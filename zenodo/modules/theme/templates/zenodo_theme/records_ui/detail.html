@@ -1,0 +1,92 @@
+{%- extends config.RECORDS_UI_BASE_TEMPLATE %}
+
+{%- from "zenodo_theme/records_ui/macros.html" import type_label, accessright_label -%}
+
+{# <meta tags> #}
+
+{%- block page_body %}
+<div class="container">
+  <div class="row" itemscope="" itemtype="TODO:SCHEMA.ORG-TYPE">
+    <div class="col-sm-8 col-md-8">
+      <p>
+        <time itemprop="datePublished" datetime="{{ record.publication_date }}" data-toggle="tooltip" title="{{_("Publication date")}}">TODO: {{ record.publication_date }}</time>
+        <span class="pull-right">
+          {{ type_label(record) }}
+          {{ accessright_label(record.access_right) }}
+        </span>
+      </p>
+      <h1 itemprop="name">{{ record.title }}</h1>
+      <p itemprop="description">{{ record.description|safe }}</p>
+      {%- if record.notes %}
+      <div class="alert alert-warning">
+        {{ record.notes}}
+      </div>
+      {%- endif %}
+    </div>
+    <div class="col-sm-4 col-md-4">
+      <div class="well metadata">
+  <dl>
+    <dt>Publication date:</dt><dd>20 October 2015</dd>
+
+
+    <dt>DOI</dt>
+    <dd>
+
+
+
+
+
+      <span class="get-badge" data-toggle="tooltip" data-placement="bottom" title="Get the DOI badge!">
+        <img data-toggle="modal" data-target="[data-modal='10.5281-zenodo.32481']" src="https://zenodo.org/badge/doi/10.5281/zenodo.32481.svg" alt="10.5281/zenodo.32481">
+      </span>
+      <div class="modal fade badge-modal" data-modal="10.5281-zenodo.32481">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-body">
+              <h4>Zenodo DOI Badge</h4>
+
+              <h4><small>Markdown</small></h4><h4>
+              <pre>[![DOI](https://zenodo.org/badge/doi/10.5281/zenodo.32481.svg)](http://dx.doi.org/10.5281/zenodo.32481)</pre>
+
+              </h4><h4><small>reStructedText</small></h4><h4>
+              <pre>.. image:: https://zenodo.org/badge/doi/10.5281/zenodo.32481.svg
+   :target: http://dx.doi.org/10.5281/zenodo.32481</pre>
+
+              </h4><h4><small>HTML</small></h4><h4>
+              <pre>&lt;a href="http://dx.doi.org/10.5281/zenodo.32481"&gt;&lt;img src="https://zenodo.org/badge/doi/10.5281/zenodo.32481.svg" alt="10.5281/zenodo.32481"&gt;&lt;/a&gt;</pre>
+
+              </h4><h4><small>Image URL</small></h4><h4>
+              <pre>https://zenodo.org/badge/doi/10.5281/zenodo.32481.svg</pre>
+
+              </h4><h4><small>DOI URL</small></h4><h4>
+              <pre>http://dx.doi.org/10.5281/zenodo.32481</pre>
+            </h4></div>
+          </div>
+        </div>
+      </div></dd>
+
+
+
+    <dt>Keyword(s):</dt><dd><span class="label label-default" itemprop="keywords"><a href="/search?f=keyword&amp;p=%22Big%20data%22&amp;ln=en">Big data</a></span> <span class="label label-default" itemprop="keywords"><a href="/search?f=keyword&amp;p=%22Cloud%20computing%22&amp;ln=en">Cloud computing</a></span> <span class="label label-default" itemprop="keywords"><a href="/search?f=keyword&amp;p=%22Medical%20research%22&amp;ln=en">Medical research</a></span> <span class="label label-default" itemprop="keywords"><a href="/search?f=keyword&amp;p=%22Clinical%20practice%22&amp;ln=en">Clinical practice</a></span></dd>
+
+
+
+
+
+
+
+
+
+    <dt>Collections:</dt><dd><a href="/collection/communities?ln=en" class="navtrail">Communities</a> &gt; <a href="/collection/user-cernopenlab?ln=en" class="navtrail">CERN openlab</a><br><a href="/collection/presentations?ln=en" class="navtrail">Presentations</a><br><a href="/collection/open?ln=en" class="navtrail">Open Access</a></dd>
+    <dt>License (for files):</dt><dd><a href="http://www.opendefinition.org/licenses/cc-by-sa">Creative Commons Attribution Share-Alike</a></dd>
+
+    <dt>Uploaded by:</dt>
+    <dd><a href="/yourmessages/write?sent_to_user_nicks=albertodm">albertodm</a> (on 21 October 2015)</dd>
+
+  </dl>
+</div>
+    </div>
+  </div>
+</div>
+{%- endblock %}
+
