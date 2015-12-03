@@ -37,6 +37,7 @@ def _(x):
 SQLALCHEMY_DATABASE_URI = os.environ.get(
     "SQLALCHEMY_DATABASE_URI",
     "postgresql+psycopg2://localhost/zenodo")
+SQLALCHEMY_ECHO = False
 
 # Default language and timezone
 BABEL_DEFAULT_LANGUAGE = 'en'
@@ -65,6 +66,8 @@ RECAPTCHA_SECRET_KEY = "CHANGE_ME"
 
 SECURITY_REGISTER_USER_TEMPLATE = \
     "zenodo_theme/security/register_user.html"
+SECURITY_LOGIN_USER_TEMPLATE = \
+    "zenodo_theme/security/login_user.html"
 
 SECURITY_CONFIRM_SALT = "CHANGE_ME"
 SECURITY_EMAIL_SENDER = "info@zenodo.org"

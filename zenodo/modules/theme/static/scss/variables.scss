@@ -36,11 +36,14 @@ $font-weight: 300;
 
 $headings-font-weight: $font-weight;
 
-$navbar-brand-padding-vertical: 15px;
+$navbar-brand-padding-vertical: 20px;
 $navbar-default-bg: $color1;
 $navbar-default-brand-color: #fff;
 $navbar-default-link-color: lighten($color1, 60%);
-$navbar-default-link-hover-bg: darken($color1, 5%);
+$navbar-default-link-active-color: #fff;
+$navbar-default-link-active-bg: transparentize(#fff, 0.9);
+$navbar-default-link-hover-color: #fff;
+$navbar-default-link-hover-bg: transparentize(#fff, 0.8);
 $navbar-height: 96px;
 
 $text-white: #fff;
@@ -48,5 +51,5 @@ $text-white: #fff;
 $brand-font-family: $font-family-sans-serif;
 $brand-font-size: 40px;
 $brand-font-weight: 400;
-$brand-primary: lighten($color1, 15%);
+$brand-primary: darken($color1-gradient, 15%);
 $brand-info: lighten($brand-primary, 10%);

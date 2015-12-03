@@ -20,7 +20,7 @@
 // waive the privileges and immunities granted to it by virtue of its status
 // as an Intergovernmental Organization or submit itself to any jurisdiction.
 
-$footer-height: 150px;
+$footer-height: 200px;
 $footer-background-color1: #f0f0f0;
 $footer-background-color2: lighten($footer-background-color1, 4%);
 
@@ -49,8 +49,18 @@ body {
   a {
     color: darken($footer-background-color1, 40%);
   }
+
+  .container {
+    padding-bottom: 20px;
+  }
 }
 
 .footer .row {
   padding-top: 10px;
+}
+
+.footer-menu {
+  h5 {
+    font-weight: 400;
+  }
 }

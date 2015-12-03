@@ -3,23 +3,40 @@
     <div class="container">
       <div class="row footer-menu">
         <div class="col-sm-3 col-md-2">
-        <h5>{{_('ABOUT')}}</h5>
-        <ul class="list-unstyled">
-        <li><a href="#">{{_('About us')}}</a></li>
-        <li><a href="#">{{_('Mission')}}</a></li>
-        </ul>
+          <h5>{{_('About')}}</h5>
+          <ul class="list-unstyled">
+            <li><a href="#">{{_('About')}}</a></li>
+            <li><a href="#">{{_('Contact')}}</a></li>
+            <li><a href="#">{{_('Polcies')}}</a></li>
+          </ul>
         </div>
         <div class="col-sm-3 col-md-2">
-        <h5>{{_('RESOURCES')}}</h5></div>
+          <h5>{{_('Resources')}}</h5>
+          <ul class="list-unstyled">
+            <li><a href="#">{{_('Get started')}}</a></li>
+            <li><a href="#">{{_('Features')}}</a></li>
+            <li><a href="#">{{_('FAQ')}}</a></li>
+          </ul>
+        </div>
         <div class="col-sm-3 col-md-2">
-        <h5>{{_('ABOUT')}}</h5></div>
+          <h5>{{_('Developers')}}</h5>
+          <ul class="list-unstyled">
+          <li><a href="#">{{_('REST API')}}</a></li>
+          <li><a href="#">{{_('OAI-PMH')}}</a></li>
+          </ul>
+        </div>
       </div>
     </div>
   </div>
   <div class="container">
     <div class="row">
-      <p class="pull-right"><a href="#">{{_('Privacy')}}</a> &middot; <a href="#">{{_('Terms of Use')}}</a> &middot; <a href="#">{{_('Cookies')}}</a></p>
-      <p>&copy; 2015 {{_(config.THEME_SITENAME)}}</p>
+      <div class="col-xs-12">
+        <p class="pull-right">
+          <a href="#">{{_('Privacy policy')}}</a> &middot;
+          <a href="#">{{_('Terms of Use')}}</a> &middot;
+          <a href="#">{{_('Support')}}</a></p>
+        <p>Powered by <a href="http://information-technology.web.cern.ch/about/computer-centre">CERN Data Centre</a> &amp; <a href="http://invenio-software.org">Invenio</a></p>
+      </div>
     </div>
   </div>
 </footer>

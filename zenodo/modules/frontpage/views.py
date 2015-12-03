@@ -26,7 +26,7 @@
 
 from __future__ import absolute_import, print_function
 
-from flask import Blueprint, render_template
+from flask import Blueprint, render_template, flash
 from flask_menu import register_menu
 
 blueprint = Blueprint(
@@ -39,15 +39,22 @@ blueprint = Blueprint(
 
 
 @blueprint.route('/')
-@register_menu(blueprint, 'main.index', 'Search')
+@register_menu(blueprint, 'main.index', 'Search', order=1)
 def index():
     """Frontpage blueprint."""
+    flash('Just a test.', category='info')
     return render_template('zenodo_theme/page.html')
 
 
 @blueprint.route('/2')
-@register_menu(blueprint, 'main.search', 'Upload')
-@register_menu(blueprint, 'main.communities', 'Communities')
+@register_menu(blueprint, 'main.search', 'Upload', order=2)
 def index2():
+    """Frontpage blueprint."""
+    return render_template('zenodo_theme/page.html')
+
+
+@blueprint.route('/3')
+@register_menu(blueprint, 'main.communities', 'Communities', order=3)
+def index3():
     """Frontpage blueprint."""
     return render_template('zenodo_theme/page.html')

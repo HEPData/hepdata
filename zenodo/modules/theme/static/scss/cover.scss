@@ -98,6 +98,10 @@ body.cover-page {
 
   footer {
     margin-top: 30px;
+    color: $text-white;
+    a, a:hover, a:active {
+      color: $text-white;
+    }
 
     .list-inline>li {
       padding-left: 20px;

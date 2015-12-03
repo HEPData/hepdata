@@ -34,19 +34,25 @@
   font-family: $brand-font-family;
   font-weight: $brand-font-weight;
   font-size: $brand-font-size;
-  padding: $navbar-brand-padding-vertical $navbar-padding-horizontal
+  padding: ($navbar-brand-padding-vertical)-4 $navbar-padding-horizontal+10 $navbar-brand-padding-vertical+4 $navbar-padding-horizontal;
 }
-
 
 .navbar-default {
   @include navbar-gradient();
 }
 
+// Border below menu item.
+// .nav.navbar-nav {
+//   > li.active a, > li a:hover {
+//     border-bottom: 3px solid #fff;
+//   }
+//   > li a {
+//     border-bottom: 3px solid transparent;
+//   }
+// }
+
 header {
-    .navbar {
-        .container {
-            background-image: url("/static/img/header.png");
-            background-repeat: no-repeat;
-        }
+    .alert {
+      margin-top: -$navbar-margin-bottom;
     }
 }
