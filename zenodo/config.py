@@ -83,6 +83,7 @@ THEME_LOGO = "img/zenodo.svg"
 
 BASE_TEMPLATE = "zenodo_theme/page.html"
 COVER_TEMPLATE = "zenodo_theme/page_cover.html"
+SETTINGS_TEMPLATE = "invenio_theme/page_settings.html"
 
 # Records configuration
 RECORDS_UI_ENDPOINTS = dict(
