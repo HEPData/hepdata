@@ -20,21 +20,32 @@
 // waive the privileges and immunities granted to it by virtue of its status
 // as an Intergovernmental Organization or submit itself to any jurisdiction.
 
-@import "variables";
+@media (min-width: $screen-sm-min) {
+    .pull-right-sm {
+        float: right !important;
+    }
+}
 
-// Setting the path to fonts files.
-$icon-font-path: "/static/node_modules/bootstrap-sass/assets/fonts/";
-$fa-font-path: "/static/node_modules/font-awesome/fonts";
+@media (min-width: $screen-md-min) {
+    .pull-right-md {
+        float: right !important;
+    }
+}
 
-@import "../node_modules/bootstrap-sass/assets/stylesheets/_bootstrap";
-@import "../node_modules/font-awesome/scss/font-awesome";
+@media (min-width: $screen-lg-min) {
+    .pull-right-lg {
+        float: right !important;
+    }
+}
 
-@import "type";
-@import "utilities";
-@import "navbar";
-@import "body";
-@import "footer";
-@import "frontpage";
-@import "input-icon";
-@import "sidebarnav";
-@import "cover";
+@media (max-width: $screen-xs-max) {
+    .text-center-xs {
+        text-align: center;
+    }
+}
+
+@media (max-width: $screen-sm-max) {
+    .text-center-sm {
+        text-align: center;
+    }
+}

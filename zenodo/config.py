@@ -85,6 +85,9 @@ BASE_TEMPLATE = "zenodo_theme/page.html"
 COVER_TEMPLATE = "zenodo_theme/page_cover.html"
 SETTINGS_TEMPLATE = "invenio_theme/page_settings.html"
 
+# Search
+SEARCH_AUTOINDEX = []
+
 # Records configuration
 RECORDS_UI_ENDPOINTS = dict(
     recid=dict(
@@ -101,4 +104,5 @@ RECORDS_REST_ENDPOINTS = dict(
     ), )
 
 # DebugToolbar
+ASSETS_DEBUG = False
 DEBUG_TB_INTERCEPT_REDIRECTS = False

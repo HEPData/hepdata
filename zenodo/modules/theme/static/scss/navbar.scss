@@ -30,6 +30,10 @@
   border-width: 0 0 0;
 }
 
+.navbar-toggle {
+  background-color: darken(#fff, 5%);
+}
+
 .navbar-brand {
   font-family: $brand-font-family;
   font-weight: $brand-font-weight;
@@ -39,20 +43,34 @@
 
 .navbar-default {
   @include navbar-gradient();
-}
 
-// Border below menu item.
-// .nav.navbar-nav {
-//   > li.active a, > li a:hover {
-//     border-bottom: 3px solid #fff;
-//   }
-//   > li a {
-//     border-bottom: 3px solid transparent;
-//   }
-// }
+  .container {
+    background-image: url('/static/img/header.png');
+    background-repeat: no-repeat;
+  }
+
+  .navbar-collapse.in, .navbar-collapse.collapsing {
+    .navbar-form {
+      margin-top: 0;
+      margin-bottom: 0;
+    }
+  }
+  .navbar-collapse, .navbar-form {
+    border-color: $color1;
+  }
+}
 
 header {
     .alert {
       margin-top: -$navbar-margin-bottom;
+      border-radius: 0;
+      border-left-width: 0;
+      border-right-width: 0;
+    }
+
+    @media (max-width: $screen-xs-max) {
+      .alert {
+        padding-left: 0;
+      }
     }
 }

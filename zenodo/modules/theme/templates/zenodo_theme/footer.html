@@ -2,7 +2,7 @@
   <div class="menu-wrapper">
     <div class="container">
       <div class="row footer-menu">
-        <div class="col-sm-3 col-md-2">
+        <div class="col-xs-3 col-md-2">
           <h5>{{_('About')}}</h5>
           <ul class="list-unstyled">
             <li><a href="#">{{_('About')}}</a></li>
@@ -10,7 +10,7 @@
             <li><a href="#">{{_('Polcies')}}</a></li>
           </ul>
         </div>
-        <div class="col-sm-3 col-md-2">
+        <div class="col-xs-3 col-md-2">
           <h5>{{_('Resources')}}</h5>
           <ul class="list-unstyled">
             <li><a href="#">{{_('Get started')}}</a></li>
@@ -18,23 +18,45 @@
             <li><a href="#">{{_('FAQ')}}</a></li>
           </ul>
         </div>
-        <div class="col-sm-3 col-md-2">
+        <div class="col-xs-3 col-md-2">
           <h5>{{_('Developers')}}</h5>
           <ul class="list-unstyled">
           <li><a href="#">{{_('REST API')}}</a></li>
           <li><a href="#">{{_('OAI-PMH')}}</a></li>
           </ul>
         </div>
+        <div class="col-xs-3 col-md-2">
+          <h5>{{_('Contribute')}}</h5>
+          <ul class="list-unstyled">
+          <li><a href="#">{{_('GitHub')}}</a></li>
+          <li><a href="#">{{_('Donate')}}</a></li>
+          </ul>
+        </div>
+        <div class="col-xs-12 text-center-sm col-md-4">
+          <div class="pull-right-md text-center-xs">
+            <h5>{{_('Funded by')}}</h5>
+            <ul class="list-inline">
+              <li><a href="http://home.cern"><img src="{{ url_for('static', filename='img/cern_badge_60.png') }}"></a></li>
+              <li><a href="http://www.openaire.eu"><img src="{{ url_for('static', filename='img/openaire-color.png') }}"></a></li>
+              <li><a href="https://ec.europa.eu/programmes/horizon2020/"><img src="{{ url_for('static', filename='img/eu-color.jpg') }}"></a></li>
+            </ul>
+          </div>
+        </div>
       </div>
     </div>
   </div>
   <div class="container">
     <div class="row">
-      <div class="col-xs-12">
-        <p class="pull-right">
-          <a href="#">{{_('Privacy policy')}}</a> &middot;
-          <a href="#">{{_('Terms of Use')}}</a> &middot;
-          <a href="#">{{_('Support')}}</a></p>
+      <div class="col-xs-12 col-sm-6 col-sm-push-6">
+        <div class="pull-right-sm text-center-xs">
+          <ul class="list-inline">
+            <li><a href="#">{{_('Privacy policy')}}</a></li>
+            <li><a href="#">{{_('Terms of Use')}}</a></li>
+            <li><a href="#">{{_('Support')}}</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="col-xs-12 col-sm-6 col-sm-pull-6 text-center-xs">
         <p>Powered by <a href="http://information-technology.web.cern.ch/about/computer-centre">CERN Data Centre</a> &amp; <a href="http://invenio-software.org">Invenio</a></p>
       </div>
     </div>
