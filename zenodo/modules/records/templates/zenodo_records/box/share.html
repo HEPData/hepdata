@@ -1,5 +1,4 @@
-# -*- coding: utf-8 -*-
-#
+{#
 # This file is part of Zenodo.
 # Copyright (C) 2015 CERN.
 #
@@ -21,31 +20,21 @@
 # In applying this license, CERN does not
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
-
-"""Jinja utilities for Invenio."""
-
-from __future__ import absolute_import, print_function
-
-from . import config
-from .views import blueprint
-
-
-class ZenodoRecords(object):
-    """Zenodo records extension."""
-
-    def __init__(self, app=None):
-        """Extension initialization."""
-        if app:
-            self.init_app(app)
-
-    def init_app(self, app):
-        """Flask application initialization."""
-        self.init_config(app)
-        app.register_blueprint(blueprint)
-        app.extensions['zenodo-records'] = self
-
-    def init_config(self, app):
-        """Initialize configuration."""
-        for k in dir(config):
-            if k.startswith('ZENODO_'):
-                app.config.setdefault(k, getattr(config, k))
+-#}
+  <h4>{{_('Share')}}</h4>
+  <!-- AddThis Button BEGIN -->
+  <div class="addthis_toolbox addthis_default_style addthis_32x32_style"{% if record.doi is local_doi %} addthis:url="{{record.doi|pid_url}}{%- endif %}">
+  <a class="addthis_button_mendeley"></a>
+  <a class="addthis_button_citeulike"></a>
+  <a class="addthis_button_twitter"></a>
+  <a class="addthis_button_preferred_1"></a>
+  <a class="addthis_button_preferred_2"></a>
+  <a class="addthis_button_compact"></a>
+  </div>
+  {#- NOTE: zenodo_records/record_detail.html includes the JavaScript #}
+  <!-- AddThis Button END -->
+  {% if record.doi %}
+  <h4>{{_('Cite as')}}</h4>
+  {# {% from "citationformatter/macros.html" import citationformatter %} #}
+  {# citationformatter(record.doi) #}
+{% endif %}

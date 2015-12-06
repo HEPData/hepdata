@@ -48,3 +48,11 @@ FIXME:
 {{ meta_opengraph(meta_title, meta_description, url=meta_url) }}
 {{ meta_twittercard(meta_title, meta_description) }}
     <link rel="canonical" href="{{ meta_url }}">
+{# FIXME
+{%- if zenodo_files -%}
+{%- for file in zenodo_files|sort(attribute='comment') -%}
+<link rel="alternate" type="{{file.mime}}" href="{{file.get_url().decode('utf8')}}">
+{%- if file.get_superformat() == '.pdf' -%}<meta content="{{file.get_url().decode('utf8')}}" name="citation_pdf_url" />{%- endif -%}
+{%- endfor -%}
+{%- endif -%}
+#}

@@ -1,5 +1,4 @@
-# -*- coding: utf-8 -*-
-#
+{#
 # This file is part of Zenodo.
 # Copyright (C) 2015 CERN.
 #
@@ -21,31 +20,12 @@
 # In applying this license, CERN does not
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
-
-"""Jinja utilities for Invenio."""
-
-from __future__ import absolute_import, print_function
-
-from . import config
-from .views import blueprint
-
-
-class ZenodoRecords(object):
-    """Zenodo records extension."""
-
-    def __init__(self, app=None):
-        """Extension initialization."""
-        if app:
-            self.init_app(app)
-
-    def init_app(self, app):
-        """Flask application initialization."""
-        self.init_config(app)
-        app.register_blueprint(blueprint)
-        app.extensions['zenodo-records'] = self
-
-    def init_config(self, app):
-        """Initialize configuration."""
-        for k in dir(config):
-            if k.startswith('ZENODO_'):
-                app.config.setdefault(k, getattr(config, k))
+-#}
+  <h4>{{_('Export')}}</h4>
+  <ul class="list-inline">
+    <li><a href="{{ url_for('invenio_records_ui.record_export', pid_value=pid.pid_value, format='hx') }}">BibTeX</a></li>
+    <li><a href="{{ url_for('invenio_records_ui.record_export', pid_value=pid.pid_value, format='json') }}">JSON</a></li>
+    <li><a href="{{ url_for('invenio_records_ui.record_export', pid_value=pid.pid_value, format='dcite3') }}">DataCite</a></li>
+    <li><a href="{{ url_for('invenio_records_ui.record_export', pid_value=pid.pid_value, format='xd') }}">Dublin Core</a></li>
+    <li><a href="{{ url_for('invenio_records_ui.record_export', pid_value=pid.pid_value, format='xm') }}">MARCXML</a></li>
+  </ul>

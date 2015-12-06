@@ -20,26 +20,18 @@
 // waive the privileges and immunities granted to it by virtue of its status
 // as an Intergovernmental Organization or submit itself to any jurisdiction.
 
-body {
-  font-weight: $font-weight;
-}
+.well.metadata {
+  word-wrap: break-word;
 
-.text-white {
-  color: $text-white;
-
-  a,
-  a:focus,
-  a:hover {
-    color: $text-white;
+  dl {
+    margin-bottom: 0;
+  }
+  dd {
+    padding-left: 10px;
+    margin-bottom: 4px;
   }
 }
 
-a.text-white,
-a.text-white:focus,
-a.text-white:hover {
-  color: $text-white;
-}
-
-h4, h5 {
-    font-weight: $headings45-font-weight;
+.inline-orcid {
+    height: $font-size-base;
 }

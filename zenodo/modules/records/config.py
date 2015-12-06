@@ -21,3 +21,25 @@
 # In applying this license, CERN does not
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
+
+"""Configuration for Zenodo Records."""
+
+from __future__ import absolute_import, print_function
+
+from flask_babelex import gettext
+from speaklater import make_lazy_gettext
+
+_ = make_lazy_gettext(lambda: gettext)
+
+ZENODO_RELATION_TYPES = [
+    ('isCitedBy', _('Cited by')),
+    ('cites', _('Cites')),
+    ('isSupplementTo', _('Supplement to')),
+    ('isSupplementedBy', _('Supplementary material')),
+    ('references', _('References')),
+    ('isReferencedBy', _('Referenced by')),
+    ('isNewVersionOf', _('Previous versions')),
+    ('isPreviousVersionOf', _('New versions')),
+]
+
+ZENODO_LOCAL_DOI_PREFIXES = []

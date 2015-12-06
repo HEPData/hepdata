@@ -93,11 +93,30 @@ SETTINGS_TEMPLATE = "invenio_theme/page_settings.html"
 SEARCH_AUTOINDEX = []
 
 # Records configuration
+ZENODO_LEGACY_FORMATS = {
+    'dcite': 'application/x-datacite+xml',
+    'dcite3': 'application/x-datacite+xml',
+    'hm': 'application/marcxml+xml',
+    'hx': 'application/x-bibtex',
+    'xd': 'application/xml',
+    'xe': None,
+    'xm': 'application/marcxml+xml',
+    'xn': None,
+    'xw': None,
+    'json': 'application/json',
+}
+
 RECORDS_UI_ENDPOINTS = dict(
     recid=dict(
         pid_type='recid',
         route='/record/<pid_value>',
         template='zenodo_records/record_detail.html',
+    ),
+    record_export=dict(
+        pid_type='recid',
+        route='/record/<pid_value>/export/<any({0}):format>'.format(", ".join(
+            list(ZENODO_LEGACY_FORMATS.keys()))),
+        template='zenodo_records/record_export.html',
     ), )
 RECORDS_REST_ENDPOINTS = dict(
     recid=dict(
@@ -110,3 +129,8 @@ RECORDS_REST_ENDPOINTS = dict(
 # DebugToolbar
 DEBUG_TB_ENABLED = True
 DEBUG_TB_INTERCEPT_REDIRECTS = False
+
+# DataCite DOI minting:
+ZENODO_LOCAL_DOI_PREFIXES = ["10.5072", "10.5281"]
+
+DATACITE_DOI_PREFIX = "10.5072"

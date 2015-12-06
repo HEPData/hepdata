@@ -98,7 +98,7 @@ class AccessRight(object):
 
 
 class ObjectType(object):
-    """Representation of object types."""
+    """Class to load object types data."""
 
     index_id = None
     index_internal_id = None

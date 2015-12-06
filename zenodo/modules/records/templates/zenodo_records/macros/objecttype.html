@@ -22,8 +22,7 @@
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 #}
 
-{%- macro objecttype_label(value, lang='en') %}
-{%- set object_type = value|objecttype %}
+{%- macro objecttype_label(object_type, lang='en') %}
 {%- if object_type %}
 <span class="label label-default">{{ object_type.title[lang] }}</span>
 {%- endif %}

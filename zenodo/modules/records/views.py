@@ -26,7 +26,8 @@
 
 from __future__ import absolute_import, print_function
 
-from flask import Blueprint
+import idutils
+from flask import Blueprint, current_app
 
 from .models import AccessRight, ObjectType
 
@@ -47,8 +48,10 @@ def is_valid_accessright(value):
 
 
 @blueprint.app_template_test('embargoed')
-def is_embargoed(embargo_date):
+def is_embargoed(embargo_date, accessright=None):
     """Test if date is still embargoed (according to UTC date."""
+    if accessright is not None and accessright != AccessRight.EMBARGOED:
+        return False
     if embargo_date is not None:
         return AccessRight.is_embargoed(embargo_date)
     return False
@@ -74,8 +77,40 @@ def accessright_title(value, embargo_date=None):
 @blueprint.app_template_filter()
 def objecttype(value):
     """Get category for access right."""
+    if not value:
+        return None
     if 'subtype' in value:
         internal_id = "{0}-{1}".format(value['type'], value['subtype'])
     else:
         internal_id = value['type']
     return ObjectType.get(internal_id)
+
+
+#
+# Persistent identifiers template filters
+#
+@blueprint.app_template_test()
+def local_doi(value):
+    """Test if a DOI is a local DOI."""
+    prefixes = current_app.config.get('ZENODO_LOCAL_DOI_PREFIXES', [])
+    return prefixes and any([value.startswith(p) for p in prefixes])
+
+
+@blueprint.app_template_filter('relation_title')
+def relation_title(relation):
+    """Map relation type to title."""
+    return dict(current_app.config['ZENODO_RELATION_TYPES']).get(relation) or \
+        relation
+
+
+@blueprint.app_template_filter('pid_url')
+def pid_url(identifier, scheme=None):
+    """Convert persistent identifier into a link."""
+    if scheme is None:
+        try:
+            scheme = idutils.detect_identifier_schemes(identifier)[0]
+        except IndexError:
+            scheme = None
+    if scheme and identifier:
+        return idutils.to_url(identifier, scheme)
+    return ""

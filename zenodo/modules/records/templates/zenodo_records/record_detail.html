@@ -26,29 +26,32 @@
 
 {%- from "zenodo_records/macros/accessright.html" import accessright_label -%}
 {%- from "zenodo_records/macros/objecttype.html" import objecttype_label -%}
+{%- from "zenodo_records/macros/altmetric.html" import almetric_badge -%}
+{%- from "zenodo_records/macros/authors.html" import authors -%}
 
 {%- set title = record.title + " | " + config.THEME_SITENAME -%}
-{%- set publication_date = record.publication_date|from_isodate|dateformat(format='long') -%}
+{%- set publication_date = record.publication_date|from_isodate -%}
 {%- set embargo_date = record.get('embargo_date', None)|from_isodate -%}
+{%- set object_type = record.upload_type|objecttype %}
 
 {%- block head %}
 {{super()}}
 {%- include "zenodo_records/meta.html" %}
 {%- endblock head %}
 
-
 {%- block page_body %}
 <div class="container">
-  <div class="row" itemscope="" itemtype="TODO:SCHEMA.ORG-TYPE">
+  <div class="row" itemscope itemtype="{{object_type['schema.org']}}">
     <div class="col-sm-8 col-md-8">
       <p>
-        <time itemprop="datePublished" datetime="{{ publication_date }}" data-toggle="tooltip" title="{{_("Publication date")}}">{{ publication_date }}</time>
+        <time itemprop="datePublished" datetime="{{ publication_date|dateformat(format='long') }}" data-toggle="tooltip" title="{{_("Publication date")}}">{{ publication_date|dateformat(format='long') }}</time>
         <span class="pull-right">
-          {{ objecttype_label(record.upload_type, lang=current_i18n.language) }}
+          {{ objecttype_label(object_type, lang=current_i18n.language) }}
           {{ accessright_label(record.access_right, embargo_date=embargo_date) }}
         </span>
       </p>
       <h1 itemprop="name">{{ record.title }}</h1>
+      <p>{{ authors(record.authors) }}</p>
       <p itemprop="description">{{ record.description|safe }}</p>
       {%- if record.notes %}
       <div class="alert alert-warning">
@@ -57,71 +60,25 @@
       {%- endif %}
     </div>
     <div class="col-sm-4 col-md-4">
+      {%- if record.doi %}
+        {{ almetric_badge(record.doi, css_class='well') }}
+      {%- endif %}
       <div class="well metadata">
-
-  <dl>
-    <dt>Publication date:</dt>
-    <dd>{{ publication_date }}</dd>
-
-
-    <dt>DOI</dt>
-    <dd>
-
-
-
-
-
-      <span class="get-badge" data-toggle="tooltip" data-placement="bottom" title="Get the DOI badge!">
-        <img data-toggle="modal" data-target="[data-modal='10.5281-zenodo.32481']" src="https://zenodo.org/badge/doi/10.5281/zenodo.32481.svg" alt="10.5281/zenodo.32481">
-      </span>
-      <div class="modal fade badge-modal" data-modal="10.5281-zenodo.32481">
-        <div class="modal-dialog">
-          <div class="modal-content">
-            <div class="modal-body">
-              <h4>Zenodo DOI Badge</h4>
-
-              <h4><small>Markdown</small></h4><h4>
-              <pre>[![DOI](https://zenodo.org/badge/doi/10.5281/zenodo.32481.svg)](http://dx.doi.org/10.5281/zenodo.32481)</pre>
-
-              </h4><h4><small>reStructedText</small></h4><h4>
-              <pre>.. image:: https://zenodo.org/badge/doi/10.5281/zenodo.32481.svg
-   :target: http://dx.doi.org/10.5281/zenodo.32481</pre>
-
-              </h4><h4><small>HTML</small></h4><h4>
-              <pre>&lt;a href="http://dx.doi.org/10.5281/zenodo.32481"&gt;&lt;img src="https://zenodo.org/badge/doi/10.5281/zenodo.32481.svg" alt="10.5281/zenodo.32481"&gt;&lt;/a&gt;</pre>
-
-              </h4><h4><small>Image URL</small></h4><h4>
-              <pre>https://zenodo.org/badge/doi/10.5281/zenodo.32481.svg</pre>
-
-              </h4><h4><small>DOI URL</small></h4><h4>
-              <pre>http://dx.doi.org/10.5281/zenodo.32481</pre>
-            </h4></div>
-          </div>
-        </div>
-      </div></dd>
-
-
-
-    <dt>Keyword(s):</dt><dd><span class="label label-default" itemprop="keywords"><a href="/search?f=keyword&amp;p=%22Big%20data%22&amp;ln=en">Big data</a></span> <span class="label label-default" itemprop="keywords"><a href="/search?f=keyword&amp;p=%22Cloud%20computing%22&amp;ln=en">Cloud computing</a></span> <span class="label label-default" itemprop="keywords"><a href="/search?f=keyword&amp;p=%22Medical%20research%22&amp;ln=en">Medical research</a></span> <span class="label label-default" itemprop="keywords"><a href="/search?f=keyword&amp;p=%22Clinical%20practice%22&amp;ln=en">Clinical practice</a></span></dd>
-
-
-
-
-
-
-
-
-
-    <dt>Collections:</dt><dd><a href="/collection/communities?ln=en" class="navtrail">Communities</a> &gt; <a href="/collection/user-cernopenlab?ln=en" class="navtrail">CERN openlab</a><br><a href="/collection/presentations?ln=en" class="navtrail">Presentations</a><br><a href="/collection/open?ln=en" class="navtrail">Open Access</a></dd>
-    <dt>License (for files):</dt><dd><a href="http://www.opendefinition.org/licenses/cc-by-sa">Creative Commons Attribution Share-Alike</a></dd>
-
-    <dt>Uploaded by:</dt>
-    <dd><a href="/yourmessages/write?sent_to_user_nicks=albertodm">albertodm</a> (on 21 October 2015)</dd>
-
-  </dl>
-</div>
+        {%- include "zenodo_records/box/info.html" %}
+      </div>
+      <div class="well">
+        {%- include "zenodo_records/box/share.html" %}
+      </div>
+      <div class="well">
+        {%- include "zenodo_records/box/export.html" %}
+      </div>
     </div>
   </div>
 </div>
 {%- endblock %}
 
+{%- block javascript %}{{super()}}
+<script type="text/javascript">var addthis_config = {"data_track_addressbar": true};</script>
+<script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-5137aff66ad9c2a1"></script>
+<script type='text/javascript' src='https://d1bxh8uas1mnw7.cloudfront.net/assets/embed.js'></script>
+{%- endblock %}

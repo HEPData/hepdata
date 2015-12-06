@@ -1,5 +1,4 @@
-# -*- coding: utf-8 -*-
-#
+{#
 # This file is part of Zenodo.
 # Copyright (C) 2015 CERN.
 #
@@ -21,31 +20,22 @@
 # In applying this license, CERN does not
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
+-#}
 
-"""Jinja utilities for Invenio."""
-
-from __future__ import absolute_import, print_function
-
-from . import config
-from .views import blueprint
+{% extends "invenio_theme/header.html" %}
 
 
-class ZenodoRecords(object):
-    """Zenodo records extension."""
+{# block navbar_nav %}
+<form class="navbar-form navbar-left" role="search">
+  <div class="form-group">
+    <div class="input-group">
 
-    def __init__(self, app=None):
-        """Extension initialization."""
-        if app:
-            self.init_app(app)
-
-    def init_app(self, app):
-        """Flask application initialization."""
-        self.init_config(app)
-        app.register_blueprint(blueprint)
-        app.extensions['zenodo-records'] = self
-
-    def init_config(self, app):
-        """Initialize configuration."""
-        for k in dir(config):
-            if k.startswith('ZENODO_'):
-                app.config.setdefault(k, getattr(config, k))
+      <input type="text" class="form-control" placeholder="Search">
+      <div class="input-group-btn">
+        <button type="button" class="btn btn-inverse"><i class="fa fa-search"></i></button>
+      </div>
+    </div>
+  </div>
+</form>
+{{super()}}
+{% endblock #}
