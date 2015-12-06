@@ -1,5 +1,4 @@
-# -*- coding: utf-8 -*-
-#
+{#
 # This file is part of Zenodo.
 # Copyright (C) 2015 CERN.
 #
@@ -21,8 +20,11 @@
 # In applying this license, CERN does not
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
+#}
 
-"""Data model package."""
-
-from __future__ import absolute_import, print_function
-
+{%- macro objecttype_label(value, lang='en') %}
+{%- set object_type = value|objecttype %}
+{%- if object_type %}
+<span class="label label-default">{{ object_type.title[lang] }}</span>
+{%- endif %}
+{%- endmacro %}

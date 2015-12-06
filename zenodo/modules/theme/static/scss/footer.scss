@@ -21,33 +21,60 @@
 // as an Intergovernmental Organization or submit itself to any jurisdiction.
 
 $footer-height: 200px;
-$footer-background-color1: #f0f0f0;
-$footer-background-color2: lighten($footer-background-color1, 4%);
+$footer-height-xs: 335px;
+$footer-height-sm: 300px;
+$footer-background-color1: #0067c9;
+$footer-background-color2: darken($color1, 0%); //lighten($footer-background-color1, 4%);
+$footer-text-color: lighten($footer-background-color1, 50%);
+$footer-heading-text-color: #fff;
 
 html {
-  position: relative;
-  min-height: 100%;
+  //@media(min-width: $screen-md-min) {
+    position: relative;
+    min-height: 100%;
+  //}
 }
 
 body {
-  margin-bottom: $footer-height;
+  @media(min-width: $screen-md-min) {
+    margin-bottom: $footer-height;
+  }
+  @media(max-width: $screen-sm-max) and (min-width: $screen-sm-min) {
+    margin-bottom: $footer-height-sm;
+  }
+  @media(max-width: $screen-xs-max) {
+    margin-bottom: $footer-height-xs;
+  }
 }
 
 .footer {
+  @media(min-width: $screen-md-min) {
+    height: $footer-height;
+  }
+  @media (max-width: $screen-sm-max) and (min-width: $screen-sm-min) {
+    height: $footer-height-sm;
+  }
+  @media(max-width: $screen-xs-max) {
+    height: $footer-height-xs;
+  }
   position: absolute;
   bottom: 0;
   width: 100%;
-  height: $footer-height;
   background-color: $footer-background-color2;
-  color: darken($footer-background-color2, 40%);
+  color: $footer-text-color;
+
+  a {
+    color: $footer-heading-text-color;
+  }
 }
 
 .footer > .menu-wrapper {
   background-color: $footer-background-color1;
   color: darken($footer-background-color1, 40%);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 
   a {
-    color: darken($footer-background-color1, 40%);
+    color: $footer-text-color;
   }
 
   .container {
@@ -56,11 +83,12 @@ body {
 }
 
 .footer .row {
-  padding-top: 10px;
+  padding-top: 15px;
 }
 
 .footer-menu {
   h5 {
     font-weight: 400;
+    color: $footer-heading-text-color;
   }
 }

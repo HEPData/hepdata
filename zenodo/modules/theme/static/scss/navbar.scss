@@ -43,10 +43,15 @@
 
 .navbar-default {
   @include navbar-gradient();
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 
-  .container {
-    background-image: url('/static/img/header.png');
-    background-repeat: no-repeat;
+  // Header background image
+  // .container {
+  //   background-image: url('/static/img/header2.png');
+  //   background-repeat: repeat-x;
+  // }
+  .navbar-collapse.in {
+    overflow-y: visible;
   }
 
   .navbar-collapse.in, .navbar-collapse.collapsing {

@@ -71,28 +71,30 @@ setup_requires = [
 ]
 
 install_requires = [
+    # 'invenio-search-ui',
     'Flask-BabelEx>=0.9.2',
     'Flask-Debugtoolbar>=0.10.0',
-    'invenio>=3.0.0a1,<3.1.0',
-    'invenio-accounts',
     'invenio-access',
+    'invenio-accounts',
     'invenio-admin',
     'invenio-assets',
     'invenio-base',
     'invenio-celery',
     'invenio-config',
+    'invenio-formatter',
     'invenio-i18n',
     'invenio-logging',
     'invenio-mail',
     'invenio-pidstore',
-    'invenio-records-ui',
-    'invenio-records-rest',
     'invenio-records',
+    'invenio-records-rest',
+    'invenio-records-ui',
     'invenio-rest',
+    'invenio-search',
     'invenio-theme',
     'invenio-userprofiles',
-    'invenio-search',
-    # 'invenio-search-ui',
+    'invenio>=3.0.0a1,<3.1.0',
+    'zenodo-migrationkit',
 ]
 
 packages = find_packages()
@@ -153,6 +155,7 @@ setup(
             'zenodo = zenodo.cli:cli',
         ],
         'invenio_base.apps': [
+            'zenodo_records = zenodo.modules.records.ext:ZenodoRecords',
             'flask_debugtoolbar = flask_debugtoolbar:DebugToolbarExtension',
         ],
         'invenio_base.blueprints': [
@@ -166,6 +169,9 @@ setup(
             'zenodo_theme_css = zenodo.modules.theme.bundles:css',
             'zenodo_theme_js = zenodo.modules.theme.bundles:js',
         ],
+        'invenio_jsonschemas.schemas': [
+            'zenodo_records = zenodo.modules.records.jsonschemas',
+        ]
     },
     extras_require=extras_require,
     install_requires=install_requires,

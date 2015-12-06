@@ -42,7 +42,9 @@ SQLALCHEMY_ECHO = False
 # Default language and timezone
 BABEL_DEFAULT_LANGUAGE = 'en'
 BABEL_DEFAULT_TIMEZONE = 'Europe/Zurich'
-I18N_LANGUAGES = []
+I18N_LANGUAGES = [
+    ('da', _('Danish')),
+]
 
 # Distributed task queue
 BROKER_URL = "redis://localhost:6379/0"
@@ -56,9 +58,6 @@ CACHE_TYPE = "redis"
 
 # ElasticSearch
 ELASTICSEARCH_HOST = "localhost"
-
-# Mail
-MAIL_SUPPRESS_SEND = True
 
 # Accounts
 RECAPTCHA_PUBLIC_KEY = "CHANGE_ME"
@@ -79,7 +78,12 @@ SECURITY_RESET_SALT = "CHANGE_ME"
 
 # Theme
 THEME_SITENAME = _("Zenodo")
+THEME_TWITTERHANDLE = "@zenodo_org"
 THEME_LOGO = "img/zenodo.svg"
+THEME_GOOGLE_SITE_VERIFICATION = [
+    "5fPGCLllnWrvFxH9QWI0l1TadV7byeEvfPcyK2VkS_s",
+    "Rp5zp04IKW-s1IbpTOGB7Z6XY60oloZD5C3kTM-AiY4"
+]
 
 BASE_TEMPLATE = "zenodo_theme/page.html"
 COVER_TEMPLATE = "zenodo_theme/page_cover.html"
@@ -93,7 +97,7 @@ RECORDS_UI_ENDPOINTS = dict(
     recid=dict(
         pid_type='recid',
         route='/record/<pid_value>',
-        template='zenodo_theme/records_ui/detail.html',
+        template='zenodo_records/record_detail.html',
     ), )
 RECORDS_REST_ENDPOINTS = dict(
     recid=dict(
@@ -104,5 +108,5 @@ RECORDS_REST_ENDPOINTS = dict(
     ), )
 
 # DebugToolbar
-ASSETS_DEBUG = False
+DEBUG_TB_ENABLED = True
 DEBUG_TB_INTERCEPT_REDIRECTS = False

@@ -1,18 +1,51 @@
+{#
+# This file is part of Zenodo.
+# Copyright (C) 2015 CERN.
+#
+# Zenodo is free software; you can redistribute it
+# and/or modify it under the terms of the GNU General Public License as
+# published by the Free Software Foundation; either version 2 of the
+# License, or (at your option) any later version.
+#
+# Zenodo is distributed in the hope that it will be
+# useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Zenodo; if not, write to the
+# Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston,
+# MA 02111-1307, USA.
+#
+# In applying this license, CERN does not
+# waive the privileges and immunities granted to it by virtue of its status
+# as an Intergovernmental Organization or submit itself to any jurisdiction.
+-#}
+
 {%- extends config.RECORDS_UI_BASE_TEMPLATE %}
 
-{%- from "zenodo_theme/records_ui/macros.html" import type_label, accessright_label -%}
+{%- from "zenodo_records/macros/accessright.html" import accessright_label -%}
+{%- from "zenodo_records/macros/objecttype.html" import objecttype_label -%}
 
-{# <meta tags> #}
+{%- set title = record.title + " | " + config.THEME_SITENAME -%}
+{%- set publication_date = record.publication_date|from_isodate|dateformat(format='long') -%}
+{%- set embargo_date = record.get('embargo_date', None)|from_isodate -%}
+
+{%- block head %}
+{{super()}}
+{%- include "zenodo_records/meta.html" %}
+{%- endblock head %}
+
 
 {%- block page_body %}
 <div class="container">
   <div class="row" itemscope="" itemtype="TODO:SCHEMA.ORG-TYPE">
     <div class="col-sm-8 col-md-8">
       <p>
-        <time itemprop="datePublished" datetime="{{ record.publication_date }}" data-toggle="tooltip" title="{{_("Publication date")}}">TODO: {{ record.publication_date }}</time>
+        <time itemprop="datePublished" datetime="{{ publication_date }}" data-toggle="tooltip" title="{{_("Publication date")}}">{{ publication_date }}</time>
         <span class="pull-right">
-          {{ type_label(record) }}
-          {{ accessright_label(record.access_right) }}
+          {{ objecttype_label(record.upload_type, lang=current_i18n.language) }}
+          {{ accessright_label(record.access_right, embargo_date=embargo_date) }}
         </span>
       </p>
       <h1 itemprop="name">{{ record.title }}</h1>
@@ -25,8 +58,10 @@
     </div>
     <div class="col-sm-4 col-md-4">
       <div class="well metadata">
+
   <dl>
-    <dt>Publication date:</dt><dd>20 October 2015</dd>
+    <dt>Publication date:</dt>
+    <dd>{{ publication_date }}</dd>
 
 
     <dt>DOI</dt>

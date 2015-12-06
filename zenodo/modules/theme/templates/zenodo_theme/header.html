@@ -1,5 +1,0 @@
-{%- extends "invenio_theme/header.html" %}
-
-{% block brand %}TEST<a class="navbar-brand" href="/"><img src="{{ url_for('static', filename='img/zenodo.svg')}}" onerror="this.src={{ url_for('static', filename='img/zenodo.png')}}; this.src=null;" alt="{{_(config.THEME_SITENAME)}}" height="55px"/></a>{% endblock %}
-
-{%- block breadcrumbs %}{%- endblock %}
