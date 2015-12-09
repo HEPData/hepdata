@@ -1,0 +1,65 @@
+// This file is part of Zenodo.
+// Copyright (C) 2015 CERN.
+//
+// Zenodo is free software; you can redistribute it
+// and/or modify it under the terms of the GNU General Public License as
+// published by the Free Software Foundation; either version 2 of the
+// License, or (at your option) any later version.
+//
+// Zenodo is distributed in the hope that it will be
+// useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+// General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Zenodo; if not, write to the
+// Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston,
+// MA 02111-1307, USA.
+//
+// In applying this license, CERN does not
+// waive the privileges and immunities granted to it by virtue of its status
+// as an Intergovernmental Organization or submit itself to any jurisdiction.
+
+$btn-font-weight: 300;
+
+
+$purple: #894B9D;
+$purple-light: #955BA5;
+$navy:#2C3E50;
+$navy-light:#3B5169;
+$grey: #7F8C8D;
+$concrete: #95a5a6;
+$lightgrey: #ECF0F1;
+$red-light: #e74c3c;
+$red: #C03A2B;
+$yellow: #f39c12;
+$green: #1FA67E;
+$blue: #2980BA;
+
+$cover-panel-padding: 40px;
+
+$font-family-sans-serif:  Lato, "Helvetica Neue", Helvetica, Arial, sans-serif;
+$font-weight: 400;
+
+$headings-font-weight: $font-weight;
+$headings45-font-weight: 400;
+
+$navbar-brand-padding-vertical: 20px;
+$navbar-default-bg: white;
+$navbar-default-brand-color: #fff;
+$navbar-default-link-color: lighten($purple, 60%);
+$navbar-default-link-active-color: #fff;
+$navbar-default-link-active-bg: transparentize(#fff, 0.9);
+$navbar-default-link-hover-color: #fff;
+$navbar-default-link-hover-bg: transparentize(#fff, 0.8);
+$navbar-height: 96px;
+
+$text-white: #fff;
+
+$brand-font-family: $font-family-sans-serif;
+$brand-font-size: 40px;
+$brand-font-weight: 400;
+$brand-primary: $purple;// lighten($color2, 4%);
+$brand-info: $purple-light;
+
+

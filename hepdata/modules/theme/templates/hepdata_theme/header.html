@@ -1,0 +1,72 @@
+
+<nav class="navbar navbar-default navbar-fixed-top top-bar">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse"
+                    data-target="#navbar-collapse" aria-expanded="false">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" style="padding: 0" href="/"><div class="pull-left hep_logo"></div></a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div class="collapse navbar-collapse menu" id="navbar-collapse">
+
+            <!--<a href="/">-->
+                <!--<div class="pull-left hep_logo"></div>-->
+            <!--</a>-->
+
+            {% block header_search %}
+            <div class="pull-left ">
+                <form class="top-search-form" action="/search">
+                    <input type="text" name="q" placeholder="Search HEP Data" value="{%if ctx %}{{ctx.q}}{%endif%}">
+                    <button type="submit" class="submit">Search</button>
+                </form>
+            </div>
+            {% endblock %}
+            <ul>
+                {%- if not current_user.is_guest %}
+                {% if user_is_coordinator_or_admin %}
+                    <li><a href="{{ url_for('webdeposit.create', deposition_type='hepdata_submission') }}">
+                        <span class="fa fa-arrow-up"></span> Submit</a></li>
+                {% endif %}
+                    <li><a href="/record/sandbox"><span class="fa fa-cube"></span> Sandbox</a></li>
+                {%- endif %}
+
+                <li><a href="/pages/submission"><span class="fa fa-life-ring"></span> Help</a></li>
+
+                {%- if not current_user.is_authenticated %}
+                <li>
+                    <a class="" href="{{ url_for_security('login')}}">
+                        <i class="fa fa-sign-in"></i> Sign in
+                    </a>
+                </li>
+                {%- else %}
+                <li>
+
+                    <a href="{% if show_dashboard %}/dashboard{%else%}/account/settings/profile{%endif%}">
+                        <i class="fa fa-user"></i>
+                        {{current_user.email}}
+                    </a>
+
+
+                    <a href="{{url_for_security('logout')}}"><span class="fa fa-power-off"></span> Log out</a>
+
+                </li>
+                {%- endif %}
+            </ul>
+
+        </div>
+    </div>
+</nav>
+
+<div class="clearfix"></div>
+
+{%- block flashmessages %}
+  {%- from "invenio_theme/macros/messages.html" import flashed_messages with context -%}
+  {{ flashed_messages() }}
+  {%- endblock %}

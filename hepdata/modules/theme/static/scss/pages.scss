@@ -1,0 +1,50 @@
+
+.team-member {
+  height: 270px;
+  width: 200px;
+  background-color: white;
+
+  float: left;
+  display: inline-block;
+  margin: 10px;
+}
+
+.team-member-image {
+  height: 200px;
+  width: 100%;
+  filter: grayscale(100%);
+  -webkit-filter: grayscale(100%);
+  -webkit-transition: all .6s ease;
+  background-size: cover;
+}
+
+.team-member-image:hover {
+  -webkit-filter: grayscale(0%);
+  filter: grayscale(0%);
+}
+
+.team-member-detail {
+  padding: 10px;
+}
+
+.team-member-detail a {
+  font-weight: bold;
+}
+
+.team-member-detail span {
+  color: $grey;
+}
+
+.section-header {
+  text-align: center;
+  margin: 0 auto;
+  width: 200px;
+}
+
+.section-header p {
+  font-size: 1.1em;
+  border-bottom: 2px solid $purple;
+  padding-bottom: 5px;
+  text-transform: uppercase;
+  font-weight: normal;
+}

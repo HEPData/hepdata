@@ -1,0 +1,95 @@
+// This file is part of Zenodo.
+// Copyright (C) 2015 CERN.
+//
+// Zenodo is free software; you can redistribute it
+// and/or modify it under the terms of the GNU General Public License as
+// published by the Free Software Foundation; either version 2 of the
+// License, or (at your option) any later version.
+//
+// Zenodo is distributed in the hope that it will be
+// useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+// General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Zenodo; if not, write to the
+// Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston,
+// MA 02111-1307, USA.
+//
+// In applying this license, CERN does not
+// waive the privileges and immunities granted to it by virtue of its status
+// as an Intergovernmental Organization or submit itself to any jurisdiction.
+
+$footer-height: 40px;
+$footer-height-xs: 335px;
+$footer-height-sm: 300px;
+$footer-heading-text-color: #fff;
+
+/* Footer properties */
+.footer-bar {
+  background-color: $purple;
+  height: $footer-height;
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  vertical-align: middle;
+  z-index: 1000;
+}
+
+#footer-decor {
+  margin-left: -40px;
+  float: left;
+}
+
+#footer-buttons {
+  float: right;
+}
+
+.footer-bar ul {
+
+  list-style: none;
+  color: #fff;
+
+  li {
+    float: left;
+    padding: 10px;
+
+    a {
+      color: white;
+    }
+  }
+
+  li:hover {
+    border-top: solid 2px #F6F6F6;
+    cursor: pointer;
+  }
+}
+
+.home-page-footer {
+  background-color: white;
+  color: $purple;
+  height: 60px;
+
+  p {
+    color: $navy;
+  }
+
+  a {
+    color: $purple;
+  }
+
+  #footer-decor {
+    margin-left: 10px;
+    /*margin-left: 10px;*/
+  }
+}
+
+
+
+.bg-purple {
+  background-color: $purple !important;
+}
+
+.bg-purple-lighter {
+  background-color: $purple-light !important;
+}

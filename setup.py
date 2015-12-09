@@ -1,20 +1,20 @@
 # -*- coding: utf-8 -*-
 #
-# This file is part of Zenodo.
+# This file is part of hepdata.
 # Copyright (C) 2015 CERN.
 #
-# Zenodo is free software; you can redistribute it
+# hepdata is free software; you can redistribute it
 # and/or modify it under the terms of the GNU General Public License as
 # published by the Free Software Foundation; either version 2 of the
 # License, or (at your option) any later version.
 #
-# Zenodo is distributed in the hope that it will be
+# hepdata is distributed in the hope that it will be
 # useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 # General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with Zenodo; if not, write to the
+# along with hepdata; if not, write to the
 # Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston,
 # MA 02111-1307, USA.
 #
@@ -22,7 +22,7 @@
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
-"""Zenodo - Research. Shared."""
+"""hepdata - Research. Shared."""
 
 import os
 import sys
@@ -95,7 +95,8 @@ install_requires = [
     'invenio-theme',
     'invenio-userprofiles',
     'invenio>=3.0.0a1,<3.1.0',
-    'zenodo-migrationkit',
+    'jsonref',
+    'cryptography'
 ]
 
 packages = find_packages()
@@ -133,45 +134,44 @@ class PyTest(TestCommand):
 
 # Get the version string. Cannot be done with import!
 g = {}
-with open(os.path.join('zenodo', 'version.py'), 'rt') as fp:
+with open(os.path.join('hepdata', 'version.py'), 'rt') as fp:
     exec(fp.read(), g)
     version = g['__version__']
 
 setup(
-    name='zenodo',
+    name='hepdata',
     version=version,
     description=__doc__,
     long_description=readme + '\n\n' + history,
-    keywords='zenodo research data repository',
+    keywords='hepdata research data repository',
     license='GPLv2',
     author='CERN',
-    author_email='info@zenodo.org',
-    url='https://github.com/zenodo/zenodo',
+    author_email='info@hepdata.org',
+    url='https://github.com/hepdata/hepdata',
     packages=packages,
     zip_safe=False,
     include_package_data=True,
     platforms='any',
     entry_points={
         'console_scripts': [
-            'zenodo = zenodo.cli:cli',
+            'hepdata = hepdata.cli:cli',
         ],
         'invenio_base.apps': [
-            'zenodo_records = zenodo.modules.records.ext:ZenodoRecords',
-            'flask_debugtoolbar = flask_debugtoolbar:DebugToolbarExtension',
+            'hepdata_records = hepdata.modules.records.ext:HEPDataRecords'
         ],
         'invenio_base.blueprints': [
-            'zenodo_frontpage = zenodo.modules.frontpage.views:blueprint',
-            'zenodo_theme = zenodo.modules.theme.views:blueprint',
+            'hepdata_frontpage = hepdata.modules.frontpage.views:blueprint',
+            'hepdata_theme = hepdata.modules.theme.views:blueprint',
         ],
         'invenio_i18n.translations': [
-            'messages = zenodo',
+            'messages = hepdata',
         ],
         'invenio_assets.bundles': [
-            'zenodo_theme_css = zenodo.modules.theme.bundles:css',
-            'zenodo_theme_js = zenodo.modules.theme.bundles:js',
+            'hepdata_theme_css = hepdata.modules.theme.bundles:css',
+            'hepdata_theme_js = hepdata.modules.theme.bundles:js',
         ],
         'invenio_jsonschemas.schemas': [
-            'zenodo_records = zenodo.modules.records.jsonschemas',
+            'hepdata_records = hepdata.modules.records.jsonschemas',
         ]
     },
     extras_require=extras_require,

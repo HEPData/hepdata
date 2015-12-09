@@ -1,0 +1,107 @@
+// This file is part of Zenodo.
+// Copyright (C) 2015 CERN.
+//
+// Zenodo is free software; you can redistribute it
+// and/or modify it under the terms of the GNU General Public License as
+// published by the Free Software Foundation; either version 2 of the
+// License, or (at your option) any later version.
+//
+// Zenodo is distributed in the hope that it will be
+// useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+// General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Zenodo; if not, write to the
+// Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston,
+// MA 02111-1307, USA.
+//
+// In applying this license, CERN does not
+// waive the privileges and immunities granted to it by virtue of its status
+// as an Intergovernmental Organization or submit itself to any jurisdiction.
+
+.navbar-static-top {
+  border-width: 0 0 0;
+}
+
+.navbar-toggle {
+    position: relative;
+    float: right;
+    margin-right: 15px;
+    padding: 9px 10px;
+    margin-top: 8px;
+    margin-bottom: 8px;
+    background-color: transparent;
+    border: 1px solid transparent;
+    border-radius: 4px;
+}
+
+.navbar-default .navbar-toggle .icon-bar {
+    background-color: #894b9d;
+}
+
+.navbar-default .navbar-collapse, .navbar-default .navbar-form {
+  @media(max-width: $screen-sm-min) {
+    background-color: #ecf0f1;
+    z-index: 1001;
+  }
+
+}
+
+.top-bar {
+  background-color: #ECF0F1;
+  height: 65px !important;
+  min-height: auto;
+  border: none;
+  color: #fff;
+  position: fixed;
+  z-index: 1000;
+  top: 0;
+}
+
+.top-search-form {
+  margin-left: 50px;
+  margin-top: 1.2em;
+}
+
+.submit {
+  background-color: #894b9d;
+  border: none;
+  font-size: .9em;
+  padding: 5px 10px;
+  margin-left: -3px;
+  border-radius: 0 4px 4px 0;
+}
+
+header {
+  .alert {
+    margin-top: -$navbar-margin-bottom;
+    border-radius: 0;
+    border-left-width: 0;
+    border-right-width: 0;
+  }
+
+  @media (max-width: $screen-xs-max) {
+    .alert {
+      padding-left: 0;
+    }
+  }
+}
+
+.menu {
+  ul {
+    padding-top: 5px;
+    list-style: none;
+    margin-top: 1.3em;
+    float: right;
+
+    li {
+      float: left;
+      margin-right: 15px;
+
+      a {
+        color: #894b9d;
+      }
+    }
+  }
+}
