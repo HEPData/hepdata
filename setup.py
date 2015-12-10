@@ -93,10 +93,13 @@ install_requires = [
     'invenio-rest',
     'invenio-search',
     'invenio-theme',
+    'invenio-testing',
     'invenio-userprofiles',
     'invenio>=3.0.0a1,<3.1.0',
     'jsonref',
-    'cryptography'
+    'cryptography',
+    'beautifulsoup4',
+    'hepdata_validator'
 ]
 
 packages = find_packages()

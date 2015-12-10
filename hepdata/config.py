@@ -30,6 +30,9 @@ import os
 
 
 # Identity function for string extraction
+import tempfile
+
+
 def _(x):
     return x
 
@@ -89,35 +92,24 @@ BASE_TEMPLATE = "hepdata_theme/page.html"
 COVER_TEMPLATE = "hepdata_theme/page_cover.html"
 SETTINGS_TEMPLATE = "invenio_theme/page_settings.html"
 
+ELASTICSEARCH_INDEX = 'records'
+SEARCH_ELASTIC_HOSTS = [
+    'localhost:9200'
+]
+
+CFG_PUB_TYPE = 'publication'
+CFG_DATA_TYPE = 'datatable'
+CFG_ES_AUTHORS = ('authors', 'author')  # (index_name, doc_type)
+CFG_DATA_KEYWORDS = ['observables', 'reactions', 'cmenergies']
+CFG_CONVERTER_URL = 'http://hepdata-converter.cern.ch'
+CFG_SUPPORTED_FORMATS = ['yaml', 'root', 'csv', 'yoda']
+CFG_TMPDIR = tempfile.gettempdir()
+CFG_DATADIR = tempfile.gettempdir()
+
 # Search
 SEARCH_AUTOINDEX = []
 
-# Records configuration
-ZENODO_LEGACY_FORMATS = {
-    'dcite': 'application/x-datacite+xml',
-    'dcite3': 'application/x-datacite+xml',
-    'hm': 'application/marcxml+xml',
-    'hx': 'application/x-bibtex',
-    'xd': 'application/xml',
-    'xe': None,
-    'xm': 'application/marcxml+xml',
-    'xn': None,
-    'xw': None,
-    'json': 'application/json',
-}
 
-RECORDS_UI_ENDPOINTS = dict(
-    recid=dict(
-        pid_type='recid',
-        route='/record/<pid_value>',
-        template='hepdata_records/record_detail.html',
-    ),
-    record_export=dict(
-        pid_type='recid',
-        route='/record/<pid_value>/export/<any({0}):format>'.format(", ".join(
-            list(ZENODO_LEGACY_FORMATS.keys()))),
-        template='hepdata_records/record_export.html',
-    ), )
 RECORDS_REST_ENDPOINTS = dict(
     recid=dict(
         pid_type='recid',
@@ -131,6 +123,6 @@ DEBUG_TB_ENABLED = True
 DEBUG_TB_INTERCEPT_REDIRECTS = False
 
 # DataCite DOI minting:
-ZENODO_LOCAL_DOI_PREFIXES = ["10.5072", "10.5281"]
+HEPDATA_LOCAL_DOI_PREFIXES = ["10.5072", "10.5281"]
 
 DATACITE_DOI_PREFIX = "10.5072"

@@ -29,28 +29,18 @@ from __future__ import absolute_import, print_function
 import idutils
 from flask import Blueprint, current_app
 
-
 blueprint = Blueprint(
     'hepdata_records',
     __name__,
     template_folder='templates'
 )
 
-#
-# Persistent identifiers template filters
-#
+
 @blueprint.app_template_test()
 def local_doi(value):
     """Test if a DOI is a local DOI."""
-    prefixes = current_app.config.get('ZENODO_LOCAL_DOI_PREFIXES', [])
+    prefixes = current_app.config.get('HEPDATA_LOCAL_DOI_PREFIXES', [])
     return prefixes and any([value.startswith(p) for p in prefixes])
-
-
-@blueprint.app_template_filter('relation_title')
-def relation_title(relation):
-    """Map relation type to title."""
-    return dict(current_app.config['ZENODO_RELATION_TYPES']).get(relation) or \
-        relation
 
 
 @blueprint.app_template_filter('pid_url')

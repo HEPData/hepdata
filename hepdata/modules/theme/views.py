@@ -36,6 +36,7 @@ blueprint = Blueprint(
     static_folder='static',
 )
 
+
 @blueprint.route('/submission')
 def submission_help():
     return render_template('hepdata_theme/pages/help.html')

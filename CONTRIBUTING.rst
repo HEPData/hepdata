@@ -10,7 +10,7 @@ Types of Contributions
 Report Bugs
 ~~~~~~~~~~~
 
-Report bugs at https://github.com/zenodo/zenodo/issues.
+Report bugs at https://github.com/hepdata/hepdata/issues.
 
 If you are reporting a bug, please include:
 
@@ -33,15 +33,15 @@ is open to whoever wants to implement it.
 Write Documentation
 ~~~~~~~~~~~~~~~~~~~
 
-Zenodo could always use more documentation, whether as part of the
-official Zenodo docs, in docstrings, or even on the web in blog posts,
+HEPData could always use more documentation, whether as part of the
+official HEPData docs, in docstrings, or even on the web in blog posts,
 articles, and such.
 
 Submit Feedback
 ~~~~~~~~~~~~~~~
 
 The best way to send feedback is to file an issue at
-https://github.com/zenodo/zenodo/issues.
+https://github.com/hepdata/hepdata/issues.
 
 If you are proposing a feature:
 
@@ -60,7 +60,7 @@ Ready to contribute? Here's how to set up `invenio` for local development.
 
    .. code-block:: console
 
-      $ git clone git@github.com:your_name_here/zenodo.git
+      $ git clone git@github.com:your_name_here/hepdata.git
 
 3. Install your local copy into a virtualenv. Assuming you have
    virtualenvwrapper installed, this is how you set up your fork for local
@@ -68,8 +68,8 @@ Ready to contribute? Here's how to set up `invenio` for local development.
 
    .. code-block:: console
 
-      $ mkvirtualenv zenodo
-      $ cd zenodo/
+      $ mkvirtualenv hepdata
+      $ cd hepdata/
       $ pip install -e .[all]
 
 4. Create a branch for local development:
@@ -109,5 +109,5 @@ Before you submit a pull request, check that it meets these guidelines:
 2. If the pull request adds functionality, the docs should be updated. Put
    your new functionality into a function with a docstring.
 3. The pull request should work for Python 2.7, 3.3, 3.4 and 3.5. Check
-   https://travis-ci.com/zenodo/zenodo/pull_requests
+   https://travis-ci.com/hepdata/hepdata/pull_requests
    and make sure that the tests pass for all supported Python versions.

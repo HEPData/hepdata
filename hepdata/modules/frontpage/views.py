@@ -42,5 +42,3 @@ blueprint = Blueprint(
 @register_menu(blueprint, 'main.index', 'Search', order=1)
 def index():
     return render_template('hepdata_theme/home.html')
-
-

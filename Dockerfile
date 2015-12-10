@@ -1,8 +1,8 @@
 #
-# Zenodo production docker build
+# HEPData production docker build
 #
 FROM python:3.5
-MAINTAINER Zenodo <info@zenodo.org>
+MAINTAINER HEPData <info@hepdata.net>
 
 # Node.js, bower, less, clean-css, uglify-js, requirejs
 RUN apt-get update
@@ -26,7 +26,7 @@ RUN pip install --upgrade pip setuptools ipython gunicorn
 RUN npm update && npm install --silent -g node-sass clean-css uglify-js requirejs
 
 #
-# Zenodo specific
+# HEPData specific
 #
 
 # Pre-install modules for caching
@@ -40,7 +40,7 @@ RUN mkdir -p ${APP_INSTANCE_PATH}
 COPY . /code
 WORKDIR /code
 
-# Install Zenodo
+# Install HEPData
 RUN pip install -r requirements.txt --src /usr/local/src
 RUN python -O -m compileall .
 
@@ -48,18 +48,18 @@ RUN python -O -m compileall .
 RUN rm -rf /tmp/* /var/tmp/* /var/lib/{cache,log}/ /root/.cache/*
 
 # Install bower dependencies and build assets.
-RUN zenodo npm
+RUN hepdata npm
 WORKDIR ${APP_INSTANCE_PATH}
 RUN npm install
 WORKDIR /code
-RUN zenodo collect -v
-RUN zenodo assets build
+RUN hepdata collect -v
+RUN hepdata assets build
 
-RUN adduser --uid 1000 --disabled-password --gecos '' zenodo
-RUN chown -R zenodo:zenodo /code /usr/local/var/invenio-instance
+RUN adduser --uid 1000 --disabled-password --gecos '' hepdata
+RUN chown -R hepdata:hepdata /code /usr/local/var/invenio-instance
 
 VOLUME ["/code"]
 
-USER zenodo
+USER hepdata
 
-CMD ["zenodo", "run", "-h", "0.0.0.0"]
+CMD ["hepdata", "run", "-h", "0.0.0.0"]

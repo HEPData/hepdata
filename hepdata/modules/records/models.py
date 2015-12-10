@@ -21,69 +21,71 @@
 # In applying this license, CERN does not
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
-
 """Helper models for HEPData data model."""
-
 from __future__ import absolute_import, print_function
 from invenio_accounts.models import User
 from invenio_records.models import RecordMetadata
-
 from sqlalchemy import func
-
-__author__ = 'eamonnmaguire'
-
 from invenio_db import db
-from sqlalchemy_utils.types import JSONType, UUIDType
+from sqlalchemy_utils.types import UUIDType
 
-db_engine = 'MyISAM'
-table_args = {'mysql_engine': db_engine}
+submission_participant_link = db.Table(
+    'submission_participant_link',
+    db.Column('rec_id', UUIDType,
+              db.ForeignKey('hepsubmission.publication_recid')),
 
+    db.Column('participant_id', db.Integer,
+              db.ForeignKey('submissionparticipant.id')))
 
+data_reference_link = db.Table(
+    'data_resource_link',
+    db.Column('rec_id', UUIDType,
+              db.ForeignKey('hepsubmission.publication_recid')),
 
-submission_participant_link = db.Table('submission_participant_link', db.Column('rec_id', UUIDType,
-                                                                                db.ForeignKey('hepsubmission.publication_recid')),
-                                       db.Column('participant_id', db.Integer, db.ForeignKey('submissionparticipant.id')), mysql_engine=db_engine)
-
-data_reference_link = db.Table('data_resource_link',
-                               db.Column('rec_id', UUIDType, db.ForeignKey('hepsubmission.publication_recid')),
-                               db.Column('dataresource_id', db.Integer, db.ForeignKey('dataresource.id')), mysql_engine=db_engine)
+    db.Column('dataresource_id', db.Integer,
+              db.ForeignKey('dataresource.id')))
 
 
 class HEPSubmission(db.Model):
     """
-    This is the main submission object. It maintains the submissions to HEPdata and who the coordinator and who the
+    This is the main submission object. It maintains the
+    submissions to HEPdata and who the coordinator and who the
     reviewers/uploaders are (via participants)
     """
     __tablename__ = "hepsubmission"
-    __table_args__ = table_args
 
-    publication_recid = db.Column(UUIDType, db.ForeignKey(RecordMetadata.id), primary_key=True)
+    publication_recid = db.Column(UUIDType, db.ForeignKey(RecordMetadata.id),
+                                  primary_key=True)
 
     data_abstract = db.Column(db.Binary)
-    references = db.relationship("DataResource", secondary="data_resource_link")
+    references = db.relationship("DataResource",
+                                 secondary="data_resource_link")
 
-    # coordinators are already logged in to submit records, so we know their User id.
+    # coordinators are already logged in to submit records,
+    # so we know their User id.
     coordinator = db.Column(db.Integer, db.ForeignKey(User.id))
-    participants = db.relationship("SubmissionParticipant", secondary="submission_participant_link")
+    participants = db.relationship("SubmissionParticipant",
+                                   secondary="submission_participant_link")
 
-    # when this flag is set to 'ready', all data records will have an invenio record created for them.
+    # when this flag is set to 'ready', all data records will have an
+    # invenio record created for them.
     overall_status = db.Column(db.String(128), default='todo')
 
-    created = db.Column(db.DateTime, nullable=False, default=func.now(), index=True)
+    created = db.Column(db.DateTime, nullable=False,
+                        default=func.now(), index=True)
 
-    # this links to the latest version of the data files to be shown in the submission and allows
-    # one to go back in time via the interface to view various stages of the submission.
+    # this links to the latest version of the data files to be shown
+    # in the submission and allows one to go back in time via the
+    # interface to view various stages of the submission.
     latest_version = db.Column(db.Integer, default=0)
-
-
 
 
 class SubmissionParticipant(db.Model):
     __tablename__ = "submissionparticipant"
-    __table_args__ = table_args
 
     """
-    This table stores information about the reviewers and uploaders of a HEPdata submission
+    This table stores information about the reviewers and
+    uploaders of a HEPdata submission
     """
     id = db.Column(db.Integer, primary_key=True,
                    nullable=False, autoincrement=True)
@@ -95,7 +97,8 @@ class SubmissionParticipant(db.Model):
     affiliation = db.Column(db.String(128))
     invitation_cookie = db.Column(db.String(128))
 
-    # when the user logs in with their cookie, this user_account should be updated.
+    # when the user logs in with their cookie,
+    # this user_account should be updated.
     user_account = db.Column(db.Integer, db.ForeignKey(User.id))
 
     # e.g., reviewer or uploader
@@ -105,23 +108,26 @@ class SubmissionParticipant(db.Model):
     action_date = db.Column(db.DateTime, nullable=True, index=True)
 
 
-datafile_identifier = db.Table('datafile_identifier',
-                               db.Column('submission_id', db.Integer, db.ForeignKey('datasubmission.id')),
-                               db.Column('dataresource_id', db.Integer, db.ForeignKey('dataresource.id')),
-                               mysql_engine=db_engine
-                               )
+datafile_identifier = db.Table(
+    'datafile_identifier',
+    db.Column('submission_id', db.Integer,
+              db.ForeignKey('datasubmission.id')),
+    db.Column('dataresource_id', db.Integer, db.ForeignKey('dataresource.id'))
+)
 
-keyword_identifier = db.Table('keyword_submission',
-                              db.Column('submission_id', db.Integer, db.ForeignKey('datasubmission.id')),
-                              db.Column('keyword_id', db.Integer, db.ForeignKey('keyword.id')),
-                              mysql_engine=db_engine)
+keyword_identifier = db.Table(
+    'keyword_submission',
+    db.Column('submission_id', db.Integer,
+              db.ForeignKey('datasubmission.id')),
+
+    db.Column('keyword_id', db.Integer, db.ForeignKey('keyword.id')))
 
 
 class DataSubmission(db.Model):
     __tablename__ = "datasubmission"
-    __table_args__ = table_args
 
-    id = db.Column(db.Integer, primary_key=True, nullable=False, autoincrement=True)
+    id = db.Column(db.Integer, primary_key=True, nullable=False,
+                   autoincrement=True)
 
     publication_recid = db.Column(UUIDType, db.ForeignKey(RecordMetadata.id))
     location_in_publication = db.Column(db.String(256))
@@ -133,16 +139,17 @@ class DataSubmission(db.Model):
     data_file = db.Column(db.Integer, db.ForeignKey("dataresource.id"))
 
     # supplementary files, such as code, links out to other resources etc.
-    additional_files = db.relationship("DataResource", secondary="datafile_identifier")
+    additional_files = db.relationship("DataResource",
+                                       secondary="datafile_identifier")
 
-    # when a new version is loaded, the version is increased and maintained so people can go back in time
+    # when a new version is loaded, the version is increased and
+    # maintained so people can go back in time
     # through a submissions review stages.
     version = db.Column(db.Integer, default=1)
 
 
 class Keyword(db.Model):
     __tablename__ = "keyword"
-    __table_args__ = table_args
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
 
@@ -152,7 +159,6 @@ class Keyword(db.Model):
 
 class License(db.Model):
     __tablename__ = "hepdata_license"
-    __table_args__ = table_args
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
 
@@ -163,7 +169,6 @@ class License(db.Model):
 
 class DataResource(db.Model):
     __tablename__ = "dataresource"
-    __table_args__ = table_args
 
     id = db.Column(
         db.Integer, primary_key=True, autoincrement=True)
@@ -172,21 +177,25 @@ class DataResource(db.Model):
     file_type = db.Column(db.String(64), default="json")
     file_description = db.Column(db.Binary)
 
-    file_license = db.Column(db.Integer, db.ForeignKey("hepdata_license.id"), nullable=True)
+    file_license = db.Column(db.Integer, db.ForeignKey("hepdata_license.id"),
+                             nullable=True)
 
-    created = db.Column(db.DateTime, nullable=False, default=func.now(), index=True)
+    created = db.Column(db.DateTime, nullable=False, default=func.now(),
+                        index=True)
 
 
 datareview_messages = db.Table('review_messages',
-                               db.Column('datareview_id', db.Integer, db.ForeignKey('datareview.id')),
-                               db.Column('datareviewmessage_id', db.Integer, db.ForeignKey('datareviewmessage.id')), mysql_engine=db_engine)
+                               db.Column('datareview_id', db.Integer,
+                                         db.ForeignKey('datareview.id')),
+                               db.Column('datareviewmessage_id', db.Integer,
+                                         db.ForeignKey(
+                                             'datareviewmessage.id')))
 
 
 class DataReview(db.Model):
     """Represent a data review including links to the messages
     made about a data record upload and it's current status."""
     __tablename__ = "datareview"
-    __table_args__ = table_args
 
     id = db.Column(
         db.Integer, primary_key=True,
@@ -199,12 +208,14 @@ class DataReview(db.Model):
         db.DateTime, nullable=False, default=func.now(), index=True)
 
     modification_date = db.Column(
-        db.DateTime, nullable=False, default=func.now(), index=True, onupdate=func.now())
+        db.DateTime, nullable=False, default=func.now(), index=True,
+        onupdate=func.now())
 
     # as in, passed, attention, to do
     status = db.Column(db.String(20), default="todo")
 
-    messages = db.relationship("DataReviewMessage", secondary="review_messages")
+    messages = db.relationship("DataReviewMessage",
+                               secondary="review_messages")
 
     # stores the vers
     version = db.Column(db.Integer, default=1)
@@ -215,14 +226,12 @@ class DataReviewMessage(db.Model):
     Stores each message made as part of a data review.
     """
     __tablename__ = "datareviewmessage"
-    __table_args__ = table_args
 
-    id = db.Column(db.Integer, primary_key=True, nullable=False, autoincrement=True)
+    id = db.Column(db.Integer, primary_key=True, nullable=False,
+                   autoincrement=True)
 
     user = db.Column(db.Integer, db.ForeignKey(User.id))
     message = db.Column(db.String(512))
 
-    creation_date = db.Column(db.DateTime, nullable=False, default=func.now(), index=False)
-
-
-
+    creation_date = db.Column(db.DateTime, nullable=False, default=func.now(),
+                              index=False)
