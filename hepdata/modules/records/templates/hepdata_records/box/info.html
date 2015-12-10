@@ -1,19 +1,19 @@
 {#
-# This file is part of Zenodo.
+# This file is part of HEPData.
 # Copyright (C) 2015 CERN.
 #
-# Zenodo is free software; you can redistribute it
+# HEPData is free software; you can redistribute it
 # and/or modify it under the terms of the GNU General Public License as
 # published by the Free Software Foundation; either version 2 of the
 # License, or (at your option) any later version.
 #
-# Zenodo is distributed in the hope that it will be
+# HEPData is distributed in the hope that it will be
 # useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 # General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with Zenodo; if not, write to the
+# along with HEPData; if not, write to the
 # Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston,
 # MA 02111-1307, USA.
 #
@@ -47,29 +47,29 @@
     {% if record.doi|is_local_doi %}{{doi_badge(record.doi)}}{% else %}{{ record.doi|doi_link }}{% endif %}</dd>
       {% endif%}
     <span class="get-badge" data-toggle="tooltip" data-placement="bottom" title="Get the DOI badge!">
-          <img data-toggle="modal" data-target="[data-modal='10.5281-zenodo.32481']" src="https://zenodo.org/badge/doi/10.5281/zenodo.32481.svg" alt="10.5281/zenodo.32481">
+          <img data-toggle="modal" data-target="[data-modal='10.5281-HEPData.32481']" src="https://HEPData.org/badge/doi/10.5281/HEPData.32481.svg" alt="10.5281/HEPData.32481">
         </span>
-        <div class="modal fade badge-modal" data-modal="10.5281-zenodo.32481">
+        <div class="modal fade badge-modal" data-modal="10.5281-HEPData.32481">
           <div class="modal-dialog">
             <div class="modal-content">
               <div class="modal-body">
-                <h4>Zenodo DOI Badge</h4>
+                <h4>HEPData DOI Badge</h4>
 
                 <h4><small>Markdown</small></h4><h4>
-                <pre>[![DOI](https://zenodo.org/badge/doi/10.5281/zenodo.32481.svg)](http://dx.doi.org/10.5281/zenodo.32481)</pre>
+                <pre>[![DOI](https://HEPData.org/badge/doi/10.5281/HEPData.32481.svg)](http://dx.doi.org/10.5281/HEPData.32481)</pre>
 
                 </h4><h4><small>reStructedText</small></h4><h4>
-                <pre>.. image:: https://zenodo.org/badge/doi/10.5281/zenodo.32481.svg
-     :target: http://dx.doi.org/10.5281/zenodo.32481</pre>
+                <pre>.. image:: https://HEPData.org/badge/doi/10.5281/HEPData.32481.svg
+     :target: http://dx.doi.org/10.5281/HEPData.32481</pre>
 
                 </h4><h4><small>HTML</small></h4><h4>
-                <pre>&lt;a href="http://dx.doi.org/10.5281/zenodo.32481"&gt;&lt;img src="https://zenodo.org/badge/doi/10.5281/zenodo.32481.svg" alt="10.5281/zenodo.32481"&gt;&lt;/a&gt;</pre>
+                <pre>&lt;a href="http://dx.doi.org/10.5281/HEPData.32481"&gt;&lt;img src="https://HEPData.org/badge/doi/10.5281/HEPData.32481.svg" alt="10.5281/HEPData.32481"&gt;&lt;/a&gt;</pre>
 
                 </h4><h4><small>Image URL</small></h4><h4>
-                <pre>https://zenodo.org/badge/doi/10.5281/zenodo.32481.svg</pre>
+                <pre>https://HEPData.org/badge/doi/10.5281/HEPData.32481.svg</pre>
 
                 </h4><h4><small>DOI URL</small></h4><h4>
-                <pre>http://dx.doi.org/10.5281/zenodo.32481</pre>
+                <pre>http://dx.doi.org/10.5281/HEPData.32481</pre>
               </h4></div>
             </div>
           </div>

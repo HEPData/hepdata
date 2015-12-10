@@ -159,6 +159,10 @@ setup(
         'invenio_base.apps': [
             'hepdata_records = hepdata.modules.records.ext:HEPDataRecords'
         ],
+
+        'invenio_db.models': [
+            'hepdata_records = hepdata.modules.records.models',
+        ],
         'invenio_base.blueprints': [
             'hepdata_frontpage = hepdata.modules.frontpage.views:blueprint',
             'hepdata_theme = hepdata.modules.theme.views:blueprint',
