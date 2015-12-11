@@ -1,0 +1,219 @@
+{#
+# This file is part of HEPData.
+# Copyright (C) 2012, 2013, 2014 CERN.
+#
+# HEPData is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License as
+# published by the Free Software Foundation; either version 2 of the
+# License, or (at your option) any later version.
+#
+# HEPData is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with HEPData; if not, write to the Free Software Foundation, Inc.,
+# 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
+#}
+
+{% extends "page.html" %}
+
+{#
+{% set title = title %}
+#}
+{% block title %}
+HEPData | {{ctx.record.title.title}}
+{% endblock %}
+
+{% block metaheader %}
+{% if recid != -1 and config.CFG_WEBSEARCH_DETAILED_META_FORMAT %}
+
+{% endif %}
+{% endblock metaheader %}
+
+{%- block header %}
+{%- include "base/scripts.html" %}
+{{- super() }}
+{%- endblock header %}
+{%- block _bottom_assets %}
+{# The legacy page requires that the scripts are loaded from the head
+# rather than at the bottom of the page.
+#}
+{%- endblock %}
+
+{%block page_description%}{{ ctx.record.title.title }}{%endblock%}
+
+{% block global_bundles %}
+{{ super() }}
+{% bundles "hep_dataview.js" %}
+<script src="//cdnjs.cloudflare.com/ajax/libs/mathjax/2.5.3/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+<style>
+    #hepdata_table_detail {
+        width: 76% !important;
+    }
+</style>
+
+{% endblock %}
+
+{% block page_body %}
+<div itemtype="http://schema.org/DataCatalog" itemscope>
+<div class="hep_breadcrumbs">
+    <ul>
+        <a href="/search">
+            <li class="active"><span class="fa fa-search"></span> Browse all</li>
+        </a>
+
+        <a href="/record/ins{{ctx.record.inspire_id}}">
+            <li class="active bg-purple-2"><span class="fa fa-list"></span> View all Publication Data</li>
+        </a>
+
+        <li><span class="fa fa-book"></span> {{ctx.table_name}} from {{ ctx.breadcrumb_text }} {%if ctx.record.accelerator_experiment %},
+            conducted on the <strong>{{ctx.record.accelerator_experiment.experiment}}</strong> experiment.{%endif%}
+        </li>
+
+    </ul>
+</div>
+
+<div class="clearfix"></div>
+
+    <!--top level publication information-->
+<div class="detailed-record-info">
+
+    <button class="btn btn-xs btn-link hide-publication-info" style="margin-bottom: 10px"><span class="fa fa-chevron-left"></span> Hide Publication Information</button>
+
+    <span id="show-publication-info" class="slider-option paper-info-option" style="left: -40px"><span class="fa fa-chevron-right"></span></span>
+
+    <div>
+        <div class="record-title" itemprop="name">
+            {{ ctx.record.title.title }}
+        </div>
+        <span itemprop="url" class="hidden">http://hepdata.net/record/{{ctx.record.recid}}</span>
+        <div class="record-authors">
+            {% for author in ctx.record.authors %}
+            <a href="/search?author={{author.full_name}}" itemprop="author" itemscope itemtype="http://schema.org/Person" ><span style="font-weight: normal" itemprop="familyName">{{author.last_name}}</span>,
+                <span itemprop="givenName">{{author.first_name}}</span> <span itemprop="affiliation" itemtype="http://schema.org/Organization" itemscope class="hidden"><span itemprop="name">{{author.affiliation}}</span></span>
+                </a>{% if loop.index < ctx.record.authors|length %},{% endif %}
+            {% endfor %}
+        </div>
+        <div class="record-journal">
+            {{ ctx.record.journal_info }}
+        </div>
+
+        <div class="collaborations">
+            {% for collaboration in ctx.record.collaborations %}
+                <a href="/search/?collaboration={{collaboration}}" class="collaboration">{{collaboration}}</a>
+            {% endfor %}
+        </div>
+        <div class="clearfix"></div>
+        <br/>
+        <div class="record-links">
+            <ul>
+                {% if ctx.record.doi %}
+                <li><a href="http://dx.doi.org/{{ctx.record.doi}}" target="_blank"><span class="link">
+                    <span class="link-value">DOI<span class="hidden" itemprop="citation">http://dx.doi.org/{{ctx.record.doi}}</span></span></a></li>
+                {% endif %}
+                <li><a href="http://inspirehep.net/record/{{ctx.record.inspire_id}}" itemprop="citation" itemscope itemtype="http://schema.org/CreativeWork" target="_blank"><span
+                    class="link"><span class="link-type">View paper in Inspire</span></span><span class="hidden" itemprop="url">http://inspirehep.net/record/{{ctx.record.inspire_id}}</span> </a></li>
+                <li><a href="http://hepdata.cedar.ac.uk/view/ins{{ctx.record.inspire_id}}" itemprop="citation" itemscope itemtype="http://schema.org/CreativeWork" target="_blank"><span
+                    class="link"><span class="link-type">View old HepData</span></span><span class="hidden" itemprop="url">http://hepdata.cedar.ac.uk/view/ins{{ctx.record.inspire_id}}</span> </a></li>
+
+                {% if ctx.additional_resources %}
+                    <li><button id="show_resources" class="link" data-recid="{{ctx.record.recid}}">Additional Resources</button></li>
+                {% endif %}
+           </ul>
+        </div>
+        {%if ctx.record.publication_info %}
+        <div class="publication-details" >
+            <span itemprop="publisher" itemscope typeof="http://schema.org/Organization"><span itemprop="name">{{ ctx.record.publication_info.journal_title }}</span> </span>, Volume {{ ctx.record.publication_info.journal_volume }},
+            pages
+            <span itemprop="pagination">{{ctx.record.publication_info.page_artid}}</span>, <span itemprop="copyrightYear" typeof="http://schema.org/Number">{{ctx.record.publication_info.year }}</span>
+        </div>
+        {%endif%}
+    </div>
+
+    <div class="clearfix"></div>
+
+    <div class="record-abstract" itemprop="description">
+        <strong>Abstract  {%if ctx.record.data_abstract%}(data abstract){%endif%}</strong><br/>
+
+        <div class="record-abstract-content scrollable">
+            {%if ctx.record.data_abstract%}
+                {{ctx.record.data_abstract}}
+            {%elif ctx.record.abstract%}
+                {{ctx.record.abstract.summary}}
+            {%else%}
+                No abstract available.
+            {%endif%}
+        </div>
+    </div>
+
+    <div class="clearfix"></div>
+    <br/>
+
+</div>
+
+{%if ctx.show_upload_area == False%}
+
+{%if ctx.show_review_widget or ctx.show_upload_widget or ctx.submission_coordinator_or_admin%}
+    {%if ctx.status != 'finished' %}
+        {% include 'hepdata_records/components/reviewer-widget.html' %}
+    {%endif%}
+{%endif%}
+
+{%if ctx.show_upload_widget%}
+{% include 'hepdata_records/components/uploader-modal.html' %}
+{%endif%}
+
+{%endif%}
+
+{% block body %}
+<!--if there is data, we show it. If not, we show the upload screen if the logged in user is an uploader-->
+{%if ctx.show_upload_area %}
+
+<div class="upload-area">
+    <div class="root_upload_form" align="center">
+        <img src="/img/icon-upload.svg" width="70px"/>
+        <h4>Upload an archive to HEPdata</h4>
+
+        <div class="info">
+            <p>You can upload an archive that should contain the files stated in these guidelines.</p>
+        </div>
+
+        <form action="/record/{{ctx.record.recid}}/consume" method="post" enctype=multipart/form-data>
+            <input type="file" name="hep_archive" id="root_file_upload" data-iconName="fa fa-upload"
+                   class="filestyle">
+            <br/>
+            <input type="submit" value="Upload and Process" class="btn btn-primary">
+        </form>
+
+    </div>
+</div>
+{%else %}
+
+{% if ctx.data_tables|length == 0 %}
+<div id="hepdata_table_detail"  style="width: 76%; text-align: center">
+    <div id="hepdata-loading" style="width: 200px; height: 200px; margin: 0 auto; margin-top: 5em"></div>
+    <h4 style="color: #894B9D">No data has been uploaded for this submission yet.</h4>
+    <p style="color:#95A5A5; font-size: 1.2em">Come back soon and you’ll see some plots of various attractiveness...</p>
+</div>
+{%else%}
+
+{%include 'hepdata_records/components/table_details.html'%}
+
+{%endif%}
+
+{%endif%}
+</div>
+{% endblock %}
+{% include 'hepdata_records/components/code-view-widget.html' %}
+{% include 'hepdata_records/components/resources-widget.html' %}
+{% endblock %}
+
+{%- block javascript %}
+
+{% include 'hepdata_records/components/record-javascript.html' %}
+
+{% endblock %}
+

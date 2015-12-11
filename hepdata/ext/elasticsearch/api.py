@@ -31,6 +31,7 @@ from query_builder import QueryBuilder, get_query_by_type, get_authors_query
 from process_results import map_result, merge_results
 from invenio_db import db
 import logging
+
 from invenio_search import current_search_client as es
 
 __all__ = ['search', 'index_record_ids', 'index_record_dict', 'fetch_record',
@@ -213,13 +214,12 @@ def get_record(record_id, doc_type, index=None, parent=None):
         return None
 
 
-@default_index
 def record_exists(inspire_id, index=None):
     """ Checks if a record with a given HEPData ID exists in the index """
     # Strip the ins from the beginning
     if isinstance(inspire_id, basestring) and inspire_id[:3] == 'ins':
         inspire_id = inspire_id[3:]
-
+    
     query = {
         'query': {
             'match': {

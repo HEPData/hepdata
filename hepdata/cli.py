@@ -25,9 +25,21 @@
 """HEPData CLI module."""
 
 from __future__ import absolute_import, print_function
-
+from flask.ext.cli import with_appcontext
 from invenio_base.app import create_cli
-
 from .factory import create_app
 
+
 cli = create_cli(create_app=create_app)
+
+@cli.command()
+@with_appcontext
+def populate():
+    """Populate the DB with sample records."""
+    from hepdata.ext.elasticsearch.api import recreate_index
+    from hepdata.modules.records.migrator.api import load_files
+    recreate_index()
+
+    files_to_load = ['ins1345354', 'ins1361912']
+    load_files.delay(files_to_load, 2, synchronous=True)
+

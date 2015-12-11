@@ -54,20 +54,135 @@
   margin-bottom: 100px;
 }
 
-// Altmetric CSS to hide/show badge with/without data.
-.altmetric-embed {
-  z-index: 100 !important;
+/**
+ * -*- mode: text; coding: utf-8; -*-
+ *
+ * This file is part of HEPData.
+ * Copyright (C) 2014 CERN.
+
+ * HEPData is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as
+ * published by the Free Software Foundation; either version 2 of the
+ * License, or (at your option) any later version.
+ *
+ * Invenio is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Invenio; if not, write to the Free Software Foundation, Inc.,
+ * 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
+ */
+
+@charset "utf-8";
+
+.content {
+  width: 100%;
+  margin: 0 auto;
 }
 
-.altmetric-embed .altmetric-popover-content {
-  background-color: transparent !important;
+
+.hep_breadcrumbs {
+  position: fixed;
+  margin-top: 65px;
+  height: 40px;
+  width: 100%;
+  z-index: 999;
+  background-color: $navy;
 }
 
-.altmetric-embed:empty {
-  display: none
+.hep_breadcrumbs ul {
+  list-style: none;
+  margin: 0;
+  height: 40px;
+  -webkit-padding-start: 0px;
+  padding: 0px;
 }
 
-.altmetric-hidden {
-  display: none;
+.hep_breadcrumbs ul li {
+  float: left;
+  display: inline;
+  color: white;
+  height: 100%;
+  padding: 10px;
+  opacity: .9;
+  -webkit-transition: opacity 0.2s;
+  -moz-transition: opacity 0.2s;
+  -ms-transition: opacity 0.2s;
+  -o-transition: opacity 0.2s;
+  transition: opacity 0.2s;
 }
+
+.hep_breadcrumbs ul li.active {
+  background-color: $purple-light;
+}
+
+.hep_breadcrumbs ul li:hover {
+  opacity: 1;
+}
+
+/*root upload form*/
+.root_upload_form {
+  width: 500px;
+  height: 500px;
+  margin: 0 auto;
+  padding-top: 14em;
+}
+
+.collaboration {
+  background-color: $purple-light;
+  color: white;
+  padding: 2px 3px;
+  border-radius: 3px;
+  font-size: .9em;
+
+}
+
+.collaboration:hover {
+  background-color: $purple;
+  color: white;
+}
+
+.scrollable {
+  overflow-y: auto !important;
+}
+
+body::-webkit-scrollbar-track, .scrollable::-webkit-scrollbar-track {
+  //    -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
+  background-color: $lightgrey;
+}
+
+body::-webkit-scrollbar, .scrollable::-webkit-scrollbar {
+  width: 6px;
+  background-color: $lightgrey;
+}
+
+body::-webkit-scrollbar-thumb {
+  background-color: $purple;
+
+}
+
+.scrollable::-webkit-scrollbar-thumb {
+  background-color: $grey;
+}
+
+.truncated-record-abstract {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: .9em;
+  max-height: 48px; /* fallback */
+  line-height: 21px;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.height30 {
+  height: 35%;
+  overflow: auto;
+}
+
+
 

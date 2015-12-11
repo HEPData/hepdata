@@ -1,0 +1,15 @@
+<div id="conversation" class="hidden">
+    <h4>Conversation</h4>
+
+    <div id="conversation_messages">
+        {%for message in conversation %}
+        <div class="message-item">
+            <div class="message-info">
+                <p class="message-time">{{message.date}}<br/>{{message.time}}</p>
+
+                <p class="reviewer">{{message.sender}}</p></div>
+            <div class="message-content">{{message.message}}</div>
+        </div>
+        {%endfor%}
+    </div>
+</div>

@@ -10,7 +10,7 @@ class SubmissionUtilsTest(unittest.TestCase):
              "exp_result": "bitbucket"},
             {"url": "http://sourceforge.net/projects/isacommons/",
              "exp_result": "sourceforge"},
-            {"url": "http://zenodo.org/record/11085", "exp_result": "zenodo"},
+            {"url": "http://hepdata.net/record/11085", "exp_result": "zenodo"},
             {"url": "https://github.com/HEPData/hepdata",
              "exp_result": "github"}
         ]

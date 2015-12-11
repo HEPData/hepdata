@@ -1,5 +1,5 @@
 from datetime import datetime
-import celery
+from celery import shared_task
 from flask import render_template
 from hepdata.modules.records.models import SubmissionParticipant, \
     DataSubmission
@@ -8,7 +8,7 @@ from invenio_db import db
 __author__ = 'eamonnmaguire'
 
 
-@celery.task
+@shared_task
 def create_bibworkflow_obj(ctx, current_user_id, doc_type,
                            workflow="hepdata_data_sub"):
     record = {
@@ -152,10 +152,11 @@ def do_send_email(subject, message, email):
     :return:
     """
     try:
-        send_email(SITE_ADMIN_EMAIL,
-                   email,
-                   header="",
-                   subject=subject,
-                   content=message)
+        print message
+        # send_email('info@hepdata.net',
+        #            email,
+        #            header="",
+        #            subject=subject,
+        #            content=message)
     except Exception as e:
         print e.message

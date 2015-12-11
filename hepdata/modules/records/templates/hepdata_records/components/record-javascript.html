@@ -1,0 +1,150 @@
+<script>
+
+    MathJax.Hub.Config({
+        tex2jax: {inlineMath: [['$', '$'], ['\\(', '\\)']]}
+    });
+    MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
+    $(document).ready(function () {
+
+        HEPDATA.render_loader("#hepdata-loading", [
+                    {x: 26, y: 30, color: "#955BA5"},
+                    {x: -60, y: 55, color: "#2C3E50"},
+                    {x: 37, y: -10, color: "#955BA5"},
+                    {x: -60, y: 10, color: "#955BA5"},
+                    {x: -27, y: -30, color: "#955BA5"},
+                    {x: 60, y: -55, color: "#2C3E50"}],
+                {"width": 200, "height": 200}
+        );
+        {% if ctx.show_upload_area %}
+            $("#root_file_upload").filestyle({
+                iconName: "fa fa-upload",
+                buttonName: "btn-primary"
+            });
+        {% elif ctx.data_tables | length != 0 %}
+
+            HEPDATA.current_record_id = {{ctx.recid | safe}};
+            HEPDATA.current_table_version = {{ctx.version | safe}};
+            var table_to_show = "{{ctx.table_to_show}}";
+            table_to_show = table_to_show.replace(/\s/g, "");
+
+            var table_id = $("." + table_to_show).attr("id");
+            if (table_id != undefined) {
+                table_to_show = table_id;
+            }
+
+            HEPDATA.switch_table('#hep-tables', table_to_show);
+
+            if (window.location.href.indexOf("table=") > -1) {
+                $('#hepdata_tables').animate({
+                    scrollTop: $("#" + table_to_show).offset().top
+                }, 2000);
+            }
+        {%else %}
+            // as a final try, we try to get html for a submission, in the case that it's a resource'
+            $.ajax({
+                type: 'GET',
+                dataType: 'json',
+                url: '/record/resources/{{ctx.recid | safe}}',
+                success: function (data) {
+                    for (var resource in data) {
+                        if (data[resource]['file_type'] == 'html') {
+                            $("#hepdata_table_detail").load('/record/resource/' + data[resource]['id'], function () {
+                                MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
+                            });
+                        }
+                    }
+                }
+            });
+        {%endif %}
+
+        show_resource = function (id, file_type, location) {
+            if (file_type == 'html') {
+                $("#resource-detail").load('/record/resource/' + id, function () {
+                    MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
+                });
+            } else {
+                if (HEPDATA.is_image(location)) {
+                    $("#resource-detail").html('<img src="' + location + '" width="400"/>');
+                } else {
+                    var download_location = location;
+                    var file_name = 'Open Link';
+                    if (location.indexOf('http') == -1) {
+                        file_name = 'Download ' + location.substring(location.lastIndexOf('/') + 1);
+                        download_location = '/record/resource/download/' + id;
+                    }
+
+                    $("#resource-detail").html('<p>This is a link to an external resource which you can view by clicking the button below.</p><a href="' + download_location + '" class="btn btn-primary btn-large" target="_new">' + file_name + '</a>');
+                }
+            }
+        };
+
+        $("#show_resources").bind("click", function () {
+            var recid = $(this).attr('data-recid');
+
+            $("#resourceModal").modal();
+            $.ajax({
+                type: 'GET',
+                dataType: 'json',
+                url: '/record/resources/' + recid,
+                success: function (data) {
+                    $("#resource-list ul").html('');
+                    for (var resource in data) {
+                        var description = data[resource]['file_description'] == '' ? 'Publication Resource' : data[resource]['file_description'];
+                        if (resource == 0) {
+                            $("#resource-list ul").append('<li class="active" data-location="' + data[resource]['location'] + '" data-type="' + data[resource]['file_type'] + '" data-id="' + data[resource]['id'] + '">' + description + '</li>');
+                            show_resource(data[resource]['id'], data[resource]['file_type'], data[resource]['location'])
+
+                        } else {
+                            $("#resource-list ul").append('<li data-location="' + data[resource]['location'] + '" data-type="' + data[resource]['file_type'] + '" data-id="' + data[resource]['id'] + '">' + description + '</li>');
+                        }
+                    }
+                    MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
+                }
+            })
+        });
+        $(document).on('click', '#resource-list ul li', function () {
+            var id = $(this).attr('data-id');
+            var type = $(this).attr('data-type');
+            var location = $(this).attr('data-location');
+
+            $("#resource-list ul li").each(function () {
+                $(this).removeClass("active");
+            });
+
+            $(this).addClass("active");
+            show_resource(id, type, location);
+        })
+    });
+
+    $('.hide-publication-info').click(function () {
+        $(".detailed-record-info").animate({
+            left: "-=520"
+        }, 400);
+
+        $("#hepdata_tables").css('margin-left', "32px");
+        $(".detailed-record-info").css('position', 'fixed').delay(400);
+        $("#hepdata_table_detail").animate({
+            width: "83%"
+        });
+
+
+        $("#show-publication-info").animate({
+            left: "+=40"
+        }, 400);
+    });
+
+    $('#show-publication-info').click(function () {
+        $(".detailed-record-info").css('position', 'relative');
+
+        $(".detailed-record-info").animate({
+            left: "+=520"
+        }, 400);
+
+        $("#show-publication-info").animate({
+            left: "-=40"
+        }, 400);
+        $("#hepdata_table_detail").css('width', "62%");
+        $("#hepdata_tables").css('margin-left', "0px");
+    });
+
+</script>

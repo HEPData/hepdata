@@ -1,0 +1,76 @@
+<!-- Modal -->
+<div class="modal fade" id="codeDialog" tabindex="-1" role="dialog"
+     aria-labelledby="codeDialog" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"
+                        aria-label="Close"><span
+                        aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="codeDialogLabel">Root File</h4>
+            </div>
+
+            <div class="modal-body" id="codeDialogContents">
+                <p id="file-description"></p>
+
+                <div id="code">
+                    <textarea id="code-contents"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary">Download File
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+
+    var codemirror;
+    $(document).on('click', '.support-file', function () {
+        $.ajax({
+            dataType: "json",
+            url: '/record/data/file/' + $(this).attr('data-file-id'),
+            processData: false,
+            cache: true,
+            success: function (data) {
+
+                $("#codeDialogLabel").html(data.file_type);
+                $("#file-description").html(data.file_description);
+
+                var image_file_types = ["png", "jpeg", "jpg", "tiff"];
+
+                if (image_file_types.indexOf(data.file_type.toLowerCase()) != -1) {
+                    $("#code").html('<img src="' + data.file_contents + '" width="100%"></img>');
+                } else if (data.file_type != 'root') {
+                    $("#code").html('<textarea id="code-contents"></textarea>');
+                    $("#code-contents").val(data.file_contents);
+
+                    codemirror = CodeMirror.fromTextArea(document.getElementById("code-contents"), {
+                        mode: data.file_type,
+                        lineNumbers: true,
+                        editable: false,
+                        theme: 'neo',
+                        readOnly: true,
+                        autofocus: true
+                    });
+
+                    codemirror.refresh();
+
+                }
+                else {
+                    $("#codeDialogLabel").html('Root');
+                    $("#code").html('We can\'t display ROOT files at present');
+                }
+
+                $('#codeDialog').modal('show');
+                $("#code").focus();
+            },
+            error: function (error) {
+                $("#code").html('We can\'t display this type of file at present. But you can download it!');
+                $('#codeDialog').modal('show');
+            }
+        });
+    });
+</script>

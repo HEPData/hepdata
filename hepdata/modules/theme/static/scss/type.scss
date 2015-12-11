@@ -24,6 +24,11 @@ body {
   font-weight: $font-weight;
 }
 
+body, html{
+  width: 100%;
+  height: 100%;
+}
+
 .text-white {
   color: $text-white;
 

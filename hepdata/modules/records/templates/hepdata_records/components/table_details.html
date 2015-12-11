@@ -1,0 +1,105 @@
+<div id="hepdata_table_detail" class="scrollable">
+
+    {%if ctx.revision_message%}
+        <div class="alert alert-info"><strong>Version {{ctx.revision_message.version}} modifications:</strong> {{ctx.revision_message.message}}</div>
+    {%endif%}
+
+    <!--{%if ctx.version < ctx.version_count %}-->
+        <!--<div class="alert alert-danger">There is a new version of this submission. <a href="/record/{{ctx.recid}}?version={{ctx.version_count}}" style="color: #a94442; font-weight: bolder;">View version {{ctx.version_count}}</a></div>-->
+    <!--{%endif%}-->
+
+    <div class="nice-dropdown" id="table-selector">
+    <select  style="width: 100%" onchange="HEPDATA.switch_table('#hep-tables',$(this).val())">
+        {%for table in ctx.data_tables %}
+            <option value="{{table.id}}">{{table.name}}</option>
+        {%endfor%}
+    </select>
+        </div>
+
+    <div id="hepdata_table_loader" style="width: 200px; height: 200px; margin: 0 auto">
+
+        <div id="table_loader"></div>
+        <p align="center" style="font-weight: bolder; color: #2C3E50; padding-top: 0px">Loading Data...</p>
+    </div>
+
+    <div id="hepdata_table_content" class="hidden">
+        <div class="hepdata_table_detail_header">
+            <!--<h4><span id="table_name"></span></h4>-->
+            <p id="table_description"></p>
+
+            <div class="clearfix"></div>
+            <div id="table_keywords">
+                <ul></ul>
+            </div>
+            <div class="clearfix"></div>
+
+        </div>
+        <br/>
+
+        <div class="clearfix"></div>
+        <div>
+            <h4>Data
+
+                <div class="dropdown" style="float: right">
+                    <button id="dLabelData"
+                            type="button"
+                            class="btn btn-default"
+                            data-toggle="dropdown"
+                            aria-haspopup="true"
+                            aria-expanded="false">
+                        Download data as
+                        <span class="caret"></span>
+                    </button>
+
+                    <ul class="dropdown-menu" aria-labelledby="dLabelData">
+                        <li>
+                            <a href="#"
+                               class="data_download_link"
+                               id="download_yaml_data">YAML</a>
+                        </li>
+                        <li>
+                            <a href="#"
+                               class="data_download_link"
+                               id="download_yoda_data">YODA</a>
+                        </li>
+                        <li>
+                            <a href="#"
+                               class="data_download_link"
+                               id="download_root_data">ROOT</a>
+                        </li>
+                        <li>
+                            <a href="#"
+                               class="data_download_link"
+                               id="download_csv_data">CSV</a>
+                        </li>
+                    </ul>
+                </div>
+
+
+                <span class="pull-right" id="support-files" style="margin-right: 20px; margin-top:1px"></span>
+            </h4>
+        </div>
+        <div class="clearfix"></div>
+
+        <div id="hep_table_data">
+            <table class="table table-bordered table-hover">
+                <tbody id="data_table_region">
+                <!--will be populated automatically-->
+                </tbody>
+            </table>
+        </div>
+
+        <div id="hep_table_chart">
+            <h4>Visualize</h4>
+
+            <div id="data_visualization_region">
+
+            </div>
+
+            <div id="legend" class="legend-container">
+
+            </div>
+        </div>
+    </div>
+
+</div>

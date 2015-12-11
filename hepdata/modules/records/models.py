@@ -24,14 +24,12 @@
 """Helper models for HEPData data model."""
 from __future__ import absolute_import, print_function
 from invenio_accounts.models import User
-from invenio_records.models import RecordMetadata
 from sqlalchemy import func
 from invenio_db import db
-from sqlalchemy_utils.types import UUIDType
 
 submission_participant_link = db.Table(
     'submission_participant_link',
-    db.Column('rec_id', UUIDType,
+    db.Column('rec_id', db.Integer,
               db.ForeignKey('hepsubmission.publication_recid')),
 
     db.Column('participant_id', db.Integer,
@@ -39,7 +37,7 @@ submission_participant_link = db.Table(
 
 data_reference_link = db.Table(
     'data_resource_link',
-    db.Column('rec_id', UUIDType,
+    db.Column('rec_id', db.Integer,
               db.ForeignKey('hepsubmission.publication_recid')),
 
     db.Column('dataresource_id', db.Integer,
@@ -54,10 +52,10 @@ class HEPSubmission(db.Model):
     """
     __tablename__ = "hepsubmission"
 
-    publication_recid = db.Column(UUIDType, db.ForeignKey(RecordMetadata.id),
+    publication_recid = db.Column(db.Integer,
                                   primary_key=True)
 
-    data_abstract = db.Column(db.Binary)
+    data_abstract = db.Column(db.LargeBinary)
     references = db.relationship("DataResource",
                                  secondary="data_resource_link")
 
@@ -90,7 +88,7 @@ class SubmissionParticipant(db.Model):
     id = db.Column(db.Integer, primary_key=True,
                    nullable=False, autoincrement=True)
 
-    publication_recid = db.Column(UUIDType, db.ForeignKey(RecordMetadata.id))
+    publication_recid = db.Column(db.Integer)
 
     full_name = db.Column(db.String(128))
     email = db.Column(db.String(128))
@@ -129,10 +127,10 @@ class DataSubmission(db.Model):
     id = db.Column(db.Integer, primary_key=True, nullable=False,
                    autoincrement=True)
 
-    publication_recid = db.Column(UUIDType, db.ForeignKey(RecordMetadata.id))
+    publication_recid = db.Column(db.Integer)
     location_in_publication = db.Column(db.String(256))
     name = db.Column(db.String(64))
-    description = db.Column(db.Binary)
+    description = db.Column(db.LargeBinary)
     keywords = db.relationship("Keyword", secondary="keyword_submission")
 
     # the main data file, with the data table
@@ -164,7 +162,7 @@ class License(db.Model):
 
     name = db.Column(db.String(256))
     url = db.Column(db.String(256))
-    description = db.Column(db.Binary)
+    description = db.Column(db.LargeBinary)
 
 
 class DataResource(db.Model):
@@ -175,7 +173,7 @@ class DataResource(db.Model):
 
     file_location = db.Column(db.String(256))
     file_type = db.Column(db.String(64), default="json")
-    file_description = db.Column(db.Binary)
+    file_description = db.Column(db.LargeBinary)
 
     file_license = db.Column(db.Integer, db.ForeignKey("hepdata_license.id"),
                              nullable=True)
@@ -201,7 +199,7 @@ class DataReview(db.Model):
         db.Integer, primary_key=True,
         nullable=False, autoincrement=True)
 
-    publication_recid = db.Column(UUIDType, db.ForeignKey(RecordMetadata.id))
+    publication_recid = db.Column(db.Integer)
     data_recid = db.Column(db.Integer, db.ForeignKey("datasubmission.id"))
 
     creation_date = db.Column(

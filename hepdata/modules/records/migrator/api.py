@@ -1,10 +1,16 @@
 import socket
 from urllib2 import HTTPError
+import uuid
 import zipfile
-import celery
+from celery import shared_task
 from flask import current_app
 import os
 import shutil
+from invenio_db import db
+from invenio_pidstore.minters import recid_minter
+from invenio_pidstore.models import PersistentIdentifier, PIDStatus
+from invenio_pidstore.providers.recordid import RecordIdProvider
+from invenio_records import Record
 import yaml
 from yaml.scanner import ScannerError
 from hepdata.config import CFG_DATADIR, CFG_TMPDIR
@@ -17,7 +23,6 @@ from hepdata.modules.records.utils.submission import \
     remove_submission
 from hepdata.modules.records.utils.workflow import create_bibworkflow_obj
 import logging
-# from hepdata.modules.dashboard.views import do_finalise
 
 __author__ = 'eamonnmaguire'
 
@@ -43,13 +48,12 @@ class FailedSubmission(Exception):
                 print "\t{0} for {1}".format(error_message, self.record_id)
 
 
-@celery.task
+@shared_task
 def load_files(inspire_ids, delay=5, synchronous=False):
     """
     :param inspire_ids:
     :return:
     """
-
     migrator = Migrator()
 
     for index, inspire_id in enumerate(inspire_ids):
@@ -57,16 +61,16 @@ def load_files(inspire_ids, delay=5, synchronous=False):
         if not record_exists(_cleaned_id):
             try:
                 log.warn('Loading {}'.format(inspire_id))
-                migrator.load_file.apply_async(args=[inspire_id, synchronous],
-                                               countdown=delay + index)
+                migrator.load_file(inspire_id, synchronous)
             except socket.error as se:
+                print 'socket error...'
                 print se.message
             except Exception as e:
                 print 'Failed to load {0} :( '.format(inspire_id)
                 print e
         else:
             print 'The record with id {} already exists in the database. ' \
-                  'We shant be loading it again thank you very much.'\
+                  'We shant be loading it again thank you very much.' \
                 .format(inspire_id)
 
 
@@ -77,7 +81,7 @@ class Migrator(object):
     def __init__(self, base_url="http://hepdata.cedar.ac.uk/view/{0}/yaml"):
         self.base_url = base_url
 
-    @celery.task
+    @shared_task
     def load_file(inspire_id, synchronous=True):
         self = Migrator()
 
@@ -90,13 +94,20 @@ class Migrator(object):
                              os.path.join(CFG_DATADIR, inspire_id + ".zip"))
             record_information = self.retrieve_publication_information(
                 inspire_id)
-            # reserve_recid(record_information)
+            record_id = uuid.uuid4()
+            pid = recid_minter(record_id, record_information)
+            print('Just minted {}'.format(pid))
+            record_information['recid'] = int(pid.pid_value)
+            record_information['uuid'] = str(record_id)
+
+            Record.create(record_information, id_=record_id)
+            db.session.commit()
+
             output_location = os.path.join(CFG_DATADIR, inspire_id)
             try:
-                recid = self.load_submission(record_information,
-                                             output_location,
-                                             os.path.join(output_location,
-                                                          "submission.yaml"))
+                recid = self.load_submission(
+                    record_information, output_location,
+                    os.path.join(output_location, "submission.yaml"))
                 if recid is not None:
                     # do_finalise(recid, publication_record=record_information,
                     # force_finalise=True, synchronous=synchronous)
@@ -136,8 +147,8 @@ class Migrator(object):
                                                    delete=False)
             tmp_file.write(yaml)
             tmp_file.close()
-
             return tmp_file.name
+
         except HTTPError as e:
             log.error('Failed to download {0}'.format(inspire_id))
             log.error(e.message)
@@ -153,7 +164,6 @@ class Migrator(object):
     def split_files(self, file_location, output_location,
                     archive_location=None):
         """
-
         :param file_location:
         :param output_location:
         :param archive_location:
@@ -249,8 +259,8 @@ class Migrator(object):
 
         if errors:
             raise FailedSubmission("Submission failed for {0}.".format(
-                record_information["recid"]), errors,
-                record_information["recid"])
+                record_information['recid']), errors,
+                record_information['recid'])
         else:
             create_bibworkflow_obj.delay(record_information, admin_user_id,
                                          doc_type="article")

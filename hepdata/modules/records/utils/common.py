@@ -1,4 +1,5 @@
 import datetime
+from invenio_pidstore.resolver import Resolver
 from invenio_records.api import Record
 import os
 from hepdata.modules.records.models import SubmissionParticipant
@@ -25,7 +26,7 @@ FILE_TYPES = {
 URL_PATTERNS = [
     "github",
     "bitbucket",
-    "zenodo",
+    "hepdata",
     "hepforge",
     "sourceforge",
     "sf"
@@ -161,7 +162,10 @@ def truncate_string(string, words):
 
 
 def get_record_by_id(recid):
-    return Record.get_record(recid)
+    resolver = Resolver(pid_type='recid', object_type='rec',
+                        getter=Record.get_record)
+    pid, record = resolver.resolve(recid)
+    return record
 
 
 def transform_record_information_for_bibupload(record_information):

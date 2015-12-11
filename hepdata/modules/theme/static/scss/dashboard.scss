@@ -1,0 +1,504 @@
+.dashboard-header {
+  background-color: $navy;
+  color: white;
+  padding: 20px;
+  height: 60px;
+
+  h4 {
+    margin: 0;
+  }
+
+}
+
+#hep-submissions {
+  list-style: none;
+  -webkit-padding-start: 0px;
+  margin: 0 auto;
+  width: 90%;
+
+  h4 {
+    height: 70px;
+    overflow: hidden;
+  }
+}
+
+.submission-item {
+  width: 293px;
+  height: 490px;
+  display: inline-block;
+  float: left;
+  margin: 10px;
+
+  .content {
+    width: 100%;
+    background-color: $lightgrey;
+    height: 230px;
+    padding: 10px;
+    border-radius: 3px;
+    color: $navy;
+
+    h4 a {
+      color: $navy;
+      font-size: 1em;
+      font-weight: normal;
+      text-transform: capitalize;
+    }
+  }
+
+  .status {
+    width: 100%;
+    padding: 15px;
+    font-weight: bolder;
+    border-radius: 3px 3px 0 0;
+  }
+
+  .todo {
+      background-color: $red;
+      color: white;
+    }
+
+    .attention {
+      background-color: $yellow;
+    }
+
+    .passed {
+      background-color: $green;
+    }
+
+  .user-submission-role {
+    width: 100%;
+    font-size: .73em;
+    font-weight: normal;
+    text-transform: uppercase;
+    padding: 15px;
+    background-color: $lightgrey;
+    border-radius: 0 0 3px 3px;
+    min-height: 223px;
+
+  }
+}
+
+.role-admin-view {
+  font-size: .9em;
+  font-weight: normal;
+  padding: 15px;
+  background-color: $lightgrey;
+  border-radius: 0 0 3px 3px;
+
+}
+
+.submission-date {
+  margin-top: 5px;
+  font-weight: bolder;
+  padding-bottom: 10px;
+  color: $grey;
+}
+
+.submission-reviewer {
+  background-color: $purple;
+  padding: 7px 6px;
+  border-radius: 3px;
+  color: white;
+}
+
+.submission-uploader {
+
+  background-color: $navy;
+  padding: 7px 6px;
+  border-radius: 3px;
+  color: white;
+}
+
+.submission-coordinator {
+
+  background-color: $blue;
+  padding: 7px 6px;
+  border-radius: 3px;
+  color: white;
+}
+
+.manage-submission-trigger {
+  border: none;
+  color: $navy;
+  background: white;
+  font-weight: lighter;
+}
+
+.manage-submission-trigger:hover {
+  background-color: $lightgrey;
+  color: $navy-light;
+}
+
+.dashboard-messages {
+  background-color: transparent;
+  border: 1px solid $navy;
+  color: $navy;
+  padding: 5px 8px;
+  border-radius: 2px;
+  margin-top: -5px;
+  cursor: pointer;
+}
+
+.final_commit_message {
+  width: 100%;
+  border-radius: 3px;
+  padding: 5px;
+}
+
+.submission-progress-header {
+  font-weight: bolder;
+  font-size: .8em;
+}
+
+.no-uploads {
+  font-weight: bolder;
+  color: $concrete;
+  width: 100%;
+}
+
+#hepdata_submissions {
+  margin-left: 0;
+  display: inline-block;
+  width: 85%;
+  height: 85%;
+  padding: 15px;
+  overflow-y: scroll;
+
+}
+
+#submission_filters {
+  background: $lightgrey;
+  width: 15%;
+  padding: 10px;
+  float: left;
+  height: 88%;
+  overflow: hidden;
+
+  ul {
+    -webkit-padding-start: 0px;
+    font-size: .9em;
+
+    li {
+      list-style: none;
+      margin-bottom: 15px;
+      cursor: pointer;
+    }
+  }
+}
+
+.filter-section {
+  width: 15%;
+  margin: 0 auto;
+  background-color: $lightgrey;
+
+  input {
+    border: none;
+    background: white url('/static/img/icons/icon_filter.svg') no-repeat 4px 4px;
+    padding: 4px 6px 4px 26px;
+    width: 95%;
+    margin: 5px auto 10px;
+  }
+}
+
+.filter-list li {
+  padding-left: 20px;
+  font-weight: normal;
+}
+
+.filter-passed {
+  color: $green;
+}
+
+.filter-finished {
+  color: $purple;
+}
+
+.filter-attention {
+  color: $yellow;
+}
+
+.filter-todo {
+  color: $red-light;
+}
+
+.filter-coordinator {
+  color: $blue;
+}
+
+.filter-reviewer {
+  color: $purple;
+}
+
+.filter-uploader {
+  color: $navy;
+}
+
+.clear-filter {
+  margin-right: 20px;
+  font-size: .7em;
+  padding: 2px 5px;
+  color: $red;
+  border-radius: 3px;
+  margin-top: 3px;
+  cursor: pointer;
+}
+
+.filter-count {
+  padding: 2px 6px;
+  background-color: white;
+  margin-right: 20px;
+  border-radius: 3px;
+}
+
+.filter-selected {
+  font-weight: bolder;
+}
+
+.filter-inactive {
+  color: $concrete;
+}
+
+.modal-body {
+  color: $navy;
+}
+
+/*manage modal screen*/
+.manage-review-menu {
+  background-color: $lightgrey;
+  min-height: 50px;
+
+  ul {
+    -webkit-padding-start: 0px;
+    list-style: none;
+    margin: -1px;
+
+    li {
+      display: inline;
+      width: 50%;
+      float: left;
+      text-align: center;
+      font-weight: lighter;
+      padding: 15px;
+      cursor: pointer;
+    }
+
+    li.active {
+      background-color: $purple;
+      color: white;
+      font-weight: bolder;
+    }
+  }
+}
+
+.manage-review-menu {
+  li.upl_rev.active:after {
+    content: url("/static/img/arrow_down.svg");
+    position: absolute;
+    left: 24%;
+    top: 104px;
+  }
+
+  li.conv.active:after {
+    content: url("/static/img/arrow_down.svg");
+    position: absolute;
+    left: 74%;
+    top: 104px;
+  }
+}
+
+.manage-uploaders, .manage-reviewers {
+  width: 48%;
+  margin-left: 1%;
+  margin-right: 1%;
+  float: left;
+  display: inline-block;
+
+  h4 {
+    color: $purple;
+  }
+}
+
+.reviewer, .uploader {
+  font-size: .8em;
+}
+
+.primary {
+  padding: 7px;
+  background-color: $lightgrey;
+  min-height: 45px;
+  border-radius: 3px;
+}
+
+.reserve {
+  padding: 7px;
+}
+
+.reviewer .info, .uploader .info, {
+  width: 50%;
+  float: left;
+}
+
+.recent-activity {
+  width: 30%;
+  float: left;
+}
+
+.trigger-actions {
+  padding-top: 8px;
+  width: 20%;
+  float: left;
+  text-align: right;
+}
+
+.review-email {
+  font-weight: lighter;
+}
+
+.reserve-header {
+  font-size: .9em;
+  font-weight: bolder;
+}
+
+.manage-reviewers .reserve-header {
+  color: $purple;
+}
+
+p.no-entries {
+  text-align: center;
+  color: $concrete;
+  font-size: .8em;
+}
+
+.add-new-uprev {
+  padding-top: 5px;
+  font-size: .6em;
+  cursor: pointer;
+}
+
+.add-new-uprev:hover {
+  color: $purple;
+}
+
+.manage-reviewers .add-new-uprev {
+  color: $purple-light;
+}
+
+.manage-reviewers .add-new-uprev:hover {
+  color: $navy;
+}
+
+.submission-person {
+  margin-bottom: 10px;
+
+  div {
+    padding: 5px 4px;
+    display: inline-block;
+  }
+  .title {
+    min-width: 75px;
+    font-weight: bolder;
+  }
+}
+
+.coordinator-title, .coordinator-value {
+  color: $blue;
+}
+
+.reviewer-title, .reviewer-value {
+  color: $purple;
+}
+
+.uploader-title, .uploader-value {
+  color: $navy;
+}
+
+.input-text-box {
+  border-radius: 4px;
+  background-color: $lightgrey;
+  border: none;
+  padding: 5px;
+  margin: 5px;
+}
+
+.submission-item {
+  .email {
+    color: $grey;
+    font-size: .8em;
+  }
+
+  .email:hover {
+    color: $purple;
+  }
+}
+
+/*loader*/
+.spinner {
+  width: 100px;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  left: 0;
+  margin: auto;
+  text-align: center;
+
+  .ball {
+    width: 20px;
+    height: 20px;
+    background-color: white;
+    border-radius: 50%;
+    display: inline-block;
+    -webkit-animation: motion 3s cubic-bezier(0.77, 0, 0.175, 1) infinite;
+    animation: motion 3s cubic-bezier(0.77, 0, 0.175, 1) infinite;
+  }
+
+  .ball-purple {
+    background-color: $purple;
+  }
+}
+
+
+@-webkit-keyframes motion {
+  0% {
+    -webkit-transform: translateX(0) scale(1);
+    transform: translateX(0) scale(1);
+  }
+  25% {
+    -webkit-transform: translateX(-50px) scale(0.4);
+    transform: translateX(-50px) scale(0.4);
+  }
+  50% {
+    -webkit-transform: translateX(0) scale(1);
+    transform: translateX(0) scale(1);
+  }
+  75% {
+    -webkit-transform: translateX(50px) scale(0.3);
+    transform: translateX(50px) scale(0.3);
+  }
+  100% {
+    -webkit-transform: translateX(0) scale(1);
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes motion {
+  0% {
+    -webkit-transform: translateX(0) scale(1);
+    transform: translateX(0) scale(1);
+  }
+  25% {
+    -webkit-transform: translateX(-50px) scale(0.4);
+    transform: translateX(-50px) scale(0.4);
+  }
+  50% {
+    -webkit-transform: translateX(0) scale(1);
+    transform: translateX(0) scale(1);
+  }
+  75% {
+    -webkit-transform: translateX(50px) scale(0.3);
+    transform: translateX(50px) scale(0.3);
+  }
+  100% {
+    -webkit-transform: translateX(0) scale(1);
+    transform: translateX(0) scale(1);
+  }
+}

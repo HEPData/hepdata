@@ -1,0 +1,41 @@
+<!-- Modal -->
+<div class="modal fade" id="manageWidget" tabindex="-1" role="dialog" aria-labelledby="codeDialog" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                        aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="codeDialogLabel">Manage Submission</h4>
+            </div>
+
+            <div class="manage-review-menu">
+
+                <ul>
+                    <li class="upl_rev active" data-screen-target="uploaders_reviewers">Manage Uploaders & Reviewers
+                    </li>
+
+                    <li class="conv" data-screen-target="conversation">Conversation (<span id="conversation_message_count"></span> messages)
+                    </li>
+                </ul>
+
+            </div>
+
+            <!--todo: add option to finalise submission. this means the creation of data records. Can also be updated in theory...? -->
+
+            <div class="modal-body">
+
+                {%include 'hepdata_dashboard/widget_components/manage_reviewer_uploader_component.html'%}
+                {%include 'hepdata_dashboard/widget_components/conversation_component.html'%}
+
+            </div>
+            <div class="clearfix"></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default pull-right" data-dismiss="modal" aria-label="Close">Close
+                </button>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+{%include 'hepdata_dashboard/widget_components/manage_scripts.html'%}

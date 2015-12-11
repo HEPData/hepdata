@@ -25,9 +25,7 @@
 
 from __future__ import absolute_import, print_function
 import os
-from flask import Flask
-from flask.ext.celeryext import FlaskCeleryExt
-from flask.ext.cli import FlaskCLI
+
 from invenio_db import InvenioDB, db
 import pytest
 from hepdata.factory import create_app
@@ -43,13 +41,10 @@ def app(request):
         CELERY_ALWAYS_EAGER=True,
         CELERY_RESULT_BACKEND="cache",
         CELERY_CACHE_BACKEND="memory",
-        CELERY_EAGER_PROPAGATES_EXCEPTIONS=True
+        CELERY_EAGER_PROPAGATES_EXCEPTIONS=True,
+        SQLALCHEMY_DATABASE_URI=os.environ.get(
+            'SQLALCHEMY_DATABASE_URI', 'sqlite:///test.db')
     ))
-
-    app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get(
-        'SQLALCHEMY_DATABASE_URI', 'sqlite:///test.db'
-    )
-
 
     with app.app_context():
         db.create_all()

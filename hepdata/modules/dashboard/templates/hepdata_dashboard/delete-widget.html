@@ -1,0 +1,68 @@
+<!-- Modal -->
+<div class="modal fade" id="deleteWidget" tabindex="-1" role="dialog"
+     aria-labelledby="codeDialog" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content" style="background-color: #2C3E50">
+            <div class="modal-header" style="border: none">
+                <button type="button" class="close" data-dismiss="modal"
+                        aria-label="Close"><span
+                        aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="deleteDialogLabel">Delete
+                    Submission</h4>
+            </div>
+
+            <!--todo: add option to finalise submission. this means the creation of data records. Can also be updated in theory...? -->
+
+            <div class="modal-body" id="delete-body" style="color: white">
+
+                <div align="center" id="delete-confirm">
+                    <p>Are you sure you want to delete this submission? You can
+                        not undo this task. You'll have to
+                        reload the submission again.</p>
+
+                    <button class="btn btn-large" data-dismiss="modal"
+                            aria-label="Close">Cancel
+                    </button>
+                    <button class="btn btn-large btn-danger confirm-delete">
+                        Delete Now
+                    </button>
+                </div>
+
+                <div class="spinner hidden" id="progress"
+                     style="padding-top: 40px; padding-bottom: 40px">
+                    <div class="ball"></div>
+                    <p style="color:#ffffff;">Deleting...</p>
+                </div>
+
+                <div align="center" class="hidden" id="delete-success"
+                     style="padding: 40px">
+                    <div style="color: #4FBA6F; font-weight: bolder">
+                        <span class="fa fa-check"
+                              style="font-size: 3em"></span><br/>
+
+                        <p>
+                            Submission deleted.
+                            <br/>
+                            This window will close in <span id="timer"
+                                                            style="color: white">5</span>
+                            seconds and refresh
+                            the dashboard page.
+                        </p>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+
+    $(document).on('click', '.confirm-delete', function () {
+        $("#delete-confirm").addClass("hidden");
+        $("#progress").removeClass("hidden");
+        HEPDATA.delete_submission(window.recid, '{{delete_redirect_url}}')
+    });
+
+</script>

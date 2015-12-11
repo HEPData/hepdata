@@ -1,0 +1,108 @@
+<!-- Modal -->
+<div class="modal fade" id="finaliseDialog" tabindex="-1" role="dialog" aria-labelledby="finaliseDialog"
+     aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content" style="background-color: #2C3E50">
+            <div class="modal-header" style="border: none">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                        aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="codeDialogLabel">Finalise Submission</h4>
+            </div>
+
+            <div class="modal-body">
+
+                <div class="alert alert-info" id="alert-section">
+                    This step creates full records for all data in this submission and makes everything searchable to
+                    the public.
+                    Ensure that you have completed all of the submission properly before preparing the submission.
+                </div>
+
+                <div id="revision_commit_message">
+                    <label style="color: white; font-weight: lighter;">Please enter a description of the changes performed in this revision.</label>
+                    <textarea class="final_commit_message" name="commit_message" id="commit_message" placeholder="Please enter a message detailing what has been changed in this revision."></textarea>
+                </div>
+
+                <div class="spinner hidden" id="finalise-progress" style="padding-top: 40px; padding-bottom: 40px">
+                    <div class="ball"></div>
+                    <p style="color:white; ">Finalising...</p>
+                </div>
+
+                <div align="center" style="padding: 40px;" id="finalise_submission_button_container">
+                    <button class="btn btn-lg btn-primary" id="finalise_submission_button" data-recid="" data-versions=""> Finalise
+                        Submission
+                    </button>
+                </div>
+
+                <div align="center" class="hidden" id="success" style="padding: 40px">
+                    <div style="color: #4FBA6F; font-weight: bolder">
+                        <span class="fa fa-check" style="font-size: 3em"></span><br/>
+
+                        <p>
+                            Submission finalised. <br/>The system has created entries for <span
+                                id="submission_count" style="color:white"></span> data tables.
+                            These are now being indexed and will be available to search shortly.
+                            <br/>
+                            <br/>
+                            This window will close in <span id="finalise-timer" style="color: white">5</span> seconds and refresh
+                            the dashboard page.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="clearfix"></div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+    require([
+        "jquery"
+    ], function ($) {
+
+        $(document).on('click', '#finalise_submission_button', function () {
+
+            if($(this).attr('data-versions') > 0 && $("#commit_message").val() == '') {
+                alert("Please enter a message describing changes in this revision.");
+                return false;
+            }
+
+            $("#finalise_submission_button_container").addClass("hidden");
+            $("#finalise_submission_button").addClass("hidden");
+            $("#finalise-progress").removeClass("hidden");
+            $("#revision_commit_message").addClass("hidden");
+
+            $.ajax({
+                dataType: "json",
+                method: "POST",
+                url: '/dashboard/finalise/' + $(this).attr('data-recid'),
+                data: {'message': $("#commit_message").val()},
+                cache: true,
+                success: function (data) {
+                    $("#finalise-progress").addClass("hidden");
+                    $("#alert-section").addClass("hidden");
+
+                    $("#" + data.recid + "-status").text("Finished");
+                    $("#codeDialogLabel").text("Submisson Finalised");
+                    $("#submission_count").text(data.data_count);
+                    $("#success").removeClass("hidden");
+
+                    var count = 5;
+                    setInterval(function () {
+                        count -= 1;
+                        $("#finalise-timer").text(count);
+                        if (count == 0) {
+                            $("#finaliseDialog").modal('hide');
+                        }
+                    }, 1000);
+
+                    setTimeout(function () {
+                        window.location = "/dashboard";
+                    }, 5500);
+
+                }
+            });
+
+        });
+    })
+</script>

@@ -1,0 +1,91 @@
+<div id="hepdata_tables">
+    <div align="center">
+
+        {% if ctx.show_upload_widget and ctx.status != 'finished' %}
+
+            <button type="button" class="btn btn-default btn-md" data-toggle="modal" data-target="#uploadDialog"><span
+                    class="fa fa-upload"></span> Upload New Files
+            </button>
+            <br/>
+        {%endif %}
+
+
+        {% if ctx.status == 'finished' and (ctx.is_submission_coordinator_or_admin or ctx.show_upload_widget) %}
+            <button type="button" class="btn btn-default btn-md" data-toggle="modal" data-target="#uploadDialog"><span
+                    class="fa fa-upload"></span> Revise Submission
+            </button>
+            <br/>
+        {%endif %}
+
+
+        {%if ctx.version_count and ctx.version_count > 1 %}
+        <br/>
+
+        <div class="dropdown">
+            <button id="dLabel" type="button" class="btn btn-default" data-toggle="dropdown" aria-haspopup="true"
+                    aria-expanded="false">
+                Viewing version {{ctx.version}}
+                <span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu" aria-labelledby="dLabel" style="height: auto; overflow: auto;padding: 5px; font-size: 1em;">
+                {%for version in range(1,ctx.version_count+1) %}
+                <li><a href="/record/{%if ctx.mode == 'sandbox'%}sandbox/{%endif%}{{ctx.recid}}?version={{version}}" id="version_{{version}}">Version
+                    {{version}}</a></li>
+                {%endfor%}
+            </ul>
+        </div>
+        <br/>
+        {%endif%}
+    </div>
+
+
+    <input id="table-filter" placeholder="Filter {{ctx.data_tables|length}} data tables" name="data-table-filter"
+           onkeyup="HEPDATA.filter_content('#table-filter','#hep-tables')">
+
+    <ul id="hep-tables" class="scrollable">
+        {%for table in ctx.data_tables %}
+
+        <li id="{{table.id}}" itemprop="dataset" itemscope itemtype="http://schema.org/Dataset"
+            class="{{table.processed_name}} {%if loop.index == 1%}active{%endif%}"
+            onclick="HEPDATA.switch_table('#hep-tables', '{{table.id}}')">
+            <div class="content">
+                <h4 itemprop="name">{{table.name}}</h4>
+
+                <p>{{table.location}}</p>
+
+                <p itemprop="description">{{table.description}}</p>
+                <span class="hidden" itemscope itemprop="distribution" itemtype="http://schema.org/DataDownload"><span
+                        itemprop="contentUrl">https://hepdata.net/record/data/{{table.id}}</span><span
+                        itemprop="encodingFormat">yaml</span></span>
+                <span class="hidden" itemscope itemprop="distribution" itemtype="http://schema.org/DataDownload"><span
+                        itemprop="contentUrl">https://hepdata.net/record/data/{{table.id}}/csv</span><span
+                        itemprop="encodingFormat">csv</span></span>
+
+                {% if ctx.mode != 'sandbox' %}
+                    {% if ctx.show_review_widget or ctx.show_upload_widget or ctx.submission_coordinator_or_admin%}
+                    <p>
+
+                        {% if ctx.version >= ctx.version_count and ctx.status != 'finished'%}
+                        <span id="{{table.id}}-status" class="review-status {{table.review_flag}}">
+                                <span id="icon"
+                                      class="fa fa-{%if table.review_flag == 'attention' %}exclamation-triangle {%elif table.review_flag == 'passed' %}check-circle{%else%}exclamation-triangle{%endif%}"></span>
+                                    <span class="text">{{table.review_status}}</span>
+                                </span>
+                        {%endif%}
+
+                                <span id="table-{{table.id}}-messages"
+                                      class="messages {%if not table.messages%} hidden{%endif%}">
+                                    <span class="fa fa-comment"></span>
+                                </span>
+                    </p>
+                    {%endif%}
+                {%endif%}
+            </div>
+            <div class="arrow">
+                <span class="fa fa-chevron-right"></span>
+            </div>
+            <div class="clearfix"></div>
+        </li>
+        {%endfor %}
+    </ul>
+</div>

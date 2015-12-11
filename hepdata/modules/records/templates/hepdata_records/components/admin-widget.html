@@ -1,0 +1,69 @@
+<span id="admin-button" class="slider-option admin-option table-show "><span
+        class="fa fa-cogs"></span></span>
+
+<div class="admin-view" align="center">
+
+    <div class="review">
+        <h4>Admin</h4>
+    </div>
+
+
+    <div class="admin-section">
+        <p>Change Submission Coordinator</p>
+        <select id="coordinator">
+            {% for coordinator in ctx.coordinators %}
+                <option value="{{ coordinator.id }}"
+                        {% if ctx.coordinator == coordinator.id %}selected{% endif %}>
+                    {{ coordinator.nickname }} - {{ coordinator.email }}
+                </option>
+            {% endfor %}
+        </select>
+
+        <br/>
+
+    </div>
+
+
+    <div class="clearfix"></div>
+    <br/>
+
+
+    <div class="alert alert-danger"><p>Danger Area</p><br/>
+
+        <button class="btn btn-danger" data-recid="{{ ctx.recid }}"
+                data-toggle="modal"
+                data-target="#deleteWidget"><span class="fa fa-trash-o"></span>
+            Delete Record
+        </button>
+    </div>
+
+
+</div>
+
+
+<script>
+
+
+    $('.admin-option').click(function () {
+        if ($(this).hasClass('table-show')) {
+            $(".admin-option, .admin-view").animate({
+                right: "+=300"
+            }, 400);
+            $(this).html('<span class="fa fa-chevron-right"></span>').removeClass('table-show').addClass('table-hide');
+        }
+        else {
+            $(".admin-option, .admin-view").animate({
+                right: "-=300"
+            }, 400);
+            $(this).html('<span class="fa fa-cogs"></span>').removeClass('table-hide').addClass('table-show');
+
+        }
+    });
+
+    window.recid = {{ctx.recid | safe}};
+
+    $("#coordinator").change(function () {
+        HEPDATA.update_coordinator(window.recid, $('#coordinator').val());
+    });
+
+</script>

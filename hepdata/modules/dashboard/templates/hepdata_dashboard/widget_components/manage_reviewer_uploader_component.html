@@ -1,0 +1,57 @@
+<div id="uploaders_reviewers">
+    <div class="manage-uploaders">
+        <h4>Uploaders <span id="add_uploader" class="pull-right add-new-uprev"><span class="fa fa-plus-circle"></span> Add new uploader</span>
+        </h4>
+
+        <div id="primary-uploader"></div>
+        <div class="clearfix"></div>
+        <br/>
+
+        <p class="reserve-header">Reserve Uploaders</p>
+
+        <div id="reserve-uploader"></div>
+    </div>
+
+    <div class="manage-reviewers">
+        <h4>Reviewers <span id="add_reviewer" class="pull-right add-new-uprev" data-action="review"><span
+                class="fa fa-plus-circle"></span> Add new reviewer</span>
+        </h4>
+
+        <div id="primary-reviewer"></div>
+        <div class="clearfix"></div>
+        <br/>
+
+        <p class="reserve-header">Reserve Reviewers</p>
+
+        <div id="reserve-reviewer"></div>
+    </div>
+
+    <div class="clearfix"></div>
+</div>
+
+<!--confirmation pane-->
+<div id="confirmation" class="hidden" align="center">
+
+    <h4>Are you sure?</h4>
+    <br/>
+
+    <div id="confirmation_message"></div>
+    <br/>
+    <button class="btn btn-danger reject-move-action">Cancel</button>
+    <button class="btn btn-success confirm-move-action">Confirm</button>
+</div>
+
+<!--add a new reviewer/uploader pane-->
+<div id="add_pane" class="hidden" align="center">
+    <h4>Add a new <span id="add_type"></span></h4>
+
+    <label for="name">Name</label>
+    <input id="name" type="text" name="name" class="input-text-box">
+    <label for="email">Email</label>
+    <input id="email" type="email" name="email" class="input-text-box">
+    <input id="type" type="hidden" name="type">
+<br/>
+    <button class="btn btn-danger reject-add-user-action">Cancel</button>
+    <button id="confirm_add_person_target" class="btn btn-success confirm-add-user-action" data-type="">Confirm</button>
+</div>
+

@@ -38,7 +38,7 @@ def assign_record_id(record_information, id=None):
         record_information['recid'] = id
     else:
         record_id = Record.create(record_information).id
-        pid = PersistentIdentifier.create('recid', record_id,
+        PersistentIdentifier.create('recid', record_id,
                                           object_type='rec',
                                           object_uuid=uuid.uuid4(),
                                           status=PIDStatus.REGISTERED)
@@ -439,6 +439,7 @@ def get_or_create_hepsubmission(recid, coordinator=1, status="todo"):
         hepsubmission = HEPSubmission(publication_recid=recid,
                                       coordinator=coordinator,
                                       overall_status=status)
+
         db.session.add(hepsubmission)
         db.session.commit()
 

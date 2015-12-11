@@ -21,15 +21,8 @@
 # In applying this license, CERN does not
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
-
-"""HEPData default application configuration."""
-
 from __future__ import absolute_import, print_function
-
 import os
-
-
-# Identity function for string extraction
 import tempfile
 
 
@@ -82,7 +75,7 @@ SECURITY_RESET_SALT = "CHANGE_ME"
 # Theme
 THEME_SITENAME = _("HEPData")
 THEME_TWITTERHANDLE = "@hepdata"
-THEME_LOGO = "img/zenodo.svg"
+THEME_LOGO = "img/hepdata_logo.svg"
 THEME_GOOGLE_SITE_VERIFICATION = [
     "5fPGCLllnWrvFxH9QWI0l1TadV7byeEvfPcyK2VkS_s",
     "Rp5zp04IKW-s1IbpTOGB7Z6XY60oloZD5C3kTM-AiY4"
@@ -92,9 +85,9 @@ BASE_TEMPLATE = "hepdata_theme/page.html"
 COVER_TEMPLATE = "hepdata_theme/page_cover.html"
 SETTINGS_TEMPLATE = "invenio_theme/page_settings.html"
 
-ELASTICSEARCH_INDEX = 'records'
+ELASTICSEARCH_INDEX = 'hepdata'
 SEARCH_ELASTIC_HOSTS = [
-    'localhost:9200'
+    '0.0.0.0:9200'
 ]
 
 CFG_PUB_TYPE = 'publication'

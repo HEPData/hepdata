@@ -1,0 +1,140 @@
+{#
+## This file is part of HEPData.
+## Copyright (C) 2014 CERN.
+##
+## HEPData is free software: you can redistribute it and/or modify
+## it under the terms of the GNU General Public License as published by
+## the Free Software Foundation, either version 3 of the License, or
+## (at your option) any later version.
+##
+## HEPData is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+## GNU General Public License for more details.
+##
+## You should have received a copy of the GNU General Public License
+## along with HEPData. If not, see
+##
+## In applying this licence, CERN does not waive the privileges and immunities
+## granted to it by virtue of its status as an Intergovernmental Organization
+## or submit itself to any jurisdiction.
+#}
+
+{%- extends "page.html" %}
+
+
+{%- block header %}
+{%- include "base/scripts.html" %}
+{{- super() }}
+{%- endblock header %}
+{%- block _bottom_assets %}
+{# The legacy page requires that the scripts are loaded from the head
+# rather than at the bottom of the page.
+#}
+{%- endblock %}
+
+{% block global_bundles %}
+{{ super() }}
+{% bundles "hep_dataview.js" %}
+<script src="//cdnjs.cloudflare.com/ajax/libs/mathjax/2.5.3/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+<style>
+    #hepdata_table_detail {
+        width: 87% !important;
+    }
+</style>
+
+{% endblock %}
+
+{% block page_body %}
+
+<div class="hep_breadcrumbs">
+    <ul>
+        <li class="active"><span class="fa fa-cube"></span> HEPData Sandbox</li>
+
+         <li class="pull-right">
+
+              <div class="dropdown" style="float: right; margin-left: 15px; margin-top: -4px;">
+                    <button id="dLabel" type="button" class="btn btn-sm btn-primary" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        Download Submission as
+                        <span class="caret"></span>
+                    </button>
+                  {% set download_base_url = "/download/submission/" + ctx.recid|string + "/" + ctx.version|string %}
+                    <ul class="dropdown-menu" aria-labelledby="dLabel" style="height: auto;">
+                        <li><a href="{{ download_base_url }}/yaml" id="download_yaml">YAML</a></li>
+                        <li><a href="{{ download_base_url }}/yoda" id="download_yoda">YODA</a></li>
+                        <li><a href="{{ download_base_url }}/root" id="download_root">ROOT</a></li>
+                        <li><a href="{{ download_base_url }}/csv" id="download_csv">CSV</a></li>
+                    </ul>
+                </div>
+
+        </li>
+    </ul>
+</div>
+
+<div class="clearfix"></div>
+
+{% if ctx.data_tables|length == 0 %}
+<div class="upload-area" style="width: 100%">
+    <div class="root_upload_form" align="center">
+        <img src="/img/icon-upload.svg" width="70px"/>
+        <h4>Upload an archive to preview</h4>
+        <br/>
+
+        <div class="info">
+            <p>Upload a <strong>zip</strong> archive containing files formatted per these <a
+                    href="https://github.com/HEPData/hepdata-submission" target="_blank">these guidelines</a>.</p>
+
+            <p>An example submission is available <a
+                    href="https://www.dropbox.com/s/ph6zphwfjnigki1/1203852_hm.zip?dl=0" target="_blank">here</a>.</p>
+        </div>
+
+        <form action="/record/sandbox/consume" method="post" enctype=multipart/form-data>
+            <input type="file" name="hep_archive" id="root_file_upload" data-iconName="fa fa-upload"
+                   class="filestyle">
+            <br/>
+
+            <input type="submit" value="Upload and Process" class="btn btn-primary">
+        </form>
+
+        {% if ctx.submissions|length > 0 %}
+        <br/>
+        <div id="past_submissions">
+            <h4 style="font-size: 1em">Your {{ctx.submissions|length}} sandbox submissions</h4>
+
+            <div class="scrollable height30">
+            {% for submission in ctx.submissions %}
+                <a href="/record/sandbox/{{submission.publication_recid}}" style="text-align: left">
+                    <div class="truncated-record-abstract">{{submission.data_abstract}}</div>
+                </a>
+                <p style="font-weight: bolder; color: #a1aec7; font-size: .7em; text-align: left">{{submission.created}}</p>
+                <br/>
+            {%endfor%}
+            </div>
+        </div>
+        {%endif%}
+    </div>
+
+</div>
+
+{%else%}
+
+
+{%include 'hepdata_records/components/table_list.html'%}
+{%include 'hepdata_records/components/table_details.html'%}
+
+{% include 'hepdata_records/components/uploader-modal.html' %}
+
+<!--if there is data, we show it. If not, we show the upload screen if the logged in user is an uploader-->
+
+{%endif%}
+
+
+{% endblock %}
+{%- block javascript %}
+
+{% include 'hepdata_records/components/record-javascript.html' %}
+
+{% endblock %}
+
+

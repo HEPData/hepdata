@@ -1,0 +1,141 @@
+{% if not ctx.show_review_widget or ctx.status == 'finished' %}
+    <style>
+        .reviews-view {
+            height: 500px;
+        }
+    </style>
+{% endif %}
+
+<span id="reviewer-button"
+      class="slider-option review-option table-show "><span
+        class="fa fa-comment"></span></span>
+
+<div class="reviews-view" align="center">
+
+    {% if (ctx.show_review_widget or ctx.is_submission_coordinator_or_admin) and ctx.status != 'finished' and ctx.version >= ctx.version_count %}
+        <div class="review">
+            <h4>Review Summary</h4>
+            <br/>
+
+            <div id="review-status" align="center">
+                <span id="todo-option" class="review-status todo deactivate">Todo</span>
+                <span id="attention-option"
+                      class="review-status attention deactivate">Attention Required</span>
+                <span id="passed-option"
+                      class="review-status passed">Passed</span>
+            </div>
+
+            <p style="font-size: .65em; padding-top: 4px"><span
+                    style="font-weight: bolder;">Todo</span> Ctrl+1, <span
+                    style="font-weight: bolder;">Attention Required</span>
+                Ctrl+2, <span style="font-weight: bolder;">Passed</span> Ctrl +
+                3</p>
+        </div>
+
+        <br/>
+    {% else %}
+
+        {% if ctx.status == 'finished' %}
+            <div class="alert alert-success">The review for this article is
+                complete. You can still view the discussion here, but cannot
+                add anything more.
+            </div>
+        {% endif %}
+    {% endif %}
+
+
+    <h4>Conversation</h4>
+    <br/>
+
+    <div class="message-container" id="review_messages">
+        <!--will be populated automatically-->
+    </div>
+
+    {% if ctx.status != 'finished' %}
+        <div class="text_status">
+            <textarea class="input_box form-control" id="message"
+                      style="height: 10%;"
+                      placeholder="Send feedback on this data..."></textarea>
+        </div>
+
+        <br/>
+
+
+        <div id="send" align="center">
+            <div class="btn btn-primary">
+                <span class="fa fa-paper-plane"></span> Send Feedback
+            </div>
+        </div>
+        <div class="clear"></div>
+    {% endif %}
+</div>
+
+
+<script>
+
+
+    $('.review-option').click(function () {
+        if ($(this).hasClass('table-show')) {
+            $(".review-option, .reviews-view").animate({
+                right: "+=300"
+            }, 400);
+            $(this).html('<span class="fa fa-chevron-right"></span>').removeClass('table-show').addClass('table-hide');
+        }
+        else {
+            $(".review-option, .reviews-view").animate({
+                right: "-=300"
+            }, 400);
+            $(this).html('<span class="fa fa-comments"></span>').removeClass('table-hide').addClass('table-show');
+
+        }
+    });
+
+    $("#send").click(function () {
+
+        $(".loading").removeClass("hidden");
+        var message = $(".input_box").val();
+        var priority = $("#priority option:selected").attr('id');
+
+        if (message == "") {
+            $(".loading").hide();
+        } else {
+            var DATA = {
+                'message': message,
+                'version': HEPDATA.current_table_version
+            };
+            $.ajax({
+                type: "POST",
+                dataType: "json",
+                url: "/record/data/review/message/" + HEPDATA.current_record_id + "/" + HEPDATA.current_table_id,
+                data: DATA,
+                cache: false,
+                success: function (data) {
+
+
+                    if ($("#review_messages").text() == 'No messages yet...') {
+                        $("#review_messages").text('');
+                    }
+
+                    var message = data.message;
+                    var date_time = data.post_time.split(" ");
+                    var html = '<div class="message-item"><div class="message-info">' +
+                            '<p class="message-time">' + date_time[0] + '<br/>' + date_time[1] + '</p>' +
+                            '<p class="reviewer">' + data.user + '</p></div>' +
+                            '<div class="message-content">' + message + '</div>' +
+                            '</div>';
+
+                    $("#table-" + HEPDATA.current_table_id + "-messages").removeClass("hidden");
+                    $(html).prependTo("#review_messages").slideDown("slow");
+                    $(".loading").addClass("hidden");
+                    $(".input_box").val('');
+                }
+            });
+        }
+        return false;
+    });
+
+    $("#review-status span").click(function () {
+        HEPDATA.set_review_status(this.id.split("-")[0])
+    });
+
+</script>

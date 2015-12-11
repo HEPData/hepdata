@@ -3,16 +3,16 @@
 ========
 
 .. image:: https://img.shields.io/travis/hepdata/hepdata.svg
-        :target: https://travis-ci.org/zenodo/zenodo
+        :target: https://travis-ci.org/hepdata/hepdata
 
 .. image:: https://img.shields.io/coveralls/hepdata/hepdata.svg
-        :target: https://coveralls.io/r/zenodo/zenodo
+        :target: https://coveralls.io/r/hepdata/hepdata
 
 .. image:: https://img.shields.io/github/tag/hepdata/hepdata.svg
-        :target: https://github.com/zenodo/zenodo/releases
+        :target: https://github.com/hepdata/hepdata/releases
 
 .. image:: https://img.shields.io/github/license/hepdata/hepdata.svg
-        :target: https://github.com/zenodo/zenodo/blob/master/LICENSE
+        :target: https://github.com/hepdata/hepdata/blob/master/LICENSE
 
 
 * Free software: GPLv2 license

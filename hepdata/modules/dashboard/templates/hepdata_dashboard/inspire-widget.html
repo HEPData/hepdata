@@ -1,0 +1,156 @@
+<!-- Modal -->
+
+<style>
+    .inspire-abstract {
+        font-size: .8em;
+        color: #7f8c8d;
+        height: 100px;
+        overflow-y: auto;
+        text-align: left;
+    }
+
+    .inspire-journal {
+        font-weight: bolder;
+    }
+</style>
+<div class="modal fade" id="inspireDialog" tabindex="-1" role="dialog" aria-labelledby="inspireDialog"
+     aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header" style="border: none">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                        aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="codeDialogLabel">Add INSPIRE ID</h4>
+            </div>
+
+
+            <div class="modal-body">
+
+                <div align="center" id="inspire_entry">
+                    <p>We can't finalise the submission until you've attached the INSPIRE ID for the record.</p>
+                    <p>Please enter the INSPIRE id corresponding to this submission.</p>
+                    <br/>
+                    <input type="number" id="inspire-id" placeholder="e.g. 1203852" class="dark-input"
+                           style="width: 200px;"/>
+                    <button class="btn btn-md btn-primary disabled" id="inspire-retrieve-button" data-recid=""> Retrieve
+                        Record
+                    </button>
+
+                    <div id="inspire-result" style="margin-top: 20px;">
+                    </div>
+
+                </div>
+
+
+                <div class="spinner hidden" id="inspire-retrieve-progress"
+                     style="padding-top: 40px; padding-bottom: 40px">
+                    <div class="ball ball-purple"></div>
+                    <p>Retrieving INSPIRE Information...</p>
+                </div>
+
+                <div class="spinner hidden" id="inspire-add-progress" style="padding-top: 40px; padding-bottom: 40px">
+                    <div class="ball ball-purple"></div>
+                    <p>Adding INSPIRE ID and Saving Information...</p>
+                </div>
+
+
+                <div align="center" class="hidden" id="success" style="padding: 40px">
+                    <div style="color: #4FBA6F; font-weight: bolder">
+                        <span class="fa fa-check" style="font-size: 3em"></span><br/>
+                        <p>
+                            INSPIRE Information Attached. Feel free to now finalise your submission.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="clearfix"></div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default pull-left" data-dismiss="modal" aria-label="Close"><span
+                        aria-hidden="true">&times; Close</span></button>
+
+                <button class="btn btn-md btn-success hidden pull-right" id="inspire-add-button" data-recid=""> Confirm
+                </button>
+
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+    require([
+        "jquery"
+    ], function ($) {
+
+        $(document).on('click', '#inspire-retrieve-button', function () {
+//            $("#inspire_retrieve_button_container").addClass("hidden");
+            $("#inspire-result").removeClass("well well-sm");
+            $("#inspire-result").html('');
+            $("#inspire-retrieve-progress").removeClass("hidden");
+
+            var inspire_id = $("#inspire-id").val();
+
+
+            $.ajax({
+                dataType: "json",
+                url: '/inspire/search/?id=' + inspire_id,
+                processData: false,
+                cache: true,
+                success: function (data) {
+                    console.log(data);
+                    window.inspire_id = inspire_id;
+                    if (data.status == 'success') {
+                        $("#inspire-retrieve-progress").addClass("hidden");
+
+                        var html = "<div class='alert alert-info'>A preview of the publication (not everything is displayed).</div>";
+                        html += '<p class="inspire-title"><a href="http://inspirehep.net/record/' + inspire_id + '" target="_blank">' + data.query.title[0] + '</a><p>';
+
+                        if (data.query.authors.length > 0) {
+                            html += '<p class="inspire-authors">' + data.query.authors[0].full_name + (data.query.authors.length > 1 ? " et al." : " ") + '</p>';
+                        }
+
+                        if (data.query.journal_info != '') {
+                            html += '<p class="inspire-journal">' + data.query.journal_info + '</p>';
+                        }
+
+                        html += '<p class="inspire-abstract">' + data.query.abstract + '</p><br/>';
+
+                        html += '<p style="font-weight: bolder;">If you\'re happy that this is the correct INSPIRE Id, you just need to click on \'confirm\'. If not, you can retrieve another record.</p>';
+
+                        $("#inspire-result").addClass("well well-sm");
+                        $("#inspire-result").html(html);
+                        $("#success").removeClass("hidden");
+                        $("#inspire-add-button").removeClass("hidden");
+                        MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
+                    } else {
+                        $("#inspire-add-button").addClass("hidden");
+                    }
+                }
+            });
+
+        });
+
+        $(document).on('click', '#inspire-add-button', function () {
+
+            $("#inspire-result").addClass("hidden");
+            $("#inspire-add-progress").removeClass("hidden");
+
+            $.ajax({
+                dataType: "json",
+                method: 'POST',
+                url: '/record/attach_information/' + $(this).attr('data-recid'),
+                data: {'inspire_id':window.inspire_id},
+                success: function (data) {
+                    setTimeout(function () {
+                        window.location = "/dashboard";
+                    }, 1000);
+                }
+            });
+        });
+
+        $(document).on("keyup", "#inspire-id", function () {
+            $("#inspire-retrieve-button").toggleClass("disabled", $(this).val() == '')
+        })
+    })
+</script>

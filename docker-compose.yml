@@ -12,7 +12,7 @@ web:
     - "APP_SECRET_KEY=CHANGE_ME"
     - "APP_SESSION_TYPE=redis"
     - "APP_SESSION_REDIS_URL=redis://cache:6379/1"
-    - "APP_SQLALCHEMY_DATABASE_URI=postgresql://zenodo:zenodo@db/zenodo"
+    - "APP_SQLALCHEMY_DATABASE_URI=postgresql://hepdata:hepdata@db/hepdata"
   read_only: true
   links:
     - cache

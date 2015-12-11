@@ -1,0 +1,60 @@
+<!-- Modal -->
+{% if ctx.record %}
+    <div class="modal fade" id="uploadDialog" tabindex="-1" role="dialog"
+         aria-labelledby="codeDialog" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"
+                            aria-label="Close"><span
+                            aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="codeDialogLabel">
+                        {% if ctx.status != 'finished' %}Upload a newSubmission
+                            File{% else %}Revise yoursubmission{% endif %}</h4>
+                </div>
+
+                <div class="modal-body">
+                    <div align="center" style="width: 100%; margin: 0 auto">
+                        <div class="alert alert-warning">
+                            {% if ctx.status != 'finished' %}Uploading a new
+                                submission will replace your other files.
+                            {% else %}
+                                <strong>This submission is already
+                                    finished.</strong><br/>Uploading a new file
+                                will create a new version, and will require
+                                approval by the submission coordinator before
+                                being available publicly.
+                            {% endif %}
+                        </div>
+
+                        <form style="width: 80%"
+                              action="{% if ctx.mode == 'sandbox' %}/record/sandbox/{{ ctx.recid }}/consume{% else %}/record/{{ ctx.recid }}/consume{% endif %}"
+                              method="post"
+                              enctype=multipart/form-data>
+                            <input type="file" name="hep_archive"
+                                   id="side_root_file_upload"
+                                   data-iconName="fa fa-upload"
+                                   class="filestyle">
+                            <br/>
+                            <input type="submit" value="Upload and Process"
+                                   class="btn btn-primary">
+                        </form>
+                        <br/>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+
+
+        $("#side_root_file_upload").filestyle({
+            iconName: "fa fa-upload",
+            buttonName: "btn-primary"
+        });
+
+    </script>
+
+{% endif %}

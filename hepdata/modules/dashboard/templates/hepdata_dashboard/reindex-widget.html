@@ -1,0 +1,55 @@
+<!-- Modal -->
+<div class="modal fade" id="reindexWidget" tabindex="-1" role="dialog" aria-labelledby="reindexDialog" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content" style="background-color: #2C3E50">
+            <div class="modal-header" style="border: none">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                        aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="deleteDialogLabel">Reindex Database</h4>
+            </div>
+
+            <!--todo: add option to finalise submission. this means the creation of data records. Can also be updated in theory...? -->
+
+            <div class="modal-body" id="delete-body" style="color: white">
+                <div align="center">
+                    <span class="fa fa-refresh" style="font-size: 3.4em"></span>
+                </div>
+                <br/>
+                <div align="center" id="reindex-confirm">
+                    <p>This process will take a few minutes. We will first delete the index, then recreate. We suggest running this action when visits to HEPData are lowest.</p>
+
+                    <button class="btn btn-large btn-danger" data-dismiss="modal" aria-label="Close">Cancel</button>
+                    <button class="btn btn-large btn-success reindex-now">Reindex Now</button>
+                </div>
+
+                <div align="center" class="hidden" id="reindex-info-panel" style="padding: 40px">
+                    <div style="color: #4FBA6F; font-weight: bolder">
+
+                        <p>
+                            Database is now being indexed. It will be finished this process in less than 10 minutes.
+                            <br/>
+                             This window will close in <span id="reindex-timer" style="color: white">5</span> seconds and refresh
+                            the dashboard page.
+                        </p>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+     require([
+        "jquery"
+    ], function ($) {
+         $(document).on('click', '.reindex-now', function () {
+             $(".reindex-now").addClass("hidden");
+             $("#reindex-confirm").addClass("hidden");
+             $("#reindex-info-panel").removeClass("hidden");
+             $(".fa-refresh").addClass("fa-spin");
+             HEPDATA.reindex(-1)
+         });
+     });
+</script>

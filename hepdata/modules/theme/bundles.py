@@ -41,17 +41,26 @@ css = NpmBundle(
     }
 )
 
+record_css = NpmBundle(
+    'scss/record.scss',
+    filters='scss, cleancss',
+    depends=('scss/*.scss', ),
+    output='gen/hepdata_record.%(version)s.css',
+    npm={
+        "almond": "~0.3.1",
+        "bootstrap-sass": "~3.3.5",
+        "font-awesome": "~4.4.0"
+    }
+)
+
+
 js = NpmBundle(
     Bundle(
-        'node_modules/almond/almond.js',
         'js/modernizr-custom.js',
-        'js/settings.js',
+        'js/dataviewer.js',
         filters='uglifyjs',
     ),
-    Bundle(
-        'js/base.js',
-        filters='requirejs',
-    ),
+
     filters='jsmin',
     output="gen/hepdata.%(version)s.js",
     npm={
