@@ -157,7 +157,7 @@ def process_submission(recid, record, version, hepdata_submission,
     """
     ctx = {}
     if hepdata_submission is not None:
-        print(record)
+
         ctx['record'] = record
         ctx["version_count"] = hepdata_submission.latest_version
 
@@ -184,8 +184,8 @@ def process_submission(recid, record, version, hepdata_submission,
             if "revision_messages" in record:
                 for review_message in record["revision_messages"]:
 
-                    if "version" in review_message and review_message[
-                        "version"] == ctx["version"]:
+                    if "version" in review_message \
+                            and review_message["version"] == ctx["version"]:
                         ctx["revision_message"] = review_message
 
             truncate_author_list(record)
@@ -202,10 +202,11 @@ def process_submission(recid, record, version, hepdata_submission,
         ctx['record']['data_abstract'] = decode_string(
             hepdata_submission.data_abstract)
 
-        if hepdata_submission.overall_status != 'finished' and ctx[
-            "version_count"] > 0:
-            if not (ctx['show_review_widget'] or ctx['show_upload_widget'] or
-                        ctx['is_submission_coordinator_or_admin']):
+        if hepdata_submission.overall_status != 'finished' \
+                and ctx["version_count"] > 0:
+
+            if not (ctx['show_review_widget'] or ctx['show_upload_widget']
+                    or ctx['is_submission_coordinator_or_admin']):
                 # we show the latest approved version.
                 ctx["version"] -= 1
                 ctx["version_count"] -= 1
@@ -218,10 +219,8 @@ def process_submission(recid, record, version, hepdata_submission,
             version=ctx["version"]).order_by(DataSubmission.id.asc())
 
         first_data_id = -1
-        data_table_metadata, first_data_id = process_data_tables(ctx,
-                                                                 data_record_query,
-                                                                 first_data_id,
-                                                                 data_table)
+        data_table_metadata, first_data_id = process_data_tables(
+            ctx, data_record_query, first_data_id, data_table)
         assign_or_create_review_status(data_table_metadata, recid,
                                        ctx["version"])
 
@@ -260,9 +259,9 @@ def do_render_record(recid, record, version):
 
         ctx = process_submission(publication_recid, publication_record,
                                  version, hepdata_submission,
-                                 data_table=record['title']['title'])
+                                 data_table=record['title'])
         ctx['related_publication_id'] = publication_recid
-        ctx['table_name'] = record['title']['title']
+        ctx['table_name'] = record['title']
 
         return render_template('hepdata_records/data_record.html', ctx=ctx)
 
@@ -311,7 +310,7 @@ def get_latest():
             result['latest'].append({
                 'id': record_information['recid'],
                 'inspire_id': record_information['inspire_id'],
-                'title': record_information['title']['title'],
+                'title': record_information['title'],
                 'collaborations': collaborations,
                 'journal': record_information['journal_info'],
                 'first_author': record_information['_first_author'],
@@ -852,7 +851,7 @@ def assign_or_create_review_status(data_table_metadata, publication_recid,
                 data_table_metadata[data_review.data_recid][
                     "review_flag"] = data_review.status
                 data_table_metadata[data_review.data_recid]["review_status"] = \
-                RECORD_PLAIN_TEXT[data_review.status]
+                    RECORD_PLAIN_TEXT[data_review.status]
                 data_table_metadata[data_review.data_recid]["messages"] = len(
                     data_review.messages) > 0
                 assigned_tables.append(data_review.data_recid)
@@ -865,7 +864,7 @@ def assign_or_create_review_status(data_table_metadata, publication_recid,
             data_table_metadata[data_table_id][
                 "review_flag"] = data_record.status
             data_table_metadata[data_table_id]["review_status"] = \
-            RECORD_PLAIN_TEXT[data_record.status]
+                RECORD_PLAIN_TEXT[data_record.status]
 
 
 def determine_user_privileges(recid, ctx):
@@ -899,7 +898,8 @@ def determine_user_privileges(recid, ctx):
                 'is_submission_coordinator_or_admin'] = True
 
         ctx['show_upload_widget'] = (
-        ctx['show_upload_widget'] or ctx['is_submission_coordinator_or_admin'])
+            ctx['show_upload_widget'] or ctx[
+                'is_submission_coordinator_or_admin'])
 
 
 def process_data_tables(ctx, data_record_query, first_data_id,

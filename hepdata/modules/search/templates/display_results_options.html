@@ -1,0 +1,68 @@
+{% set flipped_sort_order = '' if request.args.get('sort_order', '') else 'rev' %}
+{% set sorted_by = request.args.get('sort_by', 'relevance') %}
+{% set possible_max_results = [10, 25, 50] %}
+{% set possible_sorting_fields = ['relevance', 'collaborations', 'title', 'date', 'latest'] %}
+
+<div class="col-md-12">
+
+        <div class="btn-group" style="display: inline-block;">
+            <a class="btn btn-default dropdown-toggle"
+               data-toggle="dropdown"
+               href="#">
+                <i class="fa fa-arrows-v"></i> Max results
+                <span class="caret"></span>
+            </a>
+
+            <ul class="dropdown-menu">
+                {% for size in possible_max_results %}
+                    <li {%if size == ctx.max_results%} class="active" {%endif%}>
+                        <a href="{{ ctx.modify_query('.search', size=size, page=1) }}"
+                           class="active">
+                            {{ size }}
+                        </a>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <div class="btn-group" style="display: inline-block;">
+
+            <a class="btn btn-default dropdown-toggle"
+               data-toggle="dropdown"
+               href="#">
+                <i class="fa fa-sort-amount-desc"></i> Sort by
+                <span class="caret"></span>
+            </a>
+
+
+            <ul class="dropdown-menu">
+
+                {% for sort_field in possible_sorting_fields %}
+                <li {%if sorted_by == sort_field%} class="active" {%endif%}>
+                    <a href="{{ctx.modify_query('.search',
+                                                sort_by=sort_field,
+                                                sort_order='')}}"
+                       class="active">
+                        {{ sort_field }}
+                    </a>
+                </li>
+                {% endfor %}
+
+            </ul>
+
+             <a class="btn btn-default"
+               href="{{ctx.modify_query('.search', sort_order=flipped_sort_order)}}" tooltip="Reverse order">
+                <i class="fa fa-sort-alpha-desc"></i> Reverse order
+            </a>
+
+        </div>
+
+    <div style="display: inline-block; padding-left: 2%;">
+        {% if not no_results %}
+                <p>
+                    Showing <strong>{{ ctx.results|length }}</strong> of <strong>{{ctx.total_hits}}</strong> results
+                </p>
+            {% endif %}</div>
+
+    <hr/>
+</div>

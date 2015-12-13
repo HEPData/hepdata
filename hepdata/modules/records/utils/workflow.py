@@ -1,6 +1,9 @@
 from datetime import datetime
+import uuid
 from celery import shared_task
 from flask import render_template
+from invenio_pidstore.minters import recid_minter
+from invenio_records import Record
 from hepdata.modules.records.models import SubmissionParticipant, \
     DataSubmission
 from invenio_db import db
@@ -8,58 +11,56 @@ from invenio_db import db
 __author__ = 'eamonnmaguire'
 
 
-@shared_task
-def create_bibworkflow_obj(ctx, current_user_id, doc_type,
-                           workflow="hepdata_data_sub"):
-    record = {
-        "type": "hepdata_data_sub",
-        "title": ctx["name"],
-        "completed": True, "files": [],
-        "drafts": {
-            "values": {
-                "title": ctx["name"],
-                "abstract": ctx["description"],
-                "type_of_doc": doc_type,
-
-                "flags": {},
-                "validate": False,
-                "completed": True,
-                "authors": ctx["authors"],
-                "all_authors": ctx["authors"],
-                "values": {
-                    "title": ctx["name"],
-                    "abstract": ctx["description"],
-                    "inspire_id": ctx["inspire_id"],
-                    "_first_author": ctx["_first_author"],
-                    "_additional_authors": [],
-                    "authors": ctx["authors"],
-                    "all_authors": []
-                },
-            }
-        }
-    }
+def create_data_structure(ctx):
+    """
+    The data structures need to be normalised before being stored in
+    the database. This is performed here.
+    :param ctx: record information as a dictionary
+    :return: a cleaned up representation.
+    """
+    record = {"title": ctx["name"],
+              "abstract": ctx["description"],
+              "inspire_id": ctx["inspire_id"],
+              "_first_author": ctx["_first_author"],
+              "authors": ctx["authors"]
+              }
 
     optional_keys = ["related_publication", "recid", "keywords",
                      "control_number", "doi", "creation_date",
                      "last_updated", "data_endpoints", "collaborations",
-                     "journal_info"]
+                     "journal_info", "uploaders", "reviewers"]
 
     for key in optional_keys:
         if key in ctx:
-            record["drafts"]["values"][key] = ctx[key]
-            record["drafts"]["values"]["values"][key] = ctx[key]
+            record[key] = ctx[key]
 
             if "recid" == key:
                 record[key] = ctx[key]
 
-        # myobj = BibWorkflowObject.create_object(id_user=current_user_id)
-        # myobj.set_data(record)
-        # myobj.start_workflow(workflow)
+    return record
+
+
+def create_record(ctx):
+    """
+    Creates the record in the database.
+    :param ctx: The record metadata as a dictionary.
+    :return: the recid and the uuid
+    """
+    record_information = create_data_structure(ctx)
+    record_id = uuid.uuid4()
+    pid = recid_minter(record_id, record_information)
+    record_information['recid'] = int(pid.pid_value)
+    record_information['uuid'] = str(record_id)
+
+    Record.create(record_information, id_=record_id)
+    db.session.commit()
+
+    return record_information
 
 
 def update_action_for_submission_participant(recid, user_id, action):
     SubmissionParticipant.query.filter_by(
-        publication_recid=recid, role=action, user_account=user_id)\
+        publication_recid=recid, role=action, user_account=user_id) \
         .update(dict(action_date=datetime.now()))
     try:
         db.session.commit()
@@ -80,7 +81,7 @@ def send_new_review_message_email(review, message, user):
         publication_recid=review.publication_recid,
         status="primary", role="uploader")
 
-    table_information = DataSubmission.query\
+    table_information = DataSubmission.query \
         .filter_by(id=review.data_recid).one()
 
     for participant in submission_participants:
@@ -92,7 +93,7 @@ def send_new_review_message_email(review, message, user):
             table_message=message.message,
             article=review.publication_recid,
             link="http://hepdata.net/record/{0}"
-            .format(review.publication_recid))
+                .format(review.publication_recid))
 
         do_send_email('[HEPData] Submission {0} has a new upload available '
                       'for your review.'

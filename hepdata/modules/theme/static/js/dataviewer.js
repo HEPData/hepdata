@@ -487,7 +487,7 @@ HEPDATA.table_renderer = {
                     }
 
                     if (errors.length > HEPDATA.default_errors_to_show) {
-                        div.append('span').text('+ ' + errors.length + ' more errors').attr('class', 'total_errors');
+                        div.append('span').text('+ all ' + errors.length + ' more errors').attr('class', 'total_errors');
                         div.append('span').attr('class', 'show_all_errors').text('Show all').on('click', function () {
 
                             d3.selectAll('.error.hidden').classed("hidden", false);
@@ -673,7 +673,7 @@ HEPDATA.visualization.heatmap = {
             .append("g")
             .attr("transform", "translate(" + HEPDATA.visualization.heatmap.options.margins.left + "," + HEPDATA.visualization.heatmap.options.margins.top + ")");
 
-        var d3tip = tip()
+        var d3tip = d3.tip()
             .attr('class', 'd3-tip')
             .offset([-10, 0])
             .html(function (d) {

@@ -5,7 +5,6 @@ from operator import or_
 from flask.ext.login import login_required, current_user
 from invenio_accounts.models import User
 from invenio_db import db
-from invenio_records.models import RecordMetadata
 from sqlalchemy.orm.exc import NoResultFound
 from hepdata.config import CFG_DATA_TYPE
 from hepdata.ext.elasticsearch.api import reindex_all, \
@@ -17,7 +16,8 @@ from hepdata.modules.records.utils.common import get_record_by_id
 from flask import Blueprint, jsonify, request, render_template
 from hepdata.modules.records.utils.submission import unload_submission
 from hepdata.modules.records.utils.users import has_role
-from hepdata.modules.records.utils.workflow import send_finalised_email
+from hepdata.modules.records.utils.workflow import send_finalised_email, \
+    create_record
 
 __author__ = 'eamonnmaguire'
 
@@ -77,7 +77,7 @@ def create_record_for_dashboard(record_id, submissions, primary_uploader=None,
 
             if "title" in publication_record:
                 submissions[record_id]["metadata"]["title"] = \
-                    publication_record['title']['title']
+                    publication_record['title']
             else:
                 submissions[record_id]["metadata"][
                     "title"] = "Submission in Progress"
@@ -442,7 +442,7 @@ def finalise(recid, publication_record=None, force_finalise=False):
 
 
 def do_finalise(recid, publication_record=None, force_finalise=False,
-                synchronous=True, commit_message=None):
+                commit_message=None):
     """
         Creates record SIP for each data record with a link to the associated
         publication
@@ -452,7 +452,6 @@ def do_finalise(recid, publication_record=None, force_finalise=False,
         If False, object creation is asynchronous, however reindexing is not
         performed. This is only really useful for the full migration of
         content.
-
     """
     hep_submission = HEPSubmission.query.filter_by(
         publication_recid=recid).first()
@@ -461,7 +460,7 @@ def do_finalise(recid, publication_record=None, force_finalise=False,
 
     generated_record_ids = []
     # check if current user is the coordinator
-    if hep_submission.coordinator == current_user.get_id() or force_finalise:
+    if force_finalise or hep_submission.coordinator == current_user.get_id():
 
         print 'Latest version for {0} is {1}'.format(
             recid, hep_submission.latest_version)
@@ -481,41 +480,36 @@ def do_finalise(recid, publication_record=None, force_finalise=False,
             existing_data_records = get_records_matching_field(
                 'related_publication', recid, doc_type=CFG_DATA_TYPE)
             for record in existing_data_records["hits"]["hits"]:
-                existing_submissions[record["_source"]["title"]["title"]] = \
-                    record["_source"]["recid"]
-                delete_item_from_index(record["_id"], doc_type=CFG_DATA_TYPE)
+                print record
+                if "recid" in record:
+                    existing_submissions[record["title"]] = \
+                        record["recid"]
+                    delete_item_from_index(record["_id"], doc_type=CFG_DATA_TYPE)
 
         errors = []
         current_time = "{:%Y-%m-%d}".format(datetime.now())
         print 'There are {0} submissions to package and index. ' \
               'Update time will be {1}.'.format(
-            len(submissions),
-            current_time)
+            len(submissions), current_time)
         for submission in submissions:
             finalise_datasubmission(current_time, existing_submissions,
                                     generated_record_ids,
                                     publication_record, recid, submission,
-                                    synchronous, version)
+                                    version)
 
         if not errors:
 
             # Update the last_updated flag for the record.
             try:
-                record_metadata = RecordMetadata.query.filter_by(
-                    id=recid).one()
-
-                from copy import deepcopy
-                tmp_json = deepcopy(record_metadata.json)
-                tmp_json["last_updated"] = current_time
+                record = get_record_by_id(recid)
 
                 if commit_message:
-                    if 'revision_messages' not in record_metadata.json:
-                        tmp_json['revision_messages'] = []
-                    tmp_json['revision_messages'] += [
+                    if 'revision_messages' not in record:
+                        record['revision_messages'] = []
+                    record['revision_messages'] += [
                         {"version": version, "message": commit_message}]
 
-                RecordMetadata.query.filter_by(id=recid).update(
-                    {'json': tmp_json})
+                record.commit()
 
             except NoResultFound:
                 print 'No record found to update. Which is super strange.'
@@ -527,9 +521,8 @@ def do_finalise(recid, publication_record=None, force_finalise=False,
             db.session.commit()
 
             # Reindex everything.
-            if synchronous:
-                indexed = index_record_ids([recid] + generated_record_ids)
-                push_data_keywords(pub_ids=[recid])
+            index_record_ids([recid] + generated_record_ids)
+            push_data_keywords(pub_ids=[recid])
 
             send_finalised_email(hep_submission)
 
@@ -553,7 +546,7 @@ def do_finalise(recid, publication_record=None, force_finalise=False,
 
 def finalise_datasubmission(current_time, existing_submissions,
                             generated_record_ids, publication_record, recid,
-                            submission, synchronous, version):
+                            submission, version):
     # we now create a 'payload' for each data submission
     # by creating a record json and uploading it via a bibupload task.
     # add in key for associated publication...
@@ -567,6 +560,7 @@ def finalise_datasubmission(current_time, existing_submissions,
     # and assign them as authors of the data too
     if not publication_record:
         publication_record = get_record_by_id(recid)
+
     submission_info = {
         "name": submission.name,
         "description": submission.description,
@@ -583,6 +577,7 @@ def finalise_datasubmission(current_time, existing_submissions,
         "_additional_authors": publication_record.get('_additional_authors',
                                                       []),
     }
+
     if submission_info["name"] in existing_submissions:
         # in the event that we're performing an update operation, we need
         # to get the data record information
@@ -593,24 +588,20 @@ def finalise_datasubmission(current_time, existing_submissions,
         submission_info["control_number"] = submission_info["recid"] = recid
 
     else:
-        # TODO reserve_recid(submission_info)
+        submission_info = create_record(submission_info)
         submission_info["control_number"] = submission_info["recid"]
+
     generated_record_ids.append(submission_info["recid"])
     submission_info["data_endpoints"] = create_data_endpoints(submission.id,
                                                               submission_info)
-    # TODO if synchronous:
-    #     create_bibworkflow_obj(submission_info, current_user.get_id(),
-    #                            doc_type="data",
-    #                            workflow="hepdata_data_sub")
-    # else:
-    #     create_bibworkflow_obj.delay(submission_info, current_user.get_id(),
-    #                                  doc_type="data",
-    #                                  workflow="hepdata_data_sub")
+
     submission.version = version
+
     data_review = DataReview.query.filter_by(data_recid=submission.id).first()
     if data_review:
         data_review.version = version
         db.session.add(data_review)
+
     db.session.add(submission)
 
 

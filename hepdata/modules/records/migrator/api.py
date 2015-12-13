@@ -1,27 +1,22 @@
 import socket
 from urllib2 import HTTPError
-import uuid
 import zipfile
 from celery import shared_task
 from flask import current_app
 import os
 import shutil
-from invenio_db import db
-from invenio_pidstore.minters import recid_minter
-from invenio_pidstore.models import PersistentIdentifier, PIDStatus
-from invenio_pidstore.providers.recordid import RecordIdProvider
-from invenio_records import Record
 import yaml
 from yaml.scanner import ScannerError
 from hepdata.config import CFG_DATADIR, CFG_TMPDIR
-from hepdata.ext.elasticsearch.api import record_exists
+
 from hepdata.modules.api_inspire.views import get_inspire_record_information
+from hepdata.modules.dashboard.views import do_finalise
 from hepdata.modules.records.utils.common import zipdir, \
     transform_record_information_for_bibupload
 from hepdata.modules.records.utils.submission import \
     process_submission_directory, get_or_create_hepsubmission, \
     remove_submission
-from hepdata.modules.records.utils.workflow import create_bibworkflow_obj
+from hepdata.modules.records.utils.workflow import create_record
 import logging
 
 __author__ = 'eamonnmaguire'
@@ -49,19 +44,19 @@ class FailedSubmission(Exception):
 
 
 @shared_task
-def load_files(inspire_ids, delay=5, synchronous=False):
+def load_files(inspire_ids):
     """
     :param inspire_ids:
     :return:
     """
     migrator = Migrator()
-
+    from hepdata.ext.elasticsearch.api import record_exists
     for index, inspire_id in enumerate(inspire_ids):
         _cleaned_id = inspire_id.replace("ins", "")
         if not record_exists(_cleaned_id):
             try:
                 log.warn('Loading {}'.format(inspire_id))
-                migrator.load_file(inspire_id, synchronous)
+                migrator.load_file.delay(inspire_id)
             except socket.error as se:
                 print 'socket error...'
                 print se.message
@@ -82,7 +77,7 @@ class Migrator(object):
         self.base_url = base_url
 
     @shared_task
-    def load_file(inspire_id, synchronous=True):
+    def load_file(inspire_id):
         self = Migrator()
 
         file_location = self.download_file(inspire_id)
@@ -94,29 +89,25 @@ class Migrator(object):
                              os.path.join(CFG_DATADIR, inspire_id + ".zip"))
             record_information = self.retrieve_publication_information(
                 inspire_id)
-            record_id = uuid.uuid4()
-            pid = recid_minter(record_id, record_information)
-            print('Just minted {}'.format(pid))
-            record_information['recid'] = int(pid.pid_value)
-            record_information['uuid'] = str(record_id)
 
-            Record.create(record_information, id_=record_id)
-            db.session.commit()
+            record_information = create_record(record_information)
 
             output_location = os.path.join(CFG_DATADIR, inspire_id)
+
             try:
                 recid = self.load_submission(
                     record_information, output_location,
                     os.path.join(output_location, "submission.yaml"))
                 if recid is not None:
-                    # do_finalise(recid, publication_record=record_information,
-                    # force_finalise=True, synchronous=synchronous)
-                    pass
+
+                    do_finalise(recid, publication_record=record_information,
+                                force_finalise=True)
 
             except FailedSubmission as fe:
-                log.error(fe.message)
-                fe.print_errors()
+                # log.error(fe.message)
+                # fe.print_errors()
                 remove_submission(fe.record_id)
+                raise
         else:
             log.error('Failed to load ' + inspire_id)
 
@@ -127,7 +118,7 @@ class Migrator(object):
         :return:
         """
         for recid in recids:
-            # do_finalise(recid, force_finalise=True)
+            do_finalise(recid, force_finalise=True)
             pass
 
     def download_file(self, inspire_id):
@@ -257,13 +248,17 @@ class Migrator(object):
                                               submission_yaml_file_location,
                                               record_information["recid"])
 
+        if len(errors) > 0:
+            print 'ERRORS ARE: '
+            print errors
+
         if errors:
             raise FailedSubmission("Submission failed for {0}.".format(
                 record_information['recid']), errors,
                 record_information['recid'])
         else:
-            create_bibworkflow_obj.delay(record_information, admin_user_id,
-                                         doc_type="article")
+
+            # TODO: send_email_to_coordinators_etc.
             return record_information["recid"]
 
     def cleanup_data_yaml(self, yaml):

@@ -1,0 +1,10 @@
+<a href={{ ctx.modify_query('.search',
+                            page='1',
+                            **fval.url_params) }}>
+
+        {{ fval.key }}
+        <span class="facet-count">
+            {{ fval.doc_count }}
+        </span>
+
+</a>

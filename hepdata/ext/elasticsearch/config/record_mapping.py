@@ -19,12 +19,8 @@
 
 mapping = {
     "abstract": {
-        "properties": {
-            "summary": {
-                "type": "string",
-                # "analyzer": "english"
-            }
-        }
+        "type": "string",
+        # "analyzer": "english"
     },
     "authors": {
         "type": "nested",
@@ -131,16 +127,11 @@ mapping = {
         }
     },
     "title": {
-        "properties": {
-            "title": {
+        "type": "string",
+        "fields": {
+            "raw": {
                 "type": "string",
-                # "analyzer": "english",
-                "fields": {
-                    "raw": {
-                        "type": "string",
-                        "index": "not_analyzed"
-                    }
-                }
+                "index": "not_analyzed"
             }
         }
     },

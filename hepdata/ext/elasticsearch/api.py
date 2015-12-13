@@ -15,15 +15,11 @@
 # You should have received a copy of the GNU General Public License
 # along with HEPData; if not, write to the Free Software Foundation, Inc.,
 # 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
-#
 from collections import defaultdict
-from elasticsearch import Elasticsearch
-
 from flask import current_app
 from elasticsearch.exceptions import NotFoundError, RequestError
-from invenio_search import current_search_client
+from invenio_pidstore.models import RecordIdentifier
 from sqlalchemy import func
-from werkzeug.local import LocalProxy
 from hepdata.modules.records.utils.common import get_last_updated
 from .utils import index_authors
 from hepdata.config import CFG_PUB_TYPE, CFG_DATA_TYPE
@@ -159,13 +155,12 @@ def search_authors(name, size=20):
 @default_index
 def reindex_all(index=None, recreate=False, batch=50, start=-1, end=-1):
     """ Recreate the index and add all the records from the db to ES. """
-    from invenio_records.models import RecordMetadata
 
     if recreate:
         recreate_index(index=index)
 
-    qry = db.session.query(func.max(RecordMetadata.id).label("max_recid"),
-                           func.min(RecordMetadata.id).label("min_recid"),
+    qry = db.session.query(func.max(RecordIdentifier.recid).label("max_recid"),
+                           func.min(RecordIdentifier.recid).label("min_recid"),
                            )
     res = qry.one()
     min_recid = res.min_recid

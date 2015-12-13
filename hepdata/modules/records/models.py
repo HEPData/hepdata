@@ -41,7 +41,7 @@ data_reference_link = db.Table(
               db.ForeignKey('hepsubmission.publication_recid')),
 
     db.Column('dataresource_id', db.Integer,
-              db.ForeignKey('dataresource.id')))
+              db.ForeignKey('dataresource.id', ondelete='CASCADE')))
 
 
 class HEPSubmission(db.Model):
@@ -57,13 +57,15 @@ class HEPSubmission(db.Model):
 
     data_abstract = db.Column(db.LargeBinary)
     references = db.relationship("DataResource",
-                                 secondary="data_resource_link")
+                                 secondary="data_resource_link",
+                                 cascade="all,delete")
 
     # coordinators are already logged in to submit records,
     # so we know their User id.
     coordinator = db.Column(db.Integer, db.ForeignKey(User.id))
     participants = db.relationship("SubmissionParticipant",
-                                   secondary="submission_participant_link")
+                                   secondary="submission_participant_link",
+                                   cascade="all,delete")
 
     # when this flag is set to 'ready', all data records will have an
     # invenio record created for them.
@@ -110,7 +112,7 @@ datafile_identifier = db.Table(
     'datafile_identifier',
     db.Column('submission_id', db.Integer,
               db.ForeignKey('datasubmission.id')),
-    db.Column('dataresource_id', db.Integer, db.ForeignKey('dataresource.id'))
+    db.Column('dataresource_id', db.Integer, db.ForeignKey('dataresource.id', ondelete='CASCADE'))
 )
 
 keyword_identifier = db.Table(
@@ -131,14 +133,16 @@ class DataSubmission(db.Model):
     location_in_publication = db.Column(db.String(256))
     name = db.Column(db.String(64))
     description = db.Column(db.LargeBinary)
-    keywords = db.relationship("Keyword", secondary="keyword_submission")
+    keywords = db.relationship("Keyword", secondary="keyword_submission",
+                               cascade="all,delete")
 
     # the main data file, with the data table
     data_file = db.Column(db.Integer, db.ForeignKey("dataresource.id"))
 
     # supplementary files, such as code, links out to other resources etc.
     additional_files = db.relationship("DataResource",
-                                       secondary="datafile_identifier")
+                                       secondary="datafile_identifier",
+                                       cascade="all,delete")
 
     # when a new version is loaded, the version is increased and
     # maintained so people can go back in time
@@ -213,7 +217,8 @@ class DataReview(db.Model):
     status = db.Column(db.String(20), default="todo")
 
     messages = db.relationship("DataReviewMessage",
-                               secondary="review_messages")
+                               secondary="review_messages",
+                               cascade="all,delete")
 
     # stores the vers
     version = db.Column(db.Integer, default=1)

@@ -1,0 +1,198 @@
+{% extends "hepdata_theme/page.html" %}
+
+{% set no_results = (ctx.results|length == 0) %}
+{% set max_datatables = 3 %}
+{% set show_records_number = 3 %}
+
+
+{%- block additional_assets %}
+    {%- assets "hepdata_search_css" %}
+        <link href="{{ ASSET_URL }}" rel="stylesheet">
+    {%- endassets %}
+{%- endblock additional_assets %}
+
+
+
+{% block page_body %}
+    <div class="hep-content">
+
+        <div class="search-header">
+
+            <form class="search-form"
+                  action="/search">
+                <div class="search-box">
+                    <input type="text"
+                           name="q"
+                           placeholder="Search HEPdata"
+                           value="{% if ctx %}{{ ctx.q }}{% endif %}">
+
+                    {% for type, value in ctx.filters.items() %}
+                        <a href={{ ctx.modify_query('.search',
+                **{type: None}) }}>
+                            <div class="btn facet-tag {{ type }}-tag">
+                                <i class="fa fa-times"></i>
+                                {{ value }}
+                            </div>
+                        </a>
+                    {% endfor %}
+                </div>
+
+                <button type="submit" class="search-submit">Search</button>
+
+            <span class="white-link">
+                <a href="/search" class="btn btn-link">Reset search</a>
+            </span>
+
+            </form>
+        </div>
+
+        <div class="search-results">
+            {% include "display_results_options.html" %}
+            <div class="row-fluid">
+                {% include "facet_column.html" %}
+
+                <div class="col-md-10" style="padding-bottom: 3em;">
+
+                    {% for record in ctx.results %}
+                        {% set pub_index = loop.index %}
+                        <div id="publication-{{ pub_index }}" class="row"
+                             itemtype="http://schema.org/DataCatalog"
+                             itemscope>
+                            <div class="search-result-item">
+                                <div class="record-brief">
+                                    <h4 class="record-header">
+                                        {% set record_link = '/record/ins' + record.inspire_id|string %}
+                                        <a href={{ record_link }} itemprop="name">
+                                            {{ record.title }}
+                                        </a>
+                                    </h4>
+                                    {% include "record_content.html" %}
+                                    <div style="padding: 5px 0px; color: #7F8C8D">
+                                        <i class="fa fa-table"></i>
+                                        <span style="font-weight: bolder">{{ record.total_tables }}</span>
+                                        data table
+                                        {% if record.total_tables > 1 or record.total_tables == 0 %}
+                                            s{% endif %}{% if ctx %}
+                                        {% if ctx.q %} match query
+                                        {% endif %}{% endif %}.
+                                    </div>
+                                </div>
+
+                                {% for datatable in record.data %}
+                                    <div class="data-brief
+                                {% if loop.index > max_datatables %}
+                                    hidden
+                                {% endif %}"
+                                         itemprop="dataset" itemscope
+                                         itemtype="http://schema.org/Dataset">
+
+                                        <div>
+                                            <div class="pull-left"
+                                                 style="width: 7%; min-width: 60px">
+                                                <a href="/record/{{ datatable.recid }}"
+                                                   itemprop="name">
+                                                    {{ datatable.title }}
+                                                </a>
+                                            </div>
+                                            <div class="pull-left"
+                                                 style="width: 90%">
+                                                <p class="truncated-record-abstract"
+                                                   itemprop="description"
+                                                   style="color: #7F8C8D">
+                                                    {{ datatable.abstract }}
+                                                </p>
+                                            </div>
+                            <span class="hidden" itemscope
+                                  itemprop="distribution"
+                                  itemtype="http://schema.org/DataDownload"><span
+                                    itemprop="contentUrl">https://hepdata.net/record/data/file/{{ datatable.recid }}/yaml</span><span
+                                    itemprop="encodingFormat">yaml</span></span>
+                            <span class="hidden" itemscope
+                                  itemprop="distribution"
+                                  itemtype="http://schema.org/DataDownload"><span
+                                    itemprop="contentUrl">https://hepdata.net/record/data/file/{{ datatable.recid }}/csv</span><span
+                                    itemprop="encodingFormat">csv</span></span>
+                                        </div>
+                                        <div class="clearfix"></div>
+
+                                    </div>
+                                {% endfor %}
+
+                                {% if record.data|length > max_datatables %}
+                                    <a class="data-more"
+                                       onclick="show_more_datatables({{ pub_index }},
+                                               {{ show_records_number }})">
+                                        More…
+                                    </a>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="clearfix"></div>
+                        <br/>
+                    {% else %}
+                        <h4>No records found</h4>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="clearfix"></div>
+    <br/><br/>
+
+    {% if ctx.pages and not no_results %}
+        {% include "pagination.html" %}
+    {% endif %}
+
+{% endblock %}
+
+{% block javascript %}
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/mathjax/2.5.3/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script src="//cdn.jsdelivr.net/bootstrap.filestyle/1.1.0/js/bootstrap-filestyle.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.6/js/bootstrap.min.js"></script>
+
+    {%- assets "hepdata_theme_js" %}
+        <script src="{{ ASSET_URL }}"></script>
+    {%- endassets %}
+
+    <script type="text/javascript">
+        function show_more_datatables(publication, show_number) {
+            var tables = $("#publication-" + publication
+                    + " .data-brief:not(:visible)");
+
+            tables.slice(0, show_number).removeClass("hidden");
+
+            if (tables.size() <= show_number) {
+                $("#publication-" + publication + " .data-more").hide();
+            }
+        }
+
+
+        $(document).ready(function () {
+            MathJax.Hub.Config({
+                tex2jax: {inlineMath: [['$', '$'], ['\\(', '\\)']]}
+            });
+            MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
+            var search_term = '{{ctx.q}}';
+            var search_regex = '\\b({{ctx.q}})(?!(?:(?!<\/?[ha].*?>).)*<\/[ha].*?>)(?![^<>]*>)';
+
+            if (search_term != "" && search_term.length > 2) {
+                var regex = new RegExp(search_regex, "igm");
+
+                $(".record-brief, .data-brief").each(function () {
+                    var current_html = $(this).html();
+                    var replaced = current_html.replace(regex, '<span class="highlight">{{ctx.q}}</span>');
+                    $(this).html(replaced);
+                })
+            }
+
+        });
+    </script>
+
+
+
+{% endblock %}
+
+

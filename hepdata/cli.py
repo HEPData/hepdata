@@ -28,7 +28,7 @@ from __future__ import absolute_import, print_function
 from flask.ext.cli import with_appcontext
 from invenio_base.app import create_cli
 from .factory import create_app
-
+from hepdata.ext.elasticsearch.api import reindex_all
 
 cli = create_cli(create_app=create_app)
 
@@ -40,6 +40,15 @@ def populate():
     from hepdata.modules.records.migrator.api import load_files
     recreate_index()
 
-    files_to_load = ['ins1345354', 'ins1361912']
-    load_files.delay(files_to_load, 2, synchronous=True)
+    files_to_load = ['ins1345354', 'ins1361912', 'ins1296861', 'ins1386475',
+                     'ins116150', 'ins333513', 'ins1334140', 'ins1203852',
+                     'ins1343107', 'ins1373912', 'ins1377585', 'ins1359451']
+    load_files.delay(files_to_load)
+
+
+
+@cli.command()
+@with_appcontext
+def reindex(start=-1, end=-1, batch=25, recreate=True):
+    reindex_all(recreate=recreate, start=start, end=end, batch=batch)
 

@@ -67,7 +67,7 @@ def match_tables_to_papers(tables, papers):
         # Create a function to extract numbers from titles and sort with it
         def sort_key(elem):
             """ Extract the numbers from the title. """
-            title = elem['_source']['title']['title']
+            title = elem['_source']['title']
             numbers = [int(x) for x in title.split() if x.isdigit()]
             return numbers[0] if numbers else title
 
@@ -102,8 +102,8 @@ def get_basic_record_information(record):
 
     res = {
         'recid': record['_id'],
-        'title': source.get('title', dict()).get('title', ''),
-        'abstract': source.get('abstract', dict()).get('summary', ''),
+        'title': source.get('title', ''),
+        'abstract': source.get('abstract', ''),
         'doi': source.get('doi'),
         'keywords': source.get('keywords', []),
         'data_keywords': source.get('data_keywords', {}),

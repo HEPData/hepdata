@@ -172,6 +172,7 @@ setup(
             'hepdata_frontpage = hepdata.modules.frontpage.views:blueprint',
             'hepdata_theme = hepdata.modules.theme.views:blueprint',
             'hepdata_dashboard = hepdata.modules.dashboard.views:blueprint',
+            'hepdata_search = hepdata.modules.search.views:blueprint',
         ],
         'invenio_celery.tasks': [
             'hepdata_records = hepdata.modules.records.migrator.api',
@@ -183,6 +184,7 @@ setup(
             'hepdata_theme_css = hepdata.modules.theme.bundles:css',
             'hepdata_theme_js = hepdata.modules.theme.bundles:js',
             'hepdata_record_css = hepdata.modules.theme.bundles:record_css',
+            'hepdata_search_css = hepdata.modules.theme.bundles:search_css',
         ],
         'invenio_jsonschemas.schemas': [
             'hepdata_records = hepdata.modules.records.jsonschemas',

@@ -53,6 +53,19 @@ record_css = NpmBundle(
     }
 )
 
+search_css = NpmBundle(
+    'scss/search.scss',
+    filters='scss, cleancss',
+    depends=('scss/*.scss', ),
+    output='gen/hepdata_search.%(version)s.css',
+    npm={
+        "almond": "~0.3.1",
+        "bootstrap-sass": "~3.3.5",
+        "font-awesome": "~4.4.0"
+    }
+)
+
+
 
 js = NpmBundle(
     Bundle(

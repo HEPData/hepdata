@@ -2,6 +2,14 @@
 
 
 
+{%- block additional_assets %}
+    {%- assets "hepdata_theme_css" %}
+        <link href="{{ ASSET_URL }}" rel="stylesheet">
+    {%- endassets %}
+
+{%- endblock additional_assets %}
+
+
 {% block page_body %}
 
     {% set delete_redirect_url = '/dashboard' %}
@@ -291,67 +299,75 @@
 {%- block javascript %}
 
     <script>
-        require([
-            "jquery",
-            "d3"
-        ], function ($, d3) {
-            $(document).ready(function () {
-                MathJax.Hub.Config({
-                    tex2jax: {inlineMath: [['$', '$'], ['\\(', '\\)']]}
+
+        $(document).ready(function () {
+            MathJax.Hub.Config({
+                tex2jax: {inlineMath: [['$', '$'], ['\\(', '\\)']]}
+            });
+            MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
+
+            var data = {{ctx.submission_stats | safe}};
+
+            for (var submission_idx in data) {
+                HEPDATA.visualization.pie.render(data[submission_idx]);
+            }
+
+            $(".filter-list li").bind('click', function () {
+                var id_parts = this.id.split("-");
+                var item_parent = id_parts[0];
+                // we need to reset all of the items to unselected before selecting the new item.
+                $("#" + item_parent + "-filter li").each(function () {
+                    $(this).removeClass("filter-selected");
+                    $(this).addClass("filter-inactive");
                 });
-                MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
 
-                var data = {{ctx.submission_stats | safe}};
+                $(this).addClass("filter-selected");
+                $(this).removeClass("filter-inactive");
 
-                for (var submission_idx in data) {
-                    HEPDATA.visualization.pie.render(data[submission_idx]);
+                HEPDATA.current_filters[item_parent] = id_parts[1].replace("_", " ");
+                $("#clear-" + item_parent).removeClass("hidden");
+                HEPDATA.filter_content('', '#hep-submissions');
+            });
+
+            $(".finalise-btn").bind("click", function () {
+                $("#finalise_submission_button").attr('data-recid', $(this).attr('data-recid'));
+                $("#finalise_submission_button").attr('data-versions', $(this).attr('data-versions'));
+                if ($(this).attr('data-versions') == 0) {
+                    $("#revision_commit_message").addClass("hidden");
                 }
+                $("#finaliseDialog").modal();
+            });
 
-                $(".filter-list li").bind('click', function () {
-                    var id_parts = this.id.split("-");
-                    var item_parent = id_parts[0];
-                    // we need to reset all of the items to unselected before selecting the new item.
-                    $("#" + item_parent + "-filter li").each(function () {
-                        $(this).removeClass("filter-selected");
-                        $(this).addClass("filter-inactive");
-                    });
+            $(".inspire-btn").bind("click", function () {
+                $("#inspire-add-button").attr('data-recid', $(this).attr("data-recid"));
+                $("#inspireDialog").modal();
+            });
 
-                    $(this).addClass("filter-selected");
-                    $(this).removeClass("filter-inactive");
+            $(".reindex-btn").bind("click", function () {
+                $("#reindexDialog").modal();
+            });
 
-                    HEPDATA.current_filters[item_parent] = id_parts[1].replace("_", " ");
-                    $("#clear-" + item_parent).removeClass("hidden");
+            $("[id^=clear]").bind('click', function () {
+                var list = this.id.split("-")[1];
+                HEPDATA.current_filters[list] = "";
+                $("#clear-" + list).addClass("hidden");
+                $("#" + list + "-filter li").each(function () {
+                    $(this).removeClass("filter-selected filter-inactive");
                     HEPDATA.filter_content('', '#hep-submissions');
                 });
-
-                $(".finalise-btn").bind("click", function () {
-                    $("#finalise_submission_button").attr('data-recid', $(this).attr('data-recid'));
-                    $("#finalise_submission_button").attr('data-versions', $(this).attr('data-versions'));
-                    if ($(this).attr('data-versions') == 0) {
-                        $("#revision_commit_message").addClass("hidden");
-                    }
-                    $("#finaliseDialog").modal();
-                });
-
-                $(".inspire-btn").bind("click", function () {
-                    $("#inspire-add-button").attr('data-recid', $(this).attr("data-recid"));
-                    $("#inspireDialog").modal();
-                });
-
-                $(".reindex-btn").bind("click", function () {
-                    $("#reindexDialog").modal();
-                });
-
-                $("[id^=clear]").bind('click', function () {
-                    var list = this.id.split("-")[1];
-                    HEPDATA.current_filters[list] = "";
-                    $("#clear-" + list).addClass("hidden");
-                    $("#" + list + "-filter li").each(function () {
-                        $(this).removeClass("filter-selected filter-inactive");
-                        HEPDATA.filter_content('', '#hep-submissions');
-                    });
-                });
             });
-        })
+        });
+
     </script>
 {% endblock %}
+
+{%- block additional_javascript %}
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/mathjax/2.5.3/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script src="//cdn.jsdelivr.net/bootstrap.filestyle/1.1.0/js/bootstrap-filestyle.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.6/js/bootstrap.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/d3/3.5.10/d3.min.js"></script>
+        {%- assets "hepdata_theme_js" %}
+        <script src="{{ ASSET_URL }}"></script>
+    {%- endassets %}
+{%- endblock additional_javascript %}

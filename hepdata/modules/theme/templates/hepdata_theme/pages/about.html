@@ -4,211 +4,242 @@
 {% block page_body %}
 
 
-{%include "hepdata_theme/pages/custom_styling.html" %}
+    {% include "hepdata_theme/pages/custom_styling.html" %}
 
 
-<div class="row" style="margin: 0; padding: 9em 10% 1% 5%">
-    <div class="section-header" style="width:135px; padding-bottom: 4em"><p>About HEPData</p></div>
+    <div class="row" style="margin: 0; padding: 9em 10% 1% 5%">
+        <div class="section-header" style="width:135px; padding-bottom: 4em">
+            <p>About HEPData</p></div>
 
-    <div class="col-md-6">
-        <div id="hepdata-loading" style="width:80%; height: 312px; margin: 0 auto;">
-            <svg class="line-drawing" id="mac" width="100%" height="100%" preserveAspectRatio="xMidYMid meet"
-                 xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 400">
-                <path fill="none" stroke="#000000" stroke-miterlimit="10"
-                      d="M630.71,152.412h-96.022V11.417h96.022V152.412z"/>
-                <path fill="none" stroke="#000000" stroke-miterlimit="10"
-                      d="M578.977,102.797h-36.81v-30.58h36.81V102.797z"/>
-                <path fill="none" stroke="#000000" stroke-miterlimit="10" d="M70.752,86.845c9.207-4.783,14.966-14.611,34.226-17.186
+        <div class="col-md-6">
+            <div id="hepdata-loading"
+                 style="width:80%; height: 312px; margin: 0 auto;">
+                <svg class="line-drawing" id="mac" width="100%" height="100%"
+                     preserveAspectRatio="xMidYMid meet"
+                     xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 400">
+                    <path fill="none" stroke="#000000" stroke-miterlimit="10"
+                          d="M630.71,152.412h-96.022V11.417h96.022V152.412z"/>
+                    <path fill="none" stroke="#000000" stroke-miterlimit="10"
+                          d="M578.977,102.797h-36.81v-30.58h36.81V102.797z"/>
+                    <path fill="none" stroke="#000000" stroke-miterlimit="10"
+                          d="M70.752,86.845c9.207-4.783,14.966-14.611,34.226-17.186
 								c23.306-3.121,69.336,0.548,97.167-0.958c37.569-2.032,70.041-3.921,101.785,4.055c25.004,6.285,40.423,9.054,72.544,4.838
 								c25.424-3.335,48.891-12.06,79.084-7.538c25.528,3.823,51.673,13.5,77.342,14.259c6.797,0.201,13.842,1.357,20.528,3.14
 								c-0.011-0.062,6.607,1.283,6.521,1.262c7.698,1.588,11.47-1.151,19.339-1.985"/>
-                <path fill="none" stroke="#000000" stroke-miterlimit="10" d="M444.131,0.5H222.064c-2.453,0-4.441,1.989-4.441,4.441V135.22
+                    <path fill="none" stroke="#000000" stroke-miterlimit="10"
+                          d="M444.131,0.5H222.064c-2.453,0-4.441,1.989-4.441,4.441V135.22
 								c0,2.452,1.989,4.441,4.441,4.441h80.684v25.169h60.7v-25.169h80.684c2.453,0,4.441-1.989,4.441-4.441V4.941
 								C448.572,2.489,446.584,0.5,444.131,0.5z"/>
-                <path fill="none" stroke="#000000" stroke-miterlimit="10" d="M71.06,87.182c9.207,3.763,14.966,11.493,34.226,13.519
+                    <path fill="none" stroke="#000000" stroke-miterlimit="10"
+                          d="M71.06,87.182c9.207,3.763,14.966,11.493,34.226,13.519
 								c23.306,2.454,69.336-0.432,97.167,0.753c37.569,1.6,64.095-47.628,95.839-53.903c25.004-4.943,46.369,43.591,78.491,46.909
 								c25.423,2.623,48.89,9.485,79.084,5.929c11.953-1.409,34.385-5.738,58.401-6.742c34.182-1.429,38.017-15.209,45.182-16.929
 								c5.77-1.386,5.646,7.607,11,8.5c6,1,2.2,5.657,8.5,9.5"/>
-                <path fill="none" stroke="#FFFFFF" stroke-width="4" stroke-miterlimit="10" d="M88.951,86.967c0,9.736-7.892,17.622-17.625,17.622
+                    <path fill="none" stroke="#FFFFFF" stroke-width="4"
+                          stroke-miterlimit="10" d="M88.951,86.967c0,9.736-7.892,17.622-17.625,17.622
 								s-17.621-7.886-17.621-17.622c0-9.729,7.888-17.621,17.621-17.621S88.951,77.237,88.951,86.967z"/>
-                <path fill="none" stroke="#000000" stroke-width="5" stroke-miterlimit="10" d="M71.329,59.607
+                    <path fill="none" stroke="#000000" stroke-width="5"
+                          stroke-miterlimit="10" d="M71.329,59.607
 								c-15.111,0-27.359,12.248-27.359,27.36c0,15.114,12.248,27.362,27.359,27.362s27.359-12.248,27.359-27.362
 								C98.688,71.855,86.44,59.607,71.329,59.607z M83.47,132.267l21.021-12.139l12.137-21.021V74.829L104.49,53.809L83.47,41.667H59.188
 								L38.167,53.809L26.03,74.829v24.278l12.137,21.021l21.021,12.139H83.47z M86.842,144.854L113.7,129.34l15.512-26.86V71.457
 								L113.7,44.595L86.842,29.082H55.815L28.956,44.595L13.444,71.457v31.023l15.512,26.86l26.859,15.514H86.842z M89.773,155.797
 								l31.937-18.449l18.445-31.933V68.521L121.71,36.586L89.773,18.138H52.882L20.947,36.586L2.5,68.521v36.894l18.447,31.933
 								l31.935,18.449H89.773z"/>
-                <path fill="none" stroke="#FFFFFF" stroke-miterlimit="10" d="M71.329,83.722c-1.79,0-3.244,1.458-3.244,3.245
+                    <path fill="none" stroke="#FFFFFF" stroke-miterlimit="10"
+                          d="M71.329,83.722c-1.79,0-3.244,1.458-3.244,3.245
 								c0,1.792,1.454,3.244,3.244,3.244c1.792,0,3.244-1.452,3.244-3.244C74.573,85.18,73.121,83.722,71.329,83.722z"/>
-                <path fill="none" stroke="#000000" stroke-miterlimit="10" d="M541.697,25.218h82"/>
+                    <path fill="none" stroke="#000000" stroke-miterlimit="10"
+                          d="M541.697,25.218h82"/>
 
-                <path fill="none" stroke="#000000" stroke-miterlimit="10" d="M585.696,41.217h37 M585.696,46.775h37 M585.696,52.334h37
+                    <path fill="none" stroke="#000000" stroke-miterlimit="10"
+                          d="M585.696,41.217h37 M585.696,46.775h37 M585.696,52.334h37
 								 M585.696,57.893h37 M585.696,63.452h37 M585.696,69.011h37 M585.696,74.57h37 M585.696,80.128h37 M585.696,85.688h37
 								 M585.696,91.246h37 M585.696,96.805h37 M585.696,102.364h37 M585.696,107.923h37 M585.696,113.481h37 M585.696,119.04h37
 								 M585.696,124.6h37 M585.696,130.158h37 M585.696,135.717h37 M542.196,41.217h37 M542.196,46.775h37 M542.196,52.334h37
 								 M542.196,57.893h37 M542.196,63.452h37 M542.196,119.04h37 M542.196,124.6h37 M542.196,130.158h37 M542.196,135.717h37"/>
-            </svg>
+                </svg>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <p style="font-size: 1.3em; font-weight: lighter">The Durham High
+                Energy Physics Database (HEPData) has been built up over the
+                past four decades
+                as a unique open-access repository for scattering data from
+                experimental particle physics. It currently
+                comprises the data points from plots and tables related to
+                several thousand publications including those
+                from the Large Hadron Collider (LHC). HEPData is funded by a
+                grant from the UK
+                <a href="http://www.stfc.ac.uk/" target="_blank">STFC</a> and
+                is based at the
+                <a href="http://www.ippp.dur.ac.uk/" target="_blank">IPPP</a>
+                at Durham University.</p>
         </div>
     </div>
-    <div class="col-md-6">
-        <p style="font-size: 1.3em; font-weight: lighter">The Durham High Energy Physics Database (HEPData) has been built up over the past four decades
-            as a unique open-access repository for scattering data from experimental particle physics. It currently
-            comprises the data points from plots and tables related to several thousand publications including those
-            from the Large Hadron Collider (LHC).  HEPData is funded by a grant from the UK
-            <a href="http://www.stfc.ac.uk/" target="_blank">STFC</a> and is based at the
-            <a href="http://www.ippp.dur.ac.uk/" target="_blank">IPPP</a> at Durham University.</p>
+
+    <div class="row" style="margin: 0; padding: 0% 10% ">
+        <div class="section-header" style="padding-bottom: 4em"><p>Meet the
+            HEPData Team</p></div>
+
+        <div class="col-md-12">
+
+            <div class="team-member">
+                <div class="team-member-image"
+                     style="background-image: url(http://hepdata.cedar.ac.uk/resource/graemewatt.jpeg)">
+
+                </div>
+                <div class="team-member-detail">
+                    <a href="http://www.ippp.dur.ac.uk/profile/watt"
+                       target="_blank">Graeme Watt</a><br/>
+                    <span>Durham University</span>
+                </div>
+            </div>
+
+            <div class="team-member">
+                <div class="team-member-image"
+                     style="background-image: url(http://hepdata.cedar.ac.uk/resource/mikewhalley.jpeg)">
+
+                </div>
+                <div class="team-member-detail">
+                    <a href="http://www.ippp.dur.ac.uk/profile/whalley"
+                       target="_blank">Mike Whalley</a><br/>
+                    <span>Durham University</span>
+                </div>
+            </div>
+
+            <div class="team-member">
+                <div class="team-member-image"
+                     style="background-image: url(http://hepdata.cedar.ac.uk/resource/joannebentham.jpeg)">
+
+                </div>
+                <div class="team-member-detail">
+                    <a href="http://www.ippp.dur.ac.uk/profile/joanne"
+                       target="_blank">Joanne Bentham</a><br/>
+                    <span>Durham University</span>
+                </div>
+            </div>
+
+            <div class="team-member">
+                <div class="team-member-image"
+                     style="background-image: url(static/img/people/krauss.jpg)">
+
+                </div>
+                <div class="team-member-detail">
+                    <a href="http://www.ippp.dur.ac.uk/profile/krauss/"
+                       target="_blank">Frank Krauss</a><br/>
+                    <span>Durham University</span>
+                </div>
+            </div>
+
+            <div class="team-member">
+                <div class="team-member-image"
+                     style="background-image: url(http://www.oerc.ox.ac.uk/sites/default/files/styles/person/public/people/eamonn.jpg)">
+
+                </div>
+                <div class="team-member-detail">
+                    <a href="https://uk.linkedin.com/in/eamonnmaguire1986"
+                       target="_blank">Eamonn Maguire</a><br/>
+                    <span>CERN</span>
+                </div>
+            </div>
+
+            <div class="team-member">
+                <div class="team-member-image"
+                     style="background-image: url(https://media.licdn.com/mpr/mpr/shrinknp_400_400/p/4/005/0b2/086/1e94e74.jpg)">
+
+                </div>
+                <div class="team-member-detail">
+                    <a href="https://ch.linkedin.com/in/laurarueda"
+                       target="_blank">Laura Rueda Garcia</a><br/>
+                    <span>CERN</span>
+                </div>
+            </div>
+
+            <div class="team-member">
+                <div class="team-member-image"
+                     style="background-image: url(https://avatars3.githubusercontent.com/u/4479536?v=3&s=460)">
+
+                </div>
+                <div class="team-member-detail">
+                    <a href="https://pl.linkedin.com/in/jstypka/en"
+                       target="_blank">Jan Stypka</a><br/>
+                    <span>CERN</span>
+                </div>
+            </div>
+            <!--<ul>-->
+            <!--<li>Dr. Frank Krauss</li>-->
+            <!--<li>Dr. Mike Whalley</li>-->
+            <!--<li>Dr. Graeme Watt</li>-->
+            <!--<li>Mrs. Lorna</li>-->
+            <!--</ul>-->
+        </div>
+
+        <div class="clearfix"></div>
+        <div class="col-md-12" style="padding-top: 10%" align="center">
+            <div class="section-header" style="width:250px"><p>HEPData Advisory
+                Board</p></div>
+            <br/>
+            Members:
+            <ul style="list-style: none; -webkit-padding-start: 0">
+                <li>Jeppe Andersen (IPPP Durham)</li>
+                <li>Kyle Cranmer (NYU, generic users)</li>
+                <li>S&uuml;nje Dallmeier-Tiessen (CERN, INSPIRE)</li>
+                <li>Ulrik Egede (Imperial, LHCb)</li>
+                <li>Keith Ellis (IPPP Durham)</li>
+                <li>Henning Flaecher (Bristol, CMS)</li>
+                <li>Salvatore Mele (CERN, INSPIRE)</li>
+                <li>Bill Murray (RAL/Warwick, ATLAS)</li>
+                <li>Enrico Scomparin (Torino, ALICE)</li>
+                <li>Matthew Wing (UCL, non-LHC experiments)</li>
+            </ul>
+            Meetings:
+            <ul style="list-style: none; -webkit-padding-start: 0">
+                <li><a href="http://conference.ippp.dur.ac.uk/e/HepData2014"
+                       target="_blank">12<sup>th</sup> November 2014</a></li>
+                <li><a href="http://conference.ippp.dur.ac.uk/e/HepData2015"
+                       target="_blank">16<sup>th</sup> October 2015</a></li>
+            </ul>
+        </div>
+        <div class="clearfix"></div>
+
+        <div class="col-md-12" style="padding-top: 10%" align="center">
+            <div class="section-header" style="width:80px"><p>Funders</p></div>
+            <br/>
+            <br/>
+            <a href="http://www.stfc.ac.uk/" target="_blank"><img
+                    src="http://www.numerical.rl.ac.uk/images/template/stfcLogo.png"></a>
+        </div>
+
+
+        <div class="col-md-12" style="padding-top: 10%; padding-bottom: 10%">
+            <div class="section-header" style="width:80px"><p>Partners</p>
+            </div>
+            <br/>
+
+            <div class="col-md-6" align="center"><a href="http://www.dur.ac.uk"
+                                                    target="_blank"><img
+                    src="static/img/about/durham-logo.svg" width="240px"></a>
+            </div>
+            <div class="col-md-6" align="center"><a href="http://www.cern.ch"
+                                                    target="_blank"> <img
+                    src="static/img/about/cern-logo.svg" width="130px"></a>
+            </div>
+            </ul>
+        </div>
+
+
     </div>
-</div>
-
-<div class="row" style="margin: 0; padding: 0% 10% ">
-    <div class="section-header" style="padding-bottom: 4em"><p>Meet the HEPData Team</p></div>
-
-    <div class="col-md-12">
-
-        <div class="team-member">
-            <div class="team-member-image"
-                 style="background-image: url(http://hepdata.cedar.ac.uk/resource/graemewatt.jpeg)">
-
-            </div>
-            <div class="team-member-detail">
-                <a href="http://www.ippp.dur.ac.uk/profile/watt" target="_blank">Graeme Watt</a><br/>
-                <span>Durham University</span>
-            </div>
-        </div>
-
-        <div class="team-member">
-            <div class="team-member-image"
-                 style="background-image: url(http://hepdata.cedar.ac.uk/resource/mikewhalley.jpeg)">
-
-            </div>
-            <div class="team-member-detail">
-                <a href="http://www.ippp.dur.ac.uk/profile/whalley" target="_blank">Mike Whalley</a><br/>
-                <span>Durham University</span>
-            </div>
-        </div>
-
-        <div class="team-member">
-            <div class="team-member-image"
-                 style="background-image: url(http://hepdata.cedar.ac.uk/resource/joannebentham.jpeg)">
-
-            </div>
-            <div class="team-member-detail">
-                <a href="http://www.ippp.dur.ac.uk/profile/joanne" target="_blank">Joanne Bentham</a><br/>
-                <span>Durham University</span>
-            </div>
-        </div>
-
-        <div class="team-member">
-            <div class="team-member-image"
-                 style="background-image: url(static/img/people/krauss.jpg)">
-
-            </div>
-            <div class="team-member-detail">
-                <a href="http://www.ippp.dur.ac.uk/profile/krauss/" target="_blank">Frank Krauss</a><br/>
-                <span>Durham University</span>
-            </div>
-        </div>
-
-        <div class="team-member">
-            <div class="team-member-image"
-                 style="background-image: url(http://www.oerc.ox.ac.uk/sites/default/files/styles/person/public/people/eamonn.jpg)">
-
-            </div>
-            <div class="team-member-detail">
-                <a href="https://uk.linkedin.com/in/eamonnmaguire1986" target="_blank">Eamonn Maguire</a><br/>
-                <span>CERN</span>
-            </div>
-        </div>
-
-        <div class="team-member">
-            <div class="team-member-image"
-                 style="background-image: url(https://media.licdn.com/mpr/mpr/shrinknp_400_400/p/4/005/0b2/086/1e94e74.jpg)">
-
-            </div>
-            <div class="team-member-detail">
-                <a href="https://ch.linkedin.com/in/laurarueda" target="_blank">Laura Rueda Garcia</a><br/>
-                <span>CERN</span>
-            </div>
-        </div>
-
-        <div class="team-member">
-            <div class="team-member-image"
-                 style="background-image: url(https://avatars3.githubusercontent.com/u/4479536?v=3&s=460)">
-
-            </div>
-            <div class="team-member-detail">
-                <a href="https://pl.linkedin.com/in/jstypka/en" target="_blank">Jan Stypka</a><br/>
-                <span>CERN</span>
-            </div>
-        </div>
-        <!--<ul>-->
-        <!--<li>Dr. Frank Krauss</li>-->
-        <!--<li>Dr. Mike Whalley</li>-->
-        <!--<li>Dr. Graeme Watt</li>-->
-        <!--<li>Mrs. Lorna</li>-->
-        <!--</ul>-->
-    </div>
-
-    <div class="clearfix"></div>
-    <div class="col-md-12" style="padding-top: 10%" align="center">
-        <div class="section-header" style="width:250px"><p>HEPData Advisory Board</p></div>
-        <br/>
-        Members:
-        <ul style="list-style: none; -webkit-padding-start: 0">
-            <li>Jeppe Andersen (IPPP Durham)</li>
-            <li>Kyle Cranmer (NYU, generic users)</li>
-            <li>S&uuml;nje Dallmeier-Tiessen (CERN, INSPIRE)</li>
-            <li>Ulrik Egede (Imperial, LHCb)</li>
-            <li>Keith Ellis (IPPP Durham)</li>
-            <li>Henning Flaecher (Bristol, CMS)</li>
-            <li>Salvatore Mele (CERN, INSPIRE)</li>
-            <li>Bill Murray (RAL/Warwick, ATLAS)</li>
-            <li>Enrico Scomparin (Torino, ALICE)</li>
-            <li>Matthew Wing (UCL, non-LHC experiments)</li>
-        </ul>
-        Meetings:
-        <ul style="list-style: none; -webkit-padding-start: 0">
-            <li><a href="http://conference.ippp.dur.ac.uk/e/HepData2014" target="_blank">12<sup>th</sup> November 2014</a></li>
-            <li><a href="http://conference.ippp.dur.ac.uk/e/HepData2015" target="_blank">16<sup>th</sup> October 2015</a></li>
-        </ul>
-    </div>
-    <div class="clearfix"></div>
-
-    <div class="col-md-12" style="padding-top: 10%" align="center">
-        <div class="section-header" style="width:80px"><p>Funders</p></div>
-        <br/>
-        <br/>
-        <a href="http://www.stfc.ac.uk/" target="_blank"><img
-                src="http://www.numerical.rl.ac.uk/images/template/stfcLogo.png"></a>
-    </div>
-
-
-    <div class="col-md-12" style="padding-top: 10%; padding-bottom: 10%">
-        <div class="section-header" style="width:80px"><p>Partners</p></div>
-        <br/>
-
-        <div class="col-md-6" align="center"><a href="http://www.dur.ac.uk" target="_blank"><img
-                src="static/img/about/durham-logo.svg" width="240px"></a></div>
-        <div class="col-md-6" align="center"><a href="http://www.cern.ch" target="_blank"> <img
-                src="static/img/about/cern-logo.svg" width="130px"></a></div>
-        </ul>
-    </div>
-
-
-</div>
 {% endblock %}
 
 {%- block javascript %}
 
-<script>
-    require([
-        "d3",
-        "jquery"
-    ], function (d3, $) {
+    <script>
+
         $(document).ready(function () {
             HEPDATA.render_about_animation("#hepdata-loading");
         });
-    })
-</script>
+
+    </script>
 
 {% endblock %}
