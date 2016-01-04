@@ -33,7 +33,7 @@
 
                     <div class="pull-right menu">
                         <ul>
-                            {%- if not current_user.is_authenticated %}
+                            {%- if current_user.is_authenticated %}
                                 {% if user_is_coordinator_or_admin %}
                                     <li>
                                         <a href="/submit">

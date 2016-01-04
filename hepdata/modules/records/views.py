@@ -662,7 +662,6 @@ def consume_data_payload(recid):
 @login_required
 @blueprint.route('/sandbox', methods=['GET'])
 def sandbox():
-    # todo: list previous submissions for a logged in user.
     current_id = current_user.get_id()
     submissions = HEPSubmission.query.filter_by(coordinator=current_id,
                                                 overall_status='sandbox').all()

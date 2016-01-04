@@ -173,6 +173,7 @@ setup(
             'hepdata_theme = hepdata.modules.theme.views:blueprint',
             'hepdata_dashboard = hepdata.modules.dashboard.views:blueprint',
             'hepdata_search = hepdata.modules.search.views:blueprint',
+            'hepdata_submission = hepdata.modules.submission.views:blueprint',
         ],
         'invenio_celery.tasks': [
             'hepdata_records = hepdata.modules.records.migrator.api',

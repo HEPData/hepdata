@@ -1,0 +1,98 @@
+{#
+## This file is part of HEPData.
+## Copyright (C) 2014 CERN.
+##
+## HEPData is free software: you can redistribute it and/or modify
+## it under the terms of the GNU General Public License as published by
+## the Free Software Foundation, either version 3 of the License, or
+## (at your option) any later version.
+##
+## HEPData is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+## GNU General Public License for more details.
+##
+## You should have received a copy of the GNU General Public License
+## along with HEPData. If not, see
+##
+## In applying this licence, CERN does not waive the privileges and immunities
+## granted to it by virtue of its status as an Intergovernmental Organization
+## or submit itself to any jurisdiction.
+#}
+
+{%- extends "hepdata_theme/page.html" %}
+
+
+
+{%- block additional_assets %}
+
+    <style>
+        #hepdata_table_detail {
+            width: 87% !important;
+        }
+    </style>
+
+{%- endblock additional_assets %}
+
+
+{% block page_body %}
+
+    <div class="hep_breadcrumbs">
+        <ul>
+            <li class="active"><span class="fa fa-upload"></span>
+                HEPData Submission
+            </li>
+
+            <li class="pull-right">
+            </li>
+        </ul>
+    </div>
+
+    <div class="clearfix"></div>
+
+
+    <div class="upload-area" style="width: 100%">
+        <div class="root_upload_form" align="center">
+            <img src="{{ url_for('static', filename='img/icon-upload.svg') }}"
+                 width="70">
+
+            <h4>Upload an archive to preview</h4>
+            <br/>
+
+            <div class="info">
+                <p>Upload a <strong>zip</strong> archive containing files
+                    formatted per these <a
+                            href="https://github.com/HEPData/hepdata-submission"
+                            target="_blank">these guidelines</a>.</p>
+
+                <p>An example submission is available <a
+                        href="https://www.dropbox.com/s/ph6zphwfjnigki1/1203852_hm.zip?dl=0"
+                        target="_blank">here</a>.</p>
+            </div>
+
+            <form action="/record/sandbox/consume" method="post"
+                  enctype=multipart/form-data>
+                <input type="file" name="hep_archive" id="root_file_upload"
+                       data-iconName="fa fa-upload"
+                       class="filestyle">
+                <br/>
+
+                <input type="submit" value="Upload and Process"
+                       class="btn btn-primary">
+            </form>
+
+        </div>
+
+    </div>
+
+
+
+
+{% endblock %}
+{%- block javascript %}
+
+
+
+{% endblock %}
+
+

@@ -82,9 +82,7 @@ class HEPDataRecords(object):
                 :return: true if the user is a coordinator or administrator,
                 false otherwise
             """
-            print("HI THERE, is_coordinator_or_admin")
             result = user_is_admin_or_coordinator()
-            print(result)
             return dict(
                 user_is_coordinator_or_admin=result)
 
