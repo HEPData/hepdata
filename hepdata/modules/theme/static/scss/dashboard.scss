@@ -17,7 +17,7 @@
   width: 90%;
 
   h4 {
-    height: 70px;
+    height: 80px;
     overflow: hidden;
   }
 }
@@ -37,9 +37,13 @@
     border-radius: 3px;
     color: $navy;
 
+    h4 {
+      line-height: .9em;
+    }
+
     h4 a {
       color: $navy;
-      font-size: 1em;
+      font-size: .7em;
       font-weight: normal;
       text-transform: capitalize;
     }
@@ -73,7 +77,7 @@
     padding: 15px;
     background-color: $lightgrey;
     border-radius: 0 0 3px 3px;
-    min-height: 223px;
+    min-height: 210px;
 
   }
 }
@@ -313,6 +317,7 @@
   float: left;
   display: inline-block;
 
+
   h4 {
     color: $purple;
   }
@@ -391,7 +396,6 @@ p.no-entries {
   margin-bottom: 10px;
 
   div {
-    padding: 5px 4px;
     display: inline-block;
   }
   .title {

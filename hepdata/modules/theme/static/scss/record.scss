@@ -233,15 +233,16 @@
 }
 
 .message-item .reviewer {
-  font-size: .7em;
+  font-size: .8em;
   font-weight: bolder;
-  color: #3498db;
+  color: $blue;
 }
 
 .message-item .message-time {
   font-size: .7em;
   font-weight: lighter;
   color: $lightgrey;
+  text-align: left;
 }
 
 #conversation .message-item .message-time {

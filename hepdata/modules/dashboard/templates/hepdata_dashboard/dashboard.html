@@ -14,7 +14,7 @@
 
     {% set delete_redirect_url = '/dashboard' %}
 
-    <div class="hep-content" style="padding-top: 65px">
+    <div class="hep-content" style="padding-top: 65px; height: 100%">
 
     <div class="dashboard-header">
         <h4>HEPData Dashboard <span class="pull-right"
@@ -47,7 +47,7 @@
                name="data-table-filter"
                onkeyup="HEPDATA.filter_content('#submission-filter','#hep-submissions')">
 
-        <br/><br/>
+        <br/>
 
         <p>Progress <span id="clear-progress"
                           class="clear-filter pull-right hidden"><span
@@ -298,6 +298,15 @@
 
 {%- block javascript %}
 
+
+    <script src="//cdnjs.cloudflare.com/ajax/libs/mathjax/2.5.3/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script src="//cdn.jsdelivr.net/bootstrap.filestyle/1.1.0/js/bootstrap-filestyle.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.6/js/bootstrap.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/d3/3.5.10/d3.min.js"></script>
+    {%- assets "hepdata_theme_js" %}
+        <script src="{{ ASSET_URL }}"></script>
+    {%- endassets %}
+
     <script>
 
         $(document).ready(function () {
@@ -360,14 +369,3 @@
 
     </script>
 {% endblock %}
-
-{%- block additional_javascript %}
-    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/mathjax/2.5.3/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    <script src="//cdn.jsdelivr.net/bootstrap.filestyle/1.1.0/js/bootstrap-filestyle.min.js"></script>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.6/js/bootstrap.min.js"></script>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/d3/3.5.10/d3.min.js"></script>
-        {%- assets "hepdata_theme_js" %}
-        <script src="{{ ASSET_URL }}"></script>
-    {%- endassets %}
-{%- endblock additional_javascript %}

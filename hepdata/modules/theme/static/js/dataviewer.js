@@ -234,8 +234,9 @@ HEPDATA.render_review_message = function (placement, message) {
     var message_item = d3.select(placement).append('div').attr('class', 'message-item');
     var message_info = message_item.append('div').attr('class', 'message-info');
     message_info.append('p').attr('class', 'message-time').html(date_time[0] + '<br/>' + date_time[1]);
-    message_info.append('p').attr('class', 'reviewer').text(message.user);
-    message_item.append('div').attr('class', 'message-content').text(message.message);
+    var message_div = message_item.append('div').attr('class', 'message-content');
+    message_div.append('p').attr('class', 'reviewer').text(message.user);
+    message_div.append('p').text(message.message);
 };
 
 HEPDATA.load_review_messages = function (placement, record_id, table_id) {

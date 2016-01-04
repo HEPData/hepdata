@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 hepdata db drop
 hepdata db init
 hepdata db create

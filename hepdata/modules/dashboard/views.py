@@ -460,7 +460,7 @@ def do_finalise(recid, publication_record=None, force_finalise=False,
 
     generated_record_ids = []
     # check if current user is the coordinator
-    if force_finalise or hep_submission.coordinator == current_user.get_id():
+    if force_finalise or hep_submission.coordinator == int(current_user.get_id()):
 
         print 'Latest version for {0} is {1}'.format(
             recid, hep_submission.latest_version)
