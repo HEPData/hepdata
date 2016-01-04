@@ -44,7 +44,8 @@ from hepdata.ext.elasticsearch.api import get_records_matching_field, \
     get_record, get_count_for_collection, get_n_latest_records
 from hepdata.modules.api_inspire.views import get_inspire_record_information
 from hepdata.modules.records.models import HEPSubmission, DataSubmission, \
-    DataResource, DataReview, DataReviewMessage, SubmissionParticipant
+    DataResource, DataReview, DataReviewMessage, SubmissionParticipant, \
+    RecordVersionCommitMessage
 from hepdata.modules.records.utils.common import get_record_by_id, \
     default_time, \
     transform_record_information_for_bibupload, allowed_file, \
@@ -181,12 +182,17 @@ def process_submission(recid, record, version, hepdata_submission,
                     ctx['breadcrumb_text'] = record["_first_author"][
                                                  "full_name"] + " et al."
 
-            if "revision_messages" in record:
-                for review_message in record["revision_messages"]:
+            try:
+                commit_message_query = RecordVersionCommitMessage.query \
+                    .filter_by(version=ctx["version"], recid=recid).one()
 
-                    if "version" in review_message \
-                            and review_message["version"] == ctx["version"]:
-                        ctx["revision_message"] = review_message
+                ctx["revision_message"] = {
+                    'version': commit_message_query.version,
+                    'message': commit_message_query.message}
+
+            except NoResultFound:
+                print('No commit message for {0}'.format(recid))
+                pass
 
             truncate_author_list(record)
             determine_user_privileges(recid, ctx)
