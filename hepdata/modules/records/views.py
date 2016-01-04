@@ -709,7 +709,7 @@ def consume_sandbox_payload():
     # generate a unique id
     import time
     # creates an id contructed from the user id and the current time in milliseconds
-    id = (current_user.get_id()) + int(round(time.time()))
+    id = (int(current_user.get_id())) + int(round(time.time()))
 
     get_or_create_hepsubmission(id, current_user.get_id(), status="sandbox")
     file = request.files['hep_archive']

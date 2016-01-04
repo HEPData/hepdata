@@ -20,31 +20,20 @@
 ## or submit itself to any jurisdiction.
 #}
 
-{%- extends "page.html" %}
+{%- extends "hepdata_theme/page.html" %}
 
 
-{%- block header %}
-{%- include "base/scripts.html" %}
-{{- super() }}
-{%- endblock header %}
-{%- block _bottom_assets %}
-{# The legacy page requires that the scripts are loaded from the head
-# rather than at the bottom of the page.
-#}
-{%- endblock %}
 
-{% block global_bundles %}
-{{ super() }}
-{% bundles "hep_dataview.js" %}
-<script src="//cdnjs.cloudflare.com/ajax/libs/mathjax/2.5.3/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+{%- block additional_assets %}
 
-<style>
+   <style>
     #hepdata_table_detail {
         width: 87% !important;
     }
 </style>
 
-{% endblock %}
+{%- endblock additional_assets %}
+
 
 {% block page_body %}
 
@@ -77,7 +66,8 @@
 {% if ctx.data_tables|length == 0 %}
 <div class="upload-area" style="width: 100%">
     <div class="root_upload_form" align="center">
-        <img src="/img/icon-upload.svg" width="70px"/>
+        <img src="{{ url_for('static', filename='img/icon-upload.svg')}}" width="70">
+
         <h4>Upload an archive to preview</h4>
         <br/>
 

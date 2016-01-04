@@ -138,6 +138,7 @@ body.home-page {
   margin-left: -8px;
   color: $navy;
   background: white url("/static/img/icons/search_icon.svg") no-repeat 5px 50%;
+  background-size: 13%;
   padding: 5px 6px 5px 25px;
 }
 
@@ -147,6 +148,7 @@ body.home-page {
   margin-left: -8px;
   color: $navy;
   background: $lightgrey url("/static/img/icons/search_icon.svg") no-repeat 5px 50%;
+  background-size: 8%;
   padding: 8px 9px 7px 25px;
 
 }

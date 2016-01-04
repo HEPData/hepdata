@@ -147,7 +147,7 @@ class DataSubmission(db.Model):
     # when a new version is loaded, the version is increased and
     # maintained so people can go back in time
     # through a submissions review stages.
-    version = db.Column(db.Integer, default=1)
+    version = db.Column(db.Integer, default=0)
 
 
 class Keyword(db.Model):
@@ -220,8 +220,7 @@ class DataReview(db.Model):
                                secondary="review_messages",
                                cascade="all,delete")
 
-    # stores the vers
-    version = db.Column(db.Integer, default=1)
+    version = db.Column(db.Integer, default=0)
 
 
 class DataReviewMessage(db.Model):
@@ -234,7 +233,23 @@ class DataReviewMessage(db.Model):
                    autoincrement=True)
 
     user = db.Column(db.Integer, db.ForeignKey(User.id))
-    message = db.Column(db.String(512))
+    message = db.Column(db.String(1024))
 
     creation_date = db.Column(db.DateTime, nullable=False, default=func.now(),
                               index=False)
+
+
+class RecordVersionCommitMessage(db.Model):
+    """
+    Stores messages that can be attached to each submission once
+    """
+    id = db.Column(
+        db.Integer, primary_key=True,
+        nullable=False, autoincrement=True)
+
+    recid = db.Column(db.Integer, db.ForeignKey("datasubmission.id"))
+    version = db.Column(db.Integer, default=1)
+    creation_date = db.Column(
+        db.DateTime, nullable=False, default=func.now(), index=True)
+    message = db.Column(db.String(1024))
+

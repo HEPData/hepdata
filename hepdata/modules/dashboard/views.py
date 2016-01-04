@@ -11,7 +11,7 @@ from hepdata.ext.elasticsearch.api import reindex_all, \
     get_records_matching_field, delete_item_from_index, index_record_ids
 from hepdata.ext.elasticsearch.api import push_data_keywords
 from hepdata.modules.records.models import HEPSubmission, DataReview, \
-    SubmissionParticipant, DataSubmission
+    SubmissionParticipant, DataSubmission, RecordVersionCommitMessage
 from hepdata.modules.records.utils.common import get_record_by_id
 from flask import Blueprint, jsonify, request, render_template
 from hepdata.modules.records.utils.submission import unload_submission
@@ -460,7 +460,8 @@ def do_finalise(recid, publication_record=None, force_finalise=False,
 
     generated_record_ids = []
     # check if current user is the coordinator
-    if force_finalise or hep_submission.coordinator == int(current_user.get_id()):
+    if force_finalise or hep_submission.coordinator == int(
+            current_user.get_id()):
 
         print 'Latest version for {0} is {1}'.format(
             recid, hep_submission.latest_version)
@@ -479,12 +480,14 @@ def do_finalise(recid, publication_record=None, force_finalise=False,
             # we need to determine which are the existing record ids.
             existing_data_records = get_records_matching_field(
                 'related_publication', recid, doc_type=CFG_DATA_TYPE)
+            print(existing_data_records)
             for record in existing_data_records["hits"]["hits"]:
-                print record
-                if "recid" in record:
-                    existing_submissions[record["title"]] = \
-                        record["recid"]
-                    delete_item_from_index(record["_id"], doc_type=CFG_DATA_TYPE)
+
+                if "recid" in record["_source"]:
+                    existing_submissions[record["_source"]["title"]] = \
+                        record["_source"]["recid"]
+                    delete_item_from_index(record["_id"],
+                                           doc_type=CFG_DATA_TYPE)
 
         errors = []
         current_time = "{:%Y-%m-%d}".format(datetime.now())
@@ -499,17 +502,21 @@ def do_finalise(recid, publication_record=None, force_finalise=False,
 
         if not errors:
 
-            # Update the last_updated flag for the record.
             try:
-                record = get_record_by_id(recid)
-
+                # If we have a commit message, then we have a record update.
+                # We will store the commit message and also update the
+                # last_updated flag for the record.
                 if commit_message:
-                    if 'revision_messages' not in record:
-                        record['revision_messages'] = []
-                    record['revision_messages'] += [
-                        {"version": version, "message": commit_message}]
+                    record = get_record_by_id(recid)
+                    record['last_updated'] = current_time
+                    record.commit()
 
-                record.commit()
+                    commit_record = RecordVersionCommitMessage(
+                        recid=recid,
+                        version=version,
+                        message=commit_message)
+
+                    db.session.add(commit_record)
 
             except NoResultFound:
                 print 'No record found to update. Which is super strange.'
