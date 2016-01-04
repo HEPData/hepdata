@@ -107,8 +107,9 @@ def get_metadata_by_alternative_id(recid, *args, **kwargs):
             version = int(request.args.get('version', -1))
 
             return do_render_record(record['recid'], record, version=version)
-    except:
-        return render_template('404.html')
+    except Exception as e:
+        raise e
+        # return render_template('404.html')
 
 
 def get_record_contents(recid):

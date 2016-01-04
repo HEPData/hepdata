@@ -9,12 +9,12 @@ def get_coordinators_in_system():
     :return: list of coordinator ids, nicknames, and emails.
     """
 
-    # coordinators = User.query.filter(User.roles.any(name='coordinator')).all()
-    #
-    # to_return = [{'id': coordinator.id, 'nickname': coordinator.email,
-    #               'email': coordinator.email} for coordinator in coordinators]
+    coordinators = User.query.filter(User.roles.any(name='coordinator')).all()
 
-    return []
+    to_return = [{'id': coordinator.id, 'nickname': coordinator.email,
+                  'email': coordinator.email} for coordinator in coordinators]
+
+    return to_return
 
 
 def has_role(user, required_role):

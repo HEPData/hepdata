@@ -34,11 +34,13 @@
                     <div class="pull-right menu">
                         <ul>
                             {%- if not current_user.is_authenticated %}
-                                {#                {% if user_is_coordinator_or_admin %}#}
-                                {#                    <li><a href="{{ url_for('webdeposit.create', deposition_type='hepdata_submission') }}">#}
-                                {#                        <span class="fa fa-arrow-up"></span> Submit</a>#}
-                                {#                    </li>#}
-                                {#                {%endif%}#}
+                                {% if user_is_coordinator_or_admin %}
+                                    <li>
+                                        <a href="/submit">
+                                            <span class="fa fa-arrow-up"></span>
+                                            Submit</a>
+                                    </li>
+                                {% endif %}
                                 <li><a href="/record/sandbox"><span
                                         class="fa fa-cube"></span> Sandbox</a>
                                 </li>
@@ -58,7 +60,11 @@
                                 <li>
                                     <a href="{% if show_dashboard %}/dashboard{% else %}/account/settings/profile{% endif %}">
                                         <i class="fa fa-user"></i>
-                                        {{ current_user.email }}
+                                        {% if show_dashboard %}
+                                            Dashboard
+                                        {% else %}
+                                            Your Account
+                                        {% endif %}
                                     </a>
                                 </li>
                                 <li>
