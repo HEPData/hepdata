@@ -9,7 +9,7 @@ import yaml
 from yaml.scanner import ScannerError
 from hepdata.config import CFG_DATADIR, CFG_TMPDIR
 
-from hepdata.modules.api_inspire.views import get_inspire_record_information
+from hepdata.modules.inspire_api.views import get_inspire_record_information
 from hepdata.modules.dashboard.views import do_finalise
 from hepdata.modules.records.utils.common import zipdir, \
     transform_record_information_for_bibupload

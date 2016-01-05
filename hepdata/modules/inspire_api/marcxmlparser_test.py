@@ -1,5 +1,5 @@
-from hepdata.modules.api_inspire.marcxml_parser import expand_date
-from hepdata.modules.api_inspire.views import get_inspire_record_information
+from hepdata.modules.inspire_api.marcxml_parser import expand_date
+from hepdata.modules.inspire_api.views import get_inspire_record_information
 
 
 class MARCXMLParserTest():

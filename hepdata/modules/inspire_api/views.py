@@ -27,9 +27,7 @@ from marcxml_parser import get_doi, get_title, get_authors, get_abstract, \
 
 blueprint = Blueprint('inspire_datasource',
                       __name__,
-                      url_prefix='/inspire',
-                      template_folder='templates',
-                      static_folder='static')
+                      url_prefix='/inspire')
 
 
 def get_inspire_record_information(inspire_rec_id):
@@ -55,10 +53,10 @@ def get_inspire_record_information(inspire_rec_id):
     return content, status
 
 
-@blueprint.route('/search')
+@blueprint.route('/search', methods=['GET'])
 def get_record_from_inspire():
     if 'id' not in request.args:
-        return redirect('/')
+        return jsonify({'error': 'no inspire id provided'})
 
     rec_id = request.args['id']
 

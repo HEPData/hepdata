@@ -42,7 +42,7 @@ import yaml
 from hepdata.config import CFG_PUB_TYPE, CFG_DATA_TYPE, CFG_DATADIR
 from hepdata.ext.elasticsearch.api import get_records_matching_field, \
     get_record, get_count_for_collection, get_n_latest_records
-from hepdata.modules.api_inspire.views import get_inspire_record_information
+from hepdata.modules.inspire_api.views import get_inspire_record_information
 from hepdata.modules.records.models import HEPSubmission, DataSubmission, \
     DataResource, DataReview, DataReviewMessage, SubmissionParticipant, \
     RecordVersionCommitMessage

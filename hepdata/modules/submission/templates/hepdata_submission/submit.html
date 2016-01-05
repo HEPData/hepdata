@@ -32,6 +32,7 @@
         }
     </style>
 
+
 {%- endblock additional_assets %}
 
 
@@ -51,35 +52,135 @@
     <div class="clearfix"></div>
 
 
-    <div class="upload-area" style="width: 100%">
-        <div class="root_upload_form" align="center">
-            <img src="{{ url_for('static', filename='img/icon-upload.svg') }}"
-                 width="70">
+    <div class="paper-submission-area">
 
-            <h4>Upload an archive to preview</h4>
-            <br/>
 
-            <div class="info">
-                <p>Upload a <strong>zip</strong> archive containing files
-                    formatted per these <a
-                            href="https://github.com/HEPData/hepdata-submission"
-                            target="_blank">these guidelines</a>.</p>
+        <div class="container-fluid">
+            <div class="row">
+                <div id="progress-inspire" class="col-xs-4 col-sm-4 col-md-4">
+                    <div class="progress-circle active">
+                        <i class="fa fa-file-text-o"></i>
+                    </div>
 
-                <p>An example submission is available <a
-                        href="https://www.dropbox.com/s/ph6zphwfjnigki1/1203852_hm.zip?dl=0"
-                        target="_blank">here</a>.</p>
+                    <br/>
+
+                </div>
+                <div class="col-xs-4 col-sm-4 col-md-4" id="progress-people">
+                    <div class="progress-circle">
+                        <i class="fa fa-user-plus"></i>
+                    </div>
+                    <br/>
+                </div>
+
+                <div class="col-xs-4 col-sm-4 col-md-4" id="progress-submit">
+                    <div class="progress-circle">
+                        <i class="fa fa-check"></i>
+                    </div>
+
+                    <br/>
+
+                </div>
             </div>
 
-            <form action="/record/sandbox/consume" method="post"
-                  enctype=multipart/form-data>
-                <input type="file" name="hep_archive" id="root_file_upload"
-                       data-iconName="fa fa-upload"
-                       class="filestyle">
-                <br/>
+            <div class="row">
+                <div class="col-md-12" id="inspire_details">
+                    <div class="submission-stage" id="has_inspire_id">
+                        <h4>Do you have an Inspire ID?</h4>
+                        <button id="no_inspire" class="btn btn-md btn-danger">
+                            No
+                        </button>
+                        <button id="has_inspire"
+                                class="btn btn-md btn-success">Yes
+                        </button>
+                    </div>
 
-                <input type="submit" value="Upload and Process"
-                       class="btn btn-primary">
-            </form>
+
+                    <div class="submission-stage" id="enter_inspire_id">
+                        <h4>Please enter the Inspire ID for this paper.</h4>
+                        <input type="text" class="form-control" id="inspire_id"
+                               placeholder="Inspire ID">
+                    </div>
+
+                    <div class="submission-stage" id="enter_title">
+                        <h4>Please enter a title for your submission.</h4>
+
+                        <p class="text-small text-grey">You will be required to
+                            attach an Inspire ID at a later stage.</p>
+                        <input type="text" class="form-control"
+                               id="paper_title" placeholder="Submission Title">
+                    </div>
+
+                    <div>
+                        <button id="continue_btn"
+                                class="btn btn-lg btn-primary hidden disabled">
+                            Continue
+                        </button>
+                    </div>
+                </div>
+
+                <div class="col-md-12" id="inspire_preview">
+                    <div class="submission-stage">
+                        <div id="inspire-result">
+                            <div class="spinner" style="margin-top: 9em">
+                                <div class="ball ball-purple"></div>
+                                <p class="text-grey">Loading information from
+                                    inspire.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <button id="preview_back_btn"
+                                class="btn btn-lg btn-inverse hidden">
+                            Back
+                        </button>
+                        <button id="preview_continue_btn"
+                                class="btn btn-lg btn-primary hidden">
+                            Continue
+                        </button>
+                    </div>
+
+                </div>
+
+                <div class="col-md-12" id="reviewers_uploaders">
+                    <div class="submission-stage">
+                        <h4>Please Specify the uploaders and reviewers for this submission</h4>
+                    </div>
+
+
+                    <div>
+                        <button id="people_back_btn"
+                                class="btn btn-lg btn-inverse">
+                            Back
+                        </button>
+                        <button id="people_continue_btn"
+                                class="btn btn-lg btn-primary">
+                            Continue
+                        </button>
+                    </div>
+                </div>
+
+                <div class="col-md-12" id="check">
+                    <div class="submission-stage">
+                        <i class="fa fa-check"></i><br/>
+                        <p>You are about to create a submission.
+                            If you're sure that everything is correct, press the submit button to create the submission.</p>
+
+                    </div>
+
+                      <div>
+                        <button id="submit_back_btn"
+                                class="btn btn-lg btn-inverse">
+                            Back
+                        </button>
+                        <button id="submit_btn"
+                                class="btn btn-lg btn-primary">
+                            Submit
+                        </button>
+                    </div>
+                </div>
+
+            </div>
 
         </div>
 
@@ -89,9 +190,182 @@
 
 
 {% endblock %}
+
+
 {%- block javascript %}
 
+    <script src="//cdnjs.cloudflare.com/ajax/libs/mathjax/2.5.3/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
+    {%- assets "hepdata_submission_js" %}
+        <script src="{{ ASSET_URL }}"></script>
+    {%- endassets %}
+
+    <script>
+
+        var inspire = false;
+        var default_options = {animation_duration: 300};
+        var toggle_div = function (div_id, options, state, callback) {
+
+            var display = (state == "hide" ? 'none' : 'block');
+            if (display !== $(div_id).css('display')) {
+                if (state == 'show') $(div_id).css('display', display);
+
+                var animation = options.animation ? options.animation
+                        : {left: state == "hide" ? "-=2000" : "+=2000"};
+
+                $(div_id).animate(animation, options.animation_duration,
+                        function () {
+                            if (callback) {
+                                callback();
+                            }
+                            $("#continue_btn").removeClass("hidden");
+                            if (state == 'hide') $(div_id).css('display',
+                                    display);
+                        });
+            } else {
+                if (callback) {
+                    callback();
+                    $("#continue_btn").removeClass("hidden");
+                }
+            }
+        };
+
+        var register_key_input_listener = function (input_id) {
+            $(input_id).on('input', function () {
+                if ($(input_id).val().length > 0) {
+                    $("#continue_btn").removeClass("disabled")
+                } else {
+                    $("#continue_btn").addClass("disabled")
+                }
+            });
+        };
+
+        $("#no_inspire").on('click', function () {
+            inspire = false;
+            toggle_div("#enter_inspire_id", default_options, 'hide', function () {
+                toggle_div("#enter_title", default_options, 'show')
+            });
+
+
+        });
+
+        register_key_input_listener("#paper_title");
+
+
+        $("#has_inspire").on('click', function () {
+            inspire = true;
+            toggle_div("#enter_title", default_options, 'hide', function () {
+                toggle_div("#enter_inspire_id", default_options, 'show');
+            });
+
+        });
+
+        function change_breadcrumbs(from, to) {
+            $(from + " .line").addClass("hidden");
+            $(from + " .progress-circle").removeClass("active");
+
+            $(to + " .line").removeClass("hidden");
+            $(to + " .progress-circle").addClass("active");
+        }
+
+        register_key_input_listener("#inspire_id");
+
+        $("#continue_btn").on('click', function () {
+            if (!$("#continue_btn").hasClass("disabled")) {
+                // go to next page.
+                if (inspire) {
+                    var inspire_id = $("#inspire_id").val();
+
+
+                    toggle_div("#inspire_details", default_options, 'hide', function () {
+                        toggle_div("#inspire_preview", default_options, 'show', function () {
+                            inspire_ds.get_inspire_data(inspire_id, render_inspire_preview);
+                        })
+                    });
+
+                } else {
+
+                    toggle_div("#inspire_details", default_options, 'hide', function () {
+
+                        change_breadcrumbs("#progress-inspire", "#progress-people");
+
+                        toggle_div("#reviewers_uploaders", default_options, 'show')
+                    });
+                }
+            }
+        });
+
+        $("#preview_back_btn").on('click', function () {
+            toggle_div("#inspire_preview", default_options, 'hide', function () {
+                $("#inspire-result").html('<div class="spinner" style="margin-top: 9em">' +
+                        '<div class="ball ball-purple"></div>' +
+                        '<p class="text-grey">Loading information from inspire.</p></div>');
+                toggle_div("#inspire_details", default_options, 'show')
+            });
+        });
+
+        $("#preview_continue_btn").on('click', function () {
+            toggle_div("#inspire_preview", default_options, 'hide', function () {
+                change_breadcrumbs("#progress-inspire", "#progress-people");
+                toggle_div("#reviewers_uploaders", default_options, 'show')
+            });
+        });
+
+        $("#people_back_btn").on('click', function () {
+            var div = inspire ? "#inspire_preview" : "#inspire_details";
+            toggle_div("#reviewers_uploaders", default_options, 'hide', function () {
+                change_breadcrumbs("#progress-people", "#progress-inspire");
+                toggle_div(div, default_options, 'show')
+            });
+        });
+
+
+
+         $("#people_continue_btn").on('click', function () {
+            toggle_div("#reviewers_uploaders", default_options, 'hide', function () {
+                change_breadcrumbs("#progress-people", "#progress-submit");
+                toggle_div("#check", default_options, 'show')
+            });
+        });
+
+        $("#submit_back_btn").on('click', function () {
+
+            toggle_div("#check", default_options, 'hide', function () {
+                change_breadcrumbs("#progress-submit", "#progress-people");
+                toggle_div("#reviewers_uploaders", default_options, 'show')
+            });
+        });
+
+
+        var render_inspire_preview = function (data) {
+            if (data.status == 'success') {
+                $("#inspire-retrieve-progress").addClass("hidden");
+
+                var html = "<div class='alert alert-info'><strong>Is this the publication you were looking for?</strong><br/>" +
+                        "A preview of the publication (not everything is displayed).</div>";
+                html += '<p class="inspire-title"><a href="http://inspirehep.net/record/' + inspire_id + '" target="_blank">' + data.query.title[0] + '</a><p>';
+
+                if (data.query.authors.length > 0) {
+                    html += '<p class="inspire-authors">' + data.query.authors[0].full_name + (data.query.authors.length > 1 ? " et al." : " ") + '</p>';
+                }
+
+                if (data.query.journal_info != '' && data.query.journal_info != null) {
+                    html += '<p class="inspire-journal">' + data.query.journal_info + '</p>';
+                }
+
+                html += '<p class="inspire-abstract">' + data.query.abstract + '</p><br/>';
+
+                $("#inspire-result").html(html);
+                $("#preview_back_btn").removeClass("hidden");
+                $("#preview_continue_btn").removeClass("hidden");
+
+                MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
+            } else {
+                $("#inspire-add-button").addClass("hidden");
+            }
+        }
+
+    </script>
 
 {% endblock %}
 

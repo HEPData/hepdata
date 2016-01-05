@@ -32,7 +32,7 @@
 
     /* all links */
     .nav>li>a {
-        color: #999;
+        color: $grey;
         border-left: 2px solid transparent;
         padding: 4px 20px;
         font-size: 13px;
@@ -50,10 +50,10 @@
     .nav>.active>a,
     .nav>li>a:hover,
     .nav>li>a:focus {
-        color: #563d7c;
+        color: $purple;
         text-decoration: none;
         background-color: transparent;
-        border-left-color: #563d7c;
+        border-left-color: $purple;
     }
     /* all active links */
     .nav>.active>a,

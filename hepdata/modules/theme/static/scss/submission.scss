@@ -1,0 +1,73 @@
+
+.paper-submission-area {
+  width: 400px;
+  margin: 0 auto;
+  margin-top: 13em;
+  text-align: center;
+}
+
+.progress-circle {
+
+  width: 100px;
+  height: 100px;
+  border-radius: 50px;
+  background-color: $lightgrey;
+  color: $grey;
+  font-size: 2.6em;
+  padding-top: .6em;
+}
+
+.progress-circle.active {
+  background-color: $purple;
+  color: white;
+}
+
+.progress-inspire {
+  h4 {
+    font-weight: bolder;
+    font-size: .8em;
+  }
+}
+
+.line {
+  height: 30px;
+}
+.line:after {
+    content:"";
+    position: absolute;
+    z-index: -1;
+    top: 0;
+    bottom: 0;
+    left: 49%;
+  height: 100%;
+    border-left: 2px solid $purple;
+}
+
+.submission-stage {
+  background-color: $lightgrey;
+  border-radius: 3px;
+  margin-bottom: 5px;
+  min-height: 160px;
+}
+
+#has_inspire_id {
+  padding: 30px;
+}
+
+#enter_inspire_id, #enter_title {
+  padding: 30px;
+  left: -2000px;
+  position: relative;
+  display: none;
+}
+
+#inspire_preview, #reviewers_uploaders, #check {
+  left: -2000px;
+  position: relative;
+  display: none;
+}
+
+#inspire-result {
+  height: 350px;
+  overflow: auto;
+}
