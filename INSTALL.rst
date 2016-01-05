@@ -29,6 +29,15 @@ Next, create the database and database tables if you haven't already done so:
    (hepdata3)$ hepdata db init
    (hepdata3)$ hepdata db create
 
+
+Run Celery
+
+.. code-block:: console
+
+   (hepdata3)$ celery worker -E -A hepdata.celery
+   
+
 Now, start HEPData:
 
+.. code-block:: console
    (hepdata3)$ hepdata --debug run

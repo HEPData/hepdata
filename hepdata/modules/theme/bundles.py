@@ -35,7 +35,6 @@ css = NpmBundle(
     depends=('scss/*.scss', ),
     output='gen/hepdata.%(version)s.css',
     npm={
-        "almond": "~0.3.1",
         "bootstrap-sass": "~3.3.5",
         "font-awesome": "~4.4.0"
     }
@@ -47,7 +46,6 @@ record_css = NpmBundle(
     depends=('scss/*.scss', ),
     output='gen/hepdata_record.%(version)s.css',
     npm={
-        "almond": "~0.3.1",
         "bootstrap-sass": "~3.3.5",
         "font-awesome": "~4.4.0"
     }
@@ -59,12 +57,10 @@ search_css = NpmBundle(
     depends=('scss/*.scss', ),
     output='gen/hepdata_search.%(version)s.css',
     npm={
-        "almond": "~0.3.1",
         "bootstrap-sass": "~3.3.5",
         "font-awesome": "~4.4.0"
     }
 )
-
 
 
 js = NpmBundle(
@@ -75,9 +71,15 @@ js = NpmBundle(
     ),
 
     filters='jsmin',
-    output="gen/hepdata.%(version)s.js",
-    npm={
-        "almond": "~0.3.1",
-        "angular": "~1.4.7",
-    }
+    output="gen/hepdata.%(version)s.js"
+)
+
+submission_js = NpmBundle(
+    Bundle(
+        'js/inspire.js',
+        filters='uglifyjs',
+    ),
+
+    filters='jsmin',
+    output="gen/hepdata-inspire.%(version)s.js"
 )
