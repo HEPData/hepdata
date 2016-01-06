@@ -30,6 +30,10 @@
         #hepdata_table_detail {
             width: 87% !important;
         }
+
+        .input-text-box, .primary {
+            background-color: white;
+        }
     </style>
 
 
@@ -83,7 +87,8 @@
             </div>
 
             <div class="row">
-                <div class="col-md-12" id="inspire_details">
+                <div class="col-md-12" id="inspire_details"
+                     style="min-height: 120px; padding: 20px;">
                     <div class="submission-stage" id="has_inspire_id">
                         <h4>Do you have an Inspire ID?</h4>
                         <button id="no_inspire" class="btn btn-md btn-danger">
@@ -97,7 +102,8 @@
 
                     <div class="submission-stage" id="enter_inspire_id">
                         <h4>Please enter the Inspire ID for this paper.</h4>
-                        <input type="text" class="form-control" id="inspire_id"
+                        <input type="number" class="form-control"
+                               id="inspire_id"
                                placeholder="Inspire ID">
                     </div>
 
@@ -110,71 +116,89 @@
                                id="paper_title" placeholder="Submission Title">
                     </div>
 
+                    <br/>
+
                     <div>
                         <button id="continue_btn"
-                                class="btn btn-lg btn-primary hidden disabled">
+                                class="btn btn-lg btn-primary hidden" disabled>
                             Continue
                         </button>
                     </div>
                 </div>
 
                 <div class="col-md-12" id="inspire_preview">
-                    <div class="submission-stage">
-                        <div id="inspire-result">
-                            <div class="spinner" style="margin-top: 9em">
-                                <div class="ball ball-purple"></div>
-                                <p class="text-grey">Loading information from
-                                    inspire.</p>
-                            </div>
+
+                    <div id="inspire-result">
+                        <div class="spinner" style="margin-top: 9em">
+                            <div class="ball ball-purple"></div>
+                            <p class="text-grey">Loading information from
+                                inspire.</p>
                         </div>
                     </div>
 
+
                     <div>
                         <button id="preview_back_btn"
-                                class="btn btn-lg btn-inverse hidden">
+                                class="btn btn-lg btn-inverse hidden pull-left">
                             Back
                         </button>
                         <button id="preview_continue_btn"
-                                class="btn btn-lg btn-primary hidden">
-                            Continue
+                                class="btn btn-lg btn-primary hidden pull-right">
+                            This is correct
                         </button>
                     </div>
 
                 </div>
 
                 <div class="col-md-12" id="reviewers_uploaders">
-                    <div class="submission-stage">
-                        <h4>Please Specify the uploaders and reviewers for this submission</h4>
+                    <div>
+                        <h4>Please Specify the uploaders and reviewers for this
+                            submission</h4>
+
+                        <p class="text-small text-grey">You will be able to
+                            modify these from the <a href="/dashboard"
+                                                     target="_blank">dashboard</a>
+                            later.</p>
+
+                        {% include 'hepdata_submission/components/reviewers_uploaders.html' %}
                     </div>
 
+                    <br/><br/>
 
                     <div>
                         <button id="people_back_btn"
-                                class="btn btn-lg btn-inverse">
+                                class="btn btn-lg btn-inverse pull-left">
                             Back
                         </button>
                         <button id="people_continue_btn"
-                                class="btn btn-lg btn-primary">
+                                class="btn btn-lg btn-primary pull-right"
+                                disabled>
                             Continue
                         </button>
                     </div>
                 </div>
 
                 <div class="col-md-12" id="check">
-                    <div class="submission-stage">
-                        <i class="fa fa-check"></i><br/>
-                        <p>You are about to create a submission.
-                            If you're sure that everything is correct, press the submit button to create the submission.</p>
+                    <div class="submission-stage"
+                         style="background-color: white">
+
+                        <i class="fa fa-check"
+                           style="font-size: 5.3em; color: #894B9D; padding-bottom: .4em"></i><br/>
+
+                        <p style="font-size: 1.3em">You are about to create a
+                            submission for <span id="publication_title"></span>.
+                            If you're sure that everything is correct, click on
+                            the <strong>submit</strong> button.</p>
 
                     </div>
 
-                      <div>
+                    <div>
                         <button id="submit_back_btn"
-                                class="btn btn-lg btn-inverse">
+                                class="btn btn-lg btn-inverse pull-left">
                             Back
                         </button>
                         <button id="submit_btn"
-                                class="btn btn-lg btn-primary">
+                                class="btn btn-lg btn-primary pull-right">
                             Submit
                         </button>
                     </div>
@@ -203,17 +227,19 @@
     <script>
 
         var inspire = false;
-        var default_options = {animation_duration: 300};
+        var publication_data = {};
+        var default_options = {duration: 300, direction: 'from_right'};
+
+
         var toggle_div = function (div_id, options, state, callback) {
 
             var display = (state == "hide" ? 'none' : 'block');
             if (display !== $(div_id).css('display')) {
                 if (state == 'show') $(div_id).css('display', display);
 
-                var animation = options.animation ? options.animation
-                        : {left: state == "hide" ? "-=2000" : "+=2000"};
+                var animation = {bottom: state == "hide" ? "-=1000px" : "+=1000px"};
 
-                $(div_id).animate(animation, options.animation_duration,
+                $(div_id).animate(animation, options.duration,
                         function () {
                             if (callback) {
                                 callback();
@@ -230,26 +256,27 @@
             }
         };
 
-        var register_key_input_listener = function (input_id) {
+        var register_key_input_listener = function (input_id, continue_btn_id) {
             $(input_id).on('input', function () {
                 if ($(input_id).val().length > 0) {
-                    $("#continue_btn").removeClass("disabled")
+                    $(continue_btn_id).prop('disabled', false);
                 } else {
-                    $("#continue_btn").addClass("disabled")
+                    $(continue_btn_id).prop('disabled', true);
+
                 }
             });
         };
 
         $("#no_inspire").on('click', function () {
             inspire = false;
-            toggle_div("#enter_inspire_id", default_options, 'hide', function () {
-                toggle_div("#enter_title", default_options, 'show')
+            toggle_div("#enter_inspire_id", {duration: 300}, 'hide', function () {
+                toggle_div("#enter_title", {duration: 300}, 'show')
             });
 
 
         });
 
-        register_key_input_listener("#paper_title");
+        register_key_input_listener("#paper_title", "#continue_btn");
 
 
         $("#has_inspire").on('click', function () {
@@ -268,31 +295,27 @@
             $(to + " .progress-circle").addClass("active");
         }
 
-        register_key_input_listener("#inspire_id");
+        register_key_input_listener("#inspire_id", "#continue_btn");
 
         $("#continue_btn").on('click', function () {
-            if (!$("#continue_btn").hasClass("disabled")) {
-                // go to next page.
-                if (inspire) {
-                    var inspire_id = $("#inspire_id").val();
+            // go to next page.
+            if (inspire) {
+                var inspire_id = $("#inspire_id").val();
 
 
-                    toggle_div("#inspire_details", default_options, 'hide', function () {
-                        toggle_div("#inspire_preview", default_options, 'show', function () {
-                            inspire_ds.get_inspire_data(inspire_id, render_inspire_preview);
-                        })
-                    });
+                toggle_div("#inspire_details", default_options, 'hide', function () {
+                    toggle_div("#inspire_preview", default_options, 'show', function () {
+                        inspire_ds.get_inspire_data(inspire_id, render_inspire_preview);
+                    })
+                });
 
-                } else {
-
-                    toggle_div("#inspire_details", default_options, 'hide', function () {
-
-                        change_breadcrumbs("#progress-inspire", "#progress-people");
-
-                        toggle_div("#reviewers_uploaders", default_options, 'show')
-                    });
-                }
+            } else {
+                toggle_div("#inspire_details", default_options, 'hide', function () {
+                    change_breadcrumbs("#progress-inspire", "#progress-people");
+                    toggle_div("#reviewers_uploaders", default_options, 'show')
+                });
             }
+
         });
 
         $("#preview_back_btn").on('click', function () {
@@ -320,11 +343,13 @@
         });
 
 
-
-         $("#people_continue_btn").on('click', function () {
+        $("#people_continue_btn").on('click', function () {
             toggle_div("#reviewers_uploaders", default_options, 'hide', function () {
                 change_breadcrumbs("#progress-people", "#progress-submit");
-                toggle_div("#check", default_options, 'show')
+                toggle_div("#check", default_options, 'show', function () {
+                    $("#publication_title").text(inspire ? publication_data.query.title[0] : $("#paper_title").val());
+                    MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
+                })
             });
         });
 
@@ -336,34 +361,67 @@
             });
         });
 
-
         var render_inspire_preview = function (data) {
-            if (data.status == 'success') {
+            var html = '';
+
+            publication_data = data;
+
+            if (!inspire_ds.is_null(data) && data.status == 'success') {
                 $("#inspire-retrieve-progress").addClass("hidden");
 
-                var html = "<div class='alert alert-info'><strong>Is this the publication you were looking for?</strong><br/>" +
-                        "A preview of the publication (not everything is displayed).</div>";
-                html += '<p class="inspire-title"><a href="http://inspirehep.net/record/' + inspire_id + '" target="_blank">' + data.query.title[0] + '</a><p>';
 
-                if (data.query.authors.length > 0) {
-                    html += '<p class="inspire-authors">' + data.query.authors[0].full_name + (data.query.authors.length > 1 ? " et al." : " ") + '</p>';
-                }
+                html = "<div class='alert alert-info'><strong>Is this " +
+                        "the publication you were looking for?</strong><br/>" +
+                        "A preview of the publication (not everything is " +
+                        "displayed).</div>" +
+                        "<div class='publication-info'>";
 
-                if (data.query.journal_info != '' && data.query.journal_info != null) {
-                    html += '<p class="inspire-journal">' + data.query.journal_info + '</p>';
-                }
+                html = inspire_ds.create_html_summary(data, html);
+                html += '</div>';
 
-                html += '<p class="inspire-abstract">' + data.query.abstract + '</p><br/>';
-
-                $("#inspire-result").html(html);
                 $("#preview_back_btn").removeClass("hidden");
                 $("#preview_continue_btn").removeClass("hidden");
 
-                MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
-            } else {
-                $("#inspire-add-button").addClass("hidden");
+
             }
-        }
+            else if (data.status == 'exists') {
+                html = '<div class="alert alert-danger">A ' +
+                        '<a href="/record/ins"' + data.id + '" target="_blank">' +
+                        'record</a> with this inspire id already exists in HEPData.' +
+                        '</div>';
+                html = inspire_ds.create_html_summary(data, html);
+
+                $("#preview_back_btn").removeClass("hidden");
+                $("#preview_continue_btn").addClass("hidden");
+            } else {
+                html = '<div class="alert alert-danger">An error occurred while trying to find the inspire record.</div>';
+                $("#preview_back_btn").removeClass("hidden");
+                $("#preview_continue_btn").addClass("hidden");
+            }
+
+            $("#inspire-result").html(html);
+            MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
+        };
+
+        $("#submit_btn").on('click', function () {
+
+            var payload = {};
+
+            payload['inspire_id'] = inspire ? $("#inspire_id").val() : null;
+            payload['title'] = inspire ? null : $("#paper_title").val();
+            payload['reviewer'] = $('#reviewer_name').val() + "::" + $('#reviewer_email').val();
+            payload['uploader'] = $('#uploader_name').val() + "::" + $('#uploader_email').val();
+
+            $.ajax({
+                url: '/submit',
+                data: payload,
+                method: 'POST',
+                success: function() {
+                    alert('submission successful...');
+                }
+            })
+        })
+
 
     </script>
 

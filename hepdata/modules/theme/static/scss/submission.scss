@@ -1,9 +1,11 @@
 
 .paper-submission-area {
   width: 400px;
+  padding-bottom: $footer-height-spaced;
   margin: 0 auto;
   margin-top: 13em;
   text-align: center;
+  overflow-x: hidden;
 }
 
 .progress-circle {
@@ -29,45 +31,74 @@
   }
 }
 
+.with-error {
+  border: 1px solid #e64c3c;
+  color: #e64c3c;
+}
+
+#publication_title {
+  color: $purple;
+}
+
 .line {
   height: 30px;
 }
+
 .line:after {
-    content:"";
-    position: absolute;
-    z-index: -1;
-    top: 0;
-    bottom: 0;
-    left: 49%;
-  height: 100%;
-    border-left: 2px solid $purple;
+  content: "";
+  position: absolute;
+  z-index: -1;
+  top: 0;
+  bottom: 0;
+  left: 49%;
+  border-left: 2px solid $purple;
 }
 
 .submission-stage {
   background-color: $lightgrey;
   border-radius: 3px;
   margin-bottom: 5px;
-  min-height: 160px;
+  min-height: 120px;
 }
 
 #has_inspire_id {
-  padding: 30px;
+  padding: 10px;
+  background-color: white;
 }
 
 #enter_inspire_id, #enter_title {
-  padding: 30px;
-  left: -2000px;
+  padding: 25px;
+  bottom: -1000px;
   position: relative;
+  height: 160px;
   display: none;
+}
+
+#enter_inspire_id {
+  border-top: 5px solid #4cae4c;
+}
+
+#enter_title {
+  border-top: 5px solid #d9534f;
+}
+
+.publication-info {
+  background-color: $lightgrey;
+  padding: 10px;
+  height: 200px;
+  overflow: auto;
 }
 
 #inspire_preview, #reviewers_uploaders, #check {
-  left: -2000px;
+  bottom: -1000px;
   position: relative;
   display: none;
 }
 
-#inspire-result {
-  height: 350px;
-  overflow: auto;
+#inspire-result, #check {
+  padding: 10px;
+}
+
+#reviewers_uploaders .submission-stage, #check .submission-stage {
+  padding: 30px;
 }

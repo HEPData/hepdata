@@ -87,7 +87,7 @@ SETTINGS_TEMPLATE = "invenio_theme/page_settings.html"
 
 ELASTICSEARCH_INDEX = 'hepdata'
 SEARCH_ELASTIC_HOSTS = [
-    '0.0.0.0:9200'
+    'localhost:9200'
 ]
 
 CFG_PUB_TYPE = 'publication'

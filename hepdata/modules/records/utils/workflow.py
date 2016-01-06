@@ -18,11 +18,17 @@ def create_data_structure(ctx):
     :param ctx: record information as a dictionary
     :return: a cleaned up representation.
     """
-    record = {"title": ctx["name"],
-              "abstract": ctx["description"],
-              "inspire_id": ctx["inspire_id"],
-              "_first_author": ctx["_first_author"],
-              "authors": ctx["authors"]
+
+    title = ctx.get('title')
+    if type(ctx.get('title')) is list and len(ctx.get('title')) > 0:
+        print ctx.get('title')
+        title = ctx.get('title')[0]
+
+    record = {"title": title,
+              "abstract": ctx.get('abstract'),
+              "inspire_id": ctx.get("inspire_id"),
+              "_first_author": ctx.get("_first_author"),
+              "authors": ctx.get("authors")
               }
 
     optional_keys = ["related_publication", "recid", "keywords",
@@ -88,7 +94,7 @@ def send_new_review_message_email(review, message, user):
         message = render_template(
             'hepdata_dashboard/email/review-message.html',
             name=participant.full_name,
-            actor=user.nickname,
+            actor=user.email,
             table_name=table_information.name,
             table_message=message.message,
             article=review.publication_recid,
@@ -115,7 +121,7 @@ def send_new_upload_email(recid, user):
     for participant in submission_participants:
         message = render_template('hepdata_dashboard/email/upload.html',
                                   name=participant.full_name,
-                                  actor=user.nickname,
+                                  actor=user.email,
                                   article=recid,
                                   link="http://hepdata.net/record/{0}"
                                   .format(recid))

@@ -35,6 +35,7 @@ from flask import Blueprint, redirect, request, render_template, Response, \
     jsonify, send_from_directory
 from invenio_accounts.models import User
 from invenio_db import db
+import jsonpatch
 from sqlalchemy.orm.exc import NoResultFound
 import time
 from werkzeug.utils import secure_filename
@@ -47,8 +48,7 @@ from hepdata.modules.records.models import HEPSubmission, DataSubmission, \
     DataResource, DataReview, DataReviewMessage, SubmissionParticipant, \
     RecordVersionCommitMessage
 from hepdata.modules.records.utils.common import get_record_by_id, \
-    default_time, \
-    transform_record_information_for_bibupload, allowed_file, \
+    default_time, allowed_file, \
     find_file_in_directory, remove_file_extension, decode_string, \
     truncate_string
 from hepdata.modules.records.utils.data_processing_utils import \
@@ -180,8 +180,10 @@ def process_submission(recid, record, version, hepdata_submission,
                     ctx['breadcrumb_text'] = record["_first_author"][0][
                                                  "full_name"] + " et al."
                 else:
-                    ctx['breadcrumb_text'] = record["_first_author"][
-                                                 "full_name"] + " et al."
+
+                    if record["_first_author"] is not None:
+                        ctx['breadcrumb_text'] = \
+                            record["_first_author"]["full_name"] + " et al."
 
             try:
                 commit_message_query = RecordVersionCommitMessage.query \
@@ -685,17 +687,14 @@ def attach_information_to_record(recid):
 
     record = get_record_by_id(recid)
     if record is not None:
-        from hepdata.modules.records.utils.workflow import \
-            create_bibworkflow_obj
 
-        transformed_payload = transform_record_information_for_bibupload(
-            content)
-        transformed_payload['recid'] = recid
-        transformed_payload['control_number'] = recid
+        # TODO: Fix this to update the record information
+        content['recid'] = recid
 
-        create_bibworkflow_obj(transformed_payload, current_user.get_id(),
-                               doc_type="data",
-                               workflow="hepdata_data_sub")
+        patch = jsonpatch.JsonPatch.from_diff(record, content)
+        record = record.patch(patch=patch)
+        record.commit()
+        db.session.commit()
 
         return jsonify({'status': 'success'})
     else:
@@ -708,7 +707,7 @@ def attach_information_to_record(recid):
 def consume_sandbox_payload():
     # generate a unique id
     import time
-    # creates an id contructed from the user id and the current time in milliseconds
+
     id = (int(current_user.get_id())) + int(round(time.time()))
 
     get_or_create_hepsubmission(id, current_user.get_id(), status="sandbox")

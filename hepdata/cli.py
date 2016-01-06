@@ -46,6 +46,15 @@ def populate():
     load_files.delay(files_to_load)
 
 
+@cli.command()
+@with_appcontext
+def migrate():
+    """
+    Migrate content from old system to the new one.
+    :return:
+    """
+    pass
+
 
 @cli.command()
 @with_appcontext

@@ -344,11 +344,12 @@ def add_participant(recid):
         db.session.commit()
         return json.dumps(
             {"success": True, "recid": recid,
-             "message": "0} {1} added.".format(full_name, participant_type)})
+             "message": "{0} {1} added.".format(full_name, participant_type)})
 
     except Exception as e:
+        print e
         return json.dumps(
-            {"success": False, "recid": recid, "message": e.message})
+            {"success": False, "recid": recid, "message": 'Unable to add participant.'})
 
 
 @blueprint.route('/manage/coordinator/', methods=['POST'])
@@ -569,8 +570,8 @@ def finalise_datasubmission(current_time, existing_submissions,
         publication_record = get_record_by_id(recid)
 
     submission_info = {
-        "name": submission.name,
-        "description": submission.description,
+        "title": submission.name,
+        "abstract": submission.description,
         "inspire_id": publication_record['inspire_id'],
         "authors": publication_record['authors'],
         "_first_author": publication_record['_first_author'],
@@ -585,13 +586,13 @@ def finalise_datasubmission(current_time, existing_submissions,
                                                       []),
     }
 
-    if submission_info["name"] in existing_submissions:
+    if submission_info["title"] in existing_submissions:
         # in the event that we're performing an update operation, we need
         # to get the data record information
         # from the index, and use the same record id. This way, we'll just
         # update the submission instead of recreating
         # a completely new record.
-        recid = existing_submissions[submission_info["name"]]
+        recid = existing_submissions[submission_info["title"]]
         submission_info["control_number"] = submission_info["recid"] = recid
 
     else:

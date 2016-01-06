@@ -11,8 +11,7 @@ from hepdata.config import CFG_DATADIR, CFG_TMPDIR
 
 from hepdata.modules.inspire_api.views import get_inspire_record_information
 from hepdata.modules.dashboard.views import do_finalise
-from hepdata.modules.records.utils.common import zipdir, \
-    transform_record_information_for_bibupload
+from hepdata.modules.records.utils.common import zipdir
 from hepdata.modules.records.utils.submission import \
     process_submission_directory, get_or_create_hepsubmission, \
     remove_submission
@@ -228,7 +227,7 @@ class Migrator(object):
 
         content, status = get_inspire_record_information(inspire_id)
         content["inspire_id"] = inspire_id
-        return transform_record_information_for_bibupload(content)
+        return content
 
     def load_submission(self, record_information, file_base_path,
                         submission_yaml_file_location):

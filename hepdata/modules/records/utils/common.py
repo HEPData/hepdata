@@ -168,65 +168,6 @@ def get_record_by_id(recid):
     return record
 
 
-def transform_record_information_for_bibupload(record_information):
-    """
-    Converts the information from Inspire in to a suitable format
-    for the workflow.
-    :param record_information:
-    :return:
-    """
-    processed_authors = []
-    first_author = {}
-
-    if "authors" in record_information and record_information["authors"]:
-        for author in record_information["authors"]:
-            processed_authors.append(
-                {"full_name": encode_string(author["full_name"]),
-                 "affiliation": encode_string(author["affiliation"])})
-
-        first_author = None
-        if processed_authors:
-            first_author = processed_authors[0]
-    else:
-        print(
-            'There is no author for {}'.format(
-                record_information['inspire_id']))
-
-    abstract = ''
-    if "abstract" in record_information and record_information["abstract"]:
-        abstract = record_information["abstract"]
-
-    processed_keywords = []
-    for kw in record_information["keywords"]:
-        processed_keywords.append({
-            "name": encode_string(kw["name"]),
-            "value": encode_string(kw["value"]),
-            "synonyms": encode_string(kw["synonyms"])
-        })
-
-    collaborations = []
-    for c in record_information.get("collaborations", []):
-        encoded = encode_string(c)
-        collaborations.append(encoded)
-
-    transformation = {
-        "name": encode_string(record_information["title"][0]),
-        "description": encode_string(abstract),
-        "inspire_id": encode_string(record_information["inspire_id"]),
-        "keywords": processed_keywords,
-        "creation_date": record_information["creation_date"],
-        "collaborations": collaborations,
-        "journal_info": encode_string(
-            record_information.get("journal_info", "")),
-        "doi": encode_string(record_information["doi"]),
-        "authors": processed_authors,
-        "_first_author": first_author,
-        "_additional_authors": [],
-    }
-
-    return transformation
-
-
 def get_last_updated(recid):
     submission_participant = SubmissionParticipant.query.filter_by(
         publication_recid=recid).order_by('action_date').first()

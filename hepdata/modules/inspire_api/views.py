@@ -21,6 +21,7 @@
 import requests
 from bs4 import BeautifulSoup
 from flask import request, Blueprint, redirect, jsonify
+from hepdata.ext.elasticsearch.api import record_exists
 
 from marcxml_parser import get_doi, get_title, get_authors, get_abstract, \
     get_arxiv, get_collaborations, get_keywords, get_date, get_journal_info
@@ -39,7 +40,7 @@ def get_inspire_record_information(inspire_rec_id):
         soup = BeautifulSoup(content, "lxml")
 
         content = {
-            'title': [get_title(soup)],
+            'title': get_title(soup),
             'doi': get_doi(soup),
             'authors': get_authors(soup),
             'abstract': get_abstract(soup),
@@ -56,12 +57,19 @@ def get_inspire_record_information(inspire_rec_id):
 @blueprint.route('/search', methods=['GET'])
 def get_record_from_inspire():
     if 'id' not in request.args:
-        return jsonify({'error': 'no inspire id provided'})
+        return jsonify({'status': 'no inspire id provided'})
 
     rec_id = request.args['id']
+
+    # check that id is not present already.
+    exists = record_exists(rec_id)
+    print exists
+    if exists:
+        return jsonify({'status': 'exists', 'id': rec_id})
 
     content, status = get_inspire_record_information(rec_id)
 
     return jsonify({'source': 'inspire',
+                    'id': rec_id,
                     'query': content,
                     'status': status})

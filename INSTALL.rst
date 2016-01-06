@@ -35,7 +35,7 @@ Run Celery
 .. code-block:: console
 
    (hepdata3)$ celery worker -E -A hepdata.celery
-   
+
 
 Now, start HEPData:
 

@@ -214,7 +214,10 @@ def record_exists(inspire_id, index=None):
     # Strip the ins from the beginning
     if isinstance(inspire_id, basestring) and inspire_id[:3] == 'ins':
         inspire_id = inspire_id[3:]
-    
+
+    inspire_id = int(inspire_id)
+
+
     query = {
         'query': {
             'match': {
@@ -222,6 +225,8 @@ def record_exists(inspire_id, index=None):
             }
         }
     }
+
+    print query
 
     return es.search_exists(index=index, doc_type=CFG_PUB_TYPE, body=query)
 

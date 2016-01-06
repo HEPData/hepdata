@@ -119,7 +119,7 @@
 }
 
 .hep_breadcrumbs ul li.active {
-  background-color: $purple-light;
+  background-color: $purple;
 }
 
 .hep_breadcrumbs ul li:hover {
@@ -150,6 +150,10 @@
 
 .scrollable {
   overflow-y: auto !important;
+}
+
+body {
+  height: calc(100% - 60px)
 }
 
 body::-webkit-scrollbar-track, .scrollable::-webkit-scrollbar-track {
