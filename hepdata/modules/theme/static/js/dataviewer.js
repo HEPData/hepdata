@@ -1125,16 +1125,16 @@ HEPDATA.visualization.histogram = {
         if (has_y_error) {
 
             if (HEPDATA.visualization[type].options.draw_summed_error) {
-
-                dot_groups.append("rect")
-                    .attr("x", -0.5)
-                    .attr("y", function (d) {
-                        return HEPDATA.visualization[type].y_scale(HEPDATA.stats.max_y) - HEPDATA.visualization[type].y_scale((HEPDATA.stats.max_y - d.quad_error.err_plus));
+                dot_groups.append("line")
+                    .attr("x1", 0)
+                    .attr("y1", function (d) {
+                        return HEPDATA.visualization[type].y_scale(d.y + d.quad_error.err_minus) - HEPDATA.visualization[type].y_scale(d.y);
                     })
-                    .attr("width", 1)
-                    .attr("height", function (d) {
-                        return HEPDATA.visualization[type].y_scale((d.y + d.quad_error.err_minus)) - HEPDATA.visualization[type].y_scale((d.y + d.quad_error.err_plus));
+                    .attr("x2", 0)
+                    .attr("y2", function (d) {
+                        return HEPDATA.visualization[type].y_scale(d.y + d.quad_error.err_plus) - HEPDATA.visualization[type].y_scale(d.y);
                     })
+                    .attr("stroke-width", 2)
                     .style("stroke", "#2C3E50")
                     .attr("class", function (d, i) {
                         var label = d.quad_error.label == undefined ? HEPDATA.default_error_label : d.quad_error.label;
@@ -1146,21 +1146,19 @@ HEPDATA.visualization.histogram = {
             else {
 
                 dot_groups.selectAll('rect.y_err').data(function (d) {
-                    d.errors.forEach(function (e) {
-                        e["x"] = e.x;
-                        e["y"] = e.y;
-                    });
                     return d.errors;
                 }).enter()
-                    .append("rect")
-                    .attr("x", -0.5)
-                    .attr("y", function (d) {
-                        return HEPDATA.visualization[type].y_scale(HEPDATA.stats.max_y) - HEPDATA.visualization[type].y_scale((HEPDATA.stats.max_y - d.err_plus));
+                    .append("line")
+                    .attr("x1", 0)
+                    .attr("y1", function (d) {
+                        return HEPDATA.visualization[type].y_scale(d.y + d.err_minus) - HEPDATA.visualization[type].y_scale(d.y);
                     })
-                    .attr("width", 1)
-                    .attr("height", function (d) {
-                        return HEPDATA.visualization[type].y_scale((d.y + d.err_minus)) - HEPDATA.visualization[type].y_scale((d.y + d.err_plus));
+                    .attr("x2", 0)
+                    .attr("y2", function (d) {
+                        return HEPDATA.visualization[type].y_scale(d.y + d.err_plus) - HEPDATA.visualization[type].y_scale(d.y);
                     })
+
+                   .attr("stroke-width", 2)
                     .style("stroke", "#2C3E50")
                     .attr("class", function (d, i) {
                         var label = d.label == undefined ? HEPDATA.default_error_label : d.label;
@@ -1178,7 +1176,6 @@ HEPDATA.visualization.histogram = {
                 return HEPDATA.visualization[type].options.colors(d.name);
             })
     }
-
 };
 
 HEPDATA.dataprocessing = {
