@@ -33,7 +33,7 @@ mapping = {
             },
             "full_name": {
                 "type": "string",
-                "index": "analyzed"
+                "index": "not_analyzed"
             },
             "last_name": {
                 "type": "string"

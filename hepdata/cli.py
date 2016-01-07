@@ -65,7 +65,7 @@ def populate():
               type=bool,
               help='This option will automatically find the inspire ids in the current '
                    'hepdata but not in this version and migrate them.')
-def migrate(index_start, index_end, year=None, missing_only=False):
+def migrate(start, end, year=None, missing_only=False):
     """
     Migrates all content from HEPData
     :return:
@@ -76,9 +76,9 @@ def migrate(index_start, index_end, year=None, missing_only=False):
         inspire_ids = get_all_ids_in_current_system(year)
 
     print("Found {} inspire ids to load.".format(len(inspire_ids)))
-    if index_start is not None:
+    if start is not None:
         print("Slicing.")
-        _slice = slice(int(index_start), index_end)
+        _slice = slice(int(start), end)
         inspire_ids = inspire_ids[_slice]
         print("Sliced, going to load {} records.".format(len(inspire_ids)))
         print(inspire_ids)
@@ -119,8 +119,9 @@ def get_missing_records():
 
 @cli.command()
 @with_appcontext
-@click.option('--recreate', type=bool, default=False,
-              help='Whether or not to recreate the index mappings as well. This DELETES the entire index first.')
+@click.option('--recreate', '-r', type=bool, default=False,
+              help='Whether or not to recreate the index mappings as well. '
+                   'This DELETES the entire index first.')
 @click.option('--start', '-s', type=int, default=-1,
               help='Starting recid for the index operation.')
 @click.option('--end', '-e', type=int, default=-1,
