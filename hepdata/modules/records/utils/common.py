@@ -2,6 +2,7 @@ import datetime
 from invenio_pidstore.resolver import Resolver
 from invenio_records.api import Record
 import os
+from sqlalchemy.orm.exc import NoResultFound
 from hepdata.modules.records.models import SubmissionParticipant
 
 __author__ = 'eamonnmaguire'
@@ -162,10 +163,14 @@ def truncate_string(string, words):
 
 
 def get_record_by_id(recid):
-    resolver = Resolver(pid_type='recid', object_type='rec',
-                        getter=Record.get_record)
-    pid, record = resolver.resolve(recid)
-    return record
+    try:
+        resolver = Resolver(pid_type='recid', object_type='rec',
+                            getter=Record.get_record)
+        pid, record = resolver.resolve(recid)
+        return record
+    except NoResultFound:
+        print('No record found for recid {}'.format(recid))
+        return None
 
 
 def get_last_updated(recid):

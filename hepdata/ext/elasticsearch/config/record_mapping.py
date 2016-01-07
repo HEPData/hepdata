@@ -33,7 +33,7 @@ mapping = {
             },
             "full_name": {
                 "type": "string",
-                "index": "not_analyzed"
+                "index": "analyzed"
             },
             "last_name": {
                 "type": "string"
@@ -45,7 +45,7 @@ mapping = {
         "fields": {
             "raw": {
                 "type": "string",
-                "index": "not_analyzed"
+                "index": "analyzed"
             }
         }
     },
@@ -67,7 +67,7 @@ mapping = {
                 "fields": {
                     "raw": {
                         "type": "string",
-                        "index": "not_analyzed"
+                        "index": "analyzed"
                     }
                 }
             },
@@ -76,7 +76,7 @@ mapping = {
                 "fields": {
                     "raw": {
                         "type": "string",
-                        "index": "not_analyzed"
+                        "index": "analyzed"
                     }
                 }
             },
@@ -85,7 +85,7 @@ mapping = {
                 "fields": {
                     "raw": {
                         "type": "string",
-                        "index": "not_analyzed"
+                        "index": "analyzed"
                     }
                 }
             }
@@ -131,7 +131,7 @@ mapping = {
         "fields": {
             "raw": {
                 "type": "string",
-                "index": "not_analyzed"
+                "index": "analyzed"
             }
         }
     },
