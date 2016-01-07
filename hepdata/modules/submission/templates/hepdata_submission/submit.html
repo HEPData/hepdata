@@ -178,7 +178,7 @@
                 </div>
 
                 <div class="col-md-12" id="check">
-                    <div class="submission-stage"
+                    <div class="submission-stage" id="submission_state"
                          style="background-color: white">
 
                         <i class="fa fa-check"
@@ -200,6 +200,11 @@
                                 class="btn btn-lg btn-primary pull-right">
                             Submit
                         </button>
+
+                        <a id="another_submission" href="/submit"
+                                class="btn btn-lg btn-primary hidden">
+                            Create another submission
+                        </a>
                     </div>
                 </div>
 
@@ -374,7 +379,6 @@
             if (!inspire_ds.is_null(data) && data.status == 'success') {
                 $("#inspire-retrieve-progress").addClass("hidden");
 
-
                 html = "<div class='alert alert-info'><strong>Is this " +
                         "the publication you were looking for?</strong><br/>" +
                         "A preview of the publication (not everything is " +
@@ -417,12 +421,24 @@
             payload['reviewer'] = $('#reviewer_name').val() + "::" + $('#reviewer_email').val();
             payload['uploader'] = $('#uploader_name').val() + "::" + $('#uploader_email').val();
 
+
+            var progress_html = '  <i class="fa fa-refresh fa-spin" style="font-size: 5.3em; color: #894B9D; padding-bottom: .4em"></i><br/>' +
+                    '<p style="font-size: 1.3em">Processing Submission. This won\'t take long.</p>';
+            $("#submission_state").html(progress_html);
+
+            $("#submit_back_btn").addClass("hidden");
+            $("#submit_btn").addClass("hidden");
+
             $.ajax({
                 url: '/submit',
                 data: payload,
                 method: 'POST',
                 success: function () {
-                    alert('submission successful...');
+                    var finished_html = '<i class="fa fa-check-circle" style="font-size: 5.3em; color: #894B9D; padding-bottom: .4em"></i><br/>' +
+                            '<p style="font-size: 1.3em">Submission Complete!</p>';
+                    $("#submission_state").html(finished_html);
+                    $("#another_submission").removeClass("hidden");
+
                 }
             })
         })
