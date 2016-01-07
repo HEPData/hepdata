@@ -175,15 +175,9 @@ def process_submission(recid, record, version, hepdata_submission,
                                   record["collaborations"].split(",")]
                 ctx['record']['collaborations'] = collaborations
 
-            if "_first_author" in record:
-                if isinstance(record["_first_author"], list):
-                    ctx['breadcrumb_text'] = record["_first_author"][0][
+            if "first_author" in record and len(record["first_author"])>0:
+                    ctx['breadcrumb_text'] = record["first_author"][0][
                                                  "full_name"] + " et al."
-                else:
-
-                    if record["_first_author"] is not None:
-                        ctx['breadcrumb_text'] = \
-                            record["_first_author"]["full_name"] + " et al."
 
             try:
                 commit_message_query = RecordVersionCommitMessage.query \
@@ -322,7 +316,7 @@ def get_latest():
                 'title': record_information['title'],
                 'collaborations': collaborations,
                 'journal': record_information['journal_info'],
-                'first_author': record_information['_first_author'],
+                'first_author': record_information['first_author'],
                 'creation_date': record_information['creation_date'],
                 'last_updated': last_updated})
 

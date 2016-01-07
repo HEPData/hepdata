@@ -24,7 +24,7 @@ def create_data_structure(ctx):
         title = ctx.get('title')[0]
 
     first_author = []
-    authors = ctx.get('authors', default=[])
+    authors = ctx.get('authors', [])
     if len(authors) > 0:
         first_author = authors[0]
 

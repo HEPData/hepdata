@@ -221,10 +221,8 @@ HEPDATA.load_all_review_messages = function (placement, record_id) {
                 $(".input_box").css("color", "#808080")
                     .css("height", "30px");
                 $("#conversation_message_count").html(message_count);
-
             }
             $("#conversation_message_count").html(message_count);
-
         }
     });
 };
@@ -529,6 +527,11 @@ HEPDATA.visualization.utils = {
 
     calculate_x_scale: function (scale_type, min, max, options, data) {
 
+        var x_extent = d3.extent(data, function(d) {
+            return d.x;
+        });
+
+
         if (min == null) {
             //we only get null when the values are not numeric, so in this case we create an ordinal scale
             return d3.scale.ordinal().domain(data.map(function (d) {
@@ -536,13 +539,18 @@ HEPDATA.visualization.utils = {
             })).rangePoints([0, options.width - options.margins.left - options.margins.right]);
         } else {
             var scale = scale_type == 'log' && HEPDATA.stats.min_x > 0 ? d3.scale.log() : d3.scale.linear();
-            return scale.domain([min, max]).range([0, options.width - options.margins.left - options.margins.right]);
+
+            var range = [0, options.width - options.margins.left - options.margins.right];
+            if (x_extent[0] == x_extent[1]) {
+                var mid_way = (options.width - options.margins.left - options.margins.right)/2;
+                range = [mid_way, mid_way];
+            }
+            return scale.domain([min, max]).range(range);
         }
     },
 
     calculate_y_scale: function (scale_type, min, max, options) {
         var scale = scale_type == 'log' && HEPDATA.stats.min_y > 0 ? d3.scale.log() : d3.scale.linear();
-
         return scale.domain([min, max]).range([options.height - options.margins.top - options.margins.bottom, 0]);
     }
 };
@@ -691,7 +699,7 @@ HEPDATA.visualization.heatmap = {
             .call(HEPDATA.visualization.heatmap.x_axis);
         svg.append("text")
             .attr("class", "axis_text")
-            .attr("text-anchor", "end")
+            .attr("text-anchor", "middle")
             .attr("x", HEPDATA.visualization.heatmap.options.width / 2)
             .attr("y", HEPDATA.visualization.heatmap.options.height - 10)
             .text(HEPDATA.visualization.heatmap.x_index);
@@ -700,7 +708,7 @@ HEPDATA.visualization.heatmap = {
         svg.append("g").attr("class", "y axis").call(HEPDATA.visualization.heatmap.y_axis).attr("transform", "translate(-4,0)");
         svg.append("text")
             .attr("class", "axis_text")
-            .attr("text-anchor", "end")
+            .attr("text-anchor", "middle")
             .attr("x", -HEPDATA.visualization.heatmap.options.height / 3)
             .attr("y", 0)
             .attr("dy", "-3.5em")

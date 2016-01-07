@@ -36,7 +36,7 @@ def submit_post():
         content, status = get_inspire_record_information(inspire_id)
         content["inspire_id"] = inspire_id
     else:
-        content = {'name': title}
+        content = {'title': title}
 
     record_information = create_record(content)
     get_or_create_hepsubmission(record_information["recid"],

@@ -24,6 +24,9 @@
 
 $highlight-colour: #F0C419;
 
+body {
+    background-color: #ecf0f1 !important;
+}
 .data-brief {
     padding-left: 20px;
     padding-top: 5px;
@@ -101,6 +104,13 @@ $highlight-colour: #F0C419;
     background: $navy-light url("/static/img/icons/search_icon_white.png") no-repeat 5px 50%;
     padding: 7px 10px 7px 35px;
     background-size: 13%;
+}
+
+.author-search {
+    background: white url("/static/img/icons/search_icon.svg") no-repeat 5px 50%;
+    background-size: 9%;
+    width: 100%;
+    padding-left: 30px !important;
 }
 
 .search-submit {

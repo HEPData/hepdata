@@ -19,7 +19,7 @@ from hepdata.modules.records.models import DataSubmission, DataReview, \
     DataResource, License, Keyword, HEPSubmission, SubmissionParticipant
 from hepdata.modules.records.utils.common import \
     get_prefilled_dictionary, infer_file_type, URL_PATTERNS, \
-    encode_string, zipdir
+    encode_string, zipdir, get_record_by_id
 from hepdata.modules.records.utils.common import get_or_create
 from hepdata.modules.records.utils.resources import download_resource_file
 from invenio_db import db
@@ -63,8 +63,9 @@ def remove_submission(record_id):
     except NoResultFound as nrf:
         print nrf.args
 
-    publication_record = RecordMetadata.query.filter_by(id=record_id).first()
-    if publication_record:
+    record = get_record_by_id(record_id)
+
+    if record:
         data_records = get_records_matching_field(
             'related_publication', record_id, doc_type=CFG_DATA_TYPE)
 
@@ -99,7 +100,7 @@ def remove_submission(record_id):
         SubmissionParticipant.query.filter_by(
             publication_recid=record_id).delete()
 
-        db.session.delete(publication_record)
+        record.delete()
         db.session.commit()
         return True
 

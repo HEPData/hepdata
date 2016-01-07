@@ -574,7 +574,7 @@ def finalise_datasubmission(current_time, existing_submissions,
         "abstract": submission.description,
         "inspire_id": publication_record['inspire_id'],
         "authors": publication_record['authors'],
-        "_first_author": publication_record['_first_author'],
+        "first_author": publication_record['first_author'],
         "related_publication": submission.publication_recid,
         "creation_date": publication_record["creation_date"],
         "last_updated": current_time,
@@ -582,8 +582,6 @@ def finalise_datasubmission(current_time, existing_submissions,
         "keywords": keywords,
         "version": version,
         "collaborations": publication_record.get("collaborations", []),
-        "_additional_authors": publication_record.get('_additional_authors',
-                                                      []),
     }
 
     if submission_info["title"] in existing_submissions:

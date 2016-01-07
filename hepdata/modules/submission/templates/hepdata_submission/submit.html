@@ -226,6 +226,10 @@
 
     <script>
 
+        MathJax.Hub.Config({
+            tex2jax: {inlineMath: [['$', '$'], ['\\(', '\\)']]}
+        });
+
         var inspire = false;
         var publication_data = {};
         var default_options = {duration: 300, direction: 'from_right'};
@@ -323,6 +327,8 @@
                 $("#inspire-result").html('<div class="spinner" style="margin-top: 9em">' +
                         '<div class="ball ball-purple"></div>' +
                         '<p class="text-grey">Loading information from inspire.</p></div>');
+                $("#preview_back_btn").addClass("hidden");
+                $("#preview_continue_btn").addClass("hidden");
                 toggle_div("#inspire_details", default_options, 'show')
             });
         });
@@ -416,7 +422,7 @@
                 url: '/submit',
                 data: payload,
                 method: 'POST',
-                success: function() {
+                success: function () {
                     alert('submission successful...');
                 }
             })
