@@ -169,9 +169,11 @@
                     for (var record in data) {
 
                         var record_html_block = '<div class="latest-record">';
+                        console.log(data[record])
                         record_html_block += '<a href="/record/ins' + data[record]['inspire_id'] + '" class="title">' + data[record]['title'] + '</a><br/>';
-                        record_html_block += '<a href="/search/?q=&author=' + data[record]['first_author']['full_name'] + '" class="author">' + data[record]['first_author']['full_name'] + '</a>';
-
+                        if (data[record]['first_author']) {
+                            record_html_block += '<a href="/search/?q=&author=' + data[record]['first_author']['full_name'] + '" class="author">' + data[record]['first_author']['full_name'] + '</a>';
+                        }
                         if (data[record]['collaborations'].length > 0)
 
                             for (var collaboration in data[record]['collaborations']) {
