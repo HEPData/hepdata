@@ -21,14 +21,18 @@ def create_data_structure(ctx):
 
     title = ctx.get('title')
     if type(ctx.get('title')) is list and len(ctx.get('title')) > 0:
-        print ctx.get('title')
         title = ctx.get('title')[0]
+
+    first_author = []
+    authors = ctx.get('authors', default=[])
+    if len(authors) > 0:
+        first_author = authors[0]
 
     record = {"title": title,
               "abstract": ctx.get('abstract'),
               "inspire_id": ctx.get("inspire_id"),
-              "_first_author": ctx.get("_first_author"),
-              "authors": ctx.get("authors")
+              "first_author": first_author,
+              "authors": authors
               }
 
     optional_keys = ["related_publication", "recid", "keywords",
