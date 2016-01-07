@@ -101,14 +101,14 @@ body {
     font-size: 1em;
     border: 1px solid $navy-light;
     color: white;
-    background: $navy-light url("/static/img/icons/search_icon_white.png") no-repeat 5px 50%;
+    background: $navy-light url("/static/img/icons/search_icon_white.svg") no-repeat 5px 50%;
     padding: 7px 10px 7px 35px;
-    background-size: 13%;
+    background-size: 25px;
 }
 
 .author-search {
     background: white url("/static/img/icons/search_icon.svg") no-repeat 5px 50%;
-    background-size: 9%;
+    background-size:20px;
     width: 100%;
     padding-left: 30px !important;
 }
@@ -227,6 +227,10 @@ body {
 
 }
 
+.twitter-typeahead {
+    width: 100%;
+}
+
 .typeahead, .tt-query, .tt-hint {
     border: 2px solid white;
     background-color: white;
@@ -268,3 +272,4 @@ body {
 .tt-suggestion p {
     margin: 0;
 }
+

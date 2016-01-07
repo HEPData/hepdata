@@ -121,9 +121,9 @@ def default_queryable_fields(es_type):
     """ Defines what JSON fields should be queried in a full text search for
     a given type. """
     if es_type == 'datatable':
-        return ["title.title^3", "abstract.summary^10", "doi", "inspire_id"]
+        return ["title^3", "abstract.summary^10", "doi", "inspire_id"]
     elif es_type == 'publication':
-        return ["title.title^10", "abstract.summary^6", "keywords.name^4",
+        return ["title^10", "abstract.summary^6", "keywords.name^4",
                 "keywords.value^6", "doi", "inspire_id",
                 "data_keywords.observables^4", "data_keywords.cmenergies^4",
                 "data_keywords.reactions^4"]
@@ -134,7 +134,7 @@ def default_queryable_fields(es_type):
 def sort_fields_mapping(sort_by):
     """ JSON mappings to ElasticSearch fields used for sorting. """
     if sort_by == 'title':
-        return 'title.title.raw'
+        return 'title.raw'
     elif sort_by == 'collaborations':
         return 'collaborations'
     elif sort_by == 'date':

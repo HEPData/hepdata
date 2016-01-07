@@ -234,6 +234,10 @@
 
 {%- block javascript %}
 
+    {%- assets "hepdata_vis_js" %}
+        <script src="{{ ASSET_URL }}"></script>
+    {%- endassets %}
+
     <script>
 
         $(document).ready(function () {

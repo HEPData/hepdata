@@ -49,10 +49,9 @@ def create_record_for_dashboard(record_id, submissions, primary_uploader=None,
                 publication_recid=record_id).first()
 
             submissions[record_id] = {}
-            submissions[record_id]["metadata"] = {
-                "recid": record_id,
+            submissions[record_id]["metadata"] = { "recid": record_id,
                 "role": [user_role],
-                "start_date": hepdata_submission_record.created}
+                "start_date": publication_record.created}
 
             submissions[record_id]["metadata"][
                 "versions"] = hepdata_submission_record.latest_version

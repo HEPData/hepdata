@@ -26,13 +26,12 @@
 
 from __future__ import absolute_import, print_function
 
-from flask_assets import Bundle
 from invenio_assets import NpmBundle
 
 css = NpmBundle(
     'scss/styles.scss',
     filters='scss, cleancss',
-    depends=('scss/*.scss', ),
+    depends=('scss/*.scss',),
     output='gen/hepdata.%(version)s.css',
     npm={
         "bootstrap-sass": "~3.3.5",
@@ -43,7 +42,7 @@ css = NpmBundle(
 record_css = NpmBundle(
     'scss/record.scss',
     filters='scss, cleancss',
-    depends=('scss/*.scss', ),
+    depends=('scss/*.scss',),
     output='gen/hepdata_record.%(version)s.css',
     npm={
         "bootstrap-sass": "~3.3.5",
@@ -54,7 +53,7 @@ record_css = NpmBundle(
 search_css = NpmBundle(
     'scss/search.scss',
     filters='scss, cleancss',
-    depends=('scss/*.scss', ),
+    depends=('scss/*.scss',),
     output='gen/hepdata_search.%(version)s.css',
     npm={
         "bootstrap-sass": "~3.3.5",
@@ -62,24 +61,13 @@ search_css = NpmBundle(
     }
 )
 
-
-js = NpmBundle(
-    Bundle(
-        'js/modernizr-custom.js',
-        'js/dataviewer.js',
-        filters='uglifyjs',
-    ),
-
-    filters='jsmin',
-    output="gen/hepdata.%(version)s.js"
-)
-
-submission_js = NpmBundle(
-    Bundle(
-        'js/inspire.js',
-        filters='uglifyjs',
-    ),
-
-    filters='jsmin',
-    output="gen/hepdata-inspire.%(version)s.js"
+bootstrap_js = NpmBundle(
+    'js/modernizr-custom.js',
+    'node_modules/bootstrap/dist/js/bootstrap.min.js',
+    'js/lib/bootstrap-filestyle.min.js',
+    filters='jsmin,uglifyjs',
+    output="gen/hepdata.%(version)s.js",
+    npm={
+        "bootstrap": "~3.3.5"
+    }
 )

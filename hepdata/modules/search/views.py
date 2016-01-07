@@ -177,6 +177,4 @@ def search():
         'filters': dict(query_params['filters']),
     }
 
-    print ctx
-
     return render_template('search_results.html', ctx=ctx)

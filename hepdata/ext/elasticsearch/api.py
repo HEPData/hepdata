@@ -226,8 +226,6 @@ def record_exists(inspire_id, index=None):
         }
     }
 
-    print query
-
     return es.search_exists(index=index, doc_type=CFG_PUB_TYPE, body=query)
 
 

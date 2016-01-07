@@ -39,17 +39,21 @@ def submit_post():
         content = {'title': title}
 
     record_information = create_record(content)
-    get_or_create_hepsubmission(record_information["recid"],
-                                int(current_user.get_id()))
+    hepsubmission = get_or_create_hepsubmission(record_information["recid"],
+                                                int(current_user.get_id()))
 
     reviewer_name, reviewer_email = parse_person_string(reviewer)
     uploader_name, uploader_email = parse_person_string(uploader)
 
-    create_participant_record(reviewer_name, reviewer_email, 'reviewer',
-                              'primary', record_information['recid'])
+    hepsubmission.participants.append(
+        create_participant_record(reviewer_name, reviewer_email, 'reviewer',
+                                  'primary', record_information['recid']))
 
-    create_participant_record(uploader_name, uploader_email, 'uploader',
-                              'primary', record_information['recid'])
+    hepsubmission.participants.append(
+        create_participant_record(uploader_name, uploader_email, 'uploader',
+                                  'primary', record_information['recid']))
+
+    db.session.commit()
 
     return jsonify({'success': True, 'message': 'Submission successful.'})
 
@@ -61,8 +65,7 @@ def create_participant_record(name, email, role, status, recid):
                                                role=role,
                                                publication_recid=recid)
 
-    db.session.add(participant_record)
-    db.session.commit()
+    return participant_record
 
 
 def parse_person_string(person_string, separator="::"):

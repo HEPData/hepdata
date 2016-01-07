@@ -63,7 +63,7 @@ def get_record_from_inspire():
 
     # check that id is not present already.
     exists = record_exists(rec_id)
-    print exists
+
     if exists:
         return jsonify({'status': 'exists', 'id': rec_id})
 

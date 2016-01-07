@@ -149,15 +149,13 @@
 {% endblock %}
 
 {% block javascript %}
-    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/typeahead.js/0.11.1/typeahead.bundle.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/mathjax/2.5.3/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    <script src="//cdn.jsdelivr.net/bootstrap.filestyle/1.1.0/js/bootstrap-filestyle.min.js"></script>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.6/js/bootstrap.min.js"></script>
 
-    {%- assets "hepdata_theme_js" %}
+    {%- assets "hepdata_bootstrap_js" %}
         <script src="{{ ASSET_URL }}"></script>
     {%- endassets %}
+
+
 
     <script type="text/javascript">
         function show_more_datatables(publication, show_number) {
@@ -170,7 +168,6 @@
                 $("#publication-" + publication + " .data-more").hide();
             }
         }
-
 
         $(document).ready(function () {
             MathJax.Hub.Config({

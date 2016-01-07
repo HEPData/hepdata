@@ -175,8 +175,8 @@ def process_submission(recid, record, version, hepdata_submission,
                                   record["collaborations"].split(",")]
                 ctx['record']['collaborations'] = collaborations
 
-            if "first_author" in record and len(record["first_author"])>0:
-                    ctx['breadcrumb_text'] = record["first_author"][0][
+            if "first_author" in record:
+                    ctx['breadcrumb_text'] = record["first_author"][
                                                  "full_name"] + " et al."
 
             try:

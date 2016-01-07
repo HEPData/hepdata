@@ -36,7 +36,6 @@
         }
     </style>
 
-
 {%- endblock additional_assets %}
 
 
@@ -353,7 +352,7 @@
             toggle_div("#reviewers_uploaders", default_options, 'hide', function () {
                 change_breadcrumbs("#progress-people", "#progress-submit");
                 toggle_div("#check", default_options, 'show', function () {
-                    $("#publication_title").text(inspire ? publication_data.query.title[0] : $("#paper_title").val());
+                    $("#publication_title").text(inspire ? publication_data.query.title : $("#paper_title").val());
                     MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
                 })
             });

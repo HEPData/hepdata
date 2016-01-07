@@ -60,6 +60,10 @@
     {% endfor %}
 </div>
 
+  {%- assets "hepdata_search_js" %}
+        <script src="{{ ASSET_URL }}"></script>
+    {%- endassets %}
+
 <script type="text/javascript">
     var authors = new Bloodhound({
         datumTokenizer: Bloodhound.tokenizers.whitespace,
