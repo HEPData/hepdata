@@ -39,9 +39,9 @@ def assign_record_id(record_information, id=None):
     else:
         record_id = Record.create(record_information).id
         PersistentIdentifier.create('recid', record_id,
-                                          object_type='rec',
-                                          object_uuid=uuid.uuid4(),
-                                          status=PIDStatus.REGISTERED)
+                                    object_type='rec',
+                                    object_uuid=uuid.uuid4(),
+                                    status=PIDStatus.REGISTERED)
 
     # bit redundant, but the recid is used in many places.
     record_information['control_number'] = record_information['recid']
@@ -51,60 +51,59 @@ def remove_submission(record_id):
     """
     Removes the database entries related to a record.
     :param record_id:
-    :return:
-    todo: modify model so that deletes are cascaded
-          through other related db entries.
+    :return: True if Successful, False if the record does not exist.
     """
     hepdata_submission = HEPSubmission.query.filter_by(
         publication_recid=record_id)
 
     try:
-        db.session.delete(hepdata_submission.one())
-    except NoResultFound as nrf:
-        print nrf.args
+        try:
+            db.session.delete(hepdata_submission.one())
+        except NoResultFound as nrf:
+            print nrf.args
 
-    record = get_record_by_id(record_id)
+        record = get_record_by_id(record_id)
 
-    if record:
-        data_records = get_records_matching_field(
-            'related_publication', record_id, doc_type=CFG_DATA_TYPE)
+        if record:
+            data_records = get_records_matching_field(
+                'related_publication', record_id, doc_type=CFG_DATA_TYPE)
 
-        if 'hits' in data_records:
-            for data_record in data_records['hits']['hits']:
-                metadata_obj = RecordMetadata.query.filter_by(
-                    id=data_record['_source']['recid']).one()
-                db.session.delete(metadata_obj)
+            if 'hits' in data_records:
+                for data_record in data_records['hits']['hits']:
+                    record = get_record_by_id(data_record['_source']['recid'])
+                    record.delete()
 
-        submissions = DataSubmission.query.filter_by(
-            publication_recid=record_id).all()
+            submissions = DataSubmission.query.filter_by(
+                publication_recid=record_id).all()
 
-        for submission in submissions:
-            DataSubmission.query.filter_by(id=submission.data_file).delete()
+            reviews = DataReview.query.filter_by(
+                publication_recid=record_id).all()
 
-            for additional_resource in submission.additional_files:
-                db.session.delete(additional_resource)
+            for review in reviews:
+                db.session.delete(review)
 
-            DataResource.query.filter_by(id=submission.data_file).delete()
+            for submission in submissions:
 
-            db.session.delete(submission)
+                resource = DataResource.query.filter_by(
+                    id=submission.data_file).first()
 
-        # remove any reviews and associate review messages
-        reviews = DataReview.query.filter_by(
-            publication_recid=record_id).all()
-        for review in reviews:
-            for message in review.messages:
-                db.session.delete(message)
-            db.session.delete(review)
+                db.session.delete(submission)
 
-        # remove submission participant records
-        SubmissionParticipant.query.filter_by(
-            publication_recid=record_id).delete()
+                if resource:
+                    db.session.delete(resource)
 
-        record.delete()
-        db.session.commit()
-        return True
+            SubmissionParticipant.query.filter_by(
+                publication_recid=record_id).delete()
 
-    return False
+            record.delete()
+            db.session.commit()
+            return True
+
+        return False
+
+    except Exception as e:
+        db.session.rollback()
+        raise e
 
 
 @session_manager
@@ -385,7 +384,7 @@ def process_submission_directory(basepath, submission_file_path, recid):
                 zip_location = os.path.join(
                     CFG_DATADIR, str(recid),
                     SUBMISSION_FILE_NAME_PATTERN
-                    .format(recid, hepsubmission.latest_version))
+                        .format(recid, hepsubmission.latest_version))
                 if os.path.exists(zip_location):
                     os.remove(zip_location)
 

@@ -71,11 +71,11 @@
                                     <div style="padding: 5px 0px; color: #7F8C8D">
                                         <i class="fa fa-table"></i>
                                         <span style="font-weight: bolder">{{ record.total_tables }}</span>
-                                        data table
-                                        {% if record.total_tables > 1 or record.total_tables == 0 %}
-                                            s{% endif %}{% if ctx %}
-                                        {% if ctx.q %} match query
-                                        {% endif %}{% endif %}.
+                                        data table{% if record.total_tables > 1 or record.total_tables == 0 %}s{% endif %}
+                                        {% if ctx %}
+                                            {% if ctx.q %} match query
+                                        {% endif %}
+                                        {% endif %}.
                                     </div>
                                 </div>
 

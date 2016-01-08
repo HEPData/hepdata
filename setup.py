@@ -169,7 +169,6 @@ setup(
             'hepdata_stats = hepdata.modules.stats.models',
         ],
         'invenio_base.blueprints': [
-            'hepdata_frontpage = hepdata.modules.frontpage.views:blueprint',
             'hepdata_theme = hepdata.modules.theme.views:blueprint',
             'hepdata_dashboard = hepdata.modules.dashboard.views:blueprint',
             'hepdata_search = hepdata.modules.search.views:blueprint',

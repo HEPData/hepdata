@@ -175,9 +175,8 @@ def process_submission(recid, record, version, hepdata_submission,
                                   record["collaborations"].split(",")]
                 ctx['record']['collaborations'] = collaborations
 
-            if "first_author" in record:
-                    ctx['breadcrumb_text'] = record["first_author"][
-                                                 "full_name"] + " et al."
+            if "first_author" in record and 'full_name' in record["first_author"]:
+                    ctx['breadcrumb_text'] = record["first_author"]["full_name"] + " et al."
 
             try:
                 commit_message_query = RecordVersionCommitMessage.query \
@@ -673,6 +672,8 @@ def attach_information_to_record(recid):
     for a given record id with the contents.
     :return:
     """
+
+    print(request.form)
 
     inspire_id = request.form['inspire_id']
 

@@ -23,7 +23,7 @@ def create_data_structure(ctx):
     if type(ctx.get('title')) is list and len(ctx.get('title')) > 0:
         title = ctx.get('title')[0]
 
-    first_author = []
+    first_author = {}
     authors = ctx.get('authors', [])
     if len(authors) > 0:
         first_author = authors[0]

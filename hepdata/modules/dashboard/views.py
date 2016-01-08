@@ -1,3 +1,4 @@
+from __future__ import absolute_import, print_function
 from collections import OrderedDict
 from datetime import datetime
 import json
@@ -13,7 +14,8 @@ from hepdata.ext.elasticsearch.api import push_data_keywords
 from hepdata.modules.records.models import HEPSubmission, DataReview, \
     SubmissionParticipant, DataSubmission, RecordVersionCommitMessage
 from hepdata.modules.records.utils.common import get_record_by_id
-from flask import Blueprint, jsonify, request, render_template
+from flask import Blueprint, jsonify, request, render_template, redirect, \
+    url_for
 from hepdata.modules.records.utils.submission import unload_submission
 from hepdata.modules.records.utils.users import has_role
 from hepdata.modules.records.utils.workflow import send_finalised_email, \
@@ -49,9 +51,9 @@ def create_record_for_dashboard(record_id, submissions, primary_uploader=None,
                 publication_recid=record_id).first()
 
             submissions[record_id] = {}
-            submissions[record_id]["metadata"] = { "recid": record_id,
-                "role": [user_role],
-                "start_date": publication_record.created}
+            submissions[record_id]["metadata"] = {"recid": record_id,
+                                                  "role": [user_role],
+                                                  "start_date": publication_record.created}
 
             submissions[record_id]["metadata"][
                 "versions"] = hepdata_submission_record.latest_version
@@ -81,8 +83,8 @@ def create_record_for_dashboard(record_id, submissions, primary_uploader=None,
                 submissions[record_id]["metadata"][
                     "title"] = "Submission in Progress"
 
-            if "inspire_id" not in publication_record or publication_record[
-                "inspire_id"] == "":
+            if "inspire_id" not in publication_record \
+                    or publication_record["inspire_id"] == None:
                 submissions[record_id]["metadata"][
                     "requires_inspire_id"] = True
         else:
@@ -346,9 +348,10 @@ def add_participant(recid):
              "message": "{0} {1} added.".format(full_name, participant_type)})
 
     except Exception as e:
-        print e
+        print(e)
         return json.dumps(
-            {"success": False, "recid": recid, "message": 'Unable to add participant.'})
+            {"success": False, "recid": recid,
+             "message": 'Unable to add participant.'})
 
 
 @blueprint.route('/manage/coordinator/', methods=['POST'])
@@ -373,26 +376,17 @@ def change_coordinator_for_submission():
     return jsonify({'success': True})
 
 
-# @blueprint.route('/assign/<cookie>')
-# @login_required
-# def assign_role(cookie):
-#     try:
-#         (role_name, expiration) = mail_cookie_check_role(
-#             cookie,
-#             current_user.get_id()
-#         )
-#
-#         participant_record = SubmissionParticipant.query.filter_by(
-#             invitation_cookie=cookie).first()
-#         participant_record.user_account = current_user.get_id()
-#
-#         db.session.add(participant_record)
-#         db.session.commit()
-#
-#     except InvenioWebAccessMailCookieDeletedError:
-#         # Maybe print that the cookie has been already used
-#         return redirect('/')
-#     return redirect(url_for('.dashboard'))
+@blueprint.route('/assign/<cookie>')
+@login_required
+def assign_role(cookie):
+    participant_record = SubmissionParticipant.query.filter_by(
+        invitation_cookie=cookie).first()
+    participant_record.user_account = current_user.get_id()
+
+    db.session.add(participant_record)
+    db.session.commit()
+
+    return redirect(url_for('.dashboard'))
 
 
 @blueprint.route('/delete/<int:recid>')
@@ -463,8 +457,8 @@ def do_finalise(recid, publication_record=None, force_finalise=False,
     if force_finalise or hep_submission.coordinator == int(
             current_user.get_id()):
 
-        print 'Latest version for {0} is {1}'.format(
-            recid, hep_submission.latest_version)
+        print('Latest version for {0} is {1}'.format(
+            recid, hep_submission.latest_version))
         submissions = DataSubmission.query.filter_by(
             publication_recid=recid,
             version=hep_submission.latest_version).all()
@@ -491,9 +485,9 @@ def do_finalise(recid, publication_record=None, force_finalise=False,
 
         errors = []
         current_time = "{:%Y-%m-%d}".format(datetime.now())
-        print 'There are {0} submissions to package and index. ' \
+        print('There are {0} submissions to package and index. ' \
               'Update time will be {1}.'.format(
-            len(submissions), current_time)
+            len(submissions), current_time))
         for submission in submissions:
             finalise_datasubmission(current_time, existing_submissions,
                                     generated_record_ids,
@@ -519,7 +513,7 @@ def do_finalise(recid, publication_record=None, force_finalise=False,
                     db.session.add(commit_record)
 
             except NoResultFound:
-                print 'No record found to update. Which is super strange.'
+                print('No record found to update. Which is super strange.')
 
             hep_submission.overall_status = "finished"
             hep_submission.latest_version = version
