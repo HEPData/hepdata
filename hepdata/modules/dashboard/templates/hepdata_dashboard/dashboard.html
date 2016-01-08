@@ -28,8 +28,10 @@
     <div class="hep-content" style="padding-top: 65px; height: 100%">
 
     <div class="dashboard-header">
-        <h4>HEPData Dashboard <span class="pull-right"
-                                    style="margin-top: -5px;">
+        <h4>HEPData Dashboard
+
+            <span class="pull-right"
+                  style="margin-top: -5px;">
 
             {% if current_user.is_admin %}
                 <a href="/admin" class="btn btn-default btn-sm">HEPData
@@ -44,74 +46,25 @@
 
 
             {% endif %}
-            <a href="/account/settings/profile" class="btn btn-default btn-sm"><span
-                    class="fa fa-cogs"></span> Manage Profile</a>
+                <a href="/account/settings/profile"
+                   class="btn btn-default btn-sm"><span
+                        class="fa fa-cogs"></span> Manage Profile</a>
             <a href="{{ url_for('security.logout') }}"
                class="btn btn-danger btn-sm"><span
                     class="fa fa-power-off"></span> Log out</a>
+            </span>
         </h4>
     </div>
 
-
-    <div id="submission_filters" class="filter-section">
-        <input id="submission-filter" placeholder="Filter submissions"
-               name="data-table-filter"
-               onkeyup="HEPDATA.filter_content('#submission-filter','#hep-submissions')">
-
-        <br/>
-
-        <p>Progress <span id="clear-progress"
-                          class="clear-filter pull-right hidden"><span
-                class="fa fa-times"></span> Clear</span></p>
-
-        <div class="clearfix"></div>
-        <ul class="filter-list" id="progress-filter">
-            <li class="filter-todo" id="progress-Not_started"><span
-                    class="fa fa-exclamation-triangle"></span> Not
-                started
-                <span class="pull-right filter-count">{{ ctx.filters.progress.todo }}</span>
-            </li>
-            <li class="filter-attention" id="progress-In_progress"><span
-                    class="fa fa-refresh"></span> In progress <span
-                    class="pull-right filter-count">{{ ctx.filters.progress.attention }}</span>
-            </li>
-            <li class="filter-passed" id="progress-Awaiting"><span
-                    class="fa fa-check-circle"></span> Ready for Release <span
-                    class="pull-right filter-count">{{ ctx.filters.progress.passed }}</span>
-            </li>
-        </ul>
-
-        <br/>
-
-        {% if not ctx.user_is_admin %}
-            <p>Your Role <span id="clear-role"
-                               class="clear-filter pull-right hidden"><span
-                    class="fa fa-times"></span> Clear</span></p>
-
-            <div class="clearfix"></div>
-            <ul class="filter-list" id="role-filter">
-                <li class="filter-coordinator" id="role-coordinator"><span
-                        class="fa fa-gavel"></span> Coordinator <span
-                        class="pull-right filter-count">{{ ctx.filters.role.coordinator }}</span>
-                </li>
-                <li class="filter-reviewer" id="role-reviewer"><span
-                        class="fa fa-check"></span> Reviewer <span
-                        class="pull-right filter-count">{{ ctx.filters.role.reviewer }}</span>
-                </li>
-                <li class="filter-uploader" id="role-uploader"><span
-                        class="fa fa-upload"></span> Uploader <span
-                        class="pull-right filter-count">{{ ctx.filters.role.uploader }}</span>
-                </li>
-            </ul>
-        {% endif %}
-
-    </div>
-
     <div id="hepdata_submissions">
-        <h4 style="color: #2c3e50; margin-top: 4px">Submissions in
-            Progress</h4>
 
         {% if ctx.submissions|length > 0 %}
+
+            <div class="filter" align="center">
+                <input id="submission-filter" placeholder="Filter submissions"
+                       name="data-table-filter"
+                       onkeyup="HEPDATA.filter_content('#submission-filter','#hep-submissions')">
+            </div>
 
             <ul id="hep-submissions">
                 {% for submission in ctx.submissions %}
