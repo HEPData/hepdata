@@ -9,6 +9,7 @@ var inspire_ds = (function () {
                 processData: false,
                 cache: true,
                 success: function (data) {
+                    window.inspire_id = inspire_id;
                     callback(data);
                 }
             });

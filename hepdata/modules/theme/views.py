@@ -31,10 +31,15 @@ from flask import Blueprint, render_template
 blueprint = Blueprint(
     'hepdata_theme',
     __name__,
-    url_prefix='/pages',
+    url_prefix='/',
     template_folder='templates',
     static_folder='static',
 )
+
+
+@blueprint.route('')
+def index():
+    return render_template('hepdata_theme/home.html')
 
 
 @blueprint.route('/submission')
