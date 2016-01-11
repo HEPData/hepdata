@@ -23,6 +23,10 @@
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 """Helper models for HEPData data model."""
 from __future__ import absolute_import, print_function
+
+import uuid
+from sqlalchemy_utils.types import UUIDType
+
 from invenio_accounts.models import User
 from sqlalchemy import func
 from invenio_db import db
@@ -95,7 +99,7 @@ class SubmissionParticipant(db.Model):
     full_name = db.Column(db.String(128))
     email = db.Column(db.String(128))
     affiliation = db.Column(db.String(128))
-    invitation_cookie = db.Column(db.String(128))
+    invitation_cookie = db.Column(UUIDType, default=uuid.uuid4)
 
     # when the user logs in with their cookie,
     # this user_account should be updated.
@@ -252,4 +256,3 @@ class RecordVersionCommitMessage(db.Model):
     creation_date = db.Column(
         db.DateTime, nullable=False, default=func.now(), index=True)
     message = db.Column(db.String(1024))
-

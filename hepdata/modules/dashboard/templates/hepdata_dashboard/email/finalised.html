@@ -1,9 +1,20 @@
-Hi {{name}},
+{% extends 'hepdata_dashboard/email/email_container.html' %}
+{% block email_type %}
+Record {{ article }} available Publicly
+{% endblock %}
 
-Version {{version}} of record {{ article }} is now publicly available. You can view it here.
 
-{{ link }}
+{% block email_content %}
 
-Thank you for contributing to HEPData!
+    Hi {{ name }},
 
-The HEPData team
+    <p>Version {{ version }} of <a href="{{ link }}" style="color: #9b59b6">Record {{ article }}</a> is now publicly available.</p>
+
+    <p>
+    Thank you for contributing to HEPData!
+    </p>
+
+    <p>
+    The <a href="http://www.hepdata.net" style="color: #9b59b6">HEPData</a> team
+    </p>
+{% endblock %}

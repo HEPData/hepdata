@@ -1,13 +1,23 @@
-Hi {{name}},
+{% extends 'hepdata_dashboard/email/email_container.html' %}
+{% block email_type %}
+New Review Message for Record {{ article }}
+{% endblock %}
 
-{{table_name}} in Record {{ article }} has a new comment from {{actor}}.
+{% block email_content %}
 
-Message
+    Hi {{ name }},
 
-{{table_message}}
+    <p>{{ table_name }} in <a href="{{ link }}" style="color: #9b59b6">Record {{ article }}</a> has a new comment
+        from {{ actor }}.</p>
 
-You can view the submission <a href="{{ link }}">here</a>.
+    <p style="font-weight: bolder">Message:</p>
+    <p style="padding-left: 20px; font-weight: lighter">{{ table_message }}</p>
 
-Thank you for contributing to HEPData!
+    <p>You can view the submission <a href="{{ link }}" style="color: #9b59b6">here</a>.
+    </p>
 
-The HEPData team
+    <p>
+        The <a href="http://www.hepdata.net" style="color: #9b59b6">HEPData</a>
+        team
+    </p>
+{% endblock %}

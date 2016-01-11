@@ -177,6 +177,7 @@ setup(
         ],
         'invenio_celery.tasks': [
             'hepdata_records = hepdata.modules.records.migrator.api',
+            'hepdata_mail = hepdata.utils.mail',
         ],
         'invenio_i18n.translations': [
             'messages = hepdata',

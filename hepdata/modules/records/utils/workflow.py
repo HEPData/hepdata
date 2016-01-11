@@ -1,12 +1,16 @@
 from datetime import datetime
 import uuid
+
 from celery import shared_task
+from flask.ext.mail import Message
 from flask import render_template
 from invenio_pidstore.minters import recid_minter
 from invenio_records import Record
 from hepdata.modules.records.models import SubmissionParticipant, \
     DataSubmission
 from invenio_db import db
+
+from hepdata.utils.mail import send_email
 
 __author__ = 'eamonnmaguire'
 
@@ -95,7 +99,7 @@ def send_new_review_message_email(review, message, user):
         .filter_by(id=review.data_recid).one()
 
     for participant in submission_participants:
-        message = render_template(
+        message_body = render_template(
             'hepdata_dashboard/email/review-message.html',
             name=participant.full_name,
             actor=user.email,
@@ -105,10 +109,10 @@ def send_new_review_message_email(review, message, user):
             link="http://hepdata.net/record/{0}"
                 .format(review.publication_recid))
 
-        do_send_email('[HEPData] Submission {0} has a new upload available '
-                      'for your review.'
-                      .format(review.publication_recid),
-                      message, participant.email)
+        send_email.delay(
+            participant.email,
+            '[HEPData] Submission {0} has a new review message.' \
+                .format(review.publication_recid), message_body)
 
 
 def send_new_upload_email(recid, user):
@@ -123,16 +127,17 @@ def send_new_upload_email(recid, user):
         publication_recid=recid, status="primary", role="reviewer")
 
     for participant in submission_participants:
-        message = render_template('hepdata_dashboard/email/upload.html',
-                                  name=participant.full_name,
-                                  actor=user.email,
-                                  article=recid,
-                                  link="http://hepdata.net/record/{0}"
-                                  .format(recid))
+        message_body = render_template('hepdata_dashboard/email/upload.html',
+                                       name=participant.full_name,
+                                       actor=user.email,
+                                       article=recid,
+                                       link="http://hepdata.net/record/{0}"
+                                       .format(recid))
 
-        do_send_email('[HEPData] Submission {0} has a '
-                      'new upload available for you to review.'
-                      .format(recid), message, participant.email)
+        send_email.delay(
+            participant.email, '[HEPData] Submission {0} has ' \
+                               'a new upload available for you to review.'
+                .format(recid), message_body)
 
 
 def send_finalised_email(hepsubmission):
@@ -140,34 +145,15 @@ def send_finalised_email(hepsubmission):
         publication_recid=hepsubmission.publication_recid, status="primary")
 
     for participant in submission_participants:
-        message = render_template('hepdata_dashboard/email/finalised.html',
-                                  name=participant.full_name,
-                                  article=hepsubmission.publication_recid,
-                                  version=hepsubmission.latest_version,
-                                  link="http://hepdata.net/record/{0}"
-                                  .format(hepsubmission.publication_recid))
+        message_body = render_template(
+            'hepdata_dashboard/email/finalised.html',
+            name=participant.full_name,
+            article=hepsubmission.publication_recid,
+            version=hepsubmission.latest_version,
+            link="http://hepdata.net/record/{0}"
+                .format(hepsubmission.publication_recid))
 
-        do_send_email('[HEPData] Submission {0} has been finalised and is '
-                      'publicly available.'
-                      .format(hepsubmission.publication_recid), message,
-                      participant.email)
-
-
-def do_send_email(subject, message, email):
-    """
-    General function to send an email with the subject,
-    message and email for the participant
-    :param hepsubmission:
-    :param message:
-    :param email:
-    :return:
-    """
-    try:
-        print message
-        # send_email('info@hepdata.net',
-        #            email,
-        #            header="",
-        #            subject=subject,
-        #            content=message)
-    except Exception as e:
-        print e.message
+        send_email.delay(participant.email,
+                         '[HEPData] Submission {0} has been finalised and is publicly available' \
+                         .format(hepsubmission.publication_recid),
+                         message_body)

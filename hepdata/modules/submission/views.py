@@ -1,11 +1,16 @@
+import uuid
+
 from flask import Blueprint, render_template, request, jsonify
 from flask.ext.login import login_required, current_user
+from flask.ext.mail import Message
 from invenio_db import db
 from hepdata.modules.inspire_api.views import get_inspire_record_information
 from hepdata.modules.records.models import SubmissionParticipant
+from hepdata.modules.records.utils.common import encode_string
 from hepdata.modules.records.utils.submission import \
     get_or_create_hepsubmission
 from hepdata.modules.records.utils.workflow import create_record
+from hepdata.utils.mail import send_email
 
 __author__ = 'eamonnmaguire'
 
@@ -45,15 +50,22 @@ def submit_post():
     reviewer_name, reviewer_email = parse_person_string(reviewer)
     uploader_name, uploader_email = parse_person_string(uploader)
 
-    hepsubmission.participants.append(
-        create_participant_record(reviewer_name, reviewer_email, 'reviewer',
-                                  'primary', record_information['recid']))
+    reviewer = create_participant_record(
+        reviewer_name, reviewer_email, 'reviewer', 'primary',
+        record_information['recid'])
 
-    hepsubmission.participants.append(
-        create_participant_record(uploader_name, uploader_email, 'uploader',
-                                  'primary', record_information['recid']))
+    hepsubmission.participants.append(reviewer)
+
+    uploader = create_participant_record(uploader_name, uploader_email,
+                                         'uploader', 'primary',
+                                         record_information['recid'])
+    hepsubmission.participants.append(uploader)
 
     db.session.commit()
+
+    # Now Send Email only to the uploader first. The reviewer will be asked to
+    # review only when an upload has been performed.
+    send_cookie_email('invite_email', uploader, record_information)
 
     return jsonify({'success': True, 'message': 'Submission successful.'})
 
@@ -81,3 +93,22 @@ def parse_person_string(person_string, separator="::"):
         return string_parts[0], string_parts[1]
 
     return person_string
+
+
+def send_cookie_email(template_name, submission_participant,
+                      record_information):
+    msg = Message("Invitation to {0} Record {1} on HEPData".format(
+        submission_participant.role, submission_participant.publication_recid),
+        sender='submissions@hepdata.net',
+        recipients=[submission_participant.email],
+        body='Dear {0},\n'
+             'You have been requested to be a {1} of a record in HEPData.net '
+             'entitled: \n'
+             '\t {2}. This record is only accessible for editing once you '
+             'access the link below after logging in.\n'
+             '\t http://www.hepdata.net/dashboard/assign/{3}'.format(
+            submission_participant.full_name, submission_participant.role,
+            encode_string(record_information['title'], 'utf-8'),
+            submission_participant.invitation_cookie))
+
+    send_email(msg)

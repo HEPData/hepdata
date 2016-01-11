@@ -1,7 +1,19 @@
-Hi {{name}},
+{% extends 'hepdata_dashboard/email/email_container.html' %}
+{% block email_type %}
+    New Data Upload for Record {{ article }}
+{% endblock %}
 
-Record {{ article }} has a new upload from {{actor}}. You can view it <a href="{{ link }}">here</a>.
+{% block email_content %}
 
-Thank you for contributing to HEPData!
+    Hi {{ name }},
 
-The HEPData team
+    <p><a href="{{ link }}" style="color: #9b59b6">Record {{ article }}</a> has a new upload from {{ actor }}. </p>
+
+    <p>You can view it <a href="{{ link }}" style="color: #9b59b6">here</a>.
+    </p>
+
+    <p>
+        The <a href="http://www.hepdata.net" style="color: #9b59b6">HEPData</a>
+        team
+    </p>
+{% endblock %}

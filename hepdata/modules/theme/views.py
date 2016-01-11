@@ -31,13 +31,13 @@ from flask import Blueprint, render_template
 blueprint = Blueprint(
     'hepdata_theme',
     __name__,
-    url_prefix='/',
+    url_prefix='',
     template_folder='templates',
     static_folder='static',
 )
 
 
-@blueprint.route('')
+@blueprint.route('/')
 def index():
     return render_template('hepdata_theme/home.html')
 
