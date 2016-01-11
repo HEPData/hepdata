@@ -10,6 +10,7 @@ from hepdata.modules.records.models import SubmissionParticipant, \
     DataSubmission
 from invenio_db import db
 
+from hepdata.modules.records.utils.common import get_record_by_id
 from hepdata.utils.mail import send_email
 
 __author__ = 'eamonnmaguire'
@@ -98,6 +99,8 @@ def send_new_review_message_email(review, message, user):
     table_information = DataSubmission.query \
         .filter_by(id=review.data_recid).one()
 
+    record = get_record_by_id(review.publication_recid)
+
     for participant in submission_participants:
         message_body = render_template(
             'hepdata_dashboard/email/review-message.html',
@@ -106,6 +109,7 @@ def send_new_review_message_email(review, message, user):
             table_name=table_information.name,
             table_message=message.message,
             article=review.publication_recid,
+            title = record['title'],
             link="http://hepdata.net/record/{0}"
                 .format(review.publication_recid))
 
@@ -126,11 +130,14 @@ def send_new_upload_email(recid, user):
     submission_participants = SubmissionParticipant.query.filter_by(
         publication_recid=recid, status="primary", role="reviewer")
 
+    record = get_record_by_id(recid)
+
     for participant in submission_participants:
         message_body = render_template('hepdata_dashboard/email/upload.html',
                                        name=participant.full_name,
                                        actor=user.email,
                                        article=recid,
+                                       title = record['title'],
                                        link="http://hepdata.net/record/{0}"
                                        .format(recid))
 
@@ -144,12 +151,15 @@ def send_finalised_email(hepsubmission):
     submission_participants = SubmissionParticipant.query.filter_by(
         publication_recid=hepsubmission.publication_recid, status="primary")
 
+    record = get_record_by_id(hepsubmission.publication_recid)
+
     for participant in submission_participants:
         message_body = render_template(
             'hepdata_dashboard/email/finalised.html',
             name=participant.full_name,
             article=hepsubmission.publication_recid,
             version=hepsubmission.latest_version,
+            title = record['title'],
             link="http://hepdata.net/record/{0}"
                 .format(hepsubmission.publication_recid))
 

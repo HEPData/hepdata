@@ -103,6 +103,6 @@ def send_cookie_email(submission_participant,
         invite_token=submission_participant.invitation_cookie)
 
     send_email(submission_participant.email,
-               "Invitation to {0} Record {1} on HEPData".format(
+               "[HEPData] Invitation to {0} Record {1} on HEPData".format(
                    submission_participant.role,
                    submission_participant.publication_recid), message_body)

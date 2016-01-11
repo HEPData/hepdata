@@ -53,12 +53,14 @@ def remove_submission(record_id):
     :param record_id:
     :return: True if Successful, False if the record does not exist.
     """
+
     hepdata_submission = HEPSubmission.query.filter_by(
         publication_recid=record_id)
 
     try:
         try:
             db.session.delete(hepdata_submission.one())
+
         except NoResultFound as nrf:
             print nrf.args
 
@@ -97,6 +99,7 @@ def remove_submission(record_id):
 
             record.delete()
             db.session.commit()
+            db.session.flush()
             return True
 
         return False

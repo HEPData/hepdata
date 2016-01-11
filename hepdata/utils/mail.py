@@ -12,13 +12,13 @@ def send_email(destination, subject, message):
         connection = connect()
         mmp_msg = MIMEMultipart('alternative')
         mmp_msg['Subject'] = subject
-        mmp_msg['From'] = config.DEFAULT_SEND_EMAIL
+        mmp_msg['From'] = config.MAIL_DEFAULT_SENDER
         mmp_msg['To'] = destination
 
         part1 = MIMEText(message, 'html')
         mmp_msg.attach(part1)
 
-        connection.sendmail(config.DEFAULT_SEND_EMAIL, destination, mmp_msg.as_string())
+        connection.sendmail(config.MAIL_DEFAULT_SENDER, destination, mmp_msg.as_string())
         connection.quit()
     except Exception as e:
         print 'Exception occurred.'
@@ -27,8 +27,8 @@ def send_email(destination, subject, message):
 
 def connect():
     smtp = SMTP()
-    smtp.connect(config.SMTP_SERVER, config.SMTP_PORT)
+    smtp.connect(config.MAIL_SERVER, config.MAIL_PORT)
     if not config.SMTP_NO_PASSWORD:
-        smtp.login(config.DEFAULT_SEND_EMAIL, config.SMTP_PASSWORD)
+        smtp.login(config.MAIL_DEFAULT_SENDER, config.MAIL_PASSWORD)
 
     return smtp

@@ -63,6 +63,8 @@ SECURITY_REGISTER_USER_TEMPLATE = \
     "hepdata_theme/security/register_user.html"
 SECURITY_LOGIN_USER_TEMPLATE = \
     "hepdata_theme/security/login_user.html"
+SECURITY_RESET_PASSWORD_TEMPLATE = \
+    "hepdata_theme/security/reset_password.html"
 
 SECURITY_CONFIRM_SALT = "CHANGE_ME"
 SECURITY_EMAIL_SENDER = "info@hepdata.net"
@@ -99,13 +101,13 @@ CFG_SUPPORTED_FORMATS = ['yaml', 'root', 'csv', 'yoda']
 CFG_TMPDIR = tempfile.gettempdir()
 CFG_DATADIR = tempfile.gettempdir()
 
-# Search
-SEARCH_AUTOINDEX = []
-DEFAULT_SEND_EMAIL = 'submissions@hepdata.net'
-SMTP_SERVER = 'mail.smtp2go.com'
+MAIL_SERVER = 'mail.smtp2go.com'
+MAIL_PORT = 2525
+MAIL_DEFAULT_SENDER = 'submissions@hepdata.net'
 SMTP_NO_PASSWORD = True
-SMTP_PORT = 2525
-SMTP_PASSWORD = ''
+MAIL_PASSWORD = ''
+
+ACCOUNTS_USE_CELERY = False
 
 RECORDS_REST_ENDPOINTS = dict(
     recid=dict(
