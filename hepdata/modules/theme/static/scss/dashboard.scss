@@ -13,9 +13,8 @@
 #hep-submissions {
   list-style: none;
   -webkit-padding-start: 0px;
-  margin: 0 auto;
   width: 95%;
-
+  margin: 85px auto 0;
   h4 {
     height: 80px;
     overflow: hidden;
@@ -173,6 +172,7 @@
   margin-bottom: 1em;
   background-color: $navy-light;
   padding: 10px;
+  position: fixed;
 
   input {
     border: none;

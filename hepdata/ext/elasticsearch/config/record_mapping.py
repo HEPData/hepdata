@@ -76,7 +76,7 @@ mapping = {
                 "fields": {
                     "raw": {
                         "type": "string",
-                        "index": "analyzed"
+                        "index": "not_analyzed"
                     }
                 }
             },
@@ -85,7 +85,7 @@ mapping = {
                 "fields": {
                     "raw": {
                         "type": "string",
-                        "index": "analyzed"
+                        "index": "not_analyzed"
                     }
                 }
             }
@@ -110,54 +110,12 @@ mapping = {
     "recid": {
         "type": "integer"
     },
-    "reviewers": {
-        "properties": {
-            "email": {
-                "type": "string"
-            },
-            "first_name": {
-                "type": "string"
-            },
-            "full_name": {
-                "type": "string"
-            },
-            "last_name": {
-                "type": "string"
-            }
-        }
-    },
     "title": {
         "type": "string",
         "fields": {
             "raw": {
                 "type": "string",
                 "index": "analyzed"
-            }
-        }
-    },
-    "uploaders": {
-        "properties": {
-            "email": {
-                "type": "string"
-            },
-            "first_name": {
-                "type": "string"
-            },
-            "full_name": {
-                "type": "string"
-            },
-            "last_name": {
-                "type": "string"
-            }
-        }
-    },
-    "revision_messages": {
-        "properties": {
-            "version": {
-                "type": "integer"
-            },
-            "message": {
-                "type": "string"
             }
         }
     }
