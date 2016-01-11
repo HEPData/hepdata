@@ -1,8 +1,6 @@
-import uuid
 
 from flask import Blueprint, render_template, request, jsonify
 from flask.ext.login import login_required, current_user
-from flask.ext.mail import Message
 from invenio_db import db
 from hepdata.modules.inspire_api.views import get_inspire_record_information
 from hepdata.modules.records.models import SubmissionParticipant
@@ -65,7 +63,7 @@ def submit_post():
 
     # Now Send Email only to the uploader first. The reviewer will be asked to
     # review only when an upload has been performed.
-    send_cookie_email('invite_email', uploader, record_information)
+    send_cookie_email(uploader, record_information)
 
     return jsonify({'success': True, 'message': 'Submission successful.'})
 
@@ -95,20 +93,16 @@ def parse_person_string(person_string, separator="::"):
     return person_string
 
 
-def send_cookie_email(template_name, submission_participant,
+def send_cookie_email(submission_participant,
                       record_information):
-    msg = Message("Invitation to {0} Record {1} on HEPData".format(
-        submission_participant.role, submission_participant.publication_recid),
-        sender='submissions@hepdata.net',
-        recipients=[submission_participant.email],
-        body='Dear {0},\n'
-             'You have been requested to be a {1} of a record in HEPData.net '
-             'entitled: \n'
-             '\t {2}. This record is only accessible for editing once you '
-             'access the link below after logging in.\n'
-             '\t http://www.hepdata.net/dashboard/assign/{3}'.format(
-            submission_participant.full_name, submission_participant.role,
-            encode_string(record_information['title'], 'utf-8'),
-            submission_participant.invitation_cookie))
+    message_body = render_template(
+        'hepdata_dashboard/email/invite.html',
+        name=submission_participant.full_name,
+        role=submission_participant.role,
+        title=encode_string(record_information['title'], 'utf-8'),
+        invite_token=submission_participant.invitation_cookie)
 
-    send_email(msg)
+    send_email(submission_participant.email,
+               "Invitation to {0} Record {1} on HEPData".format(
+                   submission_participant.role,
+                   submission_participant.publication_recid), message_body)

@@ -101,7 +101,11 @@ CFG_DATADIR = tempfile.gettempdir()
 
 # Search
 SEARCH_AUTOINDEX = []
-
+DEFAULT_SEND_EMAIL = 'submissions@hepdata.net'
+SMTP_SERVER = 'mail.smtp2go.com'
+SMTP_NO_PASSWORD = True
+SMTP_PORT = 2525
+SMTP_PASSWORD = ''
 
 RECORDS_REST_ENDPOINTS = dict(
     recid=dict(

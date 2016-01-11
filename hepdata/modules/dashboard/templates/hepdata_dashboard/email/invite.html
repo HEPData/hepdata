@@ -1,0 +1,22 @@
+{% extends 'hepdata_dashboard/email/email_container.html' %}
+{% block email_type %}
+Invite to be a {{ role }} of a HEPData Record
+{% endblock %}
+
+
+{% block email_content %}
+
+    Hi {{ name }},
+
+    <p>You have been requested to be a {{ role }} of a record in <a href="http://www.hepdata.net" style="color: #9b59b6">HEPData.net</a> entitled:
+
+        <p style="font-weight: lighter; padding-left: 20px;">{{ title }}.</p>
+
+    <p>This record is only accessible for editing once you access the link below after logging in to HEPData</p>
+
+    <a href="http://www.hepdata.net/dashboard/assign/{{ invite_token }}" style="padding-left: 20px;">http://www.hepdata.net/dashboard/assign/{{ invite_token }}.</a>
+
+    <p>
+    The <a href="http://www.hepdata.net" style="color: #9b59b6">HEPData</a> team
+    </p>
+{% endblock %}

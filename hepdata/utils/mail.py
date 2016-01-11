@@ -28,6 +28,7 @@ def send_email(destination, subject, message):
 def connect():
     smtp = SMTP()
     smtp.connect(config.SMTP_SERVER, config.SMTP_PORT)
-    smtp.login(config.DEFAULT_SEND_EMAIL, config.SMTP_PASSWORD)
+    if not config.SMTP_NO_PASSWORD:
+        smtp.login(config.DEFAULT_SEND_EMAIL, config.SMTP_PASSWORD)
 
     return smtp
