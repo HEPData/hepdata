@@ -707,7 +707,7 @@ def consume_sandbox_payload():
 
     get_or_create_hepsubmission(id, current_user.get_id(), status="sandbox")
     file = request.files['hep_archive']
-    return process_payload(id, file, '/record/sandbox/{}')
+    return process_payload(id, file, '/record/sandbox/{}', send_email=False)
 
 
 @login_required
@@ -716,10 +716,10 @@ def update_sandbox_payload(recid):
     # generate a unique id
 
     file = request.files['hep_archive']
-    return process_payload(recid, file, '/record/sandbox/{}')
+    return process_payload(recid, file, '/record/sandbox/{}', send_email=False)
 
 
-def process_payload(recid, file, redirect_url):
+def process_payload(recid, file, redirect_url, send_email=True):
     if file and allowed_file(file.filename):
         errors = process_zip_archive(file, recid)
         if errors:
@@ -730,7 +730,8 @@ def process_payload(recid, file, redirect_url):
             update_action_for_submission_participant(recid,
                                                      current_user.get_id(),
                                                      'uploader')
-            send_new_upload_email(recid, current_user_obj)
+            if send_email:
+                send_new_upload_email(recid, current_user_obj)
             return redirect(redirect_url.format(recid))
 
     else:
