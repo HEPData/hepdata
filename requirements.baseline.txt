@@ -27,3 +27,4 @@
 
 # Base requirements
 Flask==0.10.1
+twitter==1.15.0

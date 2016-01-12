@@ -20,6 +20,7 @@ from hepdata.modules.records.utils.submission import unload_submission
 from hepdata.modules.records.utils.users import has_role
 from hepdata.modules.records.utils.workflow import send_finalised_email, \
     create_record
+from hepdata.utils.twitter import tweet
 
 __author__ = 'eamonnmaguire'
 
@@ -84,7 +85,7 @@ def create_record_for_dashboard(record_id, submissions, primary_uploader=None,
                     "title"] = "Submission in Progress"
 
             if "inspire_id" not in publication_record \
-                    or publication_record["inspire_id"] == None:
+                or publication_record["inspire_id"] == None:
                 submissions[record_id]["metadata"][
                     "requires_inspire_id"] = True
         else:
@@ -181,11 +182,11 @@ def prepare_submissions(current_user):
             if hepdata_submission.participants:
                 for participant in hepdata_submission.participants:
                     if participant.status == 'primary' \
-                            and participant.role == "uploader":
+                        and participant.role == "uploader":
                         primary_uploader = {'full_name': participant.full_name,
                                             'email': participant.email}
                     if participant.status == 'primary' \
-                            and participant.role == "reviewer":
+                        and participant.role == "reviewer":
                         primary_reviewer = {'full_name': participant.full_name,
                                             'email': participant.email}
 
@@ -246,16 +247,16 @@ def dashboard():
         review_status = "Not started"
         review_flag = "todo"
         if submissions[record_id]["stats"]["attention"] == 0 and \
-                        submissions[record_id]["stats"]["todo"] == 0 and \
-                        submissions[record_id]["stats"]["passed"] == 0:
+                submissions[record_id]["stats"]["todo"] == 0 and \
+                submissions[record_id]["stats"]["passed"] == 0:
             review_status = "Not started"
             review_flag = "todo"
         elif submissions[record_id]["stats"]["attention"] > 0 or \
-                        submissions[record_id]["stats"]["todo"] > 0:
+                submissions[record_id]["stats"]["todo"] > 0:
             review_status = "In progress"
             review_flag = "attention"
         elif submissions[record_id]["stats"]["attention"] == 0 and \
-                        submissions[record_id]["stats"]["todo"] == 0:
+                submissions[record_id]["stats"]["todo"] == 0:
             review_status = "Awaiting Action"
             review_flag = "passed"
 
@@ -432,11 +433,11 @@ def finalise(recid, publication_record=None, force_finalise=False):
     commit_message = request.form.get('message')
 
     return do_finalise(recid, publication_record, force_finalise,
-                       commit_message=commit_message)
+                       commit_message=commit_message, send_tweet=True)
 
 
 def do_finalise(recid, publication_record=None, force_finalise=False,
-                commit_message=None):
+                commit_message=None, send_tweet=False):
     """
         Creates record SIP for each data record with a link to the associated
         publication
@@ -454,11 +455,8 @@ def do_finalise(recid, publication_record=None, force_finalise=False,
 
     generated_record_ids = []
     # check if current user is the coordinator
-    if force_finalise or hep_submission.coordinator == int(
-            current_user.get_id()):
+    if force_finalise or hep_submission.coordinator == int(current_user.get_id()):
 
-        print('Latest version for {0} is {1}'.format(
-            recid, hep_submission.latest_version))
         submissions = DataSubmission.query.filter_by(
             publication_recid=recid,
             version=hep_submission.latest_version).all()
@@ -474,7 +472,7 @@ def do_finalise(recid, publication_record=None, force_finalise=False,
             # we need to determine which are the existing record ids.
             existing_data_records = get_records_matching_field(
                 'related_publication', recid, doc_type=CFG_DATA_TYPE)
-            print(existing_data_records)
+
             for record in existing_data_records["hits"]["hits"]:
 
                 if "recid" in record["_source"]:
@@ -485,9 +483,7 @@ def do_finalise(recid, publication_record=None, force_finalise=False,
 
         errors = []
         current_time = "{:%Y-%m-%d}".format(datetime.now())
-        print('There are {0} submissions to package and index. ' \
-              'Update time will be {1}.'.format(
-            len(submissions), current_time))
+
         for submission in submissions:
             finalise_datasubmission(current_time, existing_submissions,
                                     generated_record_ids,
@@ -497,11 +493,11 @@ def do_finalise(recid, publication_record=None, force_finalise=False,
         if not errors:
 
             try:
+                record = get_record_by_id(recid)
                 # If we have a commit message, then we have a record update.
                 # We will store the commit message and also update the
                 # last_updated flag for the record.
                 if commit_message:
-                    record = get_record_by_id(recid)
                     record['last_updated'] = current_time
                     record.commit()
 
@@ -512,24 +508,30 @@ def do_finalise(recid, publication_record=None, force_finalise=False,
 
                     db.session.add(commit_record)
 
+                hep_submission.overall_status = "finished"
+                hep_submission.latest_version = version
+                db.session.add(hep_submission)
+
+                db.session.commit()
+
+                # Reindex everything.
+                index_record_ids([recid] + generated_record_ids)
+                push_data_keywords(pub_ids=[recid])
+
+                send_finalised_email(hep_submission)
+
+                if send_tweet:
+                    tweet(record.get('title'), record.get('collaborations'),
+                          "http://www.hepdata.net/record/ins{0}".format(record.get('inspire_id')))
+
+                return json.dumps({"success": True, "recid": recid,
+                                   "data_count": len(submissions),
+                                   "generated_records": generated_record_ids})
+
             except NoResultFound:
                 print('No record found to update. Which is super strange.')
 
-            hep_submission.overall_status = "finished"
-            hep_submission.latest_version = version
-            db.session.add(hep_submission)
 
-            db.session.commit()
-
-            # Reindex everything.
-            index_record_ids([recid] + generated_record_ids)
-            push_data_keywords(pub_ids=[recid])
-
-            send_finalised_email(hep_submission)
-
-            return json.dumps({"success": True, "recid": recid,
-                               "data_count": len(submissions),
-                               "generated_records": generated_record_ids})
         else:
             errors.append({"level": "error",
                            "message": "No data submissions to process."})

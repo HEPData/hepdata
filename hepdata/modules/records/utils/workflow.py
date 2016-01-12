@@ -141,6 +141,8 @@ def send_new_upload_email(recid, user):
                                        link="http://hepdata.net/record/{0}"
                                        .format(recid))
 
+        print message_body
+
         send_email.delay(
             participant.email, '[HEPData] Submission {0} has ' \
                                'a new upload available for you to review.'

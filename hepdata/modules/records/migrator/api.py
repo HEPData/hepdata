@@ -18,8 +18,6 @@ from hepdata.modules.records.utils.submission import \
 from hepdata.modules.records.utils.workflow import create_record
 import logging
 
-
-
 __author__ = 'eamonnmaguire'
 
 logging.basicConfig()
@@ -45,10 +43,11 @@ class FailedSubmission(Exception):
 
 
 @shared_task
-def load_files(inspire_ids):
+def load_files(inspire_ids, send_tweet=False):
     """
-    :param inspire_ids:
-    :return:
+    :param send_tweet: whether or not to tweet this entry.
+    :param inspire_ids: array of inspire ids to load (in the format insXXX).
+    :return: None
     """
     migrator = Migrator()
     from hepdata.ext.elasticsearch.api import record_exists
@@ -57,7 +56,7 @@ def load_files(inspire_ids):
         if not record_exists(_cleaned_id):
             try:
                 log.warn('Loading {}'.format(inspire_id))
-                migrator.load_file.delay(inspire_id)
+                migrator.load_file.delay(inspire_id, send_tweet)
             except socket.error as se:
                 print 'socket error...'
                 print se.message
@@ -78,19 +77,16 @@ class Migrator(object):
         self.base_url = base_url
 
     @shared_task
-    def load_file(inspire_id):
+    def load_file(inspire_id, send_tweet):
         self = Migrator()
 
         file_location = self.download_file(inspire_id)
         if file_location:
-            # create a dictionary that contains references to a submission
-            # yaml, and N data files.
-            self.split_files(file_location,
-                             os.path.join(CFG_DATADIR, inspire_id),
-                             os.path.join(CFG_DATADIR, inspire_id + ".zip"))
-            record_information = self.retrieve_publication_information(
-                inspire_id)
 
+            self.split_files(file_location, os.path.join(CFG_DATADIR, inspire_id),
+                             os.path.join(CFG_DATADIR, inspire_id + ".zip"))
+
+            record_information = self.retrieve_publication_information(inspire_id)
             record_information = create_record(record_information)
 
             output_location = os.path.join(CFG_DATADIR, inspire_id)
@@ -100,27 +96,15 @@ class Migrator(object):
                     record_information, output_location,
                     os.path.join(output_location, "submission.yaml"))
                 if recid is not None:
-
                     do_finalise(recid, publication_record=record_information,
-                                force_finalise=True)
+                                force_finalise=True, send_tweet=send_tweet)
 
             except FailedSubmission as fe:
-                # log.error(fe.message)
-                # fe.print_errors()
+                log.error(fe.message)
+                fe.print_errors()
                 remove_submission(fe.record_id)
-                raise
         else:
             log.error('Failed to load ' + inspire_id)
-
-    def finalise_submissions(self, recids):
-
-        """
-        :param recids: []
-        :return:
-        """
-        for recid in recids:
-            do_finalise(recid, force_finalise=True)
-            pass
 
     def download_file(self, inspire_id):
         """

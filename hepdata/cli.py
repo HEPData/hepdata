@@ -37,19 +37,26 @@ from hepdata.modules.records.migrator.api import load_files
 
 cli = create_cli(create_app=create_app)
 
+default_recids = 'ins1345354,ins1361912,ins1296861,ins1386475,ins116150,ins333513,ins1359451'
+
 
 @cli.command()
 @with_appcontext
-def populate():
-    """Populate the DB with sample records."""
+@click.option('--recids', '-r', default=default_recids,
+              help='An comma separated list of recids to load.')
+@click.option('--recreate_index', '-rc', default=True, type=bool,
+              help='Whether or not to recreate the index')
+@click.option('--tweet', '-t', default=False, type=bool,
+              help='Whether or not to send a tweet announcing the arrival of these records.')
+def populate(recids, recreate_index, tweet):
+    """Populate the DB with records."""
     from hepdata.ext.elasticsearch.api import recreate_index
 
-    recreate_index()
+    if recreate_index:
+        recreate_index()
 
-    files_to_load = ['ins1345354', 'ins1361912', 'ins1296861', 'ins1386475',
-                     'ins116150', 'ins333513', 'ins1334140', 'ins1203852',
-                     'ins1343107', 'ins1373912', 'ins1377585', 'ins1359451']
-    load_files.delay(files_to_load)
+    files_to_load = recids.split(",")
+    load_files.delay(files_to_load, send_tweet=tweet)
 
 
 @cli.command()

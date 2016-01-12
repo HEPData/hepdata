@@ -29,6 +29,7 @@ import tempfile
 def _(x):
     return x
 
+
 # Database
 SQLALCHEMY_DATABASE_URI = os.environ.get(
     "SQLALCHEMY_DATABASE_URI",
@@ -92,6 +93,8 @@ SEARCH_ELASTIC_HOSTS = [
     'localhost:9200'
 ]
 
+SEARCH_AUTOINDEX = []
+
 CFG_PUB_TYPE = 'publication'
 CFG_DATA_TYPE = 'datatable'
 CFG_ES_AUTHORS = ('authors', 'author')  # (index_name, doc_type)
@@ -125,3 +128,21 @@ DEBUG_TB_INTERCEPT_REDIRECTS = False
 HEPDATA_LOCAL_DOI_PREFIXES = ["10.5072", "10.5281"]
 
 DATACITE_DOI_PREFIX = "10.5072"
+
+USE_TWITTER = True
+TWITTER_HANDLE_MAPPINGS = {
+    "lhcb": "@LHCbPhysics",
+    'atlas': "@ATLASpapers",
+    'cms': "@CMSpapers",
+}
+
+# To get twitter to work, go to https://apps.twitter.com/ and create an application owned by the user account to
+# which the tweets will be sent. Then, follow the instructions here to get hold of access tokens:
+# https://dev.twitter.com/docs/auth/tokens-devtwittercom
+# Fill these values in in the appropriate places below
+
+# Authentication info. for Twitter here
+OAUTH_TOKEN = "CHANGE_ME"
+OAUTH_SECRET = "CHANGE_ME"
+CONSUMER_KEY = "CHANGE_ME"
+CONSUMER_SECRET = "CHANGE_ME"
