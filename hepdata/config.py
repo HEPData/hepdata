@@ -121,7 +121,7 @@ RECORDS_REST_ENDPOINTS = dict(
     ), )
 
 # DebugToolbar
-DEBUG_TB_ENABLED = True
+DEBUG_TB_ENABLED = False
 DEBUG_TB_INTERCEPT_REDIRECTS = False
 
 # DataCite DOI minting:
@@ -142,7 +142,7 @@ TWITTER_HANDLE_MAPPINGS = {
 # Fill these values in in the appropriate places below
 
 # Authentication info. for Twitter here
-OAUTH_TOKEN = "CHANGE_ME"
-OAUTH_SECRET = "CHANGE_ME"
-CONSUMER_KEY = "CHANGE_ME"
-CONSUMER_SECRET = "CHANGE_ME"
+OAUTH_TOKEN = ""
+OAUTH_SECRET = ""
+CONSUMER_KEY = ""
+CONSUMER_SECRET = ""

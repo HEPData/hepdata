@@ -9,7 +9,6 @@ from hepdata.config import OAUTH_TOKEN, OAUTH_SECRET, CONSUMER_KEY, CONSUMER_SEC
 
 def tweet(title, collaborations, url):
     """
-
     :param title:
     :param collaborations:
     :param url:
@@ -22,14 +21,23 @@ def tweet(title, collaborations, url):
         else:
             twitter = Twitter(auth=OAuth(OAUTH_TOKEN, OAUTH_SECRET, CONSUMER_KEY, CONSUMER_SECRET))
             try:
-                status = "Added{0} data on {1} to {2} #hepdata".format(get_collaboration_string(collaborations),
-                                                                       truncate_string(encode_string(title), 10), url)
+                status = "Added{0} data on \"{1}\" to {2} #hepdata".format(
+                    get_collaboration_string(collaborations), truncate_string(encode_string(cleanup_latex(title)), 10),
+                    url)
 
                 twitter.statuses.update(status=status)
             except Exception as e:
                 print(e.__str__())
                 # It would be nice to get a stack trace here
                 print("(P) Failed to post tweet for record {0}".format(url))
+
+
+def cleanup_latex(latex_string):
+    chars_to_replace = ["$", "{", "}"]
+    for char_to_replace in chars_to_replace:
+        latex_string = latex_string.replace(char_to_replace, "")
+
+    return latex_string
 
 
 def get_collaboration_string(collaborations):
