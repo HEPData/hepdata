@@ -20,7 +20,7 @@ from flask import current_app
 from elasticsearch.exceptions import NotFoundError, RequestError
 from invenio_pidstore.models import RecordIdentifier
 from sqlalchemy import func
-from hepdata.modules.records.utils.common import get_last_updated
+from hepdata.modules.records.utils.common import get_last_submission_event
 from .utils import index_authors
 from hepdata.config import CFG_PUB_TYPE, CFG_DATA_TYPE
 from query_builder import QueryBuilder, get_query_by_type, get_authors_query
@@ -340,10 +340,12 @@ def index_record_ids(record_ids, index=None):
             index_authors(es, doc)
 
             if "last_updated" not in doc:
-                last_updated = get_last_updated(doc["recid"])
+                last_updated = get_last_submission_event(doc["recid"])
                 if not last_updated:
                     last_updated = doc["creation_date"]
                 doc["last_updated"] = last_updated
+
+            print 'last update is {0}'.format(doc["last_updated"])
 
             result = es.index(index=index,
                               doc_type=CFG_PUB_TYPE,

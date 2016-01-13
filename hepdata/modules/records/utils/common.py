@@ -1,4 +1,6 @@
 import datetime
+
+from dateutil.parser import parse
 from invenio_pidstore.resolver import Resolver
 from invenio_records.api import Record
 import os
@@ -24,14 +26,22 @@ FILE_TYPES = {
     "xlsx": "Excel",
 }
 
+IMAGE_TYPES = [
+    "png",
+    "jpeg",
+    "jpg",
+    "tiff"
+]
+
 URL_PATTERNS = [
     "github",
     "bitbucket",
-    "hepdata",
     "hepforge",
     "sourceforge",
     "sf"
 ]
+
+ALLOWED_EXTENSIONS = ['zip', "tar", "tar.gz"]
 
 
 def contains_accepted_url(file):
@@ -42,7 +52,6 @@ def contains_accepted_url(file):
 
 
 def allowed_file(filename):
-    ALLOWED_EXTENSIONS = {'zip', "tar", "tar.gz"}
     return '.' in filename and \
            filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
 
@@ -59,7 +68,7 @@ def infer_file_type(file):
             else:
                 return extension
     else:
-        return "Unknown File Type"
+        return "resource"
 
 
 def get_or_create(session, model, **kwargs):
@@ -173,18 +182,12 @@ def get_record_by_id(recid):
         return None
 
 
-def get_last_updated(recid):
+def get_last_submission_event(recid):
     submission_participant = SubmissionParticipant.query.filter_by(
         publication_recid=recid).order_by('action_date').first()
     last_updated = None
     if submission_participant:
         last_action_date = submission_participant.action_date
-        print(
-            "Last action on {0} was {1}, performed by {2} on {3}".format(
-                recid,
-                submission_participant.role,
-                submission_participant.full_name,
-                submission_participant.action_date))
         if last_action_date:
             try:
                 if last_action_date <= datetime.datetime.now():

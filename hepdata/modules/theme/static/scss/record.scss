@@ -553,7 +553,7 @@
 }
 
 .error .label {
-  background-color:$lightgrey;
+  background-color: $lightgrey;
   color: $red;
   display: inline-block;
   height: 16px;
@@ -798,61 +798,68 @@
 
 .axis path,
 .axis line {
-    fill: none;
-    stroke: $navy;
-    shape-rendering: crispEdges;
+  fill: none;
+  stroke: $navy;
+  shape-rendering: crispEdges;
 }
 
 .axis text {
-    font-size: .6em;
-    fill: $navy;
+  font-size: .6em;
+  fill: $navy;
 }
 
 .axis_text {
- font-size: .7em;
+  font-size: .7em;
 }
 
 g.node {
-    cursor: pointer;
+  cursor: pointer;
 }
 
 .brush .extent {
-    fill-opacity: .1;
-    stroke: $purple;
-    shape-rendering: crispEdges;
+  fill-opacity: .1;
+  stroke: $purple;
+  shape-rendering: crispEdges;
 }
 
 .d3-tip {
-    line-height: 1;
-    font-weight: normal;
-    font-size: .7em;
-    padding: 12px;
-    background-color: $navy;
-    color: #fff;
-    border-radius: 2px;
+  line-height: 1;
+  font-weight: normal;
+  font-size: .7em;
+  padding: 12px;
+  background-color: $navy;
+  color: #fff;
+  border-radius: 2px;
 }
 
 /* Creates a small triangle extender for the tooltip */
 .d3-tip:after {
-    box-sizing: border-box;
-    display: inline;
-    font-size: 10px;
-    width: 100%;
-    line-height: 1;
-    color: $navy;
-    content: "\25BC";
-    position: absolute;
-    text-align: center;
+  box-sizing: border-box;
+  display: inline;
+  font-size: 10px;
+  width: 100%;
+  line-height: 1;
+  color: $navy;
+  content: "\25BC";
+  position: absolute;
+  text-align: center;
 }
 
 /* Style northward tooltips differently */
 .d3-tip.n:after {
-    margin: -1px 0 0 0;
-    top: 100%;
-    left: 0;
+  margin: -1px 0 0 0;
+  top: 100%;
+  left: 0;
 }
 
-
 #hepdata_table_loader {
-    padding-top: 17em;
+  padding-top: 17em;
+}
+
+#code-contents {
+  width: 100%;
+  height: 100%;
+  background: #efeff0;
+  border: none;
+  padding: 10px;
 }

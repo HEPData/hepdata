@@ -12,13 +12,18 @@ def download_resource_file(recid, resource_path):
     base_url = "http://hepdata.cedar.ac.uk/{}"
 
     output_location = os.path.join(CFG_DATADIR, str(recid), 'resources')
+    print output_location
 
     if not os.path.exists(output_location):
         os.makedirs(output_location)
 
     import urllib2
 
-    response = urllib2.urlopen(base_url.format(resource_path))
+    url = resource_path
+    if 'resource' in resource_path:
+        url = base_url.format(resource_path)
+
+    response = urllib2.urlopen(url)
     contents = response.read()
     # save to tmp file
 

@@ -507,6 +507,8 @@ def do_finalise(recid, publication_record=None, force_finalise=False,
                         message=commit_message)
 
                     db.session.add(commit_record)
+                else:
+                    record['last_updated'] = hep_submission.last_updated
 
                 hep_submission.overall_status = "finished"
                 hep_submission.latest_version = version

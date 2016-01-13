@@ -1,71 +1,63 @@
-{% extends "page.html" %}
+{% extends "hepdata_theme/page.html" %}
 
 {#
 {% set title = title %}
 #}
 {% block title %}
-{% endblock title %}
-
-{% block metaheader %}
-{% if recid != -1 and config.CFG_WEBSEARCH_DETAILED_META_FORMAT %}
-
-{% endif %}
-{% endblock metaheader %}
-
-{%- block header %}
-{%- include "base/scripts.html" %}
-{{- super() }}
-{%- endblock header %}
-{%- block _bottom_assets %}
-{# The legacy page requires that the scripts are loaded from the head
-# rather than at the bottom of the page.
-#}
-{%- endblock %}
-
-{% block global_bundles %}
-{{ super() }}
-
-{% bundles "hep_dataview.js" %}
+    HEPData | {{ ctx.record.name }}
 {% endblock %}
+
+{%- block additional_assets %}
+
+    {%- assets "hepdata_record_css" %}
+        <link href="{{ ASSET_URL }}" rel="stylesheet">
+    {%- endassets %}
+
+{%- endblock additional_assets %}
+
+{% block page_description %}{{ ctx.record.title }}{% endblock %}
 
 {% block page_body %}
 
-<div class="hep-content" style="padding-top: 65px">
+    <div class="hep-content" style="padding-top: 65px">
 
-    <div class="validation-error">
-        <span class="fa fa-exclamation-triangle" style="font-size: 3.4em"></span>
-        <h4>{%if header_message %}
-                {{header_message}}
-            {%else%}
+        <div class="validation-error">
+            <span class="fa fa-exclamation-triangle" style="font-size: 3.4em"></span>
+            <h4>{% if header_message %}
+                {{ header_message }}
+            {% else %}
                 Validation error encountered
-            {%endif%}
-        </h4>
-
-        <p class="instructions">
-            {%if message %}
-                {{message}}
-            {%else%}
-                A number of errors were encountered by our validation code. Our validation ensures that your submission files match the format described <a href="https://github.com/HEPData/hepdata-submission" target="_blank">here</a>.
-
-                {% if recid %}
-                <p class="instructions" style="font-weight: bolder">Please fix your submission and reupload via the associated <a href="/record/{{recid}}" target="_blank">record</a> page.</p>
             {% endif %}
-            {%endif%}
+            </h4>
+
+            <p class="instructions">
+                {% if message %}
+                    {{ message }}
+                {% else %}
+                    A number of errors were encountered by our validation code. Our validation ensures that your
+                    submission files match the format described
+                    <a href="https://github.com/HEPData/hepdata-submission" target="_blank">here</a>.
+
+                    {% if recid %}
+                        <p class="instructions" style="font-weight: bolder">Please fix your submission and reupload via
+                            the associated <a href="/record/{{ recid }}" target="_blank">record</a> page.</p>
+                    {% endif %}
+                {% endif %}
             </p><br/>
 
 
-        <br/>
-        {% for file, file_errors in errors.iteritems() %}
-        <p class="file-name">{{file}}</p>
-            {%for error in file_errors %}
-            <div class="validation-error-message-block">
-                <div class="error-type pull-left">{{error.level}}</div>
-                <div class="error-message pull-right">{{error.message|safe}}</div>
-                <div class="clearfix"></div>
-            </div>
-            {%endfor %}
-        {%endfor %}
+            <br/>
+            {% for file, file_errors in errors.iteritems() %}
+                <p class="file-name">{{ file }}</p>
+                {% for error in file_errors %}
+                    <div class="validation-error-message-block">
+                        <div class="error-type pull-left">{{ error.level }}</div>
+                        <div class="error-message pull-right">{{ error.message|safe }}</div>
+                        <div class="clearfix"></div>
+                    </div>
+                {% endfor %}
+            {% endfor %}
+        </div>
     </div>
-</div>
 {% endblock %}
 

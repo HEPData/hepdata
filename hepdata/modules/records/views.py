@@ -32,7 +32,7 @@ import os
 import zipfile
 from flask.ext.login import login_required, current_user
 from flask import Blueprint, redirect, request, render_template, Response, \
-    jsonify, send_from_directory
+    jsonify, send_from_directory, send_file
 from invenio_accounts.models import User
 from invenio_db import db
 import jsonpatch
@@ -50,7 +50,7 @@ from hepdata.modules.records.models import HEPSubmission, DataSubmission, \
 from hepdata.modules.records.utils.common import get_record_by_id, \
     default_time, allowed_file, \
     find_file_in_directory, remove_file_extension, decode_string, \
-    truncate_string
+    truncate_string, IMAGE_TYPES
 from hepdata.modules.records.utils.data_processing_utils import \
     generate_table_structure
 from hepdata.modules.records.utils.submission import create_data_review, \
@@ -170,13 +170,13 @@ def process_submission(recid, record, version, hepdata_submission,
 
         if record is not None:
             if "collaborations" in record and type(
-                    record['collaborations']) is not list:
+                record['collaborations']) is not list:
                 collaborations = [x.strip() for x in
                                   record["collaborations"].split(",")]
                 ctx['record']['collaborations'] = collaborations
 
             if "first_author" in record and 'full_name' in record["first_author"]:
-                    ctx['breadcrumb_text'] = record["first_author"]["full_name"] + " et al."
+                ctx['breadcrumb_text'] = record["first_author"]["full_name"] + " et al."
 
             try:
                 commit_message_query = RecordVersionCommitMessage.query \
@@ -205,7 +205,7 @@ def process_submission(recid, record, version, hepdata_submission,
             hepdata_submission.data_abstract)
 
         if hepdata_submission.overall_status != 'finished' \
-                and ctx["version_count"] > 0:
+            and ctx["version_count"] > 0:
 
             if not (ctx['show_review_widget'] or ctx['show_upload_widget']
                     or ctx['is_submission_coordinator_or_admin']):
@@ -348,7 +348,7 @@ def get_table_details(recid, data_recid, version):
         # add associated files to the table contents
         table_contents['associated_files'] = []
         for associated_data_file in datasub_record.additional_files:
-            alt_location = ''
+            alt_location = associated_data_file.file_location
             if associated_data_file.file_type == 'github':
                 alt_location = associated_data_file.file_location
 
@@ -611,15 +611,27 @@ def get_resource(resource_id):
     """
 
     resource = DataResource.query.filter_by(id=resource_id)
+    view_mode = bool(request.args.get('view', False))
 
     if resource.count() > 0:
         resource_obj = resource.first()
-        if 'html' in resource_obj.file_location and 'http' not in resource_obj.file_location:
+
+        if view_mode:
+            return send_file(resource_obj.file_location, as_attachment=True)
+        elif 'html' in resource_obj.file_location and 'http' not in resource_obj.file_location:
             with open(resource_obj.file_location, 'r') as resource_file:
                 html = resource_file.read()
                 return html
         else:
-            return jsonify({"location": resource_obj.file_location})
+            contents = ''
+            if resource_obj.file_type not in IMAGE_TYPES:
+                with open(resource_obj.file_location, 'r') as resource_file:
+                    contents = resource_file.read()
+
+
+            return jsonify(
+                {"location": '/record/resource/{0}?view=true'.format(resource_obj.id), 'type': resource_obj.file_type,
+                 'description': resource_obj.file_description, 'file_contents': contents})
 
 
 @blueprint.route('/resource/download/<int:resource_id>', methods=['GET'])

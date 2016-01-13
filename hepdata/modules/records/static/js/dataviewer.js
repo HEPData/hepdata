@@ -300,8 +300,6 @@ HEPDATA.render_associated_files = function (associated_files, placement) {
         var file = associated_files[file_index];
 
         var link = file['alt_location'];
-
-        if (link != '') {
             if (file.type == 'github') {
                 html = '<a href="' + link + '" class="btn btn-md support-file-link" target="_blank">Code in ' + file.type + '</a>'
             } else if (HEPDATA.is_image(file.type.toLowerCase())) {
@@ -311,7 +309,7 @@ HEPDATA.render_associated_files = function (associated_files, placement) {
                 html = '<button type="button" class="btn btn-md support-file" data-file-id="' + file.id + '">' + file.type + '</button>';
             }
             $(placement).append(html);
-        }
+
     }
 };
 

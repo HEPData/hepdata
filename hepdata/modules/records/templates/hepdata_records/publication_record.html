@@ -80,11 +80,9 @@
 
                     {% if ctx.access_count %}
                         <span class="stats">
-                    <span class="pull-right"
-                          style="padding-left: 5px"> ({{ ctx.access_count.average }}/day)</span>
                     <span class="pull-right"><span class="fa fa-bar-chart-o"
-                                                   style="padding-right: 10px"></span> Accessed {{ ctx.access_count.sum }} times </span>
-                    <span class="pull-right" style="padding-right: 10px">Last updated on {{ ctx.record.last_updated }}</span>
+                                                   style="padding-right: 5px"></span> Accessed {{ ctx.access_count.sum }} times </span>
+                    <span class="pull-right" style="padding-right: 10px">Last updated on {{ ctx.record.last_updated }} </span>
                 </span>
                     {% endif %}
 

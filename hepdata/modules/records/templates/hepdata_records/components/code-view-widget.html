@@ -18,12 +18,14 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-primary">Download File
-                </button>
+                <a href="#" id="file_download_btn" type="button" class="btn btn-primary">Download File
+                </a>
             </div>
         </div>
     </div>
 </div>
+
+<link href="https://cdnjs.cloudflare.com/ajax/libs/prism/0.0.1/prism.min.css" rel="stylesheet">
 
 <script>
 
@@ -31,38 +33,28 @@
     $(document).on('click', '.support-file', function () {
         $.ajax({
             dataType: "json",
-            url: '/record/data/file/' + $(this).attr('data-file-id'),
+            url: '/record/resource/' + $(this).attr('data-file-id'),
             processData: false,
             cache: true,
             success: function (data) {
 
-                $("#codeDialogLabel").html(data.file_type);
-                $("#file-description").html(data.file_description);
+                $(".modal-title").html(data.type.toUpperCase() + " File");
+                $("#file-description").html(data.description);
 
                 var image_file_types = ["png", "jpeg", "jpg", "tiff"];
 
-                if (image_file_types.indexOf(data.file_type.toLowerCase()) != -1) {
-                    $("#code").html('<img src="' + data.file_contents + '" width="100%"></img>');
-                } else if (data.file_type != 'root') {
+                if (image_file_types.indexOf(data.type.toLowerCase()) != -1) {
+                    $("#code").html('<img src="' + data.location + '" width="100%"></img>');
+                } else if (data.type != 'root') {
                     $("#code").html('<textarea id="code-contents"></textarea>');
                     $("#code-contents").val(data.file_contents);
-
-                    codemirror = CodeMirror.fromTextArea(document.getElementById("code-contents"), {
-                        mode: data.file_type,
-                        lineNumbers: true,
-                        editable: false,
-                        theme: 'neo',
-                        readOnly: true,
-                        autofocus: true
-                    });
-
-                    codemirror.refresh();
-
                 }
                 else {
                     $("#codeDialogLabel").html('Root');
                     $("#code").html('We can\'t display ROOT files at present');
                 }
+
+                $("#file_download_btn").attr('href', data.location);
 
                 $('#codeDialog').modal('show');
                 $("#code").focus();

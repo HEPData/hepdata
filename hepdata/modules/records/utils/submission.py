@@ -8,7 +8,6 @@ from hepdata_validator.submission_file_validator import \
 from invenio_ext.sqlalchemy.utils import session_manager
 from invenio_pidstore.models import PersistentIdentifier, PIDStatus
 from invenio_records import Record
-from invenio_records.models import RecordMetadata
 import os
 from sqlalchemy.orm.exc import NoResultFound
 import yaml
@@ -19,10 +18,11 @@ from hepdata.modules.records.models import DataSubmission, DataReview, \
     DataResource, License, Keyword, HEPSubmission, SubmissionParticipant
 from hepdata.modules.records.utils.common import \
     get_prefilled_dictionary, infer_file_type, URL_PATTERNS, \
-    encode_string, zipdir, get_record_by_id
+    encode_string, zipdir, get_record_by_id, contains_accepted_url
 from hepdata.modules.records.utils.common import get_or_create
 from hepdata.modules.records.utils.resources import download_resource_file
 from invenio_db import db
+from dateutil.parser import parse
 
 __author__ = 'eamonnmaguire'
 
@@ -136,7 +136,6 @@ def cleanup_submission(recid, version, to_keep):
             db.session.delete(data_submission)
 
 
-@session_manager
 def cleanup_data_resources(data_submission):
     """
     Removes additional resources from the submission to avoid duplications.
@@ -147,9 +146,10 @@ def cleanup_data_resources(data_submission):
     """
     for additional_file in data_submission.additional_files:
         db.session.delete(additional_file)
+    db.session.commit()
 
 
-def process_data_file(basepath, data_sub, datasubmission, main_file_path):
+def process_data_file(recid, basepath, data_sub, datasubmission, main_file_path):
     """
     Takes a data file and any supplementary files and persists their
     metadata to the database whilst recording their upload path.
@@ -173,6 +173,7 @@ def process_data_file(basepath, data_sub, datasubmission, main_file_path):
         main_data_file.file_license = license.id
 
     db.session.add(main_data_file)
+    # I have to do the commit here, otherwise I have no ID to reference in the data submission table.
     db.session.commit()
 
     datasubmission.data_file = main_data_file.id
@@ -190,40 +191,9 @@ def process_data_file(basepath, data_sub, datasubmission, main_file_path):
     cleanup_data_resources(datasubmission)
 
     if "additional_resources" in data_sub:
-        for additional_resource in data_sub["additional_resources"]:
-
-            if "location" in additional_resource:
-
-                additional_resource["file_type"] = infer_file_type(
-                    additional_resource["location"])
-                if additional_resource["file_type"] in URL_PATTERNS:
-                    # We take the file path as is,
-                    # since it's a URL that we accept.
-                    additional_file_path = additional_resource["location"]
-                else:
-                    additional_file_path = os.path.join(
-                        basepath, additional_resource["location"])
-
-                description = ""
-                if "description" in additional_resource:
-                    description = additional_resource["description"]
-
-                additional_file = DataResource(
-                    file_location=additional_file_path,
-                    file_type=additional_resource["file_type"],
-                    file_description=description)
-
-                if "license" in additional_resource:
-                    dict = get_prefilled_dictionary(
-                        ["name", "url", "description"],
-                        additional_resource["license"])
-
-                    license = get_or_create(
-                        db.session, License, name=dict['name'],
-                        url=dict['url'], description=dict['description'])
-                    additional_file.file_license = license.id
-
-                datasubmission.additional_files.append(additional_file)
+        resources = parse_additional_resources(basepath, recid, data_sub)
+        for resource in resources:
+            datasubmission.additional_files.append(resource)
 
     db.session.commit()
 
@@ -238,62 +208,107 @@ def process_general_submission_info(submission_info_document, recid):
     :param recid:
     :return:
     """
-    from dateutil.parser import parse
+
     if 'comment' in submission_info_document \
-            or 'modifications' in submission_info_document \
-            or 'record_ids' in submission_info_document:
+        or 'modifications' in submission_info_document \
+        or 'record_ids' in submission_info_document:
 
         hepsubmission = get_or_create_hepsubmission(recid)
         hepsubmission.data_abstract = encode_string(
             submission_info_document['comment'])
 
+        if "dateupdated" in submission_info_document:
+            try:
+                hepsubmission.last_updated = parse(submission_info_document['dateupdated'])
+            except ValueError as ve:
+                hepsubmission.last_updated = datetime.now()
+
         if "modifications" in submission_info_document:
-            for modification in submission_info_document['modifications']:
-                try:
-                    date = parse(modification['date'])
-                except ValueError as ve:
-                    date = datetime.now()
-
-                # don't add another if it's not necessary to do so
-                existing_participant = SubmissionParticipant.query.filter_by(
-                    publication_recid=recid,
-                    full_name=modification["who"],
-                    role=modification["action"],
-                    action_date=date)
-
-                if existing_participant.count() == 0:
-                    participant = SubmissionParticipant(
-                        publication_recid=recid, full_name=modification["who"],
-                        role=modification["action"], action_date=date)
-                    db.session.add(participant)
+            parse_modifications(recid, submission_info_document)
 
         if 'additional_resources' in submission_info_document:
-            for reference in submission_info_document['additional_resources']:
-
-                existing_resources = DataResource.query.filter_by(
-                    file_location=reference['location']).all()
-                for resource in existing_resources:
-                    db.session.delete(resource)
-                    db.session.commit()
-
-                resource_location = reference['location']
-
-                file_type = 'resource'
-
-                if '.html' in resource_location:
-                    file_type = 'html'
-
-                if 'resource' in resource_location:
-                    resource_location = download_resource_file(
-                        recid, resource_location)
-
-                new_reference = DataResource(
-                    file_location=resource_location, file_type=file_type,
-                    file_description=reference['description'])
-                hepsubmission.references.append(new_reference)
+            resources = parse_additional_resources(submission_info_document['additional_resources'],
+                                                   recid, submission_info_document)
+            for resource in resources:
+                hepsubmission.references.append(resource)
 
         db.session.add(hepsubmission)
         db.session.commit()
+
+
+def parse_additional_resources(basepath, recid, yaml_document):
+    """
+    Parses out the additional resource section for a full submission
+    :param hepsubmission:
+    :param recid:
+    :param submission_info_document:
+    :return:
+    """
+    resources = []
+    for reference in yaml_document['additional_resources']:
+
+        existing_resources = DataResource.query.filter_by(
+            file_location=reference['location']).all()
+
+        for resource in existing_resources:
+            db.session.delete(resource)
+        db.session.commit()
+
+        resource_location = reference['location']
+
+        file_type = infer_file_type(reference["location"])
+        contains_pattern, pattern = contains_accepted_url(reference['location'])
+        if ('http' in resource_location and 'hepdata' not in resource_location) or contains_pattern:
+            if pattern:
+                file_type = pattern
+            else:
+                file_type = 'html'
+        elif 'http' not in resource_location and 'www' not in resource_location and 'resource' not in resource_location:
+            # this is a file local to the submission.
+            resource_location = os.path.join(basepath, resource_location)
+        else:
+            resource_location = download_resource_file(
+                recid, resource_location)
+            print 'Downloaded resource location is {0}'.format(resource_location)
+
+        new_reference = DataResource(
+            file_location=resource_location, file_type=file_type,
+            file_description=reference['description'])
+
+        if "license" in reference:
+            dict = get_prefilled_dictionary(
+                ["name", "url", "description"],
+                reference["license"])
+
+            resource_license = get_or_create(
+                db.session, License, name=dict['name'],
+                url=dict['url'], description=dict['description'])
+            new_reference.file_license = resource_license.id
+
+        resources.append(new_reference)
+
+    return resources
+
+
+def parse_modifications(recid, submission_info_document):
+    for modification in submission_info_document['modifications']:
+        try:
+            date = parse(modification['date'])
+        except ValueError as ve:
+            date = datetime.now()
+
+        # don't add another if it's not necessary to do so
+        existing_participant = SubmissionParticipant.query.filter_by(
+            publication_recid=recid,
+            full_name=modification["who"],
+            role=modification["action"],
+            action_date=date)
+
+        if existing_participant.count() == 0:
+            participant = SubmissionParticipant(
+                publication_recid=recid, full_name=modification["who"],
+                role=modification["action"], action_date=date)
+            db.session.add(participant)
 
 
 def process_submission_directory(basepath, submission_file_path, recid):
@@ -333,9 +348,7 @@ def process_submission_directory(basepath, submission_file_path, recid):
                 db.session.add(hepsubmission)
 
             for yaml_document in submission_processed:
-                if 'record_ids' in yaml_document \
-                        or 'comment' in yaml_document \
-                        or 'modifications' in yaml_document:
+                if 'record_ids' in yaml_document or 'comment' in yaml_document or 'modifications' in yaml_document:
                     # comments are only present in the general submission
                     # information document.
                     process_general_submission_info(yaml_document, recid)
@@ -367,7 +380,7 @@ def process_submission_directory(basepath, submission_file_path, recid):
                                                   yaml_document["data_file"])
 
                     if data_file_validator.validate(main_file_path):
-                        process_data_file(basepath, yaml_document,
+                        process_data_file(recid, basepath, yaml_document,
                                           datasubmission, main_file_path)
                     else:
                         errors = process_validation_errors_for_display(

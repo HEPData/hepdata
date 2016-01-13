@@ -75,8 +75,9 @@ class HEPSubmission(db.Model):
     # invenio record created for them.
     overall_status = db.Column(db.String(128), default='todo')
 
-    created = db.Column(db.DateTime, nullable=False,
-                        default=func.now(), index=True)
+    created = db.Column(db.DateTime, nullable=False, default=func.now(), index=True)
+
+    last_updated = db.Column(db.DateTime, nullable=True, default=func.now(), index=True)
 
     # this links to the latest version of the data files to be shown
     # in the submission and allows one to go back in time via the
