@@ -7,7 +7,7 @@
                 <button type="button" class="close" data-dismiss="modal"
                         aria-label="Close"><span
                         aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="codeDialogLabel">Root File</h4>
+                <h4 class="modal-title code-viewer-title" id="codeDialogLabel">Root File</h4>
             </div>
 
             <div class="modal-body" id="codeDialogContents">
@@ -29,7 +29,6 @@
 
 <script>
 
-    var codemirror;
     $(document).on('click', '.support-file', function () {
         $.ajax({
             dataType: "json",
@@ -38,9 +37,9 @@
             cache: true,
             success: function (data) {
 
-                $(".modal-title").html(data.type.toUpperCase() + " File");
-                $("#file-description").html(data.description);
 
+                $("#file-description").html(data.description);
+                $(".code-viewer-title").text(data.type.toUpperCase() + " File");
                 var image_file_types = ["png", "jpeg", "jpg", "tiff"];
 
                 if (image_file_types.indexOf(data.type.toLowerCase()) != -1) {

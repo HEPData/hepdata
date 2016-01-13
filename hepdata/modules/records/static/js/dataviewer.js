@@ -299,6 +299,8 @@ HEPDATA.render_associated_files = function (associated_files, placement) {
 
         var file = associated_files[file_index];
 
+        console.log(file);
+
         var link = file['alt_location'];
             if (file.type == 'github') {
                 html = '<a href="' + link + '" class="btn btn-md support-file-link" target="_blank">Code in ' + file.type + '</a>'

@@ -263,6 +263,11 @@ def parse_additional_resources(basepath, recid, yaml_document):
                 file_type = pattern
             else:
                 file_type = 'html'
+
+            # in case URLs do not have http added.
+            if 'http' not in resource_location:
+                resource_location = "http://" + resource_location
+
         elif 'http' not in resource_location and 'www' not in resource_location and 'resource' not in resource_location:
             # this is a file local to the submission.
             resource_location = os.path.join(basepath, resource_location)
