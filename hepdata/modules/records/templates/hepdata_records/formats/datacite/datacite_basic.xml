@@ -1,0 +1,20 @@
+<resource xmlns="http://datacite.org/schema/kernel-3" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://datacite.org/schema/kernel-3 http://schema.datacite.org/meta/kernel-3/metadata.xsd">
+    <identifier identifierType="DOI">{{ doi }}</identifier>
+    <creators>
+        <creator>
+            <creatorName>Holding Record</creatorName>
+            <affiliation>HEPData</affiliation>
+        </creator>
+
+    </creators>
+
+    <titles>
+        <title>{{ data_submission.name }}</title>
+    </titles>
+    <publisher>HEPData</publisher>
+    <publicationYear>2015</publicationYear>
+    <language>eng</language>
+    <resourceType resourceTypeGeneral="Dataset">Dataset</resourceType>
+
+</resource>

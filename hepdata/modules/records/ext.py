@@ -64,7 +64,7 @@ class HEPDataRecords(object):
     def setup_app(self, app):
 
         def user_is_admin_or_coordinator():
-            if current_user.is_authenticated:
+            if current_user and current_user.is_authenticated:
                 id = int(current_user.get_id())
                 with db.session.no_autoflush:
                     roles = User.query.filter(User.id == id).filter(
@@ -92,7 +92,7 @@ class HEPDataRecords(object):
             Determines if a user should be able to see the submission overview page.
             :return:
             """
-            if current_user.is_authenticated:
+            if current_user and current_user.is_authenticated:
                 if user_is_admin_or_coordinator():
                     return dict(show_dashboard=True)
                 else:

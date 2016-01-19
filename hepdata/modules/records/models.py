@@ -149,6 +149,8 @@ class DataSubmission(db.Model):
                                        secondary="datafile_identifier",
                                        cascade="all,delete")
 
+    doi = db.Column(db.String(128), nullable=True)
+
     # when a new version is loaded, the version is increased and
     # maintained so people can go back in time
     # through a submissions review stages.

@@ -40,7 +40,8 @@ SQLALCHEMY_ECHO = False
 BABEL_DEFAULT_LANGUAGE = 'en'
 BABEL_DEFAULT_TIMEZONE = 'Europe/Zurich'
 I18N_LANGUAGES = [
-    ('da', _('Danish')),
+    ('fr', _('French')),
+    ('it', _('Italian'))
 ]
 
 # Distributed task queue
@@ -93,14 +94,18 @@ SEARCH_ELASTIC_HOSTS = [
     'localhost:9200'
 ]
 
+
+
 SEARCH_AUTOINDEX = []
 
 CFG_PUB_TYPE = 'publication'
 CFG_DATA_TYPE = 'datatable'
 CFG_ES_AUTHORS = ('authors', 'author')  # (index_name, doc_type)
 CFG_DATA_KEYWORDS = ['observables', 'reactions', 'cmenergies']
+
 CFG_CONVERTER_URL = 'http://hepdata-converter.cern.ch'
 CFG_SUPPORTED_FORMATS = ['yaml', 'root', 'csv', 'yoda']
+
 CFG_TMPDIR = tempfile.gettempdir()
 CFG_DATADIR = tempfile.gettempdir()
 
@@ -125,16 +130,16 @@ DEBUG_TB_ENABLED = False
 DEBUG_TB_INTERCEPT_REDIRECTS = False
 
 # DataCite DOI minting:
-HEPDATA_LOCAL_DOI_PREFIXES = ["10.5072", "10.5281"]
+# http://datacite.readthedocs.org/en/latest/
 
-DATACITE_DOI_PREFIX = "10.5072"
+HEPDATA_DOI_PREFIX = "10.18423"
+SITE_URL = "https://www.hepdata.net"
+TEST_DOI_PREFIX = "10.5072"
 
-USE_TWITTER = True
-TWITTER_HANDLE_MAPPINGS = {
-    "lhcb": "@LHCbPhysics",
-    'atlas': "@ATLASpapers",
-    'cms': "@CMSpapers",
-}
+PIDSTORE_DATACITE_USERNAME = "CERN.HEPDATA"
+PIDSTORE_DATACITE_PASSWORD = "changeme"
+PIDSTORE_DATACITE_TESTMODE = False
+PIDSTORE_DATACITE_URL = "https://mds.datacite.org"
 
 # To get twitter to work, go to https://apps.twitter.com/ and create an application owned by the user account to
 # which the tweets will be sent. Then, follow the instructions here to get hold of access tokens:
@@ -146,3 +151,11 @@ OAUTH_TOKEN = ""
 OAUTH_SECRET = ""
 CONSUMER_KEY = ""
 CONSUMER_SECRET = ""
+
+
+USE_TWITTER = True
+TWITTER_HANDLE_MAPPINGS = {
+    "lhcb": "@LHCbPhysics",
+    'atlas': "@ATLASpapers",
+    'cms': "@CMSpapers",
+}

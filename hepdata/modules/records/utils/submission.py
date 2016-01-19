@@ -17,9 +17,9 @@ from hepdata.ext.elasticsearch.api import get_records_matching_field, \
 from hepdata.modules.records.models import DataSubmission, DataReview, \
     DataResource, License, Keyword, HEPSubmission, SubmissionParticipant
 from hepdata.modules.records.utils.common import \
-    get_prefilled_dictionary, infer_file_type, URL_PATTERNS, \
-    encode_string, zipdir, get_record_by_id, contains_accepted_url
+    get_prefilled_dictionary, infer_file_type, encode_string, zipdir, get_record_by_id, contains_accepted_url
 from hepdata.modules.records.utils.common import get_or_create
+from hepdata.modules.records.utils.doi_minter import reserve_dois_for_data_submissions
 from hepdata.modules.records.utils.resources import download_resource_file
 from invenio_db import db
 from dateutil.parser import parse
@@ -399,20 +399,8 @@ def process_submission_directory(basepath, submission_file_path, recid):
             db.session.commit()
 
             if len(errors) is 0:
-                if not os.path.exists(os.path.join(CFG_DATADIR, str(recid))):
-                    os.makedirs(os.path.join(CFG_DATADIR, str(recid)))
-
-                zip_location = os.path.join(
-                    CFG_DATADIR, str(recid),
-                    SUBMISSION_FILE_NAME_PATTERN
-                        .format(recid, hepsubmission.latest_version))
-                if os.path.exists(zip_location):
-                    os.remove(zip_location)
-
-                zipf = zipfile.ZipFile(zip_location, 'w')
-                os.chdir(basepath)
-                zipdir(".", zipf)
-                zipf.close()
+                package_submission(basepath, recid, hepsubmission)
+                reserve_dois_for_data_submissions(recid)
         else:
             errors = process_validation_errors_for_display(
                 submission_file_validator.get_messages())
@@ -431,6 +419,23 @@ def process_submission_directory(basepath, submission_file_path, recid):
     # This makes more sense that returning errors as
     # soon as problems are found on one file.
     return errors
+
+
+def package_submission(basepath, recid, hep_submission_obj):
+    if not os.path.exists(os.path.join(CFG_DATADIR, str(recid))):
+        os.makedirs(os.path.join(CFG_DATADIR, str(recid)))
+
+    zip_location = os.path.join(
+        CFG_DATADIR, str(recid),
+        SUBMISSION_FILE_NAME_PATTERN
+            .format(recid, hep_submission_obj.latest_version + 1))
+    if os.path.exists(zip_location):
+        os.remove(zip_location)
+
+    zipf = zipfile.ZipFile(zip_location, 'w')
+    os.chdir(basepath)
+    zipdir(".", zipf)
+    zipf.close()
 
 
 def process_validation_errors_for_display(errors):

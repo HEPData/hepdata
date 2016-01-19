@@ -43,6 +43,7 @@ import yaml
 from hepdata.config import CFG_PUB_TYPE, CFG_DATA_TYPE, CFG_DATADIR
 from hepdata.ext.elasticsearch.api import get_records_matching_field, \
     get_record, get_count_for_collection, get_n_latest_records
+from hepdata.modules.converter import convert_oldhepdata_to_yaml
 from hepdata.modules.inspire_api.views import get_inspire_record_information
 from hepdata.modules.records.models import HEPSubmission, DataSubmission, \
     DataResource, DataReview, DataReviewMessage, SubmissionParticipant, \
@@ -552,34 +553,6 @@ def get_all_review_messages(publication_recid):
     return json.dumps(messages, default=default_time)
 
 
-@blueprint.route('/data/file/<int:data_file_id>', methods=['GET', ])
-@login_required
-def get_data_file(data_file_id):
-    datafile_query = DataResource.query.filter_by(id=data_file_id)
-
-    result = {}
-    if datafile_query.count() > 0:
-        file_record = datafile_query.one()
-        result = {"file_type": file_record.file_type,
-                  "file_description": file_record.file_description,
-                  "file_contents": ""}
-
-        if os.path.isfile(file_record.file_location):
-            file = open(file_record.file_location, 'r')
-
-            for line in file:
-                result["file_contents"] += line
-        else:
-            if 'http' in file_record.file_location or 'www' in file_record.file_location:
-                result["file_contents"] = file_record.file_location
-            elif 'resource' in file_record.file_location:
-                # may be a resource. in this case, check for resource in the path and append the cedar.hepdata prefix
-                result[
-                    "file_contents"] = 'http://hepdata.cedar.ac.uk/' + file_record.file_location
-
-    return jsonify(result)
-
-
 @blueprint.route('/resources/<int:recid>', methods=['GET'])
 @returns_json
 def get_resources(recid):
@@ -632,21 +605,6 @@ def get_resource(resource_id):
             return jsonify(
                 {"location": '/record/resource/{0}?view=true'.format(resource_obj.id), 'type': resource_obj.file_type,
                  'description': resource_obj.file_description, 'file_contents': contents})
-
-
-@blueprint.route('/resource/download/<int:resource_id>', methods=['GET'])
-def download_resource(resource_id):
-    resource = DataResource.query.filter_by(id=resource_id)
-    if resource.count() > 0:
-        resource_obj = resource.first()
-
-        last_fs = resource_obj.file_location.rfind("/")
-        _parent = resource_obj.file_location[0:(last_fs + 1)]
-        _file_name = resource_obj.file_location[(last_fs + 1):]
-        return send_from_directory(_parent, _file_name, as_attachment=True)
-    else:
-        return jsonify(
-            {'success': False, "message": "Unable to find resource."})
 
 
 @blueprint.route('/<int:recid>/consume', methods=['GET', 'POST'])

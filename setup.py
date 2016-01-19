@@ -100,7 +100,8 @@ install_requires = [
     'cryptography',
     'beautifulsoup4',
     'hepdata_validator',
-    'hepdata-converter-ws-client'
+    'hepdata-converter-ws-client',
+    'datacite'
 ]
 
 packages = find_packages()
@@ -174,9 +175,11 @@ setup(
             'hepdata_search = hepdata.modules.search.views:blueprint',
             'hepdata_submission = hepdata.modules.submission.views:blueprint',
             'inspire_api = hepdata.modules.inspire_api.views:blueprint',
+            'hep_conversion = hepdata.modules.converter.views:blueprint',
         ],
         'invenio_celery.tasks': [
             'hepdata_records = hepdata.modules.records.migrator.api',
+            'hepdata_doi = hepdata.modules.records.utils.doi_minter',
             'hepdata_mail = hepdata.utils.mail',
         ],
         'invenio_i18n.translations': [

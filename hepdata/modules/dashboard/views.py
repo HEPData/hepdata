@@ -16,7 +16,9 @@ from hepdata.modules.records.models import HEPSubmission, DataReview, \
 from hepdata.modules.records.utils.common import get_record_by_id
 from flask import Blueprint, jsonify, request, render_template, redirect, \
     url_for
-from hepdata.modules.records.utils.submission import unload_submission
+
+from hepdata.modules.records.utils.doi_minter import register_doi
+from hepdata.modules.records.utils.submission import unload_submission, package_submission
 from hepdata.modules.records.utils.users import has_role
 from hepdata.modules.records.utils.workflow import send_finalised_email, \
     create_record
@@ -481,7 +483,6 @@ def do_finalise(recid, publication_record=None, force_finalise=False,
                     delete_item_from_index(record["_id"],
                                            doc_type=CFG_DATA_TYPE)
 
-        errors = []
         current_time = "{:%Y-%m-%d}".format(datetime.now())
 
         for submission in submissions:
@@ -490,57 +491,46 @@ def do_finalise(recid, publication_record=None, force_finalise=False,
                                     publication_record, recid, submission,
                                     version)
 
-        if not errors:
+        try:
+            record = get_record_by_id(recid)
+            # If we have a commit message, then we have a record update.
+            # We will store the commit message and also update the
+            # last_updated flag for the record.
+            if commit_message:
+                record['last_updated'] = current_time
+                record.commit()
 
-            try:
-                record = get_record_by_id(recid)
-                # If we have a commit message, then we have a record update.
-                # We will store the commit message and also update the
-                # last_updated flag for the record.
-                if commit_message:
-                    record['last_updated'] = current_time
-                    record.commit()
+                commit_record = RecordVersionCommitMessage(
+                    recid=recid,
+                    version=version,
+                    message=commit_message)
 
-                    commit_record = RecordVersionCommitMessage(
-                        recid=recid,
-                        version=version,
-                        message=commit_message)
+                db.session.add(commit_record)
+            else:
+                record['last_updated'] = hep_submission.last_updated
 
-                    db.session.add(commit_record)
-                else:
-                    record['last_updated'] = hep_submission.last_updated
+            hep_submission.overall_status = "finished"
+            hep_submission.latest_version = version
+            db.session.add(hep_submission)
 
-                hep_submission.overall_status = "finished"
-                hep_submission.latest_version = version
-                db.session.add(hep_submission)
+            db.session.commit()
 
-                db.session.commit()
+            # Reindex everything.
+            index_record_ids([recid] + generated_record_ids)
+            push_data_keywords(pub_ids=[recid])
 
-                # Reindex everything.
-                index_record_ids([recid] + generated_record_ids)
-                push_data_keywords(pub_ids=[recid])
+            send_finalised_email(hep_submission)
 
-                send_finalised_email(hep_submission)
+            if send_tweet:
+                tweet(record.get('title'), record.get('collaborations'),
+                      "http://www.hepdata.net/record/ins{0}".format(record.get('inspire_id')))
 
-                if send_tweet:
-                    tweet(record.get('title'), record.get('collaborations'),
-                          "http://www.hepdata.net/record/ins{0}".format(record.get('inspire_id')))
+            return json.dumps({"success": True, "recid": recid,
+                               "data_count": len(submissions),
+                               "generated_records": generated_record_ids})
 
-                return json.dumps({"success": True, "recid": recid,
-                                   "data_count": len(submissions),
-                                   "generated_records": generated_record_ids})
-
-            except NoResultFound:
-                print('No record found to update. Which is super strange.')
-
-
-        else:
-            errors.append({"level": "error",
-                           "message": "No data submissions to process."})
-
-            return json.dumps({"success": False,
-                               "recid": recid,
-                               "errors": errors})
+        except NoResultFound:
+            print('No record found to update. Which is super strange.')
 
     else:
         return json.dumps(
@@ -592,6 +582,7 @@ def finalise_datasubmission(current_time, existing_submissions,
 
     else:
         submission_info = create_record(submission_info)
+        submission.associated_record = submission_info['uuid']
         submission_info["control_number"] = submission_info["recid"]
 
     generated_record_ids.append(submission_info["recid"])
@@ -606,6 +597,8 @@ def finalise_datasubmission(current_time, existing_submissions,
         db.session.add(data_review)
 
     db.session.add(submission)
+
+    register_doi.delay(submission.id)
 
 
 def create_data_endpoints(data_id, info_dict):
