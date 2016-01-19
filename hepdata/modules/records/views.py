@@ -170,10 +170,8 @@ def process_submission(recid, record, version, hepdata_submission,
             ctx["version"] = hepdata_submission.latest_version
 
         if record is not None:
-            if "collaborations" in record and type(
-                record['collaborations']) is not list:
-                collaborations = [x.strip() for x in
-                                  record["collaborations"].split(",")]
+            if "collaborations" in record and type(record['collaborations']) is not list:
+                collaborations = [x.strip() for x in record["collaborations"].split(",")]
                 ctx['record']['collaborations'] = collaborations
 
             if "first_author" in record and 'full_name' in record["first_author"]:
@@ -205,8 +203,7 @@ def process_submission(recid, record, version, hepdata_submission,
         ctx['record']['data_abstract'] = decode_string(
             hepdata_submission.data_abstract)
 
-        if hepdata_submission.overall_status != 'finished' \
-            and ctx["version_count"] > 0:
+        if hepdata_submission.overall_status != 'finished' and ctx["version_count"] > 0:
 
             if not (ctx['show_review_widget'] or ctx['show_upload_widget']
                     or ctx['is_submission_coordinator_or_admin']):
@@ -600,7 +597,6 @@ def get_resource(resource_id):
             if resource_obj.file_type not in IMAGE_TYPES:
                 with open(resource_obj.file_location, 'r') as resource_file:
                     contents = resource_file.read()
-
 
             return jsonify(
                 {"location": '/record/resource/{0}?view=true'.format(resource_obj.id), 'type': resource_obj.file_type,

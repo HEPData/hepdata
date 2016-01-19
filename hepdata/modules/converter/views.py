@@ -150,6 +150,7 @@ def download_datatable(data_id, file_format):
         .join(DataSubmission) \
         .filter(DataSubmission.id == data_id) \
         .one()
+
     record_path, table_name = os.path.split(datasub.file_location)
 
     filename = str(data_id) + '-' + file_format

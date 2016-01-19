@@ -515,6 +515,9 @@ def do_finalise(recid, publication_record=None, force_finalise=False,
 
             db.session.commit()
 
+            for submission in submissions:
+                register_doi.delay(submission.id)
+
             # Reindex everything.
             index_record_ids([recid] + generated_record_ids)
             push_data_keywords(pub_ids=[recid])
@@ -582,9 +585,9 @@ def finalise_datasubmission(current_time, existing_submissions,
 
     else:
         submission_info = create_record(submission_info)
-        submission.associated_record = submission_info['uuid']
         submission_info["control_number"] = submission_info["recid"]
 
+    submission.associated_recid = submission_info['recid']
     generated_record_ids.append(submission_info["recid"])
     submission_info["data_endpoints"] = create_data_endpoints(submission.id,
                                                               submission_info)
@@ -598,7 +601,7 @@ def finalise_datasubmission(current_time, existing_submissions,
 
     db.session.add(submission)
 
-    register_doi.delay(submission.id)
+
 
 
 def create_data_endpoints(data_id, info_dict):

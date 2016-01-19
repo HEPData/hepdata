@@ -1,0 +1,71 @@
+<resource xmlns="http://datacite.org/schema/kernel-3" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://datacite.org/schema/kernel-3 http://schema.datacite.org/meta/kernel-3/metadata.xsd">
+    <identifier identifierType="DOI">{{ doi }}</identifier>
+    <creators>
+        {% for author in publication_info.authors %}
+            <creator>
+                <creatorName>{{ author.full_name }}</creatorName>
+                <affiliation>{{ author.affiliation }}</affiliation>
+            </creator>
+        {% endfor %}
+    </creators>
+    <dates>
+        <date dateType="Updated">{{ overall_submission.last_updated }}</date>
+    </dates>
+    <titles>
+        <title >{{ publication_info.title }}</title>
+    </titles>
+    <publisher>{{ publication_info.journal_info }}</publisher>
+    <publicationYear>{{ publication_info.year }}</publicationYear>
+
+    <subjects>
+        {% for keyword in data_submission.keywords %}
+            <subject subjectScheme="{{ keyword.name }}">{{ keyword.value }}</subject>
+        {% endfor %}
+    </subjects>
+    <language>eng</language>
+    <resourceType resourceTypeGeneral="Collection">Collection</resourceType>
+    <version>{{ overall_submission.latest_version }}</version>
+    <descriptions>
+        <description descriptionType="Abstract">
+            {{ overall_submission.data_abstract }}
+        </description>
+    </descriptions>
+
+
+    <alternateIdentifiers>
+
+        <alternateIdentifier alternateIdentifierType="ROOTDownload">
+            http://www.hepdata.net/download/submission{{ publication_info.recid }}/root
+
+        </alternateIdentifier>
+
+        <alternateIdentifier alternateIdentifierType="YAMLDownload">
+            http://www.hepdata.net/download/submission{{ publication_info.recid }}/yaml
+        </alternateIdentifier>
+
+        <alternateIdentifier alternateIdentifierType="CSVDownload">
+            http://www.hepdata.net/download/submission{{ publication_info.recid }}/csv
+        </alternateIdentifier>
+
+        <alternateIdentifier alternateIdentifierType="YODADownload">
+            http://www.hepdata.net/download/submission{{ publication_info.recid }}/yoda
+        </alternateIdentifier>
+    </alternateIdentifiers>
+
+    <relatedIdentifiers>
+        {% if inspire_id %}
+            <relatedIdentifier relatedIdentifierType="URL" relationType="IsSupplementTo">
+                http://www.inspirehep.net/record/{{ publication_info.inspire_id }}
+            </relatedIdentifier>
+        {% endif %}
+
+        {% for submission in data_submissions %}
+            <relatedIdentifier relatedIdentifierType="DOI" relationType="IsSupplementedBy">
+            {{ submission.doi }}
+        </relatedIdentifier>
+        {% endfor %}
+
+
+    </relatedIdentifiers>
+</resource>

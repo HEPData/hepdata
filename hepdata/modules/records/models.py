@@ -84,6 +84,9 @@ class HEPSubmission(db.Model):
     # interface to view various stages of the submission.
     latest_version = db.Column(db.Integer, default=0)
 
+    # the doi for the whole submission.
+    doi = db.Column(db.String(128), nullable=True)
+
 
 class SubmissionParticipant(db.Model):
     __tablename__ = "submissionparticipant"
@@ -145,11 +148,13 @@ class DataSubmission(db.Model):
     data_file = db.Column(db.Integer, db.ForeignKey("dataresource.id"))
 
     # supplementary files, such as code, links out to other resources etc.
-    additional_files = db.relationship("DataResource",
-                                       secondary="datafile_identifier",
+    additional_files = db.relationship("DataResource", secondary="datafile_identifier",
                                        cascade="all,delete")
 
     doi = db.Column(db.String(128), nullable=True)
+
+    # the record ID for the resulting record created on finalisation.
+    associated_recid = db.Column(db.Integer)
 
     # when a new version is loaded, the version is increased and
     # maintained so people can go back in time

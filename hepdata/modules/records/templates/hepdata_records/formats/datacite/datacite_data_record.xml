@@ -17,7 +17,7 @@
         <title xml:lang="en-us" titleType="Subtitle">{{ publication_info.title }}</title>
     </titles>
     <publisher>{{ publication_info.journal_info }}</publisher>
-    <publicationYear>2015</publicationYear>
+    <publicationYear>{{ publication_info.year }}</publicationYear>
     <subjects>
         {% for keyword in data_submission.keywords %}
             <subject subjectScheme="{{ keyword.name }}">{{ keyword.value }}</subject>
@@ -25,7 +25,7 @@
     </subjects>
     <language>eng</language>
     <resourceType resourceTypeGeneral="Dataset">Dataset</resourceType>
-    <version>{{ version }}</version>
+    <version>{{ data_submission.version }}</version>
     <descriptions>
         <description descriptionType="Abstract">
             {{ overall_submission.data_abstract }}
@@ -49,7 +49,7 @@
 
     <alternateIdentifiers>
         <alternateIdentifier alternateIdentifierType="HEPDataRecord">
-            http://www.hepdata.net/record/{{ publication_info.recid }}
+            http://www.hepdata.net/record/{{ data_submission.publication_recid }}
         </alternateIdentifier>
 
         <alternateIdentifier alternateIdentifierType="ROOTDownload">
