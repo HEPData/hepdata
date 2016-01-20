@@ -3,10 +3,10 @@ import os
 from celery import shared_task
 from flask import render_template
 from invenio_db import db
+from invenio_pidstore.errors import PIDInvalidAction, PIDDoesNotExistError
 from invenio_pidstore.models import PersistentIdentifier
 
 from invenio_pidstore.providers.datacite import DataCiteProvider
-from sqlalchemy.orm.exc import NoResultFound
 
 from hepdata.config import TEST_DOI_PREFIX
 from hepdata.modules.records.models import DataSubmission, HEPSubmission
@@ -14,34 +14,40 @@ from hepdata.modules.records.utils.common import get_record_by_id
 
 
 @shared_task
-def generate_xml_for_submission(recid, version):
+def generate_doi_for_submission(recid, version):
     data_submissions = DataSubmission.query.filter_by(publication_recid=recid, version=version).order_by(
         DataSubmission.id.asc())
 
-    hep_submission = HEPSubmission.query.filter_by(publication_recid=recid)
+    hep_submission = HEPSubmission.query.filter_by(publication_recid=recid).first()
     publication_info = get_record_by_id(recid)
 
-    xml = render_template('hepdata_records/formats/datacite/datacite_container_submission.xml',
-                          doi=hep_submission.doi,
-                          overall_submission=hep_submission,
-                          data_submissions=data_submissions,
-                          publication_info=publication_info)
+    version_doi = hep_submission.doi + ".v{0}".format(hep_submission.latest_version)
+
+    base_xml = render_template('hepdata_records/formats/datacite/datacite_container_submission.xml',
+                               doi=hep_submission.doi,
+                               overall_submission=hep_submission,
+                               data_submissions=data_submissions,
+                               publication_info=publication_info)
+
+    version_xml = render_template('hepdata_records/formats/datacite/datacite_container_submission.xml',
+                                  doi=version_doi,
+                                  overall_submission=hep_submission,
+                                  data_submissions=data_submissions,
+                                  publication_info=publication_info)
 
     # Register DOI for the version, and update the base DOI to resolve to the latest submission version.
-    register_doi(hep_submission.doi, 'http://www.hepdata.net/record/ins{0}'.format(publication_info.inspire_id),
-                 xml, publication_info['uuid'])
+    register_doi(hep_submission.doi, 'http://www.hepdata.net/record/ins{0}'.format(publication_info['inspire_id']),
+                 base_xml, publication_info['uuid'])
 
-    register_doi(hep_submission.doi+".v{0}".format(hep_submission.latest_version),
-                 'http://www.hepdata.net/record/ins{0}?version={1}'
-                 .format(publication_info.inspire_id, hep_submission.latest_version),
-                 xml, publication_info['uuid'])
+    register_doi(version_doi, 'http://www.hepdata.net/record/ins{0}?version={1}'.format(
+        publication_info['inspire_id'], hep_submission.latest_version), version_xml, publication_info['uuid'])
 
 
 @shared_task
 def generate_doi_for_data_submission(data_submission_id, version):
     data_submission = DataSubmission.query.filter_by(id=data_submission_id).first()
 
-    hep_submission = HEPSubmission.query.filter_by(publication_recid=data_submission.publication_recid)
+    hep_submission = HEPSubmission.query.filter_by(publication_recid=data_submission.publication_recid).first()
 
     publication_info = get_record_by_id(data_submission.publication_recid)
 
@@ -51,7 +57,8 @@ def generate_doi_for_data_submission(data_submission_id, version):
                           data_submission=data_submission, licenses=[],
                           publication_info=publication_info)
 
-    register_doi(data_submission.doi, 'http://www.hepdata.net/record/{0}'.format(data_submission.associated_recid),
+    register_doi(data_submission.doi, 'http://www.hepdata.net/record/{0}?version={1}&table={2}'.format(
+        hep_submission.publication_recid, data_submission.version, data_submission.name),
                  xml, publication_info['uuid'])
 
 
@@ -60,13 +67,16 @@ def reserve_doi_for_hepsubmission(hepsubmission):
         TEST_DOI_PREFIX, hepsubmission.publication_recid)
 
     version = hepsubmission.latest_version
-    if version == 0: version += 1
-
-    if hepsubmission.latest_version == 0:
-        # creating a DOI for the first time
+    if version == 0:
         version += 1
 
-    create_doi(base_doi)
+    if hepsubmission.doi is None:
+        create_doi(base_doi)
+        hepsubmission.doi = base_doi
+        db.session.add(hepsubmission)
+        db.session.commit()
+
+    create_doi(base_doi + ".v{0}".format(version))
 
 
 def reserve_dois_for_data_submissions(publication_recid, version):
@@ -84,19 +94,23 @@ def reserve_dois_for_data_submissions(publication_recid, version):
         doi_value = "{0}/hepdata.{1}.v{2}/t{3}".format(
             TEST_DOI_PREFIX, publication_recid, data_submission.version + 1, (index + 1))
 
-        create_doi(doi_value)
-        data_submission.doi = doi_value
+        if data_submission.doi is None:
+            create_doi(doi_value)
+            data_submission.doi = doi_value
+            db.session.add(data_submission)
 
-        db.session.add(data_submission)
     db.session.commit()
 
 
 def create_doi(doi):
     """
-    :param doi: Creates a DOI using the data provider.
-    :return:
+    :param doi: Creates a DOI using the data provider. If it already exists, we return back the existing provider.
+    :return: DataCiteProvider
     """
-    return DataCiteProvider.create(doi, 'doi')
+    try:
+        return DataCiteProvider.create(doi)
+    except Exception:
+        return DataCiteProvider.get(doi, 'doi')
 
 
 def register_doi(doi, url, xml, uuid):
@@ -107,14 +121,21 @@ def register_doi(doi, url, xml, uuid):
     :param recid:
     :return:
     """
+
+    print '{0} - {1}'.format(doi, url)
+
     try:
         provider = DataCiteProvider.get(doi, 'doi')
-    except NoResultFound:
+    except PIDDoesNotExistError:
         provider = create_doi(doi)
 
-    pidstore_obj = PersistentIdentifier.query.filter_by(pid_value=doi)
-    pidstore_obj.object_uuid = uuid
-    db.session.add(pidstore_obj)
+    pidstore_obj = PersistentIdentifier.query.filter_by(pid_value=doi).first()
+    if pidstore_obj:
+        pidstore_obj.object_uuid = uuid
+        db.session.add(pidstore_obj)
     db.session.commit()
 
-    provider.register(url, xml)
+    try:
+        provider.register(url, xml)
+    except PIDInvalidAction, IntegrityError:
+        provider.update(url, xml)

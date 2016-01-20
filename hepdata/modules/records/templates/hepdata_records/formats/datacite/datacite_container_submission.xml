@@ -13,16 +13,11 @@
         <date dateType="Updated">{{ overall_submission.last_updated }}</date>
     </dates>
     <titles>
-        <title >{{ publication_info.title }}</title>
+        <title>{{ publication_info.title }}</title>
     </titles>
     <publisher>{{ publication_info.journal_info }}</publisher>
     <publicationYear>{{ publication_info.year }}</publicationYear>
 
-    <subjects>
-        {% for keyword in data_submission.keywords %}
-            <subject subjectScheme="{{ keyword.name }}">{{ keyword.value }}</subject>
-        {% endfor %}
-    </subjects>
     <language>eng</language>
     <resourceType resourceTypeGeneral="Collection">Collection</resourceType>
     <version>{{ overall_submission.latest_version }}</version>
@@ -36,20 +31,25 @@
     <alternateIdentifiers>
 
         <alternateIdentifier alternateIdentifierType="ROOTDownload">
-            http://www.hepdata.net/download/submission{{ publication_info.recid }}/root
+            http://www.hepdata.net/record/{{ publication_info.inspire_id}}
+
+        </alternateIdentifier>
+
+        <alternateIdentifier alternateIdentifierType="ROOTDownload">
+            http://www.hepdata.net/download/submission/{{ publication_info.recid }}/root
 
         </alternateIdentifier>
 
         <alternateIdentifier alternateIdentifierType="YAMLDownload">
-            http://www.hepdata.net/download/submission{{ publication_info.recid }}/yaml
+            http://www.hepdata.net/download/submission/{{ publication_info.recid }}/yaml
         </alternateIdentifier>
 
         <alternateIdentifier alternateIdentifierType="CSVDownload">
-            http://www.hepdata.net/download/submission{{ publication_info.recid }}/csv
+            http://www.hepdata.net/download/submission/{{ publication_info.recid }}/csv
         </alternateIdentifier>
 
         <alternateIdentifier alternateIdentifierType="YODADownload">
-            http://www.hepdata.net/download/submission{{ publication_info.recid }}/yoda
+            http://www.hepdata.net/download/submission/{{ publication_info.recid }}/yoda
         </alternateIdentifier>
     </alternateIdentifiers>
 
@@ -62,10 +62,8 @@
 
         {% for submission in data_submissions %}
             <relatedIdentifier relatedIdentifierType="DOI" relationType="IsSupplementedBy">
-            {{ submission.doi }}
-        </relatedIdentifier>
+                {{ submission.doi }}
+            </relatedIdentifier>
         {% endfor %}
-
-
     </relatedIdentifiers>
 </resource>

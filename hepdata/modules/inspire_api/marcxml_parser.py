@@ -30,6 +30,9 @@ marc_tags = {
     'journal': ('773', ['p', 'v', 'y', 'c']),
 }
 
+DEFAULT_YEAR = 2015
+DEFAULT_JOURNAL = 'HEPData'
+
 
 def get_journal_info(soup):
     """ Parse the journal information from the xml """
@@ -37,14 +40,18 @@ def get_journal_info(soup):
         tag, codes = marc_tags['journal']
         datafield = soup.find_all(tag=tag)[0]
         journal_info = ''
+        year = None
+
         for code in codes:
             value = datafield.find_all(code=code)[0].string
             if code == 'y':
+                year = value
                 value = '(' + value + ')'
             journal_info += value + ' '
-        return journal_info[:-1]
-    except (IndexError, AssertionError):
-        return None
+
+        return journal_info[:-1], year
+    except Exception:
+        return DEFAULT_JOURNAL, DEFAULT_YEAR
 
 
 def get_doi(soup):

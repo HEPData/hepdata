@@ -39,6 +39,7 @@ def get_inspire_record_information(inspire_rec_id):
     if status == 200:
         soup = BeautifulSoup(content, "lxml")
 
+        journal_info, year = get_journal_info(soup)
         content = {
             'title': get_title(soup),
             'doi': get_doi(soup),
@@ -48,7 +49,8 @@ def get_inspire_record_information(inspire_rec_id):
             'arxiv_id': get_arxiv(soup),
             'collaborations': get_collaborations(soup),
             'keywords': get_keywords(soup),
-            'journal_info': get_journal_info(soup),
+            'journal_info': journal_info,
+            'year': year
         }
         status = 'success'
     return content, status

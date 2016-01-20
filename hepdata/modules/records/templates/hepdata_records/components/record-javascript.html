@@ -45,7 +45,7 @@
             HEPDATA.switch_table('#hep-tables', table_to_show);
 
             if (window.location.href.indexOf("table=") > -1) {
-                $('#hepdata_tables').animate({
+                $('#hep-tables').animate({
                     scrollTop: $("#" + table_to_show).offset().top
                 }, 2000);
             }
@@ -101,8 +101,6 @@
                 success: function (data) {
                     $("#resource-list ul").html('');
                     for (var resource in data) {
-                        console.log(data[resource]);
-
                         var description = data[resource]['file_description'] == '' ? 'Publication Resource' : data[resource]['file_description'];
                         if (resource == 0) {
                             $("#resource-list ul").append('<li class="active" data-location="' + data[resource]['location'] + '" data-type="' + data[resource]['file_type'] + '" data-id="' + data[resource]['id'] + '">' + description + '</li>');

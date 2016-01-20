@@ -53,19 +53,19 @@
         </alternateIdentifier>
 
         <alternateIdentifier alternateIdentifierType="ROOTDownload">
-            http://www.hepdata.net/record/{{ publication_info.recid }}/root
+            http://www.hepdata.net/download/table/{{ data_submission.associated_recid }}/root
         </alternateIdentifier>
 
         <alternateIdentifier alternateIdentifierType="YAMLDownload">
-            http://www.hepdata.net/record/{{ publication_info.recid }}/yaml
+            http://www.hepdata.net/download/table/{{ data_submission.associated_recid }}/yaml
         </alternateIdentifier>
 
         <alternateIdentifier alternateIdentifierType="CSVDownload">
-            http://www.hepdata.net/record/{{ publication_info.recid }}/csv
+            http://www.hepdata.net/download/table/{{ data_submission.associated_recid }}/csv
         </alternateIdentifier>
 
         <alternateIdentifier alternateIdentifierType="YODADownload">
-            http://www.hepdata.net/record/{{ publication_info.recid }}/yoda
+            http://www.hepdata.net/download/table/{{ data_submission.associated_recid }}/yoda
         </alternateIdentifier>
     </alternateIdentifiers>
 
@@ -78,7 +78,7 @@
         {% endif %}
 
         <relatedIdentifier relatedIdentifierType="URL" relationType="IsPartOf">
-            http://www.hepdata.net/record/{{ publication_info.recid }}
+            {{ overall_submission.doi }}
         </relatedIdentifier>
 
     </relatedIdentifiers>

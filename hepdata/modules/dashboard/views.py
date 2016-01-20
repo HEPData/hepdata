@@ -17,7 +17,8 @@ from hepdata.modules.records.utils.common import get_record_by_id
 from flask import Blueprint, jsonify, request, render_template, redirect, \
     url_for
 
-from hepdata.modules.records.utils.doi_minter import register_doi
+from hepdata.modules.records.utils.doi_minter import register_doi, generate_doi_for_data_submission, \
+    generate_doi_for_submission
 from hepdata.modules.records.utils.submission import unload_submission, package_submission
 from hepdata.modules.records.utils.users import has_role
 from hepdata.modules.records.utils.workflow import send_finalised_email, \
@@ -516,7 +517,9 @@ def do_finalise(recid, publication_record=None, force_finalise=False,
             db.session.commit()
 
             for submission in submissions:
-                register_doi.delay(submission.id)
+                generate_doi_for_data_submission.delay(submission.id, submission.version)
+
+            generate_doi_for_submission.delay(recid, version)
 
             # Reindex everything.
             index_record_ids([recid] + generated_record_ids)

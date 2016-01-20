@@ -19,7 +19,7 @@ from hepdata.modules.records.models import DataSubmission, DataReview, \
 from hepdata.modules.records.utils.common import \
     get_prefilled_dictionary, infer_file_type, encode_string, zipdir, get_record_by_id, contains_accepted_url
 from hepdata.modules.records.utils.common import get_or_create
-from hepdata.modules.records.utils.doi_minter import reserve_dois_for_data_submissions
+from hepdata.modules.records.utils.doi_minter import reserve_dois_for_data_submissions, reserve_doi_for_hepsubmission
 from hepdata.modules.records.utils.resources import download_resource_file
 from invenio_db import db
 from dateutil.parser import parse
@@ -342,8 +342,8 @@ def process_submission_directory(basepath, submission_file_path, recid):
             submission_processed = yaml.load_all(submission_file)
             # process file, extracting contents, and linking
             # the data record with the parent publication
-
             hepsubmission = get_or_create_hepsubmission(recid)
+            reserve_doi_for_hepsubmission(hepsubmission)
 
             # if it is finished and we receive an update,
             # then we need to reopen the submission to allow for revisions.
@@ -400,7 +400,7 @@ def process_submission_directory(basepath, submission_file_path, recid):
 
             if len(errors) is 0:
                 package_submission(basepath, recid, hepsubmission)
-                reserve_dois_for_data_submissions(recid)
+                reserve_dois_for_data_submissions(recid, hepsubmission.latest_version)
         else:
             errors = process_validation_errors_for_display(
                 submission_file_validator.get_messages())
