@@ -21,57 +21,61 @@
 .record-abstract-content {
   height: 25vh;
   overflow-y: auto;
+  white-space: pre-wrap;
 }
 
 .record-authors {
   padding-top: 10px;
   font-weight: normal;
+
+  a {
+    color: $purple;
+    font-size: 1em;
+    margin: 2px;
+    font-weight: lighter;
+  }
 }
 
-.record-authors a {
-  color: $purple;
-  font-size: 1em;
-  margin: 2px;
-  font-weight: lighter;
-}
+.record-links {
+  ul {
+    list-style: none;
+    -webkit-padding-start: 0px;
+    padding-left: 0;
 
-.record-links ul {
-  list-style: none;
-  -webkit-padding-start: 0px;
-  padding-left: 0;
-}
+    li {
 
-.record-links ul li {
+      padding: 0px 2px;
+      color: white;
+      display: inline-block;
+      margin-bottom: 10px;
 
-  padding: 0px 2px;
-  color: white;
-  display: inline-block;
-  margin-bottom: 10px;
+    }
+  }
 
-}
+  .link {
+    padding: 6px;
+    border: 1px solid $navy-light;
+    border-radius: 3px;
+    color: $navy-light;
+    font-size: .8em;
+    cursor: pointer;
 
-.record-links .link {
-  padding: 6px;
-  border: 1px solid $navy-light;
-  border-radius: 3px;
-  color: $navy-light;
-  font-size: .8em;
-  cursor: pointer;
-}
+    &:hover {
+      background-color: $purple;
+      color: white;
+      text-decoration: none;
+    }
+  }
 
-.record-links .link-full {
-  background-color: $navy-light;
-  color: white;
-}
+  .link-full {
+    background-color: $navy-light;
+    color: white;
 
-.record-links .link:hover {
-  background-color: $purple;
-  color: white;
-}
-
-.record-links .link-full:hover {
-  background-color: $purple;
-  color: white;
+    &:hover {
+      background-color: $purple;
+      color: white;
+    }
+  }
 }
 
 .detailed-record-info {
@@ -115,12 +119,14 @@
   min-height: 300px;
 }
 
-.reviews-view h4 {
-  margin: 0;
-}
+.reviews-view {
+  h4 {
+    margin: 0;
+  }
 
-.reviews-view h5 {
-  font-size: .9em;
+  .reviews-view h5 {
+    font-size: .9em;
+  }
 }
 
 .review-option, .upload-option, .paper-info-option, .admin-option {
@@ -254,6 +260,10 @@
   background-color: $lightgrey;
   padding: 10px;
   margin-left: 25px;
+}
+
+#table_description {
+  white-space: pre-wrap;
 }
 
 #conversation .table-name {
@@ -708,8 +718,8 @@
   border-radius: 0px 4px 4px 0px;
   max-width: 160px;
   text-overflow: clip;
-text-overflow: ellipsis;
-text-overflow: "…";
+  text-overflow: ellipsis;
+  text-overflow: "…";
 
 }
 
@@ -880,3 +890,4 @@ g.node {
   }
 
 }
+

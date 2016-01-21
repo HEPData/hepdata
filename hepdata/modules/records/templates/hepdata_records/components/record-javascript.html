@@ -16,6 +16,10 @@
     MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
     $(document).ready(function () {
 
+        // to preserve the line wrap and the
+        var abstract_html = $(".record-abstract-content").html();
+        $(".record-abstract-content").html(abstract_html.trim());
+
         HEPDATA.render_loader("#hepdata-loading", [
                     {x: 26, y: 30, color: "#955BA5"},
                     {x: -60, y: 55, color: "#2C3E50"},

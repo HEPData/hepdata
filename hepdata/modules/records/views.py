@@ -200,8 +200,7 @@ def format_submission(recid, record, version, hepdata_submission,
 
         ctx['recid'] = recid
         ctx["status"] = hepdata_submission.overall_status
-        ctx['record']['data_abstract'] = decode_string(
-            hepdata_submission.data_abstract)
+        ctx['record']['data_abstract'] = decode_string(hepdata_submission.data_abstract)
 
         if hepdata_submission.overall_status != 'finished' and ctx["version_count"] > 0:
 
