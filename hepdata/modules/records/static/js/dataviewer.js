@@ -327,6 +327,7 @@ HEPDATA.table_renderer = {
         // display the table
         $(table_placement).html('');
 
+
         $("#table_name").html(table_data.name);
         $("#table_description").html(table_data.description.trim());
 
