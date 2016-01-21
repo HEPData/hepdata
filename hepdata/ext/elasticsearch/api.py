@@ -137,6 +137,7 @@ def search_authors(name, size=20):
     index, doc_type = CFG_ES_AUTHORS
 
     query = {
+        "size": size,
         "query": {
             "match": {
                 "full_name": {
@@ -144,8 +145,7 @@ def search_authors(name, size=20):
                     "fuzziness": "AUTO"
                 }
             }
-        },
-        "size": size
+        }
     }
 
     results = es.search(index=index, doc_type=doc_type, body=query)
@@ -165,8 +165,6 @@ def reindex_all(index=None, recreate=False, batch=50, start=-1, end=-1):
     res = qry.one()
     min_recid = res.min_recid
     max_recid = res.max_recid
-
-    print 'min_recid is {0} and max_recid is {1}'.format(min_recid, max_recid)
 
     if max_recid and min_recid:
 
@@ -234,11 +232,12 @@ def get_records_matching_field(field, id, index=None, doc_type=None):
     """ Checks if a record with a given ID exists in the index """
 
     query = {
+        "size": 9999,
         'query': {
             'match': {
                 field: id
             }
-        }, 'size': 999999
+        }
     }
 
     return es.search(index=index, doc_type=doc_type, body=query)
@@ -426,8 +425,8 @@ def get_n_latest_records(n_latest, field="last_updated", index=None):
     """ Gets latest N records from the index """
 
     query = {
-        "query": QueryBuilder.generate_query_string(),
         "size": n_latest,
+        "query": QueryBuilder.generate_query_string(),
         "sort": [{
             field: {
                 "order": "desc"
