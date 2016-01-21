@@ -359,35 +359,34 @@
 .close {
   color: white;
   opacity: 1;
-}
 
-.close:hover,
-.close:focus {
-  color: white;
-  text-decoration: none;
-  cursor: pointer;
-  filter: alpha(opacity=50);
-  opacity: .5;
+  &:hover, &:focus {
+    color: white;
+    text-decoration: none;
+    cursor: pointer;
+    filter: alpha(opacity=50);
+    opacity: .5;
+  }
 }
 
 #resource-list ul {
   list-style: none;
   -webkit-padding-start: 0;
 
-}
+  li {
+    background-color: $lightgrey;
+    margin: 3px;
+    font-size: .8em;
+    padding: 5px;
+    border-radius: 3px;
+    cursor: pointer;
 
-#resource-list ul li {
-  background-color: $lightgrey;
-  margin: 3px;
-  font-size: .8em;
-  padding: 5px;
-  border-radius: 3px;
-  cursor: pointer;
-}
+    &.active {
+      color: $purple;
+      font-weight: bolder;
+    }
+  }
 
-#resource-list ul li.active {
-  color: $purple;
-  font-weight: bolder;
 }
 
 .hide_button {
@@ -421,61 +420,62 @@
   height: 80vh;
   margin-top: 120px;
 
-}
+  input {
+    border: none;
+    background: $lightgrey url('/static/img/icons/icon_filter.svg') no-repeat 4px 4px;
+    background-size: 20px;
+    padding: 4px 6px 4px 26px;
+    width: 100%;
+    margin-bottom: 10px;
+    margin-top: 5px;
+    border-radius: 2px;
+  }
 
-#hepdata_tables input {
-  border: none;
-  background: $lightgrey url('/static/img/icons/icon_filter.svg') no-repeat 4px 4px;
-  background-size: 20px;
-  padding: 4px 6px 4px 26px;
-  width: 100%;
-  margin-bottom: 10px;
-  margin-top: 5px;
-  border-radius: 2px;
-}
+  ul {
+    -webkit-padding-start: 0px;
+    font-size: .8em;
+    height: 90%;
+    width: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 0 5px 15px 0;
 
-#hepdata_tables ul {
-  -webkit-padding-start: 0px;
-  font-size: .8em;
-  height: 90%;
-  width: 100%;
-  overflow-y: auto;
-  overflow-x: hidden;
-  padding: 0px 5px 15px 0px;
-}
+    li {
+      list-style: none;
+      margin-bottom: 10px;
+      cursor: pointer;
+      color: $concrete;
 
-#hepdata_tables ul li {
-  list-style: none;
-  margin-bottom: 10px;
-  cursor: pointer;
-  color: $concrete;
-}
+      p {
+        color: $grey;
+        margin: 0 0 4px;
+      }
 
-#hepdata_tables .content {
-  float: left;
-  width: 95%;
-}
+      &.active .arrow, &.active h4 {
+        color: $purple;
+        font-weight: bolder;
+      }
+    }
+  }
 
-#hepdata_tables .arrow {
-  float: right;
-  width: 5%;
-  align-content: center;
-  margin-top: 12px;
-  font-size: 1.2em;
-  color: $concrete;
-}
+  .content {
+    float: left;
+    width: 95%;
+  }
 
-#hepdata_tables li.active .arrow, #hepdata_tables li.active h4 {
-  color: $purple;
-  font-weight: bolder;
-}
+  .arrow {
+    float: right;
+    width: 5%;
+    align-content: center;
+    margin-top: 12px;
+    font-size: 1.2em;
+    color: $concrete;
+  }
 
-#hepdata_tables li p {
-  color: $grey;
-}
+  li.active p {
+    color: $navy;
+  }
 
-#hepdata_tables li.active p {
-  color: $navy;
 }
 
 #hepdata_table_detail {
@@ -498,27 +498,31 @@
   overflow: scroll;
 }
 
-#hep_table_data h4, #hep_table_chart h4 {
-  margin-top: 0;
+#hep_table_data, #hep_table_chart {
+  h4 {
+    margin-top: 0;
+  }
 }
 
-.hepdata_table_detail_header h4 {
-  margin-top: 0;
-  color: $purple;
-  font-weight: bolder;
-}
+.hepdata_table_detail_header {
+  h4 {
+    margin-top: 0;
+    color: $purple;
+    font-weight: bolder;
+  }
 
-.hepdata_table_detail_header a {
-  color: $purple;
-  text-decoration: underline;
-}
+  a {
+    color: $purple;
+    text-decoration: underline;
 
-.hepdata_table_detail_header a:hover {
-  color: $purple-light;
-}
+    &:hover {
+      color: $purple-light;
+    }
+  }
 
-.hepdata_table_detail_header p {
-  color: $navy;
+  p {
+    color: $navy;
+  }
 }
 
 #hep_table_chart {
@@ -526,49 +530,63 @@
   float: right;
 }
 
-.table .qualifiers {
-  background-color: $lightgrey;
-}
+.table {
+  .qualifiers {
+    background-color: $lightgrey;
+  }
+  .qualifier_name {
+    font-weight: bolder;
+  }
 
-.table .qualifier_name {
-  font-weight: bolder;
-}
+  .headers {
+    font-weight: bolder;
+  }
 
-.table .headers {
-  font-weight: bolder;
-}
+  .data_values .error {
+    font-size: .7em;
+    font-weight: bolder;
+    display: inline-block;
+    background-color: $lightgrey;
+    margin: 1px;
+    border-radius: 3px;
+    padding-left: 3px;
 
-.table .data_values .error {
-  font-size: .7em;
-  font-weight: bolder;
-  display: inline-block;
-  background-color: $lightgrey;
-  margin: 1px;
-  border-radius: 3px;
-  padding-left: 3px;
-}
+    .value {
+      display: inline-block;
+    }
 
-.error .value {
-  display: inline-block;
-}
+    .label {
+      background-color: $lightgrey;
+      color: $red;
+      display: inline-block;
+      height: 16px;
+      border-radius: 0 3px 3px 0;
+      margin-left: 2px;
+      padding-top: 3px;
+      font-size: 1em;
+      vertical-align: middle !important;
+    }
 
-.error .label {
-  background-color: $lightgrey;
-  color: $red;
-  display: inline-block;
-  height: 16px;
-  border-radius: 0 3px 3px 0;
-  margin-left: 2px;
-  padding-top: 3px;
-  font-size: 1em;
-  vertical-align: middle !important;
-}
+    .asym {
+      display: inline-block;
+      vertical-align: middle;
+      font-size: .8em;
+      margin-top: -2px;
 
-.table .data_values .error .asym {
-  display: inline-block;
-  vertical-align: middle;
-  font-size: .8em;
-  margin-top: -2px;
+      .sup, .sub {
+        display: block;
+        position: relative;
+        height: 7px;
+      }
+    }
+
+    .sym {
+      display: inline-block;
+      vertical-align: middle;
+      height: 16px;
+      font-size: 1em;
+    }
+  }
 }
 
 .total_errors {
@@ -584,20 +602,6 @@
   cursor: pointer;
 }
 
-.table .data_values .error .sym {
-  display: inline-block;
-  vertical-align: middle;
-  height: 16px;
-  font-size: 1em;
-}
-
-.table .data_values .error .asym .sup,
-.table .data_values .error .asym .sub {
-  display: block;
-  position: relative;
-  height: 7px;
-}
-
 .error-qualifier-info {
   font-size: .7em;
   color: #aaa;
@@ -608,14 +612,14 @@
   font-size: .8em;
   background-color: white;
   padding: 5px;
-}
 
-.group-item .type {
-  color: $grey;
-}
+  .type {
+    color: $grey;
+  }
 
-.group-item .value {
-  font-weight: lighter;
+  .value {
+    font-weight: lighter;
+  }
 }
 
 .group {
@@ -640,17 +644,16 @@
 
 .legend-table {
   margin-top: 10px;
-}
+  tr td {
+    cursor: pointer;
+    border-radius: 5px;
+  }
 
-.legend-table tr td {
-  cursor: pointer;
-  border-radius: 5px;
-}
-
-.legend-table thead {
-  color: $navy;
-  font-weight: bolder;
-  font-size: 1em;
+  thead {
+    color: $navy;
+    font-weight: bolder;
+    font-size: 1em;
+  }
 }
 
 .variable-name {
@@ -676,16 +679,17 @@
   color: $grey;
 }
 
-#table_keywords ul {
-  list-style: none;
-  -webkit-padding-start: 0;
-}
-
-#table_keywords ul li {
-  float: left;
-  display: inline-block;
-  margin: 7px;
-  font-size: .75em;
+#table_keywords {
+  ul {
+    list-style: none;
+    -webkit-padding-start: 0;
+    li {
+      float: left;
+      display: inline-block;
+      margin: 7px;
+      font-size: .75em;
+    }
+  }
 }
 
 .keyword-name {
@@ -794,18 +798,18 @@
   border-radius: 3px;
 }
 
-@import "variables";
+.axis {
+  path, line {
+    fill: none;
+    stroke: $navy;
+    shape-rendering: crispEdges;
+  }
 
-.axis path,
-.axis line {
-  fill: none;
-  stroke: $navy;
-  shape-rendering: crispEdges;
-}
+  text {
+    font-size: .6em;
+    fill: $navy;
+  }
 
-.axis text {
-  font-size: .6em;
-  fill: $navy;
 }
 
 .axis_text {
@@ -863,3 +867,4 @@ g.node {
   border: none;
   padding: 10px;
 }
+
