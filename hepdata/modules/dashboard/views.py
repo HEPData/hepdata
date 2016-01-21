@@ -518,9 +518,6 @@ def do_finalise(recid, publication_record=None, force_finalise=False,
 
             db.session.commit()
 
-            import ipdb
-            ipdb.set_trace()
-
             create_celery_app(current_app)
 
             for submission in submissions:
