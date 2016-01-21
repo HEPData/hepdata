@@ -13,7 +13,7 @@
         <date dateType="Updated">{{ overall_submission.last_updated }}</date>
     </dates>
     <titles>
-        <title>{{ data_submission.name }}</title>
+        <title>{{ table_name }}</title>
         <title xml:lang="en-us" titleType="Subtitle">{{ publication_info.title }}</title>
     </titles>
     <publisher>{{ publication_info.journal_info }}</publisher>
@@ -32,17 +32,15 @@
         </description>
 
         <description descriptionType="Other">
-            {{ data_submission.description }}
+            {{ table_description }}
         </description>
     </descriptions>
 
-    {% if licenses %}
+    {% if license %}
         <rightsList>
-            {% for license in licenses %}
-                <rights rightsURI="{{ license.url }}">
-                    {{ license.name }}
-                </rights>
-            {% endfor %}
+            <rights rightsURI="{{ license.url }}">
+                {{ license.name }}
+            </rights>
         </rightsList>
     {% endif %}
 

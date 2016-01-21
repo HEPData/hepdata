@@ -9,8 +9,8 @@ from invenio_pidstore.models import PersistentIdentifier
 from invenio_pidstore.providers.datacite import DataCiteProvider
 
 from hepdata.config import TEST_DOI_PREFIX
-from hepdata.modules.records.models import DataSubmission, HEPSubmission
-from hepdata.modules.records.utils.common import get_record_by_id
+from hepdata.modules.records.models import DataSubmission, HEPSubmission, DataResource, License
+from hepdata.modules.records.utils.common import get_record_by_id, encode_string, decode_string
 
 
 @shared_task
@@ -51,10 +51,20 @@ def generate_doi_for_data_submission(data_submission_id, version):
 
     publication_info = get_record_by_id(data_submission.publication_recid)
 
+    data_file = DataResource.query.filter_by(id=data_submission.data_file).first()
+
+    license = None
+    if data_file:
+        if data_file.file_license:
+            license = License.query.filter_by(id=data_file.file_license).first()
+
     xml = render_template('hepdata_records/formats/datacite/datacite_data_record.xml',
                           doi=data_submission.doi,
+                          table_name=decode_string(data_submission.name),
+                          table_description=decode_string(data_submission.description),
                           overall_submission=hep_submission,
-                          data_submission=data_submission, licenses=[],
+                          data_submission=data_submission,
+                          license=license,
                           publication_info=publication_info)
 
     register_doi(data_submission.doi, 'http://www.hepdata.net/record/{0}?version={1}&table={2}'.format(
@@ -91,8 +101,12 @@ def reserve_dois_for_data_submissions(publication_recid, version):
 
     for index, data_submission in enumerate(data_submissions):
         # using the index of the sorted submissions should do a good job of maintaining the order of the tables.
+        version = data_submission.version
+        if version == 0:
+            version += 1
+
         doi_value = "{0}/hepdata.{1}.v{2}/t{3}".format(
-            TEST_DOI_PREFIX, publication_recid, data_submission.version + 1, (index + 1))
+            TEST_DOI_PREFIX, publication_recid, version, (index + 1))
 
         if data_submission.doi is None:
             create_doi(doi_value)

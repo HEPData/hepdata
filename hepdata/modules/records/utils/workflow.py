@@ -11,7 +11,7 @@ from hepdata.modules.records.models import SubmissionParticipant, \
 from invenio_db import db
 
 from hepdata.modules.records.utils.common import get_record_by_id
-from hepdata.utils.mail import send_email
+from hepdata.utils.mail import send_email, create_send_email_task
 
 __author__ = 'eamonnmaguire'
 
@@ -109,11 +109,11 @@ def send_new_review_message_email(review, message, user):
             table_name=table_information.name,
             table_message=message.message,
             article=review.publication_recid,
-            title = record['title'],
+            title=record['title'],
             link="http://hepdata.net/record/{0}"
                 .format(review.publication_recid))
 
-        send_email.delay(
+        create_send_email_task(
             participant.email,
             '[HEPData] Submission {0} has a new review message.' \
                 .format(review.publication_recid), message_body)
@@ -137,16 +137,15 @@ def send_new_upload_email(recid, user):
                                        name=participant.full_name,
                                        actor=user.email,
                                        article=recid,
-                                       title = record['title'],
+                                       title=record['title'],
                                        link="http://hepdata.net/record/{0}"
                                        .format(recid))
 
         print message_body
 
-        send_email.delay(
-            participant.email, '[HEPData] Submission {0} has ' \
-                               'a new upload available for you to review.'
-                .format(recid), message_body)
+        create_send_email_task(participant.email,
+                               '[HEPData] Submission {0} has a new upload available for you to review.'.format(recid),
+                               message_body)
 
 
 def send_finalised_email(hepsubmission):
@@ -161,11 +160,11 @@ def send_finalised_email(hepsubmission):
             name=participant.full_name,
             article=hepsubmission.publication_recid,
             version=hepsubmission.latest_version,
-            title = record['title'],
+            title=record['title'],
             link="http://hepdata.net/record/{0}"
                 .format(hepsubmission.publication_recid))
 
-        send_email.delay(participant.email,
-                         '[HEPData] Submission {0} has been finalised and is publicly available' \
-                         .format(hepsubmission.publication_recid),
-                         message_body)
+        create_send_email_task(participant.email,
+                               '[HEPData] Submission {0} has been finalised and is publicly available' \
+                               .format(hepsubmission.publication_recid),
+                               message_body)

@@ -8,7 +8,7 @@ from hepdata.modules.records.utils.common import encode_string
 from hepdata.modules.records.utils.submission import \
     get_or_create_hepsubmission
 from hepdata.modules.records.utils.workflow import create_record
-from hepdata.utils.mail import send_email
+from hepdata.utils.mail import send_email, create_send_email_task
 
 __author__ = 'eamonnmaguire'
 
@@ -102,7 +102,7 @@ def send_cookie_email(submission_participant,
         title=encode_string(record_information['title'], 'utf-8'),
         invite_token=submission_participant.invitation_cookie)
 
-    send_email(submission_participant.email,
+    create_send_email_task(submission_participant.email,
                "[HEPData] Invitation to {0} Record {1} on HEPData".format(
                    submission_participant.role,
                    submission_participant.publication_recid), message_body)

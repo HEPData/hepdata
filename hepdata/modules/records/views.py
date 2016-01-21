@@ -86,7 +86,7 @@ def sandbox_display(id):
     version = int(request.args.get('version', -1))
 
     if hepdata_submission is not None:
-        ctx = process_submission(id, None, version, hepdata_submission)
+        ctx = format_submission(id, None, version, hepdata_submission)
         ctx['mode'] = 'sandbox'
         ctx['show_review_widget'] = False
         increment(id)
@@ -147,8 +147,8 @@ def metadata(recid, *args, **kwargs):
     return do_render_record(recid, record, version=version)
 
 
-def process_submission(recid, record, version, hepdata_submission,
-                       data_table=None):
+def format_submission(recid, record, version, hepdata_submission,
+                      data_table=None):
     """
     Performs all the processing of the record to be display
     :param recid:
@@ -243,7 +243,7 @@ def do_render_record(recid, record, version):
         publication_recid=recid).first()
 
     if hepdata_submission is not None:
-        ctx = process_submission(recid, record, version, hepdata_submission)
+        ctx = format_submission(recid, record, version, hepdata_submission)
         increment(recid)
         return render_template('hepdata_records/publication_record.html',
                                ctx=ctx)
@@ -257,9 +257,9 @@ def do_render_record(recid, record, version):
         hepdata_submission = HEPSubmission.query.filter_by(
             publication_recid=publication_recid).first()
 
-        ctx = process_submission(publication_recid, publication_record,
-                                 version, hepdata_submission,
-                                 data_table=record['title'])
+        ctx = format_submission(publication_recid, publication_record,
+                                version, hepdata_submission,
+                                data_table=record['title'])
         ctx['related_publication_id'] = publication_recid
         ctx['table_name'] = record['title']
 
@@ -873,6 +873,7 @@ def process_data_tables(ctx, data_record_query, first_data_id,
                         data_table=None):
     data_table_metadata = OrderedDict()
     ctx['show_upload_area'] = False
+
     if ctx['show_upload_widget'] and data_record_query.count() == 0:
         ctx['show_upload_area'] = True
     elif data_record_query.count() > 0:
@@ -883,6 +884,7 @@ def process_data_tables(ctx, data_record_query, first_data_id,
                 "id": submission_record.id, "processed_name": processed_name,
                 "name": submission_record.name,
                 "location": submission_record.location_in_publication,
+                "doi": submission_record.doi,
                 "description": decode_string(
                     truncate_string(submission_record.description, 20))}
 

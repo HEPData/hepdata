@@ -3,6 +3,8 @@ from collections import OrderedDict
 from datetime import datetime
 import json
 from operator import or_
+
+from flask.ext.celeryext import create_celery_app
 from flask.ext.login import login_required, current_user
 from invenio_accounts.models import User
 from invenio_db import db
@@ -15,7 +17,7 @@ from hepdata.modules.records.models import HEPSubmission, DataReview, \
     SubmissionParticipant, DataSubmission, RecordVersionCommitMessage
 from hepdata.modules.records.utils.common import get_record_by_id
 from flask import Blueprint, jsonify, request, render_template, redirect, \
-    url_for
+    url_for, current_app
 
 from hepdata.modules.records.utils.doi_minter import register_doi, generate_doi_for_data_submission, \
     generate_doi_for_submission
@@ -515,6 +517,11 @@ def do_finalise(recid, publication_record=None, force_finalise=False,
             db.session.add(hep_submission)
 
             db.session.commit()
+
+            import ipdb
+            ipdb.set_trace()
+
+            create_celery_app(current_app)
 
             for submission in submissions:
                 generate_doi_for_data_submission.delay(submission.id, submission.version)
