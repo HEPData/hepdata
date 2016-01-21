@@ -706,6 +706,10 @@
   color: $navy;
   font-weight: bolder;
   border-radius: 0px 4px 4px 0px;
+  max-width: 160px;
+  text-overflow: clip;
+text-overflow: ellipsis;
+text-overflow: "…";
 
 }
 
@@ -868,3 +872,11 @@ g.node {
   padding: 10px;
 }
 
+.popover {
+
+  .popover-title {
+    background: $navy;
+    color: white;
+  }
+
+}
