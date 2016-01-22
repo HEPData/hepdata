@@ -119,9 +119,22 @@ RECORDS_REST_ENDPOINTS = dict(
     recid=dict(
         pid_type='recid',
         pid_minter='recid_minter',
+        pid_fetcher='recid_fetcher',
+        search_index='records',
+        search_type=None,
+        record_serializers={
+            'application/json': ('invenio_records_rest.serializers'
+                                 ':record_to_json_serializer'),
+        },
+        search_serializers={
+            'application/json': ('invenio_records_rest.serializers'
+                                 ':search_to_json_serializer'),
+        },
         list_route='/records/',
         item_route='/records/<pid_value>',
     ), )
+
+
 
 # DebugToolbar
 DEBUG_TB_ENABLED = False
