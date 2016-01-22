@@ -50,3 +50,8 @@ def submission_help():
 @blueprint.route('/about')
 def about():
     return render_template('hepdata_theme/pages/about.html')
+
+
+@blueprint.route('/ping')
+def ping():
+    return 'OK'
