@@ -47,7 +47,6 @@
 -e git+https://github.com/inveniosoftware/invenio-testing.git#egg=invenio-testing
 -e git+https://github.com/inveniosoftware/invenio-userprofiles.git#egg=invenio-userprofiles
 -e git+https://github.com/inveniosoftware/invenio-search.git#egg=invenio-search
--e git+https://github.com/inveniosoftware/invenio-search-ui.git#egg=invenio-search-ui
 -e git+https://github.com/inveniosoftware/invenio.git#egg=invenio
 
 -e .[postgresql]
