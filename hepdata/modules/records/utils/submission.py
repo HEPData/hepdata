@@ -339,7 +339,7 @@ def process_submission_directory(basepath, submission_file_path, recid):
         data_file_validator = DataFileValidator()
 
         if is_valid_submission_file:
-            submission_processed = yaml.load_all(submission_file)
+            submission_processed = yaml.safe_load_all(submission_file)
             # process file, extracting contents, and linking
             # the data record with the parent publication
             hepsubmission = get_or_create_hepsubmission(recid)

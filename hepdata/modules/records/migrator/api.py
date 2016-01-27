@@ -146,7 +146,7 @@ class Migrator(object):
         :return:
         """
         try:
-            file_documents = yaml.load_all(open(file_location, 'r'))
+            file_documents = yaml.safe_load_all(open(file_location, 'r'))
 
             # make a submission directory where all the files will be stored.
             # delete a directory in the event that it exists.
