@@ -168,3 +168,9 @@ def generate_table_structure(table_contents):
         record["values"].append(tmp_values[tmp_value])
 
     return record
+
+
+def str_presenter(dumper, data):
+    if "\n" in data:
+        return dumper.represent_scalar('tag:yaml.org,2002:str', data, style='|')
+    return dumper.represent_scalar('tag:yaml.org,2002:str', data)

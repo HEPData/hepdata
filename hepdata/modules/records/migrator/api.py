@@ -12,6 +12,7 @@ from hepdata.config import CFG_DATADIR, CFG_TMPDIR
 from hepdata.modules.inspire_api.views import get_inspire_record_information
 from hepdata.modules.dashboard.views import do_finalise
 from hepdata.modules.records.utils.common import zipdir
+from hepdata.modules.records.utils.data_processing_utils import str_presenter
 from hepdata.modules.records.utils.submission import \
     process_submission_directory, get_or_create_hepsubmission, \
     remove_submission
@@ -134,6 +135,7 @@ class Migrator(object):
                                     type="info"):
         submission_yaml.write("---\n")
         self.cleanup_yaml(document, type)
+        yaml.add_representer(str, str_presenter)
         yaml.dump(document, submission_yaml, allow_unicode=True)
         submission_yaml.write("\n")
 
@@ -168,6 +170,7 @@ class Migrator(object):
 
                         with open(os.path.join(output_location, file_name),
                                   'w') as data_file:
+                            yaml.add_representer(str, str_presenter)
                             yaml.dump(
                                 {"independent_variables":
                                     self.cleanup_data_yaml(
