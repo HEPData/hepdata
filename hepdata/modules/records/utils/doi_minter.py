@@ -1,7 +1,7 @@
 import os
 
 from celery import shared_task
-from flask import render_template
+from flask import render_template, current_app
 from invenio_db import db
 from invenio_pidstore.errors import PIDInvalidAction, PIDDoesNotExistError
 from invenio_pidstore.models import PersistentIdentifier
@@ -74,7 +74,7 @@ def generate_doi_for_data_submission(data_submission_id, version):
 
 def reserve_doi_for_hepsubmission(hepsubmission):
     base_doi = "{0}/hepdata.{1}".format(
-        TEST_DOI_PREFIX, hepsubmission.publication_recid)
+        current_app.config.get('DOI_PREFIX'), hepsubmission.publication_recid)
 
     version = hepsubmission.latest_version
     if version == 0:
@@ -106,7 +106,7 @@ def reserve_dois_for_data_submissions(publication_recid, version):
             version += 1
 
         doi_value = "{0}/hepdata.{1}.v{2}/t{3}".format(
-            TEST_DOI_PREFIX, publication_recid, version, (index + 1))
+            current_app.config.get('DOI_PREFIX'), publication_recid, version, (index + 1))
 
         if data_submission.doi is None:
             create_doi(doi_value)

@@ -134,8 +134,6 @@ RECORDS_REST_ENDPOINTS = dict(
         item_route='/records/<pid_value>',
     ), )
 
-
-
 # DebugToolbar
 DEBUG_TB_ENABLED = False
 DEBUG_TB_INTERCEPT_REDIRECTS = False
@@ -144,8 +142,10 @@ DEBUG_TB_INTERCEPT_REDIRECTS = False
 # http://datacite.readthedocs.org/en/latest/
 
 HEPDATA_DOI_PREFIX = "10.18423"
-SITE_URL = "https://www.hepdata.net"
 TEST_DOI_PREFIX = "10.5072"
+SITE_URL = "https://www.hepdata.net"
+
+DOI_PREFIX = TEST_DOI_PREFIX
 
 PIDSTORE_DATACITE_USERNAME = "CERN.HEPDATA"
 PIDSTORE_DATACITE_PASSWORD = ""
@@ -162,7 +162,6 @@ OAUTH_TOKEN = ""
 OAUTH_SECRET = ""
 CONSUMER_KEY = ""
 CONSUMER_SECRET = ""
-
 
 USE_TWITTER = True
 TWITTER_HANDLE_MAPPINGS = {

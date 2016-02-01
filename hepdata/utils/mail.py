@@ -6,8 +6,6 @@ from celery import shared_task
 from flask import current_app
 from flask.ext.celeryext import create_celery_app
 
-from hepdata import config
-
 
 def create_send_email_task(destination, subject, message):
     """
