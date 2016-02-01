@@ -28,16 +28,22 @@
                     </form>
                 </div>
             {% endblock %}
+
             <ul>
-                {%- if not current_user.is_guest %}
+                {%- if current_user.is_authenticated %}
                     {% if user_is_coordinator_or_admin %}
-                        <li><a href="/submit">
-                            <span class="fa fa-arrow-up"></span> Submit</a>
+                        <li>
+                            <a href="/submit">
+                                <span class="fa fa-arrow-up"></span>
+                                Submit</a>
                         </li>
                     {% endif %}
                     <li><a href="/record/sandbox"><span
-                            class="fa fa-cube"></span> Sandbox</a></li>
+                            class="fa fa-cube"></span> Sandbox</a>
+                    </li>
                 {%- endif %}
+
+
 
                 <li><a href="/submission"><span
                         class="fa fa-life-ring"></span> Help</a></li>

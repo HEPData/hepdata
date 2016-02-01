@@ -6,12 +6,16 @@
 
 
 {%- block additional_assets %}
+    <style>
+        .top-search-form {
+            display: none;
+        }
+    </style>
     {%- assets "hepdata_search_css" %}
         <link href="{{ ASSET_URL }}" rel="stylesheet">
     {%- endassets %}
 
 {%- endblock additional_assets %}
-
 
 
 {% block page_body %}
