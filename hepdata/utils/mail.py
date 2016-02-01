@@ -45,7 +45,7 @@ def send_email(destination, subject, message):
 def connect():
     smtp = SMTP()
     smtp.connect(config.MAIL_SERVER, config.MAIL_PORT)
-    if not config.SMTP_NO_PASSWORD:
+    if not current_app.config['SMTP_NO_PASSWORD']:
         smtp.login(config.MAIL_DEFAULT_SENDER, config.MAIL_PASSWORD)
 
     return smtp
