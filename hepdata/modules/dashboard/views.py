@@ -46,8 +46,11 @@ def add_user_to_metadata(type, user_info, record_id, submissions):
 
 def create_record_for_dashboard(record_id, submissions, primary_uploader=None,
                                 primary_reviewer=None, coordinator=None,
-                                user_role="coordinator",
+                                user_role=None,
                                 status="todo"):
+    if user_role is None:
+        user_role = ["coordinator"]
+
     publication_record = get_record_by_id(int(record_id))
 
     if publication_record is not None:
@@ -58,7 +61,7 @@ def create_record_for_dashboard(record_id, submissions, primary_uploader=None,
 
             submissions[record_id] = {}
             submissions[record_id]["metadata"] = {"recid": record_id,
-                                                  "role": [user_role],
+                                                  "role": user_role,
                                                   "start_date": publication_record.created}
 
             submissions[record_id]["metadata"][
@@ -127,7 +130,7 @@ def process_user_record_results(type, query_results, submissions):
 
                 create_record_for_dashboard(str(record.publication_recid),
                                             submissions,
-                                            user_role=type)
+                                            user_role=[type])
 
                 if allow_record_count_updates:
                     submissions[str(record.publication_recid)]["stats"][
@@ -136,7 +139,7 @@ def process_user_record_results(type, query_results, submissions):
                 count += 1
         else:
             create_record_for_dashboard(str(submission.publication_recid),
-                                        submissions, user_role=type)
+                                        submissions, user_role=[type])
 
 
 def prepare_submissions(current_user):
@@ -163,16 +166,20 @@ def prepare_submissions(current_user):
     else:
         # we just want to pick out people with access to particular records,
         # i.e. submissions for which they are primary reviewers.
+
         participant_records = SubmissionParticipant.query.filter_by(
-            user_account=current_user.id,
+            user_account=int(current_user.get_id()),
             status='primary').all()
+
         for participant_record in participant_records:
             hepdata_submission_records = HEPSubmission.query.filter(
-                or_(HEPSubmission.publication_recid ==
-                    participant_record.publication_recid,
-                    HEPSubmission.coordinator == current_user.id),
+                HEPSubmission.publication_recid == participant_record.publication_recid,
                 and_(HEPSubmission.overall_status != 'finished',
                      HEPSubmission.overall_status != 'sandbox')).all()
+
+        coordinator_submissions = HEPSubmission.query.filter(
+            HEPSubmission.coordinator == int(current_user.get_id())).all()
+        hepdata_submission_records += coordinator_submissions
 
     for hepdata_submission in hepdata_submission_records:
 
@@ -183,13 +190,17 @@ def prepare_submissions(current_user):
             coordinator = User.query.get(hepdata_submission.coordinator)
 
             if hepdata_submission.participants:
+                current_user_roles = []
+
                 for participant in hepdata_submission.participants:
-                    if participant.status == 'primary' \
-                        and participant.role == "uploader":
+
+                    if int(current_user.get_id()) == participant.user_account:
+                        current_user_roles.append(participant.role)
+
+                    if participant.status == 'primary' and participant.role == "uploader":
                         primary_uploader = {'full_name': participant.full_name,
                                             'email': participant.email}
-                    if participant.status == 'primary' \
-                        and participant.role == "reviewer":
+                    if participant.status == 'primary' and participant.role == "reviewer":
                         primary_reviewer = {'full_name': participant.full_name,
                                             'email': participant.email}
 
@@ -198,6 +209,7 @@ def prepare_submissions(current_user):
                     primary_uploader=primary_uploader,
                     primary_reviewer=primary_reviewer,
                     coordinator=coordinator,
+                    user_role=current_user_roles,
                     status=hepdata_submission.overall_status)
             else:
                 create_record_for_dashboard(
@@ -234,10 +246,6 @@ def dashboard():
     submission_meta = []
     submission_stats = []
 
-    filters = {
-        "progress": {"todo": 0, "attention": 0, "passed": 0, "finished": 0},
-        "role": {"coordinator": 0, "uploader": 0, "reviewer": 0}}
-
     for record_id in submissions:
         stats = []
 
@@ -272,18 +280,11 @@ def dashboard():
         submissions[record_id]["metadata"]["review_status"] = review_status
         submissions[record_id]["metadata"]["review_flag"] = review_flag
 
-        # update the filters
-        filters["progress"][
-            submissions[record_id]["metadata"]["review_flag"]] += 1
-        for role in submissions[record_id]["metadata"]["role"]:
-            filters["role"][role] += 1
-
         submission_meta.append(submissions[record_id]["metadata"])
 
     ctx = {'user_is_admin': has_role(current_user, 'admin'),
            "submissions": submission_meta,
-           "submission_stats": json.dumps(submission_stats),
-           "filters": filters}
+           "submission_stats": json.dumps(submission_stats)}
 
     return render_template('hepdata_dashboard/dashboard.html', ctx=ctx)
 

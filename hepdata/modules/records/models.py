@@ -259,7 +259,7 @@ class RecordVersionCommitMessage(db.Model):
         db.Integer, primary_key=True,
         nullable=False, autoincrement=True)
 
-    recid = db.Column(db.Integer, db.ForeignKey("datasubmission.id"))
+    recid = db.Column(db.Integer, db.ForeignKey("hepsubmission.publication_recid"))
     version = db.Column(db.Integer, default=1)
     creation_date = db.Column(
         db.DateTime, nullable=False, default=func.now(), index=True)

@@ -155,11 +155,12 @@
 
                         <div class="{% if not user_is_admin %}user-submission-role{% else %}role-admin-view{% endif %}">
                             {% if not ctx.user_is_admin and not submission.show_coord_view %}
-                                <div align="center">
+                                <div align="center" style="padding-bottom: 100px">
                                     {% for role in submission.role %}
                                         <span class="submission-{{ role }}"
                                               style="margin-left: 3px">
-                                    <span class="fa fa-{% if role == 'coordinator' %}gavel {% elif role == 'reviewer' %}checks{% else %}upload{% endif %}"
+
+                                    <span class="fa fa-{% if role == 'coordinator' %}gavel {% elif role == 'reviewer' %}check{% else %}upload{% endif %}"
                                           style="padding-right: 5px;"></span>{{ role }}</span>
                                     {% endfor %}
                                 </div>

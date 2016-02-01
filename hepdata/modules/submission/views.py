@@ -103,6 +103,6 @@ def send_cookie_email(submission_participant,
         invite_token=submission_participant.invitation_cookie)
 
     create_send_email_task(submission_participant.email,
-               "[HEPData] Invitation to {0} Record {1} on HEPData".format(
+               "[HEPData] Invitation to be a {0} of record {1} in HEPData".format(
                    submission_participant.role,
                    submission_participant.publication_recid), message_body)

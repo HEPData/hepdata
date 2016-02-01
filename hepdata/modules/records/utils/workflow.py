@@ -1,8 +1,6 @@
 from datetime import datetime
 import uuid
 
-from celery import shared_task
-from flask.ext.mail import Message
 from flask import render_template
 from invenio_pidstore.minters import recid_minter
 from invenio_records import Record
@@ -11,7 +9,7 @@ from hepdata.modules.records.models import SubmissionParticipant, \
 from invenio_db import db
 
 from hepdata.modules.records.utils.common import get_record_by_id
-from hepdata.utils.mail import send_email, create_send_email_task
+from hepdata.utils.mail import create_send_email_task
 
 __author__ = 'eamonnmaguire'
 
