@@ -77,7 +77,7 @@
                             <span class="text"
                                   id="{{ submission.recid }}-status">{{ submission.review_status }}</span>
 
-                            {% if ctx.user_is_admin %}
+                            {% if ctx.user_is_admin or submission.show_coord_view%}
 
                                 {% if submission.reviewer_message %}
                                     <span class="fa fa-comment pull-right"
@@ -154,14 +154,13 @@
                         <div class="clearfix"></div>
 
                         <div class="{% if not user_is_admin %}user-submission-role{% else %}role-admin-view{% endif %}">
-                            {% if not ctx.user_is_admin %}
+                            {% if not ctx.user_is_admin and not submission.show_coord_view %}
                                 <div align="center">
                                     {% for role in submission.role %}
                                         <span class="submission-{{ role }}"
                                               style="margin-left: 3px">
-                                <span class="fa fa-{% if role == 'coordinator' %}gavel {% elif role == 'reviewer' %}checks{% else %}upload{% endif %}"
-                                      style="padding-right: 5px;"></span>{{ role }}
-                            </span>
+                                    <span class="fa fa-{% if role == 'coordinator' %}gavel {% elif role == 'reviewer' %}checks{% else %}upload{% endif %}"
+                                          style="padding-right: 5px;"></span>{{ role }}</span>
                                     {% endfor %}
                                 </div>
                             {% else %}
@@ -215,7 +214,7 @@
                                         complete
                                     </div>
                                 {% else %}
-                                    {% if ctx.user_is_admin %}
+                                    {% if ctx.user_is_admin or submission.show_coord_view %}
 
                                         {% if submission.requires_inspire_id %}
                                             <button class="btn btn-primary inspire-btn"

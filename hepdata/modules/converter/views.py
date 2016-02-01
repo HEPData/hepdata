@@ -110,7 +110,7 @@ def download_submission(recid, version, file_format):
     if not submission:
         return display_error(
             title="No submission found",
-            description="A submission with ID " + recid + " does not exist"
+            description="A submission with ID {0} does not exist".format(recid)
         )
 
     if version > submission.latest_version or version == -1:

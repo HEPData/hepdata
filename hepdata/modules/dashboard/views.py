@@ -2,7 +2,7 @@ from __future__ import absolute_import, print_function
 from collections import OrderedDict
 from datetime import datetime
 import json
-from operator import or_
+from operator import or_, and_
 
 from flask.ext.celeryext import create_celery_app
 from flask.ext.login import login_required, current_user
@@ -77,7 +77,7 @@ def create_record_for_dashboard(record_id, submissions, primary_uploader=None,
                     'id': coordinator.id, 'name': coordinator.email,
                     'email': coordinator.email}
                 submissions[record_id]["metadata"][
-                    "show_coord_view"] = current_user.get_id() == coordinator.id
+                    "show_coord_view"] = int(current_user.get_id()) == coordinator.id
             else:
                 submissions[record_id]["metadata"]["coordinator"] = {
                     'name': 'No coordinator'}
@@ -89,8 +89,7 @@ def create_record_for_dashboard(record_id, submissions, primary_uploader=None,
                 submissions[record_id]["metadata"][
                     "title"] = "Submission in Progress"
 
-            if "inspire_id" not in publication_record \
-                or publication_record["inspire_id"] == None:
+            if "inspire_id" not in publication_record or publication_record["inspire_id"] is None:
                 submissions[record_id]["metadata"][
                     "requires_inspire_id"] = True
         else:
@@ -172,9 +171,8 @@ def prepare_submissions(current_user):
                 or_(HEPSubmission.publication_recid ==
                     participant_record.publication_recid,
                     HEPSubmission.coordinator == current_user.id),
-                or_(HEPSubmission.overall_status == 'todo',
-                    HEPSubmission.overall_status == 'attention',
-                    HEPSubmission.overall_status == 'passed')).all()
+                and_(HEPSubmission.overall_status != 'finished',
+                     HEPSubmission.overall_status != 'sandbox')).all()
 
     for hepdata_submission in hepdata_submission_records:
 
@@ -404,7 +402,7 @@ def delete_submission(recid):
     :param recid:
     :return:
     """
-    if has_role(current_user, 'admin'):
+    if has_role(current_user, 'admin') or has_role(current_user, 'coordinator'):
         unload_submission(recid)
         return json.dumps({"success": True,
                            "recid": recid,
@@ -607,8 +605,6 @@ def finalise_datasubmission(current_time, existing_submissions,
         db.session.add(data_review)
 
     db.session.add(submission)
-
-
 
 
 def create_data_endpoints(data_id, info_dict):
