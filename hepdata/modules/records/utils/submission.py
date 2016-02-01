@@ -1,7 +1,31 @@
+# -*- coding: utf-8 -*-
+#
+# This file is part of HEPData.
+# Copyright (C) 2015 CERN.
+#
+# HEPData is free software; you can redistribute it
+# and/or modify it under the terms of the GNU General Public License as
+# published by the Free Software Foundation; either version 2 of the
+# License, or (at your option) any later version.
+#
+# HEPData is distributed in the hope that it will be
+# useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with HEPData; if not, write to the
+# Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston,
+# MA 02111-1307, USA.
+#
+# In applying this license, CERN does not
+# waive the privileges and immunities granted to it by virtue of its status
+# as an Intergovernmental Organization or submit itself to any jurisdiction.
 import uuid
 import zipfile
 from datetime import datetime
 from elasticsearch import NotFoundError
+from flask import current_app
 from hepdata_validator.data_file_validator import DataFileValidator
 from hepdata_validator.submission_file_validator import \
     SubmissionFileValidator
@@ -11,7 +35,7 @@ from invenio_records import Record
 import os
 from sqlalchemy.orm.exc import NoResultFound
 import yaml
-from hepdata.config import CFG_DATA_TYPE, CFG_PUB_TYPE, CFG_DATADIR
+from hepdata.config import CFG_DATA_TYPE, CFG_PUB_TYPE
 from hepdata.ext.elasticsearch.api import get_records_matching_field, \
     delete_item_from_index
 from hepdata.modules.records.models import DataSubmission, DataReview, \
@@ -366,7 +390,6 @@ def process_submission_directory(basepath, submission_file_path, recid):
                     added_file_names.append(yaml_document["name"])
 
                     if existing_datasubmission_query.count() == 0:
-
                         datasubmission = DataSubmission(
                             publication_recid=recid,
                             name=encode_string(yaml_document["name"]),
@@ -422,11 +445,11 @@ def process_submission_directory(basepath, submission_file_path, recid):
 
 
 def package_submission(basepath, recid, hep_submission_obj):
-    if not os.path.exists(os.path.join(CFG_DATADIR, str(recid))):
-        os.makedirs(os.path.join(CFG_DATADIR, str(recid)))
+    if not os.path.exists(os.path.join(current_app.config['CFG_DATADIR'], str(recid))):
+        os.makedirs(os.path.join(current_app.config['CFG_DATADIR'], str(recid)))
 
     zip_location = os.path.join(
-        CFG_DATADIR, str(recid),
+        current_app.config['CFG_DATADIR'], str(recid),
         SUBMISSION_FILE_NAME_PATTERN
             .format(recid, hep_submission_obj.latest_version + 1))
     if os.path.exists(zip_location):

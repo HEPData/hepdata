@@ -21,7 +21,7 @@ import tarfile
 import os
 
 from flask import Blueprint, send_file, render_template, \
-    request
+    request, current_app
 from shutil import move
 import time
 from werkzeug.utils import secure_filename
@@ -30,7 +30,6 @@ from hepdata.config import CFG_CONVERTER_URL, CFG_SUPPORTED_FORMATS
 
 from hepdata_converter_ws_client import convert
 from invenio_db import db
-from hepdata.config import CFG_DATADIR, CFG_TMPDIR
 from hepdata.modules.converter import convert_zip_archive
 from hepdata.modules.records.models import HEPSubmission, DataResource, DataSubmission
 from hepdata.modules.records.utils.submission import SUBMISSION_FILE_NAME_PATTERN
@@ -66,7 +65,7 @@ def convert_endpoint():
 
     filename = secure_filename(fileobject.filename)
     timestamp = str(int(round(time.time())))
-    input_archive = os.path.join(CFG_TMPDIR, timestamp + '.zip')
+    input_archive = os.path.join(current_app.config['CFG_TMPDIR'], timestamp + '.zip')
     fileobject.save(input_archive)
 
     options = {
@@ -74,7 +73,7 @@ def convert_endpoint():
         'output_format': output_format,
         'filename': filename[:-4],
     }
-    output_file = os.path.join(CFG_TMPDIR, timestamp + '.tar.gz')
+    output_file = os.path.join(current_app.config['CFG_TMPDIR'], timestamp + '.tar.gz')
     conversion_result = convert_zip_archive(input_archive, output_file, options)
 
     os.remove(input_archive)
@@ -118,7 +117,7 @@ def download_submission(recid, version, file_format):
         version = submission.latest_version
 
     output_file = str(recid) + '-' + str(version) + '-' + file_format + '.tar.gz'
-    output_path = os.path.join(CFG_TMPDIR, output_file)
+    output_path = os.path.join(current_app.config['CFG_TMPDIR'], output_file)
 
     if os.path.exists(output_path):
         return send_file(
@@ -132,7 +131,7 @@ def download_submission(recid, version, file_format):
         'filename': str(recid) + '-' + str(version) + '-' + file_format,
     }
 
-    path = os.path.join(CFG_DATADIR, str(recid))
+    path = os.path.join(current_app.config['CFG_DATADIR'], str(recid))
     data_filename = SUBMISSION_FILE_NAME_PATTERN.format(recid, version)
     data_filepath = os.path.join(path, data_filename)
 
@@ -154,7 +153,7 @@ def download_datatable(data_id, file_format):
     record_path, table_name = os.path.split(datasub.file_location)
 
     filename = str(data_id) + '-' + file_format
-    output_path = os.path.join(CFG_TMPDIR, filename)
+    output_path = os.path.join(current_app.config['CFG_TMPDIR'], filename)
     output_tar = output_path + '.tar.gz'
 
     if os.path.exists(output_tar):

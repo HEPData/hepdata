@@ -1,5 +1,6 @@
 import os
-from hepdata.config import CFG_DATADIR
+
+from flask import current_app
 
 __author__ = 'eamonnmaguire'
 
@@ -11,7 +12,7 @@ def download_resource_file(recid, resource_path):
     """
     base_url = "http://hepdata.cedar.ac.uk/{}"
 
-    output_location = os.path.join(CFG_DATADIR, str(recid), 'resources')
+    output_location = os.path.join(current_app.config['CFG_DATADIR'], str(recid), 'resources')
     print output_location
 
     if not os.path.exists(output_location):

@@ -1,3 +1,27 @@
+# -*- coding: utf-8 -*-
+#
+# This file is part of HEPData.
+# Copyright (C) 2015 CERN.
+#
+# HEPData is free software; you can redistribute it
+# and/or modify it under the terms of the GNU General Public License as
+# published by the Free Software Foundation; either version 2 of the
+# License, or (at your option) any later version.
+#
+# HEPData is distributed in the hope that it will be
+# useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with HEPData; if not, write to the
+# Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston,
+# MA 02111-1307, USA.
+#
+# In applying this license, CERN does not
+# waive the privileges and immunities granted to it by virtue of its status
+# as an Intergovernmental Organization or submit itself to any jurisdiction.
+
 import socket
 from urllib2 import HTTPError
 import zipfile
@@ -7,7 +31,6 @@ import os
 import shutil
 import yaml
 from yaml.scanner import ScannerError
-from hepdata.config import CFG_DATADIR, CFG_TMPDIR
 
 from hepdata.modules.inspire_api.views import get_inspire_record_information
 from hepdata.modules.dashboard.views import do_finalise
@@ -84,13 +107,13 @@ class Migrator(object):
         file_location = self.download_file(inspire_id)
         if file_location:
 
-            self.split_files(file_location, os.path.join(CFG_DATADIR, inspire_id),
-                             os.path.join(CFG_DATADIR, inspire_id + ".zip"))
+            self.split_files(file_location, os.path.join(current_app.config['CFG_DATADIR'], inspire_id),
+                             os.path.join(current_app.config['CFG_DATADIR'], inspire_id + ".zip"))
 
             record_information = self.retrieve_publication_information(inspire_id)
             record_information = create_record(record_information)
 
-            output_location = os.path.join(CFG_DATADIR, inspire_id)
+            output_location = os.path.join(current_app.config['CFG_DATADIR'], inspire_id)
 
             try:
                 recid = self.load_submission(
@@ -120,7 +143,7 @@ class Migrator(object):
             yaml = response.read()
             # save to tmp file
 
-            tmp_file = tempfile.NamedTemporaryFile(dir=CFG_TMPDIR,
+            tmp_file = tempfile.NamedTemporaryFile(dir=current_app.config['CFG_TMPDIR'],
                                                    delete=False)
             tmp_file.write(yaml)
             tmp_file.close()
@@ -161,9 +184,8 @@ class Migrator(object):
                       'w') as submission_yaml:
                 for document in file_documents:
                     if "record_ids" in document:
-                        self.write_submission_yaml_block(document,
-                                                         submission_yaml)
-
+                        self.write_submission_yaml_block(
+                            document, submission_yaml)
                     else:
                         file_name = document["name"].replace(' ', '') + ".yaml"
                         document["data_file"] = file_name

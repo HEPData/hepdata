@@ -32,7 +32,7 @@ import os
 import zipfile
 from flask.ext.login import login_required, current_user
 from flask import Blueprint, redirect, request, render_template, Response, \
-    jsonify, send_from_directory, send_file
+    jsonify, send_from_directory, send_file, current_app
 from invenio_accounts.models import User
 from invenio_db import db
 import jsonpatch
@@ -40,7 +40,7 @@ from sqlalchemy.orm.exc import NoResultFound
 import time
 from werkzeug.utils import secure_filename
 import yaml
-from hepdata.config import CFG_PUB_TYPE, CFG_DATA_TYPE, CFG_DATADIR
+from hepdata.config import CFG_PUB_TYPE, CFG_DATA_TYPE
 from hepdata.ext.elasticsearch.api import get_records_matching_field, \
     get_record, get_count_for_collection, get_n_latest_records
 from hepdata.modules.converter import convert_oldhepdata_to_yaml
@@ -709,15 +709,15 @@ def process_payload(recid, file, redirect_url, send_email=True):
 def process_zip_archive(file, id):
     filename = secure_filename(file.filename)
     time_stamp = str(int(round(time.time())))
-    if not os.path.exists(os.path.join(CFG_DATADIR, str(id), time_stamp)):
-        os.makedirs(os.path.join(CFG_DATADIR, str(id), time_stamp))
-    file_path = os.path.join(CFG_DATADIR, str(id), time_stamp, filename)
+    if not os.path.exists(os.path.join(current_app.config['CFG_DATADIR'], str(id), time_stamp)):
+        os.makedirs(os.path.join(current_app.config['CFG_DATADIR'], str(id), time_stamp))
+    file_path = os.path.join(current_app.config['CFG_DATADIR'], str(id), time_stamp, filename)
     file.save(file_path)
     # unzip
 
     zipped_submission = zipfile.ZipFile(file_path)
     zipped_submission.printdir()
-    unzipped_path = os.path.join(CFG_DATADIR,
+    unzipped_path = os.path.join(current_app.config['CFG_DATADIR'],
                                  str(id),
                                  time_stamp,
                                  remove_file_extension(filename))
@@ -742,7 +742,7 @@ def process_zip_archive(file, id):
 def check_and_convert_from_oldhepdata(input_directory, id, timestamp):
     """ Check if the input directory contains a .oldhepdata file
     and convert it to YAML if it happens. """
-    converted_path = os.path.join(CFG_DATADIR, str(id), timestamp, 'yaml')
+    converted_path = os.path.join(current_app.config['CFG_DATADIR'], str(id), timestamp, 'yaml')
     oldhepdata_found = find_file_in_directory(
         input_directory,
         lambda x: x.endswith('.oldhepdata'),

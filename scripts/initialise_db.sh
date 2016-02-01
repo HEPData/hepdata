@@ -4,15 +4,15 @@ hepdata db init
 hepdata db create
 
 # Now create the roles
-hepdata roles create -n coordinator
-hepdata roles create -n admin
+hepdata roles create coordinator
+hepdata roles create admin
 
 # Next, create the users
-hepdata users create -e eamonnmag@gmail.com --password hello1 -a
+hepdata users create eamonnmag@gmail.com --password hello1 -a
 
 # Finally, add the roles to the user
-hepdata roles add -u eamonnmag@gmail.com -r coordinator
-hepdata roles add -u eamonnmag@gmail.com -r admin
+hepdata roles add eamonnmag@gmail.com coordinator
+hepdata roles add eamonnmag@gmail.com admin
 
 # now populate the database with some records. NOTE:
 # Celery needs to be running.
