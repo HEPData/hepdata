@@ -104,7 +104,11 @@
                                                 <p class="truncated-record-abstract"
                                                    itemprop="description"
                                                    style="color: #7F8C8D">
+                                                    {% if datatable.abstract != '.' %}
                                                     {{ datatable.abstract }}
+                                                    {% else %}
+                                                        No description provided.
+                                                    {% endif %}
                                                 </p>
                                             </div>
                             <span class="hidden" itemscope

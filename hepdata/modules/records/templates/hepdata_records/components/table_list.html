@@ -58,10 +58,13 @@
                         <p>{{ table.doi }}</p>
                     {% endif %}
 
-                    <p itemprop="description">{{ table.description }}</p>
-                <span class="hidden" itemscope itemprop="distribution" itemtype="http://schema.org/DataDownload"><span
-                        itemprop="contentUrl">https://hepdata.net/record/data/{{ table.id }}</span><span
-                        itemprop="encodingFormat">yaml</span></span>
+                    {% if table.description != '.' %}
+                        <p itemprop="description">{{ table.description }}</p>
+                    {% endif %}
+                    <span class="hidden" itemscope itemprop="distribution"
+                          itemtype="http://schema.org/DataDownload"><span
+                            itemprop="contentUrl">https://hepdata.net/record/data/{{ table.id }}</span><span
+                            itemprop="encodingFormat">yaml</span></span>
                 <span class="hidden" itemscope itemprop="distribution" itemtype="http://schema.org/DataDownload"><span
                         itemprop="contentUrl">https://hepdata.net/record/data/{{ table.id }}/csv</span><span
                         itemprop="encodingFormat">csv</span></span>

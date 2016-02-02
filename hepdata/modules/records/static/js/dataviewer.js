@@ -331,7 +331,8 @@ HEPDATA.table_renderer = {
 
 
         $("#table_name").html(table_data.name);
-        $("#table_description").html(table_data.description.trim());
+
+        $("#table_description").html((table_data.description.indexOf('.') == 0) ? '' : table_data.description.trim());
 
         HEPDATA.table_renderer.render_keywords(table_data.keywords, "#table_keywords");
 
