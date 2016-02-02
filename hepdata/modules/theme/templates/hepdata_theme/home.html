@@ -180,7 +180,9 @@
                             record_html_block += '<span class="journal"> ' + data[record]['journal'] + '</span>';
 
                         record_html_block += '<span class="date pull-right" style="margin-left: 10px"> Updated on ' + data[record]['last_updated'] + '</span>';
-                        record_html_block += '<span class="date pull-right"> Published on ' + data[record]['creation_date'] + '</span></div>';
+                        if (data[record]['creation_date'] != null) {
+                            record_html_block += '<span class="date pull-right"> Published on ' + data[record]['creation_date'] + '</span></div>';
+                        }
 
                         $("#latest_records").append(record_html_block);
                         $("#latest_records").append('<div class="clearfix"></div>');
