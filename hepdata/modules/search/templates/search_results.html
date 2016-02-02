@@ -105,7 +105,7 @@
                                                    itemprop="description"
                                                    style="color: #7F8C8D">
                                                     {% if datatable.abstract != '.' %}
-                                                    {{ datatable.abstract }}
+                                                        {{ datatable.abstract }}
                                                     {% else %}
                                                         No description provided.
                                                     {% endif %}
@@ -129,8 +129,7 @@
 
                                 {% if record.data|length > max_datatables %}
                                     <a class="data-more"
-                                       onclick="show_more_datatables({{ pub_index }},
-                                               {{ show_records_number }})">
+                                       onclick="show_more_datatables({{ pub_index }},{{ show_records_number }})">
                                         More…
                                     </a>
                                 {% endif %}

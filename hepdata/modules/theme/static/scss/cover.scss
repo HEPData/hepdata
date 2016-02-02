@@ -37,7 +37,6 @@ body.home-page {
   background-color: white;
 }
 
-
 /* Extra markup and styles for table-esque vertical and horizontal centering */
 .site-wrapper {
   width: 100%;
@@ -257,6 +256,33 @@ svg:not(:root) {
   overflow-y: auto;
 }
 
+#beta_alert {
+  background-color: #E1CEE8;
+  border: none;
+  color: #2C3E50
+}
+
+#home_top_bar {
+  background-color: transparent;
+  width: 100%;
+  top: 56px;
+}
+
+@media (max-width: 600px) {
+  #latest_records_section, #latest_records, #beta_alert {
+    display: none;
+  }
+
+  #home_top_bar {
+    top: 0;
+  }
+
+  .home-page-footer {
+    height: 80px;
+  }
+
+}
+
 #latest_records .latest-record {
   font-size: .8em;
   text-align: left;
@@ -292,20 +318,20 @@ svg:not(:root) {
 }
 
 .main-search-form input {
-    background-color: #ECF0F1;
-    width: 240px;
-    border-radius: 4px 0 0 4px;
+  background-color: #ECF0F1;
+  width: 240px;
+  border-radius: 4px 0 0 4px;
 }
 
 .main-search-form .submit {
-    font-size: 1em;
-    padding: 6px 15px;
-    margin-left: -5px;
+  font-size: 1em;
+  padding: 6px 15px;
+  margin-left: -5px;
   color: white;
 }
 
 .search-examples {
-    padding-top: 10px;
-    font-size: .9em;
-    color: #7F8C8D;
+  padding-top: 10px;
+  font-size: .9em;
+  color: #7F8C8D;
 }
