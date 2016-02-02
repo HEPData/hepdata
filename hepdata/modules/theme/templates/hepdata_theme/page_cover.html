@@ -32,15 +32,20 @@
         .container {
             margin-top: 0;
         }
-
-
+    body {
+        height: 100%;
+    }
+        .site-wrapper {
+            background: transparent url('{{ url_for('static', filename='img/account_bg.svg') }}') bottom right no-repeat;
+        }
     </style>
 
     {%- block browserupgrade %}
         <!--[if lt IE 8]>
-  <p class="browserupgrade">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> to improve your experience.</p>
-<![endif]-->
+            <p class="browserupgrade">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> to improve your experience.</p>
+        <![endif]-->
     {%- endblock browserupgrade %}
+
     <div class="site-wrapper">
         {% block page_header %}
             <div class="container">
