@@ -198,6 +198,8 @@ def format_submission(recid, record, version, hepdata_submission,
             ctx['show_upload_widget'] = True
             ctx['show_review_widget'] = False
 
+        ctx['record']['hepdata_doi'] = "{0}.v{1}".format(hepdata_submission.doi, ctx['version'])
+
         ctx['recid'] = recid
         ctx["status"] = hepdata_submission.overall_status
         ctx['record']['data_abstract'] = decode_string(hepdata_submission.data_abstract)

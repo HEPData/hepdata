@@ -35,7 +35,7 @@ mapping = {
                 "type": "string",
                 "index": "not_analyzed"
             },
-            "last_name": {
+            "lasts_name": {
                 "type": "string"
             }
         }
@@ -45,7 +45,7 @@ mapping = {
         "fields": {
             "raw": {
                 "type": "string",
-                "index": "analyzed"
+                "index": "not_analyzed"
             }
         }
     },

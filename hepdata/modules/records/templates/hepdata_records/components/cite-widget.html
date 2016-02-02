@@ -1,0 +1,80 @@
+<div class="modal fade" id="citeModal" tabindex="-1" role="dialog" aria-labelledby="citeModal"
+     aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                        aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="citing">Citing this record</h4>
+            </div>
+
+            <div class="modal-body" id="codeDialogContents" style="padding: 0">
+
+                <div style="background-color: #ecf0f1; padding: 15px; font-size: .9em">
+                    <p>When using this data, please cite the original publication:</p>
+
+                    <div class="well well-small" style="background: white">
+                        {% if ctx.record.collaborations %}
+                            <p><i>The
+                                {% for collaboration in ctx.record.collaborations %}{{ collaboration }}{% endfor %}
+                                collaboration ({{ ctx.record.year }})</i>.</p>
+                        {% else %}
+                            {% for author in ctx.record.authors %}
+                                {{ author.full_name }}{% if loop.index < ctx.record.authors|length %}, {% else %} ({{ ctx.record.year }}){% endif %}
+                            {% endfor %}
+                        {% endif %}
+                        <p>{{ ctx.record.title }}. {{ ctx.record.journal_info }}.</p>
+                        <p><strong>http://dx.doi.org/{{ ctx.record.doi }}</strong></p>
+                    </div>
+
+                    <p>Additionally, you should also cite the <img
+                            src="{{ url_for('static', filename='img/hepdata_logo.svg') }}" height="30"> record:
+                    </p>
+                    <div class="well well-small" style="background: white">
+                        {% if ctx.record.collaborations %}
+                            <p><i>The
+                                {% for collaboration in ctx.record.collaborations %}{{ collaboration }}{% endfor %}
+                                collaboration ({{ ctx.record.year }})</i>.</p>
+                        {% else %}
+                            {% for author in ctx.record.authors %}
+                                {{ author.full_name }}{% if loop.index < ctx.record.authors|length %}, {% else %} ({{ ctx.record.year }}){% endif %}
+                            {% endfor %}
+                        {% endif %}
+                        <p>{{ ctx.record.title }}. HEPData.</p>
+                        <p><strong>http://dx.doi.org/{{ ctx.record.hepdata_doi }}</strong></p>
+                    </div>
+
+                </div>
+
+                <div class="clearfix"></div>
+
+                <div style="padding: 15px">
+                    <p>You can also cite the {{ ctx.data_tables|length }} data table{% if ctx.data_tables|length > 1 %}s{% endif %} individually:</p>
+
+                    <div class="scrollable" style="height: 25vh; font-size: .8em">
+                        {% for table in ctx.data_tables %}
+                            <div class="well well-small">
+                                {% if ctx.record.collaborations %}
+                                    <p><i>The
+                                        {% for collaboration in ctx.record.collaborations %}
+                                            {{ collaboration }}{% endfor %}
+                                        collaboration ({{ ctx.record.year }})</i>.</p>
+                                {% else %}
+                                    {% for author in ctx.record.authors %}
+                                        {{ author.full_name }}{% if loop.index < ctx.record.authors|length %}, {% else %} ({{ ctx.record.year }})
+                                        {% endif %}
+                                    {% endfor %}
+                                {% endif %}
+                                <p>{{ table.name }} of {{ ctx.record.title }}. HEPData.</p>
+                                <p><strong>http://dx.doi.org/{{ table.doi }}</strong></p>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="clearfix"></div>
+            </div>
+        </div>
+    </div>
+</div>
+

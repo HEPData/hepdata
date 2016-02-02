@@ -90,7 +90,7 @@
 .hep_breadcrumbs {
   position: fixed;
   margin-top: 65px;
-  height: 40px;
+  height: 42px;
   width: 100%;
   z-index: 999;
   background-color: $navy;
@@ -99,9 +99,9 @@
 .hep_breadcrumbs ul {
   list-style: none;
   margin: 0;
-  height: 40px;
+  height: 100%;
   -webkit-padding-start: 0px;
-  padding: 0px;
+  padding: 0;
 }
 
 .hep_breadcrumbs ul li {

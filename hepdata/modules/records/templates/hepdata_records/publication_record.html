@@ -59,7 +59,7 @@
                                 class="btn btn-sm btn-primary"
                                 data-toggle="dropdown"
                                 aria-haspopup="true" aria-expanded="false">
-                            Download Submission as
+                            <i class="fa fa-download"></i> Download
                             <span class="caret"></span>
                         </button>
                         {% set download_base_url = "/download/submission/" + ctx.record.recid|string + "/" +
@@ -78,11 +78,19 @@
                         </ul>
                     </div>
 
+                    <div class="cite" style="float: right; margin-left: 15px; margin-top: -4px;">
+                        <button id="dLabel" type="button" data-toggle="modal" data-target="#citeModal"
+                                class="btn btn-sm btn-primary"
+                                aria-haspopup="true" aria-expanded="false">
+                            <i class="fa fa-quote-right"></i> Cite
+                        </button>
+                    </div>
+
                     {% if ctx.access_count %}
                         <span class="stats">
-                    <span class="pull-right"><span class="fa fa-bar-chart-o"
-                                                   style="padding-right: 5px"></span> Accessed {{ ctx.access_count.sum }} times </span>
-                    <span class="pull-right" style="padding-right: 10px">Last updated on {{ ctx.record.last_updated }} </span>
+                    <span class="pull-right"><span class="fa fa-bar-chart-o" style="padding-right: 5px"></span> Accessed {{ ctx.access_count.sum }} times </span>
+                    <span class="pull-right"
+                          style="padding-right: 10px">Last updated on {{ ctx.record.last_updated }} </span>
                 </span>
                     {% endif %}
 
@@ -258,7 +266,7 @@
 
             <div class="upload-area">
                 <div class="root_upload_form" align="center">
-                    <img src="{{ url_for('static', filename='img/icon-upload.svg')}}" width="70">
+                    <img src="{{ url_for('static', filename='img/icon-upload.svg') }}" width="70">
                     <h4>Upload an archive to HEPdata</h4>
 
                     <div class="info">
@@ -306,6 +314,7 @@
 
     {% include 'hepdata_records/components/code-view-widget.html' %}
     {% include 'hepdata_records/components/resources-widget.html' %}
+    {% include 'hepdata_records/components/cite-widget.html' %}
 
 
 {% endblock %}
