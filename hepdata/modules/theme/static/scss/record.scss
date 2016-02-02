@@ -433,13 +433,13 @@
 
   input {
     border: none;
-    background: $lightgrey url('/static/img/icons/icon_filter.svg') no-repeat 4px 4px;
+    background: $lightgrey url('/static/img/icons/icon_filter.svg') no-repeat 4px 9px;
     background-size: 20px;
-    padding: 4px 6px 4px 26px;
+    padding: 10px 11px 10px 26px;
     width: 100%;
     margin-bottom: 10px;
     margin-top: 5px;
-    border-radius: 2px;
+    border-radius: 4px;
   }
 
   ul {
@@ -696,26 +696,40 @@
     list-style: none;
     -webkit-padding-start: 0;
 
-    li {
+    .keyword-item {
       float: left;
       display: inline-block;
-      margin: 1%;
-
+      margin: .5%;
       width: 31%;
+      padding: 5px;
 
       h4 {
         color: $navy;
         font-size: 1.4em;
+        padding-bottom: 5px;
       }
     }
   }
 }
 
+.chip {
+  display: inline-block;
+  height: 24px;
+  font-size: 11px;
+  font-weight: 500;
+  color: rgba(44, 62, 80, 0.8);
+  line-height: 24px;
+  padding: 0 12px;
+  border-radius: 16px;
+  margin-bottom: 2px;
+  margin-right: 2px;
+  background-color: $lightgrey;
+  overflow-x: auto;
+}
 
 .keyword_values {
   max-height: 100px;
   overflow-y: auto;
-
 }
 
 .table {

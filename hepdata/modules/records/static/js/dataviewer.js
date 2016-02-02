@@ -397,20 +397,24 @@ HEPDATA.table_renderer = {
 
 
         var li = d3.select(placement + " ul").append('li')
-          .attr('class', 'keyword-item');
+          .attr('class', 'keyword-item').style('width', function () {
+
+            return (93 / (Object.keys(keywords).length-1)) + "%";
+          });
 
         li.append('h4').text(keyword_key);
         var individual_keyword_value_list = li.append('ul').attr('class', 'keyword_values');
 
-        individual_keyword_value_list.selectAll("li")
-          .data(keyword_items).enter().append('li')
-          .text(function (d) {
-            return d.length > 100 ? d.substring(0, 100) + "..." : d;
-          });
+        var individual_kw = individual_keyword_value_list.selectAll("li")
+          .data(keyword_items).enter().append('li').attr('class', 'chip');
+
+        individual_kw.append('i').attr('class', 'fa fa-tag').style({'margin-right': '5px', 'display': 'inline'});
+        individual_kw.append('span').text(function (d) {
+          return d.length > 100 ? d.substring(0, 100) + "..." : d;
+        });
       }
     }
 
-    $('.keyword-item').popover();
   },
 
   render_qualifiers: function (table_data, placement) {
