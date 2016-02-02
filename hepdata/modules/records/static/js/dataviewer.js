@@ -389,7 +389,6 @@ HEPDATA.table_renderer = {
     var keyword_count = 0;
     for (var keyword_key in keywords) {
       var keyword_values = '';
-      var keyword_values_list = '';
       var count = 0;
       for (var value in keywords[keyword_key]) {
         keyword_values += keywords[keyword_key][value];
@@ -400,7 +399,7 @@ HEPDATA.table_renderer = {
 
       var li = d3.select(placement + " ul").append('li').attr('id', 'keyword_'+keyword_count)
         .attr('class', 'keyword-item')
-        .attr('data-content', keyword_values_list)
+        .attr('data-content', keyword_values)
         .attr('title', keyword_key)
         .attr({'data-toggle': 'popover', 'data-trigger': 'hover', 'data-placement':"bottom"});
 
