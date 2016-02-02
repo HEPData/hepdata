@@ -62,6 +62,8 @@ HEPDATA.switch_table = function (listId, table_requested) {
     {"width": 200, "height": 200}
   );
 
+  $("#direct_data_link").val('http://www.hepdata.net/record/' + HEPDATA.current_record_id + '?version=' + HEPDATA.current_table_version + "&table=" + $('#' + table_requested + " h4").text());
+
   $("#hepdata_table_loader").removeClass("hidden");
   $("#hepdata_table_content").addClass("hidden");
 
@@ -386,27 +388,26 @@ HEPDATA.table_renderer = {
 
   render_keywords: function (keywords, placement) {
     $(placement + " ul").html('');
-    var keyword_count = 0;
     for (var keyword_key in keywords) {
-      var keyword_values = '';
-      var count = 0;
-      for (var value in keywords[keyword_key]) {
-        keyword_values += keywords[keyword_key][value];
-        count += 1;
-        if (count < keywords[keyword_key].length)
-          keyword_values += ','
+      var keyword_items = [];
+      if (keyword_key != 'phrases') {
+        for (var value in keywords[keyword_key]) {
+          keyword_items.push(keywords[keyword_key][value]);
+        }
+
+
+        var li = d3.select(placement + " ul").append('li')
+          .attr('class', 'keyword-item');
+
+        li.append('h4').text(keyword_key);
+        var individual_keyword_value_list = li.append('ul').attr('class', 'keyword_values');
+
+        individual_keyword_value_list.selectAll("li")
+          .data(keyword_items).enter().append('li')
+          .text(function (d) {
+            return d.length > 100 ? d.substring(0, 100) + "..." : d;
+          });
       }
-
-      var li = d3.select(placement + " ul").append('li').attr('id', 'keyword_'+keyword_count)
-        .attr('class', 'keyword-item')
-        .attr('data-content', keyword_values)
-        .attr('title', keyword_key)
-        .attr({'data-toggle': 'popover', 'data-trigger': 'hover', 'data-placement':"bottom"});
-
-      li.append('span').attr('class', 'keyword-name').text(keyword_key);
-      li.append('span').attr('class', 'keyword-value').text(keyword_values.length > 100 ? keyword_values.substring(0, 100) + "..." : keyword_values);
-
-      keyword_count+=1;
     }
 
     $('.keyword-item').popover();

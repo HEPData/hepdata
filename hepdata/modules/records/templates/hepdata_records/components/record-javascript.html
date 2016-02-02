@@ -1,4 +1,5 @@
 <script src="//cdnjs.cloudflare.com/ajax/libs/mathjax/2.5.3/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/clipboard.js/1.5.5/clipboard.min.js"></script>
 
 {%- assets "hepdata_vis_js" %}
     <script src="{{ ASSET_URL }}"></script>
@@ -15,6 +16,8 @@
     });
     MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
     $(document).ready(function () {
+
+        new Clipboard('.copy-btn');
 
         // to preserve the line wrap and the
         var abstract_html = $(".record-abstract-content").html();
@@ -162,5 +165,6 @@
         $("#hepdata_table_detail").css('width', "62%");
         $("#hepdata_tables").css('margin-left', "0px");
     });
+
 
 </script>
