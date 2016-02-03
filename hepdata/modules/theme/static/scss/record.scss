@@ -744,12 +744,19 @@
   display: none;
 }
 
-@media (max-width: 100px) {
+@media (max-width: 1000px) {
 
   .navbar-nav {
     float: left;
     margin: 0;
     padding-top: 13px;
+  }
+}
+
+@media (max-width: 500px) {
+
+  #dLabel {
+    display: none;
   }
 }
 
@@ -808,7 +815,9 @@
   border: none;
   border-radius: 3px;
   box-shadow: none;
-  background-color: $navy-light;
+  background: $navy-light url('/static/img/arrow_down_white.svg') no-repeat 98% center;
+  background-size: 15px;
+
   cursor: pointer;
   color: white;
   font-size: 16px;

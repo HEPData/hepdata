@@ -37,6 +37,12 @@
         #hepdata_table_detail {
             width: 76% !important;
         }
+
+        @media (max-width: 991px) {
+            #hepdata_table_detail {
+                width: 100% !important;
+            }
+        }
     </style>
 
 {%- endblock additional_assets %}
@@ -136,7 +142,8 @@
                                itemtype="http://schema.org/CreativeWork"
                                target="_blank"><span
                                     class="link"><span class="link-type">View paper in Inspire</span></span><span
-                                    class="hidden" itemprop="url">http://inspirehep.net/record/{{ ctx.record.inspire_id }}</span>
+                                    class="hidden"
+                                    itemprop="url">http://inspirehep.net/record/{{ ctx.record.inspire_id }}</span>
                             </a></li>
                         <li>
                             <a href="http://hepdata.cedar.ac.uk/view/ins{{ ctx.record.inspire_id }}"
@@ -144,7 +151,8 @@
                                itemtype="http://schema.org/CreativeWork"
                                target="_blank"><span
                                     class="link"><span class="link-type">View old HepData</span></span><span
-                                    class="hidden" itemprop="url">http://hepdata.cedar.ac.uk/view/ins{{ ctx.record.inspire_id }}</span>
+                                    class="hidden"
+                                    itemprop="url">http://hepdata.cedar.ac.uk/view/ins{{ ctx.record.inspire_id }}</span>
                             </a></li>
 
                         {% if ctx.additional_resources %}
