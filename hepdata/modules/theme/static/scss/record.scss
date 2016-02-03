@@ -574,8 +574,10 @@
       border-radius: 0 3px 3px 0;
       margin-left: 2px;
       padding-top: 3px;
-      font-size: 1em;
+      font-size: .9em;
       vertical-align: middle !important;
+      max-width: 150px;
+      overflow: hidden;
     }
 
     .asym {
