@@ -39,7 +39,7 @@ def create_data_structure(ctx):
               }
 
     optional_keys = ["related_publication", "recid", "keywords",
-                     "control_number", "doi", "creation_date", "year",
+                     "control_number", "doi", "creation_date", "year", "hepdata_doi",
                      "last_updated", "data_endpoints", "collaborations",
                      "journal_info", "uploaders", "reviewers"]
 

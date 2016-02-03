@@ -498,9 +498,10 @@ def do_finalise(recid, publication_record=None, force_finalise=False,
             # If we have a commit message, then we have a record update.
             # We will store the commit message and also update the
             # last_updated flag for the record.
+            record['hepdata_doi'] = hep_submission.doi
+
             if commit_message:
                 record['last_updated'] = current_time
-                record.commit()
 
                 commit_record = RecordVersionCommitMessage(
                     recid=recid,
@@ -510,6 +511,8 @@ def do_finalise(recid, publication_record=None, force_finalise=False,
                 db.session.add(commit_record)
             else:
                 record['last_updated'] = hep_submission.last_updated
+
+            record.commit()
 
             hep_submission.overall_status = "finished"
             hep_submission.latest_version = version
@@ -569,6 +572,7 @@ def finalise_datasubmission(current_time, existing_submissions,
         "title": submission.name,
         "abstract": submission.description,
         "inspire_id": publication_record['inspire_id'],
+        "doi": submission.doi,
         "authors": publication_record['authors'],
         "first_author": publication_record['first_author'],
         "related_publication": submission.publication_recid,
