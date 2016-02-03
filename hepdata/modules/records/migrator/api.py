@@ -305,8 +305,7 @@ class Migrator(object):
             variable_set = []
 
     def cleanup_yaml(self, yaml, type):
-        keys_to_remove = ["dateupdated",
-                          "independent_variables",
+        keys_to_remove = ["independent_variables",
                           "dependent_variables"]
         self.remove_keys(yaml, keys_to_remove)
 

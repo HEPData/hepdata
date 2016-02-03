@@ -178,7 +178,9 @@
                         if (data[record]['journal'])
                             record_html_block += '<span class="journal"> ' + data[record]['journal'] + '</span>';
 
-                        record_html_block += '<span class="date pull-right" style="margin-left: 10px"> Updated on ' + data[record]['last_updated'] + '</span>';
+                        var last_updated_date  = new Date(data[record]['last_updated']);
+
+                        record_html_block += '<span class="date pull-right" style="margin-left: 10px"> Updated on ' + last_updated_date.getFullYear() + '-' + (last_updated_date.getMonth()+1) + "-" + last_updated_date.getDate() + '</span>';
                         if (data[record]['creation_date'] != null) {
                             record_html_block += '<span class="date pull-right"> Published on ' + data[record]['creation_date'] + '</span></div>';
                         }

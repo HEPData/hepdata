@@ -233,6 +233,8 @@ def process_general_submission_info(submission_info_document, recid):
     :return:
     """
 
+    print submission_info_document
+
     if 'comment' in submission_info_document \
         or 'modifications' in submission_info_document \
         or 'record_ids' in submission_info_document:
@@ -256,6 +258,7 @@ def process_general_submission_info(submission_info_document, recid):
             for resource in resources:
                 hepsubmission.references.append(resource)
 
+        print 'hepsubmission.last_updated = {}'.format(hepsubmission.last_updated)
         db.session.add(hepsubmission)
         db.session.commit()
 

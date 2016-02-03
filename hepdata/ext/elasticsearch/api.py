@@ -16,6 +16,8 @@
 # along with HEPData; if not, write to the Free Software Foundation, Inc.,
 # 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
 from collections import defaultdict
+
+from dateutil.parser import parse
 from flask import current_app
 from elasticsearch.exceptions import NotFoundError, RequestError
 from invenio_pidstore.models import RecordIdentifier
@@ -342,7 +344,7 @@ def index_record_ids(record_ids, index=None):
                     last_updated = doc["creation_date"]
                 doc["last_updated"] = last_updated
 
-            print 'last update is {0}'.format(doc["last_updated"])
+            doc["last_updated"] = parse(doc["last_updated"])
 
             result = es.index(index=index,
                               doc_type=CFG_PUB_TYPE,

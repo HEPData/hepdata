@@ -8,9 +8,8 @@ from invenio_pidstore.models import PersistentIdentifier
 
 from invenio_pidstore.providers.datacite import DataCiteProvider
 
-from hepdata.config import TEST_DOI_PREFIX
 from hepdata.modules.records.models import DataSubmission, HEPSubmission, DataResource, License
-from hepdata.modules.records.utils.common import get_record_by_id, encode_string, decode_string
+from hepdata.modules.records.utils.common import get_record_by_id, decode_string
 
 
 @shared_task

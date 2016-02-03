@@ -36,8 +36,6 @@ class QueryBuilder(object):
 
     @staticmethod
     def generate_query_string(query_string='', fields=None):
-        fields = ["_all"] if not fields else fields
-
         if query_string:
             return {
                 "query_string": {
