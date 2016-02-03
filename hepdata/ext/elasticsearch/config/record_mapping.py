@@ -35,7 +35,7 @@ mapping = {
                 "type": "string",
                 "index": "not_analyzed"
             },
-            "lasts_name": {
+            "last_name": {
                 "type": "string"
             }
         }
@@ -58,6 +58,9 @@ mapping = {
         "format": "dateOptionalTime"
     },
     "doi": {
+        "type": "string"
+    },
+    "hepdata_doi": {
         "type": "string"
     },
     "data_keywords": {

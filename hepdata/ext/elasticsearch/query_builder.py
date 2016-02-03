@@ -40,11 +40,9 @@ class QueryBuilder(object):
 
         if query_string:
             return {
-                "multi_match": {
+                "query_string": {
                     "query": query_string,
-                    "type": "cross_fields",
-                    "fuzziness": "AUTO",
-                    "fields": fields
+                    "fuzziness": "AUTO"
                 }
             }
         else:
