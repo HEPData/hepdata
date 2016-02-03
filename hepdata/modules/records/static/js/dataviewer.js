@@ -1043,12 +1043,11 @@ HEPDATA.visualization.histogram = {
 
     HEPDATA.visualization.histogram.x_index = HEPDATA.visualization.histogram.x_index.replace(re_matheq, '');
     HEPDATA.visualization.histogram.x_index = HEPDATA.visualization.histogram.x_index.replace(re_mathspace, '\\;');
-    HEPDATA.visualization.histogram.x_index = "$" + HEPDATA.visualization.histogram.x_index + "$";
 
     svg.append("g").attr("class", "x axis")
       .attr("transform", "translate(0," + (HEPDATA.visualization.histogram.options.height - HEPDATA.visualization.histogram.options.margins.bottom - HEPDATA.visualization.histogram.options.margins.top) + ")")
       .call(HEPDATA.visualization.histogram.x_axis);
-    svg.append("foreignObject")
+    svg.append("text")
       .attr("class", "axis_text")
       .attr("text-anchor", "end")
       .attr("width", HEPDATA.visualization.histogram.options.width).attr("height", 25)
@@ -1057,7 +1056,6 @@ HEPDATA.visualization.histogram = {
       .text(HEPDATA.visualization.histogram.x_index);
 
     svg.append("g").attr("class", "y axis").call(HEPDATA.visualization.histogram.y_axis).attr("transform", "translate(-4,0)");
-
 
     HEPDATA.legends.draw_error_legend("#legend", HEPDATA.visualization.histogram.options.draw_summed_error ? processed_dict["quad_error"] : processed_dict["errors"], HEPDATA.visualization.histogram.options);
 
