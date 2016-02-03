@@ -53,31 +53,6 @@
                 </li>
                 <li class="pull-right">
 
-                    <div class="dropdown"
-                         style="float: right; margin-left: 15px; margin-top: -4px;">
-                        <button id="dLabel" type="button"
-                                class="btn btn-sm btn-primary"
-                                data-toggle="dropdown"
-                                aria-haspopup="true" aria-expanded="false">
-                            <i class="fa fa-download"></i> Download All
-                            <span class="caret"></span>
-                        </button>
-                        {% set download_base_url = "/download/submission/" + ctx.record.recid|string + "/" +
-                    ctx.version|string %}
-                        <ul class="dropdown-menu" aria-labelledby="dLabel"
-                            style="height: auto;">
-
-                            <li><a href="{{ download_base_url }}/yaml"
-                                   id="download_yaml">YAML</a></li>
-                            <li><a href="{{ download_base_url }}/yoda"
-                                   id="download_yoda">YODA</a></li>
-                            <li><a href="{{ download_base_url }}/root"
-                                   id="download_root">ROOT</a></li>
-                            <li><a href="{{ download_base_url }}/csv"
-                                   id="download_csv">CSV</a></li>
-                        </ul>
-                    </div>
-
                     <div class="cite" style="float: right; margin-left: 15px; margin-top: -4px;">
                         <button id="citeLabel" type="button" data-toggle="modal" data-target="#citeModal"
                                 class="btn btn-sm btn-primary"
@@ -88,7 +63,8 @@
 
                     {% if ctx.access_count %}
                         <span class="stats">
-                    <span class="pull-right"><span class="fa fa-bar-chart-o" style="padding-right: 5px"></span> Accessed {{ ctx.access_count.sum }} times </span>
+                    <span class="pull-right"><span class="fa fa-bar-chart-o"
+                                                   style="padding-right: 5px"></span> Accessed {{ ctx.access_count.sum }} times </span>
                     <span class="pull-right"
                           style="padding-right: 10px">Last updated on {{ ctx.record.last_updated }} </span>
                 </span>
@@ -138,6 +114,12 @@
                     {{ ctx.record.journal_info }}
                 </div>
 
+                <div class="record-doi">
+
+                    <a itemprop="citation" href="http://dx.doi.org/{{ ctx.record.hepdata_doi }}" target="_blank">http://dx.doi.org/{{ ctx.record.hepdata_doi }}</a>
+                </div>
+
+
                 <div class="collaborations">
                     {% for collaboration in ctx.record.collaborations %}
                         <a href="/search/?collaboration={{ collaboration }}"
@@ -149,20 +131,12 @@
 
                 <div class="record-links">
                     <ul>
-                        {% if ctx.record.doi %}
-                            <li>
-                                <a href="http://dx.doi.org/{{ ctx.record.doi }}"
-                                   target="_blank"><span class="link">
-                    <span class="link-value">DOI<span class="hidden"
-                                                      itemprop="citation">http://dx.doi.org/{{ ctx.record.doi }}</span></span></a>
-                            </li>
-                        {% endif %}
                         <li>
                             <a href="http://inspirehep.net/record/{{ ctx.record.inspire_id }}"
                                itemprop="citation" itemscope
                                itemtype="http://schema.org/CreativeWork"
                                target="_blank"><span
-                                    class="link"><span class="link-type">View paper in Inspire</span></span><span
+                                    class="link"><span class="link-type">Inspire Record</span></span><span
                                     class="hidden"
                                     itemprop="url">http://inspirehep.net/record/{{ ctx.record.inspire_id }}</span>
                             </a></li>

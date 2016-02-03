@@ -342,6 +342,7 @@ HEPDATA.table_renderer = {
 
 
         $("#table_name").html(table_data.name);
+        $("#table_doi_contents").html('<a href="http://dx.doi.org/' + table_data.doi + '" target="_blank">' + table_data.doi + '</a>');
 
         $("#table_description").html((table_data.description.indexOf('.') == 0) ? '' : table_data.description.trim());
 
@@ -410,7 +411,6 @@ HEPDATA.table_renderer = {
 
         var li = d3.select(placement + " ul").append('li')
           .attr('class', 'keyword-item').style('width', function () {
-
             return (93 / (Object.keys(keywords).length - 1)) + "%";
           });
 
@@ -1049,7 +1049,7 @@ HEPDATA.visualization.histogram = {
       .call(HEPDATA.visualization.histogram.x_axis);
     svg.append("text")
       .attr("class", "axis_text")
-      .attr("text-anchor", "end")
+      .attr("text-anchor", "middle")
       .attr("width", HEPDATA.visualization.histogram.options.width).attr("height", 25)
       .attr("x", HEPDATA.visualization.histogram.options.width / 3)
       .attr("y", HEPDATA.visualization.histogram.options.height - 10)

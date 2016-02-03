@@ -198,7 +198,10 @@ def format_submission(recid, record, version, hepdata_submission,
             ctx['show_upload_widget'] = True
             ctx['show_review_widget'] = False
 
-        ctx['record']['hepdata_doi'] = "{0}.v{1}".format(hepdata_submission.doi, ctx['version'])
+        ctx['record']['hepdata_doi'] = "{0}".format(hepdata_submission.doi)
+        if ctx['version'] > 1:
+            ctx['record']['hepdata_doi'] += ".v{0}".format(ctx['version'])
+
 
         ctx['recid'] = recid
         ctx["status"] = hepdata_submission.overall_status
@@ -343,6 +346,7 @@ def get_table_details(recid, data_recid, version):
             table_contents["name"] = datasub_record.name
             table_contents["title"] = datasub_record.description
             table_contents["keywords"] = datasub_record.keywords
+            table_contents["doi"] = datasub_record.doi
 
         # add associated files to the table contents
         table_contents['associated_files'] = []

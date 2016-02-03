@@ -8,9 +8,15 @@
 .record-journal {
   margin-top: 10px;
   margin-bottom: 10px;
-  font-weight: lighter;
+  font-weight: normal;
   color: $navy-light;
 
+}
+
+.record-doi {
+  a {
+    color: $grey;
+  }
 }
 
 .record-abstract {
@@ -30,9 +36,9 @@
 
   a {
     color: $purple;
-    font-size: 1em;
+    font-size: .9em;
     margin: 2px;
-    font-weight: lighter;
+    font-weight: normal;
   }
 }
 
@@ -429,8 +435,11 @@
   padding: 10px;
   float: left;
   height: 80vh;
-  margin-top: 120px;
+  margin-top: 105px;
 
+  button {
+    margin: 5px 0;
+  }
   input {
     border: none;
     background: $lightgrey url('/static/img/icons/icon_filter.svg') no-repeat 4px 9px;
@@ -442,7 +451,30 @@
     border-radius: 4px;
   }
 
-  ul {
+
+
+  .content {
+    float: left;
+    width: 95%;
+  }
+
+  .arrow {
+    float: right;
+    width: 5%;
+    align-content: center;
+    margin-top: 12px;
+    font-size: 1.2em;
+    color: $concrete;
+  }
+
+  li.active p {
+    color: $navy;
+  }
+
+}
+
+#hep-tables {
+
     -webkit-padding-start: 0px;
     font-size: .8em;
     height: 90%;
@@ -467,25 +499,6 @@
         font-weight: bolder;
       }
     }
-  }
-
-  .content {
-    float: left;
-    width: 95%;
-  }
-
-  .arrow {
-    float: right;
-    width: 5%;
-    align-content: center;
-    margin-top: 12px;
-    font-size: 1.2em;
-    color: $concrete;
-  }
-
-  li.active p {
-    color: $navy;
-  }
 
 }
 
@@ -493,7 +506,7 @@
   display: inline-block;
   width: 63%;
   padding: 20px;
-  padding-top: 120px;
+  padding-top: 105px;
   height: calc(100vh);
   overflow-y: scroll;
 }
@@ -931,11 +944,15 @@ g.node {
     border-left: 1px solid #ccc;
     border-radius: 0;
     padding: 5px 12px;
-    border-bottom: 1px solid #ccc;
   }
 
 }
 
 .toast-success {
   background-color: $purple !important;
+}
+
+#table_doi {
+  font-size: .9em;
+  color: $navy !important;
 }

@@ -144,7 +144,7 @@ def generate_table_structure(table_contents):
     :return: a dictionary encompassing the qualifiers, headers and values
     """
 
-    record = {"name": table_contents["name"],
+    record = {"name": table_contents["name"], "doi": table_contents["doi"],
               "description": table_contents["title"], "qualifiers": {},
               "qualifier_order": [], "headers": [],
               "review": table_contents["review"],
