@@ -30,12 +30,14 @@ from invenio_assets import NpmBundle
 
 css = NpmBundle(
     'scss/styles.scss',
+    'node_modules/toastr/toastr.scss',
     filters='scss, cleancss',
     depends=('scss/*.scss',),
     output='gen/hepdata.%(version)s.css',
     npm={
         "bootstrap-sass": "~3.3.5",
-        "font-awesome": "~4.4.0"
+        "font-awesome": "~4.4.0",
+        "toastr": "~2.1.2"
     }
 )
 
@@ -65,9 +67,11 @@ bootstrap_js = NpmBundle(
     'js/modernizr-custom.js',
     'node_modules/bootstrap/dist/js/bootstrap.min.js',
     'js/lib/bootstrap-filestyle.min.js',
+    'node_modules/toastr/toastr.js',
     filters='jsmin,uglifyjs',
     output="gen/hepdata.%(version)s.js",
     npm={
-        "bootstrap": "~3.3.5"
+        "bootstrap": "~3.3.5",
+        "toastr": "~2.1.2"
     }
 )

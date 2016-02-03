@@ -912,7 +912,7 @@ g.node {
 #data_link_container {
   margin-right: 10px;
   border: 1px solid #ccc;
-  background-color: #ecf0f1;
+  background-color: $lightgrey;
   border-radius: 3px;
   height: 33px;
 
@@ -925,7 +925,14 @@ g.node {
   }
 
   .copy-btn {
-    background: transparent;
+    background: white;
+    border-left: 1px solid #ccc;
+    border-radius: 0;
+    padding: 5px 12px;
+
   }
 }
 
+.toast-success {
+  background-color: $purple !important;
+}

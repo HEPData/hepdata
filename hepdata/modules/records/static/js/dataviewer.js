@@ -8,6 +8,7 @@ HEPDATA.default_errors_to_show = 3;
 HEPDATA.current_record_id = undefined;
 HEPDATA.current_table_id = undefined;
 HEPDATA.current_table_version = undefined;
+HEPDATA.clipboard = undefined;
 
 HEPDATA.current_filters = {
   "text": "",
@@ -62,7 +63,17 @@ HEPDATA.switch_table = function (listId, table_requested) {
     {"width": 200, "height": 200}
   );
 
-  $("#direct_data_link").val('http://www.hepdata.net/record/' + HEPDATA.current_record_id + '?version=' + HEPDATA.current_table_version + "&table=" + $('#' + table_requested + " h4").text());
+  var direct_link = 'http://www.hepdata.net/record/' + HEPDATA.current_record_id + '?version=' + HEPDATA.current_table_version + "&table=" + $('#' + table_requested + " h4").text();
+  $("#direct_data_link").val(direct_link)
+  $(".copy-btn").attr('data-clipboard-text', direct_link);
+  if (HEPDATA.clipboard == undefined) {
+    HEPDATA.clipboard = new Clipboard('.copy-btn');
+    toastr.options.timeOut = 3000;
+    HEPDATA.clipboard.on('success', function (e) {
+      toastr.success($(".copy-btn").attr('data-clipboard-text') + ' copied to clipboard.')
+    })
+  }
+
 
   $("#hepdata_table_loader").removeClass("hidden");
   $("#hepdata_table_content").addClass("hidden");
@@ -400,7 +411,7 @@ HEPDATA.table_renderer = {
         var li = d3.select(placement + " ul").append('li')
           .attr('class', 'keyword-item').style('width', function () {
 
-            return (93 / (Object.keys(keywords).length-1)) + "%";
+            return (93 / (Object.keys(keywords).length - 1)) + "%";
           });
 
         li.append('h4').text(keyword_key);
