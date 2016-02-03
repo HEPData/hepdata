@@ -97,7 +97,6 @@ def search(query,
     query_builder.add_sorting(sort_field=sort_field, sort_order=sort_order)
     query_builder.add_filters(filters)
     query_builder.add_aggregations()
-    query_builder.add_highlighting(['title', 'abstract'])
 
     pub_result = es.search(index=index,
                            body=query_builder.query,
@@ -120,7 +119,6 @@ def search(query,
                                             must=True,
                                             other_queries=[data_query])
     query_builder.add_pagination(size=size * 50)
-    query_builder.add_highlighting(['abstract'])
 
     data_result = es.search(index=index,
                             body=query_builder.query,
