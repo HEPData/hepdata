@@ -84,6 +84,7 @@
                     style="margin-bottom: 10px"><span
                     class="fa fa-chevron-left"></span> Hide Publication
                 Information
+                Information
             </button>
 
         <span id="show-publication-info"
@@ -110,15 +111,6 @@
                     {% endif %}
                     {% endfor %}
                 </div>
-                <div class="record-journal">
-                    {{ ctx.record.journal_info }}
-                </div>
-
-                <div class="record-doi">
-
-                    <a itemprop="citation" href="http://dx.doi.org/{{ ctx.record.hepdata_doi }}" target="_blank">http://dx.doi.org/{{ ctx.record.hepdata_doi }}</a>
-                </div>
-
 
                 <div class="collaborations">
                     {% for collaboration in ctx.record.collaborations %}
@@ -126,7 +118,17 @@
                            class="collaboration">{{ collaboration }}</a>
                     {% endfor %}
                 </div>
-                <div class="clearfix"></div>
+
+                <div class="record-journal">
+                    {{ ctx.record.journal_info }}
+                </div>
+
+
+                <div class="record-doi">
+                    <a itemprop="citation" href="http://dx.doi.org/{{ ctx.record.hepdata_doi }}" target="_blank">http://dx.doi.org/{{ ctx.record.hepdata_doi }}</a>
+                    <a itemprop="citation" class="hidden" href="http://dx.doi.org/{{ ctx.record.doi }}" target="_blank">http://dx.doi.org/{{ ctx.record.doi }}</a>
+                </div>
+
                 <br/>
 
                 <div class="record-links">
@@ -136,7 +138,7 @@
                                itemprop="citation" itemscope
                                itemtype="http://schema.org/CreativeWork"
                                target="_blank"><span
-                                    class="link"><span class="link-type">Inspire Record</span></span><span
+                                    class="btn btn-sm btn-default"><span class="link-type">Inspire Record</span></span><span
                                     class="hidden"
                                     itemprop="url">http://inspirehep.net/record/{{ ctx.record.inspire_id }}</span>
                             </a></li>
@@ -146,17 +148,15 @@
                                itemscope
                                itemtype="http://schema.org/CreativeWork"
                                target="_blank"><span
-                                    class="link"><span class="link-type">View old HepData</span></span><span
+                                    class="btn btn-sm btn-default"><span class="link-type">Old HepData</span></span><span
                                     class="hidden"
                                     itemprop="url">http://hepdata.cedar.ac.uk/view/ins{{ ctx.record.inspire_id }}</span>
                             </a></li>
 
                         {% if ctx.additional_resources %}
                             <li>
-                                <button id="show_resources" class="link"
-                                        data-recid="{{ ctx.record.recid }}">
-                                    Additional
-                                    Resources
+                                <button id="show_resources" class="btn btn-sm btn-primary"
+                                        data-recid="{{ ctx.record.recid }}">Resources
                                 </button>
                             </li>
                         {% endif %}
