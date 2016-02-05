@@ -104,8 +104,8 @@ def check_date(args):
 def sort_facets(facets):
     """ Sort the facets in an arbitrary way that we think is appropriate. """
     order = {
-        'collaboration': 1,
-        'date': 2,
+        'date': 1,
+        'collaboration': 2,
         'reactions': 3,
         'observables': 4,
         'cmenergies': 5,
