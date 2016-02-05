@@ -54,6 +54,9 @@ CACHE_KEY_PREFIX = "cache::"
 CACHE_REDIS_URL = "redis://localhost:6379/0"
 CACHE_TYPE = "redis"
 
+# Session
+SESSION_REDIS = "redis://localhost:6379/0"
+
 # ElasticSearch
 ELASTICSEARCH_HOST = "localhost"
 

@@ -1,5 +1,5 @@
 var search_utils = (function () {
-  var hist_svg, xScale, yScale, brush, brushScale;
+  var hist_svg, xScale, yScale, brush;
 
   var tip = d3.tip().attr('class', 'd3-tip').offset([-10, 0]).html(function (d) {
     return d.doc_count + " papers - " + d.key;
@@ -25,10 +25,18 @@ var search_utils = (function () {
   var process_data = function (data) {
 
     data.forEach(function (d) {
-      min_year = Math.min(min_year, +d.key);
-      max_year = Math.max(max_year, +d.key);
-      d.selected = true;
+      d.key = +d.key;
+      min_year = Math.min(min_year, d.key);
+      max_year = Math.max(max_year, d.key);
+
       d.year_as_date = parseDate(String(d.key));
+
+      if (options.selection_range) {
+        d.selected = d.key >= options.selection_range.min && d.key <= options.selection_range.max;
+      } else {
+        d.selected = true;
+      }
+
     });
   };
 
@@ -45,6 +53,11 @@ var search_utils = (function () {
         'height': 35
       });
 
+    selector_svg.append('line').attr({'x1': 0, 'x2': options.width, 'y1': 5.5, 'y2': 5.5}).style({
+      'stroke': '#ccc',
+      'stroke-width': 3
+    });
+
     var on_brushed = function () {
       var extent = brush.extent();
       d3.select('.brush-year.min').text(year_format(extent[0]));
@@ -60,9 +73,14 @@ var search_utils = (function () {
       });
     };
 
+    var initial_extent = [parseDate(String(min_year)), parseDate(String(max_year))];
+    if (options.selection_range) {
+      initial_extent = [parseDate(String(options.selection_range.min)), parseDate(String(options.selection_range.max))]
+    }
+
     brush = d3.svg.brush()
       .x(xScale)
-      .extent([parseDate(String(min_year)), parseDate(String(max_year))])
+      .extent(initial_extent)
       // When the brushing event is started, this function is called
       // whilst brushing is happening, this function is called
       .on("brush", on_brushed)
@@ -72,8 +90,9 @@ var search_utils = (function () {
           update_brush_position(parseDate(String(min_year)),
             parseDate(String(max_year)));
         }
-        onselection(selected);
+        onselection([year_format(brush.extent()[0]), year_format(brush.extent()[1])]);
       });
+
 
     selector_svg.append("g")
       .attr("class", "brush")
@@ -101,7 +120,11 @@ var search_utils = (function () {
         return 'brush-year ' + (i == 0 ? 'max' : 'min');
       })
       .attr('y', 31);
-  }
+
+    if (year_format(initial_extent[0]) === year_format(initial_extent[1])) {
+      d3.select('.resize.e').style('display', 'inline');
+    }
+  };
 
   return {
     /*
@@ -112,8 +135,6 @@ var search_utils = (function () {
      */
     render_histogram: function (placement, data, user_options, onselection) {
       options = $.extend({}, options, user_options);
-
-
       hist_svg = d3.select(placement).append("svg")
         .attr({
           'width': options.width,
@@ -138,7 +159,6 @@ var search_utils = (function () {
       var bar_width = Math.min(10, ((options.width - options.margins.left -
         options.margins.right) - (data.length * options.padding)) / (max_year - min_year));
 
-
       var max_value = d3.max(data, function (d) {
         return d.doc_count;
       });
@@ -157,7 +177,9 @@ var search_utils = (function () {
         .attr('y', function (d) {
           return yScale.range()[1] - yScale(d.doc_count);
         })
-        .style('fill', options.select_colour);
+        .style('fill', function (d) {
+          return d.selected ? options.select_colour : options.bar_colour
+        });
 
 
       rect_enter.on('mouseenter', function (d) {

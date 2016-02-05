@@ -20,6 +20,7 @@ from __future__ import division
 
 import json
 
+import sys
 from flask import Blueprint, request, render_template, jsonify
 from hepdata.config import CFG_DATA_KEYWORDS
 from hepdata.ext.elasticsearch.api import search as es_search, \
@@ -27,6 +28,7 @@ from hepdata.ext.elasticsearch.api import search as es_search, \
 from hepdata.modules.records.utils.common import decode_string
 from hepdata.utils.url import modify_query
 from config import HEPDATA_CFG_MAX_RESULTS_PER_PAGE, HEPDATA_CFG_FACETS
+from flask import session
 
 blueprint = Blueprint('es_search',
                       __name__,
@@ -75,12 +77,28 @@ def check_max_results(args):
 def check_date(args):
     """ Get the date parameter from the URL and if it doesn't exist
     assign a default value. """
+    min_date = sys.maxsize
+    max_date = sys.maxsize * -1
+
     if 'date' in args:
-        date = args['date']
-        if date.isdigit() and int(date) > 0:
-            args['date'] = int(date)
+        if args['date'] is not '':
+            dates = args['date'].split(',')
+            min_date = int(dates[0])
+            max_date = min_date
+            if len(dates) > 1:
+                max_date = int(dates[1])
+            years = []
+            if len(dates)==1 or dates[0] == dates[1]:
+                years = [min_date]
+            else:
+                for year in range(min_date, max_date):
+                    years.append(year)
+            args['date'] = years
+
         else:
-            del args['date']
+           del args['date']
+
+    return min_date, max_date
 
 
 def sort_facets(facets):
@@ -120,10 +138,9 @@ def parse_query_parameters(request_args):
 
     :param [dict-like structure] Any structure supporting get calls
     :result [dict] Parsed parameters"""
-    print(request_args)
 
     args = {key: value[0] for (key, value) in dict(request_args).iteritems()}
-    # check_date(args)
+    min_date, max_date = check_date(args)
     check_page(args)
     check_max_results(args)
 
@@ -140,7 +157,25 @@ def parse_query_parameters(request_args):
         'current_page': args['page'],
         'offset': (args['page'] - 1) * args['size'],
         'filters': filters,
+        'min_date': min_date,
+        'max_date': max_date
     }
+
+
+def set_session_item(key, value):
+    """
+    Stores a key and value in the session.
+    By default we use REDIS
+    :param key: e.g. my_key
+    :param value: anything, dict, array, string, int, etc.
+    :return: 'ok'
+    """
+    session[key] = value
+    return 'ok'
+
+
+def get_session_item(key):
+    return session.get(key, [])
 
 
 @blueprint.route('/authors', methods=['GET', 'POST'])
@@ -171,16 +206,20 @@ def search():
     facets = filter_facets(query_result['facets'], query_result['total'])
     facets = sort_facets(facets)
 
-    year_facet = None
-    for facet in facets:
-        if facet['printable_name'] is 'Date':
-            year_facet = decode_string(json.dumps(facet['vals']))
+    url_path = modify_query('.search', **{'date': None})
+    year_facet = get_session_item(url_path)
+    if len(year_facet) == 0:
+        for facet in facets:
+            if facet['printable_name'] is 'Date':
+                year_facet = {decode_string(json.dumps(facet['vals']))}
+                set_session_item(url_path, year_facet)
+                break
 
     ctx = {
         'results': query_result['results'],
         'total_hits': query_result['total'],
         'facets': facets,
-        'year_facet': year_facet,
+        'year_facet': list(year_facet)[0],
         'q': query_params['q'],
         'modify_query': modify_query,
         'max_results': query_params['size'],
@@ -188,5 +227,9 @@ def search():
                   'total': total_pages},
         'filters': dict(query_params['filters']),
     }
+
+    if query_params['min_date'] is not sys.maxsize:
+        ctx['min_year'] = query_params['min_date']
+        ctx['max_year'] = query_params['max_date']
 
     return render_template('search_results.html', ctx=ctx)

@@ -66,8 +66,6 @@
                            onclick="show_more_facets('{{ facet.type }}', 5)">
                             Next 5
                         </a>
-
-
                     </div>
                 {% endif %}
             {% endif %}
@@ -75,8 +73,6 @@
         </div>
     {% endfor %}
 </div>
-
-
 
 {%- assets "hepdata_search_js" %}
     <script src="{{ ASSET_URL }}"></script>
@@ -136,28 +132,33 @@
                 $(facet_id + " .facet-all").hide();
             }
         }
-
         $(facet_id + " .facet-reset").show();
     }
+
+    // due to the added complexity of showing all year values, we need to pass state to the visualization
+    // component to tell it what the current selection was
+    var selection_range;
+    {% if ctx.min_year %}
+        selection_range = {'min':{{ ctx.min_year }}, 'max':{{ ctx.max_year }}};
+    {% endif %}
+
+    console.log(selection_range);
 
     search_utils.render_histogram('#year_hist', {{ ctx.year_facet|safe }}, {
         width: 220,
         height: 70,
-        range: [{{ ctx.start_date }}, {{ ctx.end_date }}]
+        selection_range: selection_range
     }, function (data) {
         var date_str = data.join([separator = ',']);
         window.location.href = updateQueryStringParameter(window.location.href, 'date', date_str)
     });
 
-
     function reset_facet(facet_type) {
         var facet_id = "#" + facet_type + "-facet";
         var facets = $(facet_id + " li");
         facets.slice(5).addClass("hidden");
-
         $(facet_id + " .facet-reset").hide();
         $(facet_id + " .facet-more").show();
         $(facet_id + " .facet-all").show();
-
     }
 </script>

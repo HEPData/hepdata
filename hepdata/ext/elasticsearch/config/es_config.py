@@ -95,10 +95,8 @@ def get_filter_clause(name, value):
             }
         }
     elif name == 'date':
-        years = value.split(',')
-
         or_clause = []
-        for year in years:
+        for year in value:
             or_clause.append({'term': {'year': str(year)}})
 
         clause = {
