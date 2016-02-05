@@ -5,7 +5,6 @@
         <div id="{{ facet.type }}-facet" class="facet-type">
             <h4> {{ facet.printable_name }} {% if ctx.filters[facet.type] %}
                 <a class="facet-option facet-more pull-right" style="font-size: .8em" href={{ ctx.modify_query('.search',
-                    page='1',
                     **{facet.type: None}) }}>
                                     Reset
                                 </a>
