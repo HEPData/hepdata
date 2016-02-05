@@ -17,10 +17,14 @@
 # 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
 #
 from __future__ import division
+
+import json
+
 from flask import Blueprint, request, render_template, jsonify
 from hepdata.config import CFG_DATA_KEYWORDS
 from hepdata.ext.elasticsearch.api import search as es_search, \
     search_authors as es_search_authors
+from hepdata.modules.records.utils.common import decode_string
 from hepdata.utils.url import modify_query
 from config import HEPDATA_CFG_MAX_RESULTS_PER_PAGE, HEPDATA_CFG_FACETS
 
@@ -116,8 +120,10 @@ def parse_query_parameters(request_args):
 
     :param [dict-like structure] Any structure supporting get calls
     :result [dict] Parsed parameters"""
+    print(request_args)
+
     args = {key: value[0] for (key, value) in dict(request_args).iteritems()}
-    check_date(args)
+    # check_date(args)
     check_page(args)
     check_max_results(args)
 
@@ -165,10 +171,16 @@ def search():
     facets = filter_facets(query_result['facets'], query_result['total'])
     facets = sort_facets(facets)
 
+    year_facet = None
+    for facet in facets:
+        if facet['printable_name'] is 'Date':
+            year_facet = decode_string(json.dumps(facet['vals']))
+
     ctx = {
         'results': query_result['results'],
         'total_hits': query_result['total'],
         'facets': facets,
+        'year_facet': year_facet,
         'q': query_params['q'],
         'modify_query': modify_query,
         'max_results': query_params['size'],

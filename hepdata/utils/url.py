@@ -35,7 +35,7 @@ def modify_query(path, **new_values):
     for key, value in new_values.items():
         if value is not None:
             args[key] = value
-        else:
+        elif key in args:
             del args[key]
 
     return url_for(path, **args)

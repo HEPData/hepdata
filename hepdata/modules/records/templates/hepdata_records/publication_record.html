@@ -65,8 +65,11 @@
                         <span class="stats">
                     <span class="pull-right"><span class="fa fa-bar-chart-o"
                                                    style="padding-right: 5px"></span> Accessed {{ ctx.access_count.sum }} times </span>
-                    <span class="pull-right"
-                          style="padding-right: 10px">Last updated on {{ ctx.record.last_updated.strftime('%Y-%m-%d') }} </span>
+
+                            {% if ctx.record.last_updated %}
+                                <span class="pull-right"
+                                      style="padding-right: 10px">Last updated on {{ ctx.record.last_updated.strftime('%Y-%m-%d') }} </span>
+                            {% endif %}
                 </span>
                     {% endif %}
 
@@ -138,7 +141,8 @@
                                itemprop="citation" itemscope
                                itemtype="http://schema.org/CreativeWork"
                                target="_blank"><span
-                                    class="btn btn-sm btn-default"><span class="link-type">Inspire Record</span></span><span
+                                    class="btn btn-sm btn-default"><span
+                                    class="link-type">Inspire Record</span></span><span
                                     class="hidden"
                                     itemprop="url">http://inspirehep.net/record/{{ ctx.record.inspire_id }}</span>
                             </a></li>
@@ -148,7 +152,8 @@
                                itemscope
                                itemtype="http://schema.org/CreativeWork"
                                target="_blank"><span
-                                    class="btn btn-sm btn-default"><span class="link-type">Old HepData</span></span><span
+                                    class="btn btn-sm btn-default"><span
+                                    class="link-type">Old HepData</span></span><span
                                     class="hidden"
                                     itemprop="url">http://hepdata.cedar.ac.uk/view/ins{{ ctx.record.inspire_id }}</span>
                             </a></li>

@@ -95,14 +95,16 @@ def get_filter_clause(name, value):
             }
         }
     elif name == 'date':
+        years = value.split(',')
+
+        or_clause = []
+        for year in years:
+            or_clause.append({'term': {'year': str(year)}})
+
         clause = {
-            "range": {
-                "creation_date": {
-                    "gte": str(value),
-                    "lte": str(value + 1)
-                }
-            }
+            "or": or_clause
         }
+
     elif name in CFG_DATA_KEYWORDS:
         clause = {
             "bool": {

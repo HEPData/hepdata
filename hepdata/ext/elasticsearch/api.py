@@ -99,7 +99,7 @@ def search(query,
     query_builder.add_sorting(sort_field=sort_field, sort_order=sort_order)
     query_builder.add_filters(filters)
     query_builder.add_aggregations()
-
+    print(query_builder.query)
     pub_result = es.search(index=index,
                            body=query_builder.query,
                            doc_type=CFG_PUB_TYPE)

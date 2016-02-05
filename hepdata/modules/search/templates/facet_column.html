@@ -1,68 +1,87 @@
 <div id="facetparent" class="col-md-2" xmlns="http://www.w3.org/1999/html">
+
+
     {% for facet in ctx.facets %}
-    <div id="{{ facet.type }}-facet" class="facet-type">
-        <h4> {{ facet.printable_name }}</h4>
+        <div id="{{ facet.type }}-facet" class="facet-type">
+            <h4> {{ facet.printable_name }} {% if ctx.filters[facet.type] %}
+                <a class="facet-option facet-more pull-right" style="font-size: .8em" href={{ ctx.modify_query('.search',
+                    page='1',
+                    **{facet.type: None}) }}>
+                                    Reset
+                                </a>
+                    {% endif %}</h4>
 
-        {% if facet.type == 'author' %}
-            <input name="q"
-                   id="author-suggest"
-                   placeholder="Search authors"
-                   class="typeahead author-search"
-                   type="text"
-                   onclick="">
-        {% endif %}
 
-        {% set current_value = ctx.filters[facet.type] %}
-        <ul class="list-group">
-            {% for fval in facet.vals %}
-            <li class="list-group-item
+            {% if facet.type == 'date' %}
+
+                <div id="year_hist">
+                </div>
+                <div id="year_select">
+                </div>
+
+            {% else %}
+
+                {% if facet.type == 'author' %}
+                    <input name="q"
+                           id="author-suggest"
+                           placeholder="Search authors"
+                           class="typeahead author-search"
+                           type="text"
+                           onclick="">
+                {% endif %}
+
+                {% set current_value = ctx.filters[facet.type] %}
+                <ul class="list-group">
+                {% for fval in facet.vals %}
+                    <li class="list-group-item
                     {% if loop.index > facet.max_values %}
                         hidden
                     {% endif %}">
-                {% if fval.key == current_value %}
-                <strong>
-                    <a href={{ ctx.modify_query('.search',
-                    page='1',
-                    **{facet.type: None}) }}>
-                    <i class="fa fa-times small"></i>
-                    </a>
-                    {% include 'facet_link.html' %}
-                </strong>
-                {% else %}
-                {% include 'facet_link.html' %}
+                        {% if fval.key == current_value %}
+                            <strong>
+                                <a href={{ ctx.modify_query('.search', page='1', **{facet.type: None}) }}>
+                                    <i class="fa fa-times small"></i>
+                                </a>
+                                {% include 'facet_link.html' %}
+                            </strong>
+                        {% else %}
+                            {% include 'facet_link.html' %}
+                        {% endif %}
+                    </li>
+                {% endfor %}
+
+                {% if facet.vals|length > facet.max_values %}
+                    <div class="facet-options">
+                        <a class="facet-option facet-reset" style="display: none"
+                           onclick="reset_facet('{{ facet.type }}')">
+                            Reset
+                        </a>
+
+                        <a class="facet-option facet-all"
+                           onclick="show_more_facets('{{ facet.type }}', -1)">
+                            Show All
+                        </a>
+
+                        <a class="facet-option facet-more"
+                           onclick="show_more_facets('{{ facet.type }}', 5)">
+                            Next 5
+                        </a>
+
+
+                    </div>
                 {% endif %}
-            </li>
-            {% endfor %}
-
-            {% if facet.vals|length > facet.max_values %}
-            <div class="facet-options">
-                 <a class="facet-option facet-reset" style="display: none"
-                   onclick="reset_facet('{{ facet.type }}')">
-                    Reset
-                </a>
-
-                <a class="facet-option facet-all"
-                   onclick="show_more_facets('{{ facet.type }}', -1)">
-                    Show All
-                </a>
-
-                <a class="facet-option facet-more"
-                   onclick="show_more_facets('{{ facet.type }}', 5)">
-                    Next 5
-                </a>
-
-
-
-            </div>
             {% endif %}
-        </ul>
-    </div>
+            </ul>
+        </div>
     {% endfor %}
 </div>
 
-  {%- assets "hepdata_search_js" %}
-        <script src="{{ ASSET_URL }}"></script>
-    {%- endassets %}
+
+
+{%- assets "hepdata_search_js" %}
+    <script src="{{ ASSET_URL }}"></script>
+{%- endassets %}
+
 
 <script type="text/javascript">
     var authors = new Bloodhound({
@@ -79,13 +98,10 @@
         }
     });
 
-    $('#author-suggest').typeahead({
-        highlight: true
-    },
-    {
-        valueKey: 'symbol',
-        source: authors
-    });
+    $('#author-suggest').typeahead(
+            {highlight: true},
+            {valueKey: 'symbol', source: authors}
+    );
 
     function updateQueryStringParameter(uri, key, value) {
         var re = new RegExp("([?&])" + key + "=.*?(&|$)", "i");
@@ -98,10 +114,10 @@
         }
     }
 
-    $('.typeahead').bind('typeahead:select', function(ev, suggestion) {
+    $('.typeahead').bind('typeahead:select', function (ev, suggestion) {
         window.location.href = updateQueryStringParameter(window.location.href,
-                                                          'author',
-                                                          suggestion);
+                'author',
+                suggestion);
     });
 
     function show_more_facets(facet_type, show_number) {
@@ -123,6 +139,16 @@
 
         $(facet_id + " .facet-reset").show();
     }
+
+    search_utils.render_histogram('#year_hist', {{ ctx.year_facet|safe }}, {
+        width: 220,
+        height: 70,
+        range: [{{ ctx.start_date }}, {{ ctx.end_date }}]
+    }, function (data) {
+        var date_str = data.join([separator = ',']);
+        window.location.href = updateQueryStringParameter(window.location.href, 'date', date_str)
+    });
+
 
     function reset_facet(facet_type) {
         var facet_id = "#" + facet_type + "-facet";
