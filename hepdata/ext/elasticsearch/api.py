@@ -344,10 +344,13 @@ def index_record_ids(record_ids, index=None):
                     last_updated = doc["creation_date"]
                 doc["last_updated"] = last_updated
 
+            if doc["last_updated"] is not None:
+                doc["last_updated"] = parse(doc["last_updated"])
+
             if doc["year"] is not None:
                 doc["publication_date"] = parse(str(doc["year"]))
 
-            doc["last_updated"] = parse(doc["last_updated"])
+
 
             result = es.index(index=index,
                               doc_type=CFG_PUB_TYPE,
