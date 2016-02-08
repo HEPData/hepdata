@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with HEPData; if not, write to the Free Software Foundation, Inc.,
 # 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
+import timestring
 
 marc_tags = {
     'title': ('245', 'a'),
@@ -27,11 +28,11 @@ marc_tags = {
     'collaboration': ('710', 'g'),
     'keywords': ('695', 'a'),
     'date': ('269', 'c'),
+    'year': ('260', 'c'),
     'journal': ('773', ['p', 'v', 'y', 'c']),
 }
 
-DEFAULT_YEAR = 2015
-DEFAULT_JOURNAL = 'HEPData'
+DEFAULT_JOURNAL = 'No Journal Information'
 
 
 def get_journal_info(soup):
@@ -51,7 +52,16 @@ def get_journal_info(soup):
 
         return journal_info[:-1], year
     except Exception:
-        return DEFAULT_JOURNAL, DEFAULT_YEAR
+        return DEFAULT_JOURNAL, None
+
+
+def get_year(soup):
+    try:
+        tag, code = marc_tags['year']
+        datafield = soup.find_all(tag=tag)[0]
+        return timestring.Date(datafield.find_all(code=code)[0].string).year
+    except:
+        return None
 
 
 def get_doi(soup):
@@ -149,12 +159,10 @@ def expand_date(value):
 
 def get_date(soup):
     """ Parse the date from the xml """
-    # todo: some dates can be like 2012-08, e.g. record 1183818.
     try:
         (tag, code) = marc_tags['date']
         datafield = soup.find_all(tag=tag)[0]
         value = datafield.find_all(code=code)[0].string
-
         return expand_date(value)
     except IndexError:
         return None

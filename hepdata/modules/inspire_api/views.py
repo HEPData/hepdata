@@ -24,7 +24,7 @@ from flask import request, Blueprint, redirect, jsonify
 from hepdata.ext.elasticsearch.api import record_exists
 
 from marcxml_parser import get_doi, get_title, get_authors, get_abstract, \
-    get_arxiv, get_collaborations, get_keywords, get_date, get_journal_info
+    get_arxiv, get_collaborations, get_keywords, get_date, get_journal_info, get_year
 
 blueprint = Blueprint('inspire_datasource',
                       __name__,
@@ -40,6 +40,10 @@ def get_inspire_record_information(inspire_rec_id):
         soup = BeautifulSoup(content, "lxml")
 
         journal_info, year = get_journal_info(soup)
+
+        if year is None:
+            year = get_year(soup)
+
         content = {
             'title': get_title(soup),
             'doi': get_doi(soup),
