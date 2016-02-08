@@ -36,7 +36,6 @@ __all__ = ['search', 'index_record_ids', 'index_record_dict', 'fetch_record',
            'recreate_index', 'get_record', 'reindex_all',
            'get_n_latest_records']
 
-
 logging.basicConfig()
 log = logging.getLogger(__name__)
 
@@ -60,7 +59,8 @@ def search(query,
            size=10,
            offset=0,
            sort_field=None,
-           sort_order=''):
+           sort_order='',
+           post_filter=None):
     """ Perform a search query.
 
     :param query: [string] query string e.g. 'higgs boson'
@@ -98,6 +98,7 @@ def search(query,
     query_builder.add_pagination(size=size, offset=offset)
     query_builder.add_sorting(sort_field=sort_field, sort_order=sort_order)
     query_builder.add_filters(filters)
+    query_builder.add_post_filter(post_filter)
     query_builder.add_aggregations()
 
     pub_result = es.search(index=index,
@@ -214,7 +215,6 @@ def record_exists(inspire_id, index=None):
         inspire_id = inspire_id[3:]
 
     inspire_id = int(inspire_id)
-
 
     query = {
         'query': {
@@ -343,6 +343,8 @@ def index_record_ids(record_ids, index=None):
                 if not last_updated:
                     last_updated = doc["creation_date"]
                 doc["last_updated"] = last_updated
+
+            doc["publication_date"] = parse(str(doc["year"]))
 
             doc["last_updated"] = parse(doc["last_updated"])
 

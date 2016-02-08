@@ -81,22 +81,25 @@ def check_date(args):
     max_date = sys.maxsize * -1
 
     if 'date' in args:
-        if args['date'] is not '':
-            dates = args['date'].split(',')
-            min_date = int(dates[0])
-            max_date = min_date
-            if len(dates) > 1:
-                max_date = int(dates[1])
-            years = []
-            if len(dates)==1 or dates[0] == dates[1]:
-                years = [min_date]
-            else:
-                for year in range(min_date, max_date):
-                    years.append(year)
-            args['date'] = years
+        date_length = len(args['date'])
+        if date_length == 4 or date_length == 9:
+            if args['date'] is not '':
+                dates = args['date'].split(',')
+
+                min_date = int(dates[0])
+                max_date = min_date
+                if len(dates) > 1:
+                    max_date = int(dates[1])
+                years = []
+                if len(dates) == 1 or dates[0] == dates[1]:
+                    years = [min_date]
+                else:
+                    for year in range(min_date, max_date+1):
+                        years.append(year)
+                args['date'] = years
 
         else:
-           del args['date']
+            del args['date']
 
     return min_date, max_date
 

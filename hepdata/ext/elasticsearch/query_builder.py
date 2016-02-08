@@ -137,6 +137,10 @@ class QueryBuilder(object):
         if filter_clauses and "filtered" in self.query.get("query", {}):
             self.query["query"]["filtered"]["filter"] = {"and": filter_clauses}
 
+    def add_post_filter(self, postfilter):
+        if postfilter is not None:
+            self.query["post_filter"] = postfilter
+
 
 def get_query_by_type(es_type, query_string=''):
     """ Get the query adjusted to the ES type

@@ -53,6 +53,10 @@ mapping = {
         "type": "date",
         "format": "dateOptionalTime"
     },
+    "publication_year": {
+        "type": "date",
+        "format": "dateOptionalTime"
+    },
     "last_updated": {
         "type": "date",
         "format": "dateOptionalTime"

@@ -73,9 +73,17 @@ var search_utils = (function () {
       });
     };
 
+
     var initial_extent = [parseDate(String(min_year)), parseDate(String(max_year))];
     if (options.selection_range) {
-      initial_extent = [parseDate(String(options.selection_range.min)), parseDate(String(options.selection_range.max))]
+      var min_x = parseInt(year_format(xScale.domain()[0]));
+      var max_x = parseInt(year_format(xScale.domain()[1]));
+
+      var start_year = (options.selection_range.min < min_x || options.selection_range.min > max_x) ? min_x : options.selection_range.min;
+      var end_year = (options.selection_range.max > max_x || options.selection_range.max < min_x) ? max_x : options.selection_range.max;
+
+      console.log([start_year, end_year]);
+      initial_extent = [parseDate(String(start_year)), parseDate(String(end_year))]
     }
 
     brush = d3.svg.brush()

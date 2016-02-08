@@ -43,7 +43,7 @@ def default_aggregations():
         },
         "dates": {
             "date_histogram": {
-                "field": "creation_date",
+                "field": "publication_date",
                 "interval": "year",
             }
         },
@@ -138,7 +138,7 @@ def sort_fields_mapping(sort_by):
     elif sort_by == 'collaborations':
         return 'collaborations'
     elif sort_by == 'date':
-        return 'creation_date'
+        return 'publication_date'
     elif sort_by == 'latest':
         return 'last_updated'
     elif not sort_by or sort_by == 'relevance':
