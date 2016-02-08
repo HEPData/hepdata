@@ -350,8 +350,6 @@ def index_record_ids(record_ids, index=None):
             if doc["year"] is not None:
                 doc["publication_date"] = parse(str(doc["year"]))
 
-
-
             result = es.index(index=index,
                               doc_type=CFG_PUB_TYPE,
                               body=doc.dumps(),

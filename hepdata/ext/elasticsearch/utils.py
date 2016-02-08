@@ -42,12 +42,23 @@ def index_authors(es, document):
     from hepdata.config import CFG_ES_AUTHORS
     index, doc_type = CFG_ES_AUTHORS
 
+    author_data = []
     authors = document.get('authors', [])
 
     for author in authors:
-        doc_id = author['full_name']
-        if not es.exists(index=index, doc_type=doc_type, id=doc_id):
-            es.index(index=index, doc_type=doc_type, id=doc_id, body=author)
+        data_dict = author
+
+        op_dict = {
+            "index": {
+                "_index": index,
+                "_type": doc_type,
+                "_id": author['full_name']
+            }
+        }
+        author_data.append(op_dict)
+        author_data.append(data_dict)
+
+    es.bulk(index=index, body=author_data, refresh=True)
 
 
 def calculate_sort_order(is_reversed, sorting_field):
