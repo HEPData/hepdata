@@ -163,7 +163,7 @@ var search_utils = (function () {
         return d.doc_count;
       });
 
-      yScale = d3.scale.linear().domain([0, max_value]).range([options.margins.top, options.height - options.margins.bottom]);
+      yScale = d3.scale.linear().domain([0, max_value]).range([0, options.height - options.margins.bottom]);
 
       var rect_enter = group.selectAll('.bar')
         .data(data).enter().append('g').attr('class', 'bar');
