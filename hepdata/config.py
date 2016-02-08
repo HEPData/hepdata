@@ -24,6 +24,7 @@
 from __future__ import absolute_import, print_function
 import os
 import tempfile
+from datetime import timedelta
 
 
 def _(x):
@@ -56,6 +57,7 @@ CACHE_TYPE = "redis"
 
 # Session
 SESSION_REDIS = "redis://localhost:6379/0"
+PERMANENT_SESSION_LIFETIME = timedelta(minutes=15)
 
 # ElasticSearch
 ELASTICSEARCH_HOST = "localhost"
