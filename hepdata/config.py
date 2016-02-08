@@ -57,7 +57,7 @@ CACHE_TYPE = "redis"
 
 # Session
 SESSION_REDIS = "redis://localhost:6379/0"
-PERMANENT_SESSION_LIFETIME = timedelta(minutes=15)
+PERMANENT_SESSION_LIFETIME = timedelta(minutes=5)
 
 # ElasticSearch
 ELASTICSEARCH_HOST = "localhost"

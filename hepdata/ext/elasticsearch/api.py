@@ -344,7 +344,8 @@ def index_record_ids(record_ids, index=None):
                     last_updated = doc["creation_date"]
                 doc["last_updated"] = last_updated
 
-            doc["publication_date"] = parse(str(doc["year"]))
+            if doc["year"] is not None:
+                doc["publication_date"] = parse(str(doc["year"]))
 
             doc["last_updated"] = parse(doc["last_updated"])
 
