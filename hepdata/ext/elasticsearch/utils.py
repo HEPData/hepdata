@@ -36,7 +36,7 @@ def flip_sort_order(order):
         return 'asc'
 
 
-def index_authors(es, document):
+def prepare_author_for_indexing(es, document):
     """ Extract the author list from the document and index it in a separate
      index. """
     from hepdata.config import CFG_ES_AUTHORS
@@ -58,7 +58,7 @@ def index_authors(es, document):
         author_data.append(op_dict)
         author_data.append(data_dict)
 
-    es.bulk(index=index, body=author_data, refresh=True)
+    return author_data
 
 
 def calculate_sort_order(is_reversed, sorting_field):

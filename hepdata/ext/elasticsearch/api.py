@@ -23,7 +23,7 @@ from elasticsearch.exceptions import NotFoundError, RequestError
 from invenio_pidstore.models import RecordIdentifier
 from sqlalchemy import func
 from hepdata.modules.records.utils.common import get_last_submission_event
-from .utils import index_authors
+from .utils import prepare_author_for_indexing
 from hepdata.config import CFG_PUB_TYPE, CFG_DATA_TYPE
 from query_builder import QueryBuilder, get_query_by_type, get_authors_query
 from process_results import map_result, merge_results
@@ -343,7 +343,8 @@ def index_record_ids(record_ids, index=None):
             to_index.append(op_dict)
 
         else:
-            index_authors(es, doc)
+            author_docs = prepare_author_for_indexing(es, doc)
+            to_index += author_docs
 
             if "last_updated" not in doc:
                 last_updated = get_last_submission_event(doc["recid"])
