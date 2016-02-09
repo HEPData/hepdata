@@ -37,7 +37,7 @@ from hepdata.modules.records.migrator.api import load_files
 
 cli = create_cli(create_app=create_app)
 
-default_recids = 'ins1345354,ins1402356,ins1310838,ins1305286,ins1393330,ins1357982,ins1253404'
+default_recids = 'ins1345354,ins1402356,ins1310838,ins1305286,ins1393330,ins1357982,ins1253404,ins142476,ins99995,ins165484,ins2852'
 
 
 @cli.command()
@@ -61,8 +61,7 @@ def populate(recids, recreate_index, tweet):
 
 @cli.command()
 @with_appcontext
-@click.option('--start', '-s', type=int,
-              default=None,
+@click.option('--start', '-s', type=int, default=None,
               help='The start index from the total inspireids to load.')
 @click.option('--end', '-e', default=None, type=int,
               help='The end index from the total inspireids to load.')

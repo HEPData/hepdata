@@ -8,6 +8,7 @@ from flask.ext.celeryext import create_celery_app
 from flask.ext.login import login_required, current_user
 from invenio_accounts.models import User
 from invenio_db import db
+from invenio_userprofiles import UserProfile
 from sqlalchemy.orm.exc import NoResultFound
 from hepdata.config import CFG_DATA_TYPE
 from hepdata.ext.elasticsearch.api import reindex_all, \
@@ -260,7 +261,7 @@ def dashboard():
         if submissions[record_id]["stats"]["attention"] == 0 and \
                 submissions[record_id]["stats"]["todo"] == 0 and \
                 submissions[record_id]["stats"]["passed"] == 0:
-            review_status = "Not started"
+            review_status = "No Uploads"
             review_flag = "todo"
         elif submissions[record_id]["stats"]["attention"] > 0 or \
                 submissions[record_id]["stats"]["todo"] > 0:
@@ -282,9 +283,12 @@ def dashboard():
 
         submission_meta.append(submissions[record_id]["metadata"])
 
+    user_profile = UserProfile.query.filter_by(user_id=current_user.get_id()).first()
+
     ctx = {'user_is_admin': has_role(current_user, 'admin'),
-           "submissions": submission_meta,
-           "submission_stats": json.dumps(submission_stats)}
+           'submissions': submission_meta,
+           'user_profile': user_profile,
+           'submission_stats': json.dumps(submission_stats)}
 
     return render_template('hepdata_dashboard/dashboard.html', ctx=ctx)
 
