@@ -188,11 +188,10 @@ def search_authors():
     return jsonify({'results': results})
 
 
-def get_year_facet(facets):
+def get_facet(facets, facet_name):
     for facet in facets:
-        if facet['printable_name'] is 'Date':
-            year_facet = facet['vals']
-            return year_facet
+        if facet['printable_name'] is facet_name:
+            return facet['vals']
     return None
 
 
@@ -202,7 +201,7 @@ def process_year_facet(request, facets):
     if len(year_facet) == 0 or (request.full_path[:-1] == url_path or request.full_path == url_path):
         # we update the facet if there is no value stored in the session,
         # or if the base url is the same as the stripped url
-        year_facet = get_year_facet(facets)
+        year_facet = get_facet(facets, 'Date')
         if year_facet:
             year_facet = {decode_string(json.dumps(year_facet))}
             set_session_item(url_path, year_facet)
