@@ -94,7 +94,7 @@ def check_date(args):
                 if len(dates) == 1 or dates[0] == dates[1]:
                     years = [min_date]
                 else:
-                    for year in range(min_date, max_date+1):
+                    for year in range(min_date, max_date + 1):
                         years.append(year)
                 args['date'] = years
 
@@ -196,6 +196,23 @@ def get_year_facet(facets):
     return None
 
 
+def process_year_facet(request, facets):
+    url_path = modify_query('.search', **{'date': None})
+    year_facet = get_session_item(url_path)
+    if len(year_facet) == 0 or (request.full_path[:-1] == url_path or request.full_path == url_path):
+        # we update the facet if there is no value stored in the session,
+        # or if the base url is the same as the stripped url
+        year_facet = get_year_facet(facets)
+        if year_facet:
+            year_facet = {decode_string(json.dumps(year_facet))}
+            set_session_item(url_path, year_facet)
+
+    if len(year_facet) > 0:
+        year_facet = list(year_facet)[0]
+
+    return year_facet
+
+
 @blueprint.route('/', methods=['GET', 'POST'])
 def search():
     """ Main search endpoint.
@@ -217,24 +234,7 @@ def search():
     facets = filter_facets(query_result['facets'], query_result['total'])
     facets = sort_facets(facets)
 
-    url_path = modify_query('.search', **{'date': None})
-    year_facet = get_session_item(url_path)
-    if len(year_facet) == 0:
-        year_facet = get_year_facet(facets)
-        if year_facet:
-            year_facet = {decode_string(json.dumps(year_facet))}
-            set_session_item(url_path, year_facet)
-
-    elif request.path == url_path:
-        # we force an update when the url is without the date.
-        year_facet = get_year_facet(facets)
-        if year_facet:
-            year_facet = {decode_string(json.dumps(year_facet))}
-            set_session_item(url_path, year_facet)
-
-    if len(year_facet) > 0:
-        year_facet = list(year_facet)[0]
-
+    year_facet = process_year_facet(request, facets)
     ctx = {
         'results': query_result['results'],
         'total_hits': query_result['total'],
