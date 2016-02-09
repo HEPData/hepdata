@@ -163,9 +163,10 @@ def get_date(soup):
         (tag, code) = marc_tags['date']
         datafield = soup.find_all(tag=tag)[0]
         value = datafield.find_all(code=code)[0].string
-        return expand_date(value)
+        date = expand_date(value)
+        return date, timestring.Date(date).year
     except IndexError:
-        return None
+        return None, None
 
 
 def get_author_from_subfield(datafield, code_name, code_aff):

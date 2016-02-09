@@ -178,7 +178,7 @@ def reindex_all(index=None, recreate=False, batch=50, start=-1, end=-1):
 
         count = min_recid
         while count <= max_recid:
-            print("Indexing {} to {}".format(count, count + batch))
+            print("Indexing {0} to {1}".format(count, count + batch))
             index_record_ids(rec_ids[count - 1:count + batch - 1], index=index)
             count += batch
 
@@ -322,7 +322,8 @@ def index_record_ids(record_ids, index=None):
 
     docs = filter(None, [get_record_by_id(recid) for recid in record_ids])
 
-    res = []
+    to_index = []
+
     for doc in docs:
         if 'related_publication' in doc:
             # Remove unnecessary fields if it's a data record
@@ -330,11 +331,17 @@ def index_record_ids(record_ids, index=None):
                 if field in doc:
                     del doc[field]
 
-            result = es.index(index=index,
-                              doc_type=CFG_DATA_TYPE,
-                              body=doc.dumps(),
-                              id=doc['recid'],
-                              parent=str(doc['related_publication']))
+            op_dict = {
+                "index": {
+                    "_index": index,
+                    "_type": CFG_DATA_TYPE,
+                    "_id": doc['recid'],
+                    "_parent": str(doc['related_publication'])
+                }
+            }
+
+            to_index.append(op_dict)
+
         else:
             index_authors(es, doc)
 
@@ -350,13 +357,19 @@ def index_record_ids(record_ids, index=None):
             if doc["year"] is not None:
                 doc["publication_date"] = parse(str(doc["year"]))
 
-            result = es.index(index=index,
-                              doc_type=CFG_PUB_TYPE,
-                              body=doc.dumps(),
-                              id=doc['recid'])
-        res.append(result)
+            op_dict = {
+                "index": {
+                    "_index": index,
+                    "_type": CFG_PUB_TYPE,
+                    "_id": doc['recid']
+                }
+            }
 
-    return res
+            to_index.append(op_dict)
+
+        to_index.append(doc)
+
+    return es.bulk(index=index, body=to_index, refresh=True)
 
 
 @default_index

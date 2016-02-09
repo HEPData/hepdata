@@ -40,16 +40,20 @@ def get_inspire_record_information(inspire_rec_id):
         soup = BeautifulSoup(content, "lxml")
 
         journal_info, year = get_journal_info(soup)
+        creation_date, creation_year = get_date(soup)
 
         if year is None:
             year = get_year(soup)
+
+        if year is None:
+            year = creation_year
 
         content = {
             'title': get_title(soup),
             'doi': get_doi(soup),
             'authors': get_authors(soup),
             'abstract': get_abstract(soup),
-            'creation_date': get_date(soup),
+            'creation_date': creation_date,
             'arxiv_id': get_arxiv(soup),
             'collaborations': get_collaborations(soup),
             'keywords': get_keywords(soup),
