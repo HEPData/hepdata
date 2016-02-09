@@ -218,11 +218,14 @@ def search():
                 set_session_item(url_path, year_facet)
                 break
 
+    if len(year_facet) > 0:
+        year_facet = list(year_facet)[0]
+
     ctx = {
         'results': query_result['results'],
         'total_hits': query_result['total'],
         'facets': facets,
-        'year_facet': list(year_facet)[0],
+        'year_facet': year_facet,
         'q': query_params['q'],
         'modify_query': modify_query,
         'max_results': query_params['size'],
