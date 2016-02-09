@@ -167,6 +167,8 @@ def reindex_all(index=None, recreate=False, batch=50, start=-1, end=-1):
     min_recid = res.min_recid
     max_recid = res.max_recid
 
+    indexed_publications = []
+
     if max_recid and min_recid:
 
         if start != -1:
@@ -179,8 +181,12 @@ def reindex_all(index=None, recreate=False, batch=50, start=-1, end=-1):
         count = min_recid
         while count <= max_recid:
             print("Indexing {0} to {1}".format(count, count + batch))
-            index_record_ids(rec_ids[count - 1:count + batch - 1], index=index)
+            indexed_result = index_record_ids(rec_ids[count - 1:count + batch - 1], index=index)
+            indexed_publications += indexed_result[CFG_PUB_TYPE]
             count += batch
+
+        print('######\nFinished indexing, now pushing data keywords\n######')
+        push_data_keywords(pub_ids=indexed_publications)
 
 
 @default_index
@@ -316,13 +322,14 @@ def index_record_ids(record_ids, index=None):
     :param record_ids: [list of ints] list of record ids e.g. [1, 5, 2, 3]
     :param index: [string] name of the index. If None a default is used
 
-    :return: [list] list of responses (dicts)
+    :return: list of indexed publication and data recids
     """
     from hepdata.modules.records.utils.common import get_record_by_id
 
     docs = filter(None, [get_record_by_id(recid) for recid in record_ids])
 
     to_index = []
+    indexed_result = {CFG_DATA_TYPE: [], CFG_PUB_TYPE: []}
 
     for doc in docs:
         if 'related_publication' in doc:
@@ -339,6 +346,8 @@ def index_record_ids(record_ids, index=None):
                     "_parent": str(doc['related_publication'])
                 }
             }
+
+            indexed_result[CFG_DATA_TYPE].append(doc['recid'])
 
             to_index.append(op_dict)
 
@@ -365,12 +374,15 @@ def index_record_ids(record_ids, index=None):
                     "_id": doc['recid']
                 }
             }
+            indexed_result[CFG_PUB_TYPE].append(doc['recid'])
 
             to_index.append(op_dict)
 
         to_index.append(doc)
 
-    return es.bulk(index=index, body=to_index, refresh=True)
+    es.bulk(index=index, body=to_index, refresh=True)
+
+    return indexed_result
 
 
 @default_index

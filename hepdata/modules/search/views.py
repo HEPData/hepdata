@@ -188,6 +188,14 @@ def search_authors():
     return jsonify({'results': results})
 
 
+def get_year_facet(facets):
+    for facet in facets:
+        if facet['printable_name'] is 'Date':
+            year_facet = facet['vals']
+            return year_facet
+    return None
+
+
 @blueprint.route('/', methods=['GET', 'POST'])
 def search():
     """ Main search endpoint.
@@ -212,11 +220,17 @@ def search():
     url_path = modify_query('.search', **{'date': None})
     year_facet = get_session_item(url_path)
     if len(year_facet) == 0:
-        for facet in facets:
-            if facet['printable_name'] is 'Date':
-                year_facet = {decode_string(json.dumps(facet['vals']))}
-                set_session_item(url_path, year_facet)
-                break
+        year_facet = get_year_facet(facets)
+        if year_facet:
+            year_facet = {decode_string(json.dumps(year_facet))}
+            set_session_item(url_path, year_facet)
+
+    elif request.path == url_path:
+        # we force an update when the url is without the date.
+        year_facet = get_year_facet(facets)
+        if year_facet:
+            year_facet = {decode_string(json.dumps(year_facet))}
+            set_session_item(url_path, year_facet)
 
     if len(year_facet) > 0:
         year_facet = list(year_facet)[0]
