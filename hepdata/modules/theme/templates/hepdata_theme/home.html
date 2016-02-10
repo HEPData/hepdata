@@ -34,6 +34,10 @@
                                     </li>
                                 {%- endif %}
 
+                             <li><a href="/about"><span
+                                        class="fa fa-info-circle"></span> About</a>
+                                </li>
+
                                 <li><a href="/submission"><span
                                         class="fa fa-life-ring"></span> Help</a>
                                 </li>
@@ -47,7 +51,7 @@
                                 {%- else %}
                                     <li>
                                         <a href="{% if show_dashboard %}/dashboard{% else %}/account/settings/profile{% endif %}">
-                                            <i class="fa fa-user"></i>
+                                            <i class="fa fa-dashboard"></i>
                                             {% if show_dashboard %}
                                                 Dashboard
                                             {% else %}

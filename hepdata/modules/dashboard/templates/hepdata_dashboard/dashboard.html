@@ -23,7 +23,7 @@
 
 {% block page_body %}
 
-
+    {% include "hepdata_theme/pages/custom_styling.html" %}
 
     {% set delete_redirect_url = '/dashboard' %}
 
@@ -73,7 +73,8 @@
         {% if ctx.submissions|length > 0 %}
 
             <div class="filter" align="center">
-                <input id="submission-filter" placeholder="Filter {{ ctx.submissions |length }} submission{% if ctx.submissions |length > 1%}s{% endif %}"
+                <input id="submission-filter"
+                       placeholder="Filter {{ ctx.submissions |length }} submission{% if ctx.submissions |length > 1 %}s{% endif %}"
                        name="data-table-filter"
                        onkeyup="HEPDATA.filter_content('#submission-filter','#hep-submissions')">
             </div>
@@ -130,7 +131,7 @@
                                         target="_blank">{{ submission.title }}</a>
                                 </h4>
 
-                            <br/>
+                                <br/>
 
                                 <div class="row-fluid">
 

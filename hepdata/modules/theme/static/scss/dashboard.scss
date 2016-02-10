@@ -1,12 +1,12 @@
 .dashboard-header {
-  background-color: white;
-  color: $navy;
+  background-color: $navy;
+  color: white;
   padding: 20px;
   border-bottom: 4px solid $navy-light;
   h4 {
     margin: 0;
     font-size: 1.8em;
-    color: $navy;
+    color: white;
   }
 
 }
@@ -18,7 +18,7 @@
   }
 
   .email {
-    color: $purple;
+    color: $lightgrey;
     font-weight: bolder;
   }
 
@@ -73,8 +73,8 @@
   border-radius: 4px;
   background-color: white;
   color: $navy;
-  border-bottom: 2px solid $concrete;
-  border-right: 2px solid $concrete;
+  border-bottom: 2px solid $silver;
+  border-right: 2px solid $silver;
 
   .start_date {
     color: $purple;
@@ -138,6 +138,7 @@
     font-weight: normal;
     text-transform: uppercase;
     padding: 15px;
+    padding-bottom: 30px;
   }
 }
 
@@ -186,7 +187,7 @@
   background: $navy;
 
   &:hover {
-    color:white;
+    color: white;
     background-color: $navy-light;
   }
 }
@@ -220,7 +221,7 @@
 #hepdata_submissions {
   width: 100%;
   height: 55vh;
-  background-color: $navy;
+  background-color: $lightgrey;
   overflow-y: scroll;
 
 }
@@ -232,9 +233,8 @@
   padding: 2em;
 
   input {
-
     border: none;
-    background: $navy-light url(/static/img/icons/icon_filter.svg) 8px 15px no-repeat transparent;
+    background: white url(/static/img/icons/icon_filter.svg) 8px 15px no-repeat transparent;
     background-size: 23px;
     padding: 15px 12px 15px 35px;
     width: 100%;
