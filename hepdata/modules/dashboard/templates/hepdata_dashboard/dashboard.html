@@ -44,7 +44,8 @@
 
 
             <div>
-                <span class="email"><i class="fa fa-envelope-o" style="margin-right: 5px"></i> {{ current_user.email }}</span>
+                    <span class="email"><i class="fa fa-envelope-o"
+                                           style="margin-right: 5px"></i> {{ current_user.email }}</span>
 
                 <br/><br/>
 
@@ -81,14 +82,29 @@
 
             <ul id="hep-submissions">
                 {% for submission in ctx.submissions %}
-
                     <li id="{{ submission.recid }}" class="submission-item">
-
                         <div class="row-fluid">
-
-                            <div class="content">
-
+                            <div class="submission-header">
                                 {% if ctx.user_is_admin or submission.show_coord_view %}
+
+                                    {% if submission.requires_inspire_id %}
+                                        <button class="btn btn-primary btn-sm inspire-btn pull-right"
+                                                id="inspire-btn-{{ submission.recid }}"
+                                                data-recid="{{ submission.recid }}">
+                                            Add INSPIRE ID
+                                        </button>
+
+                                    {% else %}
+                                        {% if submission.review_flag == 'passed' and submission.submission_status=='todo' %}
+                                            <button class="btn btn-success btn-sm finalise-btn pull-right"
+                                                    id="finalise-btn-{{ submission.recid }}"
+                                                    data-recid="{{ submission.recid }}"
+                                                    data-versions="{{ submission.versions }}">
+                                                Finalise Submission
+                                            </button>
+
+                                        {% endif %}
+                                    {% endif %}
 
                                     {% if submission.reviewer_message %}
                                         <span class="fa fa-comment pull-right"
@@ -107,7 +123,7 @@
                                                 data-recid="{{ submission.recid }}"
                                                 data-toggle="modal"
                                                 data-target="#deleteWidget"
-                                                style="margin-right: 10px;">
+                                                style="margin-right: 5px;">
                                             <span class="fa fa-trash-o"></span>
                                         </button>
                                     {% endif %}
@@ -121,14 +137,17 @@
                                     </button>
                                 {% endif %}
 
-                                <span class="start_date"> Started on {{ submission.start_date.strftime('%Y-%m-%d at %H:%M') }}</span>
+                                <span class="start_date pull-left"> Started on {{ submission.start_date.strftime('%Y-%m-%d at %H:%M') }}</span>
+                            </div>
+
+                            <div class="clearfix"></div>
+
+                            <div class="content">
 
                                 {% if submission.versions > 1 %}
                                     <span class="label label-warning pull-right">{{ submission.versions }} Versions</span>{% endif %}
 
-                                <h4><a
-                                        href="/record/{{ submission.recid }}"
-                                        target="_blank">{{ submission.title }}</a>
+                                <h4><a href="/record/{{ submission.recid }}" target="_blank">{{ submission.title }}</a>
                                 </h4>
 
                                 <br/>
@@ -161,72 +180,43 @@
                                                 {% endfor %}
                                             </div>
                                         {% else %}
-                                            <div class="submission-person">
-                                                <div class="title coordinator-title">
-                                                    Coordinator
-                                                </div>
-                                                <div class="value coordinator-value">{{ submission.coordinator.name }}
-                                                    <a
-                                                            href="mailto:{{ submission.coordinator.email }}?subject=Coordination of HEPdata submission for {{ submission.title }}">
-                                                        <span class="email">email</span></a>
-                                                </div>
-                                                <br/></div>
-                                            <div class="submission-person">
-                                                <div class="title uploader-title">
-                                                    Uploader
-                                                </div>
-                                                <div class="value uploader-value">{{ submission.uploader.name }}
-                                                    <a
-                                                            href="mailto:{{ submission.uploader.email }}?subject=Upload for {{ submission.title }}">
-                                                        <span class="email">email</span></a>
-                                                </div>
-                                                <br/></div>
-                                            <div class="submission-person">
-                                                <div class="title reviewer-title">
-                                                    Reviewer
-                                                </div>
-                                                <div class="value reviewer-value">{{ submission.reviewer.name }}
-                                                    <a
-                                                            href="mailto:{{ submission.reviewer.email }}?subject=Review for {{ submission.title }}">
-                                                        <span class="email">email</span></a>
-                                                </div>
+
+                                            <div class="table-responsive">
+                                                <table class="table table-hover">
+                                                    <tr class="submission-person">
+                                                        <td class="title coordinator-title">Coordinator</td>
+                                                        <td class="value coordinator-value">{{ submission.coordinator.name }}</td>
+                                                        <td><a
+                                                                href="mailto:{{ submission.coordinator.email }}?subject=Coordination of HEPdata submission for {{ submission.title }}">
+                                                            <span class="email">email</span></a></td>
+                                                    </tr>
+
+                                                    <tr class="submission-person">
+                                                        <td class="title uploader-title">Uploader</td>
+                                                        <td class="value uploader-value">{{ submission.uploader.name }}</td>
+                                                        <td><a
+                                                                href="mailto:{{ submission.uploader.email }}?subject=Upload for HEPdata for {{ submission.title }}">
+                                                            <span class="email">email</span></a></td>
+                                                    </tr>
+
+                                                    <tr class="submission-person">
+                                                        <td class="title reviewer-title">Reviewer</td>
+                                                        <td class="value reviewer-value">{{ submission.reviewer.name }}</td>
+                                                        <td><a
+                                                                href="mailto:{{ submission.reviewer.email }}?subject=Review for HEPdata for {{ submission.title }}">
+                                                            <span class="email">email</span></a></td>
+                                                    </tr>
+                                                </table>
                                             </div>
+
                                         {% endif %}
 
-                                        <div align="center" id="finalise_container">
-                                            {% if submission.submission_status=='finished' %}
-                                                <div class="submission-date"
-                                                     align="center"><span
-                                                        class="fa fa-calendar"
-                                                        style="padding-right: 10px;"></span>Submission
-                                                    complete
-                                                </div>
 
-                                            {% else %}
-                                                {% if ctx.user_is_admin or submission.show_coord_view %}
-
-                                                    {% if submission.requires_inspire_id %}
-                                                        <button class="btn btn-primary inspire-btn"
-                                                                id="inspire-btn-{{ submission.recid }}"
-                                                                data-recid="{{ submission.recid }}">
-                                                            Add INSPIRE ID
-                                                        </button>
-                                                    {% else %}
-                                                        {% if submission.review_flag == 'passed' and submission.submission_status=='todo' %}
-                                                            <button class="btn btn-primary finalise-btn"
-                                                                    id="finalise-btn-{{ submission.recid }}"
-                                                                    data-recid="{{ submission.recid }}"
-                                                                    data-versions="{{ submission.versions }}">
-                                                                Finalise Submission
-                                                            </button>
-                                                        {% endif %}
-                                                    {% endif %}
-                                                {% endif %}
-                                            {% endif %}
-                                        </div>
                                     </div>
                                 </div>
+
                             </div>
+
                         </div>
                         <div class="clearfix"></div>
                     </li>

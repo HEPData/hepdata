@@ -8,11 +8,19 @@
     font-size: 1.8em;
     color: white;
   }
+}
 
+.table>tbody>tr>td, .table>tbody>tr>th, .table>tfoot>tr>td, .table>tfoot>tr>th, .table>thead>tr>td, .table>thead>tr>th {
+  border-top:none;
+}
+
+#finalise_container {
+  border-top: 2px solid #f6f6f6;
+  padding: 1em;
 }
 
 .profile-container {
-  padding: 2em;
+  padding:1em;
   h4 {
     font-weight: bolder;
   }
@@ -63,7 +71,8 @@
   list-style: none;
   -webkit-padding-start: 0px;
   width: 100%;
-  padding: 2em;
+  padding-left: 2em;
+  padding-right: 2em;
 
 }
 
@@ -75,6 +84,7 @@
   color: $navy;
   border-bottom: 2px solid $silver;
   border-right: 2px solid $silver;
+  margin-bottom: 4px;
 
   .start_date {
     color: $purple;
@@ -97,6 +107,16 @@
   .email:hover {
     background-color: $purple-light;
     text-decoration: none;
+  }
+
+  .submission-header {
+    border-bottom: 2px solid $lightgrey;
+    padding: 1em;
+    height: 55px;
+
+    button {
+      margin-right: 5px;
+    }
   }
 
   .content {
