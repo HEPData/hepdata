@@ -120,16 +120,17 @@
                                     </button>
                                 {% endif %}
 
-                                <span> Started on {{ submission.start_date.strftime('%Y-%m-%d at %H:%M') }}</span>
+                                <span class="start_date"> Started on {{ submission.start_date.strftime('%Y-%m-%d at %H:%M') }}</span>
 
                                 {% if submission.versions > 1 %}
                                     <span class="label label-warning pull-right">{{ submission.versions }} Versions</span>{% endif %}
-                                <br/><br/>
+
                                 <h4><a
                                         href="/record/{{ submission.recid }}"
                                         target="_blank">{{ submission.title }}</a>
                                 </h4>
 
+                            <br/>
 
                                 <div class="row-fluid">
 

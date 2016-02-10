@@ -2,7 +2,7 @@
   background-color: white;
   color: $navy;
   padding: 20px;
-  border-bottom: 2px solid $grey;
+  border-bottom: 4px solid $navy-light;
   h4 {
     margin: 0;
     font-size: 1.8em;
@@ -13,8 +13,6 @@
 
 .profile-container {
   padding: 2em;
-
-
   h4 {
     font-weight: bolder;
   }
@@ -73,7 +71,14 @@
   width: 100%;
   display: block;
   border-radius: 4px;
-  background-color: $navy;
+  background-color: white;
+  color: $navy;
+  border-bottom: 2px solid $concrete;
+  border-right: 2px solid $concrete;
+
+  .start_date {
+    color: $purple;
+  }
 
   .email {
     background-color: $navy-light;
@@ -98,12 +103,12 @@
     width: 100%;
     padding: 20px;
     border-radius: 3px;
-    color: white;
+    color: $navy;
 
     h4 a {
-      color: white;
-      font-size: 1em;
-      font-weight: normal;
+      color: $navy;
+      font-size: 1.1em;
+      font-weight: bolder;
       text-transform: capitalize;
     }
   }
@@ -161,7 +166,7 @@
 
 .submission-uploader {
 
-  background-color: white;
+  background-color: $navy;
   padding: 7px 6px;
   border-radius: 3px;
   color: white;
@@ -176,15 +181,14 @@
 }
 
 .manage-submission-trigger {
-  border: none;
-  color: $navy;
-  background: white;
-  font-weight: lighter;
-}
 
-.manage-submission-trigger:hover {
-  background-color: $lightgrey;
-  color: $navy-light;
+  color: white;
+  background: $navy;
+
+  &:hover {
+    color:white;
+    background-color: $navy-light;
+  }
 }
 
 .dashboard-messages {
@@ -215,8 +219,8 @@
 
 #hepdata_submissions {
   width: 100%;
-  height: 85%;
-  background-color: $navy-light;
+  height: 55vh;
+  background-color: $navy;
   overflow-y: scroll;
 
 }
@@ -230,7 +234,7 @@
   input {
 
     border: none;
-    background: white url(/static/img/icons/icon_filter.svg) 8px 15px no-repeat transparent;
+    background: $navy-light url(/static/img/icons/icon_filter.svg) 8px 15px no-repeat transparent;
     background-size: 23px;
     padding: 15px 12px 15px 35px;
     width: 100%;
@@ -449,7 +453,7 @@ p.no-entries {
 }
 
 .uploader-title, .uploader-value {
-  color: white;
+  color: $navy;
 }
 
 .input-text-box {
