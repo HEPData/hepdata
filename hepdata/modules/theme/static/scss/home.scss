@@ -1,0 +1,153 @@
+.home-top {
+  background: $purple url('/static/img/home_bg.svg') no-repeat bottom right;
+  height: 35vh;
+  border-bottom: 4px solid $purple-light;
+
+  a {
+    color: white !important;
+  }
+
+  h4 {
+    margin-top: 0;
+    color: white;
+    font-weight: normal;
+  }
+
+}
+
+.search-area {
+  background-color: $navy;
+  padding-top: 4vh;
+  padding-bottom: 3vh;
+
+}
+
+.hep_logo_home {
+
+  display: inline-block;
+  background: url("/static/img/hepdata_logo_darkbg.svg") no-repeat 0 5px;
+  background-size: 250px;
+  width: 250px;
+  height: 90px;
+  margin-top: 5vh;
+}
+
+.search-main {
+  width: 50%;
+  min-width: 400px;
+  margin: 9em auto 0;
+}
+
+.main-search-form {
+  input {
+    background-color: $lightgrey;
+    border: none;
+    width: 350px;
+    border-radius: 4px 0 0 4px;
+    padding: 12px 10px 10px 37px;
+    color: white;
+  }
+
+  .submit {
+    font-size: 1em;
+    padding: 10px 15px;
+    margin-left: -2px;
+    color: white;
+
+    -webkit-transition: all 0.3s;
+    -moz-transition: all 0.3s;
+    -ms-transition: all 0.3s;
+    transition: all 0.3s;
+
+    &:hover {
+      background-color: $purple-light;
+    }
+  }
+
+}
+
+.search-examples {
+  padding-top: 10px;
+  font-size: .9em;
+  color: $concrete;
+
+  a {
+    color: white;
+  }
+}
+
+#record_stats {
+  padding-bottom: 10px;
+  a {
+
+    font-size: 1.2em;
+    color: white;
+    font-weight: lighter;
+  }
+}
+
+.lhc_experiments {
+  padding: 2em;
+  background-color: $lightgrey;
+
+  h4 {
+    font-weight: bolder;
+    color: $navy;
+  }
+
+  .experiment {
+    border-radius: 5px;
+    margin-bottom: 20px;
+  }
+}
+
+#latest_records_section {
+
+  background-color: white;
+  padding: 2em;
+
+  h4 {
+    font-weight: bolder;
+
+    a {
+      font-size: .8em;
+    }
+  }
+
+}
+
+#latest_records .latest-record {
+  font-size: 1em;
+  text-align: center;
+  padding: 10px;
+  color: $navy;
+
+  .journal {
+    font-weight: bolder;
+  }
+
+  .collaboration {
+    margin-right: 5px;
+  }
+
+  .title {
+    font-size: 1em;
+    font-weight: bolder;
+    margin-bottom: 8px;
+  }
+
+  .author {
+    font-weight: normal;
+  }
+
+}
+
+.footer-home {
+  padding: 2em;
+  background-color: $navy;
+  color: white;
+}
+
+
+
+

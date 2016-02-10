@@ -32,7 +32,8 @@ body.cover-page {
 }
 
 body.home-page {
-  color: $grey;
+  color: $navy;
+
   text-align: center;
   background-color: white;
 }
@@ -241,21 +242,6 @@ svg:not(:root) {
   opacity: 0;
 }
 
-#latest_records_section {
-  margin-top: 5em;
-}
-
-#latest_records_section h4 {
-  color: #AAAAAA;
-  font-size: 1em;
-}
-
-#latest_records {
-
-  height: 20%;
-  overflow-y: auto;
-}
-
 #beta_alert {
   background-color: #E1CEE8;
   border: none;
@@ -265,7 +251,6 @@ svg:not(:root) {
 #home_top_bar {
   background-color: transparent;
   width: 100%;
-  top: 56px;
 }
 
 @media (max-width: 600px) {
@@ -281,57 +266,4 @@ svg:not(:root) {
     height: 80px;
   }
 
-}
-
-#latest_records .latest-record {
-  font-size: .8em;
-  text-align: left;
-  padding: 10px;
-  color: #AAAAAA;
-}
-
-#record_stats p {
-  margin-top: 1em;
-  margin-bottom: 1em;
-  font-size: .9em;
-  color: #AAAAAA;
-}
-
-.journal {
-  font-weight: bolder;
-}
-
-.title {
-  font-size: 1.1em;
-  margin-bottom: 8px;
-}
-
-.author {
-  font-weight: bolder;
-  color: #2C3E50;
-}
-
-.search-main {
-  width: 50%;
-  min-width: 400px;
-  margin: 9em auto 0;
-}
-
-.main-search-form input {
-  background-color: #ECF0F1;
-  width: 240px;
-  border-radius: 4px 0 0 4px;
-}
-
-.main-search-form .submit {
-  font-size: 1em;
-  padding: 6px 15px;
-  margin-left: -5px;
-  color: white;
-}
-
-.search-examples {
-  padding-top: 10px;
-  font-size: .9em;
-  color: #7F8C8D;
 }

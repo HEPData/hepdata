@@ -12,138 +12,152 @@
     {%- endblock browserupgrade %}
 
     <div class="site-wrapper">
-        {% block page_header %}
-
-            <div id="beta_alert" class="alert alert-info" align="center">
-                This new site is still under development. In the meantime,
-                please continue using the old site: <a
-                    href="http://hepdata.cedar.ac.uk"
-                    target="_blank">http://hepdata.cedar.ac.uk</a>
-            </div>
-
-            <div class="top-bar" id="home_top_bar">
-
-                <div class="content">
-
-
-                    <div class="pull-right login">
-                    </div>
-
-                    <div class="pull-right menu">
-                        <ul>
-                            {%- if current_user.is_authenticated %}
-                                {% if user_is_coordinator_or_admin %}
-                                    <li>
-                                        <a href="/submit">
-                                            <span class="fa fa-arrow-up"></span>
-                                            Submit</a>
-                                    </li>
-                                {% endif %}
-                                <li><a href="/record/sandbox"><span
-                                        class="fa fa-cube"></span> Sandbox</a>
-                                </li>
-                            {%- endif %}
-
-                            <li><a href="/submission"><span
-                                    class="fa fa-life-ring"></span> Help</a>
-                            </li>
-                            {%- if not current_user.is_authenticated %}
-                                <li>
-                                    <a class=""
-                                       href="{{ url_for_security('login') }}">
-                                        <i class="fa fa-sign-in"></i> Sign in
-                                    </a>
-                                </li>
-                            {%- else %}
-                                <li>
-                                    <a href="{% if show_dashboard %}/dashboard{% else %}/account/settings/profile{% endif %}">
-                                        <i class="fa fa-user"></i>
-                                        {% if show_dashboard %}
-                                            Dashboard
-                                        {% else %}
-                                            Your Account
-                                        {% endif %}
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href="{{ url_for_security('logout') }}"><span
-                                            class="fa fa-power-off"></span> Log
-                                        out</a>
-                                </li>
-                            {%- endif %}
-                        </ul>
-                    </div>
-
-
-                </div>
-
-            </div>
-
-
-        {% endblock page_header %}
 
         {% block page_body %}
 
-            <div class="clearfix"></div>
+            <div class="home-top">
+                <div class="top-bar" id="home_top_bar">
 
-            <div class="search-main" align="center">
-                <div class="hep_logo_big"></div>
+                    <div class="content">
+                        <div class="pull-right menu">
+                            <ul>
+                                {%- if current_user.is_authenticated %}
+                                    {% if user_is_coordinator_or_admin %}
+                                        <li>
+                                            <a href="/submit">
+                                                <span class="fa fa-arrow-up"></span>
+                                                Submit</a>
+                                        </li>
+                                    {% endif %}
+                                    <li><a href="/record/sandbox"><span
+                                            class="fa fa-cube"></span> Sandbox</a>
+                                    </li>
+                                {%- endif %}
+
+                                <li><a href="/submission"><span
+                                        class="fa fa-life-ring"></span> Help</a>
+                                </li>
+                                {%- if not current_user.is_authenticated %}
+                                    <li>
+                                        <a class=""
+                                           href="{{ url_for_security('login') }}">
+                                            <i class="fa fa-sign-in"></i> Sign in
+                                        </a>
+                                    </li>
+                                {%- else %}
+                                    <li>
+                                        <a href="{% if show_dashboard %}/dashboard{% else %}/account/settings/profile{% endif %}">
+                                            <i class="fa fa-user"></i>
+                                            {% if show_dashboard %}
+                                                Dashboard
+                                            {% else %}
+                                                Your Account
+                                            {% endif %}
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{{ url_for_security('logout') }}"><span
+                                                class="fa fa-power-off"></span> Log
+                                            out</a>
+                                    </li>
+                                {%- endif %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="hep_logo_home"></div>
+                {#                <h4>High Energy Physics Data Repository</h4>#}
+            </div>
+
+
+
+            <div class="search-area">
+
+                <div id="record_stats"></div>
 
                 <form class="main-search-form" action="/search">
-                    <input type="text" name="q" placeholder="Search HEP Data">
+                    <input type="text" name="q" placeholder="Search for a paper, author, experiment, reaction">
                     <button type="submit" class="submit">Search</button>
                 </form>
 
-                <p class="search-examples">example queries - <a
-                        href="/search?q=gamma gamma">gamma gamma</a>,
-                    <a href="/search?q=&collaboration=ATLAS">ATLAS</a>,
-                    <a href="/search?q=&collaboration=CMS">CMS</a>,
-                    <a href="/search?q=&collaboration=ALICE">ALICE</a>,
-                    <a href="/search?q=&collaboration=LHCb">LHCb</a>.
+                <p class="search-examples">example queries - <a href="/search?q=gamma gamma">gamma gamma</a>,
+                    <a href="/search?q=elastic scattering">elastic scattering</a>, <a href="/search?q=strangeness">strangeness</a>.
+
                 </p>
 
+            </div>
 
-                <div id="latest_records_section">
-                    <h4>Recently Updated Submissions <a
-                            href="search/?q=&sort_order=&sort_by=latest">View
-                        more</a></h4><br/>
+            <div class="lhc_experiments">
+                <h4>Data from the LHC</h4>
 
-                    <div id="latest_records" class="scrollable">
 
-                    </div>
+                <div class="row">
+
+                    {% set experiments = ["ATLAS", "ALICE", "CMS", "LHCb"] %}
+
+                    {% for experiment in experiments %}
+                        <div class="col-md-3 col-sm-3 col-xs-6 align-center experiment">
+                            <img src="/static/img/home/cern_lhc_icon_{{ experiment }}.svg"
+                                 width="90px">
+
+                            <h4>{{ experiment }}</h4>
+                            <a href="/search?q=&collaboration={{ experiment }}" class="btn btn-sm btn-primary">View
+                                Data</a>
+                        </div>
+                    {% endfor %}
+                </div>
+
+
+            </div>
+
+
+            <div id="latest_records_section">
+
+                <h4>Recently Updated Submissions - <a href="search/?q=&sort_order=&sort_by=latest">View all</a></h4>
+
+
+                <div id="latest_records" class="row scrollable">
                     <!--populated automatically-->
                 </div>
 
-                <div id="record_stats"></div>
+
             </div>
 
-            <div class="clearfix"></div>
+
+            <div id="footer" class="footer-home">
+                <div class="row">
+                    <div class="col-md-4" align="center"><a href="http://www.dur.ac.uk"
+                                                            target="_blank"><img
+                            src="static/img/about/durham-logo.svg" width="180px"></a>
+                    </div>
+                    <div class="col-md-4" align="center"><a href="http://www.cern.ch"
+                                                            target="_blank"> <img
+                            src="static/img/about/cern-logo.svg" width="90px"></a>
+                    </div>
+
+                    <div class="col-md-4" align="center"><a href="http://www.stfc.ac.uk/" target="_blank"><img
+                            src="http://www.numerical.rl.ac.uk/images/template/stfcLogo.png" width="250px"></a>
+                    </div>
+                </div>
+
+                <br/>
+
+                <div class="row">
+                    <div class="col-md-12">
+                        Copyright ~1975-Present, HEPData | Powered by <a href="http://invenio-software.org/"
+                                                                         target="_blank" style="color:white">Invenio</a>,
+                        funded by <a href="http://www.stfc.ac.uk/" target="_blank" style="color:white">STFC, UK</a>,
+                        supported by <a href="https://www.ippp.dur.ac.uk/" target="_blank" style="color:white">IPPP
+                        Durham</a>.
+                    </div>
+                </div>
+            </div>
+
+            <div class="clearfix"
 
         {% endblock page_body %}
 
-        {% block page_footer %}
-
-            <div class="footer-bar home-page-footer" align="center">
-                <p>Copyright ~1975-Present, HEPData | Powered by <a
-                        href="http://invenio-software.org/" target="_blank">Invenio</a>,
-                    funded by <a href="http://www.stfc.ac.uk/" target="_blank">STFC,
-                        UK</a>, supported by <a
-                            href="http://www.ippp.dur.ac.uk/" target="_blank">IPPP
-                        Durham</a>, hosted by <a href="http://cern.ch">CERN</a>
-                </p>
-                <p>
-                    <a href="/about" style="margin-right: 10px;"><span
-                            class="fa fa-info"></span> About</a>
-                    <a href="/submission"
-                       style="margin-right: 10px;"><span
-                            class="fa fa-check"></span> Submission
-                        Guidelines</a>
-                    <a href="http://twitter.com/hepdata" target="_new"><span
-                            class="fa fa-twitter"></span> @hepdata</a>
-                </p>
-            </div>
-
-        {% endblock page_footer %}
 
     </div>
     {%- block javascript %}
@@ -157,36 +171,46 @@
 
         <script>
             $.ajax({
-                url: '/record/latest?n=2',
+                url: '/record/latest?n=3',
                 method: 'GET',
                 success: function (data) {
                     data = data['latest'];
                     for (var record in data) {
 
-                        var record_html_block = '<div class="latest-record">';
+                        var record_html_block = '<div class="latest-record col-md-4 col-xs-12">';
 
-                        record_html_block += '<a href="/record/ins' + data[record]['inspire_id'] + '" class="title">' + data[record]['title'] + '</a><br/>';
-                        if (data[record]['first_author']) {
-                            record_html_block += '<a href="/search/?q=&author=' + data[record]['first_author']['full_name'] + '" class="author">' + data[record]['first_author']['full_name'] + '</a>';
-                        }
+
                         if (data[record]['collaborations'].length > 0)
-
                             for (var collaboration in data[record]['collaborations']) {
-                                record_html_block += ' <a href="/search?q=&collaboration=' + data[record]['collaborations'][collaboration] + '" class="collaboration">' + data[record]['collaborations'] + '</a>';
+                                record_html_block += ' <a href="/search?q=&collaboration=' + data[record]['collaborations'][collaboration] + '" class="collaboration">' + data[record]['collaborations'] + '</a> ';
                             }
 
-                        if (data[record]['journal'])
-                            record_html_block += '<span class="journal"> ' + data[record]['journal'] + '</span>';
 
-                        var last_updated_date  = new Date(data[record]['last_updated']);
+                        record_html_block += '<a href="/record/ins' + data[record]['inspire_id'] + '" class="title">' + data[record]['title'] + '</a><br/>';
 
-                        record_html_block += '<span class="date pull-right" style="margin-left: 10px"> Updated on ' + last_updated_date.getFullYear() + '-' + (last_updated_date.getMonth()+1) + "-" + last_updated_date.getDate() + '</span>';
-                        if (data[record]['creation_date'] != null) {
-                            record_html_block += '<span class="date pull-right"> Published on ' + data[record]['creation_date'] + '</span></div>';
+                        if (data[record]['first_author']) {
+                            record_html_block += '<a href="/search/?q=&author=' + data[record]['first_author']['full_name'] + '" class="author">' + data[record]['first_author']['full_name'] + ' <i>et al</i></a>';
                         }
 
+                        record_html_block += "<br/>";
+
+                        if (data[record]['journal'])
+                            record_html_block += '<span class="journal"> ' + data[record]['journal'] + '</span><br/>';
+
+
+                        record_html_block += "<br/>";
+
+                        var last_updated_date = new Date(data[record]['last_updated']);
+                        record_html_block += '<div class="date"><i class="fa fa-clock-o"></i>  Updated ' + last_updated_date.getFullYear() + '-' + (last_updated_date.getMonth() + 1) + "-" + last_updated_date.getDate() + '</div>';
+
+                        if (data[record]['creation_date'] != null) {
+                            record_html_block += '<div class="date"><i class="fa fa-bookmark-o"></i> Published on ' + data[record]['creation_date'] + '</div>';
+                        }
+
+                        record_html_block += '</div>';
+
+
                         $("#latest_records").append(record_html_block);
-                        $("#latest_records").append('<div class="clearfix"></div>');
                     }
 
                     MathJax.Hub.Config({
@@ -200,7 +224,7 @@
                 url: '/record/count',
                 method: 'GET',
                 success: function (data) {
-                    $("#record_stats").html('<p><a href="/search">View all <span style="font-weight: bolder">' + data["publications"] + '</span> publications and <span style="font-weight: bolder">' + data["data"] + '</span> data tables.</a> </p>')
+                    $("#record_stats").html('<a href="/search">Search on <span style="font-weight: bolder">' + data["publications"] + '</span> publications and <span style="font-weight: bolder">' + data["data"] + '</span> data tables.</a>')
                 }
             });
 

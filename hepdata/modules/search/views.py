@@ -206,7 +206,7 @@ def process_year_facet(request, facets):
             year_facet = {decode_string(json.dumps(year_facet))}
             set_session_item(url_path, year_facet)
 
-    if len(year_facet) > 0:
+    if year_facet and len(year_facet) > 0:
         year_facet = list(year_facet)[0]
 
     return year_facet
