@@ -143,14 +143,23 @@ body.home-page {
   padding: 5px 6px 5px 25px;
 }
 
-.main-search-form input {
-  font-size: .9em;
-  border: 1px solid white;
-  margin-left: -8px;
-  color: $navy;
-  background: $lightgrey url("/static/img/icons/search_icon.svg") no-repeat 5px 50%;
-  background-size: 8%;
-  padding: 8px 9px 7px 25px;
+.main-search-form {
+  input {
+    font-size: .9em;
+    border: 1px solid white;
+    color: $navy;
+    background: $lightgrey url("/static/img/icons/search_icon.svg") no-repeat 5px 50%;
+    background-size: 8%;
+    padding: 8px 9px 7px 25px;
+  }
+}
+
+@media (max-width: 460px) {
+  .main-search-form {
+    input {
+      width: 290px !important;
+    }
+  }
 
 }
 
@@ -268,3 +277,4 @@ svg:not(:root) {
   }
 
 }
+
