@@ -306,7 +306,7 @@ class Migrator(object):
 
     def cleanup_yaml(self, yaml, type):
         keys_to_remove = ["independent_variables",
-                          "dependent_variables"]
+                          "dependent_variables", "publicationyear", "preprintyear"]
         self.remove_keys(yaml, keys_to_remove)
 
         if type is 'info':
