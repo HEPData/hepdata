@@ -163,7 +163,6 @@ def format_submission(recid, record, version, hepdata_submission,
 
         ctx['record'] = record
         ctx["version_count"] = hepdata_submission.latest_version
-        ctx['record']['last_updated'] = hepdata_submission.last_updated
 
         if version is not -1:
             ctx["version"] = version
@@ -198,6 +197,8 @@ def format_submission(recid, record, version, hepdata_submission,
             determine_user_privileges(recid, ctx)
             ctx['show_upload_widget'] = True
             ctx['show_review_widget'] = False
+
+        ctx['record']['last_updated'] = hepdata_submission.last_updated
 
         ctx['record']['hepdata_doi'] = "{0}".format(hepdata_submission.doi)
         if ctx['version'] > 1:

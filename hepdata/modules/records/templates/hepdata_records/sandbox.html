@@ -39,9 +39,10 @@
 
     <div class="hep_breadcrumbs">
         <ul>
-            <li class="active"><span class="fa fa-cube"></span> HEPData Sandbox
-            </li>
+            <a href="/record/sandbox"><li class="active"><span class="fa fa-cube"></span> HEPData Sandbox
+            </li></a>
 
+            {% if ctx.data_tables|length != 0 %}
             <li class="pull-right">
 
                 <div class="dropdown"
@@ -68,6 +69,7 @@
                 </div>
 
             </li>
+            {% endif %}
         </ul>
     </div>
 
