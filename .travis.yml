@@ -37,6 +37,8 @@ cache:
 
 services:
   - posgresql
+  - elasticsearch
+  - redis-server
 
 python:
   - "2.7"
@@ -47,6 +49,7 @@ before_install:
 
 install:
   - "travis_retry pip install -r requirements.txt"
+  - "travis_retry hepdata reindex -r True"
 
 script:
   - "./run-tests.sh"
