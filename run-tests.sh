@@ -22,6 +22,4 @@
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
-pep257 hepdata && \
-isort -rc -c -df **/*.py && \
 python setup.py test
