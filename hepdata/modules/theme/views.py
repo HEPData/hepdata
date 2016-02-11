@@ -28,6 +28,8 @@ from __future__ import absolute_import, print_function
 
 from flask import Blueprint, render_template
 
+from hepdata.version import __version__
+
 blueprint = Blueprint(
     'hepdata_theme',
     __name__,
@@ -39,7 +41,7 @@ blueprint = Blueprint(
 
 @blueprint.route('/')
 def index():
-    return render_template('hepdata_theme/home.html')
+    return render_template('hepdata_theme/home.html', ctx={"version": __version__})
 
 
 @blueprint.route('/submission')
