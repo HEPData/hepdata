@@ -67,11 +67,11 @@ def migrator():
 def identifiers():
     return [{"inspire_id": "ins1245023",
              "title": "High-statistics study of $K^0_S$ pair "
-                      "production in two-photon collisions"}
-            # {"inspire_id": "ins731865",
-            #  "title": "Observation of the Exclusive Reaction "
-            #           "$e^{+} e^{-} \to \phi \eta$ at "
-            #           "$\sqrt{s}$ = 10.58-GeV"},
+                      "production in two-photon collisions"},
+            {"inspire_id": "ins731865",
+             "title": "Observation of the Exclusive Reaction "
+                      "$e^{+} e^{-} \to \phi \eta$ at "
+                      "$\sqrt{s}$ = 10.58-GeV"}
             # {"inspire_id": "ins1183818",
             #  "title": "Measurements of the pseudorapidity "
             #           "dependence of the total transverse energy "

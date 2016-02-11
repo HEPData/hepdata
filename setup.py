@@ -151,7 +151,7 @@ setup(
     keywords='hepdata research data repository',
     license='GPLv2',
     author='CERN',
-    author_email='info@hepdata.org',
+    author_email='info@hepdata.net',
     url='https://github.com/hepdata/hepdata',
     packages=packages,
     zip_safe=False,
