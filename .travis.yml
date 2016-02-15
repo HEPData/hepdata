@@ -36,7 +36,7 @@ cache:
   - pip
 
 services:
-  - posgresql
+  - postgresql: "9.3"
   - elasticsearch
   - redis-server
 
