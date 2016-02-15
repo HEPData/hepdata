@@ -343,7 +343,7 @@ def parse_modifications(recid, submission_info_document):
             db.session.add(participant)
 
 
-def process_submission_directory(basepath, submission_file_path, recid):
+def process_submission_directory(basepath, submission_file_path, recid, update=False):
     """
     Goes through an entire submission directory and processes the
     files within to create DataSubmissions
@@ -374,7 +374,7 @@ def process_submission_directory(basepath, submission_file_path, recid):
 
             # if it is finished and we receive an update,
             # then we need to reopen the submission to allow for revisions.
-            if hepsubmission.overall_status == 'finished':
+            if hepsubmission.overall_status == 'finished' and not update:
                 hepsubmission.overall_status = 'todo'
                 hepsubmission.latest_version += 1
                 db.session.add(hepsubmission)
@@ -476,16 +476,13 @@ def process_validation_errors_for_display(errors):
         processed_errors[file_name] = []
         for error in errors[file]:
             processed_errors[file_name].append(
-                {"level": error.level,
-                 "message": error.message.encode("utf-8")
-                 })
-
+                {"level": error.level, "message": error.message.encode("utf-8")}
+            )
     return processed_errors
 
 
 def get_or_create_hepsubmission(recid, coordinator=1, status="todo"):
-    hepsubmission = HEPSubmission.query.filter_by(publication_recid=recid) \
-        .first()
+    hepsubmission = HEPSubmission.query.filter_by(publication_recid=recid).first()
 
     if hepsubmission is None:
         hepsubmission = HEPSubmission(publication_recid=recid,

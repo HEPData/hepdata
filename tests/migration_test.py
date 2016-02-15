@@ -28,7 +28,7 @@ def test_inspire_record_retrieval(app, migrator, identifiers):
                 migrator.retrieve_publication_information(
                     test_id["inspire_id"])
 
-            assert publication_information["name"] == test_id["title"]
+            assert publication_information["title"] == test_id["title"]
 
 
 def test_migration(app, migrator, identifiers):

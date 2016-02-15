@@ -32,6 +32,8 @@ import shutil
 import yaml
 from yaml.scanner import ScannerError
 
+from hepdata.config import CFG_PUB_TYPE
+from hepdata.ext.elasticsearch.api import get_records_matching_field
 from hepdata.modules.inspire_api.views import get_inspire_record_information
 from hepdata.modules.dashboard.views import do_finalise
 from hepdata.modules.records.utils.common import zipdir
@@ -39,7 +41,7 @@ from hepdata.modules.records.utils.data_processing_utils import str_presenter
 from hepdata.modules.records.utils.submission import \
     process_submission_directory, get_or_create_hepsubmission, \
     remove_submission
-from hepdata.modules.records.utils.workflow import create_record
+from hepdata.modules.records.utils.workflow import create_record, update_record
 import logging
 
 __author__ = 'eamonnmaguire'
@@ -67,6 +69,20 @@ class FailedSubmission(Exception):
 
 
 @shared_task
+def update_submissions(inspire_ids_to_update):
+    migrator = Migrator()
+    for index, inspire_id in enumerate(inspire_ids_to_update):
+        _cleaned_id = inspire_id.replace("ins", "")
+        _matching_records = get_records_matching_field('inspire_id', _cleaned_id, doc_type=CFG_PUB_TYPE)
+        if len(_matching_records['hits']['hits']) > 0:
+            print 'The record with id {} will be updated now'.format(inspire_id)
+            migrator.update_file.delay(inspire_id, _matching_records['hits']['hits'][0]['_source']['recid'])
+        else:
+            print 'No record exists with id {0}, going to attempt fresh upload of this file.'.format(inspire_id)
+            load_files.delay([inspire_id])
+
+
+@shared_task
 def load_files(inspire_ids, send_tweet=False):
     """
     :param send_tweet: whether or not to tweet this entry.
@@ -78,27 +94,58 @@ def load_files(inspire_ids, send_tweet=False):
     for index, inspire_id in enumerate(inspire_ids):
         _cleaned_id = inspire_id.replace("ins", "")
         if not record_exists(_cleaned_id):
+            print 'The record with id {} does not exist in the database, so we\'re loading it instead' \
+                .format(inspire_id)
             try:
-                log.warn('Loading {}'.format(inspire_id))
+                log.info('Loading {}'.format(inspire_id))
                 migrator.load_file.delay(inspire_id, send_tweet)
             except socket.error as se:
                 print 'socket error...'
                 print se.message
             except Exception as e:
-                print 'Failed to load {0} :( '.format(inspire_id)
+                log.error('Failed to load {0}. {1} '.format(inspire_id, e))
                 print e
-        else:
-            print 'The record with id {} already exists in the database. ' \
-                  'We shant be loading it again thank you very much.' \
-                .format(inspire_id)
 
 
 class Migrator(object):
     """
+    Performs the interface for all migration-related tasks including downloading, splitting files, YAML cleaning, and
+    loading.
     """
 
     def __init__(self, base_url="http://hepdata.cedar.ac.uk/view/{0}/yaml"):
         self.base_url = base_url
+
+    @shared_task
+    def update_file(inspire_id, recid, send_tweet=False):
+        self = Migrator()
+
+        file_location = self.download_file(inspire_id)
+        if file_location:
+
+            self.split_files(file_location, os.path.join(current_app.config['CFG_DATADIR'], inspire_id),
+                             os.path.join(current_app.config['CFG_DATADIR'], inspire_id + ".zip"))
+
+            updated_record_information = self.retrieve_publication_information(inspire_id)
+            record_information = update_record(recid, updated_record_information)
+
+            output_location = os.path.join(current_app.config['CFG_DATADIR'], inspire_id)
+
+            try:
+                recid = self.load_submission(
+                    record_information, output_location, os.path.join(output_location, "submission.yaml"), update=True)
+
+                if recid is not None:
+                    do_finalise(recid, publication_record=record_information,
+                                force_finalise=True, send_tweet=send_tweet, update=True)
+
+            except FailedSubmission as fe:
+                log.error(fe.message)
+                fe.print_errors()
+                remove_submission(fe.record_id)
+
+        else:
+            log.error('Failed to load {0}'.format(inspire_id))
 
     @shared_task
     def load_file(inspire_id, send_tweet):
@@ -239,7 +286,7 @@ class Migrator(object):
         return content
 
     def load_submission(self, record_information, file_base_path,
-                        submission_yaml_file_location):
+                        submission_yaml_file_location, update=False):
         """
         :param record_information:
         :param file_base_path:
@@ -256,7 +303,7 @@ class Migrator(object):
         get_or_create_hepsubmission(record_information["recid"], admin_user_id)
         errors = process_submission_directory(file_base_path,
                                               submission_yaml_file_location,
-                                              record_information["recid"])
+                                              record_information["recid"], update=update)
 
         if len(errors) > 0:
             print 'ERRORS ARE: '
@@ -267,8 +314,6 @@ class Migrator(object):
                 record_information['recid']), errors,
                 record_information['recid'])
         else:
-
-            # TODO: send_email_to_coordinators_etc.
             return record_information["recid"]
 
     def cleanup_data_yaml(self, yaml):

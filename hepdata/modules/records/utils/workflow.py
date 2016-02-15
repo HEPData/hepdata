@@ -1,6 +1,7 @@
 from datetime import datetime
 import uuid
 
+import jsonpatch
 from flask import render_template
 from invenio_pidstore.minters import recid_minter
 from invenio_records import Record
@@ -49,6 +50,24 @@ def create_data_structure(ctx):
 
             if "recid" == key:
                 record[key] = ctx[key]
+
+    return record
+
+
+def update_record(recid, ctx):
+    """
+    Updates a record given a new dictionary.
+    :param recid:
+    :param ctx:
+    :return:
+    """
+
+    record = get_record_by_id(recid)
+    for key, value in ctx.iteritems():
+        record[key] = value
+
+    record.commit()
+    db.session.commit()
 
     return record
 

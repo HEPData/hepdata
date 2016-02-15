@@ -139,6 +139,7 @@ RECORDS_REST_ENDPOINTS = dict(
         item_route='/records/<pid_value>',
     ), )
 
+
 # DebugToolbar
 DEBUG_TB_ENABLED = False
 DEBUG_TB_INTERCEPT_REDIRECTS = False

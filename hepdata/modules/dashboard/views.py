@@ -445,7 +445,7 @@ def finalise(recid, publication_record=None, force_finalise=False):
 
 
 def do_finalise(recid, publication_record=None, force_finalise=False,
-                commit_message=None, send_tweet=False):
+                commit_message=None, send_tweet=False, update=False):
     """
         Creates record SIP for each data record with a link to the associated
         publication
@@ -476,7 +476,7 @@ def do_finalise(recid, publication_record=None, force_finalise=False,
             version = hep_submission.latest_version
 
         existing_submissions = {}
-        if hep_submission.latest_version > 0:
+        if hep_submission.latest_version > 0 or update:
             # we need to determine which are the existing record ids.
             existing_data_records = get_records_matching_field(
                 'related_publication', recid, doc_type=CFG_DATA_TYPE)

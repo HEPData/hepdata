@@ -33,7 +33,7 @@ from hepdata.config import CFG_PUB_TYPE
 from hepdata.ext.elasticsearch.api import reindex_all, \
     get_records_matching_field, record_exists
 from hepdata.modules.records.utils.submission import unload_submission
-from hepdata.modules.records.migrator.api import load_files
+from hepdata.modules.records.migrator.api import load_files, update_submissions
 
 cli = create_cli(create_app=create_app)
 
@@ -43,7 +43,7 @@ default_recids = 'ins1345354,ins1402356,ins1310838,ins1305286,ins1393330,ins1357
 @cli.command()
 @with_appcontext
 @click.option('--recids', '-r', default=default_recids,
-              help='An comma separated list of recids to load.')
+              help='A comma separated list of recids to load.')
 @click.option('--recreate_index', '-rc', default=True, type=bool,
               help='Whether or not to recreate the index')
 @click.option('--tweet', '-t', default=False, type=bool,
@@ -90,6 +90,15 @@ def migrate(start, end, year=None, missing_only=False):
         print(inspire_ids)
 
     load_files.delay(inspire_ids)
+
+
+@cli.command()
+@with_appcontext
+@click.option('--recids', '-r',
+              help='A comma separated list of recids to load.')
+def update(recids):
+    records_to_update = recids.split(",")
+    update_submissions.delay(records_to_update)
 
 
 @cli.command()

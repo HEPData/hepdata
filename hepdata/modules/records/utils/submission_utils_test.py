@@ -10,7 +10,7 @@ class SubmissionUtilsTest(unittest.TestCase):
              "exp_result": "bitbucket"},
             {"url": "http://sourceforge.net/projects/isacommons/",
              "exp_result": "sourceforge"},
-            {"url": "http://hepdata.net/record/11085", "exp_result": "zenodo"},
+            {"url": "http://zenodo.net/record/11085", "exp_result": "zenodo"},
             {"url": "https://github.com/HEPData/hepdata",
              "exp_result": "github"}
         ]
@@ -18,7 +18,6 @@ class SubmissionUtilsTest(unittest.TestCase):
         for url_group in test_urls:
             url_type = infer_file_type(url_group["url"])
             self.assertEqual(url_group["exp_result"], url_type)
-        self.assertEqual(True, True)
 
     def test_file_extension_pattern(self):
         test_files = [

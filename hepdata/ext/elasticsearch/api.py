@@ -221,6 +221,7 @@ def record_exists(inspire_id, index=None):
         inspire_id = inspire_id[3:]
 
     inspire_id = int(inspire_id)
+    print("Checking for presence of {}".format(inspire_id))
 
     query = {
         'query': {
