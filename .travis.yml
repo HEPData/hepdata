@@ -23,7 +23,7 @@
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
 addon:
-  postgresql: 9.4
+  postgresql: "9.3"
 
 notifications:
   email: false
@@ -36,7 +36,7 @@ cache:
   - pip
 
 services:
-  - postgresql: "9.3"
+  - postgresql
   - elasticsearch
   - redis-server
 
