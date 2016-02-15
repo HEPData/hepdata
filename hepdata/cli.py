@@ -96,9 +96,19 @@ def migrate(start, end, year=None, missing_only=False):
 @with_appcontext
 @click.option('--recids', '-r',
               help='A comma separated list of recids to load.')
-def update(recids):
+@click.option('--update_record_info_only', '-ro', default=False, type=bool,
+              help='True if you just want to update the publication information.')
+def update(recids, update_record_info_only):
+    """
+    Given a list of record ids, can update the contents of the whole submission, or just the record information
+    via the update_record_info_only option.
+    Usage: hepdata update -r 'insXXX' -ro True|False
+    :param recids: comma separated list of record ids, e.g. ins222121
+    :param update_record_info_only: if True, will only up the record information, and won't update the data files.
+    :return:
+    """
     records_to_update = recids.split(",")
-    update_submissions.delay(records_to_update)
+    update_submissions.delay(records_to_update, update_record_info_only)
 
 
 @cli.command()
@@ -128,7 +138,6 @@ def get_missing_records():
 
     print("Missing {} records.".format(len(missing_ids)))
     print(missing_ids)
-
     return missing_ids
 
 

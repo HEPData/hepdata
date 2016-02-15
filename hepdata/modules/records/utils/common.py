@@ -37,6 +37,7 @@ URL_PATTERNS = [
     "github",
     "bitbucket",
     "hepforge",
+    "zenodo",
     "sourceforge",
     "sf"
 ]

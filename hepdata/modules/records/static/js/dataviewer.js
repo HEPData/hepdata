@@ -307,12 +307,8 @@ HEPDATA.is_image = function (file_path) {
 
 HEPDATA.render_associated_files = function (associated_files, placement) {
   $(placement).html('');
-
   for (var file_index in associated_files) {
-
     var file = associated_files[file_index];
-
-    console.log(file);
 
     var link = file['alt_location'];
     if (file.type == 'github') {
@@ -324,7 +320,6 @@ HEPDATA.render_associated_files = function (associated_files, placement) {
       html = '<button type="button" class="btn btn-md support-file" data-file-id="' + file.id + '">' + file.type + '</button>';
     }
     $(placement).append(html);
-
   }
 };
 
@@ -396,37 +391,32 @@ HEPDATA.table_renderer = {
       value = ""
     }
     return value;
-
   },
 
   render_keywords: function (keywords, placement) {
     $(placement + " ul").html('');
     for (var keyword_key in keywords) {
       var keyword_items = [];
-      if (keyword_key != 'phrases') {
-        for (var value in keywords[keyword_key]) {
-          keyword_items.push(keywords[keyword_key][value]);
-        }
 
-
-        var li = d3.select(placement + " ul").append('li')
-          .attr('class', 'keyword-item').style('width', function () {
-            return (93 / (Object.keys(keywords).length - 1)) + "%";
-          });
-
-        li.append('h4').text(keyword_key);
-        var individual_keyword_value_list = li.append('ul').attr('class', 'keyword_values');
-
-        var individual_kw = individual_keyword_value_list.selectAll("li")
-          .data(keyword_items).enter().append('li').attr('class', 'chip');
-
-        individual_kw.append('i').attr('class', 'fa fa-tag').style({'margin-right': '5px', 'display': 'inline'});
-        individual_kw.append('span').text(function (d) {
-          return d.length > 100 ? d.substring(0, 100) + "..." : d;
-        });
+      for (var value in keywords[keyword_key]) {
+        keyword_items.push(keywords[keyword_key][value]);
       }
-    }
+      var li = d3.select(placement + " ul").append('li')
+        .attr('class', 'keyword-item').style('width', function () {
+          return (93 / (Object.keys(keywords).length - 1)) + "%";
+        });
 
+      li.append('h4').text(keyword_key);
+      var individual_keyword_value_list = li.append('ul').attr('class', 'keyword_values');
+
+      var individual_kw = individual_keyword_value_list.selectAll("li")
+        .data(keyword_items).enter().append('li').attr('class', 'chip');
+
+      individual_kw.append('i').attr('class', 'fa fa-tag').style({'margin-right': '5px', 'display': 'inline'});
+      individual_kw.append('span').text(function (d) {
+        return d.length > 100 ? d.substring(0, 100) + "..." : d;
+      });
+    }
   },
 
   render_qualifiers: function (table_data, placement) {
@@ -449,7 +439,6 @@ HEPDATA.table_renderer = {
     for (var header_idx in table_data.headers) {
       header_section.append('td').attr('class', 'x').attr('colspan', table_data.headers[header_idx].colspan).text(table_data.headers[header_idx].name);
     }
-
   },
 
   render_data: function (table_data, placement) {
@@ -522,6 +511,7 @@ HEPDATA.table_renderer = {
               d3.selectAll('.total_errors').classed("hidden", true);
             });
           }
+
         }
       }
     }

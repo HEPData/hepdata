@@ -1,4 +1,4 @@
-from hepdata.modules.records.utils.common import infer_file_type
+from hepdata.modules.records.utils.common import infer_file_type, contains_accepted_url
 import unittest
 
 
@@ -16,7 +16,7 @@ class SubmissionUtilsTest(unittest.TestCase):
         ]
 
         for url_group in test_urls:
-            url_type = infer_file_type(url_group["url"])
+            contained, url_type = contains_accepted_url(url_group["url"])
             self.assertEqual(url_group["exp_result"], url_type)
 
     def test_file_extension_pattern(self):
@@ -27,7 +27,7 @@ class SubmissionUtilsTest(unittest.TestCase):
             {"file": "test.sh", "exp_result": "Bash Shell"},
             {"file": "test.root", "exp_result": "ROOT"},
             {"file": "test.docx", "exp_result": "docx"},
-            {"file": "test", "exp_result": "Unknown File Type"}
+            {"file": "test", "exp_result": "resource"}
         ]
 
         for file_group in test_files:

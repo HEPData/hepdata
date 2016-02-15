@@ -33,7 +33,7 @@ import yaml
 from yaml.scanner import ScannerError
 
 from hepdata.config import CFG_PUB_TYPE
-from hepdata.ext.elasticsearch.api import get_records_matching_field
+from hepdata.ext.elasticsearch.api import get_records_matching_field, index_record_ids
 from hepdata.modules.inspire_api.views import get_inspire_record_information
 from hepdata.modules.dashboard.views import do_finalise
 from hepdata.modules.records.utils.common import zipdir
@@ -69,14 +69,15 @@ class FailedSubmission(Exception):
 
 
 @shared_task
-def update_submissions(inspire_ids_to_update):
+def update_submissions(inspire_ids_to_update, only_record_information=False):
     migrator = Migrator()
     for index, inspire_id in enumerate(inspire_ids_to_update):
         _cleaned_id = inspire_id.replace("ins", "")
         _matching_records = get_records_matching_field('inspire_id', _cleaned_id, doc_type=CFG_PUB_TYPE)
         if len(_matching_records['hits']['hits']) > 0:
             print 'The record with id {} will be updated now'.format(inspire_id)
-            migrator.update_file.delay(inspire_id, _matching_records['hits']['hits'][0]['_source']['recid'])
+            migrator.update_file.delay(inspire_id, _matching_records['hits']['hits'][0]['_source']['recid'],
+                                       only_record_information)
         else:
             print 'No record exists with id {0}, going to attempt fresh upload of this file.'.format(inspire_id)
             load_files.delay([inspire_id])
@@ -117,32 +118,34 @@ class Migrator(object):
         self.base_url = base_url
 
     @shared_task
-    def update_file(inspire_id, recid, send_tweet=False):
+    def update_file(inspire_id, recid, only_record_information=False, send_tweet=False):
         self = Migrator()
 
         file_location = self.download_file(inspire_id)
         if file_location:
-
-            self.split_files(file_location, os.path.join(current_app.config['CFG_DATADIR'], inspire_id),
-                             os.path.join(current_app.config['CFG_DATADIR'], inspire_id + ".zip"))
-
             updated_record_information = self.retrieve_publication_information(inspire_id)
             record_information = update_record(recid, updated_record_information)
 
-            output_location = os.path.join(current_app.config['CFG_DATADIR'], inspire_id)
+            if not only_record_information:
+                self.split_files(file_location, os.path.join(current_app.config['CFG_DATADIR'], inspire_id),
+                                 os.path.join(current_app.config['CFG_DATADIR'], inspire_id + ".zip"))
+                output_location = os.path.join(current_app.config['CFG_DATADIR'], inspire_id)
 
-            try:
-                recid = self.load_submission(
-                    record_information, output_location, os.path.join(output_location, "submission.yaml"), update=True)
+                try:
+                    recid = self.load_submission(
+                        record_information, output_location, os.path.join(output_location, "submission.yaml"),
+                        update=True)
 
-                if recid is not None:
-                    do_finalise(recid, publication_record=record_information,
-                                force_finalise=True, send_tweet=send_tweet, update=True)
+                    if recid is not None:
+                        do_finalise(recid, publication_record=record_information,
+                                    force_finalise=True, send_tweet=send_tweet, update=True)
 
-            except FailedSubmission as fe:
-                log.error(fe.message)
-                fe.print_errors()
-                remove_submission(fe.record_id)
+                except FailedSubmission as fe:
+                    log.error(fe.message)
+                    fe.print_errors()
+                    remove_submission(fe.record_id)
+            else:
+                index_record_ids([record_information['recid']])
 
         else:
             log.error('Failed to load {0}'.format(inspire_id))
