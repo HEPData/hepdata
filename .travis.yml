@@ -46,13 +46,13 @@ python:
 before_install:
   - "travis_retry pip install --upgrade pip setuptools py"
   - "travis_retry pip install twine wheel coveralls requirements-builder"
-  - "mysql -e 'CREATE DATABASE IF NOT EXISTS invenio;' -uroot"
-  - "psql -c 'CREATE DATABASE hepdata;' -U postgres"
+  - "travis_retry psql -c 'CREATE DATABASE hepdata;' -U postgres"
 
 install:
   - "travis_retry pip install -r requirements.txt"
+  - "travis_retry hepdata db init"
+  - "travis_retry hepdata db create"
   - "travis_retry hepdata reindex -r True"
-  - "psql -c 'CREATE DATABASE invenio;' -U postgres"
 
 script:
   - "./run-tests.sh"
