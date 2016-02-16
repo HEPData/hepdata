@@ -61,6 +61,7 @@ install:
   - "travis_retry npm install"
   - "hepdata collect -v"
   - "hepdata assets build"
+  - "cd /home/travis/build/HEPData/hepdata3"
 
 before_script:
     - "export DISPLAY=:99.0"
