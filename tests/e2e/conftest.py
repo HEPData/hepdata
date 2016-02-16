@@ -33,11 +33,13 @@ import tempfile
 import time
 
 import pytest
+from invenio_accounts.models import User, Role
 from invenio_db import db
 from selenium import webdriver
 from sqlalchemy_utils.functions import create_database, database_exists, \
     drop_database
 
+from hepdata.ext.elasticsearch.api import reindex_all
 from hepdata.factory import create_app
 
 
@@ -47,7 +49,6 @@ def app(request):
     Overrides the `app` fixture found in `../conftest.py`. Tests/files in this
     folder and subfolders will see this variant of the `app` fixture.
     """
-    instance_path = tempfile.mkdtemp()
     app = create_app()
     app.config.update(dict(
         TESTING=True,
@@ -65,12 +66,35 @@ def app(request):
             create_database(str(db.engine.url))
         db.create_all()
 
+    with app.app_context():
+        db.drop_all()
+        db.create_all()
+        reindex_all(recreate=True)
+
+        ctx = app.test_request_context()
+        ctx.push()
+
+        user_count = User.query.filter_by(email='test@hepdata.net').count()
+        if user_count == 0:
+            user = User(email='test@hepdata.net', password='hello1', active=True)
+            admin_role = Role(name='admin')
+            coordinator_role = Role(name='coordinator')
+
+            user.roles.append(admin_role)
+            user.roles.append(coordinator_role)
+
+            db.session.add(admin_role)
+            db.session.add(coordinator_role)
+            db.session.add(user)
+            db.session.commit()
+
     def teardown():
         with app.app_context():
-            drop_database(str(db.engine.url))
-        shutil.rmtree(instance_path)
+            db.drop_all()
+            ctx.pop()
 
     request.addfinalizer(teardown)
+
     return app
 
 
