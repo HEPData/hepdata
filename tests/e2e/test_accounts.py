@@ -89,7 +89,3 @@ def test_user_registration(live_server, env_browser):
     login_form.submit()
 
     assert testutils.webdriver_authenticated(browser)
-
-    browser.get(flask.url_for('security.change_password', _external=True))
-    assert (flask.url_for('security.change_password', _external=True) in
-            browser.current_url)

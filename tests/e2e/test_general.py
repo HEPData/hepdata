@@ -21,22 +21,23 @@
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
-"""HEPData end to end testing of search."""
+"""HEPData end to end testing of general pages."""
 import flask
 
 
-def test_search_from_home(live_server, env_browser):
+def test_about(live_server, env_browser):
     """E2E user registration and login test."""
     browser = env_browser
     # 1. Go to user registration page
-    browser.get(flask.url_for('hepdata_theme.index', _external=True))
-    assert (flask.url_for('hepdata_theme.index', _external=True) in
+    browser.get(flask.url_for('hepdata_theme.about', _external=True))
+    assert (flask.url_for('hepdata_theme.about', _external=True) in
             browser.current_url)
 
-    search_form = browser.find_element_by_class_name('main-search-form')
-    search_input = search_form.find_element_by_name('q')
 
-    search_term = 'elastic'
-    search_input.send_keys(search_term)
-
-    search_form.submit()
+def test_submission_help(live_server, env_browser):
+    """E2E user registration and login test."""
+    browser = env_browser
+    # 1. Go to user registration page
+    browser.get(flask.url_for('hepdata_theme.submission_help', _external=True))
+    assert (flask.url_for('hepdata_theme.submission_help', _external=True) in
+            browser.current_url)
