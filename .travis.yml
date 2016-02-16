@@ -57,7 +57,7 @@ install:
   - "echo 'WHERE AM I?'"
   - "pwd"
   - "hepdata npm"
-  - "cdvirtualenv var/hepdata-instance/static"
+  - "cd /home/travis/virtualenv/python2.7.9/var/hepdata-instance/static/"
   - "travis_retry npm install"
   - "hepdata collect -v"
   - "hepdata assets build"
