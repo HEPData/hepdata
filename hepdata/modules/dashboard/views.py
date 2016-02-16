@@ -20,9 +20,9 @@ from hepdata.modules.records.utils.common import get_record_by_id
 from flask import Blueprint, jsonify, request, render_template, redirect, \
     url_for, current_app
 
-from hepdata.modules.records.utils.doi_minter import register_doi, generate_doi_for_data_submission, \
+from hepdata.modules.records.utils.doi_minter import generate_doi_for_data_submission, \
     generate_doi_for_submission
-from hepdata.modules.records.utils.submission import unload_submission, package_submission
+from hepdata.modules.records.utils.submission import unload_submission
 from hepdata.modules.records.utils.users import has_role
 from hepdata.modules.records.utils.workflow import send_finalised_email, \
     create_record
@@ -526,10 +526,12 @@ def do_finalise(recid, publication_record=None, force_finalise=False,
 
             create_celery_app(current_app)
 
-            for submission in submissions:
-                generate_doi_for_data_submission.delay(submission.id, submission.version)
+            # only mint DOIs if not testing.
+            if not current_app.config.get('TESTING', False):
+                for submission in submissions:
+                    generate_doi_for_data_submission.delay(submission.id, submission.version)
 
-            generate_doi_for_submission.delay(recid, version)
+                generate_doi_for_submission.delay(recid, version)
 
             # Reindex everything.
             index_record_ids([recid] + generated_record_ids)

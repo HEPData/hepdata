@@ -56,7 +56,7 @@ def populate(recids, recreate_index, tweet):
         recreate_index()
 
     files_to_load = recids.split(",")
-    load_files.delay(files_to_load, send_tweet=tweet)
+    load_files(files_to_load, send_tweet=tweet)
 
 
 @cli.command()
@@ -89,7 +89,7 @@ def migrate(start, end, year=None, missing_only=False):
         print("Sliced, going to load {} records.".format(len(inspire_ids)))
         print(inspire_ids)
 
-    load_files.delay(inspire_ids)
+    load_files(inspire_ids)
 
 
 @cli.command()

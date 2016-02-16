@@ -1,6 +1,7 @@
 import os
 
 from celery import shared_task
+from datacite.errors import DataCiteUnauthorizedError
 from flask import render_template, current_app
 from invenio_db import db
 from invenio_pidstore.errors import PIDInvalidAction, PIDDoesNotExistError
@@ -10,7 +11,10 @@ from invenio_pidstore.providers.datacite import DataCiteProvider
 
 from hepdata.modules.records.models import DataSubmission, HEPSubmission, DataResource, License
 from hepdata.modules.records.utils.common import get_record_by_id, decode_string
+import logging
 
+logging.basicConfig()
+log = logging.getLogger(__name__)
 
 @shared_task
 def generate_doi_for_submission(recid, version):
@@ -122,6 +126,8 @@ def create_doi(doi):
     """
     try:
         return DataCiteProvider.create(doi)
+    except DataCiteUnauthorizedError:
+        log.error('Unable to mint DOI. No authorisation credentials provided.')
     except Exception:
         return DataCiteProvider.get(doi, 'doi')
 
@@ -135,7 +141,7 @@ def register_doi(doi, url, xml, uuid):
     :return:
     """
 
-    print '{0} - {1}'.format(doi, url)
+    log.info('{0} - {1}'.format(doi, url))
 
     try:
         provider = DataCiteProvider.get(doi, 'doi')
@@ -146,9 +152,11 @@ def register_doi(doi, url, xml, uuid):
     if pidstore_obj:
         pidstore_obj.object_uuid = uuid
         db.session.add(pidstore_obj)
-    db.session.commit()
+        db.session.commit()
 
     try:
         provider.register(url, xml)
+    except DataCiteUnauthorizedError:
+        log.error('Unable to mint DOI. No authorisation credentials provided.')
     except PIDInvalidAction, IntegrityError:
         provider.update(url, xml)

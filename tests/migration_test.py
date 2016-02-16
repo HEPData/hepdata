@@ -1,5 +1,6 @@
+from invenio_records.models import RecordMetadata
+
 from hepdata.config import CFG_TMPDIR
-from hepdata.ext.elasticsearch.api import record_exists
 from hepdata.modules.records.migrator.api import load_files
 import os
 
@@ -28,6 +29,7 @@ def test_inspire_record_retrieval(app, migrator, identifiers):
                 migrator.retrieve_publication_information(
                     test_id["inspire_id"])
 
+            print publication_information["title"]
             assert publication_information["title"] == test_id["title"]
 
 
@@ -35,6 +37,20 @@ def test_migration(app, migrator, identifiers):
     print '___test_migration___'
     to_load = [x["inspire_id"] for x in identifiers]
     with app.app_context():
-        load_files(to_load)
-        id = x["inspire_id"].replace("ins", "")
-        assert record_exists(id)
+        load_files(to_load, synchronous=True)
+
+        records = RecordMetadata.query.all()
+        all_exist = True
+        total_expected_records = 0
+        for test_record_info in identifiers:
+            found = False
+            total_expected_records += (test_record_info['data_tables']+1)
+            cleaned_record_id = int(test_record_info['inspire_id'].replace("ins", ""))
+            for record in records:
+                if record.json['inspire_id'] == cleaned_record_id:
+                    found = True
+                    break
+            all_exist = found
+
+        assert(total_expected_records == len(records))
+        assert(all_exist)

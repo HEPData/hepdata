@@ -26,8 +26,14 @@
 from __future__ import absolute_import, print_function
 import os
 
-from invenio_db import InvenioDB, db
+from invenio_accounts.models import Role, User
+from invenio_accounts.testutils import create_test_user
+from invenio_db import db
 import pytest
+from sqlalchemy.exc import IntegrityError
+from werkzeug.local import LocalProxy
+
+from hepdata.ext.elasticsearch.api import reindex_all
 from hepdata.factory import create_app
 from hepdata.modules.records.migrator.api import Migrator
 
@@ -38,16 +44,33 @@ def app(request):
     app = create_app()
     app.config.update(dict(
         TESTING=True,
+        TEST_RUNNER="celery.contrib.test_runner.CeleryTestSuiteRunner",
         CELERY_ALWAYS_EAGER=True,
         CELERY_RESULT_BACKEND="cache",
         CELERY_CACHE_BACKEND="memory",
         CELERY_EAGER_PROPAGATES_EXCEPTIONS=True,
         SQLALCHEMY_DATABASE_URI=os.environ.get(
-            'SQLALCHEMY_DATABASE_URI', 'sqlite:///test.db')
+            'SQLALCHEMY_DATABASE_URI', 'postgresql+psycopg2://localhost/hepdata')
     ))
 
     with app.app_context():
+        db.drop_all()
         db.create_all()
+        reindex_all(recreate=True)
+
+        user_count = User.query.filter_by(email='test@hepdata.net').count()
+        if user_count == 0:
+            user = User(email='test@hepdata.net', password='hello1', active=True)
+            admin_role = Role(name='admin')
+            coordinator_role = Role(name='coordinator')
+
+            user.roles.append(admin_role)
+            user.roles.append(coordinator_role)
+
+            db.session.add(admin_role)
+            db.session.add(coordinator_role)
+            db.session.add(user)
+            db.session.commit()
 
     def teardown():
         with app.app_context():
@@ -65,23 +88,9 @@ def migrator():
 
 @pytest.fixture()
 def identifiers():
-    return [{"inspire_id": "ins1245023",
-             "title": "High-statistics study of $K^0_S$ pair "
-                      "production in two-photon collisions"},
-            {"inspire_id": "ins1268975",
-             "title": "Measurement of dijet cross sections in "
-                      "$pp$ collisions at 7 TeV centre-of-mass "
-                      "energy using the ATLAS detector"}
-            #
-            # {"inspire_id": "ins1306294",
-            #  "title": "Measurements of the pseudorapidity "
-            #           "dependence of the total transverse "
-            #           "energy in proton-proton collisions at "
-            #           "$\sqrt{s}=7$ TeV with ATLAS"},
-            #
-            # {"inspire_id": "ins1362183",
-            #  "title": "Measurement of the Z production cross "
-            #           "section in pp collisions at 8 TeV and "
-            #           "search for anomalous triple gauge boson "
-            #           "couplings"}
+    return [{"inspire_id": "ins1283842",
+             "title": "Measurement of the forward-backward asymmetry "
+                      "in the distribution of leptons in $t\\bar{t}$ "
+                      "events in the lepton$+$jets channel",
+             "data_tables": 14}
             ]

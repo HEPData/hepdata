@@ -83,8 +83,7 @@ def update_submissions(inspire_ids_to_update, only_record_information=False):
             load_files.delay([inspire_id])
 
 
-@shared_task
-def load_files(inspire_ids, send_tweet=False):
+def load_files(inspire_ids, send_tweet=False, synchronous=False):
     """
     :param send_tweet: whether or not to tweet this entry.
     :param inspire_ids: array of inspire ids to load (in the format insXXX).
@@ -99,7 +98,10 @@ def load_files(inspire_ids, send_tweet=False):
                 .format(inspire_id)
             try:
                 log.info('Loading {}'.format(inspire_id))
-                migrator.load_file.delay(inspire_id, send_tweet)
+                if synchronous:
+                    migrator.load_file(inspire_id, send_tweet)
+                else:
+                    migrator.load_file.delay(inspire_id, send_tweet)
             except socket.error as se:
                 print 'socket error...'
                 print se.message
@@ -153,7 +155,6 @@ class Migrator(object):
     @shared_task
     def load_file(inspire_id, send_tweet):
         self = Migrator()
-
         file_location = self.download_file(inspire_id)
         if file_location:
 
