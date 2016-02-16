@@ -3,10 +3,10 @@
 ========
 
 .. image:: https://img.shields.io/travis/HEPData/hepdata3.svg
-    :target: https://travis-ci.org/hepdata/hepdata
+    :target: https://travis-ci.org/hepdata/hepdata3
 
 .. image:: https://img.shields.io/coveralls/HEPData/hepdata.svg
-    :target: https://coveralls.io/r/HEPData/hepdata
+    :target: https://coveralls.io/r/HEPData/hepdata3
 
 .. image:: https://img.shields.io/github/license/HEPData/hepdata3.svg
     :target: https://github.com/HEPData/hepdata3/blob/master/LICENSE
