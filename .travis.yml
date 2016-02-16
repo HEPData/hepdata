@@ -54,8 +54,13 @@ install:
   - "travis_retry hepdata db create"
   - "travis_retry hepdata reindex -r True"
 
+before_script:
+    - "export DISPLAY=:99.0"
+    - "sh -e /etc/init.d/xvfb start"
+    - "sleep 3" # give xvfb some time to start
+
 script:
-  - "./run-tests.sh"
+  - "py.test"
 
 after_success:
   - coveralls

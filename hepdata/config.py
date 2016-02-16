@@ -116,7 +116,7 @@ MAIL_PORT = 2525
 MAIL_DEFAULT_SENDER = 'submissions@hepdata.net'
 SMTP_NO_PASSWORD = True
 MAIL_USERNAME = 'submissions@hepdata.net'
-MAIL_PASSWORD = ''
+MAIL_PASSWORD = 'nRJ9VrX4jreXpPJS'
 
 ACCOUNTS_USE_CELERY = False
 

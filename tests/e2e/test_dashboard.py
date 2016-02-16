@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of HEPData.
 # Copyright (C) 2015 CERN.
@@ -22,5 +21,4 @@
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
-[pytest]
-addopts = --ignore=docs --cov=hepdata --cov-report=term-missing --cov-config=.coveragerc
+"""HEPData end to end testing of dashboard and administrative options."""

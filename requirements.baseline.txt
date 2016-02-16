@@ -30,3 +30,5 @@ Flask==0.10.1
 twitter==1.15.0
 timestring
 psycopg2
+pytest-flask
+selenium

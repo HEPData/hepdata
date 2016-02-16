@@ -22,21 +22,19 @@
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
+"""HEPData Test Fixtures"""
 
 from __future__ import absolute_import, print_function
+
 import os
 
 from invenio_accounts.models import Role, User
-from invenio_accounts.testutils import create_test_user
 from invenio_db import db
 import pytest
-from sqlalchemy.exc import IntegrityError
-from werkzeug.local import LocalProxy
 
 from hepdata.ext.elasticsearch.api import reindex_all
 from hepdata.factory import create_app
 from hepdata.modules.records.migrator.api import Migrator
-
 
 @pytest.fixture()
 def app(request):
@@ -60,7 +58,6 @@ def app(request):
 
         ctx = app.test_request_context()
         ctx.push()
-
 
         user_count = User.query.filter_by(email='test@hepdata.net').count()
         if user_count == 0:
