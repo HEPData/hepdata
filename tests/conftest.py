@@ -58,6 +58,10 @@ def app(request):
         db.create_all()
         reindex_all(recreate=True)
 
+        ctx = app.test_request_context()
+        ctx.push()
+
+
         user_count = User.query.filter_by(email='test@hepdata.net').count()
         if user_count == 0:
             user = User(email='test@hepdata.net', password='hello1', active=True)
@@ -75,6 +79,7 @@ def app(request):
     def teardown():
         with app.app_context():
             db.drop_all()
+            ctx.pop()
 
     request.addfinalizer(teardown)
 
