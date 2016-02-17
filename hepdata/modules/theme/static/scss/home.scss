@@ -2,7 +2,7 @@
   background: $purple url('/static/img/home_bg.svg') no-repeat bottom right;
   height: 35vh;
   border-bottom: 4px solid $purple-light;
-
+  min-height: 300px;
   a {
     color: white !important;
   }
