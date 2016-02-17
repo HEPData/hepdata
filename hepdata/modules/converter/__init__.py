@@ -14,7 +14,6 @@ def convert_zip_archive(input_archive, output_archive, options):
     """ Convert a zip archive into a targz path with given options. """
     input_root_dir = tempfile.mkdtemp()
     with zipfile.ZipFile(input_archive, 'r') as zip_archive:
-        # TODO check if input_archive doesn't contain dangerous files
         zip_archive.extractall(path=input_root_dir)
 
     # Find the appropriate file/directory in the input archive

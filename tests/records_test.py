@@ -22,9 +22,12 @@
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
 """HEPData records test cases."""
+from invenio_accounts.models import User
 
 from hepdata.modules.records.utils.common import get_record_by_id
+from hepdata.modules.records.utils.users import get_coordinators_in_system, has_role
 from hepdata.modules.records.utils.workflow import update_record, create_record
+from tests.conftest import TEST_EMAIL
 
 
 def test_record_creation(app):
@@ -50,3 +53,17 @@ def test_record_update(app):
 
         updated_record = get_record_by_id(record_information['recid'])
         assert (updated_record['journal_info'] == 'test')
+
+
+def test_get_coordinators(app):
+    with app.app_context():
+        coordinators = get_coordinators_in_system()
+        assert(len(coordinators) == 1)
+
+
+def test_has_role(app):
+    with app.app_context():
+        user = User.query.filter_by(email=TEST_EMAIL).first()
+        assert(user is not None)
+        assert(has_role(user, 'coordinator'))
+        assert(not has_role(user, 'awesome'))

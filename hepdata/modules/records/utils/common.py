@@ -42,7 +42,7 @@ URL_PATTERNS = [
     "sf"
 ]
 
-ALLOWED_EXTENSIONS = ['zip', "tar", "tar.gz"]
+ALLOWED_EXTENSIONS = ['zip', "tar", "gz"]
 
 
 def contains_accepted_url(file):

@@ -25,16 +25,16 @@
 """HEPData Test Fixtures"""
 
 from __future__ import absolute_import, print_function
-
 import os
-
 from invenio_accounts.models import Role, User
 from invenio_db import db
 import pytest
-
 from hepdata.ext.elasticsearch.api import reindex_all
 from hepdata.factory import create_app
 from hepdata.modules.records.migrator.api import Migrator
+
+TEST_EMAIL = 'test@hepdata.net'
+
 
 @pytest.fixture()
 def app(request):
@@ -61,7 +61,7 @@ def app(request):
 
         user_count = User.query.filter_by(email='test@hepdata.net').count()
         if user_count == 0:
-            user = User(email='test@hepdata.net', password='hello1', active=True)
+            user = User(email=TEST_EMAIL, password='hello1', active=True)
             admin_role = Role(name='admin')
             coordinator_role = Role(name='coordinator')
 
@@ -73,14 +73,13 @@ def app(request):
             db.session.add(user)
             db.session.commit()
 
-    def teardown():
-        with app.app_context():
-            db.drop_all()
-            ctx.pop()
-
-    request.addfinalizer(teardown)
-
+    ctx.pop()
     return app
+
+
+@pytest.fixture()
+def client(app):
+    return app.test_client()
 
 
 @pytest.fixture()
@@ -90,9 +89,15 @@ def migrator():
 
 @pytest.fixture()
 def identifiers():
-    return [{"inspire_id": "ins1283842",
+    return [{"hepdata_id": "ins1283842", "inspire_id": 1283842,
              "title": "Measurement of the forward-backward asymmetry "
                       "in the distribution of leptons in $t\\bar{t}$ "
                       "events in the lepton$+$jets channel",
-             "data_tables": 14}
+             "data_tables": 14,
+             "arxiv": "arXiv:1403.1294"},
+
+            {"hepdata_id": "ins1245023", "inspire_id": 1245023,
+             "title": "High-statistics study of $K^0_S$ pair production in two-photon collisions",
+             "data_tables": 40,
+             "arxiv": "arXiv:1307.7457"}
             ]

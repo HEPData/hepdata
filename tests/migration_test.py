@@ -37,13 +37,13 @@ def test_file_download_and_split(app, migrator, identifiers):
     with app.app_context():
         for test_id in identifiers:
             print test_id["inspire_id"]
-            file = migrator.download_file(test_id["inspire_id"])
+            file = migrator.download_file(test_id["hepdata_id"])
             assert file is not None
 
             migrator.split_files(
-                file, os.path.join(CFG_TMPDIR, test_id["inspire_id"]),
+                file, os.path.join(CFG_TMPDIR, test_id["hepdata_id"]),
                 os.path.join(CFG_TMPDIR, test_id[
-                    "inspire_id"] + ".zip"))
+                    "hepdata_id"] + ".zip"))
 
 
 def test_inspire_record_retrieval(app, migrator, identifiers):
@@ -52,7 +52,7 @@ def test_inspire_record_retrieval(app, migrator, identifiers):
         for test_id in identifiers:
             publication_information = \
                 migrator.retrieve_publication_information(
-                    test_id["inspire_id"])
+                    test_id["hepdata_id"])
 
             print publication_information["title"]
             assert publication_information["title"] == test_id["title"]
@@ -60,7 +60,7 @@ def test_inspire_record_retrieval(app, migrator, identifiers):
 
 def test_migration(app, migrator, identifiers):
     print '___test_migration___'
-    to_load = [x["inspire_id"] for x in identifiers]
+    to_load = [x["hepdata_id"] for x in identifiers]
     with app.app_context():
         load_files(to_load, synchronous=True)
 
@@ -70,9 +70,9 @@ def test_migration(app, migrator, identifiers):
         for test_record_info in identifiers:
             found = False
             total_expected_records += (test_record_info['data_tables']+1)
-            cleaned_record_id = int(test_record_info['inspire_id'].replace("ins", ""))
+
             for record in records:
-                if record.json['inspire_id'] == cleaned_record_id:
+                if record.json['inspire_id'] == test_record_info['inspire_id']:
                     found = True
                     break
             all_exist = found

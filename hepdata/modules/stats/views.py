@@ -35,11 +35,10 @@ def increment(recid):
 def get_count(recid):
     try:
         result = DailyAccessStatistic.query.with_entities(
-            func.avg(DailyAccessStatistic.count).label('average'),
             func.sum(DailyAccessStatistic.count).label('sum')).filter(
             DailyAccessStatistic.publication_recid == recid).one()
-        return {"sum": int(result.sum), "average": round(result.average, 2)}
+        return {"sum": int(result.sum)}
 
     except Exception as e:
         print e
-        return {"sum": 1, "average": 1}
+        return {"sum": 1}
