@@ -55,6 +55,13 @@ def test_record_update(app):
         assert (updated_record['journal_info'] == 'test')
 
 
+def test_get_record(app, client, load_default_data):
+
+    with app.app_context():
+        content = client.get('/record/1')
+        assert(content is not None)
+
+
 def test_get_coordinators(app):
     with app.app_context():
         coordinators = get_coordinators_in_system()

@@ -25,15 +25,20 @@
 """HEPData Test Fixtures"""
 
 from __future__ import absolute_import, print_function
+
+import functools
 import os
+
+import flask_login
 from invenio_accounts.models import Role, User
 from invenio_db import db
 import pytest
 from hepdata.ext.elasticsearch.api import reindex_all
 from hepdata.factory import create_app
-from hepdata.modules.records.migrator.api import Migrator
+from hepdata.modules.records.migrator.api import Migrator, load_files
 
 TEST_EMAIL = 'test@hepdata.net'
+TEST_PWD = 'hello1'
 
 
 @pytest.fixture()
@@ -72,9 +77,15 @@ def app(request):
             db.session.add(coordinator_role)
             db.session.add(user)
             db.session.commit()
-
     ctx.pop()
     return app
+
+
+@pytest.fixture()
+def load_default_data(app):
+    with app.app_context():
+        to_load = [x["hepdata_id"] for x in identifiers()]
+        load_files(to_load, synchronous=True)
 
 
 @pytest.fixture()

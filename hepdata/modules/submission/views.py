@@ -1,4 +1,3 @@
-
 from flask import Blueprint, render_template, request, jsonify
 from flask.ext.login import login_required, current_user
 from invenio_db import db
@@ -8,7 +7,7 @@ from hepdata.modules.records.utils.common import encode_string
 from hepdata.modules.records.utils.submission import \
     get_or_create_hepsubmission
 from hepdata.modules.records.utils.workflow import create_record
-from hepdata.utils.mail import send_email, create_send_email_task
+from hepdata.utils.mail import create_send_email_task
 
 __author__ = 'eamonnmaguire'
 
@@ -32,40 +31,73 @@ def submit_ui():
 def submit_post():
     inspire_id = request.form['inspire_id']
     title = request.form['title']
-    reviewer = request.form['reviewer']
-    uploader = request.form['uploader']
+    reviewer_str = request.form['reviewer']
+    uploader_str = request.form['uploader']
 
-    if inspire_id:
-        content, status = get_inspire_record_information(inspire_id)
-        content["inspire_id"] = inspire_id
+    reviewer = parse_person_string(reviewer_str)[0]
+    uploader = parse_person_string(uploader_str)[0]
+
+    print reviewer
+    print uploader
+
+    hepdata_submission = process_submission_payload(inspire_id=inspire_id,
+                                                    title=title,
+                                                    reviewer=reviewer,
+                                                    uploader=uploader)
+
+    if hepdata_submission:
+        return jsonify({'success': True, 'message': 'Submission successful.'})
     else:
-        content = {'title': title}
+        return jsonify({'success': False, 'message': 'Submission unsuccessful.'})
+
+
+def process_submission_payload(*args, **kwargs):
+    """
+    Processes the submission payload
+    :param inspire_id:
+    :param title:
+    :param reviewer:
+    :param uploader:
+    :param send_upload_email:
+    :return:
+    """
+    if kwargs.get('inspire_id'):
+        content, status = get_inspire_record_information(kwargs.get('inspire_id'))
+        content["inspire_id"] = kwargs.get('inspire_id')
+    elif kwargs.get('title'):
+        content = {'title': kwargs.get('title')}
+    else:
+        raise ValueError(message="A title or inspire_id must be provided.")
 
     record_information = create_record(content)
-    hepsubmission = get_or_create_hepsubmission(record_information["recid"],
-                                                int(current_user.get_id()))
+    submitter_id = kwargs.get('submitter_id')
+    if submitter_id is None:
+        submitter_id = int(current_user.get_id())
 
-    reviewer_name, reviewer_email = parse_person_string(reviewer)
-    uploader_name, uploader_email = parse_person_string(uploader)
+    hepsubmission = get_or_create_hepsubmission(record_information["recid"], submitter_id)
+
+    reviewer_details = kwargs.get('reviewer')
 
     reviewer = create_participant_record(
-        reviewer_name, reviewer_email, 'reviewer', 'primary',
+        reviewer_details.get('name'),
+        reviewer_details.get('email'), 'reviewer', 'primary',
         record_information['recid'])
-
     hepsubmission.participants.append(reviewer)
 
-    uploader = create_participant_record(uploader_name, uploader_email,
+    uploader_details = kwargs.get('uploader')
+    uploader = create_participant_record(uploader_details.get('name'), uploader_details.get('email'),
                                          'uploader', 'primary',
                                          record_information['recid'])
     hepsubmission.participants.append(uploader)
 
     db.session.commit()
 
-    # Now Send Email only to the uploader first. The reviewer will be asked to
-    # review only when an upload has been performed.
-    send_cookie_email(uploader, record_information)
+    if kwargs.get('send_upload_email', True):
+        # Now Send Email only to the uploader first. The reviewer will be asked to
+        # review only when an upload has been performed.
+        send_cookie_email(uploader, record_information)
 
-    return jsonify({'success': True, 'message': 'Submission successful.'})
+    return hepsubmission
 
 
 def create_participant_record(name, email, role, status, recid):
@@ -88,9 +120,9 @@ def parse_person_string(person_string, separator="::"):
 
     if separator in person_string:
         string_parts = person_string.split(separator)
-        return string_parts[0], string_parts[1]
+        return {'name': string_parts[0], 'email': string_parts[1]},
 
-    return person_string
+    return {'name': person_string, 'email': person_string}
 
 
 def send_cookie_email(submission_participant,
@@ -103,6 +135,6 @@ def send_cookie_email(submission_participant,
         invite_token=submission_participant.invitation_cookie)
 
     create_send_email_task(submission_participant.email,
-               "[HEPData] Invitation to be a {0} of record {1} in HEPData".format(
-                   submission_participant.role,
-                   submission_participant.publication_recid), message_body)
+                           "[HEPData] Invitation to be a {0} of record {1} in HEPData".format(
+                               submission_participant.role,
+                               submission_participant.publication_recid), message_body)

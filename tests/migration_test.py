@@ -54,16 +54,12 @@ def test_inspire_record_retrieval(app, migrator, identifiers):
                 migrator.retrieve_publication_information(
                     test_id["hepdata_id"])
 
-            print publication_information["title"]
             assert publication_information["title"] == test_id["title"]
 
 
-def test_migration(app, migrator, identifiers):
+def test_migration(app, migrator, load_default_data, identifiers):
     print '___test_migration___'
-    to_load = [x["hepdata_id"] for x in identifiers]
     with app.app_context():
-        load_files(to_load, synchronous=True)
-
         records = RecordMetadata.query.all()
         all_exist = True
         total_expected_records = 0
