@@ -69,8 +69,10 @@ SECURITY_REGISTER_USER_TEMPLATE = \
     "hepdata_theme/security/register_user.html"
 SECURITY_LOGIN_USER_TEMPLATE = \
     "hepdata_theme/security/login_user.html"
-SECURITY_RESET_PASSWORD_TEMPLATE = \
-    "hepdata_theme/security/reset_password.html"
+
+SECURITY_FORGOT_PASSWORD_TEMPLATE = "hepdata_theme/security/forgot_password.html"
+SECURITY_RESET_PASSWORD_TEMPLATE = "hepdata_theme/security/reset_password.html"
+
 
 SECURITY_CONFIRM_SALT = "CHANGE_ME"
 SECURITY_EMAIL_SENDER = "info@hepdata.net"
