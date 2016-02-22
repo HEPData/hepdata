@@ -131,6 +131,14 @@ def process_dependent_variables(group_count, record, table_contents,
                         error["label"] = error_label + "_" + str(
                             observed_error_labels[error_label])
 
+                    # append "_1" to first error label that has a duplicate
+                    if observed_error_labels[error_label] == 2:
+                        for error1 in y_record["errors"]:
+                            error1_label = error1.get("label")
+                            if error1_label == error_label:
+                                error1["label"] = error1_label + "_1"
+                                break
+
             tmp_values[count]["y"].append(y_record)
             count += 1
 

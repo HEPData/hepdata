@@ -75,7 +75,7 @@
         {%endif %}
 
         show_resource = function (id, file_type, location) {
-            if (file_type == 'html' && location.indexOf(".html") != -1) {
+            if (file_type == 'html' && location.indexOf(".html") != -1 && location.indexOf('http') != 0) {
                 $("#resource-detail").load('/record/resource/' + id, function () {
                     MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
                 });
