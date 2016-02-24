@@ -20,6 +20,7 @@ import timestring
 
 marc_tags = {
     'title': ('245', 'a'),
+    'title_translation': ('242', 'a'),
     'abstract': ('520', 'a'),
     'doi': ('024', '7', 'a', '2'),
     'first_author': ('100', 'a', 'u'),
@@ -76,13 +77,15 @@ def get_doi(soup):
 
 
 def get_title(soup):
-    """ Parse the title from the xml """
-    try:
-        (tag, code) = marc_tags['title']
-        datafield = soup.find_all(tag=tag)[0]
-        return datafield.find_all(code=code)[0].string
-    except IndexError:
-        return None
+    """ Parse the title from the xml.  Use translated title if present. """
+    for title in ['title_translation', 'title']:
+        try:
+            (tag, code) = marc_tags[title]
+            datafield = soup.find_all(tag=tag)[0]
+            return datafield.find_all(code=code)[0].string
+        except IndexError:
+            pass
+    return None
 
 
 def get_authors(soup):

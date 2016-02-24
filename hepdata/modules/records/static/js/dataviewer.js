@@ -503,7 +503,8 @@ HEPDATA.table_renderer = {
           }
 
           if (errors.length > HEPDATA.default_errors_to_show) {
-            div.append('span').text('+ ' + errors.length + ' more errors').attr('class', 'total_errors');
+            var more_errors_to_show = errors.length - HEPDATA.default_errors_to_show;
+            div.append('span').text('+ ' + more_errors_to_show + ' more error' + (more_errors_to_show > 1 ? 's' : '')).attr('class', 'total_errors');
             div.append('span').attr('class', 'show_all_errors').text('Show all').on('click', function () {
 
               d3.selectAll('.error.hidden').classed("hidden", false);
