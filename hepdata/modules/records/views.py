@@ -69,7 +69,8 @@ blueprint = Blueprint(
     __name__,
     url_prefix='/record',
     template_folder='templates',
-    static_folder='static'
+    static_folder='static',
+    static_url_path='/static'
 )
 
 RECORD_PLAIN_TEXT = {
