@@ -1,0 +1,20 @@
+{% extends "hepdata_theme/page.html" %}
+{%- set body_css_classes=['error-page'] %}
+
+{%- block page_body -%}
+
+    <div align="center">
+        <h4>Sorry, we weren't able to find what you were looking for...</h4>
+        <p>Need <a href="/submission">help</a>? Want to <a href="/about">learn more</a>? Or just <a href="/search">search
+            HEPData</a>.</p>
+    </div>
+
+    <div class="row-fluid error-container" align="center">
+        <div class="col-md-3"></div>
+        <div class="col-md-6">
+            <img src="{{ url_for('static', filename='img/errors/404.svg') }}" width="90%">
+        </div>
+    </div>
+    <div class="col-md-3"></div>
+
+{%- endblock -%}

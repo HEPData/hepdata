@@ -177,3 +177,6 @@ TWITTER_HANDLE_MAPPINGS = {
     'atlas': "@ATLASpapers",
     'cms': "@CMSpapers",
 }
+
+THEME_404_TEMPLATE="hepdata_theme/404.html"
+THEME_500_TEMPLATE="hepdata_theme/404.html"

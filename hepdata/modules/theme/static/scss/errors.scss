@@ -1,0 +1,26 @@
+@import "variables";
+
+.error-container {
+  position: fixed;
+  bottom: 36px;
+  width: 100%;
+  border-bottom: 50px solid $lightgrey;
+
+  img {
+    margin-bottom: -30px;
+  }
+}
+
+.error-page {
+  padding-top: 9em;
+  h4 {
+    color: $purple;
+    font-size: 2em;
+    text-align: center;
+  }
+  p {
+    padding: 2em;
+    color: $concrete;
+    font-size: 1.3em;
+  }
+}
