@@ -73,7 +73,6 @@ SECURITY_LOGIN_USER_TEMPLATE = \
 SECURITY_FORGOT_PASSWORD_TEMPLATE = "hepdata_theme/security/forgot_password.html"
 SECURITY_RESET_PASSWORD_TEMPLATE = "hepdata_theme/security/reset_password.html"
 
-
 SECURITY_CONFIRM_SALT = "CHANGE_ME"
 SECURITY_EMAIL_SENDER = "info@hepdata.net"
 SECURITY_EMAIL_SUBJECT_REGISTER = _("Welcome to HEPData!")
@@ -141,7 +140,6 @@ RECORDS_REST_ENDPOINTS = dict(
         item_route='/records/<pid_value>',
     ), )
 
-
 # DebugToolbar
 DEBUG_TB_ENABLED = False
 DEBUG_TB_INTERCEPT_REDIRECTS = False
@@ -178,5 +176,5 @@ TWITTER_HANDLE_MAPPINGS = {
     'cms': "@CMSpapers",
 }
 
-THEME_404_TEMPLATE="hepdata_theme/404.html"
-THEME_500_TEMPLATE="hepdata_theme/404.html"
+THEME_404_TEMPLATE = "hepdata_theme/404.html"
+THEME_500_TEMPLATE = "hepdata_theme/500.html"
