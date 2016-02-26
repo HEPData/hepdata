@@ -29,6 +29,7 @@ __author__ = 'eamonnmaguire'
 def process_independent_variables(table_contents, x_axes,
                                   independent_variable_headers):
     if table_contents["independent_variables"]:
+        count = 0
         for x_axis in table_contents["independent_variables"]:
 
             if x_axis["values"]:
@@ -37,6 +38,12 @@ def process_independent_variables(table_contents, x_axes,
                 x_header = x_axis['header']['name']
                 if units is not '':
                     x_header += ' [' + units + "]"
+
+                if x_header in x_axes:
+                    # sometimes, the x headers can be the same.
+                    # We must account for this. 
+                    x_header += '__{0}'.format(count)
+
                 x_axes[x_header] = []
 
                 # if x_header not in x_headers:
@@ -44,6 +51,8 @@ def process_independent_variables(table_contents, x_axes,
                     {"name": x_header, "colspan": 1})
                 for value in x_axis["values"]:
                     x_axes[x_header].append(value)
+
+            count += 1
 
 
 def process_dependent_variables(group_count, record, table_contents,
@@ -71,7 +80,7 @@ def process_dependent_variables(group_count, record, table_contents,
                 record["qualifiers"][qualifier_name].append(
                     {"type": qualifier["name"],
                      "value": str(qualifier["value"]) + (
-                     ' ' + qualifier['units'] if 'units' in qualifier else ''),
+                         ' ' + qualifier['units'] if 'units' in qualifier else ''),
                      "colspan": 1, "group": group_count})
 
             # attempt column merge
@@ -84,7 +93,7 @@ def process_dependent_variables(group_count, record, table_contents,
                         last_value = value
                     else:
                         if last_value["type"] == value["type"] \
-                                and last_value["value"] == value["value"]:
+                            and last_value["value"] == value["value"]:
 
                             last_value["colspan"] += 1
                         else:
@@ -177,6 +186,8 @@ def generate_table_structure(table_contents):
 
     group_count = 0
     yheaders = []
+
+    print x_axes
 
     process_dependent_variables(group_count, record, table_contents,
                                 tmp_values, x_axes, yheaders)
