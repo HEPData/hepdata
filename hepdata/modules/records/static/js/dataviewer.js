@@ -661,7 +661,7 @@ HEPDATA.visualization.heatmap = {
     animation_duration: 100,
     margins: {"left": 60, "right": 30, "top": 10, "bottom": 30},
     // todo: improve the scale used here.
-    colors: d3.scale.threshold().domain([0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]).range(["#ffffe5", "#ffffe5", "#fff7bc", "#fee391", "#fec44f", "#fe9929", "#ec7014", "#cc4c02", "#993404", "#662506"]),
+    colors: d3.scale.threshold().domain([0, 0.25, 0.5, 0.75, 1]).range(["#f1c40f", "#f39c12", "#e67e22", "#d35400", "#e74c3c", "#c0392b"]),
     height: 400,
     width: 400,
     y_scale: 'linear'
@@ -687,6 +687,7 @@ HEPDATA.visualization.heatmap = {
     HEPDATA.visualization.heatmap.placement = placement;
 
     var processed_dict = HEPDATA.dataprocessing.process_data_values(data);
+    console.log(HEPDATA.stats);
     HEPDATA.visualization.heatmap.render_axis_selector(data, "#legend");
 
     // in this plot, the x and y axes are defined by two x values in the data. The y 'axis' defines the value
@@ -701,11 +702,19 @@ HEPDATA.visualization.heatmap = {
       .append("g")
       .attr("transform", "translate(" + HEPDATA.visualization.heatmap.options.margins.left + "," + HEPDATA.visualization.heatmap.options.margins.top + ")");
 
-    var d3tip = d3.tip()
+    var d3tip_hm = d3.tip()
       .attr('class', 'd3-tip')
       .offset([-10, 0])
       .html(function (d) {
-        return "<strong>" + d.x + " </strong><br/>" + d.y + "<br/>" + d.value + "</span>";
+        console.log(d);
+        console.log(d.x_min != undefined);
+        if (d.x_min != undefined) {
+          return "<strong>" + d.x_min + " to " + d.x_max
+            + " </strong><br/>" + d.y_min + " to " + d.y_max
+            + "<br/>" + d.value + "</span>";
+        } else {
+            return "<strong>" + d.x + " </strong><br/>" + d.y + "<br/>" + d.value + "</span>";
+        }
       });
 
     svg.append('rect')
@@ -714,7 +723,10 @@ HEPDATA.visualization.heatmap = {
       .attr('fill', 'rgba(1,1,1,0)');
 
     svg.append("g").attr("class", "x axis")
-      .attr("transform", "translate(0," + (HEPDATA.visualization.heatmap.options.height - HEPDATA.visualization.heatmap.options.margins.bottom - HEPDATA.visualization.heatmap.options.margins.top) + ")")
+      .attr("transform", "translate(0," + (HEPDATA.visualization.heatmap.options.height
+        - HEPDATA.visualization.heatmap.options.margins.bottom
+        - HEPDATA.visualization.heatmap.options.margins.top)
+        + ")")
       .call(HEPDATA.visualization.heatmap.x_axis);
     svg.append("text")
       .attr("class", "axis_text")
@@ -739,30 +751,36 @@ HEPDATA.visualization.heatmap = {
 
     // we need to scale the data to between 0 and 1 so that the color scale works across different ranges.
 
-    var scale = d3.scale.linear().domain([HEPDATA.stats.min_value, HEPDATA.stats.max_value]).range([0, 1]);
+    var scale = d3.scale.pow().domain([1, HEPDATA.stats.max_value]).range([0, 1]);
 
 
     var node = node_data.append("g").attr("class", "hm_node").append("rect")
       .attr("x", function (d) {
-        return HEPDATA.visualization.heatmap.x_scale(d.x)
+        return HEPDATA.visualization.heatmap.x_scale(d.x_min ? d.x_min : d.x);
       })
       .attr("y", function (d) {
-        return HEPDATA.visualization.heatmap.y_scale(d.y) - 5;
+        return HEPDATA.visualization.heatmap.y_scale(d.y_max ? d.y_max : d.y);
       })
       .attr("width", function (d) {
+        if (d.x_min && d.x_max) {
+          return HEPDATA.visualization.heatmap.x_scale(d.x_max) - HEPDATA.visualization.heatmap.x_scale(d.x_min);
+        }
         return 5;
       })
       .attr("height", function (d) {
+        if (d.y_min && d.y_max) {
+          return HEPDATA.visualization.heatmap.y_scale(d.y_min) - HEPDATA.visualization.heatmap.y_scale(d.y_max);
+        }
         return 5;
       })
       .style("fill", function (d) {
         return HEPDATA.visualization.heatmap.options.colors(scale(d.value));
       });
 
-    node.on('mouseover', d3tip.show)
-      .on('mouseout', d3tip.hide);
+    node.on('mouseover', d3tip_hm.show)
+      .on('mouseout', d3tip_hm.hide);
 
-    svg.call(d3tip);
+    svg.call(d3tip_hm);
 
     if (HEPDATA.visualization.heatmap.options.brushable) {
       HEPDATA.visualization.heatmap.brush = d3.svg.brush()
@@ -857,9 +875,14 @@ HEPDATA.visualization.heatmap = {
   },
 
   calculate_x_scale: function (data) {
+
     var x_extent = d3.extent(data, function (d) {
       return d.x;
     });
+
+    if ('min_x' in HEPDATA.stats && 'max_x' in HEPDATA.stats) {
+      x_extent = [HEPDATA.stats.min_x, HEPDATA.stats.max_x];
+    }
 
     return d3.scale.linear().domain(x_extent).range([0, HEPDATA.visualization.heatmap.options.width - HEPDATA.visualization.heatmap.options.margins.left - HEPDATA.visualization.heatmap.options.margins.right]);
   },
@@ -868,6 +891,12 @@ HEPDATA.visualization.heatmap = {
     var y_extent = d3.extent(data, function (d) {
       return d.y;
     });
+
+
+    if ('min_y' in HEPDATA.stats && 'max_y' in HEPDATA.stats) {
+      y_extent = [HEPDATA.stats.min_y, HEPDATA.stats.max_y];
+    }
+
     return d3.scale.linear().domain(y_extent).range([HEPDATA.visualization.heatmap.options.height - HEPDATA.visualization.heatmap.options.margins.top - HEPDATA.visualization.heatmap.options.margins.bottom, 0]);
   }
 };
@@ -1233,8 +1262,8 @@ HEPDATA.dataprocessing = {
           };
         }
 
-        group_types[qualifier_record.type]["set"].add(qualifier_record.value)
-        group_types[qualifier_record.type]["values"].push(qualifier_record.value)
+        group_types[qualifier_record.type]["set"].add(qualifier_record.value);
+        group_types[qualifier_record.type]["values"].push(qualifier_record.value);
       }
     }
 
@@ -1275,19 +1304,17 @@ HEPDATA.dataprocessing = {
                   x1_idx = idx;
                 }
                 if (HEPDATA.visualization.heatmap.data.headers[idx].name == HEPDATA.visualization.heatmap.y_index) {
-                  y1_idx = idx;
+                  x2_idx = idx;
                 }
               }
-
               processed_value = {
 
                 "x": record.x[x1_idx],
-                "y": record.x[y1_idx],
+                "y": record.x[x2_idx],
                 "value": record.y[y_idx].value,
                 "name": data_header_value,
                 "row": data_record
               };
-
 
               if (isNaN(processed_value.value)) continue;
 
@@ -1301,6 +1328,7 @@ HEPDATA.dataprocessing = {
                 "name": data_header_value,
                 "row": data_record
               };
+
               if (processed_value.y == '-') continue;
             }
 
@@ -1311,55 +1339,58 @@ HEPDATA.dataprocessing = {
 
             var summed_uncertainties = {"up": 0, "down": 0};
 
-            for (var error_idx in record.y[y_idx].errors) {
+            if (record.x.length == 1) {
+              for (var error_idx in record.y[y_idx].errors) {
 
-              var errors_obj = $.extend(record.y[y_idx].errors[error_idx], {});
-              errors_obj.x = processed_value.x;
-              errors_obj.y = record.y[y_idx].value;
-              errors_obj.group = record.y[y_idx].group;
-              errors_obj.name = data_header_value;
+                var errors_obj = $.extend(record.y[y_idx].errors[error_idx], {});
+                errors_obj.x = processed_value.x;
+                errors_obj.y = record.y[y_idx].value;
+                errors_obj.group = record.y[y_idx].group;
+                errors_obj.name = data_header_value;
 
-              if ("asymerror" in errors_obj) {
-                var up_err = HEPDATA.dataprocessing.process_error_value(errors_obj['asymerror']['plus'], errors_obj.y);
-                var down_err = HEPDATA.dataprocessing.process_error_value(errors_obj['asymerror']['minus'], errors_obj.y);
-                errors_obj.err_plus = Math.max(down_err, up_err, 0);
-                errors_obj.err_minus = Math.min(down_err, up_err, 0);
+                if ("asymerror" in errors_obj) {
+                  var up_err = HEPDATA.dataprocessing.process_error_value(errors_obj['asymerror']['plus'], errors_obj.y);
+                  var down_err = HEPDATA.dataprocessing.process_error_value(errors_obj['asymerror']['minus'], errors_obj.y);
+                  errors_obj.err_plus = Math.max(down_err, up_err, 0);
+                  errors_obj.err_minus = Math.min(down_err, up_err, 0);
 
-              } else if ("symerror" in errors_obj) {
-                //we have a symerror
-                var value = HEPDATA.dataprocessing.process_error_value(errors_obj['symerror'], errors_obj.y);
-                errors_obj.err_plus = value;
-                errors_obj.err_minus = value == 0 ? 0 : -value;
+                } else if ("symerror" in errors_obj) {
+                  //we have a symerror
+                  var value = HEPDATA.dataprocessing.process_error_value(errors_obj['symerror'], errors_obj.y);
+                  errors_obj.err_plus = value;
+                  errors_obj.err_minus = value == 0 ? 0 : -value;
+                }
+
+                if (errors_obj.y + errors_obj.err_plus > HEPDATA.stats.max_y) HEPDATA.stats.max_y = errors_obj.err_plus + errors_obj.y;
+                if (errors_obj.y + errors_obj.err_minus < HEPDATA.stats.min_y) HEPDATA.stats.min_y = errors_obj.err_minus + errors_obj.y;
+
+                summed_uncertainties["up"] += Math.pow(errors_obj.err_plus, 2);
+                summed_uncertainties["down"] += Math.pow(errors_obj.err_minus, 2);
+
+                errors.push(errors_obj);
+                all_errors.push(errors_obj);
               }
 
-              if (errors_obj.y + errors_obj.err_plus > HEPDATA.stats.max_y) HEPDATA.stats.max_y = errors_obj.err_plus + errors_obj.y;
-              if (errors_obj.y + errors_obj.err_minus < HEPDATA.stats.min_y) HEPDATA.stats.min_y = errors_obj.err_minus + errors_obj.y;
 
-              summed_uncertainties["up"] += Math.pow(errors_obj.err_plus, 2);
-              summed_uncertainties["down"] += Math.pow(errors_obj.err_minus, 2);
+              processed_value["quad_error"] = {
+                x: processed_value.x,
+                y: record.y[y_idx].value,
+                'err_plus': Math.sqrt(summed_uncertainties["up"]),
+                'err_minus': -Math.sqrt(summed_uncertainties["down"]),
+                'label': 'Summed',
+                'name': data_header_value
+              };
 
-              errors.push(errors_obj);
-              all_errors.push(errors_obj);
+              if (summed_uncertainties["up"] == 0 && summed_uncertainties["down"] == 0) {
+                processed_value["quad_error"]["label"] = "hidden";
+              }
+
+              all_quad_errors.push(processed_value["quad_error"]);
+
+              processed_value["errors"] = errors;
+              processed_value["group"] = record.y[y_idx].group;
             }
 
-
-            processed_value["quad_error"] = {
-              x: processed_value.x,
-              y: record.y[y_idx].value,
-              'err_plus': Math.sqrt(summed_uncertainties["up"]),
-              'err_minus': -Math.sqrt(summed_uncertainties["down"]),
-              'label': 'Summed',
-              'name': data_header_value
-            };
-
-            if (summed_uncertainties["up"] == 0 && summed_uncertainties["down"] == 0) {
-              processed_value["quad_error"]["label"] = "hidden";
-            }
-
-            all_quad_errors.push(processed_value["quad_error"]);
-
-            processed_value["errors"] = errors;
-            processed_value["group"] = record.y[y_idx].group;
             processed_values.push(processed_value);
           }
         } else {
@@ -1398,6 +1429,7 @@ HEPDATA.dataprocessing = {
    */
   processed_key: function (processed_value_obj, key) {
     var val = processed_value_obj[key];
+
     if (val != undefined) {
       if (!isNaN(parseFloat(val["high"])) && !isNaN(parseFloat(val["low"]))) {
         var value = val["value"];
@@ -1425,6 +1457,18 @@ HEPDATA.dataprocessing = {
 
         if (processed_value_obj[key + '_max'] > HEPDATA.stats['max_' + key])  HEPDATA.stats['max_' + key] = processed_value_obj[key + '_max'];
         if (processed_value_obj[key + '_min'] < HEPDATA.stats['min_' + key])  HEPDATA.stats['min_' + key] = processed_value_obj[key + '_min'];
+      } else if (typeof(val["value"]) == 'string' && val["value"].split('-').length > 1) {
+        var low_high = val["value"].split('-');
+
+        if (!isNaN(low_high[1]) && !isNaN(low_high[0])) {
+          processed_value_obj[key + '_max'] = +low_high[1];
+          processed_value_obj[key + '_min'] = +low_high[0];
+          processed_value_obj[key] = +processed_value_obj[key + '_min'] + ((processed_value_obj[key + '_max'] - processed_value_obj[key + '_min']) / 2);
+        }
+
+        if (processed_value_obj[key + '_max'] > HEPDATA.stats['max_' + key])  HEPDATA.stats['max_' + key] = processed_value_obj[key + '_max'];
+        if (processed_value_obj[key + '_min'] < HEPDATA.stats['min_' + key])  HEPDATA.stats['min_' + key] = processed_value_obj[key + '_min'];
+
       } else if (!isNaN(parseFloat(val["value"]))) {
         processed_value_obj[key] = +val["value"];
 
