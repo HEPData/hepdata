@@ -37,25 +37,31 @@ from hepdata.modules.records.migrator.api import load_files, update_submissions
 
 cli = create_cli(create_app=create_app)
 
-default_recids = 'ins1345354,ins1402356,ins1310838,ins1305286,ins1393330,ins1357982,ins1253404,ins142476,ins99995,ins165484,ins2852'
+default_recids = 'ins1373299,ins1242869,ins1311487,ins1323075'
 
 
 @cli.command()
 @with_appcontext
-@click.option('--recids', '-r', default=default_recids,
+@click.option('--inspireids', '-i', default=default_recids,
               help='A comma separated list of recids to load.')
 @click.option('--recreate_index', '-rc', default=True, type=bool,
               help='Whether or not to recreate the index')
 @click.option('--tweet', '-t', default=False, type=bool,
               help='Whether or not to send a tweet announcing the arrival of these records.')
-def populate(recids, recreate_index, tweet):
-    """Populate the DB with records."""
+def populate(inspireids, recreate_index, tweet):
+    """Populate the DB with records.
+        Usage: hepdata populate -i 'ins1262703' -rc False -t False
+        :param inspireids:
+        :param tweet:
+        :param recreate_index:
+
+    """
     from hepdata.ext.elasticsearch.api import recreate_index
 
     if recreate_index:
         recreate_index()
 
-    files_to_load = recids.split(",")
+    files_to_load = parse_inspireids_from_string(inspireids)
     load_files(files_to_load, send_tweet=tweet)
 
 
@@ -94,27 +100,31 @@ def migrate(start, end, year=None, missing_only=False):
 
 @cli.command()
 @with_appcontext
-@click.option('--recids', '-r',
+@click.option('--inspireids', '-i',
               help='A comma separated list of recids to load.')
 @click.option('--update_record_info_only', '-ro', default=False, type=bool,
               help='True if you just want to update the publication information.')
-def update(recids, update_record_info_only):
+def update(inspireids, update_record_info_only):
     """
     Given a list of record ids, can update the contents of the whole submission, or just the record information
     via the update_record_info_only option.
-    Usage: hepdata update -r 'insXXX' -ro True|False
-    :param recids: comma separated list of record ids, e.g. ins222121
+    Usage: hepdata update -i 'insXXX' -ro True|False
+    :param inspireids: comma separated list of inspire ids, e.g. ins222121
     :param update_record_info_only: if True, will only up the record information, and won't update the data files.
     :return:
     """
-    records_to_update = recids.split(",")
+    records_to_update = parse_inspireids_from_string(inspireids)
     update_submissions.delay(records_to_update, update_record_info_only)
 
 
 @cli.command()
 @with_appcontext
 def find_duplicates_and_remove():
-    inspire_ids = get_all_ids_in_current_system(prepender_id_with="")
+    """
+    Will go through the application to find any duplicates then remove them.
+    :return:
+    """
+    inspire_ids = get_all_ids_in_current_system(prepend_id_with="")
 
     duplicates = []
     for inspire_id in inspire_ids:
@@ -130,7 +140,7 @@ def find_duplicates_and_remove():
 @cli.command()
 @with_appcontext
 def get_missing_records():
-    inspire_ids = get_all_ids_in_current_system(prepender_id_with="")
+    inspire_ids = get_all_ids_in_current_system(prepend_id_with="")
     missing_ids = []
     for inspire_id in inspire_ids:
         if not record_exists(inspire_id):
@@ -143,7 +153,7 @@ def get_missing_records():
 
 @cli.command()
 @with_appcontext
-@click.option('--recreate', '-r', type=bool, default=False,
+@click.option('--recreate', '-rc', type=bool, default=False,
               help='Whether or not to recreate the index mappings as well. '
                    'This DELETES the entire index first.')
 @click.option('--start', '-s', type=int, default=-1,
@@ -158,16 +168,43 @@ def reindex(recreate, start, end, batch):
 
 @cli.command()
 @with_appcontext
+@click.option('--inspireids', '-i', type=str,
+              help='Load specific recids in to the system.')
+@click.option('--tweet', '-t', default=False, type=bool,
+              help='Whether or not to send a tweet announcing the arrival of these records.')
+def load(inspireids, tweet):
+    """
+    Remove records given their HEPData IDs from the database.
+    Removes all database entries, leaves the files on the server.
+    :param inspireids: list of record IDs to remove
+    :return:
+    """
+    records_to_unload = inspireids.split(',')
+
+    processed_record_ids = parse_inspireids_from_string(records_to_unload)
+
+    load_files(processed_record_ids, send_tweet=tweet)
+
+
+def parse_inspireids_from_string(records_to_unload):
+    processed_record_ids = []
+    for record_id in records_to_unload:
+        processed_record_ids.append(record_id.strip())
+    return processed_record_ids
+
+
+@cli.command()
+@with_appcontext
 @click.option('--recids', '-r', type=str,
               help='Unload specific recids in to the system.')
-def unload(record_ids):
+def unload(recids):
     """
     Remove records given their HEPData IDs from the database.
     Removes all database entries, leaves the files on the server.
     :param record_ids: list of record IDs to remove
     :return:
     """
-    records_to_unload = record_ids.split(',')
+    records_to_unload = recids.split(',')
 
     processed_record_ids = []
     for record_id in records_to_unload:
@@ -181,7 +218,7 @@ def do_unload(records_to_unload):
         unload_submission(record_id)
 
 
-def get_all_ids_in_current_system(year=None, prepender_id_with="ins"):
+def get_all_ids_in_current_system(year=None, prepend_id_with="ins"):
     import requests, re
 
     brackets_re = re.compile(r'\[+|\]+')
@@ -201,5 +238,5 @@ def get_all_ids_in_current_system(year=None, prepender_id_with="ins"):
             id_block = brackets_re.sub("", _all_ids[start:end])
             id = id_block.split(',')[0].strip()
             if id != '0': inspire_ids.append(
-                prepender_id_with + "{}".format(id))
+                prepend_id_with + "{}".format(id))
     return inspire_ids
