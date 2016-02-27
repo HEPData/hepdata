@@ -29,7 +29,7 @@ def create_data_structure(ctx):
 
     first_author = {}
     authors = ctx.get('authors', [])
-    if len(authors) > 0:
+    if authors is not None and len(authors) > 0:
         first_author = authors[0]
 
     record = {"title": title,
@@ -39,7 +39,7 @@ def create_data_structure(ctx):
               "authors": authors
               }
 
-    optional_keys = ["related_publication", "recid", "keywords",
+    optional_keys = ["related_publication", "recid", "keywords", "dissertation", "type",
                      "control_number", "doi", "creation_date", "year", "hepdata_doi",
                      "last_updated", "data_endpoints", "collaborations",
                      "journal_info", "uploaders", "reviewers"]

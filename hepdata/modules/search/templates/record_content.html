@@ -24,26 +24,19 @@
                         <span class="info_group"> <a href={{ link }}> {{ col }} </a></span>
                     {% endfor %} collaboration{% if record.collaborations|length > 1 %}s{% endif %}.</span>
             {% endif %}
-
         </div>
 
         <div style="padding: 3px 0">
 
-            {% if record.journal_info or record.date %}
-
-                {% if record.journal_info %}
+                {% if record.journal_info == 'No Journal Information' %}
+                    <span style="font-weight: bolder">PhD Thesis, {{ record.year }}</span>.
+                {% elif record.journal_info %}
                     <span style="font-weight: bolder">{{ record.journal_info }}</span>.
                 {% endif %}
-
-            {% endif %}
-
-
         </div>
 
         <div style="padding: 3px 0">
             {% if record.inspire_id %}
-
-
                 <span itemprop="citation" itemscope itemtype="http://schema.org/CreativeWork" class="info-group">
             <span class="hidden" itemprop="url">http://inspirehep.net/record/{{ record.inspire_id }}</span>
             <i class="fa fa-link"></i> Inspire Record <a href="http://inspirehep.net/record/{{ record.inspire_id }}"
@@ -63,7 +56,6 @@
 
         </div>
     </div>
-
 
     <p class="truncated-record-abstract" itemprop="description" style="padding-top: 10px;">
         {{ record.abstract }}

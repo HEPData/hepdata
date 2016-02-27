@@ -1,13 +1,14 @@
 import os
 
 from celery import shared_task
-from datacite.errors import DataCiteUnauthorizedError
+from datacite.errors import DataCiteUnauthorizedError, DataCiteBadRequestError, DataCiteError
 from flask import render_template, current_app
 from invenio_db import db
 from invenio_pidstore.errors import PIDInvalidAction, PIDDoesNotExistError
 from invenio_pidstore.models import PersistentIdentifier
 
 from invenio_pidstore.providers.datacite import DataCiteProvider
+from sqlalchemy.exc import IntegrityError
 
 from hepdata.modules.records.models import DataSubmission, HEPSubmission, DataResource, License
 from hepdata.modules.records.utils.common import get_record_by_id, decode_string
@@ -15,6 +16,7 @@ import logging
 
 logging.basicConfig()
 log = logging.getLogger(__name__)
+
 
 @shared_task
 def generate_doi_for_submission(recid, version):
@@ -25,6 +27,10 @@ def generate_doi_for_submission(recid, version):
     publication_info = get_record_by_id(recid)
 
     version_doi = hep_submission.doi + ".v{0}".format(hep_submission.latest_version)
+
+    hep_submission.data_abstract = decode_string(hep_submission.data_abstract)
+    publication_info['title'] = decode_string(publication_info['title'])
+    publication_info['abstract'] = decode_string(publication_info['abstract'])
 
     base_xml = render_template('hepdata_records/formats/datacite/datacite_container_submission.xml',
                                doi=hep_submission.doi,
@@ -158,5 +164,10 @@ def register_doi(doi, url, xml, uuid):
         provider.register(url, xml)
     except DataCiteUnauthorizedError:
         log.error('Unable to mint DOI. No authorisation credentials provided.')
-    except PIDInvalidAction, IntegrityError:
+    except PIDInvalidAction:
         provider.update(url, xml)
+    except IntegrityError:
+        provider.update(url, xml)
+    except DataCiteError:
+        log.error('Error registering {0} for URL {1}. '
+                  'XML for submission is\n\n{2}\n\n'.format(doi, url, xml))

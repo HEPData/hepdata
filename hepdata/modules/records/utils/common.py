@@ -1,6 +1,5 @@
 import datetime
 
-from dateutil.parser import parse
 from invenio_pidstore.resolver import Resolver
 from invenio_records.api import Record
 import os
@@ -99,8 +98,10 @@ def encode_string(string, type="utf-8"):
 
 def decode_string(string, type="utf-8"):
     try:
-        return string.decode(type)
+        return string.decode(type, errors='replace')
     except AttributeError:
+        return string
+    except UnicodeEncodeError:
         return string
 
 

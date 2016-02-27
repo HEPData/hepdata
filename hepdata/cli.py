@@ -176,19 +176,18 @@ def load(inspireids, tweet):
     """
     Remove records given their HEPData IDs from the database.
     Removes all database entries, leaves the files on the server.
-    :param inspireids: list of record IDs to remove
+    :param inspireids: list of record IDs to load
     :return:
     """
-    records_to_unload = inspireids.split(',')
-
-    processed_record_ids = parse_inspireids_from_string(records_to_unload)
+    processed_record_ids = parse_inspireids_from_string(inspireids)
 
     load_files(processed_record_ids, send_tweet=tweet)
 
 
 def parse_inspireids_from_string(records_to_unload):
     processed_record_ids = []
-    for record_id in records_to_unload:
+    records = records_to_unload.split(',')
+    for record_id in records:
         processed_record_ids.append(record_id.strip())
     return processed_record_ids
 

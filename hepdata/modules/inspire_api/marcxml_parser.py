@@ -29,8 +29,10 @@ marc_tags = {
     'collaboration': ('710', 'g'),
     'keywords': ('695', 'a'),
     'date': ('269', 'c'),
+    'collection': ('980', 'a'),
     'year': ('260', 'c'),
     'journal': ('773', ['p', 'v', 'y', 'c']),
+    'dissertation_note': ('502', 'b', 'c', 'd')
 }
 
 DEFAULT_JOURNAL = 'No Journal Information'
@@ -187,6 +189,28 @@ def get_keywords(soup):
     keywords = [df.find_all(code=code)[0].string for df in datafields
                 if df.find_all(code=code)]
     return make_keyword_dicts(keywords)
+
+
+def get_collection(soup):
+    """
+    Finds the 980 code relating to thesis type.
+    """
+    (tag, code) = marc_tags['collection']
+    datafields = soup.find_all(tag=tag)
+    return [df.find_all(code=code)[0].string for df in datafields
+            if df.find_all(code=code)]
+
+
+def get_dissertation(soup):
+    (tag, diploma_type, institution, date) = marc_tags['dissertation_note']
+    datafield = soup.find(tag=tag)
+    if datafield is None:
+        return {}
+
+    type = datafield.find(code=diploma_type).string
+    university = datafield.find(code=institution).string
+    defense_date = datafield.find(code=date).string
+    return {'type': type, 'institution': university, 'defense_date': defense_date}
 
 
 def make_keyword_dicts(keywords):

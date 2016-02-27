@@ -47,6 +47,10 @@
 
     <alternateIdentifiers>
         <alternateIdentifier alternateIdentifierType="HEPDataRecord">
+            http://www.hepdata.net/record/ins{{ publication_info.inspire_id }}
+        </alternateIdentifier>
+
+        <alternateIdentifier alternateIdentifierType="HEPDataRecordAlt">
             http://www.hepdata.net/record/{{ data_submission.publication_recid }}
         </alternateIdentifier>
 
@@ -69,7 +73,7 @@
 
 
     <relatedIdentifiers>
-        {% if inspire_id %}
+        {% if publication_info.inspire_id %}
             <relatedIdentifier relatedIdentifierType="URL" relationType="IsSupplementTo">
                 http://www.inspirehep.net/record/{{ publication_info.inspire_id }}
             </relatedIdentifier>

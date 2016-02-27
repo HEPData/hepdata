@@ -24,7 +24,8 @@ from flask import request, Blueprint, redirect, jsonify
 from hepdata.ext.elasticsearch.api import record_exists
 
 from marcxml_parser import get_doi, get_title, get_authors, get_abstract, \
-    get_arxiv, get_collaborations, get_keywords, get_date, get_journal_info, get_year
+    get_arxiv, get_collaborations, get_keywords, get_date, get_journal_info, get_year, get_collection, get_dissertation, \
+    expand_date
 
 blueprint = Blueprint('inspire_datasource',
                       __name__,
@@ -39,6 +40,8 @@ def get_inspire_record_information(inspire_rec_id):
     if status == 200:
         soup = BeautifulSoup(content, "lxml")
 
+        collection_type = get_collection(soup)
+
         journal_info, year = get_journal_info(soup)
         creation_date, creation_year = get_date(soup)
 
@@ -52,6 +55,7 @@ def get_inspire_record_information(inspire_rec_id):
             'title': get_title(soup),
             'doi': get_doi(soup),
             'authors': get_authors(soup),
+            'type': get_collection(soup),
             'abstract': get_abstract(soup),
             'creation_date': creation_date,
             'arxiv_id': get_arxiv(soup),
@@ -60,6 +64,15 @@ def get_inspire_record_information(inspire_rec_id):
             'journal_info': journal_info,
             'year': year
         }
+
+        if 'Thesis' in collection_type:
+            dissertation = get_dissertation(soup)
+            content['dissertation'] = dissertation
+            if year is None:
+                content['year'] = dissertation.get('defense_date', None)
+                if content['year'] is not None:
+                    content['creation_date'] = expand_date(content['year'])
+
         status = 'success'
     return content, status
 

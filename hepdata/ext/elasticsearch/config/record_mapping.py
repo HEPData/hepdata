@@ -49,6 +49,23 @@ mapping = {
             }
         }
     },
+    "type": {
+        "type": "string"
+    },
+    "dissertation": {
+        "type": "nested",
+        "properties": {
+            "type": {
+                "type": "string"
+            },
+            "institution": {
+                "type": "string"
+            },
+            "defense_data": {
+                "type": "string"
+            }
+        }
+    },
     "creation_date": {
         "type": "date",
         "format": "dateOptionalTime"

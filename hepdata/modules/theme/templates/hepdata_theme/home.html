@@ -34,7 +34,7 @@
                                     </li>
                                 {%- endif %}
 
-                             <li><a href="/about"><span
+                                <li><a href="/about"><span
                                         class="fa fa-info-circle"></span> About</a>
                                 </li>
 
@@ -71,7 +71,7 @@
                 </div>
 
                 <div class="hep_logo_home"></div>
-                                <h4>High Energy Physics Data Repository</h4>
+                <h4>High Energy Physics Data Repository</h4>
             </div>
 
 
@@ -170,7 +170,8 @@
     {%- block javascript %}
 
         <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
-        <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script type="text/javascript"
+                src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
 
         {%- assets "hepdata_bootstrap_js" %}
@@ -187,17 +188,19 @@
 
                         var record_html_block = '<div class="latest-record col-md-4 col-xs-12">';
 
-
                         if (data[record]['collaborations'].length > 0)
                             for (var collaboration in data[record]['collaborations']) {
                                 record_html_block += ' <a href="/search?q=&collaboration=' + data[record]['collaborations'][collaboration] + '" class="collaboration">' + data[record]['collaborations'] + '</a> ';
                             }
 
-
                         record_html_block += '<a href="/record/ins' + data[record]['inspire_id'] + '" class="title">' + data[record]['title'] + '</a><br/>';
 
                         if (data[record]['first_author']) {
-                            record_html_block += '<a href="/search/?q=&author=' + data[record]['first_author']['full_name'] + '" class="author">' + data[record]['first_author']['full_name'] + ' <i>et al</i></a>';
+                            record_html_block += '<a href="/search/?q=&author=' + data[record]['first_author']['full_name'] + '" class="author">' + data[record]['first_author']['full_name'];
+                            if (data[record]['author_count'] > 1) {
+                                record_html_block += ' <i>et al</i>';
+                            }
+                            record_html_block += ' </a>';
                         }
 
                         record_html_block += "<br/>";
@@ -216,7 +219,6 @@
                         }
 
                         record_html_block += '</div>';
-
 
                         $("#latest_records").append(record_html_block);
                     }

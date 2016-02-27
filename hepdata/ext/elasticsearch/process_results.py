@@ -110,6 +110,7 @@ def get_basic_record_information(record):
         'data_keywords': source.get('data_keywords', {}),
         'collaborations': collaborations,
         'inspire_id': source.get('inspire_id', ''),
+        'year': source.get('year', ''),
         'authors': map(lambda x: x['full_name'],
                        source.get('authors', [])),
         'date': parse_and_format_date(datestring),

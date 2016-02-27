@@ -41,7 +41,7 @@ def process_independent_variables(table_contents, x_axes,
 
                 if x_header in x_axes:
                     # sometimes, the x headers can be the same.
-                    # We must account for this. 
+                    # We must account for this.
                     x_header += '__{0}'.format(count)
 
                 x_axes[x_header] = []
@@ -186,8 +186,6 @@ def generate_table_structure(table_contents):
 
     group_count = 0
     yheaders = []
-
-    print x_axes
 
     process_dependent_variables(group_count, record, table_contents,
                                 tmp_values, x_axes, yheaders)

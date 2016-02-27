@@ -111,7 +111,6 @@ def get_metadata_by_alternative_id(recid, *args, **kwargs):
             return do_render_record(record['recid'], record, version=version)
     except Exception as e:
         raise e
-        # return render_template('404.html')
 
 
 def get_record_contents(recid):
@@ -176,7 +175,10 @@ def format_submission(recid, record, version, hepdata_submission,
                 ctx['record']['collaborations'] = collaborations
 
             if "first_author" in record and 'full_name' in record["first_author"]:
-                ctx['breadcrumb_text'] = record["first_author"]["full_name"] + " et al."
+                ctx['breadcrumb_text'] = record["first_author"]["full_name"]
+
+                if 'authors' in record and len(record['authors']) > 1:
+                     ctx['breadcrumb_text'] += " et al."
 
             try:
                 commit_message_query = RecordVersionCommitMessage.query \
@@ -205,10 +207,15 @@ def format_submission(recid, record, version, hepdata_submission,
         if ctx['version'] > 1:
             ctx['record']['hepdata_doi'] += ".v{0}".format(ctx['version'])
 
-
         ctx['recid'] = recid
         ctx["status"] = hepdata_submission.overall_status
         ctx['record']['data_abstract'] = decode_string(hepdata_submission.data_abstract)
+
+        if 'type' in record and 'Thesis' in record['type']:
+            if 'type' in record['dissertation']:
+                record['journal_info'] = record['dissertation']['type'] + ", " + record['dissertation']['institution']
+            else:
+                record['journal_info'] = "PhD Thesis"
 
         if hepdata_submission.overall_status != 'finished' and ctx["version_count"] > 0:
 
@@ -314,12 +321,21 @@ def get_latest():
             if "last_updated" in record_information:
                 last_updated = record_information["last_updated"]
 
+            journal = record_information['journal_info']
+
+            if 'Thesis' in record_information['type']:
+                if 'dissertation' in record and 'type' in record['dissertation']:
+                    journal = record['dissertation']['type'] + ", " + record['dissertation']['institution']
+                else:
+                    journal = "PhD Thesis"
+
             result['latest'].append({
                 'id': record_information['recid'],
                 'inspire_id': record_information['inspire_id'],
                 'title': record_information['title'],
                 'collaborations': collaborations,
-                'journal': record_information['journal_info'],
+                'journal': journal,
+                'author_count': len(record_information.get('authors', 1)),
                 'first_author': record_information['first_author'],
                 'creation_date': record_information['creation_date'],
                 'last_updated': last_updated})
