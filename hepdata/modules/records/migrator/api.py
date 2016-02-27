@@ -73,14 +73,16 @@ def update_submissions(inspire_ids_to_update, only_record_information=False):
     migrator = Migrator()
     for index, inspire_id in enumerate(inspire_ids_to_update):
         _cleaned_id = inspire_id.replace("ins", "")
-        _matching_records = get_records_matching_field('inspire_id', _cleaned_id, doc_type=CFG_PUB_TYPE)
-        if len(_matching_records['hits']['hits']) > 0:
+        _matching_records = get_records_matching_field('inspire_id', _cleaned_id)
+        if len(_matching_records['hits']['hits']) >= 1:
             print 'The record with id {} will be updated now'.format(inspire_id)
-            migrator.update_file.delay(inspire_id, _matching_records['hits']['hits'][0]['_source']['recid'],
+            recid = _matching_records['hits']['hits'][0]['_source']['recid']
+            if 'related_publication' in _matching_records['hits']['hits'][0]['_source']:
+                recid = _matching_records['hits']['hits'][0]['_source']['related_publication']
+            migrator.update_file.delay(inspire_id, recid,
                                        only_record_information)
         else:
-            print 'No record exists with id {0}, going to attempt fresh upload of this file.'.format(inspire_id)
-            load_files.delay([inspire_id])
+            log.error('No record exists with id {0}. You should load this file first.'.format(inspire_id))
 
 
 def load_files(inspire_ids, send_tweet=False, synchronous=False):
@@ -94,7 +96,7 @@ def load_files(inspire_ids, send_tweet=False, synchronous=False):
     for index, inspire_id in enumerate(inspire_ids):
         _cleaned_id = inspire_id.replace("ins", "")
         if not record_exists(_cleaned_id):
-            print 'The record with id {} does not exist in the database, so we\'re loading it instead' \
+            print 'The record with id {} does not exist in the database, so we\'re loading it.' \
                 .format(inspire_id)
             try:
                 log.info('Loading {}'.format(inspire_id))
@@ -108,6 +110,13 @@ def load_files(inspire_ids, send_tweet=False, synchronous=False):
             except Exception as e:
                 log.error('Failed to load {0}. {1} '.format(inspire_id, e))
                 print e
+        else:
+            print 'The record with inspire id {0} already exists. Updating instead.'.format(inspire_id)
+            log.info('Updating {}'.format(inspire_id))
+            if synchronous:
+                update_submissions([inspire_id], send_tweet)
+            else:
+                update_submissions.delay([inspire_id], send_tweet)
 
 
 class Migrator(object):

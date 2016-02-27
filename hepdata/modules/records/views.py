@@ -32,7 +32,7 @@ import os
 import zipfile
 from flask.ext.login import login_required, current_user
 from flask import Blueprint, redirect, request, render_template, Response, \
-    jsonify, send_from_directory, send_file, current_app
+    jsonify, send_file, current_app
 from invenio_accounts.models import User
 from invenio_db import db
 import jsonpatch

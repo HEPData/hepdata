@@ -197,8 +197,10 @@ def get_collection(soup):
     """
     (tag, code) = marc_tags['collection']
     datafields = soup.find_all(tag=tag)
-    return [df.find_all(code=code)[0].string.lower() for df in datafields
-            if df.find_all(code=code)]
+    collections = [df.find_all(code=code)[0].string for df in datafields if df.find_all(code=code)]
+    collections = filter(lambda x: x is not None, collections)
+    collections = map(lambda x: x.lower(), collections)
+    return collections
 
 
 def get_dissertation(soup):

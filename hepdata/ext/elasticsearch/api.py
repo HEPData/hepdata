@@ -203,17 +203,17 @@ def get_record(record_id, doc_type, index=None, parent=None):
     """
     try:
         if doc_type == CFG_DATA_TYPE and parent:
-            result = es.get(index=index,
-                            doc_type=doc_type,
-                            id=record_id,
-                            parent=parent)
+            result = es.get(index=index, doc_type=doc_type,
+                            id=record_id, parent=parent)
         else:
             result = es.get(index=index, doc_type=doc_type, id=record_id)
+
         return result.get('_source', result)
     except (NotFoundError, RequestError):
         return None
 
 
+@default_index
 def record_exists(inspire_id, index=None):
     """ Checks if a record with a given HEPData ID exists in the index """
     # Strip the ins from the beginning

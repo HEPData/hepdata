@@ -36,8 +36,8 @@ from hepdata.modules.records.utils.submission import unload_submission
 from hepdata.modules.records.migrator.api import load_files, update_submissions
 
 cli = create_cli(create_app=create_app)
-#ins1373299,ins1242869,ins1311487,ins1323075
-default_recids = 'ins1187688'
+
+default_recids = 'ins1187688,ins67677,ins135836,ins1389108,ins1373299,ins1242869,ins1311487,ins1323075'
 
 
 @cli.command()
@@ -130,7 +130,6 @@ def find_duplicates_and_remove():
     for inspire_id in inspire_ids:
         matches = get_records_matching_field('inspire_id', inspire_id,
                                              doc_type=CFG_PUB_TYPE)
-
         if len(matches['hits']['hits']) > 1:
             duplicates.append(matches['hits']['hits'][0]['_source']['recid'])
     print('There are {} duplicates. Going to remove.'.format(len(duplicates)))

@@ -43,20 +43,21 @@ def prepare_author_for_indexing(es, document):
     index, doc_type = CFG_ES_AUTHORS
 
     author_data = []
-    authors = document.get('authors', [])
+    authors = document.get('authors', None)
 
-    for author in authors:
-        data_dict = author
+    if authors is not None:
+        for author in authors:
+            data_dict = author
 
-        op_dict = {
-            "index": {
-                "_index": index,
-                "_type": doc_type,
-                "_id": author['full_name']
+            op_dict = {
+                "index": {
+                    "_index": index,
+                    "_type": doc_type,
+                    "_id": author['full_name']
+                }
             }
-        }
-        author_data.append(op_dict)
-        author_data.append(data_dict)
+            author_data.append(op_dict)
+            author_data.append(data_dict)
 
     return author_data
 

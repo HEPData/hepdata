@@ -167,6 +167,6 @@ def register_doi(doi, url, xml, uuid):
         provider.update(url, xml)
     except IntegrityError:
         provider.update(url, xml)
-    except DataCiteError:
-        log.error('Error registering {0} for URL {1}. '
-                  'XML for submission is\n\n{2}\n\n'.format(doi, url, xml))
+    except DataCiteError as dce:
+        log.error('Error registering {0} for URL {1}:\n\n{2}'
+                  .format(doi, url, dce))

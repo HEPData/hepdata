@@ -61,8 +61,12 @@ def test_parser():
                   "title": "Mesure de la polarisation du proton de recul dans la diffusion élastique "
                            "pi+- p entre 550 et 1025 MeV",
                   "creation_date": "1970-01-01",
-                  "year": 1970}
-
+                  "year": 1970},
+                 {"inspire_id": "67677",
+                  "title": "INELASTIC ELECTRON - DEUTERON SCATTERING AT HIGH-ENERGIES",
+                  "creation_date": "1971-01-01",
+                  "year": 1971
+                  }
                  ]
 
     for test in test_data:

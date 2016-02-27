@@ -20,7 +20,7 @@
 
 import requests
 from bs4 import BeautifulSoup
-from flask import request, Blueprint, redirect, jsonify
+from flask import request, Blueprint, jsonify
 from hepdata.ext.elasticsearch.api import record_exists
 
 from marcxml_parser import get_doi, get_title, get_authors, get_abstract, \
