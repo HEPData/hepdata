@@ -147,7 +147,7 @@ DEBUG_TB_INTERCEPT_REDIRECTS = False
 # DataCite DOI minting:
 # http://datacite.readthedocs.org/en/latest/
 
-HEPDATA_DOI_PREFIX = "10.18423"
+HEPDATA_DOI_PREFIX = "10.17182"
 TEST_DOI_PREFIX = "10.5072"
 SITE_URL = "https://www.hepdata.net"
 
