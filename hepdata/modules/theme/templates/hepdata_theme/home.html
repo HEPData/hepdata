@@ -212,7 +212,9 @@
                         record_html_block += "<br/>";
 
                         var last_updated_date = new Date(data[record]['last_updated']);
-                        record_html_block += '<div class="date"><i class="fa fa-clock-o"></i>  Updated ' + last_updated_date.getFullYear() + '-' + (last_updated_date.getMonth() + 1) + "-" + last_updated_date.getDate() + '</div>';
+                        var month = ('0' + (last_updated_date.getMonth() + 1)).slice(-2);
+                        var date = ('0' + last_updated_date.getDate()).slice(-2);
+                        record_html_block += '<div class="date"><i class="fa fa-clock-o"></i>  Updated ' + last_updated_date.getFullYear() + '-' + month + "-" + date + '</div>';
 
                         if (data[record]['creation_date'] != null) {
                             record_html_block += '<div class="date"><i class="fa fa-bookmark-o"></i> Published on ' + data[record]['creation_date'] + '</div>';

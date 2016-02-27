@@ -245,7 +245,7 @@ def process_general_submission_info(submission_info_document, recid):
 
         if "dateupdated" in submission_info_document:
             try:
-                hepsubmission.last_updated = parse(submission_info_document['dateupdated'])
+                hepsubmission.last_updated = parse(submission_info_document['dateupdated'], dayfirst=True)
             except ValueError as ve:
                 hepsubmission.last_updated = datetime.now()
 
@@ -258,7 +258,8 @@ def process_general_submission_info(submission_info_document, recid):
             for resource in resources:
                 hepsubmission.references.append(resource)
 
-        print 'hepsubmission.last_updated = {}'.format(hepsubmission.last_updated)
+        if hepsubmission.last_updated is not None:
+            print 'hepsubmission.last_updated = {}'.format(hepsubmission.last_updated.isoformat(' '))
         db.session.add(hepsubmission)
         db.session.commit()
 
