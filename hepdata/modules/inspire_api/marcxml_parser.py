@@ -197,7 +197,7 @@ def get_collection(soup):
     """
     (tag, code) = marc_tags['collection']
     datafields = soup.find_all(tag=tag)
-    return [df.find_all(code=code)[0].string for df in datafields
+    return [df.find_all(code=code)[0].string.lower() for df in datafields
             if df.find_all(code=code)]
 
 

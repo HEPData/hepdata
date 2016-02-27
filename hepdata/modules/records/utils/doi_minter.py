@@ -159,7 +159,6 @@ def register_doi(doi, url, xml, uuid):
         pidstore_obj.object_uuid = uuid
         db.session.add(pidstore_obj)
         db.session.commit()
-
     try:
         provider.register(url, xml)
     except DataCiteUnauthorizedError:

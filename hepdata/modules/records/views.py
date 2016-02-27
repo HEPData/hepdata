@@ -211,7 +211,7 @@ def format_submission(recid, record, version, hepdata_submission,
         ctx["status"] = hepdata_submission.overall_status
         ctx['record']['data_abstract'] = decode_string(hepdata_submission.data_abstract)
 
-        if 'type' in record and 'Thesis' in record['type']:
+        if 'type' in record and 'thesis' in record['type']:
             if 'type' in record['dissertation']:
                 record['journal_info'] = record['dissertation']['type'] + ", " + record['dissertation']['institution']
             else:
@@ -323,7 +323,7 @@ def get_latest():
 
             journal = record_information['journal_info']
 
-            if 'Thesis' in record_information['type']:
+            if 'thesis' in record_information['type']:
                 if 'dissertation' in record and 'type' in record['dissertation']:
                     journal = record['dissertation']['type'] + ", " + record['dissertation']['institution']
                 else:

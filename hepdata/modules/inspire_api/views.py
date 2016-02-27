@@ -65,7 +65,7 @@ def get_inspire_record_information(inspire_rec_id):
             'year': year
         }
 
-        if 'Thesis' in collection_type:
+        if 'thesis' in collection_type:
             dissertation = get_dissertation(soup)
             content['dissertation'] = dissertation
             if year is None:

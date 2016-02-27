@@ -2,12 +2,19 @@
           xsi:schemaLocation="http://datacite.org/schema/kernel-3 http://schema.datacite.org/meta/kernel-3/metadata.xsd">
     <identifier identifierType="DOI">{{ doi }}</identifier>
     <creators>
-        {% for author in publication_info.authors %}
+         {% if publication_info.authors %}
+            {% for author in publication_info.authors %}
+                <creator>
+                    <creatorName>{{ author.full_name }}</creatorName>
+                    <affiliation>{{ author.affiliation }}</affiliation>
+                </creator>
+            {% endfor %}
+        {% else %}
             <creator>
-                <creatorName>{{ author.full_name }}</creatorName>
-                <affiliation>{{ author.affiliation }}</affiliation>
+                <creatorName>No Author Available</creatorName>
+                <affiliation>None</affiliation>
             </creator>
-        {% endfor %}
+        {% endif %}
     </creators>
     <dates>
         <date dateType="Updated">{{ overall_submission.last_updated }}</date>

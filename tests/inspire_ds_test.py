@@ -1,9 +1,11 @@
+# coding=utf-8
 import json
 
 from flask import url_for
 
 from hepdata.modules.inspire_api.marcxml_parser import expand_date
 from hepdata.modules.inspire_api.views import get_inspire_record_information
+from hepdata.modules.records.utils.common import decode_string
 
 
 def test_endpoint(client, identifiers):
@@ -54,13 +56,19 @@ def test_parser():
                  {"inspire_id": "44234",
                   "title": "DIFFERENTIAL ELASTIC PION-PROTON SCATTERING AT 600-MEV, 650-MEV and 750-MEV",
                   "creation_date": "2006-04-11",
-                  "year": 2006}
+                  "year": 2006},
+                 {"inspire_id": "1187688",
+                  "title": "Mesure de la polarisation du proton de recul dans la diffusion élastique "
+                           "pi+- p entre 550 et 1025 MeV",
+                  "creation_date": "1970-01-01",
+                  "year": 1970}
+
                  ]
 
     for test in test_data:
         content, status = get_inspire_record_information(
             test["inspire_id"])
 
-        assert (content["title"] == test["title"])
+        assert (decode_string(content["title"]) == decode_string(test["title"]))
         assert (content["creation_date"] == test["creation_date"])
         assert (int(content["year"]) == test["year"])
