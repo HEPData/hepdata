@@ -101,7 +101,7 @@ def get_basic_record_information(record):
             del highlights[key]
 
     authors = source.get('authors', None)
-    if len(authors):
+    if authors:
         authors = map(lambda x: x['full_name'], authors)
 
     res = {
