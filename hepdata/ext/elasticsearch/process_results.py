@@ -100,6 +100,10 @@ def get_basic_record_information(record):
             highlights[new_key] = highlights[key]
             del highlights[key]
 
+    authors = source.get('authors', [])
+    if len(authors) > 0:
+        authors = map(lambda x: x['full_name'], source.get('authors', []))
+
     res = {
         'recid': record['_id'],
         'title': source.get('title', ''),
@@ -111,8 +115,7 @@ def get_basic_record_information(record):
         'collaborations': collaborations,
         'inspire_id': source.get('inspire_id', ''),
         'year': source.get('year', ''),
-        'authors': map(lambda x: x['full_name'],
-                       source.get('authors', [])),
+        'authors': authors,
         'date': parse_and_format_date(datestring),
         'highlight': highlights,
         'journal_info': source.get('journal_info', '')
