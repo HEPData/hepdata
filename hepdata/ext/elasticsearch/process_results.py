@@ -100,9 +100,9 @@ def get_basic_record_information(record):
             highlights[new_key] = highlights[key]
             del highlights[key]
 
-    authors = source.get('authors', [])
-    if len(authors) > 0:
-        authors = map(lambda x: x['full_name'], source.get('authors', []))
+    authors = source.get('authors', None)
+    if len(authors):
+        authors = map(lambda x: x['full_name'], authors)
 
     res = {
         'recid': record['_id'],
