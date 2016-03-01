@@ -211,11 +211,16 @@ def format_submission(recid, record, version, hepdata_submission,
         ctx["status"] = hepdata_submission.overall_status
         ctx['record']['data_abstract'] = decode_string(hepdata_submission.data_abstract)
 
-        if 'type' in record and 'thesis' in record['type']:
-            if 'type' in record['dissertation']:
-                record['journal_info'] = record['dissertation']['type'] + ", " + record['dissertation']['institution']
-            else:
-                record['journal_info'] = "PhD Thesis"
+        print('TYPE...')
+        print(record['type'])
+        if 'type' in record:
+            if 'thesis' in record['type']:
+                if 'type' in record['dissertation']:
+                    record['journal_info'] = record['dissertation']['type'] + ", " + record['dissertation']['institution']
+                else:
+                    record['journal_info'] = "PhD Thesis"
+            elif 'conferencepaper' in record['type']:
+                record['journal_info'] = "Conference Paper"
 
         if hepdata_submission.overall_status != 'finished' and ctx["version_count"] > 0:
 

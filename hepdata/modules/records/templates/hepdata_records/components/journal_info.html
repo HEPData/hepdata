@@ -1,0 +1,12 @@
+{% if record.journal_info == 'No Journal Information' and 'thesis' in record.type %}
+    {% if 'institution' in record.dissertation %}
+        <span style="font-weight: bolder">PhD Thesis, {{ record.dissertation.institution }}, {{ record.year }}</span>.
+    {% else %}
+        <span style="font-weight: bolder">PhD Thesis, {{ record.year }}</span>.
+    {% endif %}
+
+{% elif record.journal_info == 'No Journal Information' and 'conferencepaper' in record.type %}
+    <span style="font-weight: bolder">Conference Paper, {{ record.year }}</span>.
+{% elif record.journal_info %}
+    <span style="font-weight: bolder">{{ record.journal_info }}, {{ record.year }}</span>.
+{% endif %}

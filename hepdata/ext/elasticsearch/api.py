@@ -349,7 +349,6 @@ def index_record_ids(record_ids, index=None):
             }
 
             indexed_result[CFG_DATA_TYPE].append(doc['recid'])
-
             to_index.append(op_dict)
 
         else:

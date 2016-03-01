@@ -110,6 +110,8 @@ def get_basic_record_information(record):
         'abstract': source.get('abstract', ''),
         'doi': source.get('doi'),
         'hepdata_doi': source.get('hepdata_doi'),
+        'type': source.get('type', []),
+        'dissertation': source.get('dissertation', {}),
         'keywords': source.get('keywords', []),
         'data_keywords': source.get('data_keywords', {}),
         'collaborations': collaborations,
