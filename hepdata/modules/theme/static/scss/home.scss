@@ -19,7 +19,6 @@
   background-color: $navy;
   padding-top: 4vh;
   padding-bottom: 3vh;
-
 }
 
 .hep_logo_home {
@@ -147,11 +146,30 @@
   background-color: $navy;
   color: white;
 
-  .version  {
+  .version {
     color: $navy-light;
   }
 }
 
+.disclaimer-area {
+  background-color: $navy-light;
+  padding-top: 1.5vh;
+  padding-bottom: 1vh;
+  color: white;
+  p {
+    font-size: 1.1em;
+  }
+
+  a {
+    color: white;
+    font-weight: bolder;
+
+    &:hover {
+      color: $lightgrey;
+    }
+  }
+
+}
 
 
 
