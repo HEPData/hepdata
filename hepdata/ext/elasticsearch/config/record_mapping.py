@@ -104,6 +104,15 @@ mapping = {
                     }
                 }
             },
+            "phrases": {
+                "type": "string",
+                "fields": {
+                    "raw": {
+                        "type": "string",
+                        "index": "not_analyzed"
+                    }
+                }
+            },
             "reactions": {
                 "type": "string",
                 "fields": {

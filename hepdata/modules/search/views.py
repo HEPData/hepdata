@@ -109,10 +109,11 @@ def sort_facets(facets):
     order = {
         'date': 1,
         'collaboration': 2,
-        'reactions': 3,
-        'observables': 4,
-        'cmenergies': 5,
-        'author': 6
+        'phrases': 3,
+        'reactions': 4,
+        'observables': 5,
+        'cmenergies': 6,
+        'author': 7
     }
     facets = sorted(facets, key=lambda x: order[x['type']])
 
@@ -122,7 +123,7 @@ def sort_facets(facets):
 def filter_facets(facets, total_hits):
     """ For the data keywords, show only the ones with >10 count,
     if there is more than 100 hits altogether. Filter out the empty ones. """
-    HITS = 100
+    HITS = 50
     THRESHOLD = 10
 
     if total_hits > HITS:

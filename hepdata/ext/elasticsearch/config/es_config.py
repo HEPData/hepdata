@@ -61,6 +61,13 @@ def default_aggregations():
                 "size": 0,
             }
         },
+        "phrases": {
+            "terms": {
+                "field": "data_keywords.phrases.raw",
+                # "min_doc_count": 2,
+                "size": 0,
+            }
+        },
         "cmenergies": {
             "terms": {
                 "field": "data_keywords.cmenergies.raw",
@@ -94,6 +101,7 @@ def get_filter_clause(name, value):
                 }
             }
         }
+
     elif name == 'date':
         or_clause = []
         for year in value:
