@@ -2,15 +2,13 @@ from datetime import datetime
 from invenio_db import db
 from sqlalchemy import func
 
-from dateutil import parser
 from hepdata.modules.stats.models import DailyAccessStatistic
 
 __author__ = 'eamonnmaguire'
 
 
 def get_date():
-    today = datetime.today().strftime("%m/%d/%Y")
-    return parser.parse(today)
+    return datetime.today()
 
 
 def increment(recid):
@@ -27,7 +25,7 @@ def increment(recid):
             stats = DailyAccessStatistic(
                 publication_recid=recid, day=dt, count=1)
             db.session.add(stats)
-            db.session.commit()
+        db.session.commit()
     except:
         db.session.rollback()
 
