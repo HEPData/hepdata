@@ -516,7 +516,7 @@ def do_finalise(recid, publication_record=None, force_finalise=False,
             else:
                 if hep_submission.last_updated is None:
                     hep_submission.last_updated = datetime.now()
-                record['last_updated'] = datetime.strftime(hep_submission.last_updated, '%d/%m/%y %H:%M:%S')
+                record['last_updated'] = datetime.strftime(hep_submission.last_updated, '%Y-%m-%d %H:%M:%S')
 
             record.commit()
 
