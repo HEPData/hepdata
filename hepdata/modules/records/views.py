@@ -30,6 +30,8 @@ from functools import wraps
 import json
 import os
 import zipfile
+
+from dateutil import parser
 from flask.ext.login import login_required, current_user
 from flask import Blueprint, redirect, request, render_template, Response, \
     jsonify, send_file, current_app
@@ -111,6 +113,7 @@ def get_metadata_by_alternative_id(recid, *args, **kwargs):
 
             return do_render_record(record['recid'], record, version=version)
     except Exception as e:
+        print(e)
         return render_template('hepdata_theme/404.html')
 
 
@@ -144,7 +147,8 @@ def metadata(recid, *args, **kwargs):
 
     try:
         record = get_record_contents(recid)
-    except:
+    except Exception as e:
+        print(e)
         return render_template('hepdata_theme/404.html')
 
     return do_render_record(recid, record, version=version)
@@ -329,6 +333,7 @@ def get_latest():
             last_updated = record_information['creation_date']
             if "last_updated" in record_information:
                 last_updated = record_information["last_updated"]
+                last_updated = parser.parse(last_updated).strftime("%Y-%m-%d")
 
             journal = record_information['journal_info']
 
