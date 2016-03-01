@@ -218,17 +218,7 @@ def format_submission(recid, record, version, hepdata_submission,
         ctx["status"] = hepdata_submission.overall_status
         ctx['record']['data_abstract'] = decode_string(hepdata_submission.data_abstract)
 
-        print('TYPE...')
-        print(record['type'])
-        if 'type' in record:
-            if 'thesis' in record['type']:
-                if 'type' in record['dissertation']:
-                    record['journal_info'] = record['dissertation']['type'] + ", " + record['dissertation'][
-                        'institution']
-                else:
-                    record['journal_info'] = "PhD Thesis"
-            elif 'conferencepaper' in record['type']:
-                record['journal_info'] = "Conference Paper"
+        extract_journal_info(record)
 
         if hepdata_submission.overall_status != 'finished' and ctx["version_count"] > 0:
 
@@ -263,6 +253,18 @@ def format_submission(recid, record, version, hepdata_submission,
         ctx['coordinators'] = get_coordinators_in_system()
 
     return ctx
+
+
+def extract_journal_info(record):
+    if 'type' in record:
+        if 'thesis' in record['type']:
+            if 'type' in record['dissertation']:
+                record['journal_info'] = record['dissertation']['type'] + ", " + record['dissertation'][
+                    'institution']
+            else:
+                record['journal_info'] = "PhD Thesis"
+        elif 'conferencepaper' in record['type']:
+            record['journal_info'] = "Conference Paper"
 
 
 def do_render_record(recid, record, version):
@@ -335,20 +337,14 @@ def get_latest():
                 last_updated = record_information["last_updated"]
                 last_updated = parser.parse(last_updated).strftime("%Y-%m-%d")
 
-            journal = record_information['journal_info']
-
-            if 'thesis' in record_information['type']:
-                if 'dissertation' in record and 'type' in record['dissertation']:
-                    journal = record['dissertation']['type'] + ", " + record['dissertation']['institution']
-                else:
-                    journal = "PhD Thesis"
+            extract_journal_info(record_information)
 
             result['latest'].append({
                 'id': record_information['recid'],
                 'inspire_id': record_information['inspire_id'],
                 'title': record_information['title'],
                 'collaborations': collaborations,
-                'journal': journal,
+                'journal': record_information['journal_info'],
                 'author_count': len(record_information.get('authors', 1)),
                 'first_author': record_information['first_author'],
                 'creation_date': record_information['creation_date'],
