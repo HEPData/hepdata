@@ -1,8 +1,11 @@
 @import "variables";
-
+.error-text-container {
+  background-color: white;
+}
 .error-container {
   position: fixed;
   bottom: 36px;
+  z-index: -1;
   width: 100%;
   border-bottom: 50px solid $lightgrey;
 
