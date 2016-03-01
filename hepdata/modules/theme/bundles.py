@@ -63,6 +63,13 @@ search_css = NpmBundle(
     }
 )
 
+info_page_css = NpmBundle(
+    'scss/info-pages.scss',
+    filters='scss, cleancss',
+    depends=('scss/*.scss',),
+    output='gen/hepdata_info_page.%(version)s.css'
+)
+
 bootstrap_js = NpmBundle(
     'js/modernizr-custom.js',
     'node_modules/bootstrap/dist/js/bootstrap.min.js',

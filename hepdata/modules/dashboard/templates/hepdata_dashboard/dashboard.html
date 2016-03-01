@@ -7,6 +7,10 @@
         <link href="{{ ASSET_URL }}" rel="stylesheet">
     {%- endassets %}
 
+    {%- assets "hepdata_info_page_css" %}
+        <link href="{{ ASSET_URL }}" rel="stylesheet">
+    {%- endassets %}
+
     <style>
         .filter-section input {
             -webkit-background-size: 9%;
@@ -22,8 +26,6 @@
 
 
 {% block page_body %}
-
-    {% include "hepdata_theme/pages/custom_styling.html" %}
 
     {% set delete_redirect_url = '/dashboard' %}
 

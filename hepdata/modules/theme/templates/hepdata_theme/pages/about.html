@@ -3,9 +3,9 @@
 
 {% block page_body %}
 
-
-    {% include "hepdata_theme/pages/custom_styling.html" %}
-
+    {%- assets "hepdata_info_page_css" %}
+        <link href="{{ ASSET_URL }}" rel="stylesheet">
+    {%- endassets %}
 
     <div class="row" style="margin: 0; padding: 9em 10% 1% 5%">
         <div class="section-header" style="width:135px; padding-bottom: 4em">
@@ -70,7 +70,7 @@
                 comprises the data points from plots and tables related to
                 several thousand publications including those
                 from the Large Hadron Collider (LHC). HEPData is funded by a
-                grant from the UK
+                <a href="http://gtr.rcuk.ac.uk/projects?ref=ST/N000315/1">grant</a> from the UK
                 <a href="http://www.stfc.ac.uk/" target="_blank">STFC</a> and
                 is based at the
                 <a href="http://www.ippp.dur.ac.uk/" target="_blank">IPPP</a>
@@ -78,93 +78,140 @@
         </div>
     </div>
 
-    <div class="row" style="margin: 0; padding: 0% 10% ">
+    <div class="row-fluid" style="margin: 0; padding: 0% 5% ">
         <div class="section-header" style="padding-bottom: 4em"><p>Meet the
             HEPData Team</p></div>
 
+        <p style="font-size: 1.3em; font-weight: lighter">
+            HEPData has been in existence for decades with the invaluable support from many people and grants. The
+            current team is comprised of members from
+            Durham University, England and CERN. Durham's role is largely on content, whereas CERNs role is in
+            development and hosting.</p>
+
+
+        <br/>
         <div class="col-md-12">
+            <h4 class="text-center">Durham University</h4>
+            <br/>
+            <div class="col-md-3">
+                <div class="team-member">
+                    <div class="team-member-image"
+                         style="background-image: url(http://hepdata.cedar.ac.uk/resource/graemewatt.jpeg)">
 
-            <div class="team-member">
-                <div class="team-member-image"
-                     style="background-image: url(http://hepdata.cedar.ac.uk/resource/graemewatt.jpeg)">
-
-                </div>
-                <div class="team-member-detail">
-                    <a href="http://www.ippp.dur.ac.uk/profile/watt"
-                       target="_blank">Graeme Watt</a><br/>
-                    <span>Durham University</span>
-                </div>
-            </div>
-
-            <div class="team-member">
-                <div class="team-member-image"
-                     style="background-image: url(http://hepdata.cedar.ac.uk/resource/mikewhalley.jpeg)">
-
-                </div>
-                <div class="team-member-detail">
-                    <a href="http://www.ippp.dur.ac.uk/profile/whalley"
-                       target="_blank">Mike Whalley</a><br/>
-                    <span>Durham University</span>
+                    </div>
+                    <div class="team-member-detail">
+                        <a href="http://www.ippp.dur.ac.uk/profile/watt"
+                           target="_blank">Graeme Watt</a><br/>
+                        <span>Durham University</span><br/>
+                        <span class="role">Current Database Manager</span>
+                    </div>
                 </div>
             </div>
 
-            <div class="team-member">
-                <div class="team-member-image"
-                     style="background-image: url(http://hepdata.cedar.ac.uk/resource/joannebentham.jpeg)">
+            <div class="col-md-3">
+                <div class="team-member">
+                    <div class="team-member-image"
+                         style="background-image: url(http://hepdata.cedar.ac.uk/resource/mikewhalley.jpeg)">
 
-                </div>
-                <div class="team-member-detail">
-                    <a href="http://www.ippp.dur.ac.uk/profile/joanne"
-                       target="_blank">Joanne Bentham</a><br/>
-                    <span>Durham University</span>
-                </div>
-            </div>
-
-            <div class="team-member">
-                <div class="team-member-image"
-                     style="background-image: url(static/img/people/krauss.jpg)">
-
-                </div>
-                <div class="team-member-detail">
-                    <a href="http://www.ippp.dur.ac.uk/profile/krauss/"
-                       target="_blank">Frank Krauss</a><br/>
-                    <span>Durham University</span>
+                    </div>
+                    <div class="team-member-detail">
+                        <a href="http://www.ippp.dur.ac.uk/profile/whalley"
+                           target="_blank">Mike Whalley</a><br/>
+                        <span>Durham University</span><br/>
+                        <span class="role">Previous Database Manager</span>
+                    </div>
                 </div>
             </div>
 
-            <div class="team-member">
-                <div class="team-member-image"
-                     style="background-image: url(http://www.oerc.ox.ac.uk/sites/default/files/styles/person/public/people/eamonn.jpg)">
+            <div class="col-md-3">
+                <div class="team-member">
+                    <div class="team-member-image"
+                         style="background-image: url(http://hepdata.cedar.ac.uk/resource/joannebentham.jpeg)">
 
-                </div>
-                <div class="team-member-detail">
-                    <a href="https://uk.linkedin.com/in/eamonnmaguire1986"
-                       target="_blank">Eamonn Maguire</a><br/>
-                    <span>CERN</span>
+                    </div>
+                    <div class="team-member-detail">
+                        <a href="http://www.ippp.dur.ac.uk/profile/joanne"
+                           target="_blank">Joanne Bentham</a><br/>
+                        <span>Durham University</span><br/>
+                        <span class="role">Coding Assistant</span>
+                    </div>
                 </div>
             </div>
 
+            <div class="col-md-3">
+                <div class="team-member">
+                    <div class="team-member-image"
+                         style="background-image: url(static/img/people/krauss.jpg)">
 
-            <div class="team-member">
-                <div class="team-member-image"
-                     style="background-image: url(https://avatars3.githubusercontent.com/u/4479536?v=3&s=460)">
-
-                </div>
-                <div class="team-member-detail">
-                    <a href="https://pl.linkedin.com/in/jstypka/en"
-                       target="_blank">Jan Stypka</a><br/>
-                    <span>CERN</span>
+                    </div>
+                    <div class="team-member-detail">
+                        <a href="http://www.ippp.dur.ac.uk/profile/krauss/"
+                           target="_blank">Frank Krauss</a><br/>
+                        <span>Durham University</span><br/>
+                        <span class="role">Principle Investigator</span>
+                    </div>
                 </div>
             </div>
 
         </div>
 
         <div class="clearfix"></div>
-        <div class="col-md-12" style="padding-top: 10%" align="center">
+        <br/>
+
+        <div class="col-md-12">
+            <h4 class="text-center">CERN</h4>
+            <br/>
+            <div class="col-md-3">
+                <div class="team-member">
+                    <div class="team-member-image"
+                         style="background-image: url(http://www.oerc.ox.ac.uk/sites/default/files/styles/person/public/people/eamonn.jpg)">
+
+                    </div>
+                    <div class="team-member-detail">
+                        <a href="https://uk.linkedin.com/in/eamonnmaguire1986"
+                           target="_blank">Eamonn Maguire</a><br/>
+                        <span>CERN</span><br/>
+                        <span class="role">Lead Developer</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="team-member">
+                    <div class="team-member-image"
+                         style="background-image: url(https://avatars3.githubusercontent.com/u/4479536?v=3&s=460)">
+
+                    </div>
+                    <div class="team-member-detail">
+                        <a href="https://pl.linkedin.com/in/jstypka/en"
+                           target="_blank">Jan Stypka</a><br/>
+                        <span>CERN</span><br/>
+                        <span class="role">Developer</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="clearfix"></div>
+    <div class="row-fluid">
+        <div class="col-md-6" style="padding-top: 5%" align="center">
+            <div class="section-header" style="width:250px"><p>Other Contributors</p></div>
+            <br/>
+            <ul style="list-style: none; -webkit-padding-start: 0">
+                <li>Laura Rueda (now at DataCite)</li>
+                <li>Michal Szozsak (Summer Student @ CERN, 2015)</li>
+                <li>Juan Luis (University of Salamanca, Spain)</li>
+                <li>Lukas Heinrich (NYU, New York, USA)</li>
+            </ul>
+        </div>
+
+
+        <div class="col-md-6 text-center" style="padding-top: 5%">
             <div class="section-header" style="width:250px"><p>HEPData Advisory
                 Board</p></div>
             <br/>
-            Members:
             <ul style="list-style: none; -webkit-padding-start: 0">
                 <li>Jeppe Andersen (IPPP Durham)</li>
                 <li>Kyle Cranmer (NYU, generic users)</li>
@@ -185,9 +232,72 @@
                        target="_blank">16<sup>th</sup> October 2015</a></li>
             </ul>
         </div>
-        <div class="clearfix"></div>
+    </div>
 
-        <div class="col-md-12" style="padding-top: 10%" align="center">
+
+    <div class="clearfix"></div><br/>
+
+    <div class="row-fluid" >
+        <div class="col-md-6 text-center" style="padding-top: 5%">
+            <div class="section-header" style="width:250px"><p>HEPData Papers</p></div>
+            <br/>
+            <p>Coming soon...</p>
+        </div>
+        <div class="col-md-6 text-center" style="padding-top: 5%">
+            <div class="section-header" style="width:250px"><p>HEPData Presentations</p></div>
+            <br/>
+
+            <ul class="talks">
+
+                {% with talks = [
+                {'meeting':'Invenio Workshop',
+                 'location': 'CERN, Geneva',
+                 'speaker': 'Eamonn Maguire',
+                 'date': 'Oct 2015',
+                 'link': 'http://www.slideshare.net/eamonnmag/hep-data-oct15-53863453'},
+                  {'meeting':'AAHEP8',
+                 'location': 'Amsterdam, Holland',
+                 'speaker': 'Graeme Watt',
+                 'date': 'Sep 2015',
+                 'link': 'https://indico.cern.ch/event/377699/session/4/contribution/13/attachments/1147297/1645339/watt_hepdata_aahep8.pdf'},
+                 {'meeting':'AAHEP7',
+                 'location': 'Stony Brook, New York, US',
+                 'speaker': 'Michael Whalley',
+                 'date': 'Apr 2014',
+                 'link': 'http://indico.cern.ch/event/262430/session/4/attachments/463875/642862/hepdata-aahep7.pdf'}
+
+                 ] %}
+
+                {% for talk in talks %}
+                <li>
+                    <div class="row-fluid">
+                        <div class="col-md-2 col-sm-2 col-xs-2">
+                            {{ talk.date }}
+                        </div>
+
+                        <div class="col-md-7 col-sm-7 col-xs-7">
+                            <p class="title">{{ talk.meeting }}</p>
+                            <p>{{ talk.speaker }}</p>
+                        </div>
+
+                        <div class="col-md-3 col-sm-3 col-xs-3">
+                            <a href="{{ talk.link }}" class="btn btn-md btn-primary">View</a>
+                        </div>
+                    </div>
+                    <div class="clearfix"></div>
+                </li>
+
+                {% endfor %}
+            {% endwith %}
+
+            </ul>
+        </div>
+    </div>
+
+    <div class="clearfix"></div><br/>
+
+    <div class="row-fluid">
+        <div class="col-md-6" style="padding-top: 10%" align="center">
             <div class="section-header" style="width:80px"><p>Funders</p></div>
             <br/>
             <br/>
@@ -196,7 +306,7 @@
         </div>
 
 
-        <div class="col-md-12" style="padding-top: 10%; padding-bottom: 10%">
+        <div class="col-md-6" style="padding-top: 10%; padding-bottom: 10%">
             <div class="section-header" style="width:80px"><p>Partners</p>
             </div>
             <br/>
@@ -209,10 +319,7 @@
                                                     target="_blank"> <img
                     src="static/img/about/cern-logo.svg" width="130px"></a>
             </div>
-            </ul>
         </div>
-
-
     </div>
 {% endblock %}
 

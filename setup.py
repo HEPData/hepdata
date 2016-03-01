@@ -187,6 +187,7 @@ setup(
         ],
         'invenio_assets.bundles': [
             'hepdata_theme_css = hepdata.modules.theme.bundles:css',
+            'hepdata_info_page_css = hepdata.modules.theme.bundles:info_page_css',
             'hepdata_bootstrap_js = hepdata.modules.theme.bundles:bootstrap_js',
             'hepdata_submission_js = hepdata.modules.submission.bundles:submission_js',
             'hepdata_search_js = hepdata.modules.search.bundles:search_js',
