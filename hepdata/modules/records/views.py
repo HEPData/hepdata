@@ -36,6 +36,7 @@ from flask import Blueprint, redirect, request, render_template, Response, \
 from invenio_accounts.models import User
 from invenio_db import db
 import jsonpatch
+from invenio_pidstore.errors import PIDDoesNotExistError
 from sqlalchemy.orm.exc import NoResultFound
 import time
 from werkzeug.utils import secure_filename
@@ -110,7 +111,7 @@ def get_metadata_by_alternative_id(recid, *args, **kwargs):
 
             return do_render_record(record['recid'], record, version=version)
     except Exception as e:
-        raise e
+        return render_template('hepdata_theme/404.html')
 
 
 def get_record_contents(recid):
@@ -140,9 +141,11 @@ def metadata(recid, *args, **kwargs):
     :return: renders the record template
     """
     version = int(request.args.get('version', -1))
-    record = get_record_contents(recid)
-    if record is None:
-        return render_template('404.html')
+
+    try:
+        record = get_record_contents(recid)
+    except:
+        return render_template('hepdata_theme/404.html')
 
     return do_render_record(recid, record, version=version)
 
@@ -178,7 +181,7 @@ def format_submission(recid, record, version, hepdata_submission,
                 ctx['breadcrumb_text'] = record["first_author"]["full_name"]
 
                 if 'authors' in record and len(record['authors']) > 1:
-                     ctx['breadcrumb_text'] += " et al."
+                    ctx['breadcrumb_text'] += " et al."
 
             try:
                 commit_message_query = RecordVersionCommitMessage.query \
@@ -216,7 +219,8 @@ def format_submission(recid, record, version, hepdata_submission,
         if 'type' in record:
             if 'thesis' in record['type']:
                 if 'type' in record['dissertation']:
-                    record['journal_info'] = record['dissertation']['type'] + ", " + record['dissertation']['institution']
+                    record['journal_info'] = record['dissertation']['type'] + ", " + record['dissertation'][
+                        'institution']
                 else:
                     record['journal_info'] = "PhD Thesis"
             elif 'conferencepaper' in record['type']:
