@@ -23,6 +23,9 @@
 
 """HEPData end to end testing of search."""
 import flask
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.wait import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
 
 def test_search_from_home(live_server, env_browser, search_tests):
@@ -52,15 +55,20 @@ def test_search_from_home(live_server, env_browser, search_tests):
         collaborations = browser.find_element_by_id('collaboration-facet')
         assert (collaborations)
 
-        collaboration_facet = collaborations.find_element_by_css_selector('ul li a')
-        collaboration_facet.click()
+        element = WebDriverWait(browser, 10).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, "#collaboration-facet ul li a"))
+        )
+        element.click()
 
-        collaboration_tag = browser.find_element_by_css_selector(".search-box .collaboration-tag")
-        assert (collaboration_tag)
+        collaboration_tag = WebDriverWait(browser, 10).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, ".collaboration-tag"))
+        )
+        assert(collaboration_tag)
 
-        assert (collaboration_tag.text == search_config['exp_collab_facet'])
-
-        browser.find_element_by_css_selector(".record-header a").click()
+        element = WebDriverWait(browser, 10).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, ".record-header a"))
+        )
+        element.click()
 
         assert (flask.url_for('hepdata_records.get_metadata_by_alternative_id', recid=search_config['exp_hepdata_id'],
                               _external=True) in browser.current_url)
