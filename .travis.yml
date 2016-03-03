@@ -52,7 +52,7 @@ install:
   - "travis_retry pip install -r requirements.txt"
   - "travis_retry hepdata db init"
   - "travis_retry hepdata db create"
-  - "travis_retry hepdata reindex -r True"
+  - "travis_retry hepdata reindex -rc True"
   - "travis_retry npm update && npm install --silent -g node-sass clean-css uglify-js requirejs"
   - "echo 'WHERE AM I?'"
   - "pwd"
