@@ -46,7 +46,7 @@ python:
 before_install:
   - "travis_retry pip install --upgrade pip setuptools py"
   - "travis_retry pip install twine wheel coveralls requirements-builder"
-  - "travis_retry psql -c 'CREATE DATABASE hepdata;' -U postgres"
+  - "travis_retry psql -c 'CREATE DATABASE hepdata_test;' -U postgres"
 
 install:
   - "travis_retry pip install -r requirements.txt"
@@ -54,8 +54,6 @@ install:
   - "travis_retry hepdata db create"
   - "travis_retry hepdata reindex -rc True"
   - "travis_retry npm update && npm install --silent -g node-sass clean-css uglify-js requirejs"
-  - "echo 'WHERE AM I?'"
-  - "pwd"
   - "hepdata npm"
   - "cd /home/travis/virtualenv/python2.7.9/var/hepdata-instance/static/"
   - "travis_retry npm install"
