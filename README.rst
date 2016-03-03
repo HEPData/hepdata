@@ -3,7 +3,7 @@
 ========
 
 .. image:: https://img.shields.io/travis/HEPData/hepdata3.svg
-    :target: https://travis-ci.org/hepdata/hepdata3
+    :target: https://travis-ci.org/HEPData/hepdata3
 
 .. image:: https://coveralls.io/repos/github/HEPData/hepdata3/badge.svg?branch=master
     :target: https://coveralls.io/github/HEPData/hepdata3?branch=master

@@ -17,8 +17,9 @@ def create_send_email_task(destination, subject, message):
     """
 
     # this is required for some unknown reason due to an initialisation problem with celery.
-    create_celery_app(current_app)
-    send_email.delay(destination, subject, message)
+    if not current_app.config.get('TESTING', False):
+        create_celery_app(current_app)
+        send_email.delay(destination, subject, message)
 
 
 @shared_task

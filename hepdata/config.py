@@ -117,28 +117,28 @@ MAIL_PORT = 2525
 MAIL_DEFAULT_SENDER = 'submissions@hepdata.net'
 SMTP_NO_PASSWORD = True
 MAIL_USERNAME = 'submissions@hepdata.net'
-MAIL_PASSWORD = 'nRJ9VrX4jreXpPJS'
+MAIL_PASSWORD = ''
 
 ACCOUNTS_USE_CELERY = False
 
-RECORDS_REST_ENDPOINTS = dict(
-    recid=dict(
-        pid_type='recid',
-        pid_minter='recid_minter',
-        pid_fetcher='recid_fetcher',
-        search_index='records',
-        search_type=None,
-        record_serializers={
-            'application/json': ('invenio_records_rest.serializers'
-                                 ':json_v1_response'),
-        },
-        search_serializers={
-            'application/json': ('invenio_records_rest.serializers'
-                                 ':json_v1_search'),
-        },
-        list_route='/records/',
-        item_route='/records/<pid_value>',
-    ), )
+# RECORDS_REST_ENDPOINTS = dict(
+#     recid=dict(
+#         pid_type='recid',
+#         pid_minter='recid_minter',
+#         pid_fetcher='recid_fetcher',
+#         search_index='records',
+#         search_type=None,
+#         record_serializers={
+#             'application/json': ('invenio_records_rest.serializers'
+#                                  ':json_v1_response'),
+#         },
+#         search_serializers={
+#             'application/json': ('invenio_records_rest.serializers'
+#                                  ':json_v1_search'),
+#         },
+#         list_route='/records/',
+#         item_route='/records/<pid_value>',
+#     ), )
 
 # DebugToolbar
 DEBUG_TB_ENABLED = False
@@ -151,7 +151,7 @@ HEPDATA_DOI_PREFIX = "10.17182"
 TEST_DOI_PREFIX = "10.5072"
 SITE_URL = "https://www.hepdata.net"
 
-DOI_PREFIX = HEPDATA_DOI_PREFIX
+DOI_PREFIX = TEST_DOI_PREFIX
 
 PIDSTORE_DATACITE_USERNAME = "CERN.HEPDATA"
 PIDSTORE_DATACITE_PASSWORD = ""
