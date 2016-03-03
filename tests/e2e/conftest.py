@@ -104,6 +104,16 @@ def app(request):
 
 
 @pytest.fixture()
+def test_identifiers(app):
+    return identifiers()
+
+
+@pytest.fixture()
+def search_tests(app):
+    return [{"search_term": "collisions", "exp_collab_facet": "Belle", "exp_hepdata_id": "ins1245023"}]
+
+
+@pytest.fixture()
 def load_default_data(app):
     with app.app_context():
         to_load = [x["hepdata_id"] for x in identifiers()]

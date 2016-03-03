@@ -37,7 +37,7 @@ from hepdata.modules.records.migrator.api import load_files, update_submissions
 
 cli = create_cli(create_app=create_app)
 
-default_recids = 'ins202932,ins1187688,ins67677,ins135836,ins1389108,ins1373299,ins1242869,ins1311487,ins1323075'
+default_recids = 'ins1283842,ins1245023'
 
 
 @cli.command()

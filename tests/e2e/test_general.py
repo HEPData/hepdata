@@ -25,7 +25,46 @@
 import flask
 
 
-def test_about(live_server, env_browser):
+def test_home(live_server, env_browser, test_identifiers):
+    """E2E home test to check record counts and latest submissions."""
+    browser = env_browser
+    # 1. go to the home page
+    browser.get(flask.url_for('hepdata_theme.index', _external=True))
+    assert (flask.url_for('hepdata_theme.index', _external=True) in
+            browser.current_url)
+
+    # 2. check number of records and the number of datatables is correct
+    record_stats = browser.find_element_by_css_selector("#record_stats")
+    print record_stats
+    exp_data_table_count = reduce(lambda x, y: x['data_tables'] + y['data_tables'], test_identifiers)
+    exp_publication_count = len(test_identifiers)
+    assert (record_stats.text == "Search on {0} publications and {1} data tables."
+            .format(exp_publication_count, exp_data_table_count))
+
+    # 3. check that there are two submissions in the latest submissions section
+    assert (browser.find_element_by_css_selector('.latest-record'))
+    # 4. click on the first submission.
+
+    latest_item = browser.find_element_by_css_selector('.latest-record .title')
+    href = latest_item.get_attribute("href")
+    hepdata_id = href[href.rfind("/")+1:]
+    latest_item.click()
+
+    # 5. assert that the submission is what we expected it to be.
+
+    assert (flask.url_for('hepdata_records.get_metadata_by_alternative_id', recid=hepdata_id, _external=True) in
+            browser.current_url)
+
+    assert (browser.find_element_by_css_selector('.record-title').text is not None)
+    assert (browser.find_element_by_css_selector('.record-journal').text is not None)
+    assert (browser.find_element_by_css_selector('#hep-tables li') is not None)
+
+    table_placeholder = browser.find_element_by_css_selector('#table-filter').get_attribute('placeholder')
+    expected_record = filter(lambda x: x['hepdata_id'] == hepdata_id, test_identifiers)
+    assert (table_placeholder == "Filter {0} data tables".format(expected_record[0]['data_tables']))
+
+
+def test_general_pages(live_server, env_browser):
     """E2E user registration and login test."""
     browser = env_browser
     # 1. Go to user registration page
@@ -33,11 +72,6 @@ def test_about(live_server, env_browser):
     assert (flask.url_for('hepdata_theme.about', _external=True) in
             browser.current_url)
 
-
-def test_submission_help(live_server, env_browser):
-    """E2E user registration and login test."""
-    browser = env_browser
-    # 1. Go to user registration page
     browser.get(flask.url_for('hepdata_theme.submission_help', _external=True))
     assert (flask.url_for('hepdata_theme.submission_help', _external=True) in
             browser.current_url)

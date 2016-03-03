@@ -28,24 +28,8 @@ import flask
 from invenio_accounts import testutils
 
 
-def test_login(live_server):
-    """Test that the login page of `live_server` is reachable.
-    The `live_server` fixture is provided by pytest-flask.
-    When a test using said fixture is run, the return object of the `app`
-    fixture is run in a background process.
-    For this test pytest will use the `app` fixture defined in `./conftest.py`
-    instead of the one in `../conftest.py`.
-    """
-    # With pytest-flask we don't need to be in the application context
-    # to use `flask.url_for`.
-    url = flask.url_for('security.login', _external=True)
-    print 'URL is ' + url
-    response = urlopen(url)
-    assert response
-    assert response.code == 200
 
-
-def test_user_registration(live_server, env_browser):
+def test_user_registration_and_login(live_server, env_browser):
     """E2E user registration and login test."""
     browser = env_browser
     # 1. Go to user registration page

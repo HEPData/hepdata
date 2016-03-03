@@ -1,2 +1,13 @@
 [run]
 source = hepdata
+omit = hepdata/ext*
+       hepdata/wsgi.py
+       hepdata/cli.py
+       hepdata/celery.py
+       hepdata/utils/mail.py
+       hepdata/utils/url.py
+       hepdata/utils/twitter.py
+       hepdata/config*
+       hepdata/modules/records/utils/doi_minter.py
+       hepdata/modules/records/views.py
+       hepdata/modules/search/views.py
