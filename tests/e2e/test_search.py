@@ -56,16 +56,6 @@ def test_search_from_home(live_server, env_browser, search_tests):
         assert (collaborations)
 
         element = WebDriverWait(browser, 10).until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, "#collaboration-facet ul li a"))
-        )
-        element.click()
-
-        collaboration_tag = WebDriverWait(browser, 10).until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, ".collaboration-tag"))
-        )
-        assert(collaboration_tag)
-
-        element = WebDriverWait(browser, 10).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, ".record-header a"))
         )
         element.click()
