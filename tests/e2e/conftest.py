@@ -41,6 +41,8 @@ from sqlalchemy_utils.functions import create_database, database_exists, \
 
 from hepdata.ext.elasticsearch.api import reindex_all
 from hepdata.factory import create_app
+from hepdata.modules.records.migrator.api import load_files
+from tests.conftest import identifiers
 
 
 @pytest.fixture()
@@ -56,9 +58,10 @@ def app(request):
         CELERY_ALWAYS_EAGER=True,
         CELERY_RESULT_BACKEND="cache",
         CELERY_CACHE_BACKEND="memory",
+        MAIL_SUPPRESS_SEND=True,
         CELERY_EAGER_PROPAGATES_EXCEPTIONS=True,
         SQLALCHEMY_DATABASE_URI=os.environ.get(
-            'SQLALCHEMY_DATABASE_URI', 'postgresql+psycopg2://localhost/hepdata')
+            'SQLALCHEMY_DATABASE_URI', 'postgresql+psycopg2://localhost/hepdata_test')
     ))
 
     with app.app_context():
@@ -88,6 +91,8 @@ def app(request):
             db.session.add(user)
             db.session.commit()
 
+        load_default_data(app)
+
     def teardown():
         with app.app_context():
             db.drop_all()
@@ -96,6 +101,13 @@ def app(request):
     request.addfinalizer(teardown)
 
     return app
+
+
+@pytest.fixture()
+def load_default_data(app):
+    with app.app_context():
+        to_load = [x["hepdata_id"] for x in identifiers()]
+        load_files(to_load, synchronous=True)
 
 
 def pytest_generate_tests(metafunc):

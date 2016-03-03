@@ -51,9 +51,10 @@ def app(request):
         CELERY_ALWAYS_EAGER=True,
         CELERY_RESULT_BACKEND="cache",
         CELERY_CACHE_BACKEND="memory",
+        MAIL_SUPPRESS_SEND=True,
         CELERY_EAGER_PROPAGATES_EXCEPTIONS=True,
         SQLALCHEMY_DATABASE_URI=os.environ.get(
-            'SQLALCHEMY_DATABASE_URI', 'postgresql+psycopg2://localhost/hepdata')
+            'SQLALCHEMY_DATABASE_URI', 'postgresql+psycopg2://localhost/hepdata_test')
     ))
 
     with app.app_context():

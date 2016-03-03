@@ -119,6 +119,10 @@ SMTP_NO_PASSWORD = True
 MAIL_USERNAME = 'submissions@hepdata.net'
 MAIL_PASSWORD = ''
 
+if MAIL_PASSWORD is '':
+    # this is used primarily for travis.
+    MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD', '')
+
 ACCOUNTS_USE_CELERY = False
 
 # RECORDS_REST_ENDPOINTS = dict(
@@ -185,3 +189,5 @@ try:
     from hepdata.config_local import *
 except ImportError:
     pass
+
+
