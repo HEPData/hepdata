@@ -83,7 +83,7 @@ SECURITY_RESET_SALT = "CHANGE_ME"
 
 # Theme
 THEME_SITENAME = _("HEPData")
-THEME_TWITTERHANDLE = "@hepdata"
+THEME_TWITTERHANDLE = "@HEPData"
 THEME_LOGO = "img/hepdata_logo.svg"
 THEME_GOOGLE_SITE_VERIFICATION = [
     "5fPGCLllnWrvFxH9QWI0l1TadV7byeEvfPcyK2VkS_s",
@@ -172,9 +172,16 @@ CONSUMER_SECRET = ""
 USE_TWITTER = True
 TWITTER_HANDLE_MAPPINGS = {
     "lhcb": "@LHCbPhysics",
-    'atlas': "@ATLASpapers",
-    'cms': "@CMSpapers",
+    "atlas": "@ATLASpapers",
+    "cms": "@CMSpapers",
+    "alice": "@ALICEexperiment",
 }
 
 THEME_404_TEMPLATE = "hepdata_theme/404.html"
 THEME_500_TEMPLATE = "hepdata_theme/500.html"
+
+# Import local config file if it is present.
+try:
+    from hepdata.config_local import *
+except ImportError:
+    pass
