@@ -256,7 +256,7 @@ def format_submission(recid, record, version, hepdata_submission,
 
 
 def extract_journal_info(record):
-    if 'type' in record:
+    if record and 'type' in record:
         if 'thesis' in record['type']:
             if 'type' in record['dissertation']:
                 record['journal_info'] = record['dissertation']['type'] + ", " + record['dissertation'][

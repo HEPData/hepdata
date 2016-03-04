@@ -170,12 +170,13 @@ def generate_table_structure(table_contents):
               "values": []}
 
     # add in keywords
-    for keyword in table_contents['keywords']:
-        if keyword['name'] not in record['keywords']:
-            record['keywords'][keyword['name']] = []
+    if table_contents['keywords'] is not None:
+        for keyword in table_contents['keywords']:
+            if keyword.name not in record['keywords']:
+                record['keywords'][keyword.name] = []
 
-        if keyword['value'] not in record['keywords'][keyword['name']]:
-            record['keywords'][keyword['name']].append(keyword['value'])
+            if keyword.value not in record['keywords'][keyword.name]:
+                record['keywords'][keyword.name].append(keyword.value)
 
     tmp_values = {}
     x_axes = OrderedDict()

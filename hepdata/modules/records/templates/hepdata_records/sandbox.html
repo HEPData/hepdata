@@ -121,6 +121,7 @@
                                 </a>
                                 <p style="font-weight: bolder; color: #a1aec7; font-size: .7em; text-align: left">{{ submission.created }}</p>
                                 <br/>
+                                <button class="btn btn-sm btn-danger"><i class="fa fa-trash"></i> Delete</button>
                             {% endfor %}
                         </div>
                     </div>
@@ -134,7 +135,6 @@
 
         {% include 'hepdata_records/components/table_list.html' %}
         {% include 'hepdata_records/components/table_details.html' %}
-
         {% include 'hepdata_records/components/uploader-modal.html' %}
 
         <!--if there is data, we show it. If not, we show the upload screen if the logged in user is an uploader-->

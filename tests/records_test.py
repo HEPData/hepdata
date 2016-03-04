@@ -95,7 +95,7 @@ def test_data_processing(app):
 
     data["name"] = 'test'
     data["title"] = 'test'
-    data["keywords"] = [{'name': 'testing', 'value': 'testing1'}]
+    data["keywords"] = None
     data["doi"] = 'doi/10.2342'
     data["review"] = []
     data["associated_files"] = []
