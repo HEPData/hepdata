@@ -22,9 +22,13 @@
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
 """HEPData records test cases."""
+import os
+
+import yaml
 from invenio_accounts.models import User
 
 from hepdata.modules.records.utils.common import get_record_by_id
+from hepdata.modules.records.utils.data_processing_utils import generate_table_structure
 from hepdata.modules.records.utils.users import get_coordinators_in_system, has_role
 from hepdata.modules.records.utils.workflow import update_record, create_record
 from tests.conftest import TEST_EMAIL
@@ -35,9 +39,9 @@ def test_record_creation(app):
     with app.app_context():
         record_information = create_record({'journal_info': 'Phys. Letts', 'title': 'My Journal Paper'})
 
-        assert(record_information['recid'])
-        assert(record_information['uuid'])
-        assert(record_information['title'] == 'My Journal Paper')
+        assert (record_information['recid'])
+        assert (record_information['uuid'])
+        assert (record_information['title'] == 'My Journal Paper')
 
 
 def test_record_update(app):
@@ -56,21 +60,48 @@ def test_record_update(app):
 
 
 def test_get_record(app, client, load_default_data):
-
     with app.app_context():
         content = client.get('/record/1')
-        assert(content is not None)
+        assert (content is not None)
 
 
 def test_get_coordinators(app):
     with app.app_context():
         coordinators = get_coordinators_in_system()
-        assert(len(coordinators) == 1)
+        assert (len(coordinators) == 1)
 
 
 def test_has_role(app):
     with app.app_context():
         user = User.query.filter_by(email=TEST_EMAIL).first()
-        assert(user is not None)
-        assert(has_role(user, 'coordinator'))
-        assert(not has_role(user, 'awesome'))
+        assert (user is not None)
+        assert (has_role(user, 'coordinator'))
+        assert (not has_role(user, 'awesome'))
+
+
+def test_data_processing(app):
+    base_dir = os.path.dirname(os.path.realpath(__file__))
+
+    data = yaml.safe_load(file(os.path.join(base_dir, 'test_data/data_table.yaml')))
+
+    assert ('independent_variables' in data)
+    assert ('dependent_variables' in data)
+
+    assert (len(data['independent_variables']) == 1)
+    assert (len(data['independent_variables'][0]['values']) == 3)
+
+    assert (len(data['dependent_variables']) == 1)
+    assert (len(data['dependent_variables'][0]['values']) == 3)
+
+    data["name"] = 'test'
+    data["title"] = 'test'
+    data["keywords"] = [{'name': 'testing', 'value': 'testing1'}]
+    data["doi"] = 'doi/10.2342'
+    data["review"] = []
+    data["associated_files"] = []
+
+    table_structure = generate_table_structure(data)
+
+    assert(table_structure["x_count"] == 1)
+    assert(len(table_structure["headers"]) == 2)
+    assert(len(table_structure["qualifiers"]) == 2)
