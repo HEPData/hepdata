@@ -52,9 +52,6 @@ def test_search_from_home(live_server, env_browser, search_tests):
         publication = browser.find_element_by_id('publication-1')
         assert (publication)
 
-        collaborations = browser.find_element_by_id('collaboration-facet')
-        assert (collaborations)
-
         element = WebDriverWait(browser, 10).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, ".record-header a"))
         )
