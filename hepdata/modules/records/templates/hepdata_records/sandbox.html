@@ -39,36 +39,38 @@
 
     <div class="hep_breadcrumbs">
         <ul>
-            <a href="/record/sandbox"><li class="active"><span class="fa fa-cube"></span> HEPData Sandbox
-            </li></a>
+            <a href="/record/sandbox">
+                <li class="active"><span class="fa fa-cube"></span> HEPData Sandbox
+                </li>
+            </a>
 
             {% if ctx.data_tables|length != 0 %}
-            <li class="pull-right">
+                <li class="pull-right">
 
-                <div class="dropdown"
-                     style="float: right; margin-left: 15px; margin-top: -4px;">
-                    <button id="dLabel" type="button"
-                            class="btn btn-sm btn-primary"
-                            data-toggle="dropdown" aria-haspopup="true"
-                            aria-expanded="false">
-                        Download Submission as
-                        <span class="caret"></span>
-                    </button>
-                    {% set download_base_url = "/download/submission/" + ctx.recid|string + "/" + ctx.version|string %}
-                    <ul class="dropdown-menu" aria-labelledby="dLabel"
-                        style="height: auto;">
-                        <li><a href="{{ download_base_url }}/yaml"
-                               id="download_yaml">YAML</a></li>
-                        <li><a href="{{ download_base_url }}/yoda"
-                               id="download_yoda">YODA</a></li>
-                        <li><a href="{{ download_base_url }}/root"
-                               id="download_root">ROOT</a></li>
-                        <li><a href="{{ download_base_url }}/csv"
-                               id="download_csv">CSV</a></li>
-                    </ul>
-                </div>
+                    <div class="dropdown"
+                         style="float: right; margin-left: 15px; margin-top: -4px;">
+                        <button id="dLabel" type="button"
+                                class="btn btn-sm btn-primary"
+                                data-toggle="dropdown" aria-haspopup="true"
+                                aria-expanded="false">
+                            Download Submission as
+                            <span class="caret"></span>
+                        </button>
+                        {% set download_base_url = "/download/submission/" + ctx.recid|string + "/" + ctx.version|string %}
+                        <ul class="dropdown-menu" aria-labelledby="dLabel"
+                            style="height: auto;">
+                            <li><a href="{{ download_base_url }}/yaml"
+                                   id="download_yaml">YAML</a></li>
+                            <li><a href="{{ download_base_url }}/yoda"
+                                   id="download_yoda">YODA</a></li>
+                            <li><a href="{{ download_base_url }}/root"
+                                   id="download_root">ROOT</a></li>
+                            <li><a href="{{ download_base_url }}/csv"
+                                   id="download_csv">CSV</a></li>
+                        </ul>
+                    </div>
 
-            </li>
+                </li>
             {% endif %}
         </ul>
     </div>
@@ -113,17 +115,24 @@
                             Your {{ ctx.submissions|length }} sandbox
                             submissions</h4>
 
-                        <div class="scrollable height30">
+                        <div class="scrollable height30 row-fluid">
                             {% for submission in ctx.submissions %}
-                                <a href="/record/sandbox/{{ submission.publication_recid }}"
-                                   style="text-align: left">
-                                    <div class="truncated-record-abstract">{{ submission.data_abstract }}</div>
-                                </a>
-                                <p style="font-weight: bolder; color: #a1aec7; font-size: .7em; text-align: left">{{ submission.created }}</p>
-                                <br/>
-                                <button class="btn btn-sm btn-danger"><i class="fa fa-trash"></i> Delete</button>
+                                <div class="col-md-9">
+                                    <a href="/record/sandbox/{{ submission.publication_recid }}"
+                                       style="text-align: left">
+                                        <div class="truncated-record-abstract">{{ submission.data_abstract }}</div>
+                                    </a>
+                                    <p style="font-weight: bolder; color: #a1aec7; font-size: .7em; text-align: left">{{ submission.created }}</p>
+                                </div>
+                                <div class="col-md-3">
+                                    <button class="btn btn-sm btn-danger delete_button"
+                                            data-recid="{{ submission.publication_recid }}"><i class="fa fa-trash"></i>
+                                        Delete
+                                    </button>
+                                </div>
                             {% endfor %}
                         </div>
+                        <div class="clearfix"></div>
                     </div>
                 {% endif %}
             </div>
@@ -137,15 +146,31 @@
         {% include 'hepdata_records/components/table_details.html' %}
         {% include 'hepdata_records/components/uploader-modal.html' %}
 
+
+
         <!--if there is data, we show it. If not, we show the upload screen if the logged in user is an uploader-->
 
     {% endif %}
+
+
+    {% set delete_redirect_url = '/record/sandbox' %}
+    {% include 'hepdata_dashboard/delete-widget.html' %}
+
 
 
 {% endblock %}
 {%- block javascript %}
 
     {% include 'hepdata_records/components/record-javascript.html' %}
+
+
+    <script type="text/javascript">
+        $(".delete_button").on('click', function () {
+            $("#deleteWidget").modal('show');
+            window.recid = $(this).attr('data-recid');
+
+        })
+    </script>
 
 {% endblock %}
 

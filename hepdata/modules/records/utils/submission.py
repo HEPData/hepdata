@@ -30,6 +30,7 @@ from hepdata_validator.data_file_validator import DataFileValidator
 from hepdata_validator.submission_file_validator import \
     SubmissionFileValidator
 from invenio_ext.sqlalchemy.utils import session_manager
+from invenio_pidstore.errors import PIDDoesNotExistError
 from invenio_pidstore.models import PersistentIdentifier, PIDStatus
 from invenio_records import Record
 import os
@@ -88,9 +89,30 @@ def remove_submission(record_id):
         except NoResultFound as nrf:
             print nrf.args
 
-        record = get_record_by_id(record_id)
+        submissions = DataSubmission.query.filter_by(
+            publication_recid=record_id).all()
 
-        if record:
+        reviews = DataReview.query.filter_by(
+            publication_recid=record_id).all()
+
+        for review in reviews:
+            db.session.delete(review)
+
+        for submission in submissions:
+
+            resource = DataResource.query.filter_by(
+                id=submission.data_file).first()
+
+            db.session.delete(submission)
+
+            if resource:
+                db.session.delete(resource)
+
+        SubmissionParticipant.query.filter_by(
+            publication_recid=record_id).delete()
+
+        try:
+            record = get_record_by_id(record_id)
             data_records = get_records_matching_field(
                 'related_publication', record_id, doc_type=CFG_DATA_TYPE)
 
@@ -98,35 +120,13 @@ def remove_submission(record_id):
                 for data_record in data_records['hits']['hits']:
                     record = get_record_by_id(data_record['_source']['recid'])
                     record.delete()
-
-            submissions = DataSubmission.query.filter_by(
-                publication_recid=record_id).all()
-
-            reviews = DataReview.query.filter_by(
-                publication_recid=record_id).all()
-
-            for review in reviews:
-                db.session.delete(review)
-
-            for submission in submissions:
-
-                resource = DataResource.query.filter_by(
-                    id=submission.data_file).first()
-
-                db.session.delete(submission)
-
-                if resource:
-                    db.session.delete(resource)
-
-            SubmissionParticipant.query.filter_by(
-                publication_recid=record_id).delete()
-
             record.delete()
-            db.session.commit()
-            db.session.flush()
-            return True
+        except PIDDoesNotExistError as e:
+            print('No record entry exists for {0}. Proceeding to delete other files.'.format(record_id))
 
-        return False
+        db.session.commit()
+        db.session.flush()
+        return True
 
     except Exception as e:
         db.session.rollback()
