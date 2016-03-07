@@ -307,14 +307,19 @@ HEPDATA.is_image = function (file_path) {
 
 HEPDATA.render_associated_files = function (associated_files, placement) {
   $(placement).html('');
+  $("#figures").html('');
   for (var file_index in associated_files) {
     var file = associated_files[file_index];
-
+    var html = '';
     var link = file['alt_location'];
+
     if (file.type == 'github') {
       html = '<a href="' + link + '" class="btn btn-md support-file-link" target="_blank">Code in ' + file.type + '</a>'
-    } else if (HEPDATA.is_image(file.type.toLowerCase())) {
+    } else if (HEPDATA.is_image(link.toLowerCase())) {
       html = '<button type="button" class="btn btn-md support-file" data-file-id="' + file.id + '">Associated Figure</button>';
+    }
+    else if ('preview_location' in file) {
+      $("#figures").append('<a type="button" class="support-file" data-file-id="' + file.id + '"><img src="' + file['preview_location'] + '"/></a>');
     }
     else {
       html = '<button type="button" class="btn btn-md support-file" data-file-id="' + file.id + '">' + file.type + '</button>';
@@ -394,27 +399,27 @@ HEPDATA.table_renderer = {
   },
 
   render_keywords: function (keywords, placement) {
-    $(placement + " ul").html('');
+    $(placement + " .row-fluid").html('');
     for (var keyword_key in keywords) {
       var keyword_items = [];
 
       for (var value in keywords[keyword_key]) {
-        keyword_items.push(keywords[keyword_key][value]);
+        keyword_items.push({'key': keyword_key, 'value':keywords[keyword_key][value]});
       }
-      var li = d3.select(placement + " ul").append('li')
-        .attr('class', 'keyword-item').style('width', function () {
-          return (93 / (Object.keys(keywords).length - 1)) + "%";
-        });
+
+      var col_width = parseInt((12 / (Object.keys(keywords).length)));
+      var li = d3.select(placement + " .row-fluid").append('div')
+        .attr('class', 'keyword-item col-md-' + col_width);
 
       li.append('h4').text(keyword_key);
       var individual_keyword_value_list = li.append('ul').attr('class', 'keyword_values');
 
-      var individual_kw = individual_keyword_value_list.selectAll("li")
-        .data(keyword_items).enter().append('li').attr('class', 'chip');
+      var individual_kw = individual_keyword_value_list.selectAll("a").data(keyword_items)
+        .enter().append('li').attr('class', 'chip');
 
       individual_kw.append('i').attr('class', 'fa fa-tag').style({'margin-right': '5px', 'display': 'inline'});
       individual_kw.append('span').text(function (d) {
-        return d.length > 100 ? d.substring(0, 100) + "..." : d;
+        return d.value.length > 60 ? d.value.substring(0, 60) + "..." : d.value;
       });
     }
   },
@@ -489,11 +494,8 @@ HEPDATA.table_renderer = {
 
             } else if ("symerror" in errors[error_idx]) {
               if (errors[error_idx]['symerror'] != 0) {
-
                 var sym_error = HEPDATA.visualization.utils.round(errors[error_idx]['symerror'], 2);
-
                 var error = div.append('div').attr('class', err_class + ' sym');
-
                 error.append('div').attr('class', 'value').html('&#177;' + sym_error);
 
                 if (errors[error_idx]["label"] !== undefined)
@@ -506,7 +508,6 @@ HEPDATA.table_renderer = {
             var more_errors_to_show = errors.length - HEPDATA.default_errors_to_show;
             div.append('span').text('+ ' + more_errors_to_show + ' more error' + (more_errors_to_show > 1 ? 's' : '')).attr('class', 'total_errors');
             div.append('span').attr('class', 'show_all_errors').text('Show all').on('click', function () {
-
               d3.selectAll('.error.hidden').classed("hidden", false);
               d3.selectAll('.show_all_errors').classed("hidden", true);
               d3.selectAll('.total_errors').classed("hidden", true);
@@ -713,7 +714,7 @@ HEPDATA.visualization.heatmap = {
             + " </strong><br/>" + d.y_min + " to " + d.y_max
             + "<br/>" + d.value + "</span>";
         } else {
-            return "<strong>" + d.x + " </strong><br/>" + d.y + "<br/>" + d.value + "</span>";
+          return "<strong>" + d.x + " </strong><br/>" + d.y + "<br/>" + d.value + "</span>";
         }
       });
 

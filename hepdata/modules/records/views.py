@@ -377,19 +377,27 @@ def get_table_details(recid, data_recid, version):
             table_contents["keywords"] = datasub_record.keywords
             table_contents["doi"] = datasub_record.doi
 
-        # add associated files to the table contents
-        table_contents['associated_files'] = []
+        # we create a map of files mainly to accommodate the use of thumbnails for images where possible.
+        tmp_assoc_files = {}
         for associated_data_file in datasub_record.additional_files:
             alt_location = associated_data_file.file_location
-            if associated_data_file.file_type == 'github':
-                alt_location = associated_data_file.file_location
+            location_parts = alt_location.split('/')
 
-            if "thumbnail" not in associated_data_file.file_description.lower():
-                table_contents['associated_files'].append(
-                    {'description': associated_data_file.file_description,
-                     'type': associated_data_file.file_type,
-                     'id': associated_data_file.id,
-                     'alt_location': alt_location})
+            key = location_parts[-1].replace("thumb_", "")
+            if key not in tmp_assoc_files:
+                tmp_assoc_files[key] = {}
+
+            if "thumb_" in alt_location:
+                tmp_assoc_files[key]['preview_location'] = '/record/resource/{0}?view=true'.format(
+                    associated_data_file.id)
+            else:
+                tmp_assoc_files[key].update({'description': associated_data_file.file_description,
+                                             'type': associated_data_file.file_type,
+                                             'id': associated_data_file.id,
+                                             'alt_location': alt_location})
+
+        # add associated files to the table contents
+        table_contents['associated_files'] = tmp_assoc_files.values()
 
     table_contents["review"] = {}
 

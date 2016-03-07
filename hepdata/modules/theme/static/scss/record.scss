@@ -516,9 +516,6 @@
 }
 
 #hep_table_data {
-  width: 66%;
-  float: left;
-  margin-right: 2%;
   overflow: scroll;
 }
 
@@ -547,11 +544,6 @@
   p {
     color: $navy;
   }
-}
-
-#hep_table_chart {
-  width: 32%;
-  float: right;
 }
 
 .table {
@@ -707,24 +699,16 @@
 
 #table_keywords {
   font-size: .8em;
-  ul {
-    list-style: none;
-    -webkit-padding-start: 0;
+  padding-top:10px;
 
     .keyword-item {
-      float: left;
-      display: inline-block;
-      margin: .5%;
-      width: 31%;
       padding: 5px;
-
       h4 {
         color: $navy;
         font-size: 1.4em;
         padding-bottom: 5px;
       }
     }
-  }
 }
 
 .chip {
@@ -787,16 +771,6 @@
 
   #hepdata_table_detail {
     width: 100%;
-  }
-
-  #hep_table_data {
-    width: 100%;
-    float: none;
-  }
-
-  #hep_table_chart {
-    width: 100%;
-    float: none;
   }
 
   .stats {
@@ -955,4 +929,10 @@ g.node {
 #table_doi {
   font-size: .9em;
   color: $navy !important;
+}
+
+#figures {
+  img {
+    width: 90%;
+  }
 }
