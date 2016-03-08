@@ -489,7 +489,7 @@ def do_finalise(recid, publication_record=None, force_finalise=False,
                     delete_item_from_index(record["_id"],
                                            doc_type=CFG_DATA_TYPE)
 
-        current_time = "{:%Y-%m-%d}".format(datetime.now())
+        current_time = "{:%Y-%m-%d %H:%M:%S}".format(datetime.now())
 
         for submission in submissions:
             finalise_datasubmission(current_time, existing_submissions,

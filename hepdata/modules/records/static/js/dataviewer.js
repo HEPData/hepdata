@@ -496,8 +496,12 @@ HEPDATA.table_renderer = {
 
             if ("asymerror" in errors[error_idx]) {
 
-              var plus_error = HEPDATA.visualization.utils.round(errors[error_idx]['asymerror']['plus'], decimal_places);
-              var min_error = HEPDATA.visualization.utils.round(errors[error_idx]['asymerror']['minus'], decimal_places);
+              var plus_error = errors[error_idx]['asymerror']['plus'];
+              var min_error = errors[error_idx]['asymerror']['minus'];
+              if (plus_error.toString().toLowerCase().indexOf('e') == -1)
+                plus_error = HEPDATA.visualization.utils.round(plus_error, decimal_places);
+              if (min_error.toString().toLowerCase().indexOf('e') == -1)
+                min_error = HEPDATA.visualization.utils.round(min_error, decimal_places);
 
               var plus_error_num = HEPDATA.dataprocessing.process_error_value(errors[error_idx]['asymerror']['plus'], value);
               var min_error_num = HEPDATA.dataprocessing.process_error_value(errors[error_idx]['asymerror']['minus'], value);
@@ -513,7 +517,9 @@ HEPDATA.table_renderer = {
 
             } else if ("symerror" in errors[error_idx]) {
               if (errors[error_idx]['symerror'] != 0) {
-                var sym_error = HEPDATA.visualization.utils.round(errors[error_idx]['symerror'], decimal_places);
+                var sym_error = errors[error_idx]['symerror'];
+                if (sym_error.toString().toLowerCase().indexOf('e') == -1)
+                  sym_error = HEPDATA.visualization.utils.round(sym_error, decimal_places);
                 var error = div.append('div').attr('class', err_class + ' sym');
                 error.append('div').attr('class', 'value').html('&#177;' + sym_error);
 
