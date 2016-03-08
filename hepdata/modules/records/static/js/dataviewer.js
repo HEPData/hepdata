@@ -5,10 +5,12 @@ HEPDATA.interval = undefined;
 HEPDATA.default_error_label = "";
 HEPDATA.show_review = true;
 HEPDATA.default_errors_to_show = 3;
+HEPDATA.default_row_limit = 10;
 HEPDATA.current_record_id = undefined;
 HEPDATA.current_table_id = undefined;
 HEPDATA.current_table_version = undefined;
 HEPDATA.clipboard = undefined;
+HEPDATA.selected = undefined;
 
 HEPDATA.current_filters = {
   "text": "",
@@ -64,7 +66,7 @@ HEPDATA.switch_table = function (listId, table_requested) {
   );
 
   var direct_link = 'http://www.hepdata.net/record/' + HEPDATA.current_record_id + '?version=' + HEPDATA.current_table_version + "&table=" + $('#' + table_requested + " h4").text();
-  $("#direct_data_link").val(direct_link)
+  $("#direct_data_link").val(direct_link);
   $(".copy-btn").attr('data-clipboard-text', direct_link);
   if (HEPDATA.clipboard == undefined) {
     HEPDATA.clipboard = new Clipboard('.copy-btn');
@@ -404,7 +406,7 @@ HEPDATA.table_renderer = {
       var keyword_items = [];
 
       for (var value in keywords[keyword_key]) {
-        keyword_items.push({'key': keyword_key, 'value':keywords[keyword_key][value]});
+        keyword_items.push({'key': keyword_key, 'value': keywords[keyword_key][value]});
       }
 
       var col_width = parseInt((12 / (Object.keys(keywords).length)));
@@ -452,12 +454,14 @@ HEPDATA.table_renderer = {
       var value_obj = table_data.values[value_idx];
 
       var tr = d3.select(placement).append("tr").attr("class", "data_values").attr("id", "row-" + value_idx);
+      if (value_idx > HEPDATA.default_row_limit) tr.classed('hidden', true);
 
       for (var x_idx in value_obj.x) {
+        var td;
         if ('high' in value_obj.x[x_idx]) {
-          tr.append('td').text(value_obj.x[x_idx]['low'].toFixed(2) + ' - ' + value_obj.x[x_idx]['high'].toFixed(2));
+          td = tr.append('td').text(value_obj.x[x_idx]['low'].toFixed(2) + ' - ' + value_obj.x[x_idx]['high'].toFixed(2));
         } else {
-          tr.append("td").text(value_obj.x[x_idx]['value']);
+          td = tr.append("td").text(value_obj.x[x_idx]['value']);
         }
       }
 
@@ -517,16 +521,22 @@ HEPDATA.table_renderer = {
         }
       }
     }
+
+    if (table_data.values.length > HEPDATA.default_row_limit) {
+      var btn = d3.select("#hep_table_data").append('btn').attr('class', 'btn btn-link btn-md btn-show-all-rows pull-right').text('Show All ' + table_data.values.length + ' Rows');
+      btn.on('click', function () {
+        d3.select(this).classed('hidden', true);
+        d3.selectAll('tr.data_values').classed('hidden', false);
+        HEPDATA.table_renderer.filter_rows(HEPDATA.selected);
+      })
+    }
   },
 
+
   filter_rows: function (target_rows) {
-    $(".data_values").each(function () {
-      var row_num = this.id.split("-")[1];
-      if (!(row_num in target_rows) && Object.keys(target_rows).length > 0) {
-        $(this).addClass("hidden");
-      } else {
-        $(this).removeClass("hidden");
-      }
+    d3.selectAll("tr.data_values").classed('hidden', function() {
+      var row_num =  d3.select(this).attr('id').split("-")[1];
+      return !(row_num in target_rows) && Object.keys(target_rows).length > 0;
     });
   }
 };
@@ -653,7 +663,6 @@ HEPDATA.visualization.heatmap = {
   x_index: '',
   y_index: '',
   grid_dimension: 10,
-  selected: {},
   data: undefined,
   placement: undefined,
   options: {
@@ -788,12 +797,12 @@ HEPDATA.visualization.heatmap = {
         .x(HEPDATA.visualization.heatmap.x_scale)
         .y(HEPDATA.visualization.heatmap.y_scale)
         .on("brushstart", function () {
-          HEPDATA.visualization.heatmap.selected = {};
+          HEPDATA.selected = {};
         })
         .on("brush", HEPDATA.visualization.heatmap.brushed)
         .on("brushend", function () {
 
-          HEPDATA.table_renderer.filter_rows(HEPDATA.visualization.heatmap.selected);
+          HEPDATA.table_renderer.filter_rows(HEPDATA.selected);
         });
 
       svg.append("g")
@@ -859,7 +868,7 @@ HEPDATA.visualization.heatmap = {
 
   brushed: function () {
     var extent = HEPDATA.visualization.heatmap.brush.extent();
-    HEPDATA.visualization.heatmap.selected = {};
+    HEPDATA.selected = {};
     d3.selectAll("g.hm_node").select("rect").style("stroke", function (d) {
 
       var x = d.x;
@@ -869,7 +878,7 @@ HEPDATA.visualization.heatmap = {
       && (y >= extent[0][1]) && (y <= extent[1][1]));
 
       if (d.selected) {
-        HEPDATA.visualization.heatmap.selected[d.row] = d;
+        HEPDATA.selected[d.row] = d;
       }
       return d.selected ? "#F15D2F" : "none";
     });
@@ -912,7 +921,6 @@ HEPDATA.visualization.histogram = {
   y_scale: undefined,
   data: undefined,
   histogram_added: false,
-  selected: {},
   x_index: '',
   placement: undefined,
   modes: {"scatter": "SCATTER_ONLY", "hist": "HISTOGRAM"},
@@ -1085,11 +1093,11 @@ HEPDATA.visualization.histogram = {
         .x(HEPDATA.visualization.histogram.x_scale)
         .y(HEPDATA.visualization.histogram.y_scale)
         .on("brushstart", function () {
-          HEPDATA.visualization.histogram.selected = {};
+          HEPDATA.selected = {};
         })
         .on("brush", HEPDATA.visualization.histogram.brushed)
         .on("brushend", function () {
-          HEPDATA.table_renderer.filter_rows(HEPDATA.visualization.histogram.selected);
+          HEPDATA.table_renderer.filter_rows(HEPDATA.selected);
         });
 
       svg.append("g")
@@ -1129,7 +1137,7 @@ HEPDATA.visualization.histogram = {
 
   brushed: function () {
     var extent = HEPDATA.visualization.histogram.brush.extent();
-    HEPDATA.visualization.histogram.selected = {}
+    HEPDATA.selected = {};
 
     d3.selectAll("g.node").select("circle").style("fill", function (d) {
       var x = d.x;
@@ -1140,7 +1148,7 @@ HEPDATA.visualization.histogram = {
       d.selected = (x >= (extent[0][0]) && x <= (extent[1][0])
       && (y >= extent[0][1]) && (y <= extent[1][1]));
 
-      if (d.selected) HEPDATA.visualization.histogram.selected[d.row] = d;
+      if (d.selected) HEPDATA.selected[d.row] = d;
 
       return d.selected ? "#F15D2F" : HEPDATA.visualization.histogram.options.colors(d.name);
     });
