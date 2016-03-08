@@ -29,8 +29,6 @@ from collections import OrderedDict
 from functools import wraps
 import json
 import os
-import zipfile
-
 from dateutil import parser
 from flask.ext.login import login_required, current_user
 from flask import Blueprint, redirect, request, render_template, Response, \
@@ -38,7 +36,6 @@ from flask import Blueprint, redirect, request, render_template, Response, \
 from invenio_accounts.models import User
 from invenio_db import db
 import jsonpatch
-from invenio_pidstore.errors import PIDDoesNotExistError
 from sqlalchemy.orm.exc import NoResultFound
 import time
 from werkzeug.utils import secure_filename
@@ -53,7 +50,7 @@ from hepdata.modules.records.models import HEPSubmission, DataSubmission, \
     RecordVersionCommitMessage
 from hepdata.modules.records.utils.common import get_record_by_id, \
     default_time, allowed_file, \
-    find_file_in_directory, remove_file_extension, decode_string, \
+    find_file_in_directory, decode_string, \
     truncate_string, IMAGE_TYPES
 from hepdata.modules.records.utils.data_processing_utils import \
     generate_table_structure
@@ -66,6 +63,7 @@ from hepdata.modules.records.utils.workflow import \
 from hepdata.modules.records.utils.workflow import \
     send_new_review_message_email
 from hepdata.modules.stats.views import get_count, increment
+from hepdata.utils.file_extractor import extract
 
 blueprint = Blueprint(
     'hepdata_records',
@@ -346,7 +344,7 @@ def get_latest():
                 'collaborations': collaborations,
                 'journal': record_information['journal_info'],
                 'author_count': len(record_information.get('authors', 1)),
-                'first_author': record_information['first_author'],
+                'first_author': record_information.get('first_author', None),
                 'creation_date': record_information['creation_date'],
                 'last_updated': last_updated})
 
@@ -735,9 +733,7 @@ def process_payload(recid, file, redirect_url, send_email=True):
                                    recid=None, errors=errors)
         else:
             current_user_obj = get_user_from_id(current_user.get_id())
-            update_action_for_submission_participant(recid,
-                                                     current_user.get_id(),
-                                                     'uploader')
+            update_action_for_submission_participant(recid, current_user.get_id(), 'uploader')
             if send_email:
                 send_new_upload_email(recid, current_user_obj)
             return redirect(redirect_url.format(recid))
@@ -746,7 +742,7 @@ def process_payload(recid, file, redirect_url, send_email=True):
         return render_template('hepdata_records/error_page.html', recid=recid,
                                message="Incorrect file type uploaded.",
                                errors={"Submission": [{"level": "error",
-                                                       "message": "You must upload a zip file."}]})
+                                                       "message": "You must upload a .zip, .tar, or .tar.gz file."}]})
 
 
 def process_zip_archive(file, id):
@@ -756,15 +752,8 @@ def process_zip_archive(file, id):
         os.makedirs(os.path.join(current_app.config['CFG_DATADIR'], str(id), time_stamp))
     file_path = os.path.join(current_app.config['CFG_DATADIR'], str(id), time_stamp, filename)
     file.save(file_path)
-    # unzip
 
-    zipped_submission = zipfile.ZipFile(file_path)
-    zipped_submission.printdir()
-    unzipped_path = os.path.join(current_app.config['CFG_DATADIR'],
-                                 str(id),
-                                 time_stamp,
-                                 remove_file_extension(filename))
-    zipped_submission.extractall(path=unzipped_path)
+    unzipped_path = extract(filename, file_path, time_stamp)
     submission_found = find_file_in_directory(unzipped_path,
                                               lambda x: x == "submission.yaml")
     if submission_found:
@@ -903,8 +892,8 @@ def determine_user_privileges(recid, ctx):
                 publication_recid=recid,
                 coordinator=current_user.get_id()).count()
 
-            if matching_records > 0: ctx[
-                'is_submission_coordinator_or_admin'] = True
+            if matching_records > 0:
+                ctx['is_submission_coordinator_or_admin'] = True
 
         ctx['show_upload_widget'] = (
             ctx['show_upload_widget'] or ctx[
