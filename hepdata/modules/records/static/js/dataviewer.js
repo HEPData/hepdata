@@ -5,7 +5,7 @@ HEPDATA.interval = undefined;
 HEPDATA.default_error_label = "";
 HEPDATA.show_review = true;
 HEPDATA.default_errors_to_show = 3;
-HEPDATA.default_row_limit = 10;
+HEPDATA.default_row_limit = 50;
 HEPDATA.current_record_id = undefined;
 HEPDATA.current_table_id = undefined;
 HEPDATA.current_table_version = undefined;
@@ -340,8 +340,8 @@ HEPDATA.table_renderer = {
       cache: true,
       success: function (table_data) {
         // display the table
-        $(table_placement).html('');
-
+        d3.select(table_placement).html('');
+        d3.select("#table_options_region").html('');
 
         $("#table_name").html(table_data.name);
         $("#table_doi_contents").html('<a href="http://dx.doi.org/' + table_data.doi + '" target="_blank">' + table_data.doi + '</a>');
@@ -523,9 +523,14 @@ HEPDATA.table_renderer = {
     }
 
     if (table_data.values.length > HEPDATA.default_row_limit) {
-      var btn = d3.select("#hep_table_data").append('btn').attr('class', 'btn btn-link btn-md btn-show-all-rows pull-right').text('Show All ' + table_data.values.length + ' Rows');
+      d3.select("#table_options_region").append('span').text('Showing ' + HEPDATA.default_row_limit + ' of ' + table_data.values.length + ' values');
+      var btn = d3.select("#table_options_region").append('a')
+        .attr('class', 'btn-show-all-rows pull-right')
+        .text('Show All ' + table_data.values.length + ' values');
+
       btn.on('click', function () {
         d3.select(this).classed('hidden', true);
+        d3.select("#table_options_region span").text('Showing all ' + table_data.values.length + ' values');
         d3.selectAll('tr.data_values').classed('hidden', false);
         HEPDATA.table_renderer.filter_rows(HEPDATA.selected);
       })
@@ -534,8 +539,8 @@ HEPDATA.table_renderer = {
 
 
   filter_rows: function (target_rows) {
-    d3.selectAll("tr.data_values").classed('hidden', function() {
-      var row_num =  d3.select(this).attr('id').split("-")[1];
+    d3.selectAll("tr.data_values").classed('hidden', function () {
+      var row_num = d3.select(this).attr('id').split("-")[1];
       return !(row_num in target_rows) && Object.keys(target_rows).length > 0;
     });
   }

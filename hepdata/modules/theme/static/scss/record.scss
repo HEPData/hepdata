@@ -451,8 +451,6 @@
     border-radius: 4px;
   }
 
-
-
   .content {
     float: left;
     width: 95%;
@@ -475,30 +473,30 @@
 
 #hep-tables {
 
-    -webkit-padding-start: 0px;
-    font-size: .8em;
-    height: 90%;
-    width: 100%;
-    overflow-y: auto;
-    overflow-x: hidden;
-    padding: 0 5px 15px 0;
+  -webkit-padding-start: 0px;
+  font-size: .8em;
+  height: 90%;
+  width: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 0 5px 15px 0;
 
-    li {
-      list-style: none;
-      margin-bottom: 10px;
-      cursor: pointer;
-      color: $concrete;
+  li {
+    list-style: none;
+    margin-bottom: 10px;
+    cursor: pointer;
+    color: $concrete;
 
-      p {
-        color: $grey;
-        margin: 0 0 4px;
-      }
-
-      &.active .arrow, &.active h4 {
-        color: $purple;
-        font-weight: bolder;
-      }
+    p {
+      color: $grey;
+      margin: 0 0 4px;
     }
+
+    &.active .arrow, &.active h4 {
+      color: $purple;
+      font-weight: bolder;
+    }
+  }
 
 }
 
@@ -699,16 +697,16 @@
 
 #table_keywords {
   font-size: .8em;
-  padding-top:10px;
+  padding-top: 10px;
 
-    .keyword-item {
-      padding: 5px;
-      h4 {
-        color: $navy;
-        font-size: 1.4em;
-        padding-bottom: 5px;
-      }
+  .keyword-item {
+    padding: 5px;
+    h4 {
+      color: $navy;
+      font-size: 1.4em;
+      padding-bottom: 5px;
     }
+  }
 }
 
 .chip {
@@ -934,5 +932,17 @@ g.node {
 #figures {
   img {
     width: 90%;
+  }
+}
+
+#table_options_region {
+  margin-top: 10px;
+  margin-bottom: 10px;
+  span {
+    color: $concrete
+  }
+
+  a {
+    cursor: pointer;
   }
 }
