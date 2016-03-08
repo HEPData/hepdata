@@ -4,12 +4,10 @@ import zipfile
 
 from flask import current_app
 
-from hepdata.modules.records.utils.common import remove_file_extension
+from hepdata.modules.records.utils.common import remove_file_extension, find_file_in_directory
 
 
-def extract(file_name, file_path, time_stamp):
-    unzipped_path = os.path.join(current_app.config['CFG_DATADIR'],
-                                 str(id), time_stamp, remove_file_extension(file_name))
+def extract(file_name, file_path, unzipped_path):
 
     if file_name.endswith("tar.gz"):
         tar = tarfile.open(file_path, "r:gz")
@@ -26,3 +24,9 @@ def extract(file_name, file_path, time_stamp):
         zipped_submission.extractall(path=unzipped_path)
 
     return unzipped_path
+
+
+def get_file_in_directory(path, extension):
+    directory, file = find_file_in_directory(path, lambda x: x.endswith(extension))
+
+    return file

@@ -51,7 +51,7 @@ from hepdata.modules.records.models import HEPSubmission, DataSubmission, \
 from hepdata.modules.records.utils.common import get_record_by_id, \
     default_time, allowed_file, \
     find_file_in_directory, decode_string, \
-    truncate_string, IMAGE_TYPES
+    truncate_string, IMAGE_TYPES, remove_file_extension
 from hepdata.modules.records.utils.data_processing_utils import \
     generate_table_structure
 from hepdata.modules.records.utils.submission import create_data_review, \
@@ -750,10 +750,14 @@ def process_zip_archive(file, id):
     time_stamp = str(int(round(time.time())))
     if not os.path.exists(os.path.join(current_app.config['CFG_DATADIR'], str(id), time_stamp)):
         os.makedirs(os.path.join(current_app.config['CFG_DATADIR'], str(id), time_stamp))
+
     file_path = os.path.join(current_app.config['CFG_DATADIR'], str(id), time_stamp, filename)
     file.save(file_path)
 
-    unzipped_path = extract(filename, file_path, time_stamp)
+    unzipped_path = os.path.join(current_app.config['CFG_DATADIR'],
+                                 str(id), time_stamp, remove_file_extension(filename))
+
+    extract(filename, file_path, unzipped_path)
     submission_found = find_file_in_directory(unzipped_path,
                                               lambda x: x == "submission.yaml")
     if submission_found:

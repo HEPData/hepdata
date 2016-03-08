@@ -27,12 +27,12 @@ import time
 from werkzeug.utils import secure_filename
 from hepdata.config import CFG_CONVERTER_URL, CFG_SUPPORTED_FORMATS
 
-
 from hepdata_converter_ws_client import convert
 from invenio_db import db
 from hepdata.modules.converter import convert_zip_archive
 from hepdata.modules.records.models import HEPSubmission, DataResource, DataSubmission
 from hepdata.modules.records.utils.submission import SUBMISSION_FILE_NAME_PATTERN
+from hepdata.utils.file_extractor import extract, get_file_in_directory
 
 blueprint = Blueprint('converter', __name__,
                       url_prefix="/download",
@@ -152,23 +152,12 @@ def download_datatable(data_id, file_format):
 
     record_path, table_name = os.path.split(datasub.file_location)
 
-    filename = str(data_id) + '-' + file_format
+    filename = 'HEPData-Table-{0}'.format(data_id)
     output_path = os.path.join(current_app.config['CFG_TMPDIR'], filename)
-    output_tar = output_path + '.tar.gz'
-
-    if os.path.exists(output_tar):
-        return send_file(
-            output_tar,
-            as_attachment=True,
-        )
 
     if file_format == 'yaml':
-        with tarfile.open(output_tar, "w:gz") as tar:
-            tar.add(datasub.file_location,
-                    arcname=table_name)
-
         return send_file(
-            output_tar,
+            datasub.file_location,
             as_attachment=True,
         )
 
@@ -179,22 +168,29 @@ def download_datatable(data_id, file_format):
         'filename': table_name.split('.')[0],
     }
 
-    successful = convert(
-        CFG_CONVERTER_URL,
-        record_path,
-        output=output_path,
-        options=options,
-        extract=False,
-    )
+    if not os.path.exists(output_path):
+
+        successful = convert(
+            CFG_CONVERTER_URL,
+            record_path,
+            output=output_path + '-dir',
+            options=options,
+            extract=False,
+        )
+    else:
+        successful = True
 
     # Error occurred, the output is a HTML file
     if successful:
-        new_path = output_path + '.tar.gz'
+        new_path = output_path + "." + file_format
+        new_path = extract(filename + ".tar.gz", output_path + '-dir', new_path)
     else:
         new_path = output_path + '.html'
 
-    move(output_path, new_path)
-    return send_file(new_path, as_attachment=True)
+    file_to_send = get_file_in_directory(new_path, file_format)
+
+    return send_file(file_to_send, as_attachment=True,
+                     attachment_filename=filename + '.' + file_format)
 
 
 def display_error(title='Unknown Error', description=''):
