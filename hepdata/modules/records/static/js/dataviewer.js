@@ -33,8 +33,7 @@ HEPDATA.stats = {
   min_y: Number.MAX_VALUE,
   max_y: Number.MIN_VALUE,
   min_value: Number.MAX_VALUE,
-  max_value: Number.MIN_VALUE,
-  decimal_places: 2,
+  max_value: Number.MIN_VALUE
 };
 
 HEPDATA.reset_stats = function () {
