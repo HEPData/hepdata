@@ -21,6 +21,7 @@
 # In applying this license, CERN does not
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
+from __future__ import absolute_import, print_function
 import uuid
 import zipfile
 from datetime import datetime
@@ -87,7 +88,7 @@ def remove_submission(record_id):
             db.session.delete(hepdata_submission.one())
 
         except NoResultFound as nrf:
-            print nrf.args
+            print(nrf.args)
 
         submissions = DataSubmission.query.filter_by(
             publication_recid=record_id).all()
@@ -149,12 +150,12 @@ def cleanup_submission(recid, version, to_keep):
     for data_submission in data_submissions:
 
         if not (data_submission.name in to_keep):
-            print 'Deleting Submission {0}'.format(data_submission.name)
+            print('Deleting Submission {0}'.format(data_submission.name))
             data_reviews = DataReview.query.filter_by(
                 data_recid=data_submission.id).all()
 
             for review in data_reviews:
-                print 'Deleting Associated Review {0}'.format(review.id)
+                print('Deleting Associated Review {0}'.format(review.id))
                 db.session.delete(review)
 
             db.session.delete(data_submission)
@@ -222,7 +223,7 @@ def process_data_file(recid, basepath, data_sub, datasubmission, main_file_path)
     db.session.commit()
 
 
-def process_general_submission_info(submission_info_document, recid):
+def process_general_submission_info(basepath, submission_info_document, recid):
     """
     Processes the top level information about a submission,
     extracting the information about the data abstract,
@@ -232,8 +233,6 @@ def process_general_submission_info(submission_info_document, recid):
     :param recid:
     :return:
     """
-
-    print submission_info_document
 
     if 'comment' in submission_info_document \
         or 'modifications' in submission_info_document \
@@ -253,13 +252,17 @@ def process_general_submission_info(submission_info_document, recid):
             parse_modifications(recid, submission_info_document)
 
         if 'additional_resources' in submission_info_document:
-            resources = parse_additional_resources(submission_info_document['additional_resources'],
+
+            for reference in hepsubmission.references:
+                db.session.delete(reference)
+
+            resources = parse_additional_resources(basepath,
                                                    recid, submission_info_document)
             for resource in resources:
                 hepsubmission.references.append(resource)
 
         if hepsubmission.last_updated is not None:
-            print 'hepsubmission.last_updated = {}'.format(hepsubmission.last_updated.isoformat(' '))
+            print('hepsubmission.last_updated = {}'.format(hepsubmission.last_updated.isoformat(' ')))
         db.session.add(hepsubmission)
         db.session.commit()
 
@@ -274,14 +277,6 @@ def parse_additional_resources(basepath, recid, yaml_document):
     """
     resources = []
     for reference in yaml_document['additional_resources']:
-
-        existing_resources = DataResource.query.filter_by(
-            file_location=reference['location']).all()
-
-        for resource in existing_resources:
-            db.session.delete(resource)
-        db.session.commit()
-
         resource_location = reference['location']
 
         file_type = infer_file_type(reference["location"])
@@ -298,11 +293,11 @@ def parse_additional_resources(basepath, recid, yaml_document):
 
         elif 'http' not in resource_location and 'www' not in resource_location and 'resource' not in resource_location:
             # this is a file local to the submission.
-            resource_location = os.path.join(basepath, resource_location)
+            continue
         else:
             resource_location = download_resource_file(
                 recid, resource_location)
-            print 'Downloaded resource location is {0}'.format(resource_location)
+            print('Downloaded resource location is {0}'.format(resource_location))
 
         new_reference = DataResource(
             file_location=resource_location, file_type=file_type,
@@ -384,7 +379,7 @@ def process_submission_directory(basepath, submission_file_path, recid, update=F
                 if 'record_ids' in yaml_document or 'comment' in yaml_document or 'modifications' in yaml_document:
                     # comments are only present in the general submission
                     # information document.
-                    process_general_submission_info(yaml_document, recid)
+                    process_general_submission_info(basepath, yaml_document, recid)
                 else:
                     existing_datasubmission_query = DataSubmission.query \
                         .filter_by(name=encode_string(yaml_document["name"]),
@@ -524,6 +519,6 @@ def unload_submission(record_id):
         delete_item_from_index(doc_type=CFG_PUB_TYPE, id=record_id)
         print("Removed publication {0} from index".format(record_id))
     except NotFoundError as nfe:
-        print nfe.message
+        print(nfe.message)
 
     print('Finished unloading {0}.'.format(record_id))
