@@ -60,7 +60,7 @@
 
                     {% for record in ctx.results %}
                         {% set pub_index = loop.index %}
-                        <div id="publication-{{ pub_index }}" class="row"
+                        <div id="publication-{{ pub_index }}" class="row ins{{ record.inspire_id|string }}"
                              itemtype="http://schema.org/DataCatalog"
                              itemscope>
                             <div class="search-result-item">
@@ -153,7 +153,8 @@
 {% endblock %}
 
 {% block javascript %}
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript"
+            src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
 
     {%- assets "hepdata_bootstrap_js" %}

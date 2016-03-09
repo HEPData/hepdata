@@ -27,35 +27,45 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
+from tests.e2e.conftest import make_screenshot
+
 
 def test_search_from_home(live_server, env_browser, search_tests):
     """E2E user registration and login test."""
     browser = env_browser
 
     for search_config in search_tests:
-        browser.get(flask.url_for('hepdata_theme.index', _external=True))
-        assert (flask.url_for('hepdata_theme.index', _external=True) in
-                browser.current_url)
+        try:
+            browser.get(flask.url_for('hepdata_theme.index', _external=True))
+            assert (flask.url_for('hepdata_theme.index', _external=True) in
+                    browser.current_url)
 
-        search_form = browser.find_element_by_class_name('main-search-form')
-        search_input = search_form.find_element_by_name('q')
+            search_form = browser.find_element_by_class_name('main-search-form')
+            search_input = search_form.find_element_by_name('q')
 
-        search_term = search_config['search_term']
-        search_input.send_keys(search_term)
+            search_term = search_config['search_term']
+            search_input.send_keys(search_term)
 
-        search_form.submit()
+            search_form.submit()
 
-        browser.get(flask.url_for('es_search.search', _external=True))
-        assert (flask.url_for('es_search.search', _external=True) in
-                browser.current_url)
+            assert (flask.url_for('es_search.search', _external=True) in
+                    browser.current_url)
 
-        publication = browser.find_element_by_id('publication-1')
-        assert (publication)
+            publication = browser.find_element_by_class_name(search_config['exp_hepdata_id'])
+            assert (publication)
 
-        element = WebDriverWait(browser, 10).until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, ".record-header a"))
-        )
-        element.click()
+            selector = ".{0} .record-header a".format(search_config['exp_hepdata_id'])
+            print 'SELECTOR IS {}'.format(selector)
 
-        assert (flask.url_for('hepdata_records.get_metadata_by_alternative_id', recid=search_config['exp_hepdata_id'],
-                              _external=True) in browser.current_url)
+            element = WebDriverWait(browser, 10).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, selector))
+            )
+            element.click()
+
+            assert (flask.url_for('hepdata_records.get_metadata_by_alternative_id', recid=search_config['exp_hepdata_id'],
+                                  _external=True) in browser.current_url)
+        except Exception as e:
+            screenshot_name = "./search-{}.png".format(search_config['exp_hepdata_id'])
+            make_screenshot(browser, screenshot_name)
+            print('Error occurred on test. Screenshot capured and saved in tmpdir as {}')
+            raise e

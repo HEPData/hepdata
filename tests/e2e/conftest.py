@@ -39,6 +39,7 @@ from selenium import webdriver
 from sqlalchemy_utils.functions import create_database, database_exists, \
     drop_database
 
+from hepdata.config import CFG_TMPDIR
 from hepdata.ext.elasticsearch.api import reindex_all
 from hepdata.factory import create_app
 from hepdata.modules.records.migrator.api import load_files
@@ -110,7 +111,8 @@ def test_identifiers(app):
 
 @pytest.fixture()
 def search_tests(app):
-    return [{"search_term": "collisions", "exp_collab_facet": "Belle", "exp_hepdata_id": "ins1245023"}]
+    return [{"search_term": "collisions", "exp_collab_facet": "Belle", "exp_hepdata_id": "ins1245023"},
+            {"search_term": "leptons", "exp_collab_facet": "D0", "exp_hepdata_id": "ins1283842"}]
 
 
 @pytest.fixture()
@@ -162,3 +164,10 @@ def env_browser(request):
 
     timeout_process.start()
     return browser
+
+
+def make_screenshot(driver, name):
+    dir = os.path.join(CFG_TMPDIR, 'e2e')
+    if not os.path.exists(dir):
+        os.makedirs(dir)
+    driver.save_screenshot(os.path.join(dir, name))

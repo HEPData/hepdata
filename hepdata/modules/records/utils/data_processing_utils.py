@@ -21,8 +21,9 @@
 # In applying this license, CERN does not
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
-from ordereddict import OrderedDict
+from __future__ import absolute_import, print_function
 
+from ordereddict import OrderedDict
 __author__ = 'eamonnmaguire'
 
 

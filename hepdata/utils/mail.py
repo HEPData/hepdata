@@ -1,3 +1,4 @@
+from __future__ import absolute_import, print_function
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from smtplib import SMTP
@@ -37,7 +38,7 @@ def send_email(destination, subject, message):
         connection.sendmail(current_app.config['MAIL_DEFAULT_SENDER'], destination, mmp_msg.as_string())
         connection.quit()
     except Exception as e:
-        print 'Exception occurred.'
+        print('Exception occurred.')
         raise e
 
 

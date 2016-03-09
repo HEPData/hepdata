@@ -726,7 +726,8 @@ def update_sandbox_payload(recid):
 
 
 def process_payload(recid, file, redirect_url, send_email=True):
-    if file and allowed_file(file.filename):
+    print(file.filename)
+    if file and (allowed_file(file.filename) or "oldhepdata" in file.filename):
         errors = process_zip_archive(file, recid)
         if errors:
             return render_template('hepdata_records/error_page.html',
@@ -737,7 +738,6 @@ def process_payload(recid, file, redirect_url, send_email=True):
             if send_email:
                 send_new_upload_email(recid, current_user_obj)
             return redirect(redirect_url.format(recid))
-
     else:
         return render_template('hepdata_records/error_page.html', recid=recid,
                                message="Incorrect file type uploaded.",
@@ -751,15 +751,28 @@ def process_zip_archive(file, id):
     if not os.path.exists(os.path.join(current_app.config['CFG_DATADIR'], str(id), time_stamp)):
         os.makedirs(os.path.join(current_app.config['CFG_DATADIR'], str(id), time_stamp))
 
-    file_path = os.path.join(current_app.config['CFG_DATADIR'], str(id), time_stamp, filename)
-    file.save(file_path)
+    if '.oldhepdata' not in filename:
+        file_path = os.path.join(current_app.config['CFG_DATADIR'], str(id), time_stamp, filename)
+        file.save(file_path)
 
-    unzipped_path = os.path.join(current_app.config['CFG_DATADIR'],
-                                 str(id), time_stamp, remove_file_extension(filename))
+        unzipped_path = os.path.join(current_app.config['CFG_DATADIR'],
+                                     str(id), time_stamp, remove_file_extension(filename))
+        extract(filename, file_path, unzipped_path)
+        submission_found = find_file_in_directory(unzipped_path,
+                                                  lambda x: x == "submission.yaml")
+    else:
+        file_path = os.path.join(current_app.config['CFG_DATADIR'], str(id), time_stamp, 'oldhepdata')
+        if not os.path.exists(file_path):
+            os.makedirs(file_path)
 
-    extract(filename, file_path, unzipped_path)
-    submission_found = find_file_in_directory(unzipped_path,
-                                              lambda x: x == "submission.yaml")
+        if filename.endswith('.txt'):
+            filename = filename.replace(".txt", "")
+        print('Saving file to {}'.format(os.path.join(file_path, filename)))
+        file.save(os.path.join(file_path, filename))
+
+        unzipped_path = os.path.join(current_app.config['CFG_DATADIR'], str(id), time_stamp, 'oldhepdata')
+        submission_found = False
+
     if submission_found:
         basepath, submission_file_path = submission_found
     else:
@@ -791,7 +804,6 @@ def check_and_convert_from_oldhepdata(input_directory, id, timestamp):
                            " file has been found in the archive."
             }]
         }
-
     successful = convert_oldhepdata_to_yaml(oldhepdata_found[1],
                                             converted_path)
     if not successful:

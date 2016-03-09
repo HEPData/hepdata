@@ -1,10 +1,7 @@
-import os
 import tarfile
 import zipfile
 
-from flask import current_app
-
-from hepdata.modules.records.utils.common import remove_file_extension, find_file_in_directory
+from hepdata.modules.records.utils.common import find_file_in_directory
 
 
 def extract(file_name, file_path, unzipped_path):
