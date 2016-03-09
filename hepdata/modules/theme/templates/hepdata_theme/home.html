@@ -194,7 +194,7 @@
                     data = data['latest'];
                     for (var record in data) {
 
-                        var record_html_block = '<div class="latest-record col-md-4 col-xs-12">';
+                        var record_html_block = '<div class="latest-record col-md-4 col-xs-12" id="ins' + data[record]['inspire_id'] + '">';
 
                         if (data[record]['collaborations'].length > 0)
                             for (var collaboration in data[record]['collaborations']) {

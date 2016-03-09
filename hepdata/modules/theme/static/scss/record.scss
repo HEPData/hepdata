@@ -727,6 +727,7 @@
 .keyword_values {
   max-height: 100px;
   overflow-y: auto;
+  -webkit-padding-start: 0;
 }
 
 .table {
