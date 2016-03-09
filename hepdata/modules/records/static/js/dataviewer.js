@@ -304,13 +304,18 @@ HEPDATA.filter_content = function (filterInputId, listId) {
 
 /**
  * Counts the number of decimal places for a value.
+ * Check if value is given in scientific notation.
  * @param number
  * @returns {*|number}
  */
 
 HEPDATA.count_decimals = function (number) {
   if (number.toString().indexOf('.') != -1) {
-    return number.toString().split(".")[1].length || 2
+    var rightofpoint = number.toString().split(".")[1];
+    if (rightofpoint.toLowerCase().indexOf('e') != -1)
+      return rightofpoint.toLowerCase().split('e')[0].length || 2;
+    else
+      return rightofpoint.length || 2;
   }
   return 0;
 }
@@ -498,10 +503,16 @@ HEPDATA.table_renderer = {
 
               var plus_error = errors[error_idx]['asymerror']['plus'];
               var min_error = errors[error_idx]['asymerror']['minus'];
-              if (plus_error.toString().toLowerCase().indexOf('e') == -1)
-                plus_error = HEPDATA.visualization.utils.round(plus_error, decimal_places);
-              if (min_error.toString().toLowerCase().indexOf('e') == -1)
-                min_error = HEPDATA.visualization.utils.round(min_error, decimal_places);
+              if (plus_error.toString().toLowerCase().indexOf('e') == -1 && value.toString().toLowerCase().indexOf('e') == -1) {
+                var plus_error_rounded = HEPDATA.visualization.utils.round(plus_error, decimal_places);
+                if (plus_error_rounded != 0)
+                  plus_error = plus_error_rounded;
+              }
+              if (min_error.toString().toLowerCase().indexOf('e') == -1 && value.toString().toLowerCase().indexOf('e') == -1) {
+                var min_error_rounded = HEPDATA.visualization.utils.round(min_error, decimal_places);
+                if (min_error_rounded != 0)
+                  min_error = min_error_rounded;
+              }
 
               var plus_error_num = HEPDATA.dataprocessing.process_error_value(errors[error_idx]['asymerror']['plus'], value);
               var min_error_num = HEPDATA.dataprocessing.process_error_value(errors[error_idx]['asymerror']['minus'], value);
@@ -518,8 +529,11 @@ HEPDATA.table_renderer = {
             } else if ("symerror" in errors[error_idx]) {
               if (errors[error_idx]['symerror'] != 0) {
                 var sym_error = errors[error_idx]['symerror'];
-                if (sym_error.toString().toLowerCase().indexOf('e') == -1)
-                  sym_error = HEPDATA.visualization.utils.round(sym_error, decimal_places);
+                if (sym_error.toString().toLowerCase().indexOf('e') == -1 && value.toString().toLowerCase().indexOf('e') == -1) {
+                  var sym_error_rounded = HEPDATA.visualization.utils.round(sym_error, decimal_places);
+                  if (sym_error_rounded != 0)
+                    sym_error = sym_error_rounded;
+                }
                 var error = div.append('div').attr('class', err_class + ' sym');
                 error.append('div').attr('class', 'value').html('&#177;' + sym_error);
 
