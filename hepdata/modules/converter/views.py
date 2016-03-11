@@ -116,9 +116,17 @@ def download_submission(recid, version, file_format):
     if version > submission.latest_version or version == -1:
         version = submission.latest_version
 
+    path = os.path.join(current_app.config['CFG_DATADIR'], str(recid))
+    data_filename = SUBMISSION_FILE_NAME_PATTERN.format(recid, version)
+
+    # If a YAML file is requested, we just need to send this back.
+    if file_format == 'yaml' and os.path.exists(os.path.join(path, data_filename)):
+        return send_file(os.path.join(path, data_filename), as_attachment=True)
+
     output_file = str(recid) + '-' + str(version) + '-' + file_format + '.tar.gz'
     output_path = os.path.join(current_app.config['CFG_TMPDIR'], output_file)
 
+    # If the file is already available in the tmp dir, send it back.
     if os.path.exists(output_path):
         return send_file(
             output_path,
@@ -131,10 +139,7 @@ def download_submission(recid, version, file_format):
         'filename': str(recid) + '-' + str(version) + '-' + file_format,
     }
 
-    path = os.path.join(current_app.config['CFG_DATADIR'], str(recid))
-    data_filename = SUBMISSION_FILE_NAME_PATTERN.format(recid, version)
     data_filepath = os.path.join(path, data_filename)
-
     converted_file = convert_zip_archive(data_filepath,
                                          output_path,
                                          converter_options)

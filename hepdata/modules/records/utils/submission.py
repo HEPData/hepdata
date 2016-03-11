@@ -447,10 +447,14 @@ def package_submission(basepath, recid, hep_submission_obj):
     if not os.path.exists(os.path.join(current_app.config['CFG_DATADIR'], str(recid))):
         os.makedirs(os.path.join(current_app.config['CFG_DATADIR'], str(recid)))
 
+    version = hep_submission_obj.latest_version
+    if version == 0:
+        version = 1
+
     zip_location = os.path.join(
         current_app.config['CFG_DATADIR'], str(recid),
         SUBMISSION_FILE_NAME_PATTERN
-            .format(recid, hep_submission_obj.latest_version))
+            .format(recid, version))
     if os.path.exists(zip_location):
         os.remove(zip_location)
 
