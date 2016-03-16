@@ -29,8 +29,23 @@ HEPDATA.render_loader = function (placement, events, options) {
     });
 
   //draw detector rings
-  svg.append("circle").attr("cx", options.width / 2).attr("cy", options.width / 2).attr("r", options.width * .02).attr("fill", "none").attr("stroke", "#955BA5").attr("stroke-width", options.width * .01).attr("stroke-linecap", "round");
-  svg.append("circle").attr("cx", options.width / 2).attr("cy", options.width / 2).attr("r", options.width * .2).attr("fill", "none").attr("stroke", "#955BA5").attr("stroke-width", options.width * .03).attr("stroke-linecap", "round");
+  svg.append("circle")
+    .attr("cx", options.width / 2)
+    .attr("cy", options.width / 2)
+    .attr("r", options.width * .02)
+    .attr("fill", "none")
+    .attr("stroke", "#955BA5")
+    .attr("stroke-width", options.width * .01)
+    .attr("stroke-linecap", "round");
+
+  svg.append("circle")
+    .attr("cx", options.width / 2)
+    .attr("cy", options.width / 2)
+    .attr("r", options.width * .2)
+    .attr("fill", "none")
+    .attr("stroke", "#955BA5")
+    .attr("stroke-width", options.width * .03)
+    .attr("stroke-linecap", "round");
 
 
   var path = svg.selectAll("path")
