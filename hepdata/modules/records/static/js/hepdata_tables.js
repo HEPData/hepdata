@@ -1,0 +1,291 @@
+/**
+ * Created by eamonnmaguire on 16/03/2016.
+ */
+
+
+HEPDATA.switch_table = function (listId, table_requested) {
+  // clear the active class
+  $(listId + '>li').each(function () {
+    $(this).removeClass("active")
+  });
+  // now set the active class on the table just selected
+  $('#' + table_requested).addClass("active");
+
+
+  HEPDATA.render_loader("#table_loader", [
+      {x: 26, y: 30, color: "#955BA5"},
+      {x: -60, y: 55, color: "#2C3E50"},
+      {x: 37, y: -10, color: "#955BA5"},
+      {x: -60, y: 10, color: "#955BA5"},
+      {x: -27, y: -30, color: "#955BA5"},
+      {x: 60, y: -55, color: "#2C3E50"}],
+    {"width": 200, "height": 200}
+  );
+
+  var direct_link = 'http://www.hepdata.net/record/' + HEPDATA.current_record_id + '?version=' + HEPDATA.current_table_version + "&table=" + $('#' + table_requested + " h4").text();
+  $("#direct_data_link").val(direct_link);
+  $(".copy-btn").attr('data-clipboard-text', direct_link);
+  if (HEPDATA.clipboard == undefined) {
+    HEPDATA.clipboard = new Clipboard('.copy-btn');
+    toastr.options.timeOut = 3000;
+    HEPDATA.clipboard.on('success', function (e) {
+      toastr.success($(".copy-btn").attr('data-clipboard-text') + ' copied to clipboard.')
+    })
+  }
+
+
+  $("#hepdata_table_loader").removeClass("hidden");
+  $("#hepdata_table_content").addClass("hidden");
+
+  HEPDATA.current_table_id = table_requested;
+
+  if (HEPDATA.show_review) {
+    HEPDATA.load_review_messages("#review_messages",
+      HEPDATA.current_record_id,
+      HEPDATA.current_table_id);
+  }
+  HEPDATA.table_renderer.display_table('/record/data/' + HEPDATA.current_record_id + '/' + table_requested + "/" + HEPDATA.current_table_version,
+    '#data_table_region',
+    '#data_visualization_region');
+
+  $(".data_download_link").each(function () {
+    var data_format = $(this).text().toLowerCase();
+    var data_url = '/download/table/'
+      + HEPDATA.current_table_id + '/'
+      + data_format;
+    $(this).attr('href', data_url);
+  });
+};
+
+HEPDATA.table_renderer = {
+  display_table: function (url, table_placement, visualization_placement) {
+
+    $.ajax({
+      dataType: "json",
+      url: url,
+      processData: false,
+      cache: true,
+      success: function (table_data) {
+        // display the table
+        d3.select(table_placement).html('');
+        d3.select("#table_options_region").html('');
+
+        $("#table_name").html(table_data.name);
+        $("#table_doi_contents").html('<a href="http://dx.doi.org/' + table_data.doi + '" target="_blank">' + table_data.doi + '</a>');
+
+        $("#table_description").html((table_data.description.indexOf('.') == 0) ? '' : table_data.description.trim());
+
+        HEPDATA.table_renderer.render_keywords(table_data.keywords, "#table_keywords");
+
+        HEPDATA.reset_stats();
+
+        HEPDATA.table_renderer.render_qualifiers(table_data, table_placement);
+        HEPDATA.table_renderer.render_headers(table_data, table_placement);
+        HEPDATA.table_renderer.render_data(table_data, table_placement);
+
+        HEPDATA.render_associated_files(table_data.associated_files, '#support-files');
+
+        if (table_data["x_count"] > 1) {
+          HEPDATA.visualization.heatmap.reset();
+          HEPDATA.visualization.heatmap.render(table_data, visualization_placement, {
+            width: 300,
+            height: 300
+          });
+        } else {
+          HEPDATA.visualization.histogram.render(table_data, visualization_placement, {
+            width: 300,
+            height: 300,
+            "mode": "histogram"
+          });
+        }
+
+        MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
+
+        HEPDATA.table_renderer.update_reviewer_button(table_data.review);
+
+        $("#hepdata_table_loader").addClass("hidden");
+        $("#hepdata_table_content").removeClass("hidden");
+
+      },
+      error: function (data, error) {
+        console.error('Failed to load table defined by ' + url);
+        console.error(error);
+      }
+    });
+  },
+
+  update_reviewer_button: function (review_info) {
+    HEPDATA.set_review_status(review_info.review_flag);
+  },
+
+  clean_data: function (value, remove_qualifier_uniqueness_attr) {
+
+    if (remove_qualifier_uniqueness_attr) value = value.replace(/-\d+/, "");
+    if (value == ".") {
+      value = ""
+    }
+    return value;
+  },
+
+  render_keywords: function (keywords, placement) {
+    $(placement + " .row-fluid").html('');
+    for (var keyword_key in keywords) {
+      var keyword_items = [];
+
+      for (var value in keywords[keyword_key]) {
+        keyword_items.push({'key': keyword_key, 'value': keywords[keyword_key][value]});
+      }
+
+      var col_width = parseInt((12 / (Object.keys(keywords).length)));
+      var li = d3.select(placement + " .row-fluid").append('div')
+        .attr('class', 'keyword-item col-md-' + col_width);
+
+      li.append('h4').text(keyword_key);
+      var individual_keyword_value_list = li.append('ul').attr('class', 'keyword_values');
+
+      var individual_kw = individual_keyword_value_list.selectAll("a").data(keyword_items)
+        .enter().append('li').attr('class', 'chip');
+
+      individual_kw.append('i').attr('class', 'fa fa-tag').style({'margin-right': '5px', 'display': 'inline'});
+      individual_kw.append('span').text(function (d) {
+        return d.value.length > 60 ? d.value.substring(0, 60) + "..." : d.value;
+      });
+    }
+  },
+
+  render_qualifiers: function (table_data, placement) {
+    for (var qualifier_idx in table_data["qualifier_order"]) {
+      var qualifier_type = table_data["qualifier_order"][qualifier_idx];
+
+      var qualifier_block = d3.select(placement).append('tr').attr('class', 'qualifiers');
+
+      qualifier_block.append('td').attr('class', 'qualifier_name').attr('colspan', table_data["x_count"]).text(HEPDATA.table_renderer.clean_data(qualifier_type, true));
+
+      for (var qualifier_data_idx in table_data.qualifiers[qualifier_type]) {
+        qualifier_block.append('td').attr('class', 'qualifier_value').attr('colspan', table_data.qualifiers[qualifier_type][qualifier_data_idx].colspan).text(HEPDATA.table_renderer.clean_data(table_data.qualifiers[qualifier_type][qualifier_data_idx].value));
+      }
+    }
+  },
+
+  render_headers: function (table_data, placement) {
+    var header_section = d3.select(placement).append('tr').attr('class', 'headers');
+
+    for (var header_idx in table_data.headers) {
+      header_section.append('td').attr('class', 'x').attr('colspan', table_data.headers[header_idx].colspan).text(table_data.headers[header_idx].name);
+    }
+  },
+
+  render_data: function (table_data, placement) {
+
+
+    for (var value_idx in table_data.values) {
+      var value_obj = table_data.values[value_idx];
+
+      var tr = d3.select(placement).append("tr").attr("class", "data_values").attr("id", "row-" + value_idx);
+      if (value_idx > HEPDATA.default_row_limit) tr.classed('hidden', true);
+
+      for (var x_idx in value_obj.x) {
+        var td;
+        if ('high' in value_obj.x[x_idx]) {
+          td = tr.append('td').text(value_obj.x[x_idx]['low'].toFixed(2) + ' - ' + value_obj.x[x_idx]['high'].toFixed(2));
+        } else {
+          td = tr.append("td").text(value_obj.x[x_idx]['value']);
+        }
+      }
+
+      for (var y_idx in value_obj.y) {
+        var value = value_obj.y[y_idx].value;
+        var td = tr.append('td');
+        if (value != undefined) {
+
+          var decimal_places = HEPDATA.count_decimals(value);
+          var div = td.append('div');
+          div.append('span').text(value);
+
+          var errors = value_obj.y[y_idx].errors;
+
+          for (var error_idx in errors) {
+
+            var err_class = "error " + ((error_idx < HEPDATA.default_errors_to_show) ? "" : "hidden");
+
+            if ("asymerror" in errors[error_idx]) {
+
+              var plus_error = errors[error_idx]['asymerror']['plus'];
+              var min_error = errors[error_idx]['asymerror']['minus'];
+              if (plus_error.toString().toLowerCase().indexOf('e') == -1 && value.toString().toLowerCase().indexOf('e') == -1) {
+                var plus_error_rounded = HEPDATA.visualization.utils.round(plus_error, decimal_places);
+                if (plus_error_rounded != 0)
+                  plus_error = plus_error_rounded;
+              }
+              if (min_error.toString().toLowerCase().indexOf('e') == -1 && value.toString().toLowerCase().indexOf('e') == -1) {
+                var min_error_rounded = HEPDATA.visualization.utils.round(min_error, decimal_places);
+                if (min_error_rounded != 0)
+                  min_error = min_error_rounded;
+              }
+
+              var plus_error_num = HEPDATA.dataprocessing.process_error_value(errors[error_idx]['asymerror']['plus'], value);
+              var min_error_num = HEPDATA.dataprocessing.process_error_value(errors[error_idx]['asymerror']['minus'], value);
+
+              var error = div.append('div').attr('class', err_class);
+
+              var value_block = error.append('div').attr('class', 'value');
+              var asym_block = value_block.append('div').attr('class', 'asym');
+              asym_block.append('span').attr('class', 'sup').text((plus_error_num >= 0 ? '+' : '') + plus_error);
+              asym_block.append('span').attr('class', 'sub').text((min_error_num > 0 ? '+' : '') + (min_error_num == 0 ? '-' : '') + min_error);
+              if (errors[error_idx]["label"] !== undefined)
+                value_block.append('div').attr('class', 'label').text(errors[error_idx]["label"] == undefined ? HEPDATA.default_error_label : errors[error_idx]["label"]);
+
+            } else if ("symerror" in errors[error_idx]) {
+              if (errors[error_idx]['symerror'] != 0) {
+                var sym_error = errors[error_idx]['symerror'];
+                if (sym_error.toString().toLowerCase().indexOf('e') == -1 && value.toString().toLowerCase().indexOf('e') == -1) {
+                  var sym_error_rounded = HEPDATA.visualization.utils.round(sym_error, decimal_places);
+                  if (sym_error_rounded != 0)
+                    sym_error = sym_error_rounded;
+                }
+                var error = div.append('div').attr('class', err_class + ' sym');
+                error.append('div').attr('class', 'value').html('&#177;' + sym_error);
+
+                if (errors[error_idx]["label"] !== undefined)
+                  error.append('div').attr('class', 'label').text(errors[error_idx]["label"] == undefined ? HEPDATA.default_error_label : errors[error_idx]["label"]);
+              }
+            }
+          }
+
+          if (errors.length > HEPDATA.default_errors_to_show) {
+            var more_errors_to_show = errors.length - HEPDATA.default_errors_to_show;
+            div.append('span').text('+ ' + more_errors_to_show + ' more error' + (more_errors_to_show > 1 ? 's' : '')).attr('class', 'total_errors');
+            div.append('span').attr('class', 'show_all_errors').text('Show all').on('click', function () {
+              d3.selectAll('.error.hidden').classed("hidden", false);
+              d3.selectAll('.show_all_errors').classed("hidden", true);
+              d3.selectAll('.total_errors').classed("hidden", true);
+            });
+          }
+
+        }
+      }
+    }
+
+    if (table_data.values.length > HEPDATA.default_row_limit) {
+      d3.select("#table_options_region").append('span').text('Showing ' + HEPDATA.default_row_limit + ' of ' + table_data.values.length + ' values');
+      var btn = d3.select("#table_options_region").append('a')
+        .attr('class', 'btn-show-all-rows pull-right')
+        .text('Show All ' + table_data.values.length + ' values');
+
+      btn.on('click', function () {
+        d3.select(this).classed('hidden', true);
+        d3.select("#table_options_region span").text('Showing all ' + table_data.values.length + ' values');
+        d3.selectAll('tr.data_values').classed('hidden', false);
+        HEPDATA.table_renderer.filter_rows(HEPDATA.selected);
+      })
+    }
+  },
+
+
+  filter_rows: function (target_rows) {
+    d3.selectAll("tr.data_values").classed('hidden', function () {
+      var row_num = d3.select(this).attr('id').split("-")[1];
+      return !(row_num in target_rows) && Object.keys(target_rows).length > 0;
+    });
+  }
+};
