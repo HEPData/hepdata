@@ -146,8 +146,12 @@ HEPDATA.table_renderer = {
       var individual_kw = individual_keyword_value_list.selectAll("a").data(keyword_items)
         .enter().append('li').attr('class', 'chip');
 
-      individual_kw.append('i').attr('class', 'fa fa-tag').style({'margin-right': '5px', 'display': 'inline'});
-      individual_kw.append('span').text(function (d) {
+      var individual_kw_link = individual_kw.append('a').attr('href', function(d) {
+        return '/search?q=&' + d.key + "=" + d.value.trim().replace(/\s/g, "+");
+      });
+
+      individual_kw_link.append('i').attr('class', 'fa fa-tag').style({'margin-right': '5px', 'display': 'inline'});
+      individual_kw_link.append('span').text(function (d) {
         return d.value.length > 60 ? d.value.substring(0, 60) + "..." : d.value;
       });
     }
