@@ -4,6 +4,7 @@ from datetime import datetime
 import json
 from operator import or_, and_
 
+from elasticsearch import NotFoundError
 from flask.ext.celeryext import create_celery_app
 from flask.ext.login import login_required, current_user
 from invenio_accounts.models import User
@@ -309,10 +310,15 @@ def stats():
     record_overview = {}
     for record in records_summary:
         if record[1] not in record_overview:
-            full_record_info = fetch_record(record[1], CFG_PUB_TYPE)
             title = ''
-            if full_record_info:
-                title = full_record_info['title']
+            try:
+                full_record_info = fetch_record(record[1], CFG_PUB_TYPE)
+
+                if full_record_info:
+                    title = full_record_info['title']
+            except NotFoundError:
+                # skip this record. Was probably accessed then deleted.
+                continue
             record_overview[record[1]] = {"title": title,"recid": record[1], "count": 0, "accesses": []}
 
         record_overview[record[1]]['count'] += record[0]
