@@ -305,7 +305,7 @@ def stats():
     records_summary = db.session.query(func.sum(DailyAccessStatistic.count),
                                                 DailyAccessStatistic.publication_recid,
                                                 DailyAccessStatistic.day).group_by(
-        DailyAccessStatistic.publication_recid, DailyAccessStatistic.day).order_by().all()
+        DailyAccessStatistic.publication_recid, DailyAccessStatistic.day).order_by().limit(1000).all()
 
     record_overview = {}
     for record in records_summary:
