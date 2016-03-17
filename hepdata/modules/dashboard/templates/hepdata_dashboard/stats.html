@@ -1,0 +1,95 @@
+{%- extends "hepdata_dashboard/dashboard.html" %}
+
+{% block dashboard_content %}
+    <div class="row stats-header">
+        <div class="col-md-12">
+            <h4>HEPData Record Access Statistics</h4>
+        </div>
+    </div>
+
+    <div class="row" id="stats_table">
+        <div class="col-md-6">
+            <table class="table">
+                <thead>
+                <tr>
+                    <td>Record</td>
+                    <td>Accesses</td>
+                    <td>Access Graph</td>
+                </tr>
+                </thead>
+                <tbody>
+                {% for access_stat in ctx.access %}
+                    <tr>
+                        <td><a href="/record/{{ access_stat.recid }}" target="_blank">{{ access_stat.title }}</a></td>
+                        <td>{{ access_stat.count }}</td>
+                        <td id="plot-{{ access_stat.recid }}"></td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+
+        </div>
+        <div class="col-md-6"></div>
+    </div>
+
+{% endblock %}
+
+{%- block javascript %}
+
+
+    <script type="text/javascript"
+            src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    {%- assets "hepdata_vis_js" %}
+        <script src="{{ ASSET_URL }}"></script>
+    {%- endassets %}
+
+    {%- assets "hepdata_bootstrap_js" %}
+        <script src="{{ ASSET_URL }}"></script>
+    {%- endassets %}
+
+    <script>
+        var values = {{ ctx.access_json |safe }};
+
+        var date_format = d3.time.format("%Y-%m-%d").parse;
+
+        var tip = d3.tip().attr('class', 'd3-tip').offset([-10, 0]).html(function (d) {
+            console.log(d);
+            return d.day + " - " + d.count + " accesses";
+        });
+
+        for (var value_idx in values) {
+
+            var access_obj = values[value_idx];
+            var svg = d3.select("#plot-" + access_obj.recid).append("svg").attr({
+                class: 'access_plot',
+                width: 130,
+                height: 40
+            });
+            svg.call(tip);
+
+            var y_scale = d3.scale.linear().domain([0, d3.max(access_obj.accesses, function (d) {
+                return d.count;
+            })]).range([40, 0]);
+
+            var x_scale = d3.time.scale().domain(d3.extent(access_obj.accesses, function (d) {
+                return date_format(d.day);
+            })).range([5, 95]);
+
+            var rect = svg.selectAll("rect").data(access_obj.accesses).enter().append('rect');
+
+            rect.attr('width', 2).attr('height', function (d) {
+                return y_scale.range()[0] - y_scale(d.count);
+            }).attr('x', function (d) {
+                return x_scale(date_format(d.day));
+            }).attr('y', function (d) {
+                return y_scale(d.count);
+            }).on("mouseenter", tip.show)
+                    .on("mouseout", tip.hide)
+        }
+
+        MathJax.Hub.Config({
+            tex2jax: {inlineMath: [['$', '$'], ['\\(', '\\)']]}
+        });
+        MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
+    </script>
+{% endblock %}

@@ -15,12 +15,10 @@ def increment(recid):
     dt = get_date()
     try:
         available_access_stats = DailyAccessStatistic.query.filter_by(
-            publication_recid=recid, day=dt).count()
+            publication_recid=recid, day=dt.strftime('%Y-%m-%d')).first()
 
-        if available_access_stats > 0:
-            db.session.query(DailyAccessStatistic).filter_by(
-                publication_recid=recid, day=dt).update(
-                {'count': (DailyAccessStatistic.count + 1)})
+        if available_access_stats:
+            available_access_stats.count += 1
         else:
             stats = DailyAccessStatistic(
                 publication_recid=recid, day=dt, count=1)

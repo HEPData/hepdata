@@ -194,7 +194,6 @@ def format_submission(recid, record, version, hepdata_submission,
                     'message': commit_message_query.message}
 
             except NoResultFound:
-                print('No commit message for {0}'.format(recid))
                 pass
 
             truncate_author_list(record)

@@ -9,10 +9,11 @@ from flask.ext.login import login_required, current_user
 from invenio_accounts.models import User
 from invenio_db import db
 from invenio_userprofiles import UserProfile
+from sqlalchemy import func
 from sqlalchemy.orm.exc import NoResultFound
-from hepdata.config import CFG_DATA_TYPE
+from hepdata.config import CFG_DATA_TYPE, CFG_PUB_TYPE
 from hepdata.ext.elasticsearch.api import reindex_all, \
-    get_records_matching_field, delete_item_from_index, index_record_ids
+    get_records_matching_field, delete_item_from_index, index_record_ids, fetch_record
 from hepdata.ext.elasticsearch.api import push_data_keywords
 from hepdata.modules.records.models import HEPSubmission, DataReview, \
     SubmissionParticipant, DataSubmission, RecordVersionCommitMessage
@@ -26,6 +27,7 @@ from hepdata.modules.records.utils.submission import unload_submission
 from hepdata.modules.records.utils.users import has_role
 from hepdata.modules.records.utils.workflow import send_finalised_email, \
     create_record
+from hepdata.modules.stats.models import DailyAccessStatistic
 from hepdata.utils.twitter import tweet
 
 __author__ = 'eamonnmaguire'
@@ -291,6 +293,35 @@ def dashboard():
            'submission_stats': json.dumps(submission_stats)}
 
     return render_template('hepdata_dashboard/dashboard.html', ctx=ctx)
+
+
+@blueprint.route('/stats')
+@login_required
+def stats():
+    user_profile = UserProfile.query.filter_by(user_id=current_user.get_id()).first()
+    ctx = {'user_is_admin': has_role(current_user, 'admin'), 'user_profile': user_profile}
+
+    records_summary = db.session.query(func.sum(DailyAccessStatistic.count),
+                                                DailyAccessStatistic.publication_recid,
+                                                DailyAccessStatistic.day).group_by(
+        DailyAccessStatistic.publication_recid, DailyAccessStatistic.day).order_by().all()
+
+    record_overview = {}
+    for record in records_summary:
+        if record[1] not in record_overview:
+            full_record_info = fetch_record(record[1], CFG_PUB_TYPE)
+            title = ''
+            if full_record_info:
+                title = full_record_info['title']
+            record_overview[record[1]] = {"title": title,"recid": record[1], "count": 0, "accesses": []}
+
+        record_overview[record[1]]['count'] += record[0]
+        record_overview[record[1]]["accesses"].append({"day": record[2].strftime("%Y-%m-%d"), "count": record[0]})
+
+    ctx['access'] = record_overview.values()
+    ctx['access_json'] = json.dumps(record_overview.values())
+
+    return render_template('hepdata_dashboard/stats.html', ctx=ctx)
 
 
 @blueprint.route(
