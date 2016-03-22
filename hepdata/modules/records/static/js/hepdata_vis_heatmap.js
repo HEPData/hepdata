@@ -160,6 +160,8 @@ HEPDATA.visualization.heatmap = {
         .attr("class", "brush")
         .call(HEPDATA.visualization.heatmap.brush);
     }
+
+    MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
   },
 
   render_brushable_option: function (parent_node, options, function_call) {
@@ -205,6 +207,7 @@ HEPDATA.visualization.heatmap = {
     HEPDATA.visualization.heatmap.options.brushable = d3.select(caller).property("checked");
     HEPDATA.visualization.heatmap.render_axis_selector(HEPDATA.visualization.heatmap.data, "#legend");
     HEPDATA.visualization.heatmap.render(HEPDATA.visualization.heatmap.data, HEPDATA.visualization.heatmap.placement, {});
+
   },
 
 
