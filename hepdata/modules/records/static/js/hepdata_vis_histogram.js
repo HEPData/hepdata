@@ -77,7 +77,7 @@ HEPDATA.visualization.histogram = {
 
       if (_aggregated_values[value_obj.name]["y_errors"]) {
         _aggregated_values[value_obj.name]["values"].push(value_obj);
-      } else if (HEPDATA.visualization.histogram.options.mode != HEPDATA.visualization.histogram.modes.scatter && value_obj.x_min) {
+      } else if (HEPDATA.visualization.histogram.options.mode != HEPDATA.visualization.histogram.modes.scatter && value_obj.x_min != undefined) {
         _aggregated_values[value_obj.name]["values"].push({
           x: value_obj.x_min,
           y: value_obj.y,
@@ -109,11 +109,13 @@ HEPDATA.visualization.histogram = {
       var value = keys[i];
 
       if (_aggregated_values[value]["y_errors"] || value_obj.x_min == undefined) {
-        HEPDATA.visualization.histogram.create_scatter_plot(svg, _aggregated_values[value].values, _aggregated_values[value]["x_error"], _aggregated_values[value]["y_errors"], "histogram", value);
+        HEPDATA.visualization.histogram.create_scatter_plot(svg, _aggregated_values[value].values,
+          _aggregated_values[value]["x_error"],
+          _aggregated_values[value]["y_errors"], "histogram", value);
       } else {
         var node = svg.selectAll("g.hist").append('g')
           .data([_aggregated_values[value]]);
-        // depending on if there are errors or not, we should change the rendering. Values with errors should be shown as dots with errors bars
+
         var path = node.enter().append("path")
           .attr("class", function (d) {
             return "hist " + HEPDATA.dataprocessing.cleanup_string(d.name)
@@ -224,20 +226,27 @@ HEPDATA.visualization.histogram = {
   brushed: function () {
     var extent = HEPDATA.visualization.histogram.brush.extent();
     HEPDATA.selected = {};
+    console.log(extent);
 
-    d3.selectAll("g.node").select("circle").style("fill", function (d) {
-      var x = d.x;
-      var y = d.y;
+    if (d3.selectAll("g.node").length == 0) {
 
-      if (isNaN(d.x)) x = HEPDATA.visualization.histogram.x_scale(x);
+      d3.selectAll("g.node").select("circle").style("fill", function (d) {
+        var x = d.x;
+        var y = d.y;
 
-      d.selected = (x >= (extent[0][0]) && x <= (extent[1][0])
-      && (y >= extent[0][1]) && (y <= extent[1][1]));
+        if (isNaN(d.x)) x = HEPDATA.visualization.histogram.x_scale(x);
 
-      if (d.selected) HEPDATA.selected[d.row] = d;
 
-      return d.selected ? "#F15D2F" : HEPDATA.visualization.histogram.options.colors(d.name);
-    });
+        d.selected = (x >= (extent[0][0]) && x <= (extent[1][0])
+        && (y >= extent[0][1]) && (y <= extent[1][1]));
+
+        if (d.selected) HEPDATA.selected[d.row] = d;
+
+        return d.selected ? "#F15D2F" : HEPDATA.visualization.histogram.options.colors(d.name);
+      });
+    } else {
+
+    }
   },
 
   create_scatter_plot: function (svg, values, has_x_error, has_y_error, type, id) {
