@@ -1,4 +1,3 @@
-
 HEPDATA.visualization.heatmap = {
 
   zoom: undefined,
@@ -45,7 +44,7 @@ HEPDATA.visualization.heatmap = {
     HEPDATA.visualization.heatmap.placement = placement;
 
     var processed_dict = HEPDATA.dataprocessing.process_data_values(data);
-    console.log(HEPDATA.stats);
+
     HEPDATA.visualization.heatmap.render_axis_selector(data, "#legend");
 
     // in this plot, the x and y axes are defined by two x values in the data. The y 'axis' defines the value
@@ -64,14 +63,14 @@ HEPDATA.visualization.heatmap = {
       .attr('class', 'd3-tip')
       .offset([-10, 0])
       .html(function (d) {
-        console.log(d);
-        console.log(d.x_min != undefined);
         if (d.x_min != undefined) {
           return "<strong>" + d.x_min + " to " + d.x_max
             + " </strong><br/>" + d.y_min + " to " + d.y_max
             + "<br/>" + d.value + "</span>";
         } else {
-          return "<strong>" + d.x + " </strong><br/>" + d.y + "<br/>" + d.value + "</span>";
+          var x_val = d.x.replace(/\$/g, '');
+          var y_val = d.y.replace(/\$/g, '');
+          return "<strong>" + x_val + " </strong><br/>" + y_val + "<br/>" + d.value + "</span>";
         }
       });
 
@@ -86,6 +85,7 @@ HEPDATA.visualization.heatmap = {
         - HEPDATA.visualization.heatmap.options.margins.top)
         + ")")
       .call(HEPDATA.visualization.heatmap.x_axis);
+
     svg.append("text")
       .attr("class", "axis_text")
       .attr("text-anchor", "middle")
@@ -109,12 +109,12 @@ HEPDATA.visualization.heatmap = {
 
     // we need to scale the data to between 0 and 1 so that the color scale works across different ranges.
 
-    var scale = d3.scale.pow().domain([1, HEPDATA.stats.max_value]).range([0, 1]);
+    var scale = d3.scale.pow().domain([HEPDATA.stats.min_value, HEPDATA.stats.max_value]).range([0, 1]);
 
 
-    var node = node_data.append("g").attr("class", "hm_node").append("rect")
+    var node = node_data.append("g").attr("class", "hm_node").attr("transform", "translate(-2.5,-2.5)").append("rect")
       .attr("x", function (d) {
-        return HEPDATA.visualization.heatmap.x_scale(d.x_min ? d.x_min : d.x);
+        return HEPDATA.visualization.heatmap.x_scale(d.x_min ? d.x_min : (d.x));
       })
       .attr("y", function (d) {
         return HEPDATA.visualization.heatmap.y_scale(d.y_max ? d.y_max : d.y);
@@ -238,11 +238,15 @@ HEPDATA.visualization.heatmap = {
       return d.x;
     });
 
-    if ('min_x' in HEPDATA.stats && 'max_x' in HEPDATA.stats) {
+    if ('min_x' in HEPDATA.stats && 'max_x' in HEPDATA.stats && HEPDATA.stats.min_x != null) {
       x_extent = [HEPDATA.stats.min_x, HEPDATA.stats.max_x];
+      return d3.scale.linear().domain(x_extent).range([0, HEPDATA.visualization.heatmap.options.width - HEPDATA.visualization.heatmap.options.margins.left - HEPDATA.visualization.heatmap.options.margins.right]);
+    } else {
+      return d3.scale.ordinal().domain(data.map(function (d) {
+        return d.x;
+      })).rangePoints([0, HEPDATA.visualization.heatmap.options.width - HEPDATA.visualization.heatmap.options.margins.left - HEPDATA.visualization.heatmap.options.margins.right]);
     }
 
-    return d3.scale.linear().domain(x_extent).range([0, HEPDATA.visualization.heatmap.options.width - HEPDATA.visualization.heatmap.options.margins.left - HEPDATA.visualization.heatmap.options.margins.right]);
   },
 
   calculate_y_scale: function (data) {
@@ -250,11 +254,15 @@ HEPDATA.visualization.heatmap = {
       return d.y;
     });
 
-
-    if ('min_y' in HEPDATA.stats && 'max_y' in HEPDATA.stats) {
+    if ('min_y' in HEPDATA.stats && 'max_y' in HEPDATA.stats && HEPDATA.stats.min_y != null) {
       y_extent = [HEPDATA.stats.min_y, HEPDATA.stats.max_y];
+      return d3.scale.linear().domain(y_extent).range([HEPDATA.visualization.heatmap.options.height - HEPDATA.visualization.heatmap.options.margins.top - HEPDATA.visualization.heatmap.options.margins.bottom, 10]);
+    } else {
+      return d3.scale.ordinal().domain(data.map(function (d) {
+        return d.y;
+      })).rangePoints([HEPDATA.visualization.heatmap.options.height - HEPDATA.visualization.heatmap.options.margins.top - HEPDATA.visualization.heatmap.options.margins.bottom, 10]);
     }
 
-    return d3.scale.linear().domain(y_extent).range([HEPDATA.visualization.heatmap.options.height - HEPDATA.visualization.heatmap.options.margins.top - HEPDATA.visualization.heatmap.options.margins.bottom, 0]);
+
   }
 };

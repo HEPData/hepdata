@@ -43,7 +43,6 @@ HEPDATA.visualization.utils = {
 };
 
 
-
 HEPDATA.dataprocessing = {
   /**
    * The data values come in a format relevant for tables, but not so good for use with D3.
@@ -287,9 +286,13 @@ HEPDATA.dataprocessing = {
         if (processed_value_obj[key] > HEPDATA.stats['max_' + key])  HEPDATA.stats['max_' + key] = processed_value_obj[key];
         if (processed_value_obj[key] < HEPDATA.stats['min_' + key])  HEPDATA.stats['min_' + key] = processed_value_obj[key];
 
+      } else if (typeof val == 'object' && isNaN(val["value"])) {
+        processed_value_obj[key] = val["value"];
+        HEPDATA.stats['max_' + key] = null;
+        HEPDATA.stats['min_' + key] = null;
       } else {
         if (key == 'x') {
-          processed_value_obj[key] = val["value"];
+          processed_value_obj[key] = val;
           HEPDATA.stats['max_' + key] = null;
           HEPDATA.stats['min_' + key] = null;
         }
