@@ -85,33 +85,63 @@ HEPDATA.table_renderer = {
 
         HEPDATA.render_associated_files(table_data.associated_files, '#support-files');
 
+
         if (table_data["x_count"] > 1) {
           HEPDATA.visualization.heatmap.reset();
           HEPDATA.visualization.heatmap.render(table_data, visualization_placement, {
             width: 300,
             height: 300
           });
+          HEPDATA.table_renderer.attach_row_listener(table_placement, 'heatmap');
         } else {
           HEPDATA.visualization.histogram.render(table_data, visualization_placement, {
             width: 300,
             height: 300,
             "mode": "histogram"
           });
+          HEPDATA.table_renderer.attach_row_listener(table_placement, 'histogram');
         }
-
         MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
-
         HEPDATA.table_renderer.update_reviewer_button(table_data.review);
 
         $("#hepdata_table_loader").addClass("hidden");
         $("#hepdata_table_content").removeClass("hidden");
-
       },
       error: function (data, error) {
         console.error('Failed to load table defined by ' + url);
         console.error(error);
       }
     });
+  },
+
+  attach_row_listener: function (table_placement, type) {
+
+    $(table_placement + ' tr').mouseover(function (e) {
+      var row_id = $(e.target).parents('tr').attr('id');
+      if (row_id) {
+        var row = row_id.split("-")[1];
+
+        var target = d3.selectAll(".node");
+        if (type === "heatmap") {
+          target = target.selectAll("rect");
+        }
+        target
+          .transition().style('opacity', function (d) {
+          return d.row == row ? 1 : 0.1;
+        });
+
+      }
+    });
+
+    $(table_placement + ' tr').mouseout(function (e) {
+      var target = d3.selectAll(".node");
+        if (type === "heatmap") {
+          target = target.selectAll("rect");
+        }
+        target
+          .transition().style('opacity', 1);
+    });
+
   },
 
   update_reviewer_button: function (review_info) {
@@ -146,7 +176,7 @@ HEPDATA.table_renderer = {
       var individual_kw = individual_keyword_value_list.selectAll("a").data(keyword_items)
         .enter().append('li').attr('class', 'chip');
 
-      var individual_kw_link = individual_kw.append('a').attr('href', function(d) {
+      var individual_kw_link = individual_kw.append('a').attr('href', function (d) {
         return '/search?q=&' + d.key + "=" + d.value.trim().replace(/\s/g, "+");
       });
 

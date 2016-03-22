@@ -513,8 +513,9 @@
   margin-top: 20px;
 }
 
-#hep_table_data {
-  overflow: scroll;
+#table_section {
+  max-height: 500px;
+  overflow-y: auto;
 }
 
 #hep_table_data, #hep_table_chart {
@@ -758,7 +759,7 @@
   font-size: .95em;
 }
 
-.hm_node {
+.node {
   pointer-events: all;
 }
 

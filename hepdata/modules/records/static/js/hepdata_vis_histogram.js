@@ -226,27 +226,21 @@ HEPDATA.visualization.histogram = {
   brushed: function () {
     var extent = HEPDATA.visualization.histogram.brush.extent();
     HEPDATA.selected = {};
-    console.log(extent);
 
-    if (d3.selectAll("g.node").length == 0) {
+    d3.selectAll("g.node").select("circle").style("fill", function (d) {
+      var x = d.x;
+      var y = d.y;
 
-      d3.selectAll("g.node").select("circle").style("fill", function (d) {
-        var x = d.x;
-        var y = d.y;
+      if (isNaN(d.x)) x = HEPDATA.visualization.histogram.x_scale(x);
 
-        if (isNaN(d.x)) x = HEPDATA.visualization.histogram.x_scale(x);
+      d.selected = (x >= (extent[0][0]) && x <= (extent[1][0])
+      && (y >= extent[0][1]) && (y <= extent[1][1]));
 
+      if (d.selected) HEPDATA.selected[d.row] = d;
 
-        d.selected = (x >= (extent[0][0]) && x <= (extent[1][0])
-        && (y >= extent[0][1]) && (y <= extent[1][1]));
+      return d.selected ? "#F15D2F" : HEPDATA.visualization.histogram.options.colors(d.name);
+    });
 
-        if (d.selected) HEPDATA.selected[d.row] = d;
-
-        return d.selected ? "#F15D2F" : HEPDATA.visualization.histogram.options.colors(d.name);
-      });
-    } else {
-
-    }
   },
 
   create_scatter_plot: function (svg, values, has_x_error, has_y_error, type, id) {
@@ -255,6 +249,8 @@ HEPDATA.visualization.histogram = {
 
     var dotGroup = dot_groups.enter().append("g").attr("class", function (d) {
       return "node " + HEPDATA.dataprocessing.cleanup_string(d.name);
+    }).attr('id', function (d) {
+      return 'row-' + d.row;
     }).attr('transform', function (d) {
       return "translate(" + (HEPDATA.visualization[type].x_scale(d.x)) + "," + HEPDATA.visualization[type].y_scale(d.y) + ")";
     });

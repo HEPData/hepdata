@@ -74,6 +74,8 @@ HEPDATA.visualization.heatmap = {
         }
       });
 
+    svg.call(d3tip_hm);
+
     svg.append('rect')
       .attr('width', HEPDATA.visualization.heatmap.options.width)
       .attr('height', HEPDATA.visualization.heatmap.options.height)
@@ -104,15 +106,16 @@ HEPDATA.visualization.heatmap = {
       .attr("transform", "rotate(-90)")
       .text(HEPDATA.visualization.heatmap.y_index);
 
-
-    var node_data = svg.selectAll("g.hm_node").data(processed_dict["processed"]).enter();
+    var node_data = svg.selectAll("g.node").data(processed_dict["processed"]).enter();
 
     // we need to scale the data to between 0 and 1 so that the color scale works across different ranges.
 
     var scale = d3.scale.pow().domain([HEPDATA.stats.min_value, HEPDATA.stats.max_value]).range([0, 1]);
 
 
-    var node = node_data.append("g").attr("class", "hm_node").attr("transform", "translate(-2.5,-2.5)").append("rect")
+    var node = node_data.append("g").attr("class", "node").attr('id', function (d) {
+      return 'row-' + d.row;
+    }).attr("transform", "translate(-2.5,-2.5)").append("rect")
       .attr("x", function (d) {
         return HEPDATA.visualization.heatmap.x_scale(d.x_min ? d.x_min : (d.x));
       })
@@ -138,7 +141,7 @@ HEPDATA.visualization.heatmap = {
     node.on('mouseover', d3tip_hm.show)
       .on('mouseout', d3tip_hm.hide);
 
-    svg.call(d3tip_hm);
+
 
     if (HEPDATA.visualization.heatmap.options.brushable) {
       HEPDATA.visualization.heatmap.brush = d3.svg.brush()
@@ -217,10 +220,13 @@ HEPDATA.visualization.heatmap = {
   brushed: function () {
     var extent = HEPDATA.visualization.heatmap.brush.extent();
     HEPDATA.selected = {};
-    d3.selectAll("g.hm_node").select("rect").style("stroke", function (d) {
+    d3.selectAll("g.node").select("rect").style("stroke", function (d) {
 
       var x = d.x;
       var y = d.y;
+
+      if (isNaN(x)) x = HEPDATA.visualization.heatmap.x_scale(x);
+      if (isNaN(y)) y = HEPDATA.visualization.heatmap.y_scale(y);
 
       d.selected = (x >= (extent[0][0]) && x <= (extent[1][0])
       && (y >= extent[0][1]) && (y <= extent[1][1]));
