@@ -89,7 +89,7 @@
 
                     if (location.indexOf('http') == -1) {
                         file_name = 'Download ' + location.substring(location.lastIndexOf('/') + 1);
-                        download_location = '/record/resource/download/' + id;
+                        download_location = '/record/resource/' + id + '?view=true';
                     }
 
                     $("#resource-detail").html('<p>This is a link to an external resource which you can view by clicking the button below.</p><a href="' + download_location + '" class="btn btn-primary btn-large" target="_new">' + file_name + '</a>');
