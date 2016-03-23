@@ -51,13 +51,13 @@ $footer-heading-text-color: #fff;
   list-style: none;
   color: #fff;
 
+  a {
+    color: white;
+  }
+
   li {
     float: left;
     padding: 10px;
-
-    a {
-      color: white;
-    }
   }
 
   li:hover {
@@ -84,8 +84,6 @@ $footer-heading-text-color: #fff;
     /*margin-left: 10px;*/
   }
 }
-
-
 
 .bg-purple {
   background-color: $purple !important;
