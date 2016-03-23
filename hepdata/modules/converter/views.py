@@ -200,7 +200,6 @@ def download_datatable(data_id, file_format):
 
 def display_error(title='Unknown Error', description=''):
     return render_template(
-        # TODO fix the template path
         'hepdata_records/error_page.html',
         message=title,
         errors={

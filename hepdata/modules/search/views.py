@@ -26,9 +26,9 @@ from hepdata.config import CFG_DATA_KEYWORDS
 from hepdata.ext.elasticsearch.api import search as es_search, \
     search_authors as es_search_authors
 from hepdata.modules.records.utils.common import decode_string
+from hepdata.utils.session import get_session_item, set_session_item
 from hepdata.utils.url import modify_query
 from config import HEPDATA_CFG_MAX_RESULTS_PER_PAGE, HEPDATA_CFG_FACETS
-from flask import session
 
 blueprint = Blueprint('es_search',
                       __name__,
@@ -166,20 +166,7 @@ def parse_query_parameters(request_args):
     }
 
 
-def set_session_item(key, value):
-    """
-    Stores a key and value in the session.
-    By default we use REDIS
-    :param key: e.g. my_key
-    :param value: anything, dict, array, string, int, etc.
-    :return: 'ok'
-    """
-    session[key] = value
-    return 'ok'
 
-
-def get_session_item(key):
-    return session.get(key, [])
 
 
 @blueprint.route('/authors', methods=['GET', 'POST'])
