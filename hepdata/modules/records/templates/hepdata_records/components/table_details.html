@@ -60,12 +60,14 @@
                         </ul>
                     </div>
 
+                     {% if ctx.mode != 'sandbox' %}
                     <div class="pull-right" id="data_link_container">
                         <input id="direct_data_link" value="" disabled>
                         <button class="btn btn-small copy-btn" data-clipboard-text="">
                             <i class="fa fa-copy" alt="Copy to clipboard"></i>
                         </button>
                     </div>
+                    {% endif %}
 
                     <span class="pull-right" id="support-files" style="margin-right: 20px; margin-top:1px"></span>
                 </h4>
@@ -80,7 +82,10 @@
             </div>
 
             <div class="clearfix"></div>
-            <div id="table_doi"><span id="table_doi_contents"></span></div>
+            {% if ctx.mode != 'sandbox' %}
+                <div id="table_doi"><span id="table_doi_contents"></span></div>
+            {% endif %}
+
             <div class="clearfix"></div>
             <div id="table_keywords">
                 <div class="row-fluid"></div>

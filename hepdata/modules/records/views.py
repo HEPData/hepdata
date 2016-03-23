@@ -634,8 +634,11 @@ def get_resource(resource_id):
         else:
             contents = ''
             if resource_obj.file_type not in IMAGE_TYPES:
+                print("Resource is at: " + resource_obj.file_location)
                 with open(resource_obj.file_location, 'r') as resource_file:
                     contents = resource_file.read()
+
+                print("File contents are " + contents)
 
             return jsonify(
                 {"location": '/record/resource/{0}?view=true'.format(resource_obj.id), 'type': resource_obj.file_type,

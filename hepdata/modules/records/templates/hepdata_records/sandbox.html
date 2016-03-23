@@ -22,17 +22,13 @@
 
 {%- extends "hepdata_theme/page.html" %}
 
-
-
 {%- block additional_assets %}
-
-    <style>
-        #hepdata_table_detail {
-            width: 87% !important;
-        }
-    </style>
+    {%- assets "hepdata_record_css" %}
+        <link href="{{ ASSET_URL }}" rel="stylesheet">
+    {%- endassets %}
 
 {%- endblock additional_assets %}
+
 
 
 {% block page_body %}
@@ -87,7 +83,8 @@
                 <br/>
 
                 <div class="info">
-                    <p>Upload a <strong>zip</strong>, <strong>tar.gz</strong>, or <strong>tar</strong> archive containing files
+                    <p>Upload a <strong>zip</strong>, <strong>tar.gz</strong>, or <strong>tar</strong> archive
+                        containing files
                         formatted per these <a
                                 href="https://github.com/HEPData/hepdata-submission"
                                 target="_blank">these guidelines</a>.</p>
@@ -140,38 +137,88 @@
         </div>
 
     {% else %}
+        <div class="detailed-record-info">
 
+            <button class="btn btn-xs btn-link hide-publication-info"
+                    style="margin-bottom: 10px"><span
+                    class="fa fa-chevron-left"></span> Hide Publication
+                Information
+                Information
+            </button>
 
+        <span id="show-publication-info"
+              class="slider-option paper-info-option" style="left: -40px"><span
+                class="fa fa-chevron-right"></span></span>
+
+            <div>
+                <span itemprop="url"
+                      class="hidden">http://hepdata.net/record/sandbox/{{ ctx.recid }}</span>
+                <br/>
+
+                <div class="record-links">
+                    <ul>
+                        {% if ctx.additional_resources %}
+                            <li>
+                                <button id="show_resources" class="btn btn-sm btn-primary"
+                                        data-recid="{{ ctx.recid }}">Additional Resources
+                                </button>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </div>
+                {% if ctx.record.publication_info %}
+                    <div class="publication-details">
+                        <span itemprop="publisher" itemscope
+                              typeof="http://schema.org/Organization"><span
+                                itemprop="name">{{ ctx.record.publication_info.journal_title }}</span> </span>,
+                        Volume {{ ctx.record.publication_info.journal_volume }},
+                        pages
+                        <span itemprop="pagination">{{ ctx.record.publication_info.page_artid }}</span>, <span
+                            itemprop="copyrightYear"
+                            typeof="http://schema.org/Number">{{ ctx.record.publication_info.year }}</span>
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="clearfix"></div>
+
+            <div class="record-abstract" itemprop="description">
+                <strong>Abstract {% if ctx.record.data_abstract %}(data
+                    abstract){% endif %}</strong><br/>
+
+                <div class="record-abstract-content scrollable" style="min-height: 550px">
+                    {% if ctx.record.data_abstract %}
+                        {{ ctx.record.data_abstract }}
+                    {% elif ctx.record.abstract %}
+                        {{ ctx.record.abstract }}
+                    {% else %}
+                        No abstract available.
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="clearfix"></div>
+            <br/>
+
+        </div>
         {% include 'hepdata_records/components/table_list.html' %}
         {% include 'hepdata_records/components/table_details.html' %}
         {% include 'hepdata_records/components/uploader-modal.html' %}
-
-
-
-        <!--if there is data, we show it. If not, we show the upload screen if the logged in user is an uploader-->
-
+        {% include 'hepdata_records/components/resources-widget.html' %}
     {% endif %}
-
 
     {% set delete_redirect_url = '/record/sandbox' %}
     {% include 'hepdata_dashboard/delete-widget.html' %}
 
-
-
 {% endblock %}
 {%- block javascript %}
-
     {% include 'hepdata_records/components/record-javascript.html' %}
-
-
     <script type="text/javascript">
         $(".delete_button").on('click', function () {
             $("#deleteWidget").modal('show');
             window.recid = $(this).attr('data-recid');
-
         })
     </script>
-
 {% endblock %}
 
 
