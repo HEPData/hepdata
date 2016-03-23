@@ -37,12 +37,29 @@
 
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
     {%- block additional_assets %}
-    {%- endblock additional_assets  %}
+    {%- endblock additional_assets %}
     <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
     <!--[if lt IE 9]>
       <script src="//oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
       <script src="//oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
     <![endif]-->
+
+    <!-- Begin Cookie Consent plugin by Silktide - http://silktide.com/cookieconsent -->
+    <script type="text/javascript">
+        window.cookieconsent_options = {
+            "message": "This website uses cookies to ensure you get the best experience on our website",
+            "dismiss": "Got it!",
+            "learnMore": "More info",
+            "link": "/cookies",
+            "theme": "light-bottom"
+        };
+    </script>
+
+    <script type="text/javascript"
+            src="//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/1.0.9/cookieconsent.min.js"></script>
+    <!-- End Cookie Consent plugin -->
+
+
 {%- endblock css %}
 
 {%- block page_header %}
@@ -57,7 +74,7 @@
 {%- block javascript %}
     {% include "hepdata_theme/javascript.html" %}
     {%- block additional_javascript %}
-    {%- endblock additional_javascript  %}
+    {%- endblock additional_javascript %}
 {%- endblock javascript %}
 
 {%- block trackingcode %}

@@ -49,6 +49,11 @@ def submission_help():
     return render_template('hepdata_theme/pages/help.html')
 
 
+@blueprint.route('/cookies')
+def cookie_policy():
+    return render_template('hepdata_theme/pages/cookies.html')
+
+
 @blueprint.route('/about')
 def about():
     return render_template('hepdata_theme/pages/about.html')
