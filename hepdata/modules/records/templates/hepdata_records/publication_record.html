@@ -133,34 +133,40 @@
 
                 <br/>
 
-                <div class="record-links">
+               <div class="record-links">
                     <ul>
+                        {% if ctx.record.doi %}
+                            <li>
+                                <a href="http://dx.doi.org/{{ ctx.record.doi }}"
+                                   target="_blank"><span class="link">
+                    <span class="link-value">DOI<span class="hidden"
+                                                      itemprop="citation">http://dx.doi.org/{{ ctx.record.doi }}</span></span></a>
+                            </li>
+                        {% endif %}
                         <li>
                             <a href="http://inspirehep.net/record/{{ ctx.record.inspire_id }}"
                                itemprop="citation" itemscope
                                itemtype="http://schema.org/CreativeWork"
                                target="_blank"><span
-                                    class="btn btn-sm btn-default"><span
-                                    class="link-type">Inspire Record</span></span><span
+                                    class="link"><span class="link-type">View paper in Inspire</span></span><span
                                     class="hidden"
                                     itemprop="url">http://inspirehep.net/record/{{ ctx.record.inspire_id }}</span>
                             </a></li>
                         <li>
                             <a href="http://hepdata.cedar.ac.uk/view/ins{{ ctx.record.inspire_id }}"
-                               itemprop="citation"
-                               itemscope
+                               itemprop="citation" itemscope
                                itemtype="http://schema.org/CreativeWork"
                                target="_blank"><span
-                                    class="btn btn-sm btn-default"><span
-                                    class="link-type">Old HepData</span></span><span
+                                    class="link"><span class="link-type">View old HepData</span></span><span
                                     class="hidden"
                                     itemprop="url">http://hepdata.cedar.ac.uk/view/ins{{ ctx.record.inspire_id }}</span>
                             </a></li>
 
                         {% if ctx.additional_resources %}
                             <li>
-                                <button id="show_resources" class="btn btn-sm btn-primary"
-                                        data-recid="{{ ctx.record.recid }}">Resources
+                                <button id="show_resources" class="link"
+                                        data-recid="{{ ctx.record.recid }}">
+                                    Additional Resources
                                 </button>
                             </li>
                         {% endif %}
