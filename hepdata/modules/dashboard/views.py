@@ -566,7 +566,7 @@ def do_finalise(recid, publication_record=None, force_finalise=False,
             create_celery_app(current_app)
 
             # only mint DOIs if not testing.
-            if not current_app.config.get('TESTING', False):
+            if not current_app.config.get('TESTING', False) and not current_app.config.get('NO_DOI_MINTING', False):
                 for submission in submissions:
                     generate_doi_for_data_submission.delay(submission.id, submission.version)
 

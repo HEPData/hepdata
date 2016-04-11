@@ -116,6 +116,7 @@ MAIL_SERVER = 'mail.smtp2go.com'
 MAIL_PORT = 2525
 MAIL_DEFAULT_SENDER = 'submissions@hepdata.net'
 SMTP_NO_PASSWORD = True
+SMTP_ENCRYPTION = False
 MAIL_USERNAME = 'submissions@hepdata.net'
 MAIL_PASSWORD = ''
 
@@ -161,6 +162,8 @@ PIDSTORE_DATACITE_USERNAME = "CERN.HEPDATA"
 PIDSTORE_DATACITE_PASSWORD = ""
 PIDSTORE_DATACITE_TESTMODE = False
 PIDSTORE_DATACITE_URL = "https://mds.datacite.org"
+
+NO_DOI_MINTING = False
 
 # To get twitter to work, go to https://apps.twitter.com/ and create an application owned by the user account to
 # which the tweets will be sent. Then, follow the instructions here to get hold of access tokens:
