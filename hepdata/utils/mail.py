@@ -46,6 +46,8 @@ def connect():
     smtp = SMTP()
     smtp.connect(current_app.config['MAIL_SERVER'], current_app.config['MAIL_PORT'])
     if not current_app.config['SMTP_NO_PASSWORD']:
+        if current_app.config['SMTP_ENCRYPTION']:
+            smtp.starttls()
         smtp.login(current_app.config['MAIL_USERNAME'], current_app.config['MAIL_PASSWORD'])
 
     return smtp
