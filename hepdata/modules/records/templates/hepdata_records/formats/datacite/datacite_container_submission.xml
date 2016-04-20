@@ -2,7 +2,7 @@
           xsi:schemaLocation="http://datacite.org/schema/kernel-3 http://schema.datacite.org/meta/kernel-3/metadata.xsd">
     <identifier identifierType="DOI">{{ doi }}</identifier>
     <creators>
-         {% if publication_info.authors %}
+        {% if publication_info.authors %}
             {% for author in publication_info.authors %}
                 <creator>
                     <creatorName>{{ author.full_name }}</creatorName>
@@ -38,11 +38,11 @@
     <alternateIdentifiers>
 
         <alternateIdentifier alternateIdentifierType="HEPDataRecord">
-            http://www.hepdata.net/record/ins{{ publication_info.inspire_id}}
+            http://www.hepdata.net/record/ins{{ publication_info.inspire_id }}
         </alternateIdentifier>
 
         <alternateIdentifier alternateIdentifierType="HEPDataRecordAlt">
-            http://www.hepdata.net/record/{{ publication_info.recid}}
+            http://www.hepdata.net/record/{{ publication_info.recid }}
         </alternateIdentifier>
 
         <alternateIdentifier alternateIdentifierType="ROOTDownload">
@@ -66,6 +66,12 @@
         {% if publication_info.inspire_id %}
             <relatedIdentifier relatedIdentifierType="URL" relationType="IsSupplementTo">
                 http://www.inspirehep.net/record/{{ publication_info.inspire_id }}
+            </relatedIdentifier>
+        {% endif %}
+
+        {% if publication_info.doi %}
+            <relatedIdentifier relatedIdentifierType="DOI" relationType="IsSupplementTo">
+                {{ publication_info.doi }}
             </relatedIdentifier>
         {% endif %}
 

@@ -40,6 +40,26 @@ mapping = {
             }
         }
     },
+
+    "summary_authors": {
+        "type": "nested",
+        "properties": {
+            "affiliation": {
+                "type": "string"
+            },
+            "first_name": {
+                "type": "string"
+            },
+            "full_name": {
+                "type": "string",
+                "index": "not_analyzed"
+            },
+            "last_name": {
+                "type": "string"
+            }
+        }
+    },
+
     "collaborations": {
         "type": "string",
         "fields": {
@@ -76,7 +96,7 @@ mapping = {
     },
     "last_updated": {
         "type": "date",
-        "format": "dateOptionalTime"
+        "format": "yyyy-MM-dd'T'HH:mm:ss"
     },
     "doi": {
         "type": "string"

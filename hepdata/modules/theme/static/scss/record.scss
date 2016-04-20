@@ -28,6 +28,7 @@
   height: 25vh;
   overflow-y: auto;
   white-space: pre-wrap;
+  overflow-x: hidden;
 }
 
 .record-authors {
@@ -511,11 +512,6 @@
 
 #hep_table_data, #hep_table_chart {
   margin-top: 20px;
-}
-
-#table_section {
-  max-height: 500px;
-  overflow-y: auto;
 }
 
 #hep_table_data, #hep_table_chart {

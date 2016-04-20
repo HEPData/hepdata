@@ -166,9 +166,6 @@ def parse_query_parameters(request_args):
     }
 
 
-
-
-
 @blueprint.route('/authors', methods=['GET', 'POST'])
 def search_authors():
     author_name = request.args.get('q', '')

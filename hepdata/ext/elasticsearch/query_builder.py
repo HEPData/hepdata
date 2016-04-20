@@ -68,6 +68,11 @@ class QueryBuilder(object):
             }
         }]))
 
+    def add_source_filter(self, includes, excludes):
+        self.query.update({
+            "_source": {"includes": includes, "excludes": excludes}
+        })
+
     def add_pagination(self, size, offset=0):
         self.query.update({
             "size": size,

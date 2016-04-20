@@ -57,6 +57,8 @@ def search(query,
            index=None,
            filters=list(),
            size=10,
+           include="*",
+           exclude="",
            offset=0,
            sort_field=None,
            sort_order='',
@@ -100,6 +102,7 @@ def search(query,
     query_builder.add_filters(filters)
     query_builder.add_post_filter(post_filter)
     query_builder.add_aggregations()
+    query_builder.add_source_filter(include, exclude)
 
     pub_result = es.search(index=index,
                            body=query_builder.query,
@@ -363,6 +366,8 @@ def index_record_ids(record_ids, index=None):
 
             if doc["year"] is not None:
                 doc["publication_date"] = parse(str(doc["year"]))
+
+            doc["summary_authors"] = doc["authors"][:10]
 
             op_dict = {
                 "index": {
