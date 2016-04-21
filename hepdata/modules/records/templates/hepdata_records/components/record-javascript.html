@@ -1,4 +1,5 @@
-<script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+<script type="text/javascript"
+        src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 <script src="//cdnjs.cloudflare.com/ajax/libs/clipboard.js/1.5.5/clipboard.min.js"></script>
 
 {%- assets "hepdata_vis_js" %}
@@ -39,6 +40,9 @@
             });
         {% elif ctx.data_tables | length != 0 %}
 
+            {% if ctx.record.inspire_id %}
+                HEPDATA.current_inspire_id = {{ctx.record.inspire_id | safe}};
+            {% endif %}
             HEPDATA.current_record_id = {{ctx.recid | safe}};
             HEPDATA.current_table_version = {{ctx.version | safe}};
             var table_to_show = "{{ctx.table_to_show}}";

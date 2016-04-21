@@ -32,7 +32,7 @@
                               method="post"
                               enctype=multipart/form-data>
                             <input type="file" name="hep_archive"
-                                   id="side_root_file_upload"
+                                   id="file_upload_field"
                                    data-iconName="fa fa-upload"
                                    class="filestyle">
                             <br/>
@@ -49,11 +49,14 @@
 
     <script>
 
+        try {
+            $("#file_upload_field").filestyle({
+                iconName: "fa fa-upload",
+                buttonName: "btn-primary"
+            });
+        } catch (err) {
 
-        $("#side_root_file_upload").filestyle({
-            iconName: "fa fa-upload",
-            buttonName: "btn-primary"
-        });
+        }
 
     </script>
 

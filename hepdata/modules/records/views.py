@@ -681,8 +681,6 @@ def attach_information_to_record(recid):
     :return:
     """
 
-    print(request.form)
-
     inspire_id = request.form['inspire_id']
 
     content, status = get_inspire_record_information(inspire_id)
