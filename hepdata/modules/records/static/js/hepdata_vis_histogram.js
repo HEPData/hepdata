@@ -156,10 +156,8 @@ HEPDATA.visualization.histogram = {
     var find = '\\$';
     var find_spaces = '\\s+';
     var re_matheq = new RegExp(find, 'g');
-    var re_mathspace = new RegExp(find_spaces, 'g');
 
     HEPDATA.visualization.histogram.x_index = HEPDATA.visualization.histogram.x_index.replace(re_matheq, '');
-    HEPDATA.visualization.histogram.x_index = HEPDATA.visualization.histogram.x_index.replace(re_mathspace, '\\;');
 
     svg.append("g").attr("class", "x axis")
       .attr("transform", "translate(0," + (HEPDATA.visualization.histogram.options.height - HEPDATA.visualization.histogram.options.margins.bottom - HEPDATA.visualization.histogram.options.margins.top) + ")")
