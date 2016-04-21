@@ -22,17 +22,29 @@ HEPDATA.switch_table = function (listId, table_requested) {
     {"width": 200, "height": 200}
   );
 
-  var direct_link = 'http://www.hepdata.net/record/' + HEPDATA.current_record_id + '?version=' + HEPDATA.current_table_version + "&table=" + $('#' + table_requested + " h4").text();
+  var _recid = HEPDATA.current_inspire_id ? HEPDATA.current_inspire_id : HEPDATA.current_record_id;
+  var direct_link = 'http://www.hepdata.net/record/ins' + _recid
+    + '?version=' + HEPDATA.current_table_version + "&table="
+    + $('#' + table_requested + " h4").text().replace(" ", "");
+
   $("#direct_data_link").val(direct_link);
   $(".copy-btn").attr('data-clipboard-text', direct_link);
   if (HEPDATA.clipboard == undefined) {
     HEPDATA.clipboard = new Clipboard('.copy-btn');
     toastr.options.timeOut = 3000;
+
     HEPDATA.clipboard.on('success', function (e) {
       toastr.success($(".copy-btn").attr('data-clipboard-text') + ' copied to clipboard.')
+    });
+
+    HEPDATA.clipboard.on('error', function (e) {
+      if (navigator.userAgent.indexOf("Safari") > -1) {
+        toastr.success('Press &#8984; + C to finalise copy');
+      } else {
+        toastr.error('There was a problem copying the link.');
+      }
     })
   }
-
 
   $("#hepdata_table_loader").removeClass("hidden");
   $("#hepdata_table_content").addClass("hidden");
@@ -135,11 +147,11 @@ HEPDATA.table_renderer = {
 
     $(table_placement + ' tr').mouseout(function (e) {
       var target = d3.selectAll(".node");
-        if (type === "heatmap") {
-          target = target.selectAll("rect");
-        }
-        target
-          .transition().style('opacity', 1);
+      if (type === "heatmap") {
+        target = target.selectAll("rect");
+      }
+      target
+        .transition().style('opacity', 1);
     });
 
   },
