@@ -325,9 +325,9 @@ def index_record_ids(record_ids, index=None):
 
     :param record_ids: [list of ints] list of record ids e.g. [1, 5, 2, 3]
     :param index: [string] name of the index. If None a default is used
-
     :return: list of indexed publication and data recids
     """
+    # TODO: Clean up this code base
     from hepdata.modules.records.utils.common import get_record_by_id
 
     docs = filter(None, [get_record_by_id(recid) for recid in record_ids])
@@ -367,7 +367,10 @@ def index_record_ids(record_ids, index=None):
             if doc["year"] is not None:
                 doc["publication_date"] = parse(str(doc["year"]))
 
-            doc["summary_authors"] = doc["authors"][:10]
+            if doc['authors']:
+                doc["summary_authors"] = doc["authors"][:10]
+            else:
+                doc["summary_authors"] = []
 
             op_dict = {
                 "index": {
@@ -382,7 +385,6 @@ def index_record_ids(record_ids, index=None):
 
         if doc["last_updated"] is not None:
             doc["last_updated"] = parse(doc["last_updated"]).isoformat()
-            print doc["last_updated"]
 
         to_index.append(doc)
 
