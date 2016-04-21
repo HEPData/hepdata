@@ -35,7 +35,6 @@
 -e git+https://github.com/inveniosoftware/invenio-db.git#egg=invenio-db
 -e git+https://github.com/inveniosoftware/invenio-i18n.git#egg=invenio-i18n
 -e git+https://github.com/inveniosoftware/invenio-jsonschemas.git#egg=invenio-jsonschemas
--e git+https://github.com/inveniosoftware/invenio-knowledge.git#egg=invenio-knowledge
 -e git+https://github.com/inveniosoftware/invenio-logging.git#egg=invenio-logging
 -e git+https://github.com/inveniosoftware/invenio-mail.git#egg=invenio-mail
 -e git+https://github.com/inveniosoftware/invenio-pidstore.git#egg=invenio-pidstore
