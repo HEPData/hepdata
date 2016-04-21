@@ -303,8 +303,8 @@ def stats():
     ctx = {'user_is_admin': has_role(current_user, 'admin'), 'user_profile': user_profile}
 
     records_summary = db.session.query(func.sum(DailyAccessStatistic.count),
-                                                DailyAccessStatistic.publication_recid,
-                                                DailyAccessStatistic.day).group_by(
+                                       DailyAccessStatistic.publication_recid,
+                                       DailyAccessStatistic.day).group_by(
         DailyAccessStatistic.publication_recid, DailyAccessStatistic.day).order_by().limit(1000).all()
 
     record_overview = {}
@@ -319,7 +319,7 @@ def stats():
             except NotFoundError:
                 # skip this record. Was probably accessed then deleted.
                 continue
-            record_overview[record[1]] = {"title": title,"recid": record[1], "count": 0, "accesses": []}
+            record_overview[record[1]] = {"title": title, "recid": record[1], "count": 0, "accesses": []}
 
         record_overview[record[1]]['count'] += record[0]
         record_overview[record[1]]["accesses"].append({"day": record[2].strftime("%Y-%m-%d"), "count": record[0]})
@@ -435,6 +435,16 @@ def assign_role(cookie):
     return redirect(url_for('.dashboard'))
 
 
+def check_is_sandbox_record(recid):
+    try:
+        submission = HEPSubmission.query.filter_by(publication_recid=recid).first()
+        print(submission.overall_status)
+        return submission.overall_status == 'sandbox'
+    except Exception as e:
+        print(e)
+        return False
+
+
 @blueprint.route('/delete/<int:recid>')
 @login_required
 def delete_submission(recid):
@@ -444,7 +454,9 @@ def delete_submission(recid):
     :param recid:
     :return:
     """
-    if has_role(current_user, 'admin') or has_role(current_user, 'coordinator'):
+    print('Is sandbox {0} == {1} '.format(recid, check_is_sandbox_record(recid)))
+    if has_role(current_user, 'admin') or has_role(current_user, 'coordinator') \
+        or check_is_sandbox_record(recid):
         unload_submission(recid)
         return json.dumps({"success": True,
                            "recid": recid,
@@ -524,7 +536,7 @@ def do_finalise(recid, publication_record=None, force_finalise=False,
                     existing_submissions[record["_source"]["title"]] = \
                         record["_source"]["recid"]
                     delete_item_from_index(record["_id"],
-                                           doc_type=CFG_DATA_TYPE)
+                                           doc_type=CFG_DATA_TYPE, parent=record["_source"]["related_publication"])
 
         current_time = "{:%Y-%m-%d %H:%M:%S}".format(datetime.now())
 

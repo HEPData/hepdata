@@ -254,7 +254,7 @@ def get_records_matching_field(field, id, index=None, doc_type=None):
 
 
 @default_index
-def delete_item_from_index(id, index, doc_type):
+def delete_item_from_index(id, index, doc_type, parent=None):
     """
     Given an id, deletes an item from the index.
     :param id:
@@ -262,7 +262,10 @@ def delete_item_from_index(id, index, doc_type):
     :param doc_type:
     :return:
     """
-    es.delete(index=index, doc_type=doc_type, id=id)
+    if parent:
+        es.delete(index=index, doc_type=doc_type, id=id, parent=parent)
+    else:
+        es.delete(index=index, doc_type=doc_type, id=id)
 
 
 @default_index

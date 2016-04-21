@@ -40,8 +40,9 @@
                 </li>
             </a>
 
-            {% if ctx.data_tables|length != 0 %}
+            {% if ctx.data_tables|length != 0%}
                 <li class="pull-right">
+
 
                     <div class="dropdown"
                          style="float: right; margin-left: 15px; margin-top: -4px;">
@@ -119,7 +120,7 @@
                                        style="text-align: left">
                                         <div class="truncated-record-abstract">{{ submission.data_abstract }}</div>
                                     </a>
-                                    <p style="font-weight: bolder; color: #a1aec7; font-size: .7em; text-align: left">{{ submission.created }}</p>
+                                    <p style="font-weight: bolder; color: #a1aec7; font-size: .7em; text-align: left">{{ submission.created.strftime('%Y-%m-%d %H:%M%p') }}</p>
                                 </div>
                                 <div class="col-md-3">
                                     <button class="btn btn-sm btn-danger delete_button"

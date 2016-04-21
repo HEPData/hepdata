@@ -116,6 +116,9 @@ def download_submission(recid, version, file_format):
     if version > submission.latest_version or version == -1:
         version = submission.latest_version
 
+    if version == 0:
+        version += 1
+
     path = os.path.join(current_app.config['CFG_DATADIR'], str(recid))
     data_filename = SUBMISSION_FILE_NAME_PATTERN.format(recid, version)
 
@@ -140,6 +143,8 @@ def download_submission(recid, version, file_format):
     }
 
     data_filepath = os.path.join(path, data_filename)
+
+
     converted_file = convert_zip_archive(data_filepath,
                                          output_path,
                                          converter_options)

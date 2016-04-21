@@ -80,7 +80,7 @@ RECORD_PLAIN_TEXT = {
     "todo": "to be reviewed"
 }
 
-
+@login_required
 @blueprint.route('/sandbox/<int:id>', methods=['GET'])
 def sandbox_display(id):
     hepdata_submission = HEPSubmission.query.filter_by(
@@ -662,8 +662,9 @@ def consume_data_payload(recid):
         return redirect('/record/' + str(recid))
 
 
-@login_required
+
 @blueprint.route('/sandbox', methods=['GET'])
+@login_required
 def sandbox():
     current_id = current_user.get_id()
     submissions = HEPSubmission.query.filter_by(coordinator=current_id,

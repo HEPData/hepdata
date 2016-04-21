@@ -1,43 +1,47 @@
 <div id="hepdata_tables">
     <div align="center">
 
-           {% if ctx.show_upload_widget and ctx.status != 'finished' %}
-            <button type="button" class="btn btn-success btn-md" data-toggle="modal" style="width: 100%" data-target="#uploadDialog"><span
+        {% if ctx.show_upload_widget and ctx.status != 'finished' %}
+            <button type="button" class="btn btn-success btn-md" data-toggle="modal" style="width: 100%"
+                    data-target="#uploadDialog"><span
                     class="fa fa-upload"></span> Upload New Files
             </button>
         {% endif %}
 
 
         {% if ctx.status == 'finished' and (ctx.is_submission_coordinator_or_admin or ctx.show_upload_widget) %}
-            <button type="button" class="btn btn-danger btn-md" data-toggle="modal" style="width: 100%" data-target="#uploadDialog"><span
-                    class="fa fa-upload" ></span> Revise Submission
+            <button type="button" class="btn btn-danger btn-md" data-toggle="modal" style="width: 100%"
+                    data-target="#uploadDialog"><span
+                    class="fa fa-upload"></span> Revise Submission
             </button>
         {% endif %}
 
 
-        <div class="dropdown">
-            <button id="dLabel" type="button"
-                    class="btn btn-md btn-primary"
-                    data-toggle="dropdown"
-                    aria-haspopup="true" aria-expanded="false" style="width: 100%">
-                <i class="fa fa-download"></i> Download All
-                <span class="caret"></span>
-            </button>
-            {% set download_base_url = "/download/submission/" + ctx.record.recid|string + "/" +
+        {% if ctx.mode != 'sandbox' %}
+            <div class="dropdown">
+                <button id="dLabel" type="button"
+                        class="btn btn-md btn-primary"
+                        data-toggle="dropdown"
+                        aria-haspopup="true" aria-expanded="false" style="width: 100%">
+                    <i class="fa fa-download"></i> Download All
+                    <span class="caret"></span>
+                </button>
+                {% set download_base_url = "/download/submission/" + ctx.record.recid|string + "/" +
                     ctx.version|string %}
-            <ul class="dropdown-menu" aria-labelledby="dLabel"
-                style="height: auto;">
+                <ul class="dropdown-menu" aria-labelledby="dLabel"
+                    style="height: auto;">
 
-                <li><a href="{{ download_base_url }}/yaml"
-                       id="download_yaml">YAML</a></li>
-                <li><a href="{{ download_base_url }}/yoda"
-                       id="download_yoda">YODA</a></li>
-                <li><a href="{{ download_base_url }}/root"
-                       id="download_root">ROOT</a></li>
-                <li><a href="{{ download_base_url }}/csv"
-                       id="download_csv">CSV</a></li>
-            </ul>
-        </div>
+                    <li><a href="{{ download_base_url }}/yaml"
+                           id="download_yaml">YAML</a></li>
+                    <li><a href="{{ download_base_url }}/yoda"
+                           id="download_yoda">YODA</a></li>
+                    <li><a href="{{ download_base_url }}/root"
+                           id="download_root">ROOT</a></li>
+                    <li><a href="{{ download_base_url }}/csv"
+                           id="download_csv">CSV</a></li>
+                </ul>
+            </div>
+        {% endif %}
 
         {% if ctx.version_count and ctx.version_count > 1 %}
 
