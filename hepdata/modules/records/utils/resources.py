@@ -43,6 +43,6 @@ def download_resource_file(recid, resource_path):
         try:
             resource_file.write(contents)
         except IOError as ioe:
-            log.error("IO Error occurred when getting {0} to store in {}".format(resource_path, output_location))
+            log.error("IO Error occurred when getting {0} to store in {1}".format(resource_path, output_location))
 
     return os.path.join(output_location, file_name)
