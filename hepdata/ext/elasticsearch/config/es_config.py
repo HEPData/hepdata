@@ -129,7 +129,7 @@ def default_queryable_fields(es_type):
     """ Defines what JSON fields should be queried in a full text search for
     a given type. """
     if es_type == 'datatable':
-        return ["title^3", "abstract^10", "doi", "inspire_id"]
+        return ["title^3", "abstract^10", "doi", "inspire_id", "keywords.values"]
     elif es_type == 'publication':
         return ["title^10", "abstract^6", "keywords.name^4", "hepdata_doi", "year",
                 "keywords.value^6", "doi", "inspire_id", "authors.full_name", "authors.affiliation",
