@@ -1,9 +1,12 @@
+import logging
 import os
 
 from flask import current_app
 
 __author__ = 'eamonnmaguire'
 
+logging.basicConfig()
+log = logging.getLogger(__name__)
 
 def download_resource_file(recid, resource_path):
     """
@@ -37,6 +40,9 @@ def download_resource_file(recid, resource_path):
         file_name = "index.html"
 
     with open(os.path.join(output_location, file_name), 'w+') as resource_file:
-        resource_file.write(contents)
+        try:
+            resource_file.write(contents)
+        except IOError as ioe:
+            log.error("IO Error occurred when getting {0} to store in {}".format(resource_path, output_location))
 
     return os.path.join(output_location, file_name)
