@@ -118,7 +118,7 @@ HEPDATA.visualization.heatmap = {
 
     // we need to scale the data to between 0 and 1 so that the color scale works across different ranges.
 
-    var scale = d3.scale.pow().domain([HEPDATA.stats.min_value, HEPDATA.stats.max_value]).range([0, 1]);
+    var scale = d3.scale.pow().exponent(.5).domain([HEPDATA.stats.min_value, HEPDATA.stats.max_value]).range([0, 1]);
 
 
     var node = node_data.append("g").attr("class", "node").attr('id', function (d) {
