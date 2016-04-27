@@ -244,7 +244,7 @@ HEPDATA.visualization.heatmap = {
         });
 
         d3.select(placement).selectAll(".node").filter(function (dn) {
-          if(!(dn.value > min && dn.value <= max)) return dn;
+          if(!(dn.value >= min && dn.value <= max)) return dn;
         }).style('opacity', 0);
       })
       .on("mouseout", function (d) {
