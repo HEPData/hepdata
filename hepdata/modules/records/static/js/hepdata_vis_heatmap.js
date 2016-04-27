@@ -12,13 +12,16 @@ HEPDATA.visualization.heatmap = {
   grid_dimension: 10,
   data: undefined,
   placement: undefined,
+  decimal_places: 5,
   options: {
     brushable: false,
     zoomable: false,
     animation_duration: 100,
     margins: {"left": 60, "right": 30, "top": 10, "bottom": 30},
     // todo: improve the scale used here.
-    colors: d3.scale.threshold().domain([0, 0.25, 0.5, 0.75, 1]).range(["#f1c40f", "#f39c12", "#e67e22", "#d35400", "#e74c3c", "#c0392b"]),
+    colors: d3.scale.threshold()
+      .domain([0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1])
+      .range(["#fff5eb", "#fee6ce", "#fdd0a2", "#fdae6b", "#fd8d3c", "#f16913", "#d94801", "#a63603", "#7f2704"]),
     height: 400,
     width: 400,
     y_scale: 'linear'
@@ -28,12 +31,10 @@ HEPDATA.visualization.heatmap = {
     HEPDATA.visualization.heatmap.x_index = '';
   },
 
-
   render: function (data, placement, options) {
     $(placement).html('');
 
     HEPDATA.visualization.heatmap.options = $.extend(HEPDATA.visualization.heatmap.options, options);
-
     HEPDATA.visualization.heatmap.data = data;
 
     if (HEPDATA.visualization.heatmap.x_index == '') {
@@ -55,9 +56,12 @@ HEPDATA.visualization.heatmap = {
     HEPDATA.visualization.heatmap.x_axis = d3.svg.axis().scale(HEPDATA.visualization.heatmap.x_scale).orient("bottom").tickPadding(2);
     HEPDATA.visualization.heatmap.y_axis = d3.svg.axis().scale(HEPDATA.visualization.heatmap.y_scale).orient("left").tickPadding(2);
 
-    var svg = d3.select(placement).append("svg").attr("width", HEPDATA.visualization.heatmap.options.width).attr("height", HEPDATA.visualization.heatmap.options.height)
+    var svg = d3.select(placement).append("svg")
+      .attr("width", HEPDATA.visualization.heatmap.options.width)
+      .attr("height", HEPDATA.visualization.heatmap.options.height)
       .append("g")
-      .attr("transform", "translate(" + HEPDATA.visualization.heatmap.options.margins.left + "," + HEPDATA.visualization.heatmap.options.margins.top + ")");
+      .attr("transform", "translate(" + HEPDATA.visualization.heatmap.options.margins.left
+        + "," + HEPDATA.visualization.heatmap.options.margins.top + ")");
 
     var d3tip_hm = d3.tip()
       .attr('class', 'd3-tip')
@@ -68,8 +72,12 @@ HEPDATA.visualization.heatmap = {
             + " </strong><br/>" + d.y_min + " to " + d.y_max
             + "<br/>" + d.value + "</span>";
         } else {
-          var x_val = d.x.replace(/\$/g, '');
-          var y_val = d.y.replace(/\$/g, '');
+          var x_val = d.x;
+          var y_val = d.y;
+          if (typeof d.x == "string") {
+            x_val = d.x.replace(/\$/g, '');
+            y_val = d.y.replace(/\$/g, '');
+          }
           return "<strong>" + x_val + " </strong><br/>" + y_val + "<br/>" + d.value + "</span>";
         }
       });
@@ -142,7 +150,6 @@ HEPDATA.visualization.heatmap = {
       .on('mouseout', d3tip_hm.hide);
 
 
-
     if (HEPDATA.visualization.heatmap.options.brushable) {
       HEPDATA.visualization.heatmap.brush = d3.svg.brush()
         .x(HEPDATA.visualization.heatmap.x_scale)
@@ -160,6 +167,8 @@ HEPDATA.visualization.heatmap = {
         .attr("class", "brush")
         .call(HEPDATA.visualization.heatmap.brush);
     }
+    HEPDATA.visualization.heatmap.decimal_places = Math.min(HEPDATA.visualization.heatmap.decimal_places, HEPDATA.count_decimals(scale.domain()[0]))
+    HEPDATA.visualization.heatmap.render_legend(placement, scale, HEPDATA.visualization.heatmap.options.colors);
 
     MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
   },
@@ -203,11 +212,57 @@ HEPDATA.visualization.heatmap = {
     }
   },
 
+  render_legend: function (placement, value_scale, colour_scale) {
+    var legend = d3.select(placement).append("svg").attr("id", "hmlegend");
+
+    var d3tip_hm = d3.tip()
+      .attr('class', 'd3-tip legend')
+      .offset([-10, 0])
+      .html(function (d) {
+        var low = HEPDATA.visualization.utils.round(d.low, HEPDATA.visualization.heatmap.decimal_places);
+        var high = HEPDATA.visualization.utils.round(d.high, HEPDATA.visualization.heatmap.decimal_places);
+        return low + ' - ' + high;
+      });
+
+    legend.call(d3tip_hm);
+
+    var bar_width = HEPDATA.visualization.heatmap.options.width / colour_scale.range().length;
+    var rect = legend.selectAll('rect.legend').data(colour_scale.range()).enter()
+      .append('rect').attr('class', 'legend')
+      .attr({'width': bar_width, 'height': 15}).style("fill", function (d) {
+        return d;
+      }).attr('x', function (d, i) {
+        return i * bar_width;
+      }).attr('y', 5);
+
+    rect.on("mouseover", function (d) {
+        var extent = colour_scale.invertExtent(d);
+        var min = isNaN(value_scale.invert(extent[0])) ? value_scale.domain()[0] : value_scale.invert(extent[0]);
+        var max = isNaN(value_scale.invert(extent[1])) ? value_scale.domain()[1] : value_scale.invert(extent[1]);
+        d3tip_hm.show({
+          'fill': d, 'low': min, 'high': max
+        });
+
+        d3.select(placement).selectAll(".node").filter(function (dn) {
+          if(!(dn.value > min && dn.value <= max)) return dn;
+        }).style('opacity', 0);
+      })
+      .on("mouseout", function (d) {
+        d3tip_hm.hide();
+        d3.select(placement).selectAll(".node").style('opacity', 1);
+      });
+
+    legend.append('text').text(HEPDATA.visualization.utils.round(value_scale.domain()[0], HEPDATA.visualization.heatmap.decimal_places)).attr('x', 0).attr('y', 35);
+    legend.append('text').text(HEPDATA.visualization.utils.round(value_scale.domain()[1], HEPDATA.visualization.heatmap.decimal_places))
+      .attr('x', HEPDATA.visualization.heatmap.options.width)
+      .attr('text-anchor', 'end')
+      .attr('y', 35);
+  },
+
   toggle_brushing: function (caller) {
     HEPDATA.visualization.heatmap.options.brushable = d3.select(caller).property("checked");
     HEPDATA.visualization.heatmap.render_axis_selector(HEPDATA.visualization.heatmap.data, "#legend");
     HEPDATA.visualization.heatmap.render(HEPDATA.visualization.heatmap.data, HEPDATA.visualization.heatmap.placement, {});
-
   },
 
 
@@ -215,7 +270,6 @@ HEPDATA.visualization.heatmap = {
     var tmp_y = HEPDATA.visualization.heatmap.y_index;
     HEPDATA.visualization.heatmap.y_index = HEPDATA.visualization.heatmap.x_index;
     HEPDATA.visualization.heatmap.x_index = tmp_y;
-
     HEPDATA.visualization.heatmap.render_axis_selector(HEPDATA.visualization.heatmap.data, "#legend");
     HEPDATA.visualization.heatmap.render(HEPDATA.visualization.heatmap.data, HEPDATA.visualization.heatmap.placement, {});
   },
@@ -255,7 +309,6 @@ HEPDATA.visualization.heatmap = {
         return d.x;
       })).rangePoints([0, HEPDATA.visualization.heatmap.options.width - HEPDATA.visualization.heatmap.options.margins.left - HEPDATA.visualization.heatmap.options.margins.right]);
     }
-
   },
 
   calculate_y_scale: function (data) {

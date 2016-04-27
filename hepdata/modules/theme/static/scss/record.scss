@@ -972,3 +972,15 @@ g.node {
     cursor: pointer;
   }
 }
+
+#hmlegend {
+  height: 50px;
+  text {
+    font-size: 12px;
+    fill: $concrete;
+  }
+}
+
+.legend {
+  pointer-events: all;
+}

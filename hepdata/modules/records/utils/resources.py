@@ -8,6 +8,7 @@ __author__ = 'eamonnmaguire'
 logging.basicConfig()
 log = logging.getLogger(__name__)
 
+
 def download_resource_file(recid, resource_path):
     """
     :param inspire_id:
