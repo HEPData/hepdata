@@ -120,7 +120,6 @@ HEPDATA.visualization.heatmap = {
 
     var scale = d3.scale.pow().exponent(.5).domain([HEPDATA.stats.min_value, HEPDATA.stats.max_value]).range([0, 1]);
 
-
     var node = node_data.append("g").attr("class", "node").attr('id', function (d) {
       return 'row-' + d.row;
     }).attr("transform", "translate(-2.5,-2.5)").append("rect")
@@ -176,7 +175,6 @@ HEPDATA.visualization.heatmap = {
   render_brushable_option: function (parent_node, options, function_call) {
 
     var label = parent_node.append("label").text("Brushing Enabled? ").attr("style", "padding-right:10px");
-
     var checkbox = parent_node.append("input")
       .attr("type", "checkbox")
       .attr("onClick", function_call);
@@ -191,11 +189,14 @@ HEPDATA.visualization.heatmap = {
     $(placement).html('');
     var options = d3.select(placement).append("div");
 
-    HEPDATA.visualization.heatmap.render_brushable_option(options, HEPDATA.visualization.heatmap.options, "HEPDATA.visualization.heatmap.toggle_brushing(this)");
-
+    HEPDATA.visualization.heatmap.render_brushable_option(options,
+      HEPDATA.visualization.heatmap.options, "HEPDATA.visualization.heatmap.toggle_brushing(this)");
 
     options.append("label").text("X Axis").attr("style", "padding-right:10px");
-    var selector = options.append("select").attr("class", "hm_axis").attr("id", "hm_xaxis").attr("onchange", "HEPDATA.visualization.heatmap.switch_axis()");
+    var selector = options.append("select")
+      .attr("class", "hm_axis")
+      .attr("id", "hm_xaxis")
+      .attr("onchange", "HEPDATA.visualization.heatmap.switch_axis()");
 
     options.append("br");
     for (var i = 0; i < 2; i++) {

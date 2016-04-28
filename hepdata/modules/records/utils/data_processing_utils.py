@@ -24,11 +24,31 @@
 from __future__ import absolute_import, print_function
 
 from ordereddict import OrderedDict
+
 __author__ = 'eamonnmaguire'
+
+
+def pad_indepenent_variables(table_contents):
+    """
+    Pads out the independent variable column in the event that nothing exists.
+    :param table_contents:
+    :return:
+    """
+    _dep_count = len(table_contents["dependent_variables"])
+    _count = 0
+    _ind_vars = {"header": {"name": "", "units": ""}, "values": []}
+    while _count < _dep_count:
+        _ind_vars["values"].append({"value": ""})
+        _count += 1
+
+    table_contents["independent_variables"].append(_ind_vars)
 
 
 def process_independent_variables(table_contents, x_axes,
                                   independent_variable_headers):
+    if len(table_contents["independent_variables"]) == 0:
+        pad_indepenent_variables(table_contents)
+
     if table_contents["independent_variables"]:
         count = 0
         for x_axis in table_contents["independent_variables"]:
@@ -93,9 +113,7 @@ def process_dependent_variables(group_count, record, table_contents,
                     if not last_value:
                         last_value = value
                     else:
-                        if last_value["type"] == value["type"] \
-                            and last_value["value"] == value["value"]:
-
+                        if last_value["type"] == value["type"] and last_value["value"] == value["value"]:
                             last_value["colspan"] += 1
                         else:
                             merged_values.append(last_value)

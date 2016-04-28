@@ -241,7 +241,7 @@ HEPDATA.table_renderer = {
 
       for (var y_idx in value_obj.y) {
         var value = value_obj.y[y_idx].value;
-        var td = tr.append('td');
+        td = tr.append('td');
         if (value != undefined) {
 
           var decimal_places = HEPDATA.count_decimals(value);
