@@ -225,7 +225,6 @@ def search():
         'facets': facets,
         'year_facet': year_facet,
         'q': query_params['q'],
-        'modify_query': modify_query,
         'max_results': query_params['size'],
         'pages': {'current': query_params['current_page'],
                   'total': total_pages},
@@ -236,4 +235,8 @@ def search():
         ctx['min_year'] = query_params['min_date']
         ctx['max_year'] = query_params['max_date']
 
-    return render_template('search_results.html', ctx=ctx)
+    if 'format' in request.args and request.args['format'] == 'json':
+        return jsonify(ctx)
+    else:
+        ctx['modify_query'] = modify_query
+        return render_template('search_results.html', ctx=ctx)
