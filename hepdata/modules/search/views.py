@@ -235,8 +235,9 @@ def search():
         ctx['min_year'] = query_params['min_date']
         ctx['max_year'] = query_params['max_date']
 
-    if 'format' in request.args and request.args['format'] == 'json':
-        return jsonify(ctx)
+    if ('format' in request.args and request.args['format'] == 'json') \
+        or 'json' in request.headers['accept']:
+        return jsonify(query_result)
     else:
         ctx['modify_query'] = modify_query
         return render_template('search_results.html', ctx=ctx)
