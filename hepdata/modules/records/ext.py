@@ -27,6 +27,8 @@
 from __future__ import absolute_import, print_function
 
 from operator import or_
+
+import pkg_resources
 from invenio_accounts.models import User
 from hepdata.modules.records.models import SubmissionParticipant
 
@@ -62,6 +64,16 @@ class HEPDataRecords(object):
                 app.config.setdefault(k, getattr(config, k))
 
     def setup_app(self, app):
+
+        try:
+            pkg_resources.get_distribution('Flask-CORS')
+            from flask_cors import CORS
+            CORS(app)
+            # CORS can be configured using CORS_* configuration variables.
+        except pkg_resources.DistributionNotFound:
+            raise RuntimeError(
+                "You must use `pip install flask-cors` to "
+                "enable CORS support.")
 
         def user_is_admin_or_coordinator():
             if current_user and current_user.is_authenticated:
