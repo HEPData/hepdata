@@ -97,6 +97,7 @@ install_requires = [
     'invenio-userprofiles',
     'invenio>=3.0.0a1,<3.1.0',
     'jsonref',
+    'flask-cors',
     'cryptography',
     'beautifulsoup4',
     'hepdata_validator',
