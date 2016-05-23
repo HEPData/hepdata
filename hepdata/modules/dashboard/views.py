@@ -183,6 +183,7 @@ def prepare_submissions(current_user):
 
         coordinator_submissions = HEPSubmission.query.filter(
             HEPSubmission.coordinator == int(current_user.get_id())).all()
+
         hepdata_submission_records += coordinator_submissions
 
     for hepdata_submission in hepdata_submission_records:

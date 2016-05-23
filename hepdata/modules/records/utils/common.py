@@ -175,8 +175,7 @@ def truncate_string(string, words):
 
 def get_record_by_id(recid):
     try:
-        resolver = Resolver(pid_type='recid', object_type='rec',
-                            getter=Record.get_record)
+        resolver = Resolver(pid_type='recid', object_type='rec', getter=Record.get_record)
         pid, record = resolver.resolve(recid)
         return record
     except NoResultFound:

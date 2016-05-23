@@ -60,6 +60,7 @@ class HEPSubmission(db.Model):
                                   primary_key=True)
 
     data_abstract = db.Column(db.LargeBinary)
+
     references = db.relationship("DataResource",
                                  secondary="data_resource_link",
                                  cascade="all,delete")

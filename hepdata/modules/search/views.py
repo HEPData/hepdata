@@ -219,25 +219,28 @@ def search():
     facets = sort_facets(facets)
 
     year_facet = process_year_facet(request, facets)
-    ctx = {
-        'results': query_result['results'],
-        'total_hits': query_result['total'],
-        'facets': facets,
-        'year_facet': year_facet,
-        'q': query_params['q'],
-        'max_results': query_params['size'],
-        'pages': {'current': query_params['current_page'],
-                  'total': total_pages},
-        'filters': dict(query_params['filters']),
-    }
-
-    if query_params['min_date'] is not sys.maxsize:
-        ctx['min_year'] = query_params['min_date']
-        ctx['max_year'] = query_params['max_date']
 
     if ('format' in request.args and request.args['format'] == 'json') \
         or 'json' in request.headers['accept']:
+        query_result['hits'] = {'total': query_result['total']}
         return jsonify(query_result)
     else:
+        ctx = {
+            'results': query_result['results'],
+            'total_hits': query_result['total'],
+            'facets': facets,
+            'year_facet': year_facet,
+            'q': query_params['q'],
+            'max_results': query_params['size'],
+            'pages': {'current': query_params['current_page'],
+                      'total': total_pages},
+            'filters': dict(query_params['filters']),
+        }
+
+        if query_params['min_date'] is not sys.maxsize:
+            ctx['min_year'] = query_params['min_date']
+            ctx['max_year'] = query_params['max_date']
+
         ctx['modify_query'] = modify_query
+
         return render_template('search_results.html', ctx=ctx)
