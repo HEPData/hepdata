@@ -238,7 +238,8 @@ def str_presenter(dumper, data):
 
 
 def process_ctx(ctx, light_mode=False):
-    for key_to_remove in ['show_review_widget', 'show_upload_area', 'show_upload_widget']:
+    for key_to_remove in ['show_review_widget', 'show_upload_area', 'show_upload_widget',
+                          'coordinators', 'is_submission_coordinator_or_admin']:
         ctx.pop(key_to_remove, None)
 
     if light_mode:
