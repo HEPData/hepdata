@@ -23,6 +23,7 @@
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 from __future__ import absolute_import, print_function
 
+from flask import current_app
 from ordereddict import OrderedDict
 
 __author__ = 'eamonnmaguire'
@@ -234,3 +235,25 @@ def str_presenter(dumper, data):
     if "\n" in data:
         return dumper.represent_scalar('tag:yaml.org,2002:str', data, style='|')
     return dumper.represent_scalar('tag:yaml.org,2002:str', data)
+
+
+def process_ctx(ctx, light_mode=False):
+    for key_to_remove in ['show_review_widget', 'show_upload_area', 'show_upload_widget']:
+        ctx.pop(key_to_remove, None)
+
+    if light_mode:
+        ctx.pop('data_tables', None)
+    else:
+        SITE_URL = current_app.config['SITE_URL']
+        for data_table in ctx['data_tables']:
+            for key_to_remove in ['review_status', 'review_flag']:
+                data_table.pop(key_to_remove, None)
+                data_table['data'] = {
+                    'json': '{0}/record/data/{1}/{2}/{3}'.format(
+                        SITE_URL, data_table['id'], ctx['recid'], ctx['version']),
+                    'root': '{0}/download/table/{1}/root'.format(SITE_URL, data_table['id']),
+                    'csv': '{0}/download/table/{1}/csv'.format(SITE_URL, data_table['id']),
+                    'yoda': '{0}/download/table/{1}/yoda'.format(SITE_URL, data_table['id']),
+                    'yaml': '{0}/download/table/{1}/yaml'.format(SITE_URL, data_table['id'])}
+
+    return ctx

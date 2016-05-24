@@ -101,7 +101,7 @@
                       class="hidden">http://hepdata.net/record/{{ ctx.record.recid }}</span>
 
                 <div class="record-authors">
-                    {% for author in ctx.record.authors %}
+                    {% for author in ctx.record.summary_authors %}
                         <a href="/search?author={{ author.full_name }}"
                            itemprop="author" itemscope
                            itemtype="http://schema.org/Person">{{ author.full_name }} <span
@@ -109,7 +109,7 @@
                                 itemtype="http://schema.org/Organization"
                                 itemscope class="hidden"><span
                                 itemprop="name">{{ author.affiliation }}</span></span>
-                        </a>{% if loop.index < ctx.record.authors|length %},
+                        </a>{% if loop.index < ctx.record.summary_authors|length %},
                     {% endif %}
                     {% endfor %}
                 </div>

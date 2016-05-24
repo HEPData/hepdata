@@ -53,7 +53,7 @@ from hepdata.modules.records.utils.common import get_record_by_id, \
     find_file_in_directory, decode_string, \
     truncate_string, IMAGE_TYPES, remove_file_extension
 from hepdata.modules.records.utils.data_processing_utils import \
-    generate_table_structure
+    generate_table_structure, process_ctx
 from hepdata.modules.records.utils.submission import create_data_review, \
     get_or_create_hepsubmission, process_submission_directory
 from hepdata.modules.records.utils.users import get_coordinators_in_system, \
@@ -79,6 +79,7 @@ RECORD_PLAIN_TEXT = {
     "attention": "attention required",
     "todo": "to be reviewed"
 }
+
 
 @login_required
 @blueprint.route('/sandbox/<int:id>', methods=['GET'])
@@ -109,7 +110,11 @@ def get_metadata_by_alternative_id(recid, *args, **kwargs):
             record = record['hits']['hits'][0].get("_source")
             version = int(request.args.get('version', -1))
 
-            return do_render_record(record['recid'], record, version=version)
+            output_format = request.args.get('format', 'html')
+            light_mode = bool(request.args.get('light', False))
+
+            return do_render_record(recid=record['recid'], record=record, version=version, output_format=output_format,
+                                    light_mode=light_mode)
     except Exception as e:
         print(e)
         return render_template('hepdata_theme/404.html')
@@ -142,6 +147,7 @@ def metadata(recid, *args, **kwargs):
     :return: renders the record template
     """
     version = int(request.args.get('version', -1))
+    format = request.args.get('format', 'html')
 
     try:
         record = get_record_contents(recid)
@@ -149,7 +155,7 @@ def metadata(recid, *args, **kwargs):
         print(e)
         return render_template('hepdata_theme/404.html')
 
-    return do_render_record(recid, record, version=version)
+    return do_render_record(recid=recid, record=record, version=version, format=format)
 
 
 def format_submission(recid, record, version, hepdata_submission,
@@ -248,6 +254,7 @@ def format_submission(recid, record, version, hepdata_submission,
         ctx['mode'] = 'record'
         ctx['coordinator'] = hepdata_submission.coordinator
         ctx['coordinators'] = get_coordinators_in_system()
+        ctx['record'].pop('authors', None)
 
     return ctx
 
@@ -264,15 +271,19 @@ def extract_journal_info(record):
             record['journal_info'] = "Conference Paper"
 
 
-def do_render_record(recid, record, version):
+def do_render_record(recid, record, version, output_format, light_mode=False):
     hepdata_submission = HEPSubmission.query.filter_by(
         publication_recid=recid).first()
 
     if hepdata_submission is not None:
         ctx = format_submission(recid, record, version, hepdata_submission)
         increment(recid)
-        return render_template('hepdata_records/publication_record.html',
-                               ctx=ctx)
+        if output_format == "json":
+            ctx = process_ctx(ctx, light_mode)
+            return jsonify(ctx)
+        else:
+            return render_template('hepdata_records/publication_record.html',
+                                   ctx=ctx)
 
     else:  # this happens when we access an id of a data record
         # in which case, we find the related publication, and
@@ -289,7 +300,11 @@ def do_render_record(recid, record, version):
         ctx['related_publication_id'] = publication_recid
         ctx['table_name'] = record['title']
 
-        return render_template('hepdata_records/data_record.html', ctx=ctx)
+        if output_format == "json":
+            ctx = process_ctx(ctx, light_mode)
+            return jsonify(ctx)
+        else:
+            return render_template('hepdata_records/data_record.html', ctx=ctx)
 
 
 def returns_json(f):
@@ -660,7 +675,6 @@ def consume_data_payload(recid):
 
     else:
         return redirect('/record/' + str(recid))
-
 
 
 @blueprint.route('/sandbox', methods=['GET'])
