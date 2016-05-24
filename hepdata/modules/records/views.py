@@ -155,7 +155,7 @@ def metadata(recid, *args, **kwargs):
         print(e)
         return render_template('hepdata_theme/404.html')
 
-    return do_render_record(recid=recid, record=record, version=version, format=format)
+    return do_render_record(recid=recid, record=record, version=version, output_format=format)
 
 
 def format_submission(recid, record, version, hepdata_submission,
