@@ -185,10 +185,10 @@ def format_submission(recid, record, version, hepdata_submission,
                 collaborations = [x.strip() for x in record["collaborations"].split(",")]
                 ctx['record']['collaborations'] = collaborations
 
+            authors = record.get('authors', None)
             if "first_author" in record and 'full_name' in record["first_author"]:
                 ctx['breadcrumb_text'] = record["first_author"]["full_name"]
-
-                if 'authors' in record and len(record['authors']) > 1:
+                if authors is not None and len(record['authors']) > 1:
                     ctx['breadcrumb_text'] += " et al."
 
             try:
@@ -202,7 +202,9 @@ def format_submission(recid, record, version, hepdata_submission,
             except NoResultFound:
                 pass
 
-            truncate_author_list(record)
+            if authors:
+                truncate_author_list(record)
+
             determine_user_privileges(recid, ctx)
 
         else:
@@ -241,6 +243,7 @@ def format_submission(recid, record, version, hepdata_submission,
         first_data_id = -1
         data_table_metadata, first_data_id = process_data_tables(
             ctx, data_record_query, first_data_id, data_table)
+
         assign_or_create_review_status(data_table_metadata, recid,
                                        ctx["version"])
 
@@ -351,13 +354,18 @@ def get_latest():
 
             extract_journal_info(record_information)
 
+            authors = record_information.get('authors', [])
+            if authors is None:
+                author_count = 0
+            else:
+                author_count = len(authors)
             result['latest'].append({
                 'id': record_information['recid'],
                 'inspire_id': record_information['inspire_id'],
                 'title': record_information['title'],
                 'collaborations': collaborations,
                 'journal': record_information['journal_info'],
-                'author_count': len(record_information.get('authors', 1)),
+                'author_count': author_count,
                 'first_author': record_information.get('first_author', None),
                 'creation_date': record_information['creation_date'],
                 'last_updated': last_updated})
