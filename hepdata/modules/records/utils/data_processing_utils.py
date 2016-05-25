@@ -251,7 +251,7 @@ def process_ctx(ctx, light_mode=False):
                 data_table.pop(key_to_remove, None)
                 data_table['data'] = {
                     'json': '{0}/record/data/{1}/{2}/{3}'.format(
-                        SITE_URL, data_table['id'], ctx['recid'], ctx['version']),
+                        SITE_URL, ctx['recid'], data_table['id'], ctx['version']),
                     'root': '{0}/download/table/{1}/root'.format(SITE_URL, data_table['id']),
                     'csv': '{0}/download/table/{1}/csv'.format(SITE_URL, data_table['id']),
                     'yoda': '{0}/download/table/{1}/yoda'.format(SITE_URL, data_table['id']),
