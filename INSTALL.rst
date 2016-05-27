@@ -28,7 +28,6 @@ Next, create the database and database tables if you haven't already done so:
    (hepdata3)$ hepdata db init
    (hepdata3)$ hepdata db create
 
-
 Run Celery
 
 .. code-block:: console
@@ -41,3 +40,16 @@ Now, start HEPData:
 .. code-block:: console
 
    (hepdata3)$ hepdata --debug run
+
+
+Run using honcho
+============
+
+Honcho will run elasticsearch, redis, celery, and the web application for you automatically.
+Just workon your virtual environment, go to the root directory of hepdata source where you can see a file called
+Procfile. Then install flower if you haven't done so already, and then start honcho.
+
+.. code-block:: console
+
+   (hepdata3)$ pip install flower
+   (hepdata3)$ honcho start
