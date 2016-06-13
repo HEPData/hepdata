@@ -481,6 +481,8 @@ def process_validation_errors_for_display(errors):
     return processed_errors
 
 
+
+
 def get_or_create_hepsubmission(recid, coordinator=1, status="todo"):
     hepsubmission = HEPSubmission.query.filter_by(publication_recid=recid).first()
 

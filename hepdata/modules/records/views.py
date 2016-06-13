@@ -55,7 +55,7 @@ from hepdata.modules.records.utils.common import get_record_by_id, \
 from hepdata.modules.records.utils.data_processing_utils import \
     generate_table_structure, process_ctx
 from hepdata.modules.records.utils.submission import create_data_review, \
-    get_or_create_hepsubmission, process_submission_directory
+    get_or_create_hepsubmission, process_submission_directory, remove_submission
 from hepdata.modules.records.utils.users import get_coordinators_in_system, \
     has_role
 from hepdata.modules.records.utils.workflow import \
@@ -753,6 +753,7 @@ def process_payload(recid, file, redirect_url, send_email=True):
     if file and (allowed_file(file.filename) or "oldhepdata" in file.filename):
         errors = process_zip_archive(file, recid)
         if errors:
+            remove_submission(recid)
             return render_template('hepdata_records/error_page.html',
                                    recid=None, errors=errors)
         else:
