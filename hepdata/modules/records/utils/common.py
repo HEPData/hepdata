@@ -1,5 +1,7 @@
 import datetime
 
+from flask import current_app
+from invenio_pidstore.errors import PIDDoesNotExistError
 from invenio_pidstore.resolver import Resolver
 from invenio_records.api import Record
 import os
@@ -179,8 +181,10 @@ def get_record_by_id(recid):
         pid, record = resolver.resolve(recid)
         return record
     except NoResultFound:
-        print('No record found for recid {}'.format(recid))
+        current_app.logger.exception('No record found for recid {}'.format(recid))
         return None
+    except PIDDoesNotExistError:
+        current_app.logger.exception('The PID {0} does not exist'.format(recid))
 
 
 def get_last_submission_event(recid):
