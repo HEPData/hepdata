@@ -33,15 +33,12 @@ from invenio_accounts.models import User
 from hepdata.modules.records.models import SubmissionParticipant
 from hepdata.modules.theme.views import internal_error
 from hepdata.modules.theme.views import page_not_found
-
-__author__ = 'eamonnmaguire'
-
 from flask.ext.login import current_user
 from invenio_db import db
-
 from . import config
-
 from .views import blueprint
+
+__author__ = 'eamonnmaguire'
 
 
 class HEPDataRecords(object):

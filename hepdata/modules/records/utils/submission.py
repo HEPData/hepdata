@@ -22,6 +22,7 @@
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 from __future__ import absolute_import, print_function
+
 import uuid
 import zipfile
 from datetime import datetime
@@ -293,10 +294,12 @@ def parse_additional_resources(basepath, recid, yaml_document):
 
         elif 'http' not in resource_location and 'www' not in resource_location and 'resource' not in resource_location:
             # this is a file local to the submission.
-            continue
+            try:
+                resource_location = os.path.join(basepath, resource_location)
+            except Exception as e:
+                raise e
         else:
-            resource_location = download_resource_file(
-                recid, resource_location)
+            resource_location = download_resource_file(recid, resource_location)
             print('Downloaded resource location is {0}'.format(resource_location))
 
         new_reference = DataResource(

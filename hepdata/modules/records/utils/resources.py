@@ -17,7 +17,6 @@ def download_resource_file(recid, resource_path):
     base_url = "http://hepdata.cedar.ac.uk/{}"
 
     output_location = os.path.join(current_app.config['CFG_DATADIR'], str(recid), 'resources')
-    print output_location
 
     if not os.path.exists(output_location):
         os.makedirs(output_location)
