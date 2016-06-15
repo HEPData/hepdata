@@ -59,6 +59,11 @@ def about():
     return render_template('hepdata_theme/pages/about.html')
 
 
+@blueprint.route('/terms')
+def terms():
+    return render_template('hepdata_theme/pages/terms.html')
+
+
 def page_not_found(e):
     """Error handler to show a 404.html page in case of a 404 error."""
     return render_template(current_app.config['THEME_404_TEMPLATE']), 404
