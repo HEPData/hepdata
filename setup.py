@@ -75,6 +75,7 @@ install_requires = [
     'Flask-BabelEx>=0.9.2',
     'Flask-Debugtoolbar>=0.10.0',
     'idutils>=0.1.1',
+    'raven<=5.1.0',
     'invenio-access',
     'invenio-accounts',
     'invenio-admin',
