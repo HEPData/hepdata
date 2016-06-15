@@ -185,6 +185,7 @@ def get_record_by_id(recid):
         return None
     except PIDDoesNotExistError:
         current_app.logger.exception('The PID {0} does not exist'.format(recid))
+        return None
 
 
 def get_last_submission_event(recid):

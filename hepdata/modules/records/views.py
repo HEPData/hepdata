@@ -116,7 +116,6 @@ def get_metadata_by_alternative_id(recid, *args, **kwargs):
             return do_render_record(recid=record['recid'], record=record, version=version, output_format=output_format,
                                     light_mode=light_mode)
     except Exception as e:
-        print(e)
         return render_template('hepdata_theme/404.html')
 
 
@@ -152,7 +151,9 @@ def metadata(recid, *args, **kwargs):
     try:
         record = get_record_contents(recid)
     except Exception as e:
-        print(e)
+        record = None
+
+    if record is None:
         return render_template('hepdata_theme/404.html')
 
     return do_render_record(recid=recid, record=record, version=version, output_format=format)
@@ -291,23 +292,26 @@ def do_render_record(recid, record, version, output_format, light_mode=False):
     else:  # this happens when we access an id of a data record
         # in which case, we find the related publication, and
         # make the front end focus on the relevant data table.
-        publication_recid = int(record['related_publication'])
-        publication_record = get_record_contents(publication_recid)
+        try:
+            publication_recid = int(record['related_publication'])
+            publication_record = get_record_contents(publication_recid)
 
-        hepdata_submission = HEPSubmission.query.filter_by(
-            publication_recid=publication_recid).first()
+            hepdata_submission = HEPSubmission.query.filter_by(
+                publication_recid=publication_recid).first()
 
-        ctx = format_submission(publication_recid, publication_record,
-                                version, hepdata_submission,
-                                data_table=record['title'])
-        ctx['related_publication_id'] = publication_recid
-        ctx['table_name'] = record['title']
+            ctx = format_submission(publication_recid, publication_record,
+                                    version, hepdata_submission,
+                                    data_table=record['title'])
+            ctx['related_publication_id'] = publication_recid
+            ctx['table_name'] = record['title']
 
-        if output_format == "json":
-            ctx = process_ctx(ctx, light_mode)
-            return jsonify(ctx)
-        else:
-            return render_template('hepdata_records/data_record.html', ctx=ctx)
+            if output_format == "json":
+                ctx = process_ctx(ctx, light_mode)
+                return jsonify(ctx)
+            else:
+                return render_template('hepdata_records/data_record.html', ctx=ctx)
+        except:
+            return render_template('hepdata_theme/404.html')
 
 
 def returns_json(f):
