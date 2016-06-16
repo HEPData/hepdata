@@ -40,7 +40,7 @@
                 </li>
             </a>
 
-            {% if ctx.data_tables|length != 0%}
+            {% if ctx.data_tables|length != 0 %}
                 <li class="pull-right">
 
 
@@ -110,24 +110,26 @@
                     <br/>
                     <div id="past_submissions">
                         <h4 style="font-size: 1em">
-                            Your {{ ctx.submissions|length }} sandbox
-                            submissions</h4>
+                            Your sandbox submissions</h4>
 
                         <div class="scrollable height30 row-fluid">
                             {% for submission in ctx.submissions %}
-                                <div class="col-md-9">
-                                    <a href="/record/sandbox/{{ submission.publication_recid }}"
-                                       style="text-align: left">
-                                        <div class="truncated-record-abstract">{{ submission.data_abstract }}</div>
-                                    </a>
-                                    <p style="font-weight: bolder; color: #a1aec7; font-size: .7em; text-align: left">{{ submission.created.strftime('%Y-%m-%d %H:%M%p') }}</p>
-                                </div>
-                                <div class="col-md-3">
-                                    <button class="btn btn-sm btn-danger delete_button"
-                                            data-recid="{{ submission.publication_recid }}"><i class="fa fa-trash"></i>
-                                        Delete
-                                    </button>
-                                </div>
+                                {% if submission.data_abstract != None %}
+                                    <div class="col-md-9">
+                                        <a href="/record/sandbox/{{ submission.publication_recid }}"
+                                           style="text-align: left">
+                                            <div class="truncated-record-abstract">{{ submission.data_abstract }}</div>
+                                        </a>
+                                        <p style="font-weight: bolder; color: #a1aec7; font-size: .7em; text-align: left">{{ submission.created.strftime('%Y-%m-%d %H:%M%p') }}</p>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <button class="btn btn-sm btn-danger delete_button"
+                                                data-recid="{{ submission.publication_recid }}"><i
+                                                class="fa fa-trash"></i>
+                                            Delete
+                                        </button>
+                                    </div>
+                                {% endif %}
                             {% endfor %}
                         </div>
                         <div class="clearfix"></div>

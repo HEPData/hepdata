@@ -87,7 +87,6 @@ def remove_submission(record_id):
     try:
         try:
             db.session.delete(hepdata_submission.one())
-
         except NoResultFound as nrf:
             print(nrf.args)
 
@@ -132,7 +131,6 @@ def remove_submission(record_id):
 
     except Exception as e:
         db.session.rollback()
-        raise e
 
 
 @session_manager
@@ -365,7 +363,11 @@ def process_submission_directory(basepath, submission_file_path, recid, update=F
         data_file_validator = DataFileValidator()
 
         if is_valid_submission_file:
-            submission_processed = yaml.safe_load_all(submission_file)
+            try:
+                submission_processed = yaml.load_all(submission_file, Loader=yaml.CSafeLoader)
+            except:
+                submission_processed = yaml.safe_load_all(submission_file)
+
             # process file, extracting contents, and linking
             # the data record with the parent publication
             hepsubmission = get_or_create_hepsubmission(recid)
