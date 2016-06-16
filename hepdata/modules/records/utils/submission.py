@@ -109,8 +109,11 @@ def remove_submission(record_id):
             if resource:
                 db.session.delete(resource)
 
-        SubmissionParticipant.query.filter_by(
-            publication_recid=record_id).delete()
+        try:
+            SubmissionParticipant.query.filter_by(
+                publication_recid=record_id).delete()
+        except Exception:
+            print("Unable to find a submission participant for {0}".format(record_id))
 
         try:
             record = get_record_by_id(record_id)
@@ -119,9 +122,11 @@ def remove_submission(record_id):
 
             if 'hits' in data_records:
                 for data_record in data_records['hits']['hits']:
-                    record = get_record_by_id(data_record['_source']['recid'])
-                    record.delete()
-            record.delete()
+                    data_record_obj = get_record_by_id(data_record['_source']['recid'])
+                    if data_record_obj:
+                        data_record_obj.delete()
+            if record:
+                record.delete()
         except PIDDoesNotExistError as e:
             print('No record entry exists for {0}. Proceeding to delete other files.'.format(record_id))
 
@@ -131,6 +136,7 @@ def remove_submission(record_id):
 
     except Exception as e:
         db.session.rollback()
+        raise e
 
 
 @session_manager
