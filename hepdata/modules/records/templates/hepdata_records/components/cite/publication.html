@@ -1,0 +1,19 @@
+{% if ctx.record.collaborations %}
+    <p><i>The
+        {% for collaboration in ctx.record.collaborations %}
+            {{ collaboration }}{% endfor %}
+        collaboration ({{ ctx.record.year }})</i>.</p>
+{% else %}
+    {% for author in ctx.record.authors %}
+        {{ author.full_name }}{% if loop.index < ctx.record.authors|length %},
+        {% else %} (
+            {{ ctx.record.year }}){% endif %}
+    {% endfor %}
+{% endif %}
+<p>{{ ctx.record.title }}. {{ ctx.record.journal_info }}.</p>
+<p><strong>http://dx.doi.org/{{ ctx.record.doi }}</strong></p>
+
+<a href="http://inspirehep.net/record/{{ ctx.record.inspire_id }}" class="btn btn-default btn-sm" target="_new">View
+    Inspire Record</a>
+<a href="http://inspirehep.net/record/{{ ctx.record.inspire_id }}/export/hx" class="btn btn-default btn-sm"
+   target="_new">View BibTex from Inspire</a>
