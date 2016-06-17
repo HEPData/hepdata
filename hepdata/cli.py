@@ -71,7 +71,7 @@ def populate(inspireids, recreate_index, tweet):
               help='The start index from the total inspireids to load.')
 @click.option('--end', '-e', default=None, type=int,
               help='The end index from the total inspireids to load.')
-@click.option('--year', '-y', type=int, default=None,
+@click.option('--year', '-y', type=str, default=None,
               help='Filter all records modified since some point in time.')
 @click.option('--missing-only', '-m', default=False,
               type=bool,
