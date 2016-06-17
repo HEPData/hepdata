@@ -58,18 +58,26 @@
                                 aria-haspopup="true" aria-expanded="false">
                             <i class="fa fa-quote-right"></i> Cite
                         </button>
+
+                        <a href="?format=json" id="jsonLabel" type="button"
+                                class="btn btn-sm btn-default"
+                                aria-haspopup="true" aria-expanded="false">
+                            JSON
+                        </a>
+
                     </div>
 
                     {% if ctx.access_count %}
-                        <span class="stats">
-                    <span class="pull-right"><span class="fa fa-bar-chart-o"
-                                                   style="padding-right: 5px"></span> Accessed {{ ctx.access_count.sum }} times </span>
+                        <span class="pull-right">
+                                <span class="fa fa-bar-chart-o" style="padding-right: 5px"></span>
+                                Accessed {{ ctx.access_count.sum }} times
+                        </span>
+                    {% endif %}
 
-                            {% if ctx.record.last_updated %}
-                                <span class="pull-right"
-                                      style="padding-right: 10px">Last updated on {{ ctx.record.last_updated.strftime('%Y-%m-%d %H:%M:%S') }} </span>
-                            {% endif %}
-                </span>
+                    {% if ctx.record.last_updated %}
+                        <span class="pull-right"
+                                  style="padding-right: 10px">Last updated on {{ ctx.record.last_updated.strftime('%Y-%m-%d %H:%M') }}
+                        </span>
                     {% endif %}
 
 
@@ -84,9 +92,7 @@
 
             <button class="btn btn-xs btn-link hide-publication-info"
                     style="margin-bottom: 10px"><span
-                    class="fa fa-chevron-left"></span> Hide Publication
-                Information
-                Information
+                    class="fa fa-chevron-left"></span> Hide Publication Information
             </button>
 
         <span id="show-publication-info"
@@ -133,7 +139,7 @@
 
                 <br/>
 
-               <div class="record-links">
+                <div class="record-links">
                     <ul>
                         {% if ctx.record.doi %}
                             <li>

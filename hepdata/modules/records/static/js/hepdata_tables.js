@@ -46,6 +46,8 @@ HEPDATA.switch_table = function (listId, table_requested) {
     })
   }
 
+
+
   $("#hepdata_table_loader").removeClass("hidden");
   $("#hepdata_table_content").addClass("hidden");
 
@@ -67,6 +69,8 @@ HEPDATA.switch_table = function (listId, table_requested) {
       + data_format;
     $(this).attr('href', data_url);
   });
+
+  $("#json_link").attr('href', '/record/data/' + HEPDATA.current_record_id + "/" +  HEPDATA.current_table_id + "/" + HEPDATA.current_table_version)
 };
 
 HEPDATA.table_renderer = {
