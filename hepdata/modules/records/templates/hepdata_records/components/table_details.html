@@ -25,6 +25,7 @@
                     <div id="table_name" class="pull-left" style="padding-top: 7px;"></div>
 
 
+                <a href="" class="pull-right btn btn-link btn-sm" id="json_link">JSON</a>
                     <div class="dropdown pull-right">
                         <button id="dLabelData"
                                 type="button"
@@ -61,13 +62,15 @@
                     </div>
 
                      {% if ctx.mode != 'sandbox' %}
-                    <div class="pull-right" id="data_link_container">
-                        <input id="direct_data_link" value="" disabled>
-                        <button class="btn btn-small copy-btn" data-clipboard-text="">
-                            <i class="fa fa-copy" alt="Copy to clipboard"></i>
-                        </button>
-                    </div>
+                        <div class="pull-right" id="data_link_container">
+                            <input id="direct_data_link" value="" disabled>
+                            <button class="btn btn-small copy-btn" data-clipboard-text="">
+                                <i class="fa fa-copy" alt="Copy to clipboard"></i>
+                            </button>
+                        </div>
                     {% endif %}
+
+
 
                     <span class="pull-right" id="support-files" style="margin-right: 20px; margin-top:1px"></span>
                 </h4>

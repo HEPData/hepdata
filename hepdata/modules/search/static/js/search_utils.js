@@ -53,7 +53,7 @@ var search_utils = (function () {
         'height': 35
       });
 
-    selector_svg.append('line').attr({'x1': 0, 'x2': options.width, 'y1': 5.5, 'y2': 5.5}).style({
+    selector_svg.append('line').attr({'x1': 0, 'x2': options.width -20, 'y1': 5.5, 'y2': 5.5}).style({
       'stroke': '#ccc',
       'stroke-width': 3
     });
