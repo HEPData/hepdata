@@ -28,68 +28,69 @@
 
 
 {% macro form_errors(form) %}
-  {%- if form.errors %}
-  <div class="alert alert-danger alert-dismissible text-left" role="alert">
-  <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-  {%- for key,err_obj in form.errors.items() recursive %}
-      {%  if err_obj is mapping %}
-          {{  loop(err_obj.items()) }}
-      {% else %}
-          {% for single_message in err_obj %}
-            <p>{{ single_message }}</p>
-          {% endfor %}
-      {% endif %}
-  {%- endfor %}
-  </div>
-  {%- endif %}
+    {%- if form.errors %}
+        <div class="alert alert-danger alert-dismissible text-left" role="alert">
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span
+                    aria-hidden="true">&times;</span></button>
+            {%- for key,err_obj in form.errors.items() recursive %}
+                {% if err_obj is mapping %}
+                    {{ loop(err_obj.items()) }}
+                {% else %}
+                    {% for single_message in err_obj %}
+                        <p>{{ single_message }}</p>
+                    {% endfor %}
+                {% endif %}
+            {%- endfor %}
+        </div>
+    {%- endif %}
 {% endmacro %}
 
 
 {% block panel %}
-    {%- with form = register_user_form %}
-        <div class="col-xs-12 col-md-10 col-md-offset-1">
-            <div class="row">
-                <div class="col-sm-6 col-sm-push-6 sign-up">
-                    <form action="{{ url_for_security('register') }}"
-                          method="POST" name="register_user_form">
-                        {{ form_errors(form) }}
-                        {{ form.hidden_tag() }}
-                        <div class="social-signup">
-                            <a href="{{ url_for('invenio_oauthclient.login', remote_app='orcid') }}"
-                               class="btn btn-default btn-lg btn-block" style="color: #2c3e50; font-weight: bolder;"><img
-                                    src="{{ url_for('static', filename='img/orcid.svg') }}"
-                                    height="18px"> {{ _('Sign up with ORCID') }}</a>
-                            <h4 align="center" style="color: white; margin-top: 10px;"> OR </h4>
-                        </div>
-                        {{ render_field(form.email, icon="fa fa-user", autofocus=True, errormsg=False) }}
-                        {{ render_field(form.password, icon="fa fa-lock", errormsg=False) }}
-                        {%- if form.password_confirm %}
-                            {{ render_field(form.password_confirm, icon="fa fa-lock", errormsg=False) }}
-                        {%- endif %}
-                        {%- if form.recaptcha %}
-                            <div class="form-group form-group-lg">{{ form.recaptcha() }}</div>
-                        {%- endif %}
-                        <button type="submit"
-                                class="btn btn-success btn-lg btn-block"><i
-                                class="fa fa-edit"></i> {{ _('Sign Up') }}
-                        </button>
-                    </form>
-                    <p align="center">
-                        {{ _('Already have an account?') }} <a
-                            href="{{ url_for_security('login') }}">{{ _('Log In') }}</a>
-                    </p>
-                </div>
-                <div class="col-sm-6 col-sm-pull-6 sign-up sign-up-benefits">
-                    {%- block signup_benefits %}
-                        <h4>{{ _('Discover.') }}</h4>
-                        <p>{{ _('Our powerful search makes it easy to find the data you need for your research goals.') }}</p>
-                        <h4>{{ _('Visualise.') }}</h4>
-                        <p>{{ _('Interact with data, filter it, and download as ROOT, YAML, CSV, or YODA.') }}</p>
-                    {%- endblock signup_benefits %}
+    {%- set form = form or register_user_form %}
+    <div class="col-xs-12 col-md-10 col-md-offset-1">
+        <div class="row">
+            <div class="col-sm-6 col-sm-push-6 sign-up">
+                <form action="{{ url_for_security('register') }}"
+                      method="POST" name="register_user_form">
+                    {{ form_errors(form) }}
+                    {{ form.hidden_tag() }}
+                    <div class="social-signup">
+                        <a href="{{ url_for('invenio_oauthclient.login', remote_app='orcid') }}"
+                           class="btn btn-default btn-lg btn-block" style="color: #2c3e50; font-weight: bolder;"><img
+                                src="{{ url_for('static', filename='img/orcid.svg') }}"
+                                height="18px"> {{ _('Sign up with ORCID') }}</a>
+                        <h4 align="center" style="color: white; margin-top: 10px;"> OR </h4>
+                    </div>
+                    {{ render_field(form.email, icon="fa fa-user", autofocus=True, errormsg=False) }}
+                    {{ render_field(form.password, icon="fa fa-lock", errormsg=False) }}
+                    {%- if form.password_confirm %}
+                        {{ render_field(form.password_confirm, icon="fa fa-lock", errormsg=False) }}
+                    {%- endif %}
+                    {%- if form.recaptcha %}
+                        <div class="form-group form-group-lg">{{ form.recaptcha() }}</div>
+                    {%- endif %}
+                    <button type="submit"
+                            class="btn btn-success btn-lg btn-block"><i
+                            class="fa fa-edit"></i> {{ _('Sign Up') }}
+                    </button>
+                </form>
+                <p align="center">
+                    {{ _('Already have an account?') }} <a
+                        href="{{ url_for_security('login') }}">{{ _('Log In') }}</a>
+                </p>
+            </div>
+            <div class="col-sm-6 col-sm-pull-6 sign-up sign-up-benefits">
+                {%- block signup_benefits %}
+                    <h4>{{ _('Discover.') }}</h4>
+                    <p>{{ _('Our powerful search makes it easy to find the data you need for your research goals.') }}</p>
+                    <h4>{{ _('Visualise.') }}</h4>
+                    <p>{{ _('Interact with data, filter it, and download as ROOT, YAML, CSV, or YODA.') }}</p>
+                {%- endblock signup_benefits %}
 
-                </div>
             </div>
         </div>
-    {%- endwith %}
+    </div>
+
 {% endblock panel %}
 
