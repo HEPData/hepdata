@@ -1,0 +1,25 @@
+{%- extends "hepdata_theme/security/register_user.html" %}
+
+{%- block brand %}{{super()}}
+{%- if app_title == 'ORCID' %}
+<h1 class="plus"><i class="fa fa-plus"></i></h1>
+<img class="orcid" height="95px" src="{{ url_for('static', filename='img/orcid.svg')}}" />
+{%- elif app_icon %}
+<h1 class="plus"><i class="fa fa-plus"></i></h1>
+<h1><i class="fa-3x {{app_icon}}"></i></h1>
+{%- endif %}
+{%- endblock %}
+
+{%- block signup_slogan %}
+  <h1>{{_('Sign up with %(app_title)s', app_title=app_title)}} - {{_('Almost there...')}}</h1>
+{%- endblock signup_slogan %}
+
+{%- block signup_form_endpoint %}{% endblock %}
+
+{%- block signup_form_header %}
+<div class="alert alert-info alert-dismissible text-left" role="alert">
+{{ _('Fill in your details to complete your registration. You only have to do this once.') }}
+</div>
+{%- endblock %}
+
+{%- block signup_button_text %}{{_('Sign up with %(app_title)s', app_title=app_title)}}{% endblock %}

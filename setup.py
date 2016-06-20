@@ -92,6 +92,8 @@ install_requires = [
     'invenio-search',
     'invenio-theme',
     'invenio-testing',
+    'invenio-oauth2server>=1.0.0a5',
+    'invenio-oauthclient>=1.0.0a6',
     'invenio-userprofiles',
     'invenio>=3.0.0a1,<3.1.0',
     'jsonref',
