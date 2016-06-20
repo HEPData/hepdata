@@ -51,17 +51,20 @@
     <div class="col-xs-12 col-md-10 col-md-offset-1">
         <div class="row">
             <div class="col-sm-6 col-sm-push-6 sign-up">
-                <form action="{{ url_for_security('register') }}"
+                <form action="{%- block signup_form_endpoint %}{{ url_for_security('register') }}{% endblock %}"
                       method="POST" name="register_user_form">
                     {{ form_errors(form) }}
                     {{ form.hidden_tag() }}
-                    <div class="social-signup">
-                        <a href="{{ url_for('invenio_oauthclient.login', remote_app='orcid') }}"
-                           class="btn btn-default btn-lg btn-block" style="color: #2c3e50; font-weight: bolder;"><img
-                                src="{{ url_for('static', filename='img/orcid.svg') }}"
-                                height="18px"> {{ _('Sign up with ORCID') }}</a>
-                        <h4 align="center" style="color: white; margin-top: 10px;"> OR </h4>
-                    </div>
+                    {%- block signup_form_header %}
+                        <div class="social-signup">
+                            <a href="{{ url_for('invenio_oauthclient.login', remote_app='orcid') }}"
+                               class="btn btn-default btn-lg btn-block"
+                               style="color: #2c3e50; font-weight: bolder;"><img
+                                    src="{{ url_for('static', filename='img/orcid.svg') }}"
+                                    height="18px"> {{ _('Sign up with ORCID') }}</a>
+                            <h4 align="center" style="color: white; margin-top: 10px;"> OR </h4>
+                        </div>
+                    {% endblock %}
                     {{ render_field(form.email, icon="fa fa-user", autofocus=True, errormsg=False) }}
                     {%- if form.password %}
                         {{ render_field(form.password, icon="fa fa-lock", errormsg=False) }}
@@ -70,15 +73,17 @@
                         {{ render_field(form.password_confirm, icon="fa fa-lock", errormsg=False) }}
                     {%- endif %}
 
-                    <button type="submit"
-                            class="btn btn-success btn-lg btn-block"><i
-                            class="fa fa-edit"></i> {{ _('Sign Up') }}
-                    </button>
+                    <button type="submit" class="btn btn-success btn-lg btn-block"><i class="fa fa-edit"></i>
+                        {% block signup_button_text %}{{ _('Sign Up') }}{% endblock %}</button>
+
                 </form>
-                <p align="center">
-                    {{ _('Already have an account?') }} <a
-                        href="{{ url_for_security('login') }}">{{ _('Log In') }}</a>
-                </p>
+
+                {%- block signup_form_footer %}
+                    <p align="center">
+                        {{ _('Already have an account?') }} <a
+                            href="{{ url_for_security('login') }}">{{ _('Log In') }}</a>
+                    </p>
+                {%- endblock %}
             </div>
             <div class="col-sm-6 col-sm-pull-6 sign-up sign-up-benefits">
                 {%- block signup_benefits %}
