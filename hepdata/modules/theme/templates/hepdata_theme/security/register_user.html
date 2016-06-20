@@ -63,13 +63,13 @@
                         <h4 align="center" style="color: white; margin-top: 10px;"> OR </h4>
                     </div>
                     {{ render_field(form.email, icon="fa fa-user", autofocus=True, errormsg=False) }}
-                    {{ render_field(form.password, icon="fa fa-lock", errormsg=False) }}
+                    {%- if form.password %}
+                        {{ render_field(form.password, icon="fa fa-lock", errormsg=False) }}
+                    {%- endif %}
                     {%- if form.password_confirm %}
                         {{ render_field(form.password_confirm, icon="fa fa-lock", errormsg=False) }}
                     {%- endif %}
-                    {%- if form.recaptcha %}
-                        <div class="form-group form-group-lg">{{ form.recaptcha() }}</div>
-                    {%- endif %}
+
                     <button type="submit"
                             class="btn btn-success btn-lg btn-block"><i
                             class="fa fa-edit"></i> {{ _('Sign Up') }}
