@@ -24,7 +24,26 @@
 
 {%- extends config.ACCOUNTS_COVER_TEMPLATE %}
 
-{% from "invenio_accounts/_macros.html" import render_field, form_errors %}
+{% from "invenio_accounts/_macros.html" import render_field %}
+
+
+{% macro form_errors(form) %}
+  {%- if form.errors %}
+  <div class="alert alert-danger alert-dismissible text-left" role="alert">
+  <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+  {%- for key,err_obj in form.errors.items() recursive %}
+      {%  if err_obj is mapping %}
+          {{  loop(err_obj.items()) }}
+      {% else %}
+          {% for single_message in err_obj %}
+            <p>{{ single_message }}</p>
+          {% endfor %}
+      {% endif %}
+  {%- endfor %}
+  </div>
+  {%- endif %}
+{% endmacro %}
+
 
 {% block panel %}
     {%- with form = register_user_form %}
@@ -37,10 +56,10 @@
                         {{ form.hidden_tag() }}
                         <div class="social-signup">
                             <a href="{{ url_for('invenio_oauthclient.login', remote_app='orcid') }}"
-                               class="btn btn-default btn-lg btn-block"><img
+                               class="btn btn-default btn-lg btn-block" style="color: #2c3e50; font-weight: bolder;"><img
                                     src="{{ url_for('static', filename='img/orcid.svg') }}"
                                     height="18px"> {{ _('Sign up with ORCID') }}</a>
-                            <h3 align="center">— OR —</h3>
+                            <h4 align="center" style="color: white; margin-top: 10px;"> OR </h4>
                         </div>
                         {{ render_field(form.email, icon="fa fa-user", autofocus=True, errormsg=False) }}
                         {{ render_field(form.password, icon="fa fa-lock", errormsg=False) }}
