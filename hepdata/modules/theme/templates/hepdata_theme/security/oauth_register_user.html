@@ -10,9 +10,12 @@
 {%- if app_title == 'ORCID' %}
 <h1 class="plus"><i class="fa fa-plus"></i></h1>
 <img class="orcid" height="95px" src="{{ url_for('static', filename='img/orcid.svg')}}" />
+{% elif app_title == 'CERN' %}
+    <h1 class="plus"><i class="fa fa-plus"></i></h1>
+    <h4>CERN</h4>
 {%- elif app_icon %}
-<h1 class="plus"><i class="fa fa-plus"></i></h1>
-<h1><i class="fa-3x {{app_icon}}"></i></h1>
+    <h1 class="plus"><i class="fa fa-plus"></i></h1>
+    <h1><i class="fa-3x {{app_icon}}"></i></h1>
 {%- endif %}
 {%- endblock %}
 

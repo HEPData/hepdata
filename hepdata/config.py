@@ -25,6 +25,7 @@ from __future__ import absolute_import, print_function
 import os
 import tempfile
 from invenio_oauthclient.contrib.orcid import REMOTE_APP as ORCID_REMOTE_APP
+from invenio_oauthclient.contrib.cern import REMOTE_APP as CERN_REMOTE_APP
 
 
 def _(x):
@@ -187,11 +188,6 @@ TWITTER_HANDLE_MAPPINGS = {
 THEME_404_TEMPLATE = "hepdata_theme/404.html"
 THEME_500_TEMPLATE = "hepdata_theme/500.html"
 
-#: Defintion of OAuth client applications.
-OAUTHCLIENT_REMOTE_APPS = dict(
-    orcid=ORCID_REMOTE_APP,
-)
-
 #: Change default template for oauth sign up.
 OAUTHCLIENT_SIGNUP_TEMPLATE = 'hepdata_theme/security/oauth_register_user.html'
 #: Stop oauthclient from taking over template.
@@ -203,10 +199,25 @@ ORCID_APP_CREDENTIALS = dict(
     consumer_secret="CHANGE_ME",
 )
 
+CERN_APP_CREDENTIALS = dict(
+    consumer_key="CHANGE_ME",
+    consumer_secret="CHANGE_ME",
+)
+
+CERN_REMOTE_APP["params"].update({
+    'request_token_params': {
+        "scope": "Email Groups",
+     }
+})
+
+#: Definition of OAuth client applications.
+OAUTHCLIENT_REMOTE_APPS = dict(
+    orcid=ORCID_REMOTE_APP,
+    cern=CERN_REMOTE_APP
+)
+
 # Import local config file if it is present.
 try:
     from hepdata.config_local import *
 except ImportError:
     pass
-
-
