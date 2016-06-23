@@ -22,10 +22,12 @@
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 from __future__ import absolute_import, print_function
+
+import copy
 import os
 import tempfile
 from invenio_oauthclient.contrib.orcid import REMOTE_APP as ORCID_REMOTE_APP
-from invenio_oauthclient.contrib.cern import REMOTE_APP as CERN_REMOTE_APP
+from invenio_oauthclient.contrib import cern
 
 
 def _(x):
@@ -204,6 +206,7 @@ CERN_APP_CREDENTIALS = dict(
     consumer_secret="CHANGE_ME",
 )
 
+CERN_REMOTE_APP = copy.deepcopy(cern.REMOTE_APP)
 CERN_REMOTE_APP["params"].update({
     'request_token_params': {
         "scope": "Email Groups",
