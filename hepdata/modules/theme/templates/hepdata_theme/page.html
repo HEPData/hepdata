@@ -31,13 +31,18 @@
     <meta name="msapplication-navbutton-color" content="#894B9D">
     <!-- iOS Safari -->
     <meta name="apple-mobile-web-app-status-bar-style" content="#894B9D">
+
+    {%- block additional_meta %}
+    {%- endblock additional_meta %}
     {%- assets "hepdata_theme_css" %}
         <link href="{{ ASSET_URL }}" rel="stylesheet">
     {%- endassets %}
 
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+
     {%- block additional_assets %}
     {%- endblock additional_assets %}
+
     <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
     <!--[if lt IE 9]>
       <script src="//oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>

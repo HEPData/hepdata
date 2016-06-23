@@ -26,6 +26,9 @@
 
 {% from "invenio_accounts/_macros.html" import render_field %}
 
+{%- block additional_meta %}
+    {% include 'hepdata_theme/components/meta_redirect_www.html' %}
+{%- endblock additional_meta %}
 
 {% macro form_errors(form) %}
     {%- if form.errors %}
