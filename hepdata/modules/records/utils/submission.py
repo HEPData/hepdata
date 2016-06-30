@@ -179,22 +179,22 @@ def cleanup_data_resources(data_submission):
     db.session.commit()
 
 
-def process_data_file(recid, basepath, data_sub, datasubmission, main_file_path):
+def process_data_file(recid, basepath, data_obj, datasubmission, main_file_path):
     """
     Takes a data file and any supplementary files and persists their
     metadata to the database whilst recording their upload path.
-    :param basepath:
-    :param data_sub:
-    :param datasubmission:
-    :param main_file_path:
+    :param basepath: the path the submission has been loaded to
+    :param data_obj: Object representation of loaded YAML file
+    :param datasubmission: the DataSubmission object representing this file in the DB
+    :param main_file_path: the data file path
     :return:
     """
     main_data_file = DataResource(
         file_location=main_file_path, file_type="data")
 
-    if "data_license" in data_sub:
+    if "data_license" in data_obj:
         dict = get_prefilled_dictionary(
-            ["name", "url", "description"], data_sub["data_license"])
+            ["name", "url", "description"], data_obj["data_license"])
 
         license = get_or_create(
             db.session, License, name=dict['name'],
@@ -208,11 +208,11 @@ def process_data_file(recid, basepath, data_sub, datasubmission, main_file_path)
 
     datasubmission.data_file = main_data_file.id
 
-    if "location" in data_sub:
-        datasubmission.location_in_publication = data_sub["location"]
+    if "location" in data_obj:
+        datasubmission.location_in_publication = data_obj["location"]
 
-    if "keywords" in data_sub:
-        for keyword in data_sub["keywords"]:
+    if "keywords" in data_obj:
+        for keyword in data_obj["keywords"]:
             keyword_name = keyword['name']
             for value in keyword['values']:
                 keyword = Keyword(name=keyword_name, value=value)
@@ -220,8 +220,8 @@ def process_data_file(recid, basepath, data_sub, datasubmission, main_file_path)
 
     cleanup_data_resources(datasubmission)
 
-    if "additional_resources" in data_sub:
-        resources = parse_additional_resources(basepath, recid, data_sub)
+    if "additional_resources" in data_obj:
+        resources = parse_additional_resources(basepath, recid, data_obj)
         for resource in resources:
             datasubmission.additional_files.append(resource)
 
@@ -364,7 +364,7 @@ def process_submission_directory(basepath, submission_file_path, recid, update=F
 
         submission_file_validator = SubmissionFileValidator()
         is_valid_submission_file = submission_file_validator.validate(
-            submission_file_path)
+            file_path=submission_file_path)
 
         data_file_validator = DataFileValidator()
 
@@ -417,7 +417,7 @@ def process_submission_directory(basepath, submission_file_path, recid, update=F
                     main_file_path = os.path.join(basepath,
                                                   yaml_document["data_file"])
 
-                    if data_file_validator.validate(main_file_path):
+                    if data_file_validator.validate(file_path=main_file_path):
                         process_data_file(recid, basepath, yaml_document,
                                           datasubmission, main_file_path)
                     else:
@@ -490,8 +490,6 @@ def process_validation_errors_for_display(errors):
                 {"level": error.level, "message": error.message.encode("utf-8")}
             )
     return processed_errors
-
-
 
 
 def get_or_create_hepsubmission(recid, coordinator=1, status="todo"):

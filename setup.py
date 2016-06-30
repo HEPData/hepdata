@@ -100,7 +100,7 @@ install_requires = [
     'flask-cors',
     'cryptography',
     'beautifulsoup4',
-    'hepdata_validator',
+    'hepdata_validator==0.1.10',
     'hepdata-converter-ws-client',
     'datacite'
 ]
