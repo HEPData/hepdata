@@ -26,7 +26,7 @@
 -r requirements.pinned.txt
 
 # Base requirements
-Flask==0.10.1
+Flask==0.11.1
 twitter==1.15.0
 timestring
 psycopg2
