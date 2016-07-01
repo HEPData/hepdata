@@ -405,7 +405,11 @@ def get_table_details(recid, data_recid, version):
             data_record = data_query.one()
             file_location = data_record.file_location
 
-            table_contents = yaml.load(file(file_location), Loader=yaml.CSafeLoader)
+            try:
+                table_contents = yaml.load(file(file_location), Loader=yaml.CSafeLoader)
+            except:
+                table_contents = yaml.load(file(file_location))
+
             table_contents["name"] = datasub_record.name
             table_contents["title"] = datasub_record.description
             table_contents["keywords"] = datasub_record.keywords
