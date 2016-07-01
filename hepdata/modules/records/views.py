@@ -88,7 +88,7 @@ def sandbox_display(id):
         publication_recid=id).first()
 
     if hepdata_submission is not None:
-        ctx = format_submission(id, None, 0, 1, hepdata_submission)
+        ctx = format_submission(id, None, 1, 1, hepdata_submission)
         ctx['mode'] = 'sandbox'
         ctx['show_review_widget'] = False
         increment(id)
