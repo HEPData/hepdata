@@ -160,7 +160,7 @@ setup(
     platforms='any',
     entry_points={
         'console_scripts': [
-            'hepdata = hepdata.cli:cli',
+            'hepdata = hepdata.cli:cli'
         ],
         'invenio_base.apps': [
             'hepdata_records = hepdata.modules.records.ext:HEPDataRecords'

@@ -26,7 +26,7 @@ def generate_doi_for_submission(recid, version):
     hep_submission = HEPSubmission.query.filter_by(publication_recid=recid).first()
     publication_info = get_record_by_id(recid)
 
-    version_doi = hep_submission.doi + ".v{0}".format(hep_submission.latest_version)
+    version_doi = hep_submission.doi + ".v{0}".format(hep_submission.version)
 
     hep_submission.data_abstract = decode_string(hep_submission.data_abstract)
     publication_info['title'] = decode_string(publication_info['title'])
@@ -49,7 +49,7 @@ def generate_doi_for_submission(recid, version):
                  base_xml, publication_info['uuid'])
 
     register_doi(version_doi, 'http://www.hepdata.net/record/ins{0}?version={1}'.format(
-        publication_info['inspire_id'], hep_submission.latest_version), version_xml, publication_info['uuid'])
+        publication_info['inspire_id'], hep_submission.version), version_xml, publication_info['uuid'])
 
 
 @shared_task
@@ -85,7 +85,7 @@ def reserve_doi_for_hepsubmission(hepsubmission):
     base_doi = "{0}/hepdata.{1}".format(
         current_app.config.get('DOI_PREFIX'), hepsubmission.publication_recid)
 
-    version = hepsubmission.latest_version
+    version = hepsubmission.version
     if version == 0:
         version += 1
 

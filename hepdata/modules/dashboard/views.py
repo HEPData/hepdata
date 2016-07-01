@@ -24,7 +24,7 @@ from flask import Blueprint, jsonify, request, render_template, redirect, \
 
 from hepdata.modules.records.utils.doi_minter import generate_doi_for_data_submission, \
     generate_doi_for_submission
-from hepdata.modules.records.utils.submission import unload_submission
+from hepdata.modules.records.utils.submission import unload_submission, get_latest_hepsubmission
 from hepdata.modules.records.utils.users import has_role
 from hepdata.modules.records.utils.workflow import send_finalised_email, \
     create_record
@@ -60,8 +60,7 @@ def create_record_for_dashboard(record_id, submissions, primary_uploader=None,
     if publication_record is not None:
         if record_id not in submissions:
 
-            hepdata_submission_record = HEPSubmission.query.filter_by(
-                publication_recid=record_id).first()
+            hepdata_submission_record = get_latest_hepsubmission(record_id)
 
             submissions[record_id] = {}
             submissions[record_id]["metadata"] = {"recid": record_id,
@@ -69,7 +68,7 @@ def create_record_for_dashboard(record_id, submissions, primary_uploader=None,
                                                   "start_date": publication_record.created}
 
             submissions[record_id]["metadata"][
-                "versions"] = hepdata_submission_record.latest_version
+                "versions"] = hepdata_submission_record.version
             submissions[record_id]["status"] = status
             submissions[record_id]["stats"] = {"passed": 0, "attention": 0,
                                                "todo": 0}
@@ -117,7 +116,7 @@ def process_user_record_results(type, query_results, submissions):
 
         record_query_results = DataReview.query.filter_by(
             publication_recid=submission.publication_recid,
-            version=submission.latest_version).order_by(
+            version=submission.version).order_by(
             DataReview.id.asc()).all()
 
         if record_query_results:
@@ -229,7 +228,7 @@ def prepare_submissions(current_user):
                 status_count = DataReview.query.filter_by(
                     publication_recid=hepdata_submission.publication_recid,
                     status=status,
-                    version=hepdata_submission.latest_version).count()
+                    version=hepdata_submission.version).count()
                 if str(hepdata_submission.publication_recid) in submissions:
                     submissions[str(hepdata_submission.publication_recid)][
                         "stats"][status] += status_count
@@ -507,7 +506,7 @@ def do_finalise(recid, publication_record=None, force_finalise=False,
         content.
     """
     hep_submission = HEPSubmission.query.filter_by(
-        publication_recid=recid).first()
+        publication_recid=recid, overall_status="todo").first()
 
     print('Finalising record {}'.format(recid))
 
@@ -517,16 +516,12 @@ def do_finalise(recid, publication_record=None, force_finalise=False,
 
         submissions = DataSubmission.query.filter_by(
             publication_recid=recid,
-            version=hep_submission.latest_version).all()
+            version=hep_submission.version).all()
 
-        # this only happens for the first upload where the version is set to 0.
-        if hep_submission.latest_version == 0:
-            version = hep_submission.latest_version + 1
-        else:
-            version = hep_submission.latest_version
+        version = hep_submission.version
 
         existing_submissions = {}
-        if hep_submission.latest_version > 0 or update:
+        if hep_submission.version > 1 or update:
             # we need to determine which are the existing record ids.
             existing_data_records = get_records_matching_field(
                 'related_publication', recid, doc_type=CFG_DATA_TYPE)
@@ -555,23 +550,21 @@ def do_finalise(recid, publication_record=None, force_finalise=False,
             record['hepdata_doi'] = hep_submission.doi
 
             if commit_message:
-                record['last_updated'] = current_time
-
                 commit_record = RecordVersionCommitMessage(
+
                     recid=recid,
                     version=version,
                     message=commit_message)
 
                 db.session.add(commit_record)
-            else:
-                if hep_submission.last_updated is None:
-                    hep_submission.last_updated = datetime.now()
-                record['last_updated'] = datetime.strftime(hep_submission.last_updated, '%Y-%m-%d %H:%M:%S')
+
+            hep_submission.last_updated = datetime.now()
+            record['last_updated'] = current_time
+            record['version'] = version
 
             record.commit()
 
             hep_submission.overall_status = "finished"
-            hep_submission.latest_version = version
             db.session.add(hep_submission)
 
             db.session.commit()

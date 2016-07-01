@@ -28,6 +28,7 @@ import zipfile
 from datetime import datetime
 from elasticsearch import NotFoundError
 from flask import current_app
+from flask.ext.login import current_user
 from hepdata_validator.data_file_validator import DataFileValidator
 from hepdata_validator.submission_file_validator import \
     SubmissionFileValidator
@@ -179,10 +180,12 @@ def cleanup_data_resources(data_submission):
     db.session.commit()
 
 
-def process_data_file(recid, basepath, data_obj, datasubmission, main_file_path):
+def process_data_file(recid, version, basepath, data_obj, datasubmission, main_file_path):
     """
     Takes a data file and any supplementary files and persists their
     metadata to the database whilst recording their upload path.
+    :param recid: the record id
+    :param version: version of the resource to be stored
     :param basepath: the path the submission has been loaded to
     :param data_obj: Object representation of loaded YAML file
     :param datasubmission: the DataSubmission object representing this file in the DB
@@ -221,7 +224,7 @@ def process_data_file(recid, basepath, data_obj, datasubmission, main_file_path)
     cleanup_data_resources(datasubmission)
 
     if "additional_resources" in data_obj:
-        resources = parse_additional_resources(basepath, recid, data_obj)
+        resources = parse_additional_resources(basepath, recid, version, data_obj)
         for resource in resources:
             datasubmission.additional_files.append(resource)
 
@@ -243,7 +246,7 @@ def process_general_submission_info(basepath, submission_info_document, recid):
         or 'modifications' in submission_info_document \
         or 'record_ids' in submission_info_document:
 
-        hepsubmission = get_or_create_hepsubmission(recid)
+        hepsubmission = get_latest_hepsubmission(recid)
         hepsubmission.data_abstract = encode_string(
             submission_info_document['comment'])
 
@@ -262,7 +265,7 @@ def process_general_submission_info(basepath, submission_info_document, recid):
                 db.session.delete(reference)
 
             resources = parse_additional_resources(basepath,
-                                                   recid, submission_info_document)
+                                                   recid, hepsubmission.version, submission_info_document)
             for resource in resources:
                 hepsubmission.references.append(resource)
 
@@ -272,7 +275,7 @@ def process_general_submission_info(basepath, submission_info_document, recid):
         db.session.commit()
 
 
-def parse_additional_resources(basepath, recid, yaml_document):
+def parse_additional_resources(basepath, recid, version, yaml_document):
     """
     Parses out the additional resource section for a full submission
     :param hepsubmission:
@@ -376,15 +379,20 @@ def process_submission_directory(basepath, submission_file_path, recid, update=F
 
             # process file, extracting contents, and linking
             # the data record with the parent publication
-            hepsubmission = get_or_create_hepsubmission(recid)
-            reserve_doi_for_hepsubmission(hepsubmission)
+            hepsubmission = get_latest_hepsubmission(recid)
 
             # if it is finished and we receive an update,
             # then we need to reopen the submission to allow for revisions.
             if hepsubmission.overall_status == 'finished' and not update:
-                hepsubmission.overall_status = 'todo'
-                hepsubmission.latest_version += 1
-                db.session.add(hepsubmission)
+                # we create a new HEPSubmission object
+                _rev_hepsubmission = HEPSubmission(publication_recid=recid,
+                                                   overall_status='todo',
+                                                   coordinator=hepsubmission.coordinator,
+                                                   version=hepsubmission.version+1)
+                db.session.add(_rev_hepsubmission)
+                hepsubmission = _rev_hepsubmission
+
+            reserve_doi_for_hepsubmission(hepsubmission)
 
             for yaml_document in submission_processed:
                 if 'record_ids' in yaml_document or 'comment' in yaml_document or 'modifications' in yaml_document:
@@ -395,7 +403,7 @@ def process_submission_directory(basepath, submission_file_path, recid, update=F
                     existing_datasubmission_query = DataSubmission.query \
                         .filter_by(name=encode_string(yaml_document["name"]),
                                    publication_recid=recid,
-                                   version=hepsubmission.latest_version)
+                                   version=hepsubmission.version)
 
                     added_file_names.append(yaml_document["name"])
 
@@ -405,7 +413,7 @@ def process_submission_directory(basepath, submission_file_path, recid, update=F
                             name=encode_string(yaml_document["name"]),
                             description=encode_string(
                                 yaml_document["description"]),
-                            version=hepsubmission.latest_version)
+                            version=hepsubmission.version)
 
                     else:
                         datasubmission = existing_datasubmission_query.one()
@@ -418,7 +426,7 @@ def process_submission_directory(basepath, submission_file_path, recid, update=F
                                                   yaml_document["data_file"])
 
                     if data_file_validator.validate(file_path=main_file_path):
-                        process_data_file(recid, basepath, yaml_document,
+                        process_data_file(recid, hepsubmission.version, basepath, yaml_document,
                                           datasubmission, main_file_path)
                     else:
                         errors = process_validation_errors_for_display(
@@ -426,14 +434,14 @@ def process_submission_directory(basepath, submission_file_path, recid, update=F
 
                         data_file_validator.clear_messages()
 
-            cleanup_submission(recid, hepsubmission.latest_version,
+            cleanup_submission(recid, hepsubmission.version,
                                added_file_names)
 
             db.session.commit()
 
             if len(errors) is 0:
                 package_submission(basepath, recid, hepsubmission)
-                reserve_dois_for_data_submissions(recid, hepsubmission.latest_version)
+                reserve_dois_for_data_submissions(recid, hepsubmission.version)
         else:
             errors = process_validation_errors_for_display(
                 submission_file_validator.get_messages())
@@ -455,10 +463,18 @@ def process_submission_directory(basepath, submission_file_path, recid, update=F
 
 
 def package_submission(basepath, recid, hep_submission_obj):
+    """
+    Zips up a submission directory. This is in advance of its download
+    for example by users
+    :param basepath: path of directory containing all submission files
+    :param recid: the publication record ID
+    :param hep_submission_obj: the HEPSubmission object representing
+           the overall position
+    """
     if not os.path.exists(os.path.join(current_app.config['CFG_DATADIR'], str(recid))):
         os.makedirs(os.path.join(current_app.config['CFG_DATADIR'], str(recid)))
 
-    version = hep_submission_obj.latest_version
+    version = hep_submission_obj.version
     if version == 0:
         version = 1
 
@@ -493,6 +509,13 @@ def process_validation_errors_for_display(errors):
 
 
 def get_or_create_hepsubmission(recid, coordinator=1, status="todo"):
+    """
+    Gets of creates a new HEPSubmission record
+    :param recid: the publication record id
+    :param coordinator: the user id of the user who owns this record
+    :param status: e.g. todo, finished.
+    :return: the newly created HEPSubmission object
+    """
     hepsubmission = HEPSubmission.query.filter_by(publication_recid=recid).first()
 
     if hepsubmission is None:
@@ -504,6 +527,27 @@ def get_or_create_hepsubmission(recid, coordinator=1, status="todo"):
         db.session.commit()
 
     return hepsubmission
+
+
+def get_latest_hepsubmission(recid):
+    """
+    Gets of creates a new HEPSubmission record
+    :param recid: the publication record id
+    :param coordinator: the user id of the user who owns this record
+    :param status: e.g. todo, finished.
+    :return: the newly created HEPSubmission object
+    """
+    hepsubmissions = HEPSubmission.query.filter_by(publication_recid=recid).all()
+
+    last = None
+    for hepsubmission in hepsubmissions:
+        if last is None:
+            last = hepsubmission
+        else:
+            if hepsubmission.version > last.version:
+                last = hepsubmission
+
+    return last
 
 
 def create_data_review(data_recid, publication_recid, version=1):

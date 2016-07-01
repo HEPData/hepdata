@@ -113,8 +113,8 @@ def download_submission(recid, version, file_format):
             description="A submission with ID {0} does not exist".format(recid)
         )
 
-    if version > submission.latest_version or version == -1:
-        version = submission.latest_version
+    if version > submission.version or version == -1:
+        version = submission.version
 
     if version == 0:
         version += 1
@@ -143,7 +143,6 @@ def download_submission(recid, version, file_format):
     }
 
     data_filepath = os.path.join(path, data_filename)
-
 
     converted_file = convert_zip_archive(data_filepath,
                                          output_path,

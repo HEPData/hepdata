@@ -86,10 +86,9 @@ RECORD_PLAIN_TEXT = {
 def sandbox_display(id):
     hepdata_submission = HEPSubmission.query.filter_by(
         publication_recid=id).first()
-    version = int(request.args.get('version', -1))
 
     if hepdata_submission is not None:
-        ctx = format_submission(id, None, version, hepdata_submission)
+        ctx = format_submission(id, None, 0, 1, hepdata_submission)
         ctx['mode'] = 'sandbox'
         ctx['show_review_widget'] = False
         increment(id)
@@ -159,7 +158,7 @@ def metadata(recid, *args, **kwargs):
     return do_render_record(recid=recid, record=record, version=version, output_format=format)
 
 
-def format_submission(recid, record, version, hepdata_submission,
+def format_submission(recid, record, version, version_count, hepdata_submission,
                       data_table=None):
     """
     Performs all the processing of the record to be display
@@ -174,12 +173,13 @@ def format_submission(recid, record, version, hepdata_submission,
     if hepdata_submission is not None:
 
         ctx['record'] = record
-        ctx["version_count"] = hepdata_submission.latest_version
+        ctx["version_count"] = version_count
 
         if version is not -1:
             ctx["version"] = version
         else:
-            ctx["version"] = hepdata_submission.latest_version
+            # we get the latest version by default
+            ctx["version"] = version_count
 
         if record is not None:
             if "collaborations" in record and type(record['collaborations']) is not list:
@@ -234,7 +234,7 @@ def format_submission(recid, record, version, hepdata_submission,
                 ctx["version"] -= 1
                 ctx["version_count"] -= 1
 
-        ctx['additional_resources'] = len(hepdata_submission.references) > 0
+        ctx['additional_resources'] = get_resource_count(hepdata_submission, version_count)
 
         # query for a related data submission
         data_record_query = DataSubmission.query.filter_by(
@@ -263,6 +263,10 @@ def format_submission(recid, record, version, hepdata_submission,
     return ctx
 
 
+def get_resource_count(hepsubmission, versions):
+    return len(hepsubmission.references) > 0
+
+
 def extract_journal_info(record):
     if record and 'type' in record:
         if 'thesis' in record['type']:
@@ -276,11 +280,17 @@ def extract_journal_info(record):
 
 
 def do_render_record(recid, record, version, output_format, light_mode=False):
+    version_count = HEPSubmission.query.filter_by(
+        publication_recid=recid).count()
+
+    if version == -1:
+        version = version_count
+
     hepdata_submission = HEPSubmission.query.filter_by(
-        publication_recid=recid).first()
+        publication_recid=recid, version=version).first()
 
     if hepdata_submission is not None:
-        ctx = format_submission(recid, record, version, hepdata_submission)
+        ctx = format_submission(recid, record, version, version_count, hepdata_submission)
         increment(recid)
         if output_format == "json":
             ctx = process_ctx(ctx, light_mode)
@@ -300,7 +310,7 @@ def do_render_record(recid, record, version, output_format, light_mode=False):
                 publication_recid=publication_recid).first()
 
             ctx = format_submission(publication_recid, publication_record,
-                                    version, hepdata_submission,
+                                    version, 0, hepdata_submission,
                                     data_table=record['title'])
             ctx['related_publication_id'] = publication_recid
             ctx['table_name'] = record['title']
@@ -395,7 +405,7 @@ def get_table_details(recid, data_recid, version):
             data_record = data_query.one()
             file_location = data_record.file_location
 
-            table_contents = yaml.safe_load(file(file_location))
+            table_contents = yaml.load(file(file_location), Loader=yaml.CSafeLoader)
             table_contents["name"] = datasub_record.name
             table_contents["title"] = datasub_record.description
             table_contents["keywords"] = datasub_record.keywords
@@ -616,23 +626,25 @@ def get_all_review_messages(publication_recid):
     return json.dumps(messages, default=default_time)
 
 
-@blueprint.route('/resources/<int:recid>', methods=['GET'])
+@blueprint.route('/resources/<int:recid>/<int:version>', methods=['GET'])
 @returns_json
-def get_resources(recid):
+def get_resources(recid, version):
     """
     Gets a list of resources for a publication, relevant to all data records
     :param recid:
     :return: json
     """
+
     result = []
-    submission = HEPSubmission.query.filter_by(publication_recid=recid)
+    submission = HEPSubmission.query.filter_by(publication_recid=recid, version=version)
+
     if submission.count() > 0:
         submission_obj = submission.first()
         for reference in submission_obj.references:
             result.append(
-                {'id': reference.id, 'file_type': reference.file_type,
-                 'file_description': reference.file_description,
-                 'location': reference.file_location})
+                    {'id': reference.id, 'file_type': reference.file_type,
+                     'file_description': reference.file_description,
+                     'location': reference.file_location})
 
     return json.dumps(result)
 

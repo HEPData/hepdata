@@ -62,10 +62,11 @@
             }
         {%else %}
             // as a final try, we try to get html for a submission, in the case that it's a resource'
+
             $.ajax({
                 type: 'GET',
                 dataType: 'json',
-                url: '/record/resources/{{ctx.recid | safe}}',
+                url: '/record/resources/{{ctx.recid | safe}}/{{ ctx.version | safe}}',
                 success: function (data) {
                     for (var resource in data) {
                         if (data[resource]['file_type'] == 'html') {
@@ -108,7 +109,7 @@
             $.ajax({
                 type: 'GET',
                 dataType: 'json',
-                url: '/record/resources/' + recid,
+                url: '/record/resources/' + recid + '/' + {{ ctx.version | safe}},
                 success: function (data) {
                     $("#resource-list ul").html('');
                     for (var resource in data) {

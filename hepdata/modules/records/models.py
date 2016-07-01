@@ -25,6 +25,8 @@
 from __future__ import absolute_import, print_function
 
 import uuid
+
+from alembic import op
 from sqlalchemy_utils.types import UUIDType
 
 from invenio_accounts.models import User
@@ -34,18 +36,19 @@ from invenio_db import db
 submission_participant_link = db.Table(
     'submission_participant_link',
     db.Column('rec_id', db.Integer,
-              db.ForeignKey('hepsubmission.publication_recid')),
+              db.ForeignKey('hepsubmission.id')),
 
     db.Column('participant_id', db.Integer,
               db.ForeignKey('submissionparticipant.id')))
 
 data_reference_link = db.Table(
     'data_resource_link',
-    db.Column('rec_id', db.Integer,
-              db.ForeignKey('hepsubmission.publication_recid')),
+    db.Column('submission_id', db.Integer,
+              db.ForeignKey('hepsubmission.id')),
 
     db.Column('dataresource_id', db.Integer,
-              db.ForeignKey('dataresource.id', ondelete='CASCADE')))
+              db.ForeignKey('dataresource.id', ondelete='CASCADE'))
+)
 
 
 class HEPSubmission(db.Model):
@@ -56,8 +59,9 @@ class HEPSubmission(db.Model):
     """
     __tablename__ = "hepsubmission"
 
-    publication_recid = db.Column(db.Integer,
-                                  primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+
+    publication_recid = db.Column(db.Integer)
 
     data_abstract = db.Column(db.LargeBinary)
 
@@ -83,7 +87,7 @@ class HEPSubmission(db.Model):
     # this links to the latest version of the data files to be shown
     # in the submission and allows one to go back in time via the
     # interface to view various stages of the submission.
-    latest_version = db.Column(db.Integer, default=0)
+    version = db.Column(db.Integer, default=1)
 
     # the doi for the whole submission.
     doi = db.Column(db.String(128), nullable=True)
@@ -260,8 +264,9 @@ class RecordVersionCommitMessage(db.Model):
         db.Integer, primary_key=True,
         nullable=False, autoincrement=True)
 
-    recid = db.Column(db.Integer, db.ForeignKey("hepsubmission.publication_recid"))
-    version = db.Column(db.Integer, default=1)
+    recid = db.Column(db.Integer)
+
     creation_date = db.Column(
         db.DateTime, nullable=False, default=func.now(), index=True)
+    version = db.Column(db.Integer, default=1)
     message = db.Column(db.String(1024))
