@@ -29,7 +29,6 @@ from __future__ import absolute_import, print_function
 from operator import or_
 
 import pkg_resources
-from flask.ext.alembic import Alembic
 from flask_cors import CORS
 from invenio_accounts.models import User
 from hepdata.modules.records.models import SubmissionParticipant

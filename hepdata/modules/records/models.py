@@ -26,7 +26,6 @@ from __future__ import absolute_import, print_function
 
 import uuid
 
-from alembic import op
 from sqlalchemy_utils.types import UUIDType
 
 from invenio_accounts.models import User
