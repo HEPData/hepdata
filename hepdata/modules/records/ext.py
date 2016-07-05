@@ -29,7 +29,6 @@ from __future__ import absolute_import, print_function
 from operator import or_
 
 import pkg_resources
-
 from invenio_accounts.models import User
 from hepdata.modules.records.models import SubmissionParticipant
 from hepdata.modules.theme.views import internal_error
@@ -71,8 +70,10 @@ class HEPDataRecords(object):
         try:
             from flask_cors import CORS
             pkg_resources.get_distribution('Flask-CORS')
+
             # CORS can be configured using CORS_* configuration variables.
             CORS(app)
+
         except pkg_resources.DistributionNotFound:
             raise RuntimeError(
                 "You must use `pip install flask-cors` to "
