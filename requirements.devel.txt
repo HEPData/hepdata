@@ -23,4 +23,3 @@
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
 # Requirements for testing development version of important packages.
--e git+git://github.com/mitsuhiko/Flask.git#egg=Flask

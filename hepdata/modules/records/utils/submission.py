@@ -380,6 +380,11 @@ def process_submission_directory(basepath, submission_file_path, recid, update=F
             # process file, extracting contents, and linking
             # the data record with the parent publication
             hepsubmission = get_latest_hepsubmission(recid)
+            if hepsubmission is None:
+                HEPSubmission(publication_recid=recid,
+                              overall_status='todo',
+                              coordinator=int(current_user.get_id()),
+                              version=hepsubmission.version + 1)
 
             # if it is finished and we receive an update,
             # then we need to reopen the submission to allow for revisions.
@@ -388,7 +393,7 @@ def process_submission_directory(basepath, submission_file_path, recid, update=F
                 _rev_hepsubmission = HEPSubmission(publication_recid=recid,
                                                    overall_status='todo',
                                                    coordinator=hepsubmission.coordinator,
-                                                   version=hepsubmission.version+1)
+                                                   version=hepsubmission.version + 1)
                 db.session.add(_rev_hepsubmission)
                 hepsubmission = _rev_hepsubmission
 

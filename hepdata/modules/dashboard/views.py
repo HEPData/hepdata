@@ -558,8 +558,11 @@ def do_finalise(recid, publication_record=None, force_finalise=False,
 
                 db.session.add(commit_record)
 
-            hep_submission.last_updated = datetime.now()
-            record['last_updated'] = current_time
+            if hep_submission.last_updated is None:
+                hep_submission.last_updated = datetime.now()
+
+            record['last_updated'] = datetime.strftime(hep_submission.last_updated, '%Y-%m-%d %H:%M:%S')
+
             record['version'] = version
 
             record.commit()

@@ -26,6 +26,9 @@ from __future__ import absolute_import, print_function
 import copy
 import os
 import tempfile
+from datetime import timedelta
+
+from celery.schedules import crontab
 from invenio_oauthclient.contrib.orcid import REMOTE_APP as ORCID_REMOTE_APP
 from invenio_oauthclient.contrib import cern
 
@@ -52,6 +55,14 @@ I18N_LANGUAGES = [
 BROKER_URL = "redis://localhost:6379/0"
 CELERY_RESULT_BACKEND = "redis://localhost:6379/1"
 CELERY_ACCEPT_CONTENT = ['json', 'msgpack', 'yaml']
+
+CELERYBEAT_SCHEDULE = {
+    # Executes every 6 hours
+    'get-updated-content': {
+        'task': 'hepdata.modules.records.migrator.api.add_or_update_records_since_date',
+        'schedule': timedelta(hours=6)
+    },
+}
 
 # Cache
 CACHE_KEY_PREFIX = "cache::"

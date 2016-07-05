@@ -23,6 +23,7 @@
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
 import socket
+from datetime import datetime, timedelta
 from urllib2 import HTTPError
 import zipfile
 from celery import shared_task
@@ -83,6 +84,55 @@ def update_submissions(inspire_ids_to_update, only_record_information=False):
                                        only_record_information)
         else:
             log.error('No record exists with id {0}. You should load this file first.'.format(inspire_id))
+
+
+@shared_task
+def add_or_update_records_since_date(date=None):
+    """
+    Given a date, gets all the records updated or added since that
+    date and updates or adds the corresponding records
+    :param date: in the format YYYYddMM (e.g. 20160705 for the 5th July 2016)
+    :return:
+    """
+    if not date:
+        # then use yesterdays date
+        yesterday = datetime.now() - timedelta(days=1)
+        date = yesterday.strftime("%Y%m%d")
+
+    inspire_ids = get_all_ids_in_current_system(date)
+    print("{0} records to be added or updated since {1}.".format(len(inspire_ids), date))
+    load_files(inspire_ids)
+
+
+def get_all_ids_in_current_system(date=None, prepend_id_with="ins"):
+    """
+    Finds all the IDs that have been added or updated since some date
+    :param date:
+    :param prepend_id_with:
+    :return:
+    """
+    import requests, re
+
+    brackets_re = re.compile(r'\[+|\]+')
+    inspire_ids = []
+    base_url = 'http://hepdata.cedar.ac.uk/allids/{0}'
+    if date:
+        base_url = base_url.format(date)
+    else:
+        base_url = base_url.format('')
+
+    response = requests.get(base_url)
+    if response.ok:
+        _all_ids = response.text
+        for match in re.finditer('\[[0-9]+,[0-9]+,[0-9]+\]', _all_ids):
+            start = match.start()
+            end = match.end()
+            # process the block which is of the form [inspire_id,xxx,xxx]
+            id_block = brackets_re.sub("", _all_ids[start:end])
+            id = id_block.split(',')[0].strip()
+            if id != '0': inspire_ids.append(
+                prepend_id_with + "{}".format(id))
+    return inspire_ids
 
 
 def load_files(inspire_ids, send_tweet=False, synchronous=False):
