@@ -176,7 +176,7 @@ def send_finalised_email(hepsubmission):
             'hepdata_dashboard/email/finalised.html',
             name=participant.full_name,
             article=hepsubmission.publication_recid,
-            version=hepsubmission.latest_version,
+            version=hepsubmission.version,
             title=record['title'],
             link="http://hepdata.net/record/{0}"
                 .format(hepsubmission.publication_recid))

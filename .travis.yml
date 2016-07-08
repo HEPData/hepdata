@@ -67,7 +67,7 @@ before_script:
     - "sleep 3" # give xvfb some time to start
 
 script:
-  - "py.test  tests -k 'not tests/e2e'"
+  - "py.test tests -k 'not tests/e2e'"
 
 after_success:
   - coveralls

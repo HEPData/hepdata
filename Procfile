@@ -1,4 +1,4 @@
-web: hepdata run --debugger
+web: gunicorn hepdata.wsgi -c gunicorn.cfg
 cache: redis-server
 worker: celery worker -E -B -A hepdata.celery --loglevel=INFO --workdir="${VIRTUAL_ENV}" --autoreload --pidfile="${VIRTUAL_ENV}/worker.pid" --purge
 workermon: flower --broker=amqp://guest:guest@localhost:5672
