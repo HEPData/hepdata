@@ -295,7 +295,7 @@
             $(".finalise-btn").bind("click", function () {
                 $("#finalise_submission_button").attr('data-recid', $(this).attr('data-recid'));
                 $("#finalise_submission_button").attr('data-versions', $(this).attr('data-versions'));
-                if ($(this).attr('data-versions') == 0) {
+                if ($(this).attr('data-versions') == 1) {
                     $("#revision_commit_message").addClass("hidden");
                 }
                 $("#finaliseDialog").modal();

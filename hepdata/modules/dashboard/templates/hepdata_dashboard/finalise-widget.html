@@ -79,7 +79,7 @@
 
     $(document).on('click', '#finalise_submission_button', function () {
 
-        if ($(this).attr('data-versions') > 0 && $("#commit_message").val() == '') {
+        if ($(this).attr('data-versions') > 1 && $("#commit_message").val() == '') {
             alert("Please enter a message describing changes in this revision.");
             return false;
         }
