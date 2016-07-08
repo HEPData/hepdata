@@ -550,19 +550,20 @@ def do_finalise(recid, publication_record=None, force_finalise=False,
             record['hepdata_doi'] = hep_submission.doi
 
             if commit_message:
-                commit_record = RecordVersionCommitMessage(
 
+                # On a revision, the last updated date will
+                # be the current date.
+                hep_submission.last_updated = datetime.now()
+
+                commit_record = RecordVersionCommitMessage(
                     recid=recid,
                     version=version,
                     message=commit_message)
 
                 db.session.add(commit_record)
 
-            if hep_submission.last_updated is None:
-                hep_submission.last_updated = datetime.now()
-
-            record['last_updated'] = datetime.strftime(hep_submission.last_updated, '%Y-%m-%d %H:%M:%S')
-
+            record['last_updated'] = datetime.strftime(
+                hep_submission.last_updated, '%Y-%m-%d %H:%M:%S')
             record['version'] = version
 
             record.commit()

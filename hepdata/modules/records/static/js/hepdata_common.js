@@ -181,8 +181,8 @@ HEPDATA.render_associated_files = function (associated_files, placement) {
     var html = '';
     var link = file['alt_location'];
 
-    if (file.type == 'github') {
-      html = '<a href="' + link + '" class="btn btn-md support-file-link" target="_blank">Code in ' + file.type + '</a>'
+    if (link.indexOf('http') >= 0) {
+      html = '<a href="' + link + '" class="btn btn-md support-file-link" target="_blank">' + file.type + '</a>'
     } else if (HEPDATA.is_image(link.toLowerCase())) {
       html = '<button type="button" class="btn btn-md support-file" data-file-id="' + file.id + '">Associated Figure</button>';
     }

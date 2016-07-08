@@ -295,6 +295,10 @@
   border: none;
   text-transform: capitalize;
   margin-right: 1px;
+
+  a {
+    color: $navy;
+  }
 }
 
 .support-file:hover, .support-file-link:hover {
