@@ -23,9 +23,12 @@
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 from __future__ import absolute_import, print_function
 
+import logging
 import uuid
 import zipfile
 from datetime import datetime
+from urllib2 import URLError
+
 from elasticsearch import NotFoundError
 from flask import current_app
 from flask.ext.login import current_user
@@ -56,6 +59,8 @@ __author__ = 'eamonnmaguire'
 
 SUBMISSION_FILE_NAME_PATTERN = 'HEPData-{}-v{}-yaml.zip'
 
+logging.basicConfig()
+log = logging.getLogger(__name__)
 
 def assign_record_id(record_information, id=None):
     """
@@ -82,12 +87,13 @@ def remove_submission(record_id):
     :return: True if Successful, False if the record does not exist.
     """
 
-    hepdata_submission = HEPSubmission.query.filter_by(
-        publication_recid=record_id)
+    hepdata_submissions = HEPSubmission.query.filter_by(
+        publication_recid=record_id).all()
 
     try:
         try:
-            db.session.delete(hepdata_submission.one())
+            for hepdata_submission in hepdata_submissions:
+                db.session.delete(hepdata_submission)
         except NoResultFound as nrf:
             print(nrf.args)
 
@@ -306,24 +312,29 @@ def parse_additional_resources(basepath, recid, version, yaml_document):
             except Exception as e:
                 raise e
         else:
-            resource_location = download_resource_file(recid, resource_location)
-            print('Downloaded resource location is {0}'.format(resource_location))
+            try:
+                resource_location = download_resource_file(recid, resource_location)
+                print('Downloaded resource location is {0}'.format(resource_location))
+            except URLError as url_error:
+                log.error("Unable to download {0}. The resource is unavailable.".format(resource_location))
+                resource_location = None
 
-        new_reference = DataResource(
-            file_location=resource_location, file_type=file_type,
-            file_description=reference['description'])
+        if resource_location:
+            new_reference = DataResource(
+                file_location=resource_location, file_type=file_type,
+                file_description=reference['description'])
 
-        if "license" in reference:
-            dict = get_prefilled_dictionary(
-                ["name", "url", "description"],
-                reference["license"])
+            if "license" in reference:
+                dict = get_prefilled_dictionary(
+                    ["name", "url", "description"],
+                    reference["license"])
 
-            resource_license = get_or_create(
-                db.session, License, name=dict['name'],
-                url=dict['url'], description=dict['description'])
-            new_reference.file_license = resource_license.id
+                resource_license = get_or_create(
+                    db.session, License, name=dict['name'],
+                    url=dict['url'], description=dict['description'])
+                new_reference.file_license = resource_license.id
 
-        resources.append(new_reference)
+            resources.append(new_reference)
 
     return resources
 
@@ -577,7 +588,10 @@ def unload_submission(record_id):
     data_records = get_records_matching_field("related_publication", record_id)
     for record in data_records["hits"]["hits"]:
         print("\t Removed data table {0} from index".format(record["_id"]))
-        delete_item_from_index(doc_type=CFG_DATA_TYPE, id=record["_id"])
+        try:
+            delete_item_from_index(doc_type=CFG_DATA_TYPE, id=record["_id"], parent=record_id)
+        except Exception as e:
+            logging.error("Unable to remove {0} from index. {1}".format(record["_id"], e))
 
     try:
         delete_item_from_index(doc_type=CFG_PUB_TYPE, id=record_id)
