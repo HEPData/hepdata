@@ -1,0 +1,63 @@
+<!-- Modal -->
+{% if ctx.record %}
+    <div class="modal fade" id="notifyReviewer" tabindex="-1" role="dialog"
+         aria-labelledby="codeDialog" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"
+                            aria-label="Close"><span
+                            aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="codeDialogLabel">
+                        Notify the reviewer</h4>
+                </div>
+
+                <div class="modal-body">
+                    <div class="container-fluid" id="review-notify-container">
+
+                        {% if ctx.reviewer_count > 0 %}
+                            <div class="row-fluid">
+                                <div class="col-md-12">
+                                    <label for="message">Additional Message to Reviewer? (optional)</label>
+                                    <textarea id="reviewer_msg" name="message" class="form-control"
+                                              placeholder="This is ready to be reviewed. Here's a summary of my changes..."></textarea>
+                                    <br/> <br/>
+                                    <div align="center">
+                                        <button type="submit" class="btn btn-warning btn-md" onclick="send_message()">
+                                            Notify Reviewer
+                                        </button>
+                                    </div>
+
+                                </div>
+                            </div>
+                        {% else %}
+                            <h4>No reviewers for this submission.</h4>
+                            <p>This submission has no reviewers attached. Please contact the submission coordinator
+                                to get a reviewer assigned.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        var send_message = function () {
+
+            $("#notify-reviewer-btn").addClass("hidden");
+            $("#reviewer-message-area").html('<p>Reviewer(s) notified by email</p>');
+            $.post('/record/{{ ctx.recid |safe }}/{{ ctx.version |safe }}/notify', {message: $("#reviewer_msg").val()})
+                    .done(function (data) {
+                        $("#review-notify-container").html('<h4>Sent Notification</h4>');
+                        setTimeout(function () {
+                            $("#notifyReviewer").modal('hide')
+                        }, 1000)
+                    })
+                    .fail(function (data) {
+                        alert(data.status + ": " + data.message);
+                    });
+
+        }
+    </script>
+
+{% endif %}

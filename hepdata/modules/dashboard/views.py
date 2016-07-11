@@ -29,6 +29,7 @@ from hepdata.modules.records.utils.users import has_role
 from hepdata.modules.records.utils.workflow import send_finalised_email, \
     create_record
 from hepdata.modules.stats.models import DailyAccessStatistic
+from hepdata.modules.submission.views import send_cookie_email
 from hepdata.utils.twitter import tweet
 
 __author__ = 'eamonnmaguire'
@@ -358,10 +359,8 @@ def promote_or_demote_participant(recid, action, demote_or_promote,
         record = get_record_by_id(recid)
 
         # now send the email telling the user of their new status!
-        # if status == 'primary':
-        # send_cookie_email(recid, record['title']['title'], action,
-        #                   {'email': participant.email,
-        #                    'full_name': participant.full_name})
+        if status == 'primary':
+            send_cookie_email(participant, record)
 
         return json.dumps({"success": True, "recid": recid})
     except Exception as e:
@@ -378,8 +377,7 @@ def add_participant(recid):
     :return:
     """
     try:
-        submission_record = HEPSubmission.query.filter_by(
-            publication_recid=recid).one()
+        submission_record = get_latest_hepsubmission(recid)
         full_name = request.form['name']
         email = request.form['email']
         participant_type = request.form['type']

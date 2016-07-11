@@ -55,11 +55,11 @@ from hepdata.modules.records.utils.common import get_record_by_id, \
 from hepdata.modules.records.utils.data_processing_utils import \
     generate_table_structure, process_ctx
 from hepdata.modules.records.utils.submission import create_data_review, \
-    get_or_create_hepsubmission, process_submission_directory, remove_submission
+    get_or_create_hepsubmission, process_submission_directory, remove_submission, get_latest_hepsubmission
 from hepdata.modules.records.utils.users import get_coordinators_in_system, \
     has_role
 from hepdata.modules.records.utils.workflow import \
-    update_action_for_submission_participant, send_new_upload_email
+    update_action_for_submission_participant, send_new_upload_email, NoReviewersException
 from hepdata.modules.records.utils.workflow import \
     send_new_review_message_email
 from hepdata.modules.stats.views import get_count, increment
@@ -116,6 +116,28 @@ def get_metadata_by_alternative_id(recid, *args, **kwargs):
                                     light_mode=light_mode)
     except Exception as e:
         return render_template('hepdata_theme/404.html')
+
+
+@login_required
+@blueprint.route('/<int:recid>/<int:version>/notify', methods=['POST'], strict_slashes=True)
+def notify_reviewers(recid, version):
+    message = request.form['message']
+
+    submission = HEPSubmission.query.filter_by(publication_recid=recid, version=version).first()
+    try:
+        current_user_obj = get_user_from_id(current_user.get_id())
+        send_new_upload_email(recid, current_user_obj, message=message)
+
+        submission.reviewers_notified = True
+        db.session.add(submission)
+        db.session.commit()
+
+        return jsonify({"status": "success"})
+    except NoReviewersException as nre:
+        return jsonify({"status": "error", "message": "There are no reviewers for this submission."})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"status": "error", "message": e.__str__()})
 
 
 def get_record_contents(recid):
@@ -213,6 +235,10 @@ def format_submission(recid, record, version, version_count, hepdata_submission,
             determine_user_privileges(recid, ctx)
             ctx['show_upload_widget'] = True
             ctx['show_review_widget'] = False
+
+        ctx['reviewer_count'] = SubmissionParticipant.query.filter_by(
+            publication_recid=recid, status="primary", role="reviewer").count()
+        ctx['reviewers_notified'] = hepdata_submission.reviewers_notified
 
         ctx['record']['last_updated'] = hepdata_submission.last_updated
 
@@ -454,8 +480,7 @@ def get_table_details(recid, data_recid, version):
 @login_required
 def get_coordinator_view(recid):
     # there should only ever be one rev
-    hepsubmission_record = db.session.query(HEPSubmission).filter(
-        HEPSubmission.publication_recid == recid).one()
+    hepsubmission_record = get_latest_hepsubmission(recid)
 
     participants = {"reviewer": {"reserve": [], "primary": []},
                     "uploader": {"reserve": [], "primary": []}}
@@ -646,9 +671,9 @@ def get_resources(recid, version):
         submission_obj = submission.first()
         for reference in submission_obj.references:
             result.append(
-                    {'id': reference.id, 'file_type': reference.file_type,
-                     'file_description': reference.file_description,
-                     'location': reference.file_location})
+                {'id': reference.id, 'file_type': reference.file_type,
+                 'file_description': reference.file_description,
+                 'location': reference.file_location})
 
     return json.dumps(result)
 
@@ -765,11 +790,11 @@ def update_sandbox_payload(recid):
     # generate a unique id
 
     file = request.files['hep_archive']
-    return process_payload(recid, file, '/record/sandbox/{}', send_email=False)
+    return process_payload(recid, file, '/record/sandbox/{}')
 
 
-def process_payload(recid, file, redirect_url, send_email=True):
-    print(file.filename)
+def process_payload(recid, file, redirect_url):
+
     if file and (allowed_file(file.filename) or "oldhepdata" in file.filename):
         errors = process_zip_archive(file, recid)
         if errors:
@@ -777,10 +802,8 @@ def process_payload(recid, file, redirect_url, send_email=True):
             return render_template('hepdata_records/error_page.html',
                                    recid=None, errors=errors)
         else:
-            current_user_obj = get_user_from_id(current_user.get_id())
+
             update_action_for_submission_participant(recid, current_user.get_id(), 'uploader')
-            if send_email:
-                send_new_upload_email(recid, current_user_obj)
             return redirect(redirect_url.format(recid))
     else:
         return render_template('hepdata_records/error_page.html', recid=recid,

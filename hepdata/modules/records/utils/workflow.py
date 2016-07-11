@@ -136,7 +136,11 @@ def send_new_review_message_email(review, message, user):
                 .format(review.publication_recid), message_body)
 
 
-def send_new_upload_email(recid, user):
+class NoReviewersException(Exception):
+    pass
+
+
+def send_new_upload_email(recid, user, message=None):
     """
     :param action: e.g. upload or review_message
     :param hepsubmission: submission information
@@ -147,6 +151,9 @@ def send_new_upload_email(recid, user):
     submission_participants = SubmissionParticipant.query.filter_by(
         publication_recid=recid, status="primary", role="reviewer")
 
+    if submission_participants.count() == 0:
+        raise NoReviewersException()
+
     record = get_record_by_id(recid)
 
     for participant in submission_participants:
@@ -154,11 +161,10 @@ def send_new_upload_email(recid, user):
                                        name=participant.full_name,
                                        actor=user.email,
                                        article=recid,
+                                       message=message,
                                        title=record['title'],
                                        link="http://hepdata.net/record/{0}"
                                        .format(recid))
-
-        print message_body
 
         create_send_email_task(participant.email,
                                '[HEPData] Submission {0} has a new upload available for you to review.'.format(recid),

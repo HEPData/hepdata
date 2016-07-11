@@ -91,6 +91,8 @@ class HEPSubmission(db.Model):
     # the doi for the whole submission.
     doi = db.Column(db.String(128), nullable=True)
 
+    reviewers_notified = db.Column(db.Boolean, default=False)
+
 
 class SubmissionParticipant(db.Model):
     __tablename__ = "submissionparticipant"
