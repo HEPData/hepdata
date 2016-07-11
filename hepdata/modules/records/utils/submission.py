@@ -397,6 +397,9 @@ def process_submission_directory(basepath, submission_file_path, recid, update=F
                               coordinator=int(current_user.get_id()),
                               version=hepsubmission.version + 1)
 
+            # On a new upload, we reset the flag to notify reviewers
+            hepsubmission.reviewers_notified = False
+
             # if it is finished and we receive an update,
             # then we need to reopen the submission to allow for revisions.
             if hepsubmission.overall_status == 'finished' and not update:

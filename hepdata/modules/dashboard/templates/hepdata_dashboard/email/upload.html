@@ -9,7 +9,12 @@
 
     <p><a href="{{ link }}" style="color: #9b59b6">{{ title }}</a> has a new upload from {{ actor }}. </p>
 
-    <p>You can view it <a href="{{ link }}" style="color: #9b59b6">here</a>.
+    {% if message %}
+        <p style="font-weight: bolder">Message:</p>
+        <p style="padding-left: 20px; font-weight: lighter">{{ message }}</p>
+    {% endif %}
+
+    <p>You can view the record <a href="{{ link }}" style="color: #9b59b6">here</a>.
     </p>
 
     <p>

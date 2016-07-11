@@ -2,6 +2,14 @@
     <div align="center">
 
         {% if ctx.show_upload_widget and ctx.status != 'finished' %}
+
+            {% if not ctx.reviewers_notified %}
+            <button type="button" class="btn btn-warning btn-md" data-toggle="modal" style="width: 100%"
+                    id="notify-reviewer-btn" data-target="#notifyReviewer"><span
+                    class="fa fa-bell"></span> Notify Reviewer
+            </button>
+                {% endif %}
+
             <button type="button" class="btn btn-success btn-md" data-toggle="modal" style="width: 100%"
                     data-target="#uploadDialog"><span
                     class="fa fa-upload"></span> Upload New Files
