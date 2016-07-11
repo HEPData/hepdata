@@ -287,6 +287,17 @@
   float: left;
 }
 
+#uploadDialog {
+  .modal-body {
+    background-color: $navy;
+    color: white;
+  }
+
+  .modal-header {
+    border-bottom: none;
+  }
+}
+
 .support-file, .support-file-link {
   background-color: $lightgrey;
   color: $navy-light;

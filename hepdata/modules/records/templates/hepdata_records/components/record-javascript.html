@@ -61,22 +61,25 @@
                 }, 2000);
             }
         {%else %}
-            // as a final try, we try to get html for a submission, in the case that it's a resource'
-
-            $.ajax({
-                type: 'GET',
-                dataType: 'json',
-                url: '/record/resources/{{ctx.recid | safe}}/{{ ctx.version | safe}}',
-                success: function (data) {
-                    for (var resource in data) {
-                        if (data[resource]['file_type'] == 'html') {
-                            $("#hepdata_table_detail").load('/record/resource/' + data[resource]['id'], function () {
-                                MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
-                            });
+            // only load this code if we have a record to display (not always the case, e.g. when in the
+            // main sandbox page.)
+            {% if ctx.recid %}
+                // as a final try, we try to get html for a submission, in the case that it's a resource'
+                $.ajax({
+                    type: 'GET',
+                    dataType: 'json',
+                    url: '/record/resources/{{ctx.recid | safe}}/{{ ctx.version | safe}}',
+                    success: function (data) {
+                        for (var resource in data) {
+                            if (data[resource]['file_type'] == 'html') {
+                                $("#hepdata_table_detail").load('/record/resource/' + data[resource]['id'], function () {
+                                    MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
+                                });
+                            }
                         }
                     }
-                }
-            });
+                });
+            {% endif %}
         {%endif %}
 
         show_resource = function (id, file_type, location) {
@@ -104,12 +107,15 @@
 
         $("#show_resources").bind("click", function () {
             var recid = $(this).attr('data-recid');
-
+            var version = 1;
+            {% if ctx.version %}
+                version = {{ ctx.version |safe }};
+            {% endif %}
             $("#resourceModal").modal();
             $.ajax({
                 type: 'GET',
                 dataType: 'json',
-                url: '/record/resources/' + recid + '/' + {{ ctx.version | safe}},
+                url: '/record/resources/' + recid + '/' + version,
                 success: function (data) {
                     $("#resource-list ul").html('');
                     for (var resource in data) {
@@ -170,6 +176,32 @@
         $("#hepdata_table_detail").css('width', "62%");
         $("#hepdata_tables").css('margin-left', "0px");
     });
+
+    var perform_upload_action = function (placement, colors, insertion_type) {
+
+        var html = '<div id="upload-progress"></div>' +
+                    '<div><p>Uploading and validating files...</p></div>';
+        if(insertion_type === 'large_area'){
+            html = '<div id="upload-progress" style="padding-top: 200px; width: 200px; margin: 0 auto;"></div>' +
+                    '<div style="width: 200px; margin: 0 auto;"><p>Uploading and validating files...</p></div>';
+        }
+
+        $(placement).html(html);
+
+        if(colors === undefined) {
+            colors = ["#955BA5", "white"]
+        }
+
+        HEPDATA.render_loader("#upload-progress", [
+                    {x: 26, y: 30, color: colors[0]},
+                    {x: -60, y: 55, color: colors[1]},
+                    {x: 37, y: -10, color: colors[0]},
+                    {x: -60, y: 10, color: colors[0]},
+                    {x: -27, y: -30, color: colors[0]},
+                    {x: 60, y: -55, color: colors[1]}],
+                {"width": 200, "height": 200}
+        );
+    }
 
 
 </script>

@@ -14,7 +14,7 @@
                 </div>
 
                 <div class="modal-body">
-                    <div align="center" style="width: 100%; margin: 0 auto">
+                    <div align="center" style="width: 100%; margin: 0 auto" id="upload-area">
                         <div class="alert alert-warning">
                             {% if ctx.status != 'finished' %}Uploading a new
                                 submission will replace your other files.
@@ -37,7 +37,7 @@
                                    class="filestyle">
                             <br/>
                             <input type="submit" value="Upload and Process"
-                                   class="btn btn-primary">
+                                   class="btn btn-primary btn-lg" onclick="perform_upload_action('#upload-area')">
                         </form>
                         <br/>
                     </div>

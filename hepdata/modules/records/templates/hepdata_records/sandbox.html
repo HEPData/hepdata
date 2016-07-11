@@ -75,7 +75,7 @@
     <div class="clearfix"></div>
 
     {% if ctx.data_tables|length == 0 %}
-        <div class="upload-area" style="width: 100%">
+        <div class="upload-area" style="width: 100%" id="sandbox-upload-area">
             <div class="root_upload_form" align="center">
                 <img src="{{ url_for('static', filename='img/icon-upload.svg') }}"
                      width="70">
@@ -103,7 +103,7 @@
                     <br/>
 
                     <input type="submit" value="Upload and Process"
-                           class="btn btn-primary">
+                           class="btn btn-primary" onclick="perform_upload_action('#sandbox-upload-area', ['#955BA5', '#2C3E50'], 'large_area')">
                 </form>
 
                 {% if ctx.submissions|length > 0 %}

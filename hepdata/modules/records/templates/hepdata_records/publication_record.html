@@ -60,8 +60,8 @@
                         </button>
 
                         <a href="?format=json" id="jsonLabel" type="button"
-                                class="btn btn-sm btn-default"
-                                aria-haspopup="true" aria-expanded="false">
+                           class="btn btn-sm btn-default"
+                           aria-haspopup="true" aria-expanded="false">
                             JSON
                         </a>
 
@@ -76,7 +76,7 @@
 
                     {% if ctx.record.last_updated %}
                         <span class="pull-right"
-                                  style="padding-right: 10px">Last updated on {{ ctx.record.last_updated.strftime('%Y-%m-%d %H:%M') }}
+                              style="padding-right: 10px">Last updated on {{ ctx.record.last_updated.strftime('%Y-%m-%d %H:%M') }}
                         </span>
                     {% endif %}
 
@@ -254,7 +254,7 @@
         <!--if there is data, we show it. If not, we show the upload screen if the logged in user is an uploader-->
         {% if ctx.show_upload_area %}
 
-            <div class="upload-area">
+            <div class="upload-area" id="main-upload-area">
                 <div class="root_upload_form" align="center">
                     <img src="{{ url_for('static', filename='img/icon-upload.svg') }}" width="70">
                     <h4>Upload an archive to HEPdata</h4>
@@ -272,7 +272,8 @@
                                class="filestyle">
                         <br/>
                         <input type="submit" value="Upload and Process"
-                               class="btn btn-primary">
+                               class="btn btn-primary"
+                               onclick="perform_upload_action('#main-upload-area', ['#955BA5', '#2C3E50'] , 'large_area')">
                     </form>
 
                 </div>
