@@ -96,6 +96,7 @@ install_requires = [
     'invenio-testing',
     'invenio-oauth2server>=1.0.0a5',
     'invenio-oauthclient>=1.0.0a6',
+    'Flask-OAuthlib<0.7',
     'invenio-userprofiles',
     'invenio>=3.0.0a1,<3.1.0',
     'jsonref',
