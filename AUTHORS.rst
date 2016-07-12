@@ -25,10 +25,16 @@
 Authors
 =======
 
-HEPData
+* **Principle Investigator:**
 
- * Eamonn Maguire
- * Jan Stypka
- * Graeme Watt
- * Lars Holm Nielsen
+  * Frank Krauss
+
+* **Lead Developer:**
+
+  * Eamonn Maguire
+
+* **Developers:**
+
+  * Graeme Watt
+  * Jan Stypka
 

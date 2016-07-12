@@ -50,6 +50,7 @@ before_install:
 
 install:
   - "travis_retry pip install -r requirements.txt"
+  - "travis_retry pip install -e .[all,postgresql] --pre"
   - "travis_retry hepdata db init"
   - "travis_retry hepdata db create"
   - "travis_retry hepdata reindex -rc True"

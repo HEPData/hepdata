@@ -37,30 +37,29 @@ tests_require = [
     'check-manifest>=0.25',
     'coverage>=4.0',
     'isort>=4.2.2',
-    'pep257>=0.7.0',
+    'mock>=1.3.0',
+    'pydocstyle>=1.0.0',
     'pytest-cache>=1.0',
     'pytest-cov>=1.8.0',
+    'pytest-flask>=0.10.0',
     'pytest-pep8>=1.0.6',
     'pytest>=2.8.0',
+    # 2.53.0 introduced a Python 3 compatibility issue. Wait for it to be fixed
+    'selenium>=2.48.0,<2.53.0',
+    'six>=1.10.0'
+
 ]
 
-extras_require = {
-    'docs': [
-        'Sphinx>=1.3',
-    ],
-    'postgresql': [
-        'invenio-db[postgresql]>=1.0.0a6',
-    ],
-    'mysql': [
-        'invenio-db[mysql]>=1.0.0a6',
-    ],
-    'sqlite': [
-        'invenio-db>=1.0.0a6',
-    ],
-    'tests': tests_require,
-}
+extras_require = {'docs': [
+    'Sphinx>=1.3',
+], 'postgresql': [
+    'invenio-db[postgresql]>=1.0.0a6',
+], 'mysql': [
+    'invenio-db[mysql]>=1.0.0a6',
+], 'sqlite': [
+    'invenio-db>=1.0.0a6',
+], 'tests': tests_require, 'all': []}
 
-extras_require['all'] = []
 for name, reqs in extras_require.items():
     if name in ('postgresql', 'mysql', 'sqlite'):
         continue
@@ -138,10 +137,11 @@ class PyTest(TestCommand):
         errno = pytest.main(self.pytest_args)
         sys.exit(errno)
 
+
 # Get the version string. Cannot be done with import!
 g = {}
 with open(os.path.join('hepdata', 'version.py'), 'rt') as fp:
-    exec(fp.read(), g)
+    exec (fp.read(), g)
     version = g['__version__']
 
 setup(
