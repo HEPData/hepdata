@@ -332,17 +332,17 @@ def do_render_record(recid, record, version, output_format, light_mode=False):
             publication_recid = int(record['related_publication'])
             publication_record = get_record_contents(publication_recid)
 
-            hepdata_submission = HEPSubmission.query.filter_by(
-                publication_recid=publication_recid).first()
+            hepdata_submission = get_latest_hepsubmission(publication_recid)
 
             ctx = format_submission(publication_recid, publication_record,
-                                    version, 0, hepdata_submission,
+                                    hepdata_submission.version, 1, hepdata_submission,
                                     data_table=record['title'])
             ctx['related_publication_id'] = publication_recid
             ctx['table_name'] = record['title']
 
             if output_format == "json":
                 ctx = process_ctx(ctx, light_mode)
+
                 return jsonify(ctx)
             else:
                 return render_template('hepdata_records/data_record.html', ctx=ctx)

@@ -221,52 +221,26 @@
 
 
         <!--if there is data, we show it. If not, we show the upload screen if the logged in user is an uploader-->
-        {% if ctx.show_upload_area %}
 
-            <div class="upload-area">
-                <div class="root_upload_form" align="center">
-                    <img src="/img/icon-upload.svg" width="70px"/>
-                    <h4>Upload an archive to HEPdata</h4>
+        {% if ctx.data_tables|length == 0 %}
+            <div id="hepdata_table_detail"
+                 style="width: 76%; text-align: center">
+                <div id="hepdata-loading"
+                     style="width: 200px; height: 200px; margin: 0 auto; margin-top: 5em"></div>
+                <h4 style="color: #894B9D">No data has been uploaded
+                    for this submission yet.</h4>
 
-                    <div class="info">
-                        <p>You can upload an archive that should contain
-                            the files stated in these guidelines.</p>
-                    </div>
-
-                    <form action="/record/{{ ctx.record.recid }}/consume"
-                          method="post" enctype=multipart/form-data>
-                        <input type="file" name="hep_archive"
-                               id="root_file_upload"
-                               data-iconName="fa fa-upload"
-                               class="filestyle">
-                        <br/>
-                        <input type="submit" value="Upload and Process"
-                               class="btn btn-primary">
-                    </form>
-
-                </div>
+                <p style="color:#95A5A5; font-size: 1.2em">Come back
+                    soon and you’ll see some plots of various
+                    attractiveness...</p>
             </div>
         {% else %}
 
-            {% if ctx.data_tables|length == 0 %}
-                <div id="hepdata_table_detail"
-                     style="width: 76%; text-align: center">
-                    <div id="hepdata-loading"
-                         style="width: 200px; height: 200px; margin: 0 auto; margin-top: 5em"></div>
-                    <h4 style="color: #894B9D">No data has been uploaded
-                        for this submission yet.</h4>
-
-                    <p style="color:#95A5A5; font-size: 1.2em">Come back
-                        soon and you’ll see some plots of various
-                        attractiveness...</p>
-                </div>
-            {% else %}
-
-                {% include 'hepdata_records/components/table_details.html' %}
-
-            {% endif %}
+            {% include 'hepdata_records/components/table_details.html' %}
 
         {% endif %}
+
+
     </div>
 
     {% include 'hepdata_records/components/code-view-widget.html' %}

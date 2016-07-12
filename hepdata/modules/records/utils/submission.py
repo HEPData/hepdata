@@ -62,6 +62,7 @@ SUBMISSION_FILE_NAME_PATTERN = 'HEPData-{}-v{}-yaml.zip'
 logging.basicConfig()
 log = logging.getLogger(__name__)
 
+
 def assign_record_id(record_information, id=None):
     """
     :param record_information:
