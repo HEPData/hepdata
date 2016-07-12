@@ -52,9 +52,9 @@
         </div>
 
         <div class="search-results">
-            {% include "display_results_options.html" %}
+            {% include "hepdata_search/display_results_options.html" %}
             <div class="row-fluid">
-                {% include "facet_column.html" %}
+                {% include "hepdata_search/facet_column.html" %}
 
                 <div class="col-md-10" style="padding-bottom: 3em;">
 
@@ -71,7 +71,7 @@
                                             {{ record.title }}
                                         </a>
                                     </h4>
-                                    {% include "record_content.html" %}
+                                    {% include "hepdata_search/record_content.html" %}
                                     <div style="padding: 5px 0px; color: #7F8C8D">
                                         <i class="fa fa-table"></i>
                                         <span style="font-weight: bolder">{{ record.total_tables }}</span>
@@ -147,7 +147,7 @@
     <br/><br/>
 
     {% if ctx.pages and not no_results %}
-        {% include "pagination.html" %}
+        {% include "hepdata_search/pagination.html" %}
     {% endif %}
 
 {% endblock %}

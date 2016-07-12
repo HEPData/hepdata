@@ -25,6 +25,8 @@
 """Blueprint for HEPData-Records."""
 
 from __future__ import absolute_import, print_function
+
+import logging
 from collections import OrderedDict
 from functools import wraps
 import json
@@ -65,6 +67,10 @@ from hepdata.modules.records.utils.workflow import \
 from hepdata.modules.stats.views import get_count, increment
 from hepdata.utils.file_extractor import extract
 
+logging.basicConfig()
+log = logging.getLogger(__name__)
+
+
 blueprint = Blueprint(
     'hepdata_records',
     __name__,
@@ -100,10 +106,11 @@ def sandbox_display(id):
 
 
 @blueprint.route('/<string:recid>', methods=['GET'], strict_slashes=True)
-def get_metadata_by_alternative_id(recid, *args, **kwargs):
+def get_metadata_by_alternative_id(recid):
     try:
         if "ins" in recid:
             recid = recid.replace("ins", "")
+            print(CFG_PUB_TYPE)
             record = get_records_matching_field('inspire_id', recid,
                                                 doc_type=CFG_PUB_TYPE)
             record = record['hits']['hits'][0].get("_source")
@@ -115,6 +122,7 @@ def get_metadata_by_alternative_id(recid, *args, **kwargs):
             return do_render_record(recid=record['recid'], record=record, version=version, output_format=output_format,
                                     light_mode=light_mode)
     except Exception as e:
+        log.error("Unable to find {0}.".format(recid))
         return render_template('hepdata_theme/404.html')
 
 
@@ -133,7 +141,7 @@ def notify_reviewers(recid, version):
         db.session.commit()
 
         return jsonify({"status": "success"})
-    except NoReviewersException as nre:
+    except NoReviewersException:
         return jsonify({"status": "error", "message": "There are no reviewers for this submission."})
     except Exception as e:
         db.session.rollback()
@@ -158,16 +166,14 @@ def get_record_contents(recid):
 @blueprint.route('/<int:recid>/metadata', methods=['GET', 'POST'])
 @blueprint.route('/<int:recid>/', methods=['GET', 'POST'])
 @blueprint.route('/<int:recid>', methods=['GET', 'POST'])
-def metadata(recid, *args, **kwargs):
+def metadata(recid):
     """
     Queries and returns a data record
     :param recid: the record id being queried
-    :param args:
-    :param kwargs:
     :return: renders the record template
     """
     version = int(request.args.get('version', -1))
-    format = request.args.get('format', 'html')
+    serialization_format = request.args.get('format', 'html')
 
     try:
         record = get_record_contents(recid)
@@ -177,7 +183,7 @@ def metadata(recid, *args, **kwargs):
     if record is None:
         return render_template('hepdata_theme/404.html')
 
-    return do_render_record(recid=recid, record=record, version=version, output_format=format)
+    return do_render_record(recid=recid, record=record, version=version, output_format=serialization_format)
 
 
 def format_submission(recid, record, version, version_count, hepdata_submission,
@@ -253,14 +259,12 @@ def format_submission(recid, record, version, version_count, hepdata_submission,
         extract_journal_info(record)
 
         if hepdata_submission.overall_status != 'finished' and ctx["version_count"] > 0:
-
-            if not (ctx['show_review_widget'] or ctx['show_upload_widget']
-                    or ctx['is_submission_coordinator_or_admin']):
+            if not (ctx['show_review_widget'] or ctx['show_upload_widget'] or ctx['is_submission_coordinator_or_admin']):
                 # we show the latest approved version.
                 ctx["version"] -= 1
                 ctx["version_count"] -= 1
 
-        ctx['additional_resources'] = get_resource_count(hepdata_submission, version_count)
+        ctx['additional_resources'] = submission_has_resources(hepdata_submission)
 
         # query for a related data submission
         data_record_query = DataSubmission.query.filter_by(
@@ -289,7 +293,12 @@ def format_submission(recid, record, version, version_count, hepdata_submission,
     return ctx
 
 
-def get_resource_count(hepsubmission, versions):
+def submission_has_resources(hepsubmission):
+    """
+    Returns if the submission has resources attached
+    :param hepsubmission: HEPSubmission object
+    :return: bool
+    """
     return len(hepsubmission.references) > 0
 
 
@@ -346,7 +355,7 @@ def do_render_record(recid, record, version, output_format, light_mode=False):
                 return jsonify(ctx)
             else:
                 return render_template('hepdata_records/data_record.html', ctx=ctx)
-        except:
+        except Exception:
             return render_template('hepdata_theme/404.html')
 
 

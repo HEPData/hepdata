@@ -37,9 +37,6 @@ def submit_post():
     reviewer = parse_person_string(reviewer_str)[0]
     uploader = parse_person_string(uploader_str)[0]
 
-    print reviewer
-    print uploader
-
     hepdata_submission = process_submission_payload(inspire_id=inspire_id,
                                                     title=title,
                                                     reviewer=reviewer,

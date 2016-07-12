@@ -90,6 +90,7 @@
                 <form class="main-search-form" action="/search">
                     <input type="text" name="q" placeholder="Search for a paper, author, experiment, reaction">
                     <button type="submit" class="submit">Search</button>
+                    <a class="btn btn-link btn-lg" data-toggle="modal" data-target="#searchHelpWidget">Help</a>
                 </form>
 
                 <p class="search-examples">example queries - <a href="/search?q=gamma gamma">gamma gamma</a>,
@@ -175,6 +176,7 @@
 
         {% endblock page_body %}
 
+    {% include "hepdata_search/modals/search_help.html" %}
 
     </div>
     {%- block javascript %}
@@ -182,6 +184,8 @@
         <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
         <script type="text/javascript"
                 src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+
 
 
         {%- assets "hepdata_bootstrap_js" %}

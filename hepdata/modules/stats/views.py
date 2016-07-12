@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime
 from invenio_db import db
 from sqlalchemy import func
@@ -6,12 +7,25 @@ from hepdata.modules.stats.models import DailyAccessStatistic
 
 __author__ = 'eamonnmaguire'
 
+logging.basicConfig()
+log = logging.getLogger(__name__)
+
 
 def get_date():
+    """
+    Gets todays' date
+    :return: datetime object
+    """
     return datetime.today()
 
 
 def increment(recid):
+    """
+    Increases the number of accesses to the record
+    by 1
+    :param recid: id of the record accessed
+    :return:
+    """
     dt = get_date()
     try:
         available_access_stats = DailyAccessStatistic.query.filter_by(
@@ -29,6 +43,11 @@ def increment(recid):
 
 
 def get_count(recid):
+    """
+    Returns the number of times the record has been accessed
+    :param recid: record id to get the count for
+    :return: dict with sum as a key {"sum": 2}
+    """
     try:
         result = DailyAccessStatistic.query.with_entities(
             func.sum(DailyAccessStatistic.count).label('sum')).filter(
@@ -36,5 +55,5 @@ def get_count(recid):
         return {"sum": int(result.sum)}
 
     except Exception as e:
-        print e
+        log.error(e)
         return {"sum": 1}

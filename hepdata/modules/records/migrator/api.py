@@ -33,7 +33,6 @@ import shutil
 import yaml
 from yaml.scanner import ScannerError
 
-from hepdata.config import CFG_PUB_TYPE
 from hepdata.ext.elasticsearch.api import get_records_matching_field, index_record_ids
 from hepdata.modules.inspire_api.views import get_inspire_record_information
 from hepdata.modules.dashboard.views import do_finalise
@@ -63,7 +62,7 @@ class FailedSubmission(Exception):
 
     def print_errors(self):
         for file in self.errors:
-            print file
+            print(file)
             for error_message in self.errors[file]:
                 print("\t{0} for {1}".format(error_message, self.record_id))
 

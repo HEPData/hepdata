@@ -243,4 +243,4 @@ def search():
 
         ctx['modify_query'] = modify_query
 
-        return render_template('search_results.html', ctx=ctx)
+        return render_template('hepdata_search/search_results.html', ctx=ctx)

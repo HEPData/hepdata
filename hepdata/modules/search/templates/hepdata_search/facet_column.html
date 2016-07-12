@@ -41,10 +41,10 @@
                                 <a href={{ ctx.modify_query('.search', page='1', **{facet.type: None}) }}>
                                     <i class="fa fa-times small"></i>
                                 </a>
-                                {% include 'facet_link.html' %}
+                                {% include 'hepdata_search/facet_link.html' %}
                             </strong>
                         {% else %}
-                            {% include 'facet_link.html' %}
+                            {% include 'hepdata_search/facet_link.html' %}
                         {% endif %}
                     </li>
                 {% endfor %}
