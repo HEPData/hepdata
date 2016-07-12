@@ -62,11 +62,10 @@ class FailedSubmission(Exception):
         self.record_id = record_id
 
     def print_errors(self):
-        print "errors"
         for file in self.errors:
             print file
             for error_message in self.errors[file]:
-                print "\t{0} for {1}".format(error_message, self.record_id)
+                print("\t{0} for {1}".format(error_message, self.record_id))
 
 
 @shared_task

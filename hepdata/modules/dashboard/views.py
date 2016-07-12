@@ -669,8 +669,6 @@ def create_data_endpoints(data_id, info_dict):
     """ Generate dictionary describing endpoints
     where different data formats are served"""
 
-    from hepdata.config import CFG_DATA_TYPE
-
     parent_param = "?parent=" + str(info_dict["related_publication"])
     return {
         "json": "/".join(["/api",

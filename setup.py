@@ -97,6 +97,7 @@ install_requires = [
     'invenio>=3.0.0a1,<3.1.0',
     'jsonref',
     'flask-cors',
+    'timestring',
     'cryptography',
     'beautifulsoup4',
     'hepdata_validator==0.1.10',

@@ -28,7 +28,6 @@ import os
 import tempfile
 from datetime import timedelta
 
-from celery.schedules import crontab
 from invenio_oauthclient.contrib.orcid import REMOTE_APP as ORCID_REMOTE_APP
 from invenio_oauthclient.contrib import cern
 
@@ -221,7 +220,7 @@ CERN_REMOTE_APP = copy.deepcopy(cern.REMOTE_APP)
 CERN_REMOTE_APP["params"].update({
     'request_token_params': {
         "scope": "Email Groups",
-     }
+    }
 })
 
 #: Definition of OAuth client applications.

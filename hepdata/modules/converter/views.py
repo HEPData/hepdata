@@ -57,7 +57,7 @@ def convert_endpoint():
 
     fileobject = request.files.get('file')
     if not fileobject or not fileobject.filename.endswith('.zip'):
-        print "Fileobject: " + str(fileobject)
+        print("Fileobject: " + str(fileobject))
         return display_error(
             title="Please send a zip file for conversion",
             description="No file has been sent or it does not have a zip extension"

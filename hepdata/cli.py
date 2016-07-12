@@ -26,8 +26,6 @@
 
 from __future__ import absolute_import, print_function
 
-from datetime import datetime
-
 import click
 from flask.ext.cli import with_appcontext
 from invenio_base.app import create_cli
