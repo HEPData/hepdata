@@ -35,7 +35,6 @@ from flask.ext.login import current_user
 from hepdata_validator.data_file_validator import DataFileValidator
 from hepdata_validator.submission_file_validator import \
     SubmissionFileValidator
-from invenio_ext.sqlalchemy.utils import session_manager
 from invenio_pidstore.errors import PIDDoesNotExistError
 from invenio_pidstore.models import PersistentIdentifier, PIDStatus
 from invenio_records import Record
@@ -147,7 +146,6 @@ def remove_submission(record_id):
         raise e
 
 
-@session_manager
 def cleanup_submission(recid, version, to_keep):
     """
     Removes old, unreferenced files from the submission.
@@ -160,18 +158,24 @@ def cleanup_submission(recid, version, to_keep):
     data_submissions = DataSubmission.query.filter_by(
         publication_recid=recid, version=version).all()
 
-    for data_submission in data_submissions:
+    try:
+        for data_submission in data_submissions:
 
-        if not (data_submission.name in to_keep):
-            print('Deleting Submission {0}'.format(data_submission.name))
-            data_reviews = DataReview.query.filter_by(
-                data_recid=data_submission.id).all()
+            if not (data_submission.name in to_keep):
+                print('Deleting Submission {0}'.format(data_submission.name))
+                data_reviews = DataReview.query.filter_by(
+                    data_recid=data_submission.id).all()
 
-            for review in data_reviews:
-                print('Deleting Associated Review {0}'.format(review.id))
-                db.session.delete(review)
+                for review in data_reviews:
+                    print('Deleting Associated Review {0}'.format(review.id))
+                    db.session.delete(review)
 
-            db.session.delete(data_submission)
+                db.session.delete(data_submission)
+
+        db.session.commit()
+    except Exception as e:
+        logging.error(e)
+        db.session.rollback()
 
 
 def cleanup_data_resources(data_submission):
