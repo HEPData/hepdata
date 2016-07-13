@@ -44,9 +44,10 @@
 
                 <button type="submit" class="search-submit">Search</button>
 
-            <span class="white-link hidden-sm">
-                <a href="/search" class="btn btn-link" style="color: white">Reset search</a>
-            </span>
+                {% if ctx.q %}
+                    <a href="/search" class="btn btn-link hidden-sm hidden-xs">Reset search</a>
+                {% endif %}
+                <a class="btn btn-link hidden-sm hidden-xs" data-toggle="modal" data-target="#searchHelpWidget">Advanced</a>
 
             </form>
         </div>
@@ -57,7 +58,6 @@
                 {% include "hepdata_search/facet_column.html" %}
 
                 <div class="col-md-10" style="padding-bottom: 3em;">
-
                     {% for record in ctx.results %}
                         {% set pub_index = loop.index %}
                         <div id="publication-{{ pub_index }}" class="row ins{{ record.inspire_id|string }}"
@@ -75,7 +75,8 @@
                                     <div style="padding: 5px 0px; color: #7F8C8D">
                                         <i class="fa fa-table"></i>
                                         <span style="font-weight: bolder">{{ record.total_tables }}</span>
-                                        data table{% if record.total_tables > 1 or record.total_tables == 0 %}s{% endif %}
+                                        data table{% if record.total_tables > 1 or record.total_tables == 0 %}
+                                        s{% endif %}
                                         {% if ctx %}{% if ctx.q %} match query{% endif %}{% endif %}
                                     </div>
                                 </div>
@@ -149,6 +150,8 @@
     {% if ctx.pages and not no_results %}
         {% include "hepdata_search/pagination.html" %}
     {% endif %}
+
+    {% include "hepdata_search/modals/search_help.html" %}
 
 {% endblock %}
 

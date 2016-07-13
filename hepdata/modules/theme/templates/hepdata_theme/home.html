@@ -39,7 +39,7 @@
                                 </li>
 
                                 <li><a href="/submission"><span
-                                        class="fa fa-life-ring"></span> Help</a>
+                                        class="fa fa-life-ring"></span> Submission Help</a>
                                 </li>
                                 {%- if not current_user.is_authenticated %}
                                     <li>
@@ -90,20 +90,16 @@
                 <form class="main-search-form" action="/search">
                     <input type="text" name="q" placeholder="Search for a paper, author, experiment, reaction">
                     <button type="submit" class="submit">Search</button>
-                    <a class="btn btn-link btn-lg" data-toggle="modal" data-target="#searchHelpWidget">Help</a>
+                    <a class="btn btn-link btn-lg" data-toggle="modal" data-target="#searchHelpWidget">Advanced</a>
                 </form>
 
-                <p class="search-examples">example queries - <a href="/search?q=gamma gamma">gamma gamma</a>,
-                    <a href="/search?q=elastic scattering">elastic scattering</a>, <a href="/search?q=strangeness">strangeness</a>.
-
+                <p class="search-examples">e.g. <a href='/search?q=reactions:"P P --> LQ LQ X"'><span class="text-muted">Reaction</span> P P --> LQ LQ X</a>,
+                    <a href='/search?q=title:"photon collisions"'><span class="text-muted">title has</span> "photon collisions"</a>, <a href="/search?q=collaborations:LHCf OR collaborations:D0"><span class="text-muted">Has collaboration</span> LHCf or D0</a>.
                 </p>
-
             </div>
 
             <div class="lhc_experiments">
                 <h4>Data from the LHC</h4>
-
-
                 <div class="row">
 
                     {% set experiments = ["ATLAS", "ALICE", "CMS", "LHCb"] %}

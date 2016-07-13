@@ -16,10 +16,10 @@
 # along with HEPData; if not, write to the Free Software Foundation, Inc.,
 # 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
 #
+import re
 
 
 class QueryBuilder(object):
-
     def __init__(self, query=None):
         if query:
             self.query = query
@@ -128,7 +128,7 @@ class QueryBuilder(object):
             "highlight": {
                 "fields": {
                     field: {} for field in fields
-                }
+                    }
             }
         })
 
@@ -145,6 +145,35 @@ class QueryBuilder(object):
     def add_post_filter(self, postfilter):
         if postfilter is not None:
             self.query["post_filter"] = postfilter
+
+
+class HEPDataQueryParser(object):
+    @staticmethod
+    def parse_query(query_string):
+        # query should be something like 'observable:ASYM' which
+        # would translate to data_keywords.observables:ASYM
+        mapping = {
+            "keys": {
+                "observables": "data_keywords.observables:{0}",
+                "cmenergies": "data_keywords.cmenergies:{0}",
+                "phrases": "data_keywords.phrases:{0}",
+                "reactions": "data_keywords.reactions:{0}"
+            }
+        }
+
+        new_query_string = query_string
+
+        for query_part in re.split("AND|OR", query_string):
+            query_part = query_part.strip()
+            if ':' in query_part:
+                try:
+                    _key_value = query_part.split(':')
+                    _key = mapping['keys'][_key_value[0]].format(_key_value[1])
+                    new_query_string = new_query_string.replace(query_part, "{0}".format(_key))
+                except KeyError:
+                    continue
+
+        return new_query_string
 
 
 def get_query_by_type(es_type, query_string=''):

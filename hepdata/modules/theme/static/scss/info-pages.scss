@@ -6,9 +6,10 @@ body {
 }
 
 a {
-  color: $purple-light;
+  color:white;
+  font-weight:bolder;
   &:hover {
-
+    color: $lightgrey;
   }
 }
 

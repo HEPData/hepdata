@@ -146,7 +146,7 @@ def sort_fields_mapping(sort_by):
     elif sort_by == 'collaborations':
         return 'collaborations'
     elif sort_by == 'date':
-        return 'publication_date'
+        return 'creation_date'
     elif sort_by == 'latest':
         return 'last_updated'
     elif not sort_by or sort_by == 'relevance':

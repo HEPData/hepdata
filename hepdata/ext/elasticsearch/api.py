@@ -15,8 +15,9 @@
 # You should have received a copy of the GNU General Public License
 # along with HEPData; if not, write to the Free Software Foundation, Inc.,
 # 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
-from collections import defaultdict
+from __future__ import print_function
 
+from collections import defaultdict
 from dateutil.parser import parse
 from flask import current_app
 from elasticsearch.exceptions import NotFoundError, RequestError
@@ -25,13 +26,12 @@ from sqlalchemy import func
 from hepdata.modules.records.utils.common import get_last_submission_event
 from .utils import prepare_author_for_indexing
 from hepdata.config import CFG_PUB_TYPE, CFG_DATA_TYPE
-from query_builder import QueryBuilder, get_query_by_type, get_authors_query
+from query_builder import QueryBuilder, get_query_by_type, get_authors_query, HEPDataQueryParser
 from process_results import map_result, merge_results
 from invenio_db import db
 import logging
 
 from invenio_search import current_search_client as es
-
 __all__ = ['search', 'index_record_ids', 'index_record_dict', 'fetch_record',
            'recreate_index', 'get_record', 'reindex_all',
            'get_n_latest_records']
@@ -84,6 +84,8 @@ def search(query,
     if query == '' and not sort_field:
         sort_field = 'date'
 
+    query = HEPDataQueryParser.parse_query(query)
+
     # Build core query
     data_query = get_query_by_type(CFG_DATA_TYPE, query)
     pub_query = get_query_by_type(CFG_PUB_TYPE, query)
@@ -103,6 +105,9 @@ def search(query,
     query_builder.add_post_filter(post_filter)
     query_builder.add_aggregations()
     query_builder.add_source_filter(include, exclude)
+
+    print("QUERY...")
+    print(query_builder.query)
 
     pub_result = es.search(index=index,
                            body=query_builder.query,

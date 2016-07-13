@@ -196,5 +196,38 @@ body::-webkit-scrollbar-thumb {
 }
 
 
+#searchHelpWidget {
+  text-align: left;
 
+  .modal-body {
+    color: white;
+    background-color: $navy-light;
+  }
 
+  .modal-footer {
+    border-top: none;
+  }
+
+  .well {
+    background-color: white;
+    border: none;
+    color: $navy;
+
+    h4 {
+      font-weight: bolder;
+      margin: 0 0 10px;
+
+    }
+
+    ul {
+      list-style: none;
+      -webkit-padding-start: 10px;
+      li {
+        padding-left: 10px;
+      }
+    }
+    a {
+      color: $purple;
+    }
+  }
+}

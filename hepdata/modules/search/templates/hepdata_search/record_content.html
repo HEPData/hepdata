@@ -5,6 +5,14 @@
     <div class="record-info">
 
         <div style="padding: 3px 0">
+            {% if record.collaborations %}
+                <span class="collaboration-group"> The
+                    {% for col in record.collaborations %}
+                        {% set link = ctx.modify_query('.search', collaboration=col) %}
+                        <span class="info_group"> <a href={{ link }}> {{ col }} </a></span>
+                    {% endfor %} collaboration{% if record.collaborations|length > 1 %}s{% endif %}</span>
+            {% endif %}
+
             {% if record.authors %}
                 {% for author_name in record.authors[:max_authors] %}
                     {% set link = ctx.modify_query('.search', author=author_name) %}
@@ -15,14 +23,6 @@
                 {% if record.authors|length > max_authors %}
                     <em>et al. </em>
                 {% endif %}
-            {% endif %}
-
-            {% if record.collaborations %}
-                <span class="collaboration-group"> The
-                    {% for col in record.collaborations %}
-                        {% set link = ctx.modify_query('.search', collaboration=col) %}
-                        <span class="info_group"> <a href={{ link }}> {{ col }} </a></span>
-                    {% endfor %} collaboration{% if record.collaborations|length > 1 %}s{% endif %}.</span>
             {% endif %}
         </div>
 
@@ -52,8 +52,10 @@
         </div>
     </div>
 
-    <p class="truncated-record-abstract" itemprop="description" style="padding-top: 10px;">
-        {{ record.abstract }}
-    </p>
+    {% if record.abstract %}
+        <p class="truncated-record-abstract" itemprop="description" style="padding-top: 10px;">
+            {{ record.abstract }}
+        </p>
+    {% endif %}
 
 </div>
