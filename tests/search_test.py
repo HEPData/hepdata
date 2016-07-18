@@ -19,11 +19,11 @@ from hepdata.ext.elasticsearch.query_builder import HEPDataQueryParser
 
 
 def test_query_parser():
-    _test_query = "observable:ASYM"
+    _test_query = "observables:ASYM"
     parsed_query_string = HEPDataQueryParser.parse_query(_test_query)
     assert (parsed_query_string == 'data_keywords.observables:ASYM')
 
-    _test_query2 = "observable:ASYM AND phrases:Elastic Scattering OR cmenergies:1.34"
+    _test_query2 = "observables:ASYM AND phrases:Elastic Scattering OR cmenergies:1.34"
     parsed_query_string2 = HEPDataQueryParser.parse_query(_test_query2)
 
     print(parsed_query_string2)
