@@ -32,6 +32,7 @@ from invenio_db import db
 import logging
 
 from invenio_search import current_search_client as es
+
 __all__ = ['search', 'index_record_ids', 'index_record_dict', 'fetch_record',
            'recreate_index', 'get_record', 'reindex_all',
            'get_n_latest_records']
@@ -105,9 +106,6 @@ def search(query,
     query_builder.add_post_filter(post_filter)
     query_builder.add_aggregations()
     query_builder.add_source_filter(include, exclude)
-
-    print("QUERY...")
-    print(query_builder.query)
 
     pub_result = es.search(index=index,
                            body=query_builder.query,
@@ -335,7 +333,6 @@ def index_record_ids(record_ids, index=None):
     :param index: [string] name of the index. If None a default is used
     :return: list of indexed publication and data recids
     """
-    # TODO: Clean up this code base
     from hepdata.modules.records.utils.common import get_record_by_id
 
     docs = filter(None, [get_record_by_id(recid) for recid in record_ids])
@@ -370,15 +367,15 @@ def index_record_ids(record_ids, index=None):
                 last_updated = get_last_submission_event(doc["recid"])
                 if not last_updated:
                     last_updated = doc["creation_date"]
+
                 doc["last_updated"] = last_updated
 
             if doc["year"] is not None:
                 doc["publication_date"] = parse(str(doc["year"]))
 
+            doc["summary_authors"] = []
             if doc['authors']:
                 doc["summary_authors"] = doc["authors"][:10]
-            else:
-                doc["summary_authors"] = []
 
             op_dict = {
                 "index": {
