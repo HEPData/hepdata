@@ -59,13 +59,9 @@
                 {%- else %}
                     <li>
 
-                        <a href="{% if show_dashboard %}/dashboard{% else %}/account/settings/profile{% endif %}">
+                        <a href="/dashboard">
                             <i class="fa fa-user"></i>
-                            {% if show_dashboard %}
                                 Dashboard
-                            {% else %}
-                                Your Account
-                            {% endif %}
                         </a>
                     </li>
 

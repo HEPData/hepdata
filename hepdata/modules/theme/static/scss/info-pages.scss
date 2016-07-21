@@ -1,7 +1,7 @@
 @import "variables";
 
 body {
-  background-color: $navy;
+  background-color: $darker-blue;
   color: white;
 }
 
@@ -15,8 +15,8 @@ a {
 
 .top-bar {
 
-  background-color: $navy !important;
-  border-bottom: $navy-light 3px solid;
+  background-color: $darker-blue !important;
+  border-bottom: $navy 3px solid;
 }
 
 .hep_logo {

@@ -1,6 +1,5 @@
 <script>
 
-
     $(".manage-review-menu li").on('click', function () {
         var active_target = $(this).attr('data-screen-target');
         window.active_target = active_target;
@@ -108,6 +107,7 @@
     }
 
     function process_reviews(recid) {
+
         $.ajax({
             dataType: "json",
             url: '/record/coordinator/view/' + recid,
@@ -154,21 +154,22 @@
                 create_section_contents("#reserve-reviewer", reserve_reviewers, 'reviewer', 'reserve');
                 create_section_contents("#reserve-uploader", reserve_uploaders, 'uploader', 'reserve');
                 return true;
-            },
-
-            error: function (error) {
-                $("#code").html('We can\'t display this type of file at present. But you can download it!');
-                $('#codeDialog').modal('show');
-                return false;
             }
         });
     }
 
     $(document).on('click', '.manage-submission-trigger', function (event) {
         window.recid = $(this).attr('data-recid');
+        console.log(window.recid);
         HEPDATA.load_all_review_messages("#conversation", $(this).attr('data-recid'));
         process_reviews($(this).attr('data-recid'));
     });
+
+    $(document).on('click', '.conversation-trigger', function (event) {
+        HEPDATA.load_all_review_messages("#conversation-only", $(this).attr('data-recid'));
+    });
+
+
 
     $(document).on('click', '.delete-submission-trigger', function (event) {
         window.recid = $(this).attr('data-recid');

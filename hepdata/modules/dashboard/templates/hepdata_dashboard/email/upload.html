@@ -1,11 +1,22 @@
 {% extends 'hepdata_dashboard/email/email_container.html' %}
 {% block email_type %}
-    New Data Upload for Record {{ article }}
+    {% if cookie %}
+        Invitation to Review a HEPData Record {{ article }}
+    {% else %}
+        New Data Upload for Record {{ article }}
+    {% endif %}
 {% endblock %}
 
 {% block email_content %}
 
     Hi {{ name }},
+
+    {% if invite_token %}
+        <p>You have been added as a reviewer for a HEPData record. You can only review the article once you access the link below <strong>after logging in to HEPData</strong></p>
+        <a href="{{ site_url }}/dashboard/assign/{{ invite_token }}" style="padding-left: 20px;">{{ site_url }}/dashboard/assign/{{ invite_token }}.</a>
+    {% endif %}
+
+    <br/><br/>
 
     <p><a href="{{ link }}" style="color: #9b59b6">{{ title }}</a> has a new upload from {{ actor }}. </p>
 
@@ -18,7 +29,6 @@
     </p>
 
     <p>
-        The <a href="http://www.hepdata.net" style="color: #9b59b6">HEPData</a>
-        team
+        The <a href="http://www.hepdata.net" style="color: #9b59b6">HEPData</a> team
     </p>
 {% endblock %}

@@ -1,65 +1,78 @@
-HEPDATA.visualization.pie = {
+HEPDATA.visualization.submission_status = {
 
   options: {
     radius: 50,
     animation_duration: 100,
     margins: {"left": 40, "right": 30, "top": 10, "bottom": 30},
     colors: d3.scale.ordinal().domain(['passed', 'attention', 'todo']).range(["#1FA67E", "#f39c12", "#e74c3c"]),
-    height: 100,
-    width: 250
+    height: 30,
+    width: 70
   },
 
-  render: function (data) {
+  render: function (data, options) {
 
-    var svg = d3.select('#submission-' + data.recid)
-      .append('svg')
-      .attr('width', HEPDATA.visualization.pie.options.width)
-      .attr('height', HEPDATA.visualization.pie.options.height)
-      .append('g')
-      .attr('transform', 'translate(' + (HEPDATA.visualization.pie.options.width / 2.5) + ',' + (HEPDATA.visualization.pie.options.height / 2) + ')');
 
-    var arc = d3.svg.arc()
-      .outerRadius(HEPDATA.visualization.pie.options.radius);
+      var total = d3.sum(data.stats, function (d) {
+        return +d.count;
+      });
+      if (total > 0) {
+      var svg = d3.select('#submission-' + data.recid)
+        .append('svg')
+        .attr('width', HEPDATA.visualization.submission_status.options.width)
+        .attr('height', HEPDATA.visualization.submission_status.options.height)
+        .append('g');
 
-    var pie = d3.layout.pie()
-      .value(function (d) {
-        return d.count;
-      })
-      .sort(null);
 
-    var path = svg.selectAll('path')
-      .data(pie(data.stats))
-      .enter()
-      .append('path')
-      .attr('d', arc)
-      .attr('fill', function (d, i) {
-        return HEPDATA.visualization.pie.options.colors(data.stats[i].name);
+      var x_scale = d3.scale.linear()
+        .domain([0, 100])
+        .range([0, HEPDATA.visualization.submission_status.options.width - (data.stats.length * 5)]);
+
+
+      data.stats.forEach(function (d) {
+        d.width = x_scale((d.count / total) * 100);
       });
 
+      var _last_x = 0;
 
-    svg.selectAll('text.name').data(data.stats).enter().append("text")
-      .attr('x', (HEPDATA.visualization.pie.options.radius + 10))
-      .attr('y', function (d, i) {
-        return (i * 20) - HEPDATA.visualization.pie.options.radius / 3;
-      }).style("fill", function (d, i) {
-      return HEPDATA.visualization.pie.options.colors(data.stats[i].name);
-    }).text(
-      function (d, i) {
-        return data.stats[i].name;
-      }
-    ).style("font-size", "0.8em");
 
-    svg.selectAll('text.count').data(data.stats).enter().append("text")
-      .attr('x', (HEPDATA.visualization.pie.options.radius + 70))
-      .attr('y', function (d, i) {
-        return (i * 20) - HEPDATA.visualization.pie.options.radius / 3;
-      }).style("fill", function (d, i) {
-      return HEPDATA.visualization.pie.options.colors(data.stats[i].name);
-    }).text(
-      function (d, i) {
-        return data.stats[i].count;
-      }
-    ).style({"font-size": "0.8em", "font-weight": "bolder"});
+      var d3tip = d3.tip()
+        .attr('class', 'd3-tip')
+        .offset([-10, 0])
+        .html(function (d) {
+          d3.select(".d3-tip").style("background-color", d.color);
+          return d.name + " - " + d.count;
+        });
 
+      svg.call(d3tip);
+
+      var rect = svg.selectAll('rect')
+        .data(data.stats)
+        .enter()
+        .append('rect')
+        .attr('class', 'status-rect')
+        .attr('x', function (d, i) {
+          if (i == 0) {
+            return 0;
+          }
+          else {
+            _last_x += (data.stats[i - 1].width) + 5;
+            return _last_x;
+          }
+        })
+        .attr('y', 10)
+        .attr('width', function (d, i) {
+          return d.width;
+        })
+        .attr('height', '15')
+        .attr('fill', function (d, i) {
+          d.color = HEPDATA.visualization.submission_status.options.colors(d.name);
+          return d.color;
+        });
+
+
+      rect.on("mouseover", d3tip.show);
+      rect.on("mouseout", d3tip.hide);
+
+    }
   }
 };

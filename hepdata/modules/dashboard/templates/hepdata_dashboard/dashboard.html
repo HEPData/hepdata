@@ -1,6 +1,6 @@
 {%- extends "hepdata_theme/page.html" %}
 
-
+{% set body_css_classes = ["dashboard"] %}
 
 {%- block additional_assets %}
     {%- assets "hepdata_theme_css" %}
@@ -31,212 +31,224 @@
 
     <div class="hep-content" style="padding-top: 65px; height: 100%">
 
-    <div class="dashboard-header">
+        <div class="dashboard-header">
 
-        <div align="center" class="profile-container">
+            <div align="center" class="profile-container container-fluid">
 
-            <img src="{{ url_for('static', filename='img/dashboard/hepdata_logo_dark.svg') }}" width="120">
-            <br/><br/>
-            {% if ctx.user_profile %}
-                <h4>{{ ctx.user_profile.full_name }}</h4>
-            {% else %}
-                <p>No name provided <a href="/account/settings/profile" class="btn btn-sm btn-default"><i
-                        class="fa fa-pencil"></i> Add Name</a></p>
-            {% endif %}
+                <div class="row-fluid">
+
+                    <div class="col-md-1 col-sm-2 col-xs-12 logo">
+                        <img src="{{ url_for('static', filename='img/dashboard/hepdata_logo_dark.svg') }}">
+                    </div>
+
+                    <div class="col-md-6 col-sm-10 col-xs-12 user-info">
+                        {% if ctx.user_profile %}
+                            <h4>{{ ctx.user_profile.full_name }}</h4>
+                        {% else %}
+                            <p>No name provided <a href="/account/settings/profile" class="btn btn-sm btn-default"><i
+                                    class="fa fa-pencil"></i> Add Name</a></p>
+                        {% endif %}
 
 
-            <div>
+                        <div>
                     <span class="email"><i class="fa fa-envelope-o"
                                            style="margin-right: 5px"></i> {{ current_user.email }}</span>
+                        </div>
+                    </div>
 
-                <br/><br/>
+                    <div class="col-md-5 col-xs-12 action-btns text-right">
+                        {% if ctx.user_is_admin %}
+                            <a href="/admin" class="btn-profile">HEPData
+                                Administration</a>
+                            <a id="reindex-button" class="btn-profile"
+                               data-toggle="modal"
+                               data-target="#reindexWidget"><span
+                                    class="fa fa-refresh"></span> Reindex Database
+                            </a>
 
-                {% if ctx.user_is_admin %}
-                    <a href="/admin" class="btn-profile">HEPData
-                        Administration</a>
-                    <a id="reindex-button" class="btn-profile"
-                       data-toggle="modal"
-                       data-target="#reindexWidget"><span
-                            class="fa fa-refresh"></span> Reindex Database
-                    </a>
+                        {% endif %}
+                        <a href="/account/settings/profile"
+                           class="btn-profile"><i class="fa fa-pencil"></i> Edit Profile</a>
 
-                    <a href="/dashboard/stats" class="btn-profile"><span
-                            class="fa fa-bar-chart"></span> Access Statistics</a>
-                {% endif %}
-                <a href="/account/settings/profile"
-                   class="btn-profile"><i class="fa fa-pencil"></i> Edit Profile</a>
-
-                <a href="{{ url_for('security.logout') }}"
-                   class="btn-profile danger"><i
-                        class="fa fa-power-off"></i> Log out</a>
-
+                        <a href="{{ url_for('security.logout') }}"
+                           class="btn-profile danger"><i
+                                class="fa fa-power-off"></i> Log out</a>
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
 
-    <div id="hepdata_submissions">
+        <div class="clearfix"></div>
 
-        {% block dashboard_content %}
+        {% if ctx.pending_invites | length > 0 %}
+            <div id="pending-invite-area" class="container-fluid">
+                <div class="row-fluid">
 
-            {% if ctx.submissions|length > 0 %}
+                    <h4>Invitations to review or upload</h4>
+                    {% for invitation in ctx.pending_invites %}
+                        <div class="col-md-12 invite">
+                            <div class="row">
 
-                <div class="filter" align="center">
-                    <input id="submission-filter"
-                           placeholder="Filter {{ ctx.submissions |length }} submission{% if ctx.submissions |length > 1 %}s{% endif %}"
-                           name="data-table-filter"
-                           onkeyup="HEPDATA.filter_content('#submission-filter','#hep-submissions')">
-                </div>
-
-                <ul id="hep-submissions">
-                    {% for submission in ctx.submissions %}
-                        <li id="{{ submission.recid }}" class="submission-item">
-                            <div class="row-fluid">
-                                <div class="submission-header">
-                                    {% if ctx.user_is_admin or submission.show_coord_view %}
-
-                                        {% if submission.requires_inspire_id %}
-                                            <button class="btn btn-primary btn-sm inspire-btn pull-right"
-                                                    id="inspire-btn-{{ submission.recid }}"
-                                                    data-recid="{{ submission.recid }}">
-                                                Add INSPIRE ID
-                                            </button>
-
-                                        {% else %}
-                                            {% if submission.review_flag == 'passed' and submission.submission_status=='todo' %}
-                                                <button class="btn btn-success btn-sm finalise-btn pull-right"
-                                                        id="finalise-btn-{{ submission.recid }}"
-                                                        data-recid="{{ submission.recid }}"
-                                                        data-versions="{{ submission.versions }}">
-                                                    Finalise Submission
-                                                </button>
-
-                                            {% endif %}
-                                        {% endif %}
-
-                                        {% if submission.reviewer_message %}
-                                            <span class="fa fa-comment pull-right"
-                                                  style="margin-top: 5px"></span>
-                                        {% endif %}
-
-                                        <button class="btn btn-sm btn-default pull-right manage-submission-trigger"
-                                                data-recid="{{ submission.recid }}"
-                                                data-toggle="modal"
-                                                data-target="#manageWidget"><span
-                                                class="fa fa-cogs"></span>
-                                        </button>
-
-                                        {% if submission.versions == 0 %}
-                                            <button class="btn btn-sm btn-danger pull-right delete-submission-trigger"
-                                                    data-recid="{{ submission.recid }}"
-                                                    data-toggle="modal"
-                                                    data-target="#deleteWidget"
-                                                    style="margin-right: 5px;">
-                                                <span class="fa fa-trash-o"></span>
-                                            </button>
-                                        {% endif %}
-
-                                    {% else %}
-                                        <button class="btn btn-sm btn-default pull-right manage-submission-trigger"
-                                                data-recid="{{ submission.recid }}"
-                                                data-toggle="modal"
-                                                data-target="#conversationDialog"><span
-                                                class="fa fa-comment" s></span>
-                                        </button>
-                                    {% endif %}
-
-                                    <span class="start_date pull-left"> Started on {{ submission.start_date.strftime('%Y-%m-%d at %H:%M') }}</span>
+                                <div class="col-md-10">
+                                    <p><span
+                                            class="label label-info">{{ invitation.role }}</span> {{ invitation.title }}
+                                    </p>
+                                    <p class="coordinator">Coordinator: <a
+                                            href="invitation.coordinator.email"> {{ invitation.coordinator.email }}</a>.
+                                        Invitation sent to <em>{{ current_user.email }}</em></p>
                                 </div>
+                                <div class="col-md-2">
+                                    <a href="assign/{{ invitation.invitation_cookie }}"
+                                       class="btn btn-success pull-right" style="margin-right: 3px">Accept
+                                        Invite</a>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
 
-                                <div class="clearfix"></div>
+        <div class="row-fluid">
+            <div class="col-md-8">
+                <div class="dashboard-section">
+                    <h4>Submissions In Progress</h4>
+                    <br/>
 
-                                <div class="content">
+                    <div class="filter" align="center">
+                        <input id="submission-filter"
+                               placeholder="Filter {{ ctx.submissions |length }} submission{% if ctx.submissions |length > 1 %}s{% endif %}"
+                               name="data-table-filter"
+                               onkeyup="HEPDATA.filter_content('#submission-filter','#hep-submissions')">
+                    </div>
 
-                                    {% if submission.versions > 1 %}
-                                        <span class="label label-warning pull-right">{{ submission.versions }} Versions</span>{% endif %}
 
-                                    <h4><a href="/record/{{ submission.recid }}"
-                                           target="_blank">{{ submission.title }}</a>
-                                    </h4>
+                    <ul id="hep-submissions">
+                        {% for submission in ctx.submissions %}
+                            <li id="{{ submission.recid }}" class="submission-item">
+                                <div class="container-fluid">
+                                    <div class="row">
 
-                                    <br/>
-
-                                    <div class="row-fluid">
-
-                                        {% if submission.review_flag == 'todo' %}
-                                            <div class="no-uploads col-md-6" align="center">
-                                                <br/>
+                                        <div class="col-md-2 text-center">
+                                            {% if submission.review_flag == 'todo' %}
                                                 <img src="{{ url_for('static', filename='img/nodata.svg') }}"
                                                      alt="No data uploaded yet"
-                                                     width="80px"/><br/>
-                                                Nothing uploaded yet.
-                                            </div>
-                                        {% else %}
-                                            <div class="submission-progress col-md-6"
-                                                 id="submission-{{ submission.recid }}"></div>
-                                        {% endif %}
-
-
-                                        <div class="{% if not user_is_admin %}user-submission-role{% else %}role-admin-view{% endif %} col-md-6">
-                                            {% if not ctx.user_is_admin and not submission.show_coord_view %}
-                                                <div align="center" style="padding-bottom: 100px">
-                                                    {% for role in submission.role %}
-                                                        <span class="submission-{{ role }}"
-                                                              style="margin-left: 3px">
-
-                                    <span class="fa fa-{% if role == 'coordinator' %}gavel {% elif role == 'reviewer' %}check{% else %}upload{% endif %}"
-                                          style="padding-right: 5px;"></span>{{ role }}</span>
-                                                    {% endfor %}
-                                                </div>
+                                                     width="50px"/><br/>
+                                                <span>No data</span>
                                             {% else %}
-
-                                                <div class="table-responsive">
-                                                    <table class="table table-hover">
-                                                        <tr class="submission-person">
-                                                            <td class="title coordinator-title">Coordinator</td>
-                                                            <td class="value coordinator-value">{{ submission.coordinator.name }}</td>
-                                                            <td><a
-                                                                    href="mailto:{{ submission.coordinator.email }}?subject=Coordination of HEPdata submission for {{ submission.title }}">
-                                                                <span class="email">email</span></a></td>
-                                                        </tr>
-
-                                                        <tr class="submission-person">
-                                                            <td class="title uploader-title">Uploader</td>
-                                                            <td class="value uploader-value">{{ submission.uploader.name }}</td>
-                                                            <td><a
-                                                                    href="mailto:{{ submission.uploader.email }}?subject=Upload for HEPdata for {{ submission.title }}">
-                                                                <span class="email">email</span></a></td>
-                                                        </tr>
-
-                                                        <tr class="submission-person">
-                                                            <td class="title reviewer-title">Reviewer</td>
-                                                            <td class="value reviewer-value">{{ submission.reviewer.name }}</td>
-                                                            <td><a
-                                                                    href="mailto:{{ submission.reviewer.email }}?subject=Review for HEPdata for {{ submission.title }}">
-                                                                <span class="email">email</span></a></td>
-                                                        </tr>
-                                                    </table>
+                                                <p class="status">
+                                                    {% if submission.submission_status=='todo' %}
+                                                        <span class="in-progress">In Progress</span>
+                                                    {% else %}
+                                                        <span class="complete">Complete</span>
+                                                    {% endif %}
+                                                </p>
+                                                <div id="submission-{{ submission.recid }}">
                                                 </div>
-
                                             {% endif %}
-
-
                                         </div>
+
+                                        <div class="col-md-7">
+
+                                            <p class="start-date">
+                                                {% if submission.show_coord_view %}
+                                                    <span class="label label-info">Coordinator</span>
+                                                {% endif %}
+                                                {% for role in submission.role %}
+                                                    <span class="label label-info">
+                                                        <span class="fa fa-{% if role == 'coordinator' %}gavel {% elif role == 'reviewer' %}check{% else %}upload{% endif %}"
+                                                              style="padding-right: 5px;"></span>{{ role }}</span>
+                                                {% endfor %}
+
+                                                <span
+                                                        class="label label-default">Version {{ submission.versions }}</span>
+                                                started
+                                                {{ submission.start_date.strftime('%d %B %Y at %-I%p') }}
+
+
+                                            </p>
+                                            <h4><a href="/record/{{ submission.recid }}"
+                                                   target="_blank">{{ submission.title }}</a>
+
+                                                {% if submission.requires_inspire_id %}
+                                                    <button class="btn btn-primary btn-xs inspire-btn"
+                                                            id="inspire-btn-{{ submission.recid }}"
+                                                            data-recid="{{ submission.recid }}">
+                                                        Attach INSPIRE Record
+                                                    </button>
+                                                {% endif %}
+                                            </h4>
+                                        </div>
+
+
+                                        <div class="col-md-3 actions">
+                                            {% if ctx.user_is_admin or submission.show_coord_view %}
+                                                {% if not submission.requires_inspire_id %}
+
+                                                    {% if submission.review_flag == 'passed' and submission.submission_status=='todo' %}
+                                                        <button class="btn btn-success btn-sm finalise-btn pull-right"
+                                                                id="finalise-btn-{{ submission.recid }}"
+                                                                data-recid="{{ submission.recid }}"
+                                                                data-versions="{{ submission.versions }}">
+                                                            Finalise
+                                                        </button>
+
+                                                    {% endif %}
+                                                {% endif %}
+
+                                                <button class="btn btn-sm btn-default pull-right manage-submission-trigger"
+                                                        data-recid="{{ submission.recid }}"
+                                                        data-toggle="modal"
+                                                        data-target="#manageWidget"><span
+                                                        class="fa fa-cogs"></span>
+                                                </button>
+
+                                                {% if submission.versions == 1 %}
+                                                    <button class="btn btn-sm btn-danger pull-right delete-submission-trigger"
+                                                            data-recid="{{ submission.recid }}"
+                                                            data-toggle="modal"
+                                                            data-target="#deleteWidget"
+                                                            style="margin-right: 5px;">
+                                                        <span class="fa fa-trash-o"></span>
+                                                    </button>
+                                                {% endif %}
+                                            {% else %}
+                                                <button class="btn btn-sm btn-default pull-right conversation-trigger"
+                                                        data-recid="{{ submission.recid }}"
+                                                        data-toggle="modal"
+                                                        data-target="#conversationDialog"><span
+                                                        class="fa fa-comment" s></span>
+                                                </button>
+                                            {% endif %}
+                                        </div>
+
                                     </div>
-
                                 </div>
-
-                            </div>
-                            <div class="clearfix"></div>
-                        </li>
-                    {% endfor %}
-                </ul>
-            {% else %}
-                <div class="no_submissions">
-                    There are no submissions in progress.
+                            </li>
+                        {% endfor %}
+                    </ul>
                 </div>
-            {% endif %}
+            </div>
 
-        {% endblock %}
+            <div class="col-md-4">
+                <div class="container-fluid">
+                    <div class="row-fluid">
+                        <div class="col-md-12 dashboard-section">
+                            <h4>Watch List</h4>
+                            <div id="watch_btn_container" class="text-center">
+                                <button class="btn btn-md btn-default"><i class="fa fa-plus"></i> Add to the watch list
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="col-md-12 dashboard-section">
+                            <h4>Discussions</h4>
+                            <p class="text-center">No discussions</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     {% include 'hepdata_dashboard/manager-widget.html' %}
@@ -272,7 +284,7 @@
             var data = {{ctx.submission_stats | safe}};
 
             for (var submission_idx in data) {
-                HEPDATA.visualization.pie.render(data[submission_idx]);
+                HEPDATA.visualization.submission_status.render(data[submission_idx]);
             }
 
             $(".filter-list li").bind('click', function () {

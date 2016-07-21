@@ -5,7 +5,7 @@
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
                         aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="codeDialogLabel">Conversation</h4>
+                <h4 class="modal-title" id="conversationDialog">Conversation</h4>
             </div>
 
             <div class="manage-review-menu">
@@ -21,7 +21,8 @@
 
             <div class="modal-body">
 
-                {%include 'hepdata_dashboard/widget_components/conversation_component.html'%}
+                <div id="conversation-only">
+                </div>
 
             </div>
             <div class="clearfix"></div>

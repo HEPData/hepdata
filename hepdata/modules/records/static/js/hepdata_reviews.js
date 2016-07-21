@@ -49,6 +49,7 @@ HEPDATA.load_all_review_messages = function (placement, record_id) {
     dataType: "json",
     cache: false,
     success: function (data) {
+      console.log(data);
       $(placement).html('');
       var message_count = 0;
       for (var table in data) {
@@ -63,7 +64,7 @@ HEPDATA.load_all_review_messages = function (placement, record_id) {
         $(".loading").addClass("hidden");
         $(".input_box").css("color", "#808080")
           .css("height", "30px");
-        $("#conversation_message_count").html(message_count);
+        d3.selectAll("#conversation_message_count").html(message_count);
       }
       $("#conversation_message_count").html(message_count);
     }
@@ -72,12 +73,14 @@ HEPDATA.load_all_review_messages = function (placement, record_id) {
 
 HEPDATA.render_review_message = function (placement, message) {
   var date_time = message.post_time.split(" ");
-  var message_item = d3.select(placement).append('div').attr('class', 'message-item');
-  var message_info = message_item.append('div').attr('class', 'message-info');
-  message_info.append('p').attr('class', 'message-time').html(date_time[0] + '<br/>' + date_time[1]);
-  var message_div = message_item.append('div').attr('class', 'message-content');
+  var message_container = d3.select(placement).append('div').attr('class', 'container-fluid');
+  var message_item = message_container.append('div').attr('class', 'message-item row-fluid');
+  var message_info = message_item.append('div').attr('class', 'message-info col-md-12');
+  message_info.append('p').attr('class', 'message-time').html(date_time[0] + ' at ' + date_time[1]);
+  var message_div = message_item.append('div').attr('class', 'message-content col-md-12');
   message_div.append('p').attr('class', 'reviewer').text(message.user);
   message_div.append('p').text(message.message);
+  message_item.append('div').attr('class', 'clearfix');
 };
 
 HEPDATA.load_review_messages = function (placement, record_id, table_id) {

@@ -47,8 +47,8 @@ from hepdata.ext.elasticsearch.api import get_records_matching_field, \
     get_record, get_count_for_collection, get_n_latest_records
 from hepdata.modules.converter import convert_oldhepdata_to_yaml
 from hepdata.modules.inspire_api.views import get_inspire_record_information
-from hepdata.modules.records.models import HEPSubmission, DataSubmission, \
-    DataResource, DataReview, DataReviewMessage, SubmissionParticipant, \
+from hepdata.modules.submission.models import HEPSubmission, DataSubmission, \
+    DataResource, DataReview, Message, SubmissionParticipant, \
     RecordVersionCommitMessage
 from hepdata.modules.records.utils.common import get_record_by_id, \
     default_time, allowed_file, \
@@ -499,6 +499,7 @@ def get_coordinator_view(recid):
             {"full_name": participant.full_name, "email": participant.email,
              "id": participant.id})
 
+    print(participants)
     return json.dumps(
         {"recid": recid,
          "primary-reviewers": participants["reviewer"]["primary"],
@@ -593,7 +594,7 @@ def add_data_review_messsage(publication_recid, data_recid):
         data_review_record = create_data_review(data_recid, publication_recid)
         trace.append("created a new data review record")
 
-    data_review_message = DataReviewMessage(user=userid, message=message)
+    data_review_message = Message(user=userid, message=message)
     data_review_record.messages.append(data_review_message)
 
     db.session.commit()
@@ -790,7 +791,7 @@ def consume_sandbox_payload():
 
     get_or_create_hepsubmission(id, current_user.get_id(), status="sandbox")
     file = request.files['hep_archive']
-    return process_payload(id, file, '/record/sandbox/{}', send_email=False)
+    return process_payload(id, file, '/record/sandbox/{}')
 
 
 @login_required

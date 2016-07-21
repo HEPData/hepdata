@@ -30,7 +30,7 @@ from operator import or_
 
 import pkg_resources
 from invenio_accounts.models import User
-from hepdata.modules.records.models import SubmissionParticipant
+from hepdata.modules.submission.models import SubmissionParticipant
 from hepdata.modules.theme.views import internal_error
 from hepdata.modules.theme.views import page_not_found
 from flask.ext.login import current_user

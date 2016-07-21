@@ -225,59 +225,39 @@
   margin-bottom: 10px;
 }
 
-.message-info {
-  display: inline-block;
-  width: 70px;
-  vertical-align: top;
-}
-
-.message-content {
-  display: inline-block;
-  background-color: $navy-light;
-  padding: 10px;
-  border-radius: 2px;
-  vertical-align: top;
-  width: 180px;
-  text-align: left;
-  font-weight: normal;
-  font-size: .8em;
-}
-
-#conversation .message-content {
-  background-color: transparent;
-}
-
 .message-item {
-  margin-bottom: 5px;
-}
-
-.message-item p {
-  margin: 0;
-  font-size: .9em;
-}
-
-.message-item .reviewer {
-  font-size: .8em;
-  font-weight: bolder;
-  color: $blue;
-}
-
-.message-item .message-time {
-  font-size: .7em;
-  font-weight: lighter;
-  color: $lightgrey;
-  text-align: left;
-}
-
-#conversation .message-item .message-time {
-  color: $navy-light;
-}
-
-#conversation .message-item {
+  background-color: $navy-light;
   border-radius: 2px;
-  background-color: $lightgrey;
   padding: 10px;
-  margin-left: 25px;
+  margin-bottom: 5px;
+  .message-info {
+    vertical-align: top;
+  }
+
+  .message-content {
+
+    vertical-align: top;
+    text-align: left;
+    font-weight: normal;
+    font-size: 1em;
+  }
+  p {
+    margin: 0;
+    font-size: .9em;
+  }
+
+  .reviewer {
+    font-size: .8em;
+    font-weight: bolder;
+    color: $blue;
+  }
+
+  .message-time {
+    font-size: .7em;
+    font-weight: lighter;
+    color: $lightgrey;
+    text-align: left;
+  }
 }
 
 #table_description {
@@ -285,13 +265,6 @@
   white-space: pre-wrap;
 }
 
-#conversation .table-name {
-
-  padding: 5px;
-  font-weight: bolder;
-  color: $purple;
-  font-size: 1em;
-}
 
 .upload-area {
   width: 75%;

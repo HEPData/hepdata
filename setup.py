@@ -168,8 +168,11 @@ setup(
         ],
 
         'invenio_db.models': [
-            'hepdata_records = hepdata.modules.records.models',
+            'hepdata_submissions = hepdata.modules.submission.models',
             'hepdata_stats = hepdata.modules.stats.models',
+            'hepdata_discuss = hepdata.modules.records.discuss.models',
+            'hepdata_watcher = hepdata.modules.records.watcher.models',
+            'hepdata_status = hepdata.modules.records.status.models',
         ],
         'invenio_base.blueprints': [
             'hepdata_theme = hepdata.modules.theme.views:blueprint',
@@ -196,9 +199,6 @@ setup(
             'hepdata_vis_js = hepdata.modules.records.bundles:vis_js',
             'hepdata_record_css = hepdata.modules.theme.bundles:record_css',
             'hepdata_search_css = hepdata.modules.theme.bundles:search_css',
-        ],
-        'invenio_jsonschemas.schemas': [
-            'hepdata_records = hepdata.modules.records.jsonschemas',
         ]
     },
     extras_require=extras_require,

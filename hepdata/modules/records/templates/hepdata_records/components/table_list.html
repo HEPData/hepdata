@@ -3,7 +3,7 @@
 
         {% if ctx.show_upload_widget and ctx.status != 'finished' %}
 
-            {% if not ctx.reviewers_notified %}
+            {% if not ctx.reviewers_notified and ctx.mode != 'sandbox' %}
             <button type="button" class="btn btn-warning btn-md" data-toggle="modal" style="width: 100%"
                     id="notify-reviewer-btn" data-target="#notifyReviewer"><span
                     class="fa fa-bell"></span> Notify Reviewer

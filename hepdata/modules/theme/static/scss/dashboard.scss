@@ -1,8 +1,15 @@
+body, html {
+  &.dashboard {
+    background-color: $darker-blue !important;
+  }
+}
+
 .dashboard-header {
-  background-color: $navy;
+  background-color: #29394a;
   color: white;
   padding: 20px;
-  border-bottom: 4px solid $navy-light;
+  margin-bottom: 20px;
+
   h4 {
     margin: 0;
     font-size: 1.8em;
@@ -10,8 +17,31 @@
   }
 }
 
-.table>tbody>tr>td, .table>tbody>tr>th, .table>tfoot>tr>td, .table>tfoot>tr>th, .table>thead>tr>td, .table>thead>tr>th {
-  border-top:none;
+.dashboard-section {
+  background-color: $dark-blue;
+  margin: 10px;
+  padding: 20px;
+  border-radius: 3px;
+
+  h4 {
+    color: white;
+    font-size: 1.2em;
+    font-weight: normal;
+    text-transform: uppercase;
+  }
+}
+
+.inspire-title {
+  a {
+    color: $purple;
+    &:hover {
+      color: $purple-light;
+    }
+  }
+}
+
+.table > tbody > tr > td, .table > tbody > tr > th, .table > tfoot > tr > td, .table > tfoot > tr > th, .table > thead > tr > td, .table > thead > tr > th {
+  border-top: none;
 }
 
 .stats-header {
@@ -23,6 +53,11 @@
 
 #stats_table {
   color: $navy;
+}
+
+.status-rect {
+  pointer-events: all;
+  cursor: pointer;
 }
 
 .access_plot {
@@ -39,9 +74,24 @@
 }
 
 .profile-container {
-  padding:1em;
+  padding: 1em;
   h4 {
     font-weight: bolder;
+  }
+
+  .logo img {
+    width: 100%;
+
+    @media screen and (max-width: 768px){
+      width: 40%;
+      margin-bottom: 20px;
+    }
+  }
+
+  .action-btns {
+    @media screen and (max-width: 768px){
+      margin-top: 20px;
+    }
   }
 
   .email {
@@ -49,8 +99,14 @@
     font-weight: bolder;
   }
 
+  .user-info {
+    @media screen and (min-width: 768px){
+      text-align: left;
+    }
+  }
+
   .btn-profile {
-    background-color: #2f4254;
+    background-color: $darker-blue;
     color: white;
     display: inline-block;
     padding: 8px 6px;
@@ -90,42 +146,44 @@
   list-style: none;
   -webkit-padding-start: 0px;
   width: 100%;
-  padding-left: 2em;
-  padding-right: 2em;
 
 }
 
 .submission-item {
+  text-rendering: optimizeLegibility;
+
   width: 100%;
+  background-color: $darker-blue;
   display: block;
   border-radius: 4px;
-  background-color: white;
+  padding: 10px;
   color: $navy;
-  border-bottom: 2px solid $silver;
-  border-right: 2px solid $silver;
   margin-bottom: 4px;
 
-  .start_date {
-    color: $purple;
+  h4 {
+    font-size: 1.1em;
+    text-transform: none;
   }
-
-  .email {
-    background-color: $navy-light;
-    padding: 4px 5px;
-    margin-left: 5px;
-    border-radius: 3px;
-    color: white;
+  .start-date {
+    color: $lightgrey;
     font-size: 1em;
-    -webkit-transition: all 0.3s;
-    -moz-transition: all 0.3s;
-    -ms-transition: all 0.3s;
-    -o-transition: all 0.3s;
-    transition: all 0.3s;
+    font-weight: normal;
+    margin: 0
   }
 
-  .email:hover {
-    background-color: $purple-light;
-    text-decoration: none;
+  .status {
+    margin: 0;
+    color: white;
+    text-transform: uppercase;
+    font-size: .9em;
+  }
+
+  .actions {
+    padding-top: 10px;
+
+    .btn {
+      margin: 2px;
+    }
   }
 
   .submission-header {
@@ -159,17 +217,20 @@
     border-radius: 3px;
   }
 
-  .todo {
-    background-color: $red-light;
-    color: white;
+  .in-progress {
+    background-color: $orange;
+    color: $navy;
+    padding: 4px 6px;
+    font-size: .8em;
+    border-radius: 4px;
   }
 
-  .attention {
-    background-color: $yellow;
-  }
-
-  .passed {
+  .complete {
     background-color: $green;
+    color: white;
+    padding: 4px 6px;
+    font-size: .8em;
+    border-radius: 4px;
   }
 
   .user-submission-role {
@@ -190,44 +251,22 @@
 
 }
 
-.submission-date {
-  margin-top: 5px;
-  font-weight: bolder;
-  padding-bottom: 10px;
-  color: $grey;
-}
-
-.submission-reviewer {
-  background-color: $purple;
-  padding: 7px 6px;
-  border-radius: 3px;
-  color: white;
-}
-
-.submission-uploader {
-
-  background-color: $navy;
-  padding: 7px 6px;
-  border-radius: 3px;
-  color: white;
-}
-
-.submission-coordinator {
-
-  background-color: $blue;
-  padding: 7px 6px;
-  border-radius: 3px;
-  color: white;
-}
-
 .manage-submission-trigger {
 
   color: white;
-  background: $navy;
+  background: $dark-blue;
+  border-color: $dark-blue;
+
+  -webkit-transition: all 0.3s;
+  -moz-transition: all 0.3s;
+  -ms-transition: all 0.3s;
+  -o-transition: all 0.3s;
+  transition: all 0.3s;
 
   &:hover {
     color: white;
-    background-color: $navy-light;
+    background-color: $purple;
+    border-color: $purple-light;
   }
 }
 
@@ -258,24 +297,19 @@
 }
 
 #hepdata_submissions {
-  width: 100%;
-  height: 55vh;
-  background-color: $lightgrey;
   overflow-y: scroll;
-
 }
 
 .filter {
 
+  padding-bottom: 2em;
   width: 100%;
-  background-color: transparent;
-  padding: 2em;
 
   input {
     border: none;
-    background: white url(/static/img/icons/icon_filter.svg) 8px 15px no-repeat transparent;
+    background: $navy url(/static/img/icons/icon_filter.svg) 8px 10px no-repeat;
     background-size: 23px;
-    padding: 15px 12px 15px 35px;
+    padding: 10px 10px 10px 35px;
     width: 100%;
     border-radius: 5px;
     color: $navy;
@@ -287,59 +321,6 @@
 .filter-list li {
   padding-left: 20px;
   font-weight: normal;
-}
-
-.filter-passed {
-  color: $green;
-}
-
-.filter-finished {
-  color: $purple;
-}
-
-.filter-attention {
-  color: $yellow;
-}
-
-.filter-todo {
-  color: $red-light;
-}
-
-.filter-coordinator {
-  color: $blue;
-}
-
-.filter-reviewer {
-  color: $purple;
-}
-
-.filter-uploader {
-  color: $navy;
-}
-
-.clear-filter {
-  margin-right: 20px;
-  font-size: .7em;
-  padding: 2px 5px;
-  color: $red;
-  border-radius: 3px;
-  margin-top: 3px;
-  cursor: pointer;
-}
-
-.filter-count {
-  padding: 2px 6px;
-  background-color: white;
-  margin-right: 20px;
-  border-radius: 3px;
-}
-
-.filter-selected {
-  font-weight: bolder;
-}
-
-.filter-inactive {
-  color: $concrete;
 }
 
 .modal-body {
@@ -457,18 +438,19 @@ p.no-entries {
   padding-top: 5px;
   font-size: .6em;
   cursor: pointer;
+
+  &:hover {
+    color: $purple;
+  }
 }
 
-.add-new-uprev:hover {
-  color: $purple;
-}
-
-.manage-reviewers .add-new-uprev {
-  color: $purple-light;
-}
-
-.manage-reviewers .add-new-uprev:hover {
-  color: $navy;
+.manage-reviewers {
+  .add-new-uprev {
+    color: $purple-light;
+    &:hover {
+      color: $navy;
+    }
+  }
 }
 
 .submission-person {
@@ -572,4 +554,41 @@ p.no-entries {
     -webkit-transform: translateX(0) scale(1);
     transform: translateX(0) scale(1);
   }
+}
+
+#conversation .message-item, #conversation-only .message-item {
+  background-color: $lightgrey;
+  padding: 10px;
+
+
+  .message-time {
+    color: $navy;
+  }
+}
+
+
+#conversation .table-name {
+  padding: 5px;
+  font-weight: bolder;
+  color: $purple;
+  font-size: 1em;
+}
+
+.invite {
+  padding: 20px;
+  background-color: $dark-blue;
+  margin-bottom: 10px;
+
+  .label {
+
+    text-transform: uppercase;
+  }
+
+  .coordinator {
+    font-size: 1em;
+  }
+}
+
+#pending-invite-area {
+  margin-bottom: 30px;
 }

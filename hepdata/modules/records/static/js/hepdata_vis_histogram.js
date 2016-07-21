@@ -70,7 +70,7 @@ HEPDATA.visualization.histogram = {
           "name": value_obj.name,
           "values": [],
           "x_error": "x_min" in value_obj,
-          "y_errors": !value_obj.errors[0].hide
+          "y_errors": value_obj.errors[0] ? !value_obj.errors[0].hide : false
         };
       }
 

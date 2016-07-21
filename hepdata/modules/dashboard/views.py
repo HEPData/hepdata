@@ -1,36 +1,24 @@
 from __future__ import absolute_import, print_function
-from collections import OrderedDict
-from datetime import datetime
-import json
-from operator import or_, and_
 
-from elasticsearch import NotFoundError
-from flask.ext.celeryext import create_celery_app
+from collections import OrderedDict
+from flask import Blueprint, jsonify, request, render_template, redirect, \
+    url_for
 from flask.ext.login import login_required, current_user
+
+from hepdata.ext.elasticsearch.api import reindex_all
+from hepdata.ext.elasticsearch.api import push_data_keywords
+from hepdata.modules.records.views import get_user_from_id
+from hepdata.modules.submission.models import HEPSubmission, DataReview, \
+    SubmissionParticipant
+from hepdata.modules.records.utils.common import get_record_by_id, encode_string
+from hepdata.modules.records.utils.submission import unload_submission, get_latest_hepsubmission, do_finalise
+from hepdata.modules.records.utils.users import has_role
+from hepdata.modules.submission.views import send_cookie_email
 from invenio_accounts.models import User
 from invenio_db import db
 from invenio_userprofiles import UserProfile
-from sqlalchemy import func
-from sqlalchemy.orm.exc import NoResultFound
-from hepdata.config import CFG_DATA_TYPE, CFG_PUB_TYPE
-from hepdata.ext.elasticsearch.api import reindex_all, \
-    get_records_matching_field, delete_item_from_index, index_record_ids, fetch_record
-from hepdata.ext.elasticsearch.api import push_data_keywords
-from hepdata.modules.records.models import HEPSubmission, DataReview, \
-    SubmissionParticipant, DataSubmission, RecordVersionCommitMessage
-from hepdata.modules.records.utils.common import get_record_by_id
-from flask import Blueprint, jsonify, request, render_template, redirect, \
-    url_for, current_app
-
-from hepdata.modules.records.utils.doi_minter import generate_doi_for_data_submission, \
-    generate_doi_for_submission
-from hepdata.modules.records.utils.submission import unload_submission, get_latest_hepsubmission
-from hepdata.modules.records.utils.users import has_role
-from hepdata.modules.records.utils.workflow import send_finalised_email, \
-    create_record
-from hepdata.modules.stats.models import DailyAccessStatistic
-from hepdata.modules.submission.views import send_cookie_email
-from hepdata.utils.twitter import tweet
+import json
+from operator import and_, or_
 
 __author__ = 'eamonnmaguire'
 
@@ -74,11 +62,6 @@ def create_record_for_dashboard(record_id, submissions, primary_uploader=None,
             submissions[record_id]["stats"] = {"passed": 0, "attention": 0,
                                                "todo": 0}
 
-            add_user_to_metadata("uploader", primary_uploader, record_id,
-                                 submissions)
-            add_user_to_metadata("reviewer", primary_reviewer, record_id,
-                                 submissions)
-
             if coordinator:
                 submissions[record_id]["metadata"]["coordinator"] = {
                     'id': coordinator.id, 'name': coordinator.email,
@@ -92,9 +75,6 @@ def create_record_for_dashboard(record_id, submissions, primary_uploader=None,
             if "title" in publication_record:
                 submissions[record_id]["metadata"]["title"] = \
                     publication_record['title']
-            else:
-                submissions[record_id]["metadata"][
-                    "title"] = "Submission in Progress"
 
             if "inspire_id" not in publication_record or publication_record["inspire_id"] is None:
                 submissions[record_id]["metadata"][
@@ -149,8 +129,8 @@ def process_user_record_results(type, query_results, submissions):
 def prepare_submissions(current_user):
     """
     Finds all the relevant submissions for a user, or all submissions if the logged in user is a 'super admin'
-    :param invenio_user: current user
-    :return:
+    :param current_user: User obj
+    :return: OrderedDict of submissions
     """
 
     submissions = OrderedDict()
@@ -162,10 +142,7 @@ def prepare_submissions(current_user):
         # though considering the user him/herself is probably not a
         # reviewer/uploader
         hepdata_submission_records = HEPSubmission.query.filter(
-            or_(HEPSubmission.overall_status == 'todo',
-                or_(HEPSubmission.overall_status == 'attention',
-                    HEPSubmission.overall_status == 'passed'),
-                )).order_by(
+            and_(HEPSubmission.overall_status != 'finished', HEPSubmission.overall_status != 'sandbox')).order_by(
             HEPSubmission.created.desc()).all()
     else:
         # we just want to pick out people with access to particular records,
@@ -182,7 +159,9 @@ def prepare_submissions(current_user):
                      HEPSubmission.overall_status != 'sandbox')).all()
 
         coordinator_submissions = HEPSubmission.query.filter(
-            HEPSubmission.coordinator == int(current_user.get_id())).all()
+            HEPSubmission.coordinator == int(current_user.get_id()),
+            and_(HEPSubmission.overall_status != 'finished',
+                 HEPSubmission.overall_status != 'sandbox')).all()
 
         hepdata_submission_records += coordinator_submissions
 
@@ -237,6 +216,29 @@ def prepare_submissions(current_user):
     return submissions
 
 
+def get_pending_invitations_for_user(user):
+    pending_invites = SubmissionParticipant.query.filter(
+        SubmissionParticipant.email == user.email,
+        or_(SubmissionParticipant.role == 'reviewer',
+            SubmissionParticipant.role == 'uploader'),
+        SubmissionParticipant.user_account == None
+    ).all()
+
+    result = []
+
+    for invite in pending_invites:
+        publication_record = get_record_by_id(invite.publication_recid)
+        hepsubmission = get_latest_hepsubmission(invite.publication_recid)
+
+        coordinator = get_user_from_id(hepsubmission.coordinator)
+        result.append(
+            {'title': encode_string(publication_record['title'], 'utf-8'),
+             'invitation_cookie': invite.invitation_cookie,
+             'role': invite.role, 'coordinator': coordinator})
+
+    return result
+
+
 @blueprint.route('/')
 @login_required
 def dashboard():
@@ -260,29 +262,23 @@ def dashboard():
 
         submission_stats.append({"recid": record_id, "stats": stats})
 
-        review_status = "Not started"
         review_flag = "todo"
         if submissions[record_id]["stats"]["attention"] == 0 and \
                 submissions[record_id]["stats"]["todo"] == 0 and \
                 submissions[record_id]["stats"]["passed"] == 0:
-            review_status = "No Uploads"
             review_flag = "todo"
         elif submissions[record_id]["stats"]["attention"] > 0 or \
                 submissions[record_id]["stats"]["todo"] > 0:
-            review_status = "In progress"
             review_flag = "attention"
         elif submissions[record_id]["stats"]["attention"] == 0 and \
                 submissions[record_id]["stats"]["todo"] == 0:
-            review_status = "Awaiting Action"
             review_flag = "passed"
 
         if submissions[record_id]["status"] == 'finished':
-            review_status = "Finished"
             review_flag = "finished"
 
         submissions[record_id]["metadata"]["submission_status"] = \
             submissions[record_id]["status"]
-        submissions[record_id]["metadata"]["review_status"] = review_status
         submissions[record_id]["metadata"]["review_flag"] = review_flag
 
         submission_meta.append(submissions[record_id]["metadata"])
@@ -292,43 +288,10 @@ def dashboard():
     ctx = {'user_is_admin': has_role(current_user, 'admin'),
            'submissions': submission_meta,
            'user_profile': user_profile,
-           'submission_stats': json.dumps(submission_stats)}
+           'submission_stats': json.dumps(submission_stats),
+           'pending_invites': get_pending_invitations_for_user(current_user)}
 
     return render_template('hepdata_dashboard/dashboard.html', ctx=ctx)
-
-
-@blueprint.route('/stats')
-@login_required
-def stats():
-    user_profile = UserProfile.query.filter_by(user_id=current_user.get_id()).first()
-    ctx = {'user_is_admin': has_role(current_user, 'admin'), 'user_profile': user_profile}
-
-    records_summary = db.session.query(func.sum(DailyAccessStatistic.count),
-                                       DailyAccessStatistic.publication_recid,
-                                       DailyAccessStatistic.day).group_by(
-        DailyAccessStatistic.publication_recid, DailyAccessStatistic.day).order_by().limit(1000).all()
-
-    record_overview = {}
-    for record in records_summary:
-        if record[1] not in record_overview:
-            title = ''
-            try:
-                full_record_info = fetch_record(record[1], CFG_PUB_TYPE)
-
-                if full_record_info:
-                    title = full_record_info['title']
-            except NotFoundError:
-                # skip this record. Was probably accessed then deleted.
-                continue
-            record_overview[record[1]] = {"title": title, "recid": record[1], "count": 0, "accesses": []}
-
-        record_overview[record[1]]['count'] += record[0]
-        record_overview[record[1]]["accesses"].append({"day": record[2].strftime("%Y-%m-%d"), "count": record[0]})
-
-    ctx['access'] = record_overview.values()
-    ctx['access_json'] = json.dumps(record_overview.values())
-
-    return render_template('hepdata_dashboard/stats.html', ctx=ctx)
 
 
 @blueprint.route(
@@ -489,197 +452,3 @@ def finalise(recid, publication_record=None, force_finalise=False):
 
     return do_finalise(recid, publication_record, force_finalise,
                        commit_message=commit_message, send_tweet=True)
-
-
-def do_finalise(recid, publication_record=None, force_finalise=False,
-                commit_message=None, send_tweet=False, update=False):
-    """
-        Creates record SIP for each data record with a link to the associated
-        publication
-        and submits to bibupload.
-        :param synchronous: if true then workflow execution and creation is
-        waited on, then everything is indexed in one go.
-        If False, object creation is asynchronous, however reindexing is not
-        performed. This is only really useful for the full migration of
-        content.
-    """
-    hep_submission = HEPSubmission.query.filter_by(
-        publication_recid=recid, overall_status="todo").first()
-
-    print('Finalising record {}'.format(recid))
-
-    generated_record_ids = []
-    # check if current user is the coordinator
-    if force_finalise or hep_submission.coordinator == int(current_user.get_id()):
-
-        submissions = DataSubmission.query.filter_by(
-            publication_recid=recid,
-            version=hep_submission.version).all()
-
-        version = hep_submission.version
-
-        existing_submissions = {}
-        if hep_submission.version > 1 or update:
-            # we need to determine which are the existing record ids.
-            existing_data_records = get_records_matching_field(
-                'related_publication', recid, doc_type=CFG_DATA_TYPE)
-
-            for record in existing_data_records["hits"]["hits"]:
-
-                if "recid" in record["_source"]:
-                    existing_submissions[record["_source"]["title"]] = \
-                        record["_source"]["recid"]
-                    delete_item_from_index(record["_id"],
-                                           doc_type=CFG_DATA_TYPE, parent=record["_source"]["related_publication"])
-
-        current_time = "{:%Y-%m-%d %H:%M:%S}".format(datetime.now())
-
-        for submission in submissions:
-            finalise_datasubmission(current_time, existing_submissions,
-                                    generated_record_ids,
-                                    publication_record, recid, submission,
-                                    version)
-
-        try:
-            record = get_record_by_id(recid)
-            # If we have a commit message, then we have a record update.
-            # We will store the commit message and also update the
-            # last_updated flag for the record.
-            record['hepdata_doi'] = hep_submission.doi
-
-            if commit_message:
-
-                # On a revision, the last updated date will
-                # be the current date.
-                hep_submission.last_updated = datetime.now()
-
-                commit_record = RecordVersionCommitMessage(
-                    recid=recid,
-                    version=version,
-                    message=commit_message)
-
-                db.session.add(commit_record)
-
-            record['last_updated'] = datetime.strftime(
-                hep_submission.last_updated, '%Y-%m-%d %H:%M:%S')
-            record['version'] = version
-
-            record.commit()
-
-            hep_submission.overall_status = "finished"
-            db.session.add(hep_submission)
-
-            db.session.commit()
-
-            create_celery_app(current_app)
-
-            # only mint DOIs if not testing.
-            if not current_app.config.get('TESTING', False) and not current_app.config.get('NO_DOI_MINTING', False):
-                for submission in submissions:
-                    generate_doi_for_data_submission.delay(submission.id, submission.version)
-
-                generate_doi_for_submission.delay(recid, version)
-
-            # Reindex everything.
-            index_record_ids([recid] + generated_record_ids)
-            push_data_keywords(pub_ids=[recid])
-
-            send_finalised_email(hep_submission)
-
-            if send_tweet:
-                tweet(record.get('title'), record.get('collaborations'),
-                      "http://www.hepdata.net/record/ins{0}".format(record.get('inspire_id')))
-
-            return json.dumps({"success": True, "recid": recid,
-                               "data_count": len(submissions),
-                               "generated_records": generated_record_ids})
-
-        except NoResultFound:
-            print('No record found to update. Which is super strange.')
-
-    else:
-        return json.dumps(
-            {"success": False, "recid": recid,
-             "errors": ["You do not have permission to finalise this "
-                        "submission. Only coordinators can do that."]})
-
-
-def finalise_datasubmission(current_time, existing_submissions,
-                            generated_record_ids, publication_record, recid,
-                            submission, version):
-    # we now create a 'payload' for each data submission
-    # by creating a record json and uploading it via a bibupload task.
-    # add in key for associated publication...
-    keywords = []
-    for keyword in submission.keywords:
-        keywords.append({"name": keyword.name,
-                         "value": keyword.value,
-                         "synonyms": ""})
-
-    # we want to retrieve back the authors of the paper
-    # and assign them as authors of the data too
-    if not publication_record:
-        publication_record = get_record_by_id(recid)
-
-    submission_info = {
-        "title": submission.name,
-        "abstract": submission.description,
-        "inspire_id": publication_record['inspire_id'],
-        "doi": submission.doi,
-        "authors": publication_record['authors'],
-        "first_author": publication_record.get('first_author', None),
-        "related_publication": submission.publication_recid,
-        "creation_date": publication_record["creation_date"],
-        "last_updated": current_time,
-        "journal_info": publication_record.get("journal_info", ""),
-        "keywords": keywords,
-        "version": version,
-        "collaborations": publication_record.get("collaborations", []),
-    }
-
-    if submission_info["title"] in existing_submissions:
-        # in the event that we're performing an update operation, we need
-        # to get the data record information
-        # from the index, and use the same record id. This way, we'll just
-        # update the submission instead of recreating
-        # a completely new record.
-        recid = existing_submissions[submission_info["title"]]
-        submission_info["control_number"] = submission_info["recid"] = recid
-
-    else:
-        submission_info = create_record(submission_info)
-        submission_info["control_number"] = submission_info["recid"]
-
-    submission.associated_recid = submission_info['recid']
-    generated_record_ids.append(submission_info["recid"])
-    submission_info["data_endpoints"] = create_data_endpoints(submission.id,
-                                                              submission_info)
-
-    submission.version = version
-
-    data_review = DataReview.query.filter_by(data_recid=submission.id).first()
-    if data_review:
-        data_review.version = version
-        db.session.add(data_review)
-
-    db.session.add(submission)
-
-
-def create_data_endpoints(data_id, info_dict):
-    """ Generate dictionary describing endpoints
-    where different data formats are served"""
-
-    parent_param = "?parent=" + str(info_dict["related_publication"])
-    return {
-        "json": "/".join(["/api",
-                          "record",
-                          CFG_DATA_TYPE,
-                          str(info_dict["recid"]),
-                          "json" + parent_param]),
-        "csv": "/".join(["",
-                         "record",
-                         CFG_DATA_TYPE,
-                         "file",
-                         str(data_id),
-                         "csv"])
-    }

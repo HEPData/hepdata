@@ -23,6 +23,7 @@
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 from __future__ import absolute_import, print_function
 
+import json
 import logging
 import uuid
 import zipfile
@@ -31,6 +32,7 @@ from urllib2 import URLError
 
 from elasticsearch import NotFoundError
 from flask import current_app
+from flask.ext.celeryext import create_celery_app
 from flask.ext.login import current_user
 from hepdata_validator.data_file_validator import DataFileValidator
 from hepdata_validator.submission_file_validator import \
@@ -43,16 +45,20 @@ from sqlalchemy.orm.exc import NoResultFound
 import yaml
 from hepdata.config import CFG_DATA_TYPE, CFG_PUB_TYPE
 from hepdata.ext.elasticsearch.api import get_records_matching_field, \
-    delete_item_from_index
-from hepdata.modules.records.models import DataSubmission, DataReview, \
-    DataResource, License, Keyword, HEPSubmission, SubmissionParticipant
+    delete_item_from_index, index_record_ids, push_data_keywords
+from hepdata.modules.records.utils.workflow import create_record, send_finalised_email
+from hepdata.modules.submission.models import DataSubmission, DataReview, \
+    DataResource, License, Keyword, HEPSubmission, SubmissionParticipant, RecordVersionCommitMessage
 from hepdata.modules.records.utils.common import \
     get_prefilled_dictionary, infer_file_type, encode_string, zipdir, get_record_by_id, contains_accepted_url
 from hepdata.modules.records.utils.common import get_or_create
-from hepdata.modules.records.utils.doi_minter import reserve_dois_for_data_submissions, reserve_doi_for_hepsubmission
+from hepdata.modules.records.utils.doi_minter import reserve_dois_for_data_submissions, reserve_doi_for_hepsubmission, \
+    generate_doi_for_data_submission, generate_doi_for_submission
 from hepdata.modules.records.utils.resources import download_resource_file
 from invenio_db import db
 from dateutil.parser import parse
+
+from hepdata.utils.twitter import tweet
 
 __author__ = 'eamonnmaguire'
 
@@ -608,3 +614,196 @@ def unload_submission(record_id):
         print(nfe.message)
 
     print('Finished unloading {0}.'.format(record_id))
+
+
+def do_finalise(recid, publication_record=None, force_finalise=False,
+                commit_message=None, send_tweet=False, update=False):
+    """
+        Creates record SIP for each data record with a link to the associated
+        publication
+        and submits to bibupload.
+        :param synchronous: if true then workflow execution and creation is
+        waited on, then everything is indexed in one go.
+        If False, object creation is asynchronous, however reindexing is not
+        performed. This is only really useful for the full migration of
+        content.
+    """
+    hep_submission = HEPSubmission.query.filter_by(
+        publication_recid=recid, overall_status="todo").first()
+
+    print('Finalising record {}'.format(recid))
+
+    generated_record_ids = []
+    # check if current user is the coordinator
+    if force_finalise or hep_submission.coordinator == int(current_user.get_id()):
+
+        submissions = DataSubmission.query.filter_by(
+            publication_recid=recid,
+            version=hep_submission.version).all()
+
+        version = hep_submission.version
+
+        existing_submissions = {}
+        if hep_submission.version > 1 or update:
+            # we need to determine which are the existing record ids.
+            existing_data_records = get_records_matching_field(
+                'related_publication', recid, doc_type=CFG_DATA_TYPE)
+
+            for record in existing_data_records["hits"]["hits"]:
+
+                if "recid" in record["_source"]:
+                    existing_submissions[record["_source"]["title"]] = \
+                        record["_source"]["recid"]
+                    delete_item_from_index(record["_id"],
+                                           doc_type=CFG_DATA_TYPE, parent=record["_source"]["related_publication"])
+
+        current_time = "{:%Y-%m-%d %H:%M:%S}".format(datetime.now())
+
+        for submission in submissions:
+            finalise_datasubmission(current_time, existing_submissions,
+                                    generated_record_ids,
+                                    publication_record, recid, submission,
+                                    version)
+
+        try:
+            record = get_record_by_id(recid)
+            # If we have a commit message, then we have a record update.
+            # We will store the commit message and also update the
+            # last_updated flag for the record.
+            record['hepdata_doi'] = hep_submission.doi
+
+            if commit_message:
+                # On a revision, the last updated date will
+                # be the current date.
+                hep_submission.last_updated = datetime.now()
+
+                commit_record = RecordVersionCommitMessage(
+                    recid=recid,
+                    version=version,
+                    message=commit_message)
+
+                db.session.add(commit_record)
+
+            record['last_updated'] = datetime.strftime(
+                hep_submission.last_updated, '%Y-%m-%d %H:%M:%S')
+            record['version'] = version
+
+            record.commit()
+
+            hep_submission.overall_status = "finished"
+            db.session.add(hep_submission)
+
+            db.session.commit()
+
+            create_celery_app(current_app)
+
+            # only mint DOIs if not testing.
+            if not current_app.config.get('TESTING', False) and not current_app.config.get('NO_DOI_MINTING', False):
+                for submission in submissions:
+                    generate_doi_for_data_submission.delay(submission.id, submission.version)
+
+                generate_doi_for_submission.delay(recid, version)
+
+            # Reindex everything.
+            index_record_ids([recid] + generated_record_ids)
+            push_data_keywords(pub_ids=[recid])
+
+            send_finalised_email(hep_submission)
+
+            if send_tweet:
+                tweet(record.get('title'), record.get('collaborations'),
+                      "http://www.hepdata.net/record/ins{0}".format(record.get('inspire_id')))
+
+            return json.dumps({"success": True, "recid": recid,
+                               "data_count": len(submissions),
+                               "generated_records": generated_record_ids})
+
+        except NoResultFound:
+            print('No record found to update. Which is super strange.')
+
+    else:
+        return json.dumps(
+            {"success": False, "recid": recid,
+             "errors": ["You do not have permission to finalise this "
+                        "submission. Only coordinators can do that."]})
+
+
+def finalise_datasubmission(current_time, existing_submissions,
+                            generated_record_ids, publication_record, recid,
+                            submission, version):
+    # we now create a 'payload' for each data submission
+    # by creating a record json and uploading it via a bibupload task.
+    # add in key for associated publication...
+    keywords = []
+    for keyword in submission.keywords:
+        keywords.append({"name": keyword.name,
+                         "value": keyword.value,
+                         "synonyms": ""})
+
+    # we want to retrieve back the authors of the paper
+    # and assign them as authors of the data too
+    if not publication_record:
+        publication_record = get_record_by_id(recid)
+
+    submission_info = {
+        "title": submission.name,
+        "abstract": submission.description,
+        "inspire_id": publication_record['inspire_id'],
+        "doi": submission.doi,
+        "authors": publication_record['authors'],
+        "first_author": publication_record.get('first_author', None),
+        "related_publication": submission.publication_recid,
+        "creation_date": publication_record["creation_date"],
+        "last_updated": current_time,
+        "journal_info": publication_record.get("journal_info", ""),
+        "keywords": keywords,
+        "version": version,
+        "collaborations": publication_record.get("collaborations", []),
+    }
+
+    if submission_info["title"] in existing_submissions:
+        # in the event that we're performing an update operation, we need
+        # to get the data record information
+        # from the index, and use the same record id. This way, we'll just
+        # update the submission instead of recreating
+        # a completely new record.
+        recid = existing_submissions[submission_info["title"]]
+        submission_info["control_number"] = submission_info["recid"] = recid
+
+    else:
+        submission_info = create_record(submission_info)
+        submission_info["control_number"] = submission_info["recid"]
+
+    submission.associated_recid = submission_info['recid']
+    generated_record_ids.append(submission_info["recid"])
+    submission_info["data_endpoints"] = create_data_endpoints(submission.id,
+                                                              submission_info)
+
+    submission.version = version
+
+    data_review = DataReview.query.filter_by(data_recid=submission.id).first()
+    if data_review:
+        data_review.version = version
+        db.session.add(data_review)
+
+    db.session.add(submission)
+
+
+def create_data_endpoints(data_id, info_dict):
+    """ Generate dictionary describing endpoints
+    where different data formats are served"""
+
+    parent_param = "?parent=" + str(info_dict["related_publication"])
+    return {
+        "json": "/".join(["/api",
+                          "record",
+                          CFG_DATA_TYPE,
+                          str(info_dict["recid"]),
+                          "json" + parent_param]),
+        "csv": "/".join(["",
+                         "record",
+                         CFG_DATA_TYPE,
+                         "file",
+                         str(data_id),
+                         "csv"])
+    }

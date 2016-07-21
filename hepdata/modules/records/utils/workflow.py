@@ -1,11 +1,33 @@
+# -*- coding: utf-8 -*-
+#
+# This file is part of HEPData.
+# Copyright (C) 2015 CERN.
+#
+# HEPData is free software; you can redistribute it
+# and/or modify it under the terms of the GNU General Public License as
+# published by the Free Software Foundation; either version 2 of the
+# License, or (at your option) any later version.
+#
+# HEPData is distributed in the hope that it will be
+# useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with HEPData; if not, write to the
+# Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston,
+# MA 02111-1307, USA.
+#
+# In applying this license, CERN does not
+# waive the privileges and immunities granted to it by virtue of its status
+# as an Intergovernmental Organization or submit itself to any jurisdiction.
 from datetime import datetime
 import uuid
 
-import jsonpatch
-from flask import render_template
+from flask import render_template, current_app
 from invenio_pidstore.minters import recid_minter
 from invenio_records import Record
-from hepdata.modules.records.models import SubmissionParticipant, \
+from hepdata.modules.submission.models import SubmissionParticipant, \
     DataSubmission
 from invenio_db import db
 
@@ -154,16 +176,28 @@ def send_new_upload_email(recid, user, message=None):
     if submission_participants.count() == 0:
         raise NoReviewersException()
 
+    site_url = current_app.config.get('SITE_URL', 'https://www.hepdata.net')
+
     record = get_record_by_id(recid)
 
     for participant in submission_participants:
+
+        # TODO: if the submission participant link has not been clicked on, then add the cookie invite
+        # to the upload Email
+        invite_token = None
+        if not participant.user_account:
+            invite_token = participant.invitation_cookie
+
         message_body = render_template('hepdata_dashboard/email/upload.html',
                                        name=participant.full_name,
                                        actor=user.email,
                                        article=recid,
                                        message=message,
+                                       invite_token=invite_token,
+                                       role=participant.role,
                                        title=record['title'],
-                                       link="http://hepdata.net/record/{0}"
+                                       site_url=site_url,
+                                       link=site_url + "/record/{0}"
                                        .format(recid))
 
         create_send_email_task(participant.email,
