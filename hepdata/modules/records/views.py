@@ -819,7 +819,8 @@ def process_payload(recid, file, redirect_url):
         return render_template('hepdata_records/error_page.html', recid=recid,
                                message="Incorrect file type uploaded.",
                                errors={"Submission": [{"level": "error",
-                                                       "message": "You must upload a .zip, .tar, or .tar.gz file."}]})
+                                                       "message": "You must upload a .zip, .tar, or .tar.gz file"
+                                                                      + " (or a .oldhepdata file)."}]})
 
 
 def process_zip_archive(file, id):
