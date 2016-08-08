@@ -66,7 +66,7 @@ URL_PATTERNS = [
     "sf"
 ]
 
-ALLOWED_EXTENSIONS = ['zip', "tar", "gz"]
+ALLOWED_EXTENSIONS = ['zip', "tar", "gz", "oldhepdata", "yaml"]
 
 
 def contains_accepted_url(file):

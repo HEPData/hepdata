@@ -7,7 +7,7 @@ from flask.ext.login import login_required, current_user
 
 from hepdata.ext.elasticsearch.api import reindex_all
 from hepdata.ext.elasticsearch.api import push_data_keywords
-from hepdata.modules.records.views import get_user_from_id
+from hepdata.modules.records.api import get_user_from_id
 from hepdata.modules.submission.models import HEPSubmission, DataReview, \
     SubmissionParticipant
 from hepdata.modules.records.utils.common import get_record_by_id, encode_string
