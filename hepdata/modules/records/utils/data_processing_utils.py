@@ -29,7 +29,7 @@ from ordereddict import OrderedDict
 __author__ = 'eamonnmaguire'
 
 
-def pad_indepenent_variables(table_contents):
+def pad_independent_variables(table_contents):
     """
     Pads out the independent variable column in the event that nothing exists.
     :param table_contents:
@@ -48,29 +48,30 @@ def pad_indepenent_variables(table_contents):
 def process_independent_variables(table_contents, x_axes,
                                   independent_variable_headers):
     if len(table_contents["independent_variables"]) == 0:
-        pad_indepenent_variables(table_contents)
+        pad_independent_variables(table_contents)
 
     if table_contents["independent_variables"]:
         count = 0
         for x_axis in table_contents["independent_variables"]:
+            units = x_axis['header']['units'] if 'units' in x_axis[
+                'header'] else ''
+            x_header = x_axis['header']['name']
+            if units is not '':
+                x_header += ' [' + units + "]"
+
+            if x_header in x_axes:
+                # sometimes, the x headers can be the same.
+                # We must account for this.
+                x_header += '__{0}'.format(count)
+
+            x_axes[x_header] = []
+
+            independent_variable_headers.append(
+                    {"name": x_header, "colspan": 1})
 
             if x_axis["values"]:
-                units = x_axis['header']['units'] if 'units' in x_axis[
-                    'header'] else ''
-                x_header = x_axis['header']['name']
-                if units is not '':
-                    x_header += ' [' + units + "]"
-
-                if x_header in x_axes:
-                    # sometimes, the x headers can be the same.
-                    # We must account for this.
-                    x_header += '__{0}'.format(count)
-
-                x_axes[x_header] = []
-
                 # if x_header not in x_headers:
-                independent_variable_headers.append(
-                    {"name": x_header, "colspan": 1})
+
                 for value in x_axis["values"]:
                     x_axes[x_header].append(value)
 
