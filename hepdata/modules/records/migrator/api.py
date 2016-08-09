@@ -25,24 +25,23 @@
 import socket
 from datetime import datetime, timedelta
 from urllib2 import HTTPError
-import zipfile
+
 from celery import shared_task
 from flask import current_app
 import os
-import shutil
-import yaml
-from yaml.scanner import ScannerError
+
 
 from hepdata.ext.elasticsearch.api import get_records_matching_field, index_record_ids
 from hepdata.modules.inspire_api.views import get_inspire_record_information
 from hepdata.modules.dashboard.views import do_finalise
-from hepdata.modules.records.utils.common import zipdir
-from hepdata.modules.records.utils.data_processing_utils import str_presenter
+
 from hepdata.modules.records.utils.submission import \
     process_submission_directory, get_or_create_hepsubmission, \
     remove_submission
 from hepdata.modules.records.utils.workflow import create_record, update_record
 import logging
+
+from hepdata.modules.records.utils.yaml_utils import split_files
 
 __author__ = 'eamonnmaguire'
 
@@ -215,7 +214,7 @@ class Migrator(object):
         file_location = self.download_file(inspire_id)
         if file_location:
 
-            self.split_files(file_location, os.path.join(current_app.config['CFG_DATADIR'], inspire_id),
+            split_files(file_location, os.path.join(current_app.config['CFG_DATADIR'], inspire_id),
                              os.path.join(current_app.config['CFG_DATADIR'], inspire_id + ".zip"))
 
             record_information = self.retrieve_publication_information(inspire_id)
@@ -261,71 +260,6 @@ class Migrator(object):
             log.error('Failed to download {0}'.format(inspire_id))
             log.error(e.message)
             return None
-
-    def write_submission_yaml_block(self, document, submission_yaml,
-                                    type="info"):
-        submission_yaml.write("---\n")
-        self.cleanup_yaml(document, type)
-        yaml.add_representer(str, str_presenter)
-        yaml.dump(document, submission_yaml, allow_unicode=True)
-        submission_yaml.write("\n")
-
-    def split_files(self, file_location, output_location,
-                    archive_location=None):
-        """
-        :param file_location:
-        :param output_location:
-        :param archive_location:
-        :return:
-        """
-        try:
-            file_documents = yaml.safe_load_all(open(file_location, 'r'))
-
-            # make a submission directory where all the files will be stored.
-            # delete a directory in the event that it exists.
-            if os.path.exists(output_location):
-                shutil.rmtree(output_location)
-
-            os.makedirs(output_location)
-
-            with open(os.path.join(output_location, "submission.yaml"),
-                      'w') as submission_yaml:
-                for document in file_documents:
-                    if "record_ids" in document:
-                        self.write_submission_yaml_block(
-                            document, submission_yaml)
-                    else:
-                        file_name = document["name"].replace(' ', '') + ".yaml"
-                        document["data_file"] = file_name
-
-                        with open(os.path.join(output_location, file_name),
-                                  'w') as data_file:
-                            yaml.add_representer(str, str_presenter)
-                            yaml.dump(
-                                {"independent_variables":
-                                    self.cleanup_data_yaml(
-                                        document["independent_variables"]),
-                                    "dependent_variables":
-                                        self.cleanup_data_yaml(
-                                            document["dependent_variables"])},
-                                data_file, allow_unicode=True)
-
-                        self.write_submission_yaml_block(document,
-                                                         submission_yaml,
-                                                         type="record")
-
-            if archive_location:
-                if os.path.exists(archive_location):
-                    os.remove(archive_location)
-
-                zipf = zipfile.ZipFile(archive_location, 'w')
-                os.chdir(output_location)
-                zipdir(".", zipf)
-                zipf.close()
-        except ScannerError as se:
-            current_app.logger.exception()
-            current_app.logger.error(
-                'Error parsing {0}, {1}'.format(file_location, se.message))
 
     def retrieve_publication_information(self, inspire_id):
         """
@@ -376,70 +310,3 @@ class Migrator(object):
                 record_information['recid'])
         else:
             return record_information["recid"]
-
-    def cleanup_data_yaml(self, yaml):
-        """
-        Casts strings to numbers where possible, e.g
-        :param yaml:
-        :return:
-        """
-        if yaml is None:
-            yaml = []
-
-        self.convert_string_to_numbers(yaml)
-
-        return yaml
-
-    def convert_string_to_numbers(self, variable_set):
-        fields = ["value", "high", "low"]
-
-        if variable_set is not None:
-            for variable in variable_set:
-                if type(variable) is dict:
-                    if variable["values"] is not None:
-                        for value_item in variable["values"]:
-                            try:
-                                for field in fields:
-                                    if field in value_item:
-                                        value_item[field] = float(
-                                            value_item[field])
-                            except ValueError:
-                                pass
-                    else:
-                        variable["values"] = []
-        else:
-            variable_set = []
-
-    def cleanup_yaml(self, yaml, type):
-        keys_to_remove = ["independent_variables",
-                          "dependent_variables", "publicationyear", "preprintyear"]
-        self.remove_keys(yaml, keys_to_remove)
-
-        if type is 'info':
-            self.add_field_if_needed(yaml, 'comment',
-                                     'No description provided.')
-        else:
-            self.add_field_if_needed(yaml, 'keywords', [])
-            self.add_field_if_needed(yaml, 'description',
-                                     'No description provided.')
-
-        if "label" in yaml:
-            yaml["location"] = yaml["label"]
-            del yaml["label"]
-
-    def add_field_if_needed(self, yaml, field_name, default_value):
-        if not (field_name in yaml):
-            yaml[field_name] = default_value
-
-    def remove_keys(self, yaml, to_remove):
-        """
-        :param yaml:
-        :return:
-        """
-        for key in yaml:
-            if not yaml[key]:
-                to_remove.append(key)
-
-        for key in to_remove:
-            if key in yaml:
-                del yaml[key]

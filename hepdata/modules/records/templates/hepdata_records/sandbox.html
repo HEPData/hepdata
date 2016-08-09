@@ -89,6 +89,11 @@
                                 href="https://github.com/HEPData/hepdata-submission"
                                 target="_blank">guidelines</a>.
                         An example submission is available <a
+                                target="_blank">these guidelines</a>.</p>
+
+                    <p class="text-muted">We also accept Single YAML files containing all of the submission data.</p>
+
+                    <p>View an example submission <a
                             href="https://www.dropbox.com/s/ph6zphwfjnigki1/1203852_hm.zip?dl=0"
                             target="_blank">here</a>.</p>
 
@@ -118,18 +123,17 @@
                         <div class="scrollable height30 row-fluid">
                             {% for submission in ctx.submissions %}
                                 {% if submission.data_abstract != None %}
-                                    <div class="col-md-9">
+                                    <div class="col-md-10 col-sm-10 col-xs-10">
                                         <a href="/record/sandbox/{{ submission.publication_recid }}"
                                            style="text-align: left">
                                             <div class="truncated-record-abstract">{{ submission.data_abstract }}</div>
                                         </a>
                                         <p style="font-weight: bolder; color: #a1aec7; font-size: .7em; text-align: left">{{ submission.created.strftime('%Y-%m-%d %H:%M%p') }}</p>
                                     </div>
-                                    <div class="col-md-3">
+                                    <div class="col-md-2 col-sm-2 col-xs-2">
                                         <button class="btn btn-sm btn-danger delete_button"
                                                 data-recid="{{ submission.publication_recid }}"><i
                                                 class="fa fa-trash"></i>
-                                            Delete
                                         </button>
                                     </div>
                                 {% endif %}

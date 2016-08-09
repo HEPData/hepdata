@@ -47,7 +47,6 @@ HEPDATA.switch_table = function (listId, table_requested) {
   }
 
 
-
   $("#hepdata_table_loader").removeClass("hidden");
   $("#hepdata_table_content").addClass("hidden");
 
@@ -70,7 +69,7 @@ HEPDATA.switch_table = function (listId, table_requested) {
     $(this).attr('href', data_url);
   });
 
-  $("#json_link").attr('href', '/record/data/' + HEPDATA.current_record_id + "/" +  HEPDATA.current_table_id + "/" + HEPDATA.current_table_version)
+  $("#json_link").attr('href', '/record/data/' + HEPDATA.current_record_id + "/" + HEPDATA.current_table_id + "/" + HEPDATA.current_table_version)
 };
 
 HEPDATA.table_renderer = {
@@ -101,7 +100,7 @@ HEPDATA.table_renderer = {
 
         HEPDATA.render_associated_files(table_data.associated_files, '#support-files');
 
-
+        console.log(table_data["values"].length);
         if (table_data["x_count"] > 1) {
           HEPDATA.visualization.heatmap.reset();
           HEPDATA.visualization.heatmap.render(table_data, visualization_placement, {
@@ -109,7 +108,14 @@ HEPDATA.table_renderer = {
             height: 300
           });
           HEPDATA.table_renderer.attach_row_listener(table_placement, 'heatmap');
-        } else {
+        } else if (table_data["values"].length == 0) {
+          // No data to display
+          d3.select(visualization_placement).html("");
+          d3.select("#legend").html("");
+          var no_data_info = d3.select(visualization_placement).append("div").style("text-align","center");
+          no_data_info.append("img").attr("src", "/static/img/nodata.svg").attr({"width": 100, height: 100});
+          no_data_info.append("p").text("No data to display...").style({"font-size": 14, "color": "#aaa"})
+        } else if (table_data["x_count"] === 1) {
           HEPDATA.visualization.histogram.render(table_data, visualization_placement, {
             width: 300,
             height: 300,

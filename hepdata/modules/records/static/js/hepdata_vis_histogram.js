@@ -154,7 +154,6 @@ HEPDATA.visualization.histogram = {
     }
 
     var find = '\\$';
-    var find_spaces = '\\s+';
     var re_matheq = new RegExp(find, 'g');
 
     HEPDATA.visualization.histogram.x_index = HEPDATA.visualization.histogram.x_index.replace(re_matheq, '');

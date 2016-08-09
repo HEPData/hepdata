@@ -21,13 +21,12 @@
 # In applying this license, CERN does not
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
+# __author__ = 'eamonnmaguire'
 
-"""Version information for HEPData.
+from invenio_assets import NpmBundle
 
-This file is imported by ``HEPData.__init__``,
-and parsed by ``setup.py``.
-"""
-
-from __future__ import absolute_import, print_function
-
-__version__ = "0.9.3dev20160809"
+dashboard_js = NpmBundle(
+    'js/dashboard.js',
+    filters='jsmin,uglifyjs',
+    output="gen/hepdata.dashboard.%(version)s.js"
+)

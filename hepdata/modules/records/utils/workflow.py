@@ -27,6 +27,8 @@ import uuid
 from flask import render_template, current_app
 from invenio_pidstore.minters import recid_minter
 from invenio_records import Record
+
+from hepdata.modules.records.subscribers.api import get_users_subscribed_to_record
 from hepdata.modules.submission.models import SubmissionParticipant, \
     DataSubmission
 from invenio_db import db
@@ -206,11 +208,17 @@ def send_new_upload_email(recid, user, message=None):
 
 
 def send_finalised_email(hepsubmission):
+
     submission_participants = SubmissionParticipant.query.filter_by(
         publication_recid=hepsubmission.publication_recid, status="primary")
 
     record = get_record_by_id(hepsubmission.publication_recid)
 
+    notify_participants(hepsubmission, record, submission_participants)
+    notify_subscribers(hepsubmission, record)
+
+
+def notify_participants(hepsubmission, record, submission_participants):
     for participant in submission_participants:
         message_body = render_template(
             'hepdata_dashboard/email/finalised.html',
@@ -223,5 +231,22 @@ def send_finalised_email(hepsubmission):
 
         create_send_email_task(participant.email,
                                '[HEPData] Submission {0} has been finalised and is publicly available' \
+                               .format(hepsubmission.publication_recid),
+                               message_body)
+
+
+def notify_subscribers(hepsubmission, record):
+    subscribers = get_users_subscribed_to_record(hepsubmission.publication_recid)
+    for subscriber in subscribers:
+        message_body = render_template(
+            'hepdata_dashboard/email/subscriber_notification.html',
+            article=hepsubmission.publication_recid,
+            version=hepsubmission.version,
+            title=record['title'],
+            link="http://hepdata.net/record/{0}"
+                .format(hepsubmission.publication_recid))
+
+        create_send_email_task(subscriber.get('email'),
+                               '[HEPData] Record update available' \
                                .format(hepsubmission.publication_recid),
                                message_body)

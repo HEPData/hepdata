@@ -26,8 +26,9 @@
 from invenio_records.models import RecordMetadata
 
 from hepdata.config import CFG_TMPDIR
-from hepdata.modules.records.migrator.api import load_files
 import os
+
+from hepdata.modules.records.utils.yaml_utils import split_files
 
 __author__ = 'eamonnmaguire'
 
@@ -40,7 +41,7 @@ def test_file_download_and_split(app, migrator, identifiers):
             file = migrator.download_file(test_id["hepdata_id"])
             assert file is not None
 
-            migrator.split_files(
+            split_files(
                 file, os.path.join(CFG_TMPDIR, test_id["hepdata_id"]),
                 os.path.join(CFG_TMPDIR, test_id[
                     "hepdata_id"] + ".zip"))

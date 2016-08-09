@@ -18,12 +18,14 @@
 from __future__ import print_function
 
 from collections import defaultdict
+
+import datetime
 from dateutil.parser import parse
 from flask import current_app
 from elasticsearch.exceptions import NotFoundError, RequestError
 from invenio_pidstore.models import RecordIdentifier
 from sqlalchemy import func
-from hepdata.modules.records.utils.common import get_last_submission_event
+from hepdata.modules.submission.models import SubmissionParticipant
 from .utils import prepare_author_for_indexing
 from hepdata.config import CFG_PUB_TYPE, CFG_DATA_TYPE
 from query_builder import QueryBuilder, get_query_by_type, get_authors_query, HEPDataQueryParser
@@ -490,3 +492,18 @@ def get_count_for_collection(doc_type, index=None):
     :return: the number of records in that collection
     """
     return es.count(index=index, doc_type=doc_type)
+
+
+def get_last_submission_event(recid):
+    submission_participant = SubmissionParticipant.query.filter_by(
+        publication_recid=recid).order_by('action_date').first()
+    last_updated = None
+    if submission_participant:
+        last_action_date = submission_participant.action_date
+        if last_action_date:
+            try:
+                if last_action_date <= datetime.datetime.now():
+                    last_updated = last_action_date.strftime("%Y-%m-%d")
+            except ValueError as ve:
+                print(ve.args)
+    return last_updated

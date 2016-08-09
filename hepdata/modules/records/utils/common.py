@@ -29,6 +29,9 @@ from invenio_pidstore.resolver import Resolver
 from invenio_records.api import Record
 import os
 from sqlalchemy.orm.exc import NoResultFound
+
+from hepdata.config import CFG_PUB_TYPE
+from hepdata.ext.elasticsearch.api import get_record
 from hepdata.modules.submission.models import SubmissionParticipant
 
 __author__ = 'eamonnmaguire'
@@ -66,7 +69,7 @@ URL_PATTERNS = [
     "sf"
 ]
 
-ALLOWED_EXTENSIONS = ['zip', "tar", "gz"]
+ALLOWED_EXTENSIONS = ['zip', "tar", "gz", "oldhepdata", "yaml"]
 
 
 def contains_accepted_url(file):
@@ -198,6 +201,21 @@ def truncate_string(string, words):
     return truncated_string
 
 
+def get_record_contents(recid):
+    """
+    Tries to get record from elastic search first. Failing that,
+    it tries from the database.
+    :param recid: Record ID to get.
+    :return: a dictionary containing the record contents if the recid exists,
+    None otherwise.
+    """
+    record = get_record(recid, doc_type=CFG_PUB_TYPE)
+    if record is None:
+        record = get_record_by_id(recid)
+
+    return record
+
+
 def get_record_by_id(recid):
     try:
         resolver = Resolver(pid_type='recid', object_type='rec', getter=Record.get_record)
@@ -209,18 +227,3 @@ def get_record_by_id(recid):
     except PIDDoesNotExistError:
         current_app.logger.exception('The PID {0} does not exist'.format(recid))
         return None
-
-
-def get_last_submission_event(recid):
-    submission_participant = SubmissionParticipant.query.filter_by(
-        publication_recid=recid).order_by('action_date').first()
-    last_updated = None
-    if submission_participant:
-        last_action_date = submission_participant.action_date
-        if last_action_date:
-            try:
-                if last_action_date <= datetime.datetime.now():
-                    last_updated = last_action_date.strftime("%Y-%m-%d")
-            except ValueError as ve:
-                print(ve.args)
-    return last_updated
