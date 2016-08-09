@@ -82,14 +82,14 @@ body, html {
   .logo img {
     width: 100%;
 
-    @media screen and (max-width: 768px){
+    @media screen and (max-width: 768px) {
       width: 40%;
       margin-bottom: 20px;
     }
   }
 
   .action-btns {
-    @media screen and (max-width: 768px){
+    @media screen and (max-width: 768px) {
       margin-top: 20px;
     }
   }
@@ -100,7 +100,7 @@ body, html {
   }
 
   .user-info {
-    @media screen and (min-width: 768px){
+    @media screen and (min-width: 768px) {
       text-align: left;
     }
   }
@@ -149,15 +149,52 @@ body, html {
 
 }
 
+.watch-list {
+  padding: 10px;
+
+  .watch-item {
+    padding: 10px;
+    h4 {
+      font-size: 1.1em;
+      text-transform: none;
+      margin: 0;
+    }
+
+    p {
+      margin: 0;
+    }
+
+    .journal-info {
+      font-size: 1em;
+    }
+
+    .updated {
+      color: $lightgrey;
+      font-size: .9em;
+    }
+  }
+
+  .controls {
+    .btn {
+      color: white;
+
+      &:hover {
+        color: $red-light;
+      }
+    }
+  }
+}
+
 .submission-item {
   text-rendering: optimizeLegibility;
 
   width: 100%;
-  background-color: $darker-blue;
   display: block;
   border-radius: 4px;
-  padding: 10px;
+  padding: 20px 0 20px 0;
   color: $navy;
+
+  border-bottom: 2px solid $navy;
   margin-bottom: 4px;
 
   h4 {
@@ -254,8 +291,8 @@ body, html {
 .manage-submission-trigger {
 
   color: white;
-  background: $dark-blue;
-  border-color: $dark-blue;
+  background: $darker-blue;
+  border-color: $darker-blue;
 
   -webkit-transition: all 0.3s;
   -moz-transition: all 0.3s;
@@ -560,12 +597,10 @@ p.no-entries {
   background-color: $lightgrey;
   padding: 10px;
 
-
   .message-time {
     color: $navy;
   }
 }
-
 
 #conversation .table-name {
   padding: 5px;

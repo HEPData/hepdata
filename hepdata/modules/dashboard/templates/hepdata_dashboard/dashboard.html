@@ -234,16 +234,16 @@
                 <div class="container-fluid">
                     <div class="row-fluid">
                         <div class="col-md-12 dashboard-section">
-                            <h4>Watch List</h4>
-                            <div id="watch_btn_container" class="text-center">
-                                <button class="btn btn-md btn-default"><i class="fa fa-plus"></i> Add to the watch list
-                                </button>
+                            <h4><i class="fa fa-eye"></i> Watch List</h4>
+                            <div id="watch_container">
+                                <p class="text-muted text-small">Nothing has been watched yet.<br/> You can watch
+                                    records for updates.</p>
                             </div>
                         </div>
 
                         <div class="col-md-12 dashboard-section">
-                            <h4>Discussions</h4>
-                            <p class="text-center">No discussions</p>
+                            <h4><i class="fa fa-comments"></i> Discussions</h4>
+                            <p class="text-muted text-small">You are not participating in any discussions.</p>
                         </div>
                     </div>
                 </div>
@@ -269,6 +269,10 @@
         <script src="{{ ASSET_URL }}"></script>
     {%- endassets %}
 
+    {%- assets "hepdata_dashboard_js" %}
+        <script src="{{ ASSET_URL }}"></script>
+    {%- endassets %}
+
     {%- assets "hepdata_bootstrap_js" %}
         <script src="{{ ASSET_URL }}"></script>
     {%- endassets %}
@@ -276,61 +280,8 @@
     <script>
 
         $(document).ready(function () {
-            MathJax.Hub.Config({
-                tex2jax: {inlineMath: [['$', '$'], ['\\(', '\\)']]}
-            });
-            MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
-
             var data = {{ctx.submission_stats | safe}};
-
-            for (var submission_idx in data) {
-                HEPDATA.visualization.submission_status.render(data[submission_idx]);
-            }
-
-            $(".filter-list li").bind('click', function () {
-                var id_parts = this.id.split("-");
-                var item_parent = id_parts[0];
-                // we need to reset all of the items to unselected before selecting the new item.
-                $("#" + item_parent + "-filter li").each(function () {
-                    $(this).removeClass("filter-selected");
-                    $(this).addClass("filter-inactive");
-                });
-
-                $(this).addClass("filter-selected");
-                $(this).removeClass("filter-inactive");
-
-                HEPDATA.current_filters[item_parent] = id_parts[1].replace("_", " ");
-                $("#clear-" + item_parent).removeClass("hidden");
-                HEPDATA.filter_content('', '#hep-submissions');
-            });
-
-            $(".finalise-btn").bind("click", function () {
-                $("#finalise_submission_button").attr('data-recid', $(this).attr('data-recid'));
-                $("#finalise_submission_button").attr('data-versions', $(this).attr('data-versions'));
-                if ($(this).attr('data-versions') == 1) {
-                    $("#revision_commit_message").addClass("hidden");
-                }
-                $("#finaliseDialog").modal();
-            });
-
-            $(".inspire-btn").bind("click", function () {
-                $("#inspire-add-button").attr('data-recid', $(this).attr("data-recid"));
-                $("#inspireDialog").modal();
-            });
-
-            $(".reindex-btn").bind("click", function () {
-                $("#reindexDialog").modal();
-            });
-
-            $("[id^=clear]").bind('click', function () {
-                var list = this.id.split("-")[1];
-                HEPDATA.current_filters[list] = "";
-                $("#clear-" + list).addClass("hidden");
-                $("#" + list + "-filter li").each(function () {
-                    $(this).removeClass("filter-selected filter-inactive");
-                    HEPDATA.filter_content('', '#hep-submissions');
-                });
-            });
+            dashboard.initialise(data);
         });
 
     </script>

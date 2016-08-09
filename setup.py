@@ -171,7 +171,7 @@ setup(
             'hepdata_submissions = hepdata.modules.submission.models',
             'hepdata_stats = hepdata.modules.stats.models',
             'hepdata_discuss = hepdata.modules.records.discuss.models',
-            'hepdata_watcher = hepdata.modules.records.watcher.models',
+            'hepdata_subscribers = hepdata.modules.records.subscribers.models',
             'hepdata_status = hepdata.modules.records.status.models',
         ],
         'invenio_base.blueprints': [
@@ -181,6 +181,7 @@ setup(
             'hepdata_submission = hepdata.modules.submission.views:blueprint',
             'inspire_api = hepdata.modules.inspire_api.views:blueprint',
             'hep_conversion = hepdata.modules.converter.views:blueprint',
+            'hep_subscriptions = hepdata.modules.records.subscribers.rest:blueprint',
         ],
         'invenio_celery.tasks': [
             'hepdata_records = hepdata.modules.records.migrator.api',
@@ -197,6 +198,8 @@ setup(
             'hepdata_submission_js = hepdata.modules.submission.bundles:submission_js',
             'hepdata_search_js = hepdata.modules.search.bundles:search_js',
             'hepdata_vis_js = hepdata.modules.records.bundles:vis_js',
+            'hepdata_dashboard_js = hepdata.modules.dashboard.bundles:dashboard_js',
+
             'hepdata_record_css = hepdata.modules.theme.bundles:record_css',
             'hepdata_search_css = hepdata.modules.theme.bundles:search_css',
         ]

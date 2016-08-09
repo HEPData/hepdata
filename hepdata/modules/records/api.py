@@ -39,8 +39,9 @@ from werkzeug.utils import secure_filename
 from hepdata.config import CFG_PUB_TYPE
 from hepdata.ext.elasticsearch.api import get_record
 from hepdata.modules.converter import convert_oldhepdata_to_yaml
+from hepdata.modules.records.subscribers.api import is_current_user_subscribed_to_record
 from hepdata.modules.records.utils.common import decode_string, find_file_in_directory, allowed_file, \
-    remove_file_extension, truncate_string, get_record_by_id
+    remove_file_extension, truncate_string, get_record_by_id, get_record_contents
 from hepdata.modules.records.utils.data_processing_utils import process_ctx
 from hepdata.modules.records.utils.submission import process_submission_directory, get_latest_hepsubmission, \
     remove_submission, create_data_review
@@ -159,9 +160,9 @@ def format_submission(recid, record, version, version_count, hepdata_submission,
         data_table_metadata, first_data_id = process_data_tables(
             ctx, data_record_query, first_data_id, data_table)
 
-        assign_or_create_review_status(data_table_metadata, recid,
-                                       ctx["version"])
+        assign_or_create_review_status(data_table_metadata, recid, ctx["version"])
 
+        ctx['watched'] = is_current_user_subscribed_to_record(recid)
         ctx['table_to_show'] = first_data_id
         if 'table' in request.args:
             if request.args['table'] is not '':
@@ -471,17 +472,3 @@ def process_data_tables(ctx, data_record_query, first_data_id,
 def truncate_author_list(record, length=10):
     record['authors'] = record['authors'][:length]
 
-
-def get_record_contents(recid):
-    """
-    Tries to get record from elastic search first. Failing that,
-    it tries from the database.
-    :param recid: Record ID to get.
-    :return: a dictionary containing the record contents if the recid exists,
-    None otherwise.
-    """
-    record = get_record(recid, doc_type=CFG_PUB_TYPE)
-    if record is None:
-        record = get_record_by_id(recid)
-
-    return record

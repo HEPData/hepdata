@@ -26,7 +26,6 @@
 from invenio_records.models import RecordMetadata
 
 from hepdata.config import CFG_TMPDIR
-from hepdata.modules.records.migrator.api import load_files
 import os
 
 from hepdata.modules.records.utils.yaml_utils import split_files

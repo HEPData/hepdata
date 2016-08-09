@@ -1,0 +1,24 @@
+{% extends 'hepdata_dashboard/email/email_container.html' %}
+{% block email_type %}
+    Record {{ article }} updated
+{% endblock %}
+
+
+{% block email_content %}
+
+    Hi there,
+
+    <p>A record you have 'watched' has been updated.</p>
+
+    <p>Version {{ version }} of <a href="{{ link }}" style="color: #9b59b6">{{ title }}</a> is now available.</p>
+
+    <hr/>
+
+    <p style="color: #aaa; font-size: 9px;">You are receiving this email because you are watching it. You can unwatch the record and stop receiving
+        notifications by logging in to HEPData and clicking the 'Unwatch record' button on <a href="{{ link }}"
+                                                                                              style="color: #9b59b6">{{ title }}</a>.
+    </p>
+    <p>
+        The <a href="http://www.hepdata.net" style="color: #9b59b6">HEPData</a> team
+    </p>
+{% endblock %}

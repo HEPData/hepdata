@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of HEPData.
 # Copyright (C) 2015 CERN.
@@ -22,12 +21,29 @@
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
-"""Version information for HEPData.
+"""HEPData Subscriber model."""
 
-This file is imported by ``HEPData.__init__``,
-and parsed by ``setup.py``.
-"""
+from invenio_db import db
 
-from __future__ import absolute_import, print_function
+from hepdata.modules.records.utils.common import get_or_create
 
-__version__ = "0.9.3dev20160809"
+subscriber = db.Table(
+    'subscriber',
+    db.Column('publication_recid', db.Integer,
+              db.ForeignKey('record_subscribers.publication_recid')),
+
+    db.Column('user_id', db.Integer,
+              db.ForeignKey('accounts_user.id')))
+
+
+class Subscribers(db.Model):
+    """
+    WatchList is the main model for storing the query to be made for
+    a watched query and the user who is watching it.
+    """
+    __tablename__ = "record_subscribers"
+    publication_recid = db.Column(db.Integer, primary_key=True)
+
+    subscribers = db.relationship("User",
+                                  secondary="subscriber",
+                                  cascade="all,delete")

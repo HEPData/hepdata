@@ -201,8 +201,7 @@ def get_latest():
     return jsonify(result)
 
 
-@blueprint.route('/data/<int:recid>/<int:data_recid>/<int:version>',
-                 methods=['GET', ])
+@blueprint.route('/data/<int:recid>/<int:data_recid>/<int:version>', methods=['GET', ])
 def get_table_details(recid, data_recid, version):
     """
 
@@ -511,7 +510,6 @@ def get_resource(resource_id):
 
 @blueprint.route('/<int:recid>/consume', methods=['GET', 'POST'])
 def consume_data_payload(recid):
-    # this method will persist, then present back the loaded data to the user via JSON.
     """
         This method persists, then presents the loaded data back to the user.
         :param recid: record Id to attach the data to
@@ -552,8 +550,6 @@ def attach_information_to_record(recid):
 
     record = get_record_by_id(recid)
     if record is not None:
-
-        # TODO: Fix this to update the record information
         content['recid'] = recid
 
         patch = jsonpatch.JsonPatch.from_diff(record, content)
