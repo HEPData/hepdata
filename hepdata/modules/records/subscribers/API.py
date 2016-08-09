@@ -24,7 +24,6 @@
 """HEPData API"""
 from flask.ext.login import current_user
 
-from hepdata.config import CFG_PUB_TYPE
 from hepdata.modules.records.utils.common import get_record_contents
 from .models import Subscribers
 
