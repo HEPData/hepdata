@@ -25,6 +25,12 @@
 
 from invenio_assets import NpmBundle
 
+record_js = NpmBundle(
+    'js/hepdata_record_js.js',
+    filters='jsmin,uglifyjs',
+    output="gen/hepdata.record.%(version)s.js",
+)
+
 vis_js = NpmBundle(
     'node_modules/d3/d3.min.js',
     'node_modules/d3-tip/index.js',

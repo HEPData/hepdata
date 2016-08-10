@@ -143,11 +143,23 @@
 
 .footer-home {
   padding: 2em;
-  background-color: $navy;
+  background-color: $darker-blue;
   color: white;
 
   .version {
     color: $navy-light;
+  }
+
+  p {
+    font-size: 1em;
+  }
+
+  .footer-links {
+    a {
+      padding: 5px;
+      font-size: 1em !important;
+      font-weight: normal;
+    }
   }
 }
 

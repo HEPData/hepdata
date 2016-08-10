@@ -1,4 +1,4 @@
-<div id="hepdata_table_detail" class="scrollable">
+<div id="hepdata_table_detail" class="scrollable col-lg-7 col-md-7">
 
     {% if ctx.revision_message %}
         <div class="alert alert-info"><strong>Version {{ ctx.revision_message.version }}
@@ -6,7 +6,7 @@
     {% endif %}
 
     <div class="nice-dropdown" id="table-selector">
-        <select style="width: 100%" onchange="HEPDATA.switch_table('#hep-tables',$(this).val())">
+        <select style="width: 100%" onchange="HEPDATA.switch_table('#table-list',$(this).val())">
             {% for table in ctx.data_tables %}
                 <option value="{{ table.id }}">{{ table.name }}</option>
             {% endfor %}
@@ -22,7 +22,11 @@
         <div class="hepdata_table_detail_header">
             <div>
                 <h4>
+
                     <div id="table_name" class="pull-left" style="padding-top: 7px;"></div>
+                    {% if ctx.mode != 'sandbox' %}
+                        <div id="table_doi" style="padding-top: 7px;" class="pull-left"><div id="table_doi_contents"></div></div>
+                    {% endif %}
 
 
                 <a href="" class="pull-right btn btn-link btn-sm" id="json_link">JSON</a>
@@ -84,10 +88,6 @@
                 <div id="figures" class="col-md-3 col-sm-2"></div>
             </div>
 
-            <div class="clearfix"></div>
-            {% if ctx.mode != 'sandbox' %}
-                <div id="table_doi"><span id="table_doi_contents"></span></div>
-            {% endif %}
 
             <div class="clearfix"></div>
             <div id="table_keywords">

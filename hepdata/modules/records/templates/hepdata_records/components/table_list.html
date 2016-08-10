@@ -1,4 +1,4 @@
-<div id="hepdata_tables">
+<div id="table-list-section" class="col-lg-2 col-md-2">
     <div align="center">
 
         {% if ctx.show_upload_widget and ctx.status != 'finished' %}
@@ -74,15 +74,17 @@
     </div>
 
 
-    <input id="table-filter" placeholder="Filter {{ ctx.data_tables|length }} data tables" name="data-table-filter"
-           onkeyup="HEPDATA.filter_content('#table-filter','#hep-tables')">
+    <input id="table-filter"
+           placeholder="Filter {{ ctx.data_tables|length }} data tables"
+           name="data-table-filter"
+           onkeyup="HEPDATA.filter_content('#table-filter','#table-list')">
 
-    <ul id="hep-tables" class="scrollable">
+    <ul id="table-list" class="scrollable">
         {% for table in ctx.data_tables %}
 
             <li id="{{ table.id }}" itemprop="dataset" itemscope itemtype="http://schema.org/Dataset"
                 class="{{ table.processed_name }} {% if loop.index == 1 %}active{% endif %}"
-                onclick="HEPDATA.switch_table('#hep-tables', '{{ table.id }}')">
+                onclick="HEPDATA.switch_table('#table-list', '{{ table.id }}')">
                 <div class="content">
                     <h4 itemprop="name">{{ table.name }}</h4>
 

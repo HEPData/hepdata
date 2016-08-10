@@ -197,6 +197,7 @@ setup(
             'hepdata_bootstrap_js = hepdata.modules.theme.bundles:bootstrap_js',
             'hepdata_submission_js = hepdata.modules.submission.bundles:submission_js',
             'hepdata_search_js = hepdata.modules.search.bundles:search_js',
+            'hepdata_record_js = hepdata.modules.records.bundles:record_js',
             'hepdata_vis_js = hepdata.modules.records.bundles:vis_js',
             'hepdata_dashboard_js = hepdata.modules.dashboard.bundles:dashboard_js',
 

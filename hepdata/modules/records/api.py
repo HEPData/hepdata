@@ -28,20 +28,17 @@ from collections import OrderedDict
 from functools import wraps
 
 import time
-from flask import redirect, request, render_template, jsonify, current_app
+from flask import redirect, request, render_template, jsonify, current_app, Response
 from flask.ext.login import current_user
 from invenio_accounts.models import User
 from invenio_db import db
-from requests import Response
 from sqlalchemy.orm.exc import NoResultFound
 from werkzeug.utils import secure_filename
 
-from hepdata.config import CFG_PUB_TYPE
-from hepdata.ext.elasticsearch.api import get_record
 from hepdata.modules.converter import convert_oldhepdata_to_yaml
 from hepdata.modules.records.subscribers.api import is_current_user_subscribed_to_record
 from hepdata.modules.records.utils.common import decode_string, find_file_in_directory, allowed_file, \
-    remove_file_extension, truncate_string, get_record_by_id, get_record_contents
+    remove_file_extension, truncate_string, get_record_contents
 from hepdata.modules.records.utils.data_processing_utils import process_ctx
 from hepdata.modules.records.utils.submission import process_submission_directory, get_latest_hepsubmission, \
     remove_submission, create_data_review

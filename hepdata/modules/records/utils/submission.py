@@ -28,21 +28,12 @@ import logging
 import uuid
 import zipfile
 from datetime import datetime
-from urllib2 import URLError
+from dateutil.parser import parse
 
 from elasticsearch import NotFoundError
 from flask import current_app
 from flask.ext.celeryext import create_celery_app
 from flask.ext.login import current_user
-from hepdata_validator.data_file_validator import DataFileValidator
-from hepdata_validator.submission_file_validator import \
-    SubmissionFileValidator
-from invenio_pidstore.errors import PIDDoesNotExistError
-from invenio_pidstore.models import PersistentIdentifier, PIDStatus
-from invenio_records import Record
-import os
-from sqlalchemy.orm.exc import NoResultFound
-import yaml
 from hepdata.config import CFG_DATA_TYPE, CFG_PUB_TYPE
 from hepdata.ext.elasticsearch.api import get_records_matching_field, \
     delete_item_from_index, index_record_ids, push_data_keywords
@@ -55,10 +46,18 @@ from hepdata.modules.records.utils.common import get_or_create
 from hepdata.modules.records.utils.doi_minter import reserve_dois_for_data_submissions, reserve_doi_for_hepsubmission, \
     generate_doi_for_data_submission, generate_doi_for_submission
 from hepdata.modules.records.utils.resources import download_resource_file
-from invenio_db import db
-from dateutil.parser import parse
-
 from hepdata.utils.twitter import tweet
+from hepdata_validator.data_file_validator import DataFileValidator
+from hepdata_validator.submission_file_validator import SubmissionFileValidator
+from invenio_db import db
+from invenio_pidstore.errors import PIDDoesNotExistError
+from invenio_pidstore.models import PersistentIdentifier, PIDStatus
+from invenio_records import Record
+import os
+from sqlalchemy.orm.exc import NoResultFound
+import yaml
+from urllib2 import URLError
+
 
 __author__ = 'eamonnmaguire'
 
@@ -168,12 +167,10 @@ def cleanup_submission(recid, version, to_keep):
         for data_submission in data_submissions:
 
             if not (data_submission.name in to_keep):
-                print('Deleting Submission {0}'.format(data_submission.name))
                 data_reviews = DataReview.query.filter_by(
                     data_recid=data_submission.id).all()
 
                 for review in data_reviews:
-                    print('Deleting Associated Review {0}'.format(review.id))
                     db.session.delete(review)
 
                 db.session.delete(data_submission)

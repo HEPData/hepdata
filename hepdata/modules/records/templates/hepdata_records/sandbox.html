@@ -33,194 +33,214 @@
 
 {% block page_body %}
 
-    <div class="hep_breadcrumbs">
-        <ul>
-            <a href="/record/sandbox">
-                <li class="active"><span class="fa fa-cube"></span> HEPData Sandbox
-                </li>
-            </a>
+    <div class="container-fluid">
+        <div class="hep_breadcrumbs row">
+            <div class="col-md-12 no-padding">
+                <ul>
+                    <a href="/record/sandbox">
+                        <li class="active"><span class="fa fa-cube"></span> HEPData Sandbox
+                        </li>
+                    </a>
 
-            {% if ctx.data_tables|length != 0 %}
-                <li class="pull-right">
-
-
-                    <div class="dropdown"
-                         style="float: right; margin-left: 15px; margin-top: -4px;">
-                        <button id="dLabel" type="button"
-                                class="btn btn-sm btn-primary"
-                                data-toggle="dropdown" aria-haspopup="true"
-                                aria-expanded="false">
-                            Download Submission as
-                            <span class="caret"></span>
-                        </button>
-                        {% set download_base_url = "/download/submission/" + ctx.recid|string + "/" + ctx.version|string %}
-                        <ul class="dropdown-menu" aria-labelledby="dLabel"
-                            style="height: auto;">
-                            <li><a href="{{ download_base_url }}/yaml"
-                                   id="download_yaml">YAML</a></li>
-                            <li><a href="{{ download_base_url }}/yoda"
-                                   id="download_yoda">YODA</a></li>
-                            <li><a href="{{ download_base_url }}/root"
-                                   id="download_root">ROOT</a></li>
-                            <li><a href="{{ download_base_url }}/csv"
-                                   id="download_csv">CSV</a></li>
-                        </ul>
-                    </div>
-
-                </li>
-            {% endif %}
-        </ul>
-    </div>
-
-    <div class="clearfix"></div>
-
-    {% if ctx.data_tables|length == 0 %}
-        <div class="upload-area" style="width: 100%" id="sandbox-upload-area">
-            <div class="root_upload_form" align="center">
-                <img src="{{ url_for('static', filename='img/icon-upload.svg') }}"
-                     width="70">
-
-                <h4>Upload an archive to preview</h4>
-                <br/>
-
-                <div class="info">
-                    <p>Upload an archive (<strong>zip</strong>, <strong>tar.gz</strong>, <strong>tar</strong>)
-                        containing YAML files formatted according to these <a
-                                href="https://github.com/HEPData/hepdata-submission"
-                                target="_blank">guidelines</a>.
-                        An example submission is available <a
-                                target="_blank">these guidelines</a>.</p>
-
-                    <p class="text-muted">We also accept Single YAML files containing all of the submission data.</p>
-
-                    <p class="text-muted">Alternatively, upload a single text file with extension <strong>.oldhepdata</strong> containing
-                        the "input" format that was used for data submissions from the old <a
-                            href="http://hepdata.cedar.ac.uk"
-                            target="_blank">HepData</a> site.</p>
-
-                    <p>View an example submission <a
-                            href="https://www.dropbox.com/s/ph6zphwfjnigki1/1203852_hm.zip?dl=0"
-                            target="_blank">here</a>.</p>
+                    {% if ctx.data_tables|length != 0 %}
+                        <li class="pull-right">
 
 
-                </div>
+                            <div class="dropdown"
+                                 style="float: right; margin-left: 15px; margin-top: -4px;">
+                                <button id="dLabel" type="button"
+                                        class="btn btn-sm btn-primary"
+                                        data-toggle="dropdown" aria-haspopup="true"
+                                        aria-expanded="false">
+                                    Download Submission as
+                                    <span class="caret"></span>
+                                </button>
+                                {% set download_base_url = "/download/submission/" + ctx.recid|string + "/" + ctx.version|string %}
+                                <ul class="dropdown-menu" aria-labelledby="dLabel"
+                                    style="height: auto;">
+                                    <li><a href="{{ download_base_url }}/yaml"
+                                           id="download_yaml">YAML</a></li>
+                                    <li><a href="{{ download_base_url }}/yoda"
+                                           id="download_yoda">YODA</a></li>
+                                    <li><a href="{{ download_base_url }}/root"
+                                           id="download_root">ROOT</a></li>
+                                    <li><a href="{{ download_base_url }}/csv"
+                                           id="download_csv">CSV</a></li>
+                                </ul>
+                            </div>
 
-                <form action="/record/sandbox/consume" method="post"
-                      enctype=multipart/form-data>
-                    <input type="file" name="hep_archive" id="root_file_upload"
-                           data-iconName="fa fa-upload"
-                           class="filestyle">
-                    <br/>
-
-                    <input type="submit" value="Upload and Process"
-                           class="btn btn-primary" onclick="perform_upload_action('#sandbox-upload-area', ['#955BA5', '#2C3E50'], 'large_area')">
-                </form>
-
-                {% if ctx.submissions|length > 0 %}
-                    <br/>
-                    <div id="past_submissions">
-                        <h4 style="font-size: 1em">
-                            Your sandbox submissions</h4>
-
-                        <div class="scrollable height30 row-fluid">
-                            {% for submission in ctx.submissions %}
-                                {% if submission.data_abstract != None %}
-                                    <div class="col-md-10 col-sm-10 col-xs-10">
-                                        <a href="/record/sandbox/{{ submission.publication_recid }}"
-                                           style="text-align: left">
-                                            <div class="truncated-record-abstract">{{ submission.data_abstract }}</div>
-                                        </a>
-                                        <p style="font-weight: bolder; color: #a1aec7; font-size: .7em; text-align: left">{{ submission.created.strftime('%Y-%m-%d %H:%M%p') }}</p>
-                                    </div>
-                                    <div class="col-md-2 col-sm-2 col-xs-2">
-                                        <button class="btn btn-sm btn-danger delete_button"
-                                                data-recid="{{ submission.publication_recid }}"><i
-                                                class="fa fa-trash"></i>
-                                        </button>
-                                    </div>
-                                {% endif %}
-                            {% endfor %}
-                        </div>
-                        <div class="clearfix"></div>
-                    </div>
-                {% endif %}
+                        </li>
+                    {% endif %}
+                </ul>
             </div>
-
         </div>
 
-    {% else %}
-        <div class="detailed-record-info">
+        <div class="clearfix"></div>
 
-            <button class="btn btn-xs btn-link hide-publication-info"
-                    style="margin-bottom: 10px"><span
-                    class="fa fa-chevron-left"></span> Hide Publication
-                Information
-                Information
-            </button>
+        <div class="row" style="padding-top: 120px;">
+
+            {% if ctx.data_tables|length == 0 %}
+                <div class="container">
+                    <div class="row">
+                        <div class="upload-area col-md-7 text-center" id="sandbox-upload-area">
+
+                            <img src="{{ url_for('static', filename='img/icon-upload.svg') }}"
+                                 width="70">
+
+                            <h4>Upload an archive to preview</h4>
+                            <br/>
+
+                            <div class="info">
+                                <p>Upload an archive (<strong>zip</strong>, <strong>tar.gz</strong>,
+                                    <strong>tar</strong>)
+                                    containing YAML files formatted according to these <a
+                                            href="https://github.com/HEPData/hepdata-submission"
+                                            target="_blank">guidelines</a>.
+                                    An example submission is available <a
+                                            target="_blank">these guidelines</a>.</p>
+
+                                <p class="text-muted">We also accept Single YAML files containing all of the
+                                    submission
+                                    data.</p>
+
+                                <p class="text-muted">Alternatively, upload a single text file with extension
+                                    <strong>.oldhepdata</strong>
+                                    containing
+                                    the "input" format that was used for data submissions from the old <a
+                                            href="http://hepdata.cedar.ac.uk"
+                                            target="_blank">HepData</a> site.</p>
+
+                                <p>View an example submission <a
+                                        href="https://www.dropbox.com/s/ph6zphwfjnigki1/1203852_hm.zip?dl=0"
+                                        target="_blank">here</a>.</p>
+
+
+                            </div>
+
+                            <form action="/record/sandbox/consume" method="post"
+                                  enctype=multipart/form-data>
+                                <input type="file" name="hep_archive" id="root_file_upload"
+                                       data-iconName="fa fa-upload"
+                                       class="filestyle">
+                                <br/>
+
+                                <input type="submit" value="Upload and Process"
+                                       class="btn btn-primary"
+                                       onclick="hepdata_record.perform_upload_action('#sandbox-upload-area', ['#955BA5', '#2C3E50'], 'large_area')">
+                            </form>
+
+                        </div>
+
+                        <div id="past_submissions" class="col-md-offset-1 col-md-4">
+                            <div class="well">
+                                <h4>Your sandbox submissions</h4>
+
+                                {% if ctx.submissions|length > 0 %}
+                                    <div class="scrollable height30 row-fluid">
+                                        {% for submission in ctx.submissions %}
+                                            {% if submission.data_abstract != None %}
+                                                <div class="col-md-10 col-sm-10 col-xs-10">
+                                                    <a href="/record/sandbox/{{ submission.publication_recid }}"
+                                                       style="text-align: left">
+                                                        <div class="truncated-record-abstract">{{ submission.data_abstract }}</div>
+                                                    </a>
+                                                    <p style="font-weight: bolder; color: #a1aec7; font-size: .7em; text-align: left">{{ submission.created.strftime('%Y-%m-%d %H:%M%p') }}</p>
+                                                </div>
+                                                <div class="col-md-2 col-sm-2 col-xs-2">
+                                                    <button class="btn btn-sm btn-danger delete_button"
+                                                            data-recid="{{ submission.publication_recid }}"><i
+                                                            class="fa fa-trash"></i>
+                                                    </button>
+                                                </div>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                    <div class="clearfix"></div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="clearfix"></div>
+
+
+            {% else %}
+                <div class="detailed-record-info col-lg-3 col-md-3">
+
+                    <button class="btn btn-xs btn-link hide-publication-info"
+                            style="margin-bottom: 10px"><span
+                            class="fa fa-chevron-left"></span> Hide Publication
+                        Information
+                        Information
+                    </button>
 
         <span id="show-publication-info"
               class="slider-option paper-info-option" style="left: -40px"><span
                 class="fa fa-chevron-right"></span></span>
 
-            <div>
+                    <div>
                 <span itemprop="url"
                       class="hidden">http://hepdata.net/record/sandbox/{{ ctx.recid }}</span>
-                <br/>
+                        <br/>
 
-                <div class="record-links">
-                    <ul>
-                        {% if ctx.additional_resources %}
-                            <li>
-                                <button id="show_resources" class="btn btn-sm btn-primary"
-                                        data-recid="{{ ctx.recid }}">Additional Resources
-                                </button>
-                            </li>
-                        {% endif %}
-                    </ul>
-                </div>
-                {% if ctx.record.publication_info %}
-                    <div class="publication-details">
+                        <div class="record-links">
+                            <ul>
+                                {% if ctx.additional_resources %}
+                                    <li>
+                                        <button id="show_resources" class="btn btn-sm btn-primary"
+                                                data-recid="{{ ctx.recid }}">Additional Resources
+                                        </button>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </div>
+                        {% if ctx.record.publication_info %}
+                            <div class="publication-details">
                         <span itemprop="publisher" itemscope
                               typeof="http://schema.org/Organization"><span
                                 itemprop="name">{{ ctx.record.publication_info.journal_title }}</span> </span>,
-                        Volume {{ ctx.record.publication_info.journal_volume }},
-                        pages
-                        <span itemprop="pagination">{{ ctx.record.publication_info.page_artid }}</span>, <span
-                            itemprop="copyrightYear"
-                            typeof="http://schema.org/Number">{{ ctx.record.publication_info.year }}</span>
+                                Volume {{ ctx.record.publication_info.journal_volume }},
+                                pages
+                                <span itemprop="pagination">{{ ctx.record.publication_info.page_artid }}</span>, <span
+                                    itemprop="copyrightYear"
+                                    typeof="http://schema.org/Number">{{ ctx.record.publication_info.year }}</span>
+                            </div>
+                        {% endif %}
                     </div>
-                {% endif %}
-            </div>
 
-            <div class="clearfix"></div>
+                    <div class="clearfix"></div>
 
-            <div class="record-abstract" itemprop="description">
-                <strong>Abstract {% if ctx.record.data_abstract %}(data
-                    abstract){% endif %}</strong><br/>
+                    <div class="record-abstract" itemprop="description">
+                        <strong>Abstract {% if ctx.record.data_abstract %}(data
+                            abstract){% endif %}</strong><br/>
 
-                <div class="record-abstract-content scrollable" style="min-height: 550px">
-                    {% if ctx.record.data_abstract %}
-                        {{ ctx.record.data_abstract }}
-                    {% elif ctx.record.abstract %}
-                        {{ ctx.record.abstract }}
-                    {% else %}
-                        No abstract available.
-                    {% endif %}
+                        <div class="record-abstract-content scrollable" style="min-height: 550px">
+                            {% if ctx.record.data_abstract %}
+                                {{ ctx.record.data_abstract }}
+                            {% elif ctx.record.abstract %}
+                                {{ ctx.record.abstract }}
+                            {% else %}
+                                No abstract available.
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="clearfix"></div>
+                    <br/>
+
                 </div>
-            </div>
+                {% include 'hepdata_records/components/table_list.html' %}
+                {% include 'hepdata_records/components/table_details.html' %}
+                {% include 'hepdata_records/components/uploader-modal.html' %}
+                {% include 'hepdata_records/components/resources-widget.html' %}
+            {% endif %}
 
-            <div class="clearfix"></div>
-            <br/>
+            {% set delete_redirect_url = '/record/sandbox' %}
+            {% include 'hepdata_dashboard/delete-widget.html' %}
 
         </div>
-        {% include 'hepdata_records/components/table_list.html' %}
-        {% include 'hepdata_records/components/table_details.html' %}
-        {% include 'hepdata_records/components/uploader-modal.html' %}
-        {% include 'hepdata_records/components/resources-widget.html' %}
-    {% endif %}
-
-    {% set delete_redirect_url = '/record/sandbox' %}
-    {% include 'hepdata_dashboard/delete-widget.html' %}
+    </div>
 
 {% endblock %}
 {%- block javascript %}

@@ -126,40 +126,10 @@
             </div>
 
 
-            <div id="footer" class="footer-home">
-                <div class="row">
-                    <div class="col-md-4" align="center"><a href="https://www.ippp.dur.ac.uk/"
-                                                            target="_blank"><img
-                            src="static/img/about/durham-logo.svg" width="180px"></a>
-                    </div>
-                    <div class="col-md-4" align="center"><a href="http://home.cern"
-                                                            target="_blank"> <img
-                            src="static/img/about/cern-logo.svg" width="90px"></a>
-                    </div>
 
-                    <div class="col-md-4" align="center"><a href="http://www.stfc.ac.uk/" target="_blank"><img
-                            src="static/img/about/stfc-logo.png" width="250px"></a>
-                    </div>
-                </div>
+            {% include "hepdata_theme/footer.html" %}
 
-                <br/>
 
-                <div class="row">
-                    <div class="col-md-12">
-                        Copyright ~1975-Present, HEPData | Powered by <a href="http://invenio-software.org/"
-                                                                         target="_blank" style="color:white">Invenio</a>,
-                        funded by <a href="http://www.stfc.ac.uk/" target="_blank" style="color:white">STFC, UK</a>,
-                        developed and hosted at <a href="https://home.cern" target="_blank" style="color:white">CERN</a>,
-                        supported by <a href="https://www.ippp.dur.ac.uk/" target="_blank" style="color:white">IPPP
-                        Durham</a>.
-
-                        <br/><br/>
-                        <p><a href="/terms" target="_new" style="color: white">View our Terms of Use</a></p>
-                        <br/>
-                        <p class="version">HEPData version: {{ ctx.version }}</p>
-                    </div>
-                </div>
-            </div>
 
             <div class="clearfix"></div>
 

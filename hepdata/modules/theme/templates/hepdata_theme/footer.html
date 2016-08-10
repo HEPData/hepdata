@@ -1,19 +1,45 @@
-<div class="footer-bar">
+<div id="footer" class="footer-home">
+    <div class="row">
+        <div class="col-md-4" align="center"><a href="https://www.ippp.dur.ac.uk/"
+                                                target="_blank"><img
+                src="/static/img/about/durham-logo.svg" width="180px"></a>
+        </div>
+        <div class="col-md-4" align="center"><a href="http://home.cern"
+                                                target="_blank"> <img
+                src="/static/img/about/cern-logo.svg" width="90px"></a>
+        </div>
 
-    <div id="footer-decor">
-        <ul>
-            <li class="bg-purple">&nbsp;</li>
-            <li class="bg-purple-lighter">&nbsp;</li>
-            <li class="bg-purple">Copyright ~1975-Present HEPData, funded by <a href="http://www.stfc.ac.uk/" target="_blank" style="color:white">STFC, UK</a>, developed and hosted at <a href="https://home.cern" target="_blank" style="color:white">CERN</a>, supported by <a href="https://www.ippp.dur.ac.uk/" target="_blank" style="color:white">IPPP Durham</a>. <a href="/terms" target="_new">Terms of Use</a>.</li>
-        </ul>
+        <div class="col-md-4" align="center"><a href="http://www.stfc.ac.uk/" target="_blank"><img
+                src="/static/img/about/stfc-logo.png" width="250px"></a>
+        </div>
     </div>
 
-    <div id="footer-buttons">
-        <ul>
-            <a href="mailto:info@hepdata.net" target="_new"><li class="bg-purple-lighter"><i class="fa fa-envelope"></i></li></a>
-            <a href="http://twitter.com/HEPData" target="_new"><li class="bg-purple"><i class="fa fa-twitter"></i></li></a>
-            <a href="http://github.com/hepdata" target="_new"><li class="bg-purple-lighter"><i class="fa fa-github" aria-hidden="true"></i></li></a>
+    <br/>
 
-        </ul>
+    <div class="row text-center">
+        <div class="col-md-12">
+
+
+            <p class="footer-links"><a href="/terms" target="_new" style="color: white">View our Terms of Use</a>
+                 <a href="http://www.twitter.com/hepdata" target="_new" style="color: white"><i class="fa fa-twitter"></i> HEPData on Twitter</a>
+                 <a href="http://www.github.com/hepdata" target="_new" style="color: white"><i class="fa fa-github"></i> HEPData on Github</a>
+                 <a href="http://www.github.com/hepdata/issues" target="_new" style="color: white"><i class="fa fa-bug"></i> Report an issue</a>
+            </p>
+            <br/>
+
+
+            <p>Copyright ~1975-Present, HEPData | Powered by <a href="http://invenio-software.org/"
+                                                                target="_blank" style="color:white">Invenio</a>,
+                funded by <a href="http://www.stfc.ac.uk/" target="_blank" style="color:white">STFC, UK</a>,
+                developed and hosted at <a href="https://home.cern" target="_blank" style="color:white">CERN</a>,
+                supported by <a href="https://www.ippp.dur.ac.uk/" target="_blank" style="color:white">IPPP
+                    Durham</a>.
+            </p>
+            {% block version %}
+                <p class="version">HEPData version: {{ ctx.version }}</p>
+            {% endblock %}
+        </div>
     </div>
 </div>
+
+<div class="clearfix"></div>

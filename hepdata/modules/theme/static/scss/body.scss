@@ -126,13 +126,6 @@
   opacity: 1;
 }
 
-/*root upload form*/
-.root_upload_form {
-  max-width: 600px;
-  min-width: 300px;
-  margin: 0 auto;
-  padding-top: 13em;
-}
 
 .collaboration {
   background-color: $purple-light;
@@ -146,6 +139,10 @@
 .collaboration:hover {
   background-color: $purple;
   color: white;
+}
+
+.no-padding {
+  padding: 0;
 }
 
 .scrollable {
@@ -187,7 +184,7 @@ body::-webkit-scrollbar-thumb {
 }
 
 .height30 {
-  height: 150px;
+  height: 30vh;
   overflow: auto;
 }
 

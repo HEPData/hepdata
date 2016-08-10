@@ -97,14 +97,9 @@
 }
 
 .detailed-record-info {
-  background: $lightgrey;
-  width: 24%;
   margin-right: 0;
-  position: relative;
-  float: left;
   height: 100vh;
   color: $navy-light;
-  padding: 120px 15px 15px;
   /*border-right: $lightgrey solid 1px;*/
 }
 
@@ -175,6 +170,8 @@
   top: 115px;
   left: 0;
   border-radius: 0 4px 4px 0;
+  pointer-events: all;
+  z-index: 9999;
 }
 
 .review, .upload {
@@ -263,12 +260,6 @@
 #table_description {
   padding-top: 10px;
   white-space: pre-wrap;
-}
-
-
-.upload-area {
-  width: 75%;
-  float: left;
 }
 
 #uploadDialog, #notifyReviewer {
@@ -430,12 +421,7 @@
 
 /*Data view CSS*/
 
-#hepdata_tables {
-  width: 13%;
-  padding: 10px;
-  float: left;
-  height: 80vh;
-  margin-top: 105px;
+#table-list-section {
 
   button {
     margin: 5px 0;
@@ -471,11 +457,11 @@
 
 }
 
-#hep-tables {
+#table-list {
 
   -webkit-padding-start: 0px;
   font-size: .8em;
-  height: 90%;
+  height: calc(100vh - 140px);
   width: 100%;
   overflow-y: auto;
   overflow-x: hidden;
@@ -502,9 +488,6 @@
 
 #hepdata_table_detail {
   display: inline-block;
-  width: 63%;
-  padding: 20px;
-  padding-top: 110px;
   height: calc(100vh);
   overflow-y: scroll;
 }
@@ -784,7 +767,7 @@
 
 @media (max-width: 992px) {
 
-  #hepdata_tables {
+  #table-list{
     display: none;
   }
 
@@ -950,8 +933,14 @@ g.node {
 }
 
 #table_doi {
-  font-size: .9em;
+  font-size: .55em;
   color: $navy !important;
+
+  background-color: $lightgrey;
+  padding: 7px 6px;
+  border-radius: 4px;
+  margin-left: 5px;
+  margin-top: 4px;
 }
 
 #figures {
@@ -982,4 +971,16 @@ g.node {
 
 .legend {
   pointer-events: all;
+}
+
+#upload-progress {
+  padding-top: 200px;
+  padding-bottom: 200px;
+  width: 200px;
+  margin: 0 auto;
+}
+
+#sandbox-upload-area {
+  min-height: 55vh;
+  padding-bottom: 20px;
 }
