@@ -185,14 +185,8 @@ body {
 }
 
 .pagination-bar {
-  background-color: white;
-  opacity: .9;
-  height: 40px;
-  position: fixed;
-  bottom: 40px;
   width: 100%;
   vertical-align: middle;
-  z-index: 1000;
 }
 
 .pagination {
@@ -354,3 +348,18 @@ body {
   margin: 0 auto;
 }
 
+
+.version, .rivet {
+  padding: 4px 6px;
+  border-radius: 4px;
+  font-size: .6em;
+  background-color: $navy;
+  color: white;
+  margin-right: 5px;
+  display: inline-block;
+}
+
+.rivet {
+  background-color: $yellow;
+  color: $navy;
+}

@@ -25,7 +25,8 @@ from flask import current_app
 from elasticsearch.exceptions import NotFoundError, RequestError
 from invenio_pidstore.models import RecordIdentifier
 from sqlalchemy import func
-from hepdata.modules.submission.models import SubmissionParticipant
+
+from hepdata.modules.submission.models import SubmissionParticipant, HEPSubmission, DataResource
 from .utils import prepare_author_for_indexing
 from hepdata.config import CFG_PUB_TYPE, CFG_DATA_TYPE
 from query_builder import QueryBuilder, get_query_by_type, get_authors_query, HEPDataQueryParser
@@ -379,6 +380,12 @@ def index_record_ids(record_ids, index=None):
             if doc['authors']:
                 doc["summary_authors"] = doc["authors"][:10]
 
+            hepforge_resource_count = HEPSubmission.query.filter(HEPSubmission.publication_recid == int(doc["recid"]),
+                                       HEPSubmission.version == int(doc["version"]),
+                                       HEPSubmission.references.any(DataResource.file_type == "hepforge")).count()
+
+            doc["has_rivet_analysis"] = bool(hepforge_resource_count)
+
             op_dict = {
                 "index": {
                     "_index": index,
@@ -386,13 +393,12 @@ def index_record_ids(record_ids, index=None):
                     "_id": doc['recid']
                 }
             }
-            indexed_result[CFG_PUB_TYPE].append(doc['recid'])
 
+            indexed_result[CFG_PUB_TYPE].append(doc['recid'])
             to_index.append(op_dict)
 
         if doc["last_updated"] is not None:
             doc["last_updated"] = parse(doc["last_updated"]).isoformat()
-
         to_index.append(doc)
 
     es.bulk(index=index, body=to_index, refresh=True)

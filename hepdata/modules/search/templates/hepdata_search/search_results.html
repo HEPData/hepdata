@@ -47,7 +47,8 @@
                 {% if ctx.q %}
                     <a href="/search" class="btn btn-link hidden-sm hidden-xs">Reset search</a>
                 {% endif %}
-                <a class="btn btn-link hidden-sm hidden-xs" data-toggle="modal" data-target="#searchHelpWidget">Advanced</a>
+                <a class="btn btn-link hidden-sm hidden-xs" data-toggle="modal"
+                   data-target="#searchHelpWidget">Advanced</a>
 
             </form>
         </div>
@@ -58,6 +59,9 @@
                 {% include "hepdata_search/facet_column.html" %}
 
                 <div class="col-md-10" style="padding-bottom: 3em;">
+                    {% if ctx.pages and not no_results %}
+                        {% include "hepdata_search/pagination.html" %}
+                    {% endif %}
                     {% for record in ctx.results %}
                         {% set pub_index = loop.index %}
                         <div id="publication-{{ pub_index }}" class="row ins{{ record.inspire_id|string }}"
@@ -66,10 +70,22 @@
                             <div class="search-result-item">
                                 <div class="record-brief">
                                     <h4 class="record-header">
+                                        {% if record.has_rivet_analysis %}
+                                            <div itemprop="version" class="rivet">
+                                                Rivet Analysis
+                                            </div>
+                                        {% endif %}
+                                        {% if record.version > 1 %}
+                                            <div itemprop="version" class="version">
+                                                {{ record.version }} Versions
+                                            </div>
+                                        {% endif %}
+
                                         {% set record_link = '/record/ins' + record.inspire_id|string %}
                                         <a href={{ record_link }} itemprop="name">
                                             {{ record.title }}
                                         </a>
+
                                     </h4>
                                     {% include "hepdata_search/record_content.html" %}
                                     <div style="padding: 5px 0px; color: #7F8C8D">
@@ -136,9 +152,11 @@
 
                         <div class="clearfix"></div>
                         <br/>
-                    {% else %}
-                        <h4>No records found</h4>
                     {% endfor %}
+
+                    {% if ctx.pages and not no_results %}
+                        {% include "hepdata_search/pagination.html" %}
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -147,9 +165,7 @@
     <div class="clearfix"></div>
     <br/><br/>
 
-    {% if ctx.pages and not no_results %}
-        {% include "hepdata_search/pagination.html" %}
-    {% endif %}
+
 
     {% include "hepdata_search/modals/search_help.html" %}
 

@@ -72,6 +72,7 @@ mapping = {
     "type": {
         "type": "string"
     },
+
     "dissertation": {
         "type": "nested",
         "properties": {

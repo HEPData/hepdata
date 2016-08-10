@@ -118,6 +118,8 @@ def get_basic_record_information(record):
         'collaborations': collaborations,
         'inspire_id': source.get('inspire_id', ''),
         'year': source.get('year', ''),
+        'version': source.get('version', 1),
+        'has_rivet_analysis': source.get('has_rivet_analysis', False),
         'authors': authors,
         'date': parse_and_format_date(datestring),
         'highlight': highlights,
