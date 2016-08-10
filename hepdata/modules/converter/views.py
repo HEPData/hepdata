@@ -99,7 +99,7 @@ def download_submission(recid, version, file_format):
     :param file_format: yaml, csv, ROOT, or YODA
     :return:
     """
-    submission = HEPSubmission.query.filter_by(publication_recid=recid).first()
+    submission = HEPSubmission.query.filter_by(publication_recid=recid, version=version).first()
     if file_format not in CFG_SUPPORTED_FORMATS:
         return display_error(
             title="The " + file_format + " output format is not supported",
@@ -115,9 +115,6 @@ def download_submission(recid, version, file_format):
 
     if version > submission.version or version == -1:
         version = submission.version
-
-    if version == 0:
-        version += 1
 
     path = os.path.join(current_app.config['CFG_DATADIR'], str(recid))
     data_filename = SUBMISSION_FILE_NAME_PATTERN.format(recid, version)

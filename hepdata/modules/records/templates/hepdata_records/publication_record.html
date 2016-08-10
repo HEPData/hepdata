@@ -116,8 +116,8 @@
                     </button>
 
             <span id="show-publication-info"
-              class="slider-option paper-info-option" style="left: -40px"><span
-                class="fa fa-chevron-right"></span></span>
+                  class="slider-option paper-info-option" style="left: -40px"><span
+                    class="fa fa-chevron-right"></span></span>
 
                     <div>
                         <div class="record-title" itemprop="name">
@@ -277,41 +277,43 @@
 
                 <!--if there is data, we show it. If not, we show the upload screen if the logged in user is an uploader-->
                 {% if ctx.show_upload_area %}
+                    <div class="col-md-9">
+                        <div class="upload-area" id="main-upload-area">
+                            <div class="root_upload_form" align="center">
+                                <img src="{{ url_for('static', filename='img/icon-upload.svg') }}" width="70">
+                                <h4>Upload an archive to HEPData</h4>
 
-                    <div class="upload-area" id="main-upload-area">
-                        <div class="root_upload_form" align="center">
-                            <img src="{{ url_for('static', filename='img/icon-upload.svg') }}" width="70">
-                            <h4>Upload an archive to HEPData</h4>
+                                <div class="info">
+                                    <p>Upload an archive (<strong>zip</strong>, <strong>tar.gz</strong>,
+                                        <strong>tar</strong>)
+                                        containing YAML files formatted according to these <a
+                                                href="https://github.com/HEPData/hepdata-submission"
+                                                target="_blank">guidelines</a>.
+                                        An example submission is available <a
+                                                href="https://www.dropbox.com/s/ph6zphwfjnigki1/1203852_hm.zip?dl=0"
+                                                target="_blank">here</a>.</p>
 
-                            <div class="info">
-                                <p>Upload an archive (<strong>zip</strong>, <strong>tar.gz</strong>,
-                                    <strong>tar</strong>)
-                                    containing YAML files formatted according to these <a
-                                            href="https://github.com/HEPData/hepdata-submission"
-                                            target="_blank">guidelines</a>.
-                                    An example submission is available <a
-                                            href="https://www.dropbox.com/s/ph6zphwfjnigki1/1203852_hm.zip?dl=0"
-                                            target="_blank">here</a>.</p>
+                                    <p>Alternatively, upload a single text file with extension
+                                        <strong>.oldhepdata</strong>
+                                        containing
+                                        the "input" format that was used for data submissions from the old <a
+                                                href="http://hepdata.cedar.ac.uk"
+                                                target="_blank">HepData</a> site.</p>
+                                </div>
 
-                                <p>Alternatively, upload a single text file with extension <strong>.oldhepdata</strong>
-                                    containing
-                                    the "input" format that was used for data submissions from the old <a
-                                            href="http://hepdata.cedar.ac.uk"
-                                            target="_blank">HepData</a> site.</p>
+                                <form action="/record/{{ ctx.record.recid }}/consume"
+                                      method="post" enctype=multipart/form-data>
+                                    <input type="file" name="hep_archive"
+                                           id="root_file_upload"
+                                           data-iconName="fa fa-upload"
+                                           class="filestyle">
+                                    <br/>
+                                    <input type="submit" value="Upload and Process"
+                                           class="btn btn-primary"
+                                           onclick="hepdata_record.perform_upload_action('#main-upload-area', ['#955BA5', '#2C3E50'] , 'large_area')">
+                                </form>
+
                             </div>
-
-                            <form action="/record/{{ ctx.record.recid }}/consume"
-                                  method="post" enctype=multipart/form-data>
-                                <input type="file" name="hep_archive"
-                                       id="root_file_upload"
-                                       data-iconName="fa fa-upload"
-                                       class="filestyle">
-                                <br/>
-                                <input type="submit" value="Upload and Process"
-                                       class="btn btn-primary"
-                                       onclick="hepdata_record.perform_upload_action('#main-upload-area', ['#955BA5', '#2C3E50'] , 'large_area')">
-                            </form>
-
                         </div>
                     </div>
                 {% else %}

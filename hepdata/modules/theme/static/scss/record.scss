@@ -767,7 +767,7 @@
 
 @media (max-width: 992px) {
 
-  #table-list{
+  #table-list {
     display: none;
   }
 
@@ -974,9 +974,15 @@ g.node {
 }
 
 #upload-progress {
-  padding-top: 200px;
-  padding-bottom: 200px;
+  padding-top: 60px;
+  padding-bottom: 40px;
   width: 200px;
+  margin: 0 auto;
+}
+
+.upload-area {
+  width: 65%;
+  padding: 5em;
   margin: 0 auto;
 }
 
