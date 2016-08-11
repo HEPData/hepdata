@@ -98,22 +98,46 @@
                 dataType: 'json',
                 url: '/record/resources/' + recid + '/' + version,
                 success: function (data) {
-                    $("#resource-list ul").html('');
-                    for (var resource in data) {
-                        var description = data[resource]['file_description'] == '' ? 'Publication Resource'
-                                : data[resource]['file_description'];
-                        if (resource == 0) {
-                            $("#resource-list ul").append('<li class="active" data-location="'
-                                    + data[resource]['location'] + '" data-type="' + data[resource]['file_type']
-                                    + '" data-id="' + data[resource]['id'] + '">' + description + '</li>');
-                            hepdata_record.show_resource(data[resource]['id'], data[resource]['file_type'], data[resource]['location'])
+
+                    var placement = d3.select("#resource-list");
+                    placement.html("");
+                    var resource_item_container = placement.selectAll(".resource-item-container").data(data).enter().append("div").attr("class", "col-md-6 resource-item-container");
+
+                    var resource_item = resource_item_container.append("div").attr("class", "resource-item");
+
+                    resource_item.append("div").html(function(d) {
+                        if(HEPDATA.is_image(d.file_type)) {
+                            d.file_type = 'image';
+                            return '<i class="fa fa-' + HEPDATA.map_file_type_to_property(d.file_type, 'icon') + '"></i>';
 
                         } else {
-                            $("#resource-list ul").append('<li data-location="' + data[resource]['location']
-                                    + '" data-type="' + data[resource]['file_type'] + '" data-id="'
-                                    + data[resource]['id'] + '">' + description + '</li>');
+                            return '<i class="fa fa-' + HEPDATA.map_file_type_to_property(d.file_type, 'icon') + '"></i>';
                         }
-                    }
+                    });
+
+                    resource_item.append("h4").text(function (d) {
+                        return HEPDATA.map_file_type_to_property(d.file_type, 'description');
+                    });
+
+                    resource_item.append("p").text(function (d) {
+                        return d['file_description'];
+                    });
+
+                    resource_item.append("a").attr("class", "btn btn-primary btn-sm").attr("href", function (d) {
+                        var download_location = d.location;
+                        if (d.location.indexOf('http') == -1) {
+                            download_location = '/record/resource/' + d.id + '?view=true';
+                        }
+
+                        return download_location;
+                    }).text(function(d) {
+                        if (d.location.indexOf('http') == -1) {
+                            return "Download"
+                        }
+                        return "View Resource";
+                    });
+
+
                     MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
                 }
             })

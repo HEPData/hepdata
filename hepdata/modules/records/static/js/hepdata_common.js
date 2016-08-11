@@ -31,6 +31,16 @@ HEPDATA.review_classes = {
   "passed": {"icon": "fa-check-circle", "text": "passed review"}
 };
 
+
+HEPDATA.file_type_to_details = {
+  "image": {"icon": "image", "description": "Image File"},
+  "github": {"icon": "github", "description": "GitHub Repository"},
+  "hepforge": {"icon": "area-chart", "description": "Rivet Analysis"},
+  "html": {"icon": "link", "description": "External Link"},
+  "oldhepdata": {"icon": "file-text-o", "description": "Legacy HEPData Format"},
+  "root": {"icon": "line-chart", "description": "ROOT File"}
+};
+
 HEPDATA.stats = {
   min_x: Number.MAX_VALUE,
   max_x: Number.MIN_VALUE,
@@ -168,9 +178,27 @@ HEPDATA.count_decimals = function (number) {
   return 0;
 }
 
-HEPDATA.is_image = function (file_path) {
+HEPDATA.is_image = function (file_type) {
   var image_file_types = ["png", "jpeg", "jpg", "tiff"];
-  return image_file_types.indexOf(file_path.toLowerCase) != -1
+  console.log(file_type);
+  console.log(image_file_types.indexOf(file_type.toLowerCase()));
+  return image_file_types.indexOf(file_type.toLowerCase()) != -1
+};
+
+/**
+ * @param file_type e.g. github
+ * @param property e.g. icon
+ */
+HEPDATA.map_file_type_to_property = function (file_type, property) {
+
+  var mapping = HEPDATA.file_type_to_details[file_type];
+  if (mapping) {
+    return HEPDATA.file_type_to_details[file_type][property];
+  }
+
+  if (property === "icon") return 'link';
+  if (property === "description") return 'No description available';
+
 };
 
 HEPDATA.render_associated_files = function (associated_files, placement) {

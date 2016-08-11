@@ -990,3 +990,41 @@ g.node {
   min-height: 55vh;
   padding-bottom: 20px;
 }
+
+#resourceModal .modal-dialog {
+
+  .modal-header {
+    border: none;
+    background-color: $darker-blue;
+    color: white;
+  }
+
+  .modal-body {
+    background-color: $darker-blue;
+    color: white;
+  }
+
+  .resource-item-container {
+    padding: 10px;
+
+    .resource-item {
+      background-color: $navy;
+      border-radius: 4px;
+      min-height: 190px;
+      padding: 20px;
+      text-align: center;
+
+      h4 {
+        color: white;
+      }
+
+      p {
+        color: $concrete;
+      }
+
+      i {
+        font-size: 2em;
+      }
+    }
+  }
+}
