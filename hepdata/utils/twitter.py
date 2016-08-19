@@ -21,7 +21,7 @@ def tweet(title, collaborations, url):
         else:
             twitter = Twitter(auth=OAuth(OAUTH_TOKEN, OAUTH_SECRET, CONSUMER_KEY, CONSUMER_SECRET))
             try:
-                status = "Added{0} data on \"{1}\" to {2} #hepdata".format(
+                status = "Added{0} data on \"{1}\" to {2}".format(
                     get_collaboration_string(collaborations), truncate_string(encode_string(cleanup_latex(title)), 10),
                     url)
 

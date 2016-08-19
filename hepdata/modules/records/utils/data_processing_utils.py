@@ -35,7 +35,7 @@ def pad_independent_variables(table_contents):
     :param table_contents:
     :return:
     """
-    _dep_count = len(table_contents["dependent_variables"])
+    _dep_count = len(table_contents["dependent_variables"][0]['values'])
     _count = 0
     _ind_vars = {"header": {"name": "", "units": ""}, "values": []}
     while _count < _dep_count:
@@ -47,7 +47,7 @@ def pad_independent_variables(table_contents):
 
 def process_independent_variables(table_contents, x_axes,
                                   independent_variable_headers):
-    if len(table_contents["independent_variables"]) == 0:
+    if len(table_contents["independent_variables"]) == 0 and table_contents["dependent_variables"]:
         pad_independent_variables(table_contents)
 
     if table_contents["independent_variables"]:
