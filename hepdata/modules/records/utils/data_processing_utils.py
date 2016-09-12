@@ -45,6 +45,19 @@ def pad_independent_variables(table_contents):
     table_contents["independent_variables"].append(_ind_vars)
 
 
+def fix_nan_inf(value):
+    """
+    Converts NaN, +inf, and -inf values to strings
+    :param value:
+    :return:
+    """
+    keys = ['value', 'high', 'low']
+    for key in keys:
+        if key in value and str(value[key]) in current_app.config['SPECIAL_VALUES']:
+            value[key] = str(value['value'])
+    return value
+
+
 def process_independent_variables(table_contents, x_axes,
                                   independent_variable_headers):
     if len(table_contents["independent_variables"]) == 0 and table_contents["dependent_variables"]:
@@ -67,13 +80,13 @@ def process_independent_variables(table_contents, x_axes,
             x_axes[x_header] = []
 
             independent_variable_headers.append(
-                    {"name": x_header, "colspan": 1})
+                {"name": x_header, "colspan": 1})
 
             if x_axis["values"]:
                 # if x_header not in x_headers:
 
                 for value in x_axis["values"]:
-                    x_axes[x_header].append(value)
+                    x_axes[x_header].append(fix_nan_inf(value))
 
             count += 1
 
@@ -143,6 +156,9 @@ def process_dependent_variables(group_count, record, table_contents,
                 tmp_values[count] = {"x": x, "y": []}
 
             y_record = value
+
+            fix_nan_inf(y_record)
+
             y_record["group"] = group_count
 
             if "errors" not in y_record:
