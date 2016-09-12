@@ -45,7 +45,9 @@ var hepdata_record = (function () {
         }
       },
 
-      perform_upload_action: function (placement, colors, insertion_type) {
+      perform_upload_action: function (placement, form_name, colors, insertion_type) {
+
+
 
         var html = '<div id="upload-progress"></div>' +
           '<div><p>Uploading and validating files...</p></div>';
@@ -54,7 +56,9 @@ var hepdata_record = (function () {
             '<div style="width: 200px; margin: 0 auto;"><p>Uploading and validating files...</p></div>';
         }
 
-        $(placement).html(html);
+        $(".upload-form").css('display', 'none');
+
+        $(placement).append(html);
 
         if (colors === undefined) {
           colors = ["#955BA5", "white"]
@@ -69,6 +73,12 @@ var hepdata_record = (function () {
             {x: 60, y: -55, color: colors[1]}],
           {"width": 200, "height": 200}
         );
+
+
+        document.forms[form_name].submit();
+
+        return false;
+
       }
     }
   }
