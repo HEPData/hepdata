@@ -33,6 +33,7 @@ def submit_post():
     title = request.form['title']
     reviewer_str = request.form['reviewer']
     uploader_str = request.form['uploader']
+    message = request.form['message']
 
     reviewer = parse_person_string(reviewer_str)[0]
     uploader = parse_person_string(uploader_str)[0]
@@ -40,7 +41,7 @@ def submit_post():
     hepdata_submission = process_submission_payload(inspire_id=inspire_id,
                                                     title=title,
                                                     reviewer=reviewer,
-                                                    uploader=uploader)
+                                                    uploader=uploader, message=message)
 
     if hepdata_submission:
         return jsonify({'success': True, 'message': 'Submission successful.'})
@@ -92,7 +93,8 @@ def process_submission_payload(*args, **kwargs):
     if kwargs.get('send_upload_email', True):
         # Now Send Email only to the uploader first. The reviewer will be asked to
         # review only when an upload has been performed.
-        send_cookie_email(uploader, record_information)
+        message = kwargs.get('message', None)
+        send_cookie_email(uploader, record_information, message)
 
     return hepsubmission
 
@@ -123,7 +125,7 @@ def parse_person_string(person_string, separator="::"):
 
 
 def send_cookie_email(submission_participant,
-                      record_information):
+                      record_information, message=None):
     try:
         message_body = render_template(
             'hepdata_dashboard/email/invite.html',
@@ -131,7 +133,8 @@ def send_cookie_email(submission_participant,
             role=submission_participant.role,
             title=encode_string(record_information['title'], 'utf-8'),
             site_url=current_app.config.get('SITE_URL', 'https://www.hepdata.net'),
-            invite_token=submission_participant.invitation_cookie)
+            invite_token=submission_participant.invitation_cookie,
+            message=message)
     except UnicodeDecodeError:
         message_body = render_template(
             'hepdata_dashboard/email/invite.html',
@@ -139,7 +142,8 @@ def send_cookie_email(submission_participant,
             role=submission_participant.role,
             site_url=current_app.config.get('SITE_URL', 'https://www.hepdata.net'),
             title=None,
-            invite_token=submission_participant.invitation_cookie)
+            invite_token=submission_participant.invitation_cookie,
+            message=message)
 
     create_send_email_task(submission_participant.email,
                            "[HEPData] Invitation to be a {0} of record {1} in HEPData".format(
