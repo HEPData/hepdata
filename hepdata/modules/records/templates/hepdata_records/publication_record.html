@@ -62,6 +62,7 @@
                                     <i class="fa fa-quote-right"></i> Cite
                                 </button>
 
+                            {% if current_user.is_authenticated %}
                                 <button id="watch_btn" type="button" data-toggle="modal"
                                         class="btn btn-sm btn-default"
                                         aria-haspopup="true" aria-expanded="false">
@@ -75,6 +76,7 @@
                             </span>
 
                                 </button>
+                            {% endif %}
 
                                 <a href="?format=json" id="jsonLabel" type="button"
                                    class="btn btn-sm btn-default"
