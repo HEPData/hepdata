@@ -27,18 +27,22 @@
                             {% endif %}
                         </div>
 
-                        <form style="width: 80%"
-                              action="{% if ctx.mode == 'sandbox' %}/record/sandbox/{{ ctx.recid }}/consume{% else %}/record/{{ ctx.recid }}/consume{% endif %}"
-                              method="post"
-                              enctype=multipart/form-data>
-                            <input type="file" name="hep_archive"
-                                   id="file_upload_field"
-                                   data-iconName="fa fa-upload"
-                                   class="filestyle">
-                            <br/>
-                            <input type="submit" value="Upload and Process"
-                                   class="btn btn-primary btn-lg" onclick="hepdata_record.perform_upload_action('#upload-area')">
-                        </form>
+                        <div class="upload-form">
+                            <form style="width: 80%"
+                                  action="{% if ctx.mode == 'sandbox' %}/record/sandbox/{{ ctx.recid }}/consume{% else %}/record/{{ ctx.recid }}/consume{% endif %}"
+                                  method="post"
+                                  name="upload-form-modal"
+                                  enctype=multipart/form-data>
+                                <input type="file" name="hep_archive"
+                                       id="file_upload_field"
+                                       data-iconName="fa fa-upload"
+                                       class="filestyle">
+                                <br/>
+                                <input type="submit" value="Upload and Process"
+                                       class="btn btn-primary btn-lg"
+                                       onclick="hepdata_record.perform_upload_action('#upload-area', 'upload-form-modal')">
+                            </form>
+                        </div>
                         <br/>
                     </div>
                 </div>

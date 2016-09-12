@@ -46,7 +46,7 @@
                                 Browse all
                             </li>
                         </a>
-                        <li><span class="fa fa-book"></span> {{ ctx.breadcrumb_text }}
+                        <li class="hidden-xs"><span class="fa fa-book"></span> {{ ctx.breadcrumb_text }}
                             {% if ctx.record.accelerator_experiment %},
                                 conducted on the
                                 <strong>{{ ctx.record.accelerator_experiment.experiment }}</strong>
@@ -54,7 +54,7 @@
                         </li>
                         <li class="pull-right">
 
-                            <div class="cite" style="float: right; margin-left: 15px; margin-top: -4px;">
+                            <div class="cite">
 
                                 <button id="citeLabel" type="button" data-toggle="modal" data-target="#citeModal"
                                         class="btn btn-sm btn-primary"
@@ -87,14 +87,14 @@
                             </div>
 
                             {% if ctx.access_count %}
-                                <span class="pull-right">
+                                <span class="pull-right hidden-xs">
                                 <span class="fa fa-bar-chart-o" style="padding-right: 5px"></span>
                                 Accessed {{ ctx.access_count.sum }} times
                         </span>
                             {% endif %}
 
                             {% if ctx.record.last_updated %}
-                                <span class="pull-right"
+                                <span class="pull-right hidden-xs"
                                       style="padding-right: 10px">Last updated on {{ ctx.record.last_updated.strftime('%Y-%m-%d %H:%M') }}
                         </span>
                             {% endif %}
@@ -281,12 +281,12 @@
                 {% if ctx.show_upload_area %}
                     <div class="col-md-9">
                         <div class="upload-area" id="main-upload-area">
-                            <div class="root_upload_form" align="center">
+                            <div class="upload-form" align="center">
                                 <img src="{{ url_for('static', filename='img/icon-upload.svg') }}" width="70">
                                 <h4>Upload an archive to HEPData</h4>
                                 {% include 'hepdata_records/components/uploader_info.html' %}
 
-                                <form action="/record/{{ ctx.record.recid }}/consume"
+                                <form name="upload-form" action="/record/{{ ctx.record.recid }}/consume"
                                       method="post" enctype=multipart/form-data>
                                     <input type="file" name="hep_archive"
                                            id="root_file_upload"
@@ -295,7 +295,7 @@
                                     <br/>
                                     <input type="submit" value="Upload and Process"
                                            class="btn btn-primary"
-                                           onclick="hepdata_record.perform_upload_action('#main-upload-area', ['#955BA5', '#2C3E50'] , 'large_area')">
+                                           onclick="hepdata_record.perform_upload_action('#main-upload-area', 'upload-form', ['#955BA5', '#2C3E50'] , 'large_area'); return false;">
                                 </form>
 
                             </div>
@@ -304,8 +304,7 @@
                 {% else %}
 
                     {% if ctx.data_tables|length == 0 %}
-                        <div id="hepdata_table_detail"
-                             style="text-align: center">
+                        <div id="hepdata_table_detail" align="center">
 
                             <div id="hepdata-loading"
                                  style="width: 200px; height: 200px; margin: 0 auto; margin-top: 5em"></div>

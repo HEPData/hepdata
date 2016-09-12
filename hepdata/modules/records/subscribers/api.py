@@ -22,6 +22,9 @@
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
 """HEPData API"""
+from functools import partial
+from operator import is_not
+
 from flask.ext.login import current_user
 
 from hepdata.modules.records.utils.common import get_record_contents
@@ -48,6 +51,8 @@ def get_users_subscribed_to_record(recid):
 def get_records_subscribed_by_current_user():
     subscriptions = Subscribers.query.filter(Subscribers.subscribers.contains(current_user)).all()
     if subscriptions:
-        return [get_record_contents(x.publication_recid) for x in subscriptions]
+        records = [get_record_contents(x.publication_recid) for x in subscriptions]
+        return filter(partial(is_not, None), records)
+
     else:
         return []

@@ -36,6 +36,7 @@ var dashboard = (function () {
         d3.select("#watch_container").html("");
       }
 
+
       var watch_list = d3.select("#watch_container").append("div").attr("class", "container-fluid watch-list");
       var watch_item = watch_list.selectAll("div.row").data(data).enter()
         .append("div")
@@ -61,8 +62,10 @@ var dashboard = (function () {
       });
 
       var controls = watch_item.append("div").attr("class", "col-md-1 controls");
-      controls.append("button").attr("class", "btn btn-link")
-        .append("i").attr("class", "fa fa-eye-slash").attr("title", "Unwatch Record")
+      controls.append("button").attr("class", "btn btn-sm btn-danger")
+        .append("i").attr("class", "fa fa-eye-slash")
+        .attr("title", "Unwatch Record")
+        .attr("alt", "Unwatch Record")
         .attr("onclick", function (d) {
           return "dashboard.unwatch('" + d.recid + "')";
         });

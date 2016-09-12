@@ -3,18 +3,21 @@
 
 {%- block page_body -%}
 
-    <div align="center" class="error-text-container">
-        <h4>Sorry, we have some issues processing your request. </h4>
-        <p>The error has been reported to our developers and we will solve it very soon!</p>
-    <p>If you have any questions, please email info@hepdata.net.</p>
-    </div>
-
-    <div class="row-fluid error-container" align="center">
-        <div class="col-md-3"></div>
-        <div class="col-md-6">
-            <img src="{{ url_for('static', filename='img/errors/500.svg') }}" width="90%">
+    <div class="container-fluid">
+        <div align="center" class="error-text-container">
+            <h4>Sorry, we have some issues processing your request. </h4>
+            <p>The error has been reported to our developers and we will solve it very soon!</p>
+            <p>If you have any questions, please email info@hepdata.net.</p>
         </div>
+
+        <div class="row-fluid error-container" align="center">
+            <div class="col-md-2"></div>
+            <div class="col-md-6">
+                <img src="{{ url_for('static', filename='img/errors/500.svg') }}" width="90%">
+            </div>
+        </div>
+        <div class="col-md-2"></div>
+
     </div>
-    <div class="col-md-3"></div>
 
 {%- endblock -%}

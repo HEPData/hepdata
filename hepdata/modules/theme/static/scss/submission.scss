@@ -1,4 +1,3 @@
-
 .paper-submission-area {
   width: 400px;
   margin: 0 auto;
@@ -6,7 +5,11 @@
   text-align: center;
   overflow-y: hidden;
   min-height: 600px;
+}
 
+.input-text-box {
+  border: none;
+  padding: 5px;
 }
 
 .progress-circle {

@@ -3,11 +3,9 @@
   background-color: white;
 }
 .error-container {
-  position: fixed;
   bottom: 36px;
   z-index: -1;
   width: 100%;
-  border-bottom: 50px solid $lightgrey;
 
   img {
     margin-bottom: -30px;
@@ -25,5 +23,9 @@
     padding: .5em;
     color: $concrete;
     font-size: 1.3em;
+  }
+
+  .footer-home {
+    font-size: .8em;
   }
 }
