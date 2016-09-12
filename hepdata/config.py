@@ -119,7 +119,7 @@ CFG_DATA_TYPE = 'datatable'
 CFG_ES_AUTHORS = ('authors', 'author')  # (index_name, doc_type)
 CFG_DATA_KEYWORDS = ['observables', 'reactions', 'cmenergies', 'phrases']
 
-CFG_CONVERTER_URL = 'http://hepdata-converter.cern.ch'  # http://172.99.65.51:5000/
+CFG_CONVERTER_URL = 'http://172.99.65.51:5000'
 CFG_SUPPORTED_FORMATS = ['yaml', 'root', 'csv', 'yoda']
 
 CFG_TMPDIR = tempfile.gettempdir()

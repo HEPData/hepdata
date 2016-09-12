@@ -89,7 +89,8 @@
                 <div class="col-md-12" id="inspire_details"
                      style="min-height: 120px; padding: 20px;">
                     <div class="submission-stage" id="has_inspire_id">
-                        <h4>Do you have an <a href="http://inspirehep.net" target="_blank">Inspire</a> record associated with your submission?</h4>
+                        <h4>Do you have an <a href="http://inspirehep.net" target="_blank">Inspire</a> record associated
+                            with your submission?</h4>
                         <button id="no_inspire" class="btn btn-md btn-danger">
                             No
                         </button>
@@ -146,7 +147,6 @@
                             This is correct
                         </button>
                     </div>
-
                 </div>
 
                 <div class="col-md-12" id="reviewers_uploaders">
@@ -177,6 +177,31 @@
                     </div>
                 </div>
 
+
+                <div class="col-md-12" id="uploader_message">
+                    <div>
+                        <h4>Do you want to add a message to the uploader of this record?</h4>
+
+                        <p class="text-small text-grey">This will be added in the email sent to the uploader.</p>
+
+                        <textarea class="uploader-message" id="uploader-message-input" name="uploader-message"
+                                  placeholder="Instructions to the record uploader..."></textarea>
+                    </div>
+
+                    <br/><br/>
+
+                    <div>
+                        <button id="message_back_btn"
+                                class="btn btn-lg btn-inverse pull-left">
+                            Back
+                        </button>
+                        <button id="message_continue_btn"
+                                class="btn btn-lg btn-primary pull-right">
+                            Continue
+                        </button>
+                    </div>
+                </div>
+
                 <div class="col-md-12" id="check">
                     <div class="submission-stage" id="submission_state"
                          style="background-color: white">
@@ -202,7 +227,7 @@
                         </button>
 
                         <a id="another_submission" href="/submit"
-                                class="btn btn-lg btn-primary hidden">
+                           class="btn btn-lg btn-primary hidden">
                             Create another submission
                         </a>
                     </div>
@@ -222,7 +247,8 @@
 
 {%- block javascript %}
 
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript"
+            src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
     {%- assets "hepdata_submission_js" %}
         <script src="{{ ASSET_URL }}"></script>
@@ -310,7 +336,6 @@
             if (inspire) {
                 var inspire_id = $("#inspire_id").val();
 
-
                 toggle_div("#inspire_details", default_options, 'hide', function () {
                     toggle_div("#inspire_preview", default_options, 'show', function () {
                         inspire_ds.get_inspire_data(inspire_id, render_inspire_preview);
@@ -355,6 +380,22 @@
 
         $("#people_continue_btn").on('click', function () {
             toggle_div("#reviewers_uploaders", default_options, 'hide', function () {
+                toggle_div("#uploader_message", default_options, 'show', function () {
+                    MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
+                })
+            });
+        });
+
+
+        $("#message_back_btn").on('click', function () {
+            toggle_div("#uploader_message", default_options, 'hide', function () {
+                toggle_div("#reviewers_uploaders", default_options, 'show')
+            });
+        });
+
+
+        $("#message_continue_btn").on('click', function () {
+            toggle_div("#uploader_message", default_options, 'hide', function () {
                 change_breadcrumbs("#progress-people", "#progress-submit");
                 toggle_div("#check", default_options, 'show', function () {
                     $("#publication_title").text(inspire ? publication_data.query.title : $("#paper_title").val());
@@ -367,7 +408,7 @@
 
             toggle_div("#check", default_options, 'hide', function () {
                 change_breadcrumbs("#progress-submit", "#progress-people");
-                toggle_div("#reviewers_uploaders", default_options, 'show')
+                toggle_div("#uploader_message", default_options, 'show')
             });
         });
 
@@ -418,6 +459,7 @@
 
             payload['inspire_id'] = inspire ? $("#inspire_id").val() : null;
             payload['title'] = inspire ? null : $("#paper_title").val();
+            payload['message'] = $("#uploader-message-input").val();
             payload['reviewer'] = $('#reviewer_name').val() + "::" + $('#reviewer_email').val();
             payload['uploader'] = $('#uploader_name').val() + "::" + $('#uploader_email').val();
 

@@ -1,6 +1,6 @@
 {% extends 'hepdata_dashboard/email/email_container.html' %}
 {% block email_type %}
-Invite to be a {{ role }} of a HEPData Record
+    Invite to be a {{ role }} of a HEPData Record
 {% endblock %}
 
 
@@ -8,15 +8,27 @@ Invite to be a {{ role }} of a HEPData Record
 
     Hi {{ name }},
 
-    <p>You have been requested to be a {{ role }} of a record in <a href="http://www.hepdata.net" style="color: #9b59b6">HEPData.net</a> {% if title %}entitled:
+    <p>You have been requested to be a {{ role }} of a record in <a href="http://www.hepdata.net"
+                                                                    style="color: #9b59b6">HEPData.net</a>
+        {% if title %}entitled:
 
-        <p style="font-weight: lighter; padding-left: 20px;">{{ title }}.</p>{% endif %}
+            <p style="font-weight: lighter; padding-left: 20px;">{{ title }}.</p>{% endif %}
 
     <p>This record is only accessible for editing once you access the link below after logging in to HEPData</p>
 
     <a href="{{ site_url }}/dashboard/assign/{{ invite_token }}" style="padding-left: 20px;">{{ site_url }}/dashboard/assign/{{ invite_token }}.</a>
 
+    {% if message %}
+        <hr/>
+        <p>
+            <b>A message has been supplied by the coordinator. </b>
+        </p>
+        <div style="padding-left: 20px;">
+            <p>{{ message }}</p>
+        </div>
+    {% endif %}
+
     <p>
-    The <a href="http://www.hepdata.net" style="color: #9b59b6">HEPData</a> team
+        The <a href="http://www.hepdata.net" style="color: #9b59b6">HEPData</a> team
     </p>
 {% endblock %}

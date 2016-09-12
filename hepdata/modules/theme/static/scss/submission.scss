@@ -93,7 +93,7 @@
   overflow: auto;
 }
 
-#inspire_preview, #reviewers_uploaders, #check {
+#inspire_preview, #reviewers_uploaders, #check, #uploader_message {
   bottom: -1000px;
   position: relative;
   display: none;
@@ -105,4 +105,13 @@
 
 #reviewers_uploaders .submission-stage, #check .submission-stage {
   padding: 30px;
+}
+
+.uploader-message {
+  width: 100%;
+  background-color: #f1f6f7;
+  border: none;
+  border-radius: 4px;
+  height: 125px;
+  padding: 5px;
 }

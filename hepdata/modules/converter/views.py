@@ -17,12 +17,10 @@
 # 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
 #
 
-import tarfile
 import os
 
 from flask import Blueprint, send_file, render_template, \
     request, current_app
-from shutil import move
 import time
 from werkzeug.utils import secure_filename
 from hepdata.config import CFG_CONVERTER_URL, CFG_SUPPORTED_FORMATS
