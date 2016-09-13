@@ -30,7 +30,6 @@ from celery import shared_task
 from flask import current_app
 import os
 
-
 from hepdata.ext.elasticsearch.api import get_records_matching_field, index_record_ids
 from hepdata.modules.inspire_api.views import get_inspire_record_information
 from hepdata.modules.dashboard.views import do_finalise
@@ -127,8 +126,8 @@ def get_all_ids_in_current_system(date=None, prepend_id_with="ins"):
             # process the block which is of the form [inspire_id,xxx,xxx]
             id_block = brackets_re.sub("", _all_ids[start:end])
             id = id_block.split(',')[0].strip()
-            if id != '0': inspire_ids.append(
-                prepend_id_with + "{}".format(id))
+            if id != '0':
+                inspire_ids.append("{0}{1}".format(prepend_id_with, id))
     return inspire_ids
 
 
@@ -215,7 +214,7 @@ class Migrator(object):
         if file_location:
 
             split_files(file_location, os.path.join(current_app.config['CFG_DATADIR'], inspire_id),
-                             os.path.join(current_app.config['CFG_DATADIR'], inspire_id + ".zip"))
+                        os.path.join(current_app.config['CFG_DATADIR'], inspire_id + ".zip"))
 
             record_information = self.retrieve_publication_information(inspire_id)
             record_information = create_record(record_information)

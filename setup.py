@@ -80,8 +80,8 @@ install_requires = [
     'invenio-access',
     'invenio-accounts',
     'invenio-admin',
-    'invenio-assets',
-    'invenio-base',
+    'invenio-assets>=1.0.0b2',
+    'invenio-base>=1.0.0a11',
     'invenio-celery',
     'invenio-config',
     'invenio-i18n',
@@ -170,7 +170,6 @@ setup(
         'invenio_db.models': [
             'hepdata_submissions = hepdata.modules.submission.models',
             'hepdata_stats = hepdata.modules.stats.models',
-            'hepdata_discuss = hepdata.modules.records.discuss.models',
             'hepdata_subscribers = hepdata.modules.records.subscribers.models',
             'hepdata_status = hepdata.modules.records.status.models',
         ],

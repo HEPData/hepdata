@@ -31,7 +31,7 @@ from invenio_assets import NpmBundle
 css = NpmBundle(
     'scss/styles.scss',
     'node_modules/toastr/toastr.scss',
-    filters='scss, cleancss',
+    filters='node-scss, cleancss',
     depends=('scss/*.scss',),
     output='gen/hepdata.%(version)s.css',
     npm={
@@ -43,7 +43,7 @@ css = NpmBundle(
 
 record_css = NpmBundle(
     'scss/record.scss',
-    filters='scss, cleancss',
+    filters='node-scss, cleancss',
     depends=('scss/*.scss',),
     output='gen/hepdata_record.%(version)s.css',
     npm={
@@ -54,7 +54,7 @@ record_css = NpmBundle(
 
 search_css = NpmBundle(
     'scss/search.scss',
-    filters='scss, cleancss',
+    filters='node-scss, cleancss',
     depends=('scss/*.scss',),
     output='gen/hepdata_search.%(version)s.css',
     npm={
@@ -65,7 +65,7 @@ search_css = NpmBundle(
 
 info_page_css = NpmBundle(
     'scss/info-pages.scss',
-    filters='scss, cleancss',
+    filters='node-scss, cleancss',
     depends=('scss/*.scss',),
     output='gen/hepdata_info_page.%(version)s.css'
 )

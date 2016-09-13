@@ -240,7 +240,12 @@ def record_exists(inspire_id, index=None):
         }
     }
 
-    return es.search_exists(index=index, doc_type=CFG_PUB_TYPE, body=query)
+    try:
+        result = es.search_exists(index=index, doc_type=CFG_PUB_TYPE, body=query)
+        return result['exists']
+    except NotFoundError as nfe:
+        return False
+
 
 
 @default_index
