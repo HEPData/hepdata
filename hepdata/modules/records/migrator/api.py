@@ -184,7 +184,7 @@ class Migrator(object):
             record_information = update_record(recid, updated_record_information)
 
             if not only_record_information:
-                self.split_files(file_location, os.path.join(current_app.config['CFG_DATADIR'], inspire_id),
+                split_files(file_location, os.path.join(current_app.config['CFG_DATADIR'], inspire_id),
                                  os.path.join(current_app.config['CFG_DATADIR'], inspire_id + ".zip"))
                 output_location = os.path.join(current_app.config['CFG_DATADIR'], inspire_id)
 
