@@ -192,9 +192,14 @@ CONSUMER_SECRET = ""
 USE_TWITTER = True
 TWITTER_HANDLE_MAPPINGS = {
     "lhcb": "@LHCbPhysics",
-    "atlas": "@ATLASpapers",
+    "atlas": "@ATLASexperiment",
     "cms": "@CMSpapers",
     "alice": "@ALICEexperiment",
+    "t2k": "@Tokai2Kamioka",
+    "phenix": "@RHIC_PHENIX",
+    "star": "@RHIC_STAR",
+    "minerva": "@minervaexpt",
+    "bicep2": "@BICEPTWO",
 }
 
 THEME_404_TEMPLATE = "hepdata_theme/404.html"
