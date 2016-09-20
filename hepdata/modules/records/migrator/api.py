@@ -276,6 +276,7 @@ class Migrator(object):
             inspire_id = int(inspire_id.replace("ins", ""))
 
         content, status = get_inspire_record_information(inspire_id)
+
         content["inspire_id"] = inspire_id
         return content
 

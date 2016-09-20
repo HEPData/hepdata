@@ -1,19 +1,17 @@
 from __future__ import absolute_import, print_function
 
-from flask import Blueprint, jsonify, request, render_template, redirect, \
-    url_for
+from flask import Blueprint, jsonify, request, render_template
 from flask.ext.login import login_required, current_user
 from hepdata.ext.elasticsearch.api import reindex_all
 from hepdata.ext.elasticsearch.api import push_data_keywords
 from hepdata.modules.dashboard.api import prepare_submissions, get_pending_invitations_for_user
-from hepdata.modules.submission.models import HEPSubmission, SubmissionParticipant
-from hepdata.modules.records.utils.common import get_record_by_id
-from hepdata.modules.records.utils.submission import unload_submission, get_latest_hepsubmission, do_finalise
+from hepdata.modules.permissions.api import get_pending_request, get_pending_coordinator_requests
+from hepdata.modules.permissions.views import check_is_sandbox_record
+from hepdata.modules.records.utils.submission import unload_submission, do_finalise
 from hepdata.modules.records.utils.users import has_role
-from hepdata.modules.submission.views import send_cookie_email
-from invenio_db import db
-from invenio_userprofiles import UserProfile
 import json
+
+from invenio_userprofiles import current_userprofile
 
 __author__ = 'eamonnmaguire'
 
@@ -66,127 +64,17 @@ def dashboard():
 
         submission_meta.append(submissions[record_id]["metadata"])
 
-    user_profile = UserProfile.query.filter_by(user_id=current_user.get_id()).first()
+    user_profile = current_userprofile.query.filter_by(user_id=current_user.get_id()).first()
 
     ctx = {'user_is_admin': has_role(current_user, 'admin'),
            'submissions': submission_meta,
            'user_profile': user_profile,
+           'user_has_coordinator_request': get_pending_request(),
+           'pending_coordinator_requests': get_pending_coordinator_requests(),
            'submission_stats': json.dumps(submission_stats),
            'pending_invites': get_pending_invitations_for_user(current_user)}
 
     return render_template('hepdata_dashboard/dashboard.html', ctx=ctx)
-
-
-@blueprint.route(
-    '/manage/<int:recid>/<string:action>/<string:demote_or_promote>/<int:participant_id>')
-@login_required
-def promote_or_demote_participant(recid, action, demote_or_promote,
-                                  participant_id):
-    """
-    Can promote or demote a participant to/from primary reviewer/uploader
-    :param recid: record id that the user will be promoted or demoted
-    :param action: upload or review
-    :param demote_or_promote: demote or promote
-    :param participant_id: id of user from the SubmissionParticipant table.
-    :return:
-    """
-    try:
-        participant = SubmissionParticipant.query.filter_by(
-            id=participant_id).one()
-
-        status = 'reserve'
-        if demote_or_promote == 'promote':
-            status = 'primary'
-
-        participant.status = status
-        db.session.add(participant)
-        db.session.commit()
-
-        record = get_record_by_id(recid)
-
-        # now send the email telling the user of their new status!
-        if status == 'primary':
-            send_cookie_email(participant, record)
-
-        return json.dumps({"success": True, "recid": recid})
-    except Exception as e:
-        return json.dumps(
-            {"success": False, "recid": recid, "error": e.message})
-
-
-@blueprint.route('/manage/person/add/<int:recid>', methods=['POST'])
-@login_required
-def add_participant(recid):
-    """
-    Adds a participant to a record
-    :param recid:
-    :return:
-    """
-    try:
-        submission_record = get_latest_hepsubmission(recid)
-        full_name = request.form['name']
-        email = request.form['email']
-        participant_type = request.form['type']
-
-        new_record = SubmissionParticipant(publication_recid=recid,
-                                           full_name=full_name,
-                                           email=email, role=participant_type)
-        submission_record.participants.append(new_record)
-        db.session.commit()
-        return json.dumps(
-            {"success": True, "recid": recid,
-             "message": "{0} {1} added.".format(full_name, participant_type)})
-
-    except Exception as e:
-        print(e)
-        return json.dumps(
-            {"success": False, "recid": recid,
-             "message": 'Unable to add participant.'})
-
-
-@blueprint.route('/manage/coordinator/', methods=['POST'])
-@login_required
-def change_coordinator_for_submission():
-    """
-    Changes the coordinator for a record to that defined by a coordinate.
-    Accepts a data object containing {'recid': record id to be acted upon,
-    'coordinator': id of user who will now be the coordinator}
-    :return: dict
-    """
-
-    recid = request.form['recid']
-    coordinator_id = request.form['coordinator']
-    submission_record = HEPSubmission.query.filter_by(
-        publication_recid=recid).one()
-
-    submission_record.coordinator = coordinator_id
-    db.session.add(submission_record)
-    db.session.commit()
-
-    return jsonify({'success': True})
-
-
-@blueprint.route('/assign/<cookie>')
-@login_required
-def assign_role(cookie):
-    participant_record = SubmissionParticipant.query.filter_by(
-        invitation_cookie=cookie).first()
-    participant_record.user_account = current_user.get_id()
-
-    db.session.add(participant_record)
-    db.session.commit()
-
-    return redirect(url_for('.dashboard'))
-
-
-def check_is_sandbox_record(recid):
-    try:
-        submission = HEPSubmission.query.filter_by(publication_recid=recid).first()
-        print(submission.overall_status)
-        return submission.overall_status == 'sandbox'
-    except Exception as e:
-        print(e)
-        return False
 
 
 @blueprint.route('/delete/<int:recid>')
@@ -198,7 +86,6 @@ def delete_submission(recid):
     :param recid:
     :return:
     """
-    print('Is sandbox {0} == {1} '.format(recid, check_is_sandbox_record(recid)))
     if has_role(current_user, 'admin') or has_role(current_user, 'coordinator') \
         or check_is_sandbox_record(recid):
         unload_submission(recid)

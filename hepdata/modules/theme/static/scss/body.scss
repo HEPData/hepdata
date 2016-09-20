@@ -20,14 +20,12 @@
 // waive the privileges and immunities granted to it by virtue of its status
 // as an Intergovernmental Organization or submit itself to any jurisdiction.
 
-
-
 .page-title {
   background-color: lighten(white, 3%);
   h1, h2, h3, h4, h5 {
     color: lighten($navy, 20%);
     margin-bottom: 20px;
-    small{
+    small {
       font-weight: inherit;
     }
   }
@@ -37,16 +35,15 @@
   margin-bottom: $navbar-margin-bottom;
 }
 
-
 .error-page.container .row {
-  @media (min-width: $screen-md-min){
+  @media (min-width: $screen-md-min) {
     margin-left: 50px;
     margin-top: 100px;
   }
   @media (max-width: $screen-sm-max) and (min-width: $screen-sm-min) {
     margin-left: 20px;
   }
-  @media (max-width: $screen-sm-max){
+  @media (max-width: $screen-sm-max) {
     margin-top: 20px;
     margin-bottom: 75px;
   }
@@ -86,7 +83,6 @@
   margin-top: 80px;
 }
 
-
 .hep_breadcrumbs {
   position: fixed;
   margin-top: 65px;
@@ -125,7 +121,6 @@
 .hep_breadcrumbs ul li:hover {
   opacity: 1;
 }
-
 
 .collaboration {
   background-color: $purple-light;
@@ -188,10 +183,9 @@ body::-webkit-scrollbar-thumb {
   overflow: auto;
 }
 
-.dropdown-menu>li>a {
-    text-decoration: none;
+.dropdown-menu > li > a {
+  text-decoration: none;
 }
-
 
 #searchHelpWidget {
   text-align: left;
@@ -228,3 +222,4 @@ body::-webkit-scrollbar-thumb {
     }
   }
 }
+

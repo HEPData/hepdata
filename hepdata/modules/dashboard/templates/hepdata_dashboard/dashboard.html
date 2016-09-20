@@ -46,6 +46,7 @@
                         </div>
                     </div>
 
+
                     <div class="col-md-5 col-xs-12 action-btns text-right">
                         {% if ctx.user_is_admin %}
                             <a href="/admin" class="btn-profile">HEPData
@@ -71,30 +72,90 @@
         <div class="clearfix"></div>
 
         {% if ctx.pending_invites | length > 0 %}
-            <div id="pending-invite-area" class="container-fluid">
-                <div class="row-fluid">
+            <div id="pending-invite-area">
+                <div class="container-fluid">
+                    <div class="row-fluid admin-response-area">
 
-                    <h4>Invitations to review or upload</h4>
-                    {% for invitation in ctx.pending_invites %}
-                        <div class="col-md-12 invite">
-                            <div class="row">
+                        <h4>Invitations to review or upload</h4>
+                        {% for invitation in ctx.pending_invites %}
+                            <div class="col-md-12 request-item">
+                                <div class="row">
 
-                                <div class="col-md-10">
-                                    <p><span
-                                            class="label label-info">{{ invitation.role }}</span> {{ invitation.title }}
-                                    </p>
-                                    <p class="coordinator">Coordinator: <a
-                                            href="invitation.coordinator.email"> {{ invitation.coordinator.email }}</a>.
-                                        Invitation sent to <em>{{ current_user.email }}</em></p>
+                                    <div class="col-md-10">
+                                        <p><span
+                                                class="label label-info">{{ invitation.role }}</span> {{ invitation.title }}
+                                        </p>
+                                        <p class="coordinator text-small">Coordinator: <a
+                                                href="mailto:{{ invitation.coordinator.email }}"> {{ invitation.coordinator.email }}</a>.
+                                            Invitation sent to <em>{{ current_user.email }}</em></p>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <a href="/permissions/assign/{{ invitation.invitation_cookie }}"
+                                           class="btn btn-success pull-right" style="margin-right: 3px">Accept
+                                            Invite</a>
+                                    </div>
                                 </div>
+                            </div>
+                            <div class="clearfix"></div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
+
+        {% if ctx.pending_coordinator_requests | length > 0 and user_is_admin %}
+            <div id="pending-request-area">
+                <div class="container-fluid">
+                    <div class="row-fluid admin-response-area">
+
+                        <h4>Coordinator requests</h4>
+                        <br/>
+                        <div class="col-md-12 request-header hidden-xs hidden-sm">
+                            <div class="row-fluid">
+                                <div class="col-md-3">
+                                    Email
+                                </div>
+
                                 <div class="col-md-2">
-                                    <a href="assign/{{ invitation.invitation_cookie }}"
-                                       class="btn btn-success pull-right" style="margin-right: 3px">Accept
-                                        Invite</a>
+                                    Collaboration
+                                </div>
+
+                                <div class="col-md-4">
+                                    Message
                                 </div>
                             </div>
                         </div>
-                    {% endfor %}
+                        {% for request in ctx.pending_coordinator_requests %}
+                            <div class="col-md-12">
+                                <div class="row-fluid request-item">
+
+                                    <div class="col-md-3">
+                                        <a href="mailto:{{ request.user.email }}"> {{ request.user.email }}</a>
+                                    </div>
+
+                                    <div class="col-md-2">
+                                        <em>{{ request.collaboration }}</em></p>
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <em>{{ request.message }}</em></p>
+                                    </div>
+
+                                    <div class="col-md-3">
+                                        <a href="/permissions/coordinator/response/{{ request.id }}/approve"
+                                           class="btn btn-success pull-right" style="margin-right: 3px; margin-top: -5px;">Approve
+                                            Request</a>
+                                        <a href="/permissions/coordinator/response/{{ request.id }}/reject"
+                                           class="btn btn-danger pull-right" style="margin-right: 3px; margin-top: -5px;">Reject
+                                            Request</a>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                        <div class="clearfix"></div>
+                    </div>
+
                 </div>
             </div>
         {% endif %}
@@ -226,8 +287,50 @@
                         <div class="col-md-12 dashboard-section">
                             <h4><i class="fa fa-eye"></i> Watch List</h4>
                             <div id="watch_container">
-                                <p class="text-muted text-small">Nothing has been watched yet.<br/> You can watch
-                                    records for updates.</p>
+                                <p class="text-muted text-small">You can watch
+                                    records for updates. Nothing has been watched yet.</p>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="row-fluid">
+                        <div class="col-md-12 dashboard-section">
+                            <h4><i class="fa fa-lock"></i> Permissions</h4>
+                            <div id="permissions_container">
+
+                                {% if user_is_coordinator_or_admin %}
+                                    <div class="alert alert-info"><i class="fa fa-gavel"></i> <strong>You are a HEPData
+                                        coordinator</strong>.<br/> <span class="text-muted">You are able to create and manage HEPData submissions.</span>
+                                    </div>
+                                {% else %}
+                                    <p class="text-small text-muted">You are not able to create or manage HEPData
+                                        submissions without coordinator access. If you want to submit on behalf of your
+                                        project, request privilege by clicking the button below.</p>
+
+                                    {% if not ctx.user_has_coordinator_request %}
+                                        <a id="reindex-button" class="btn btn-md btn-primary"
+                                           data-toggle="modal"
+                                           data-target="#requestCoordinatorDialog"><i class="fa fa-gavel"></i> Request
+                                            Coordinator Privileges
+                                        </a>
+                                        <br/><br/>
+                                    {% else %}
+                                        <div class="alert alert-info">
+                                            A pending coordinator request is in the system.
+                                        </div>
+                                    {% endif %}
+
+                                {% endif %}
+
+
+
+                                <p class="text-small" style="font-weight: normal;">You can see papers you have
+                                    coordinator, uploader, or reviewer
+                                    rights to here: </p>
+                                <div id="permissions">
+                                    {# automatically populated from api endpoint#}
+                                </div>
                             </div>
                         </div>
 
@@ -242,7 +345,9 @@
     {% include 'hepdata_dashboard/reindex-widget.html' %}
     {% include 'hepdata_dashboard/conversation-widget.html' %}
     {% include 'hepdata_dashboard/finalise-widget.html' %}
+    {% include 'hepdata_dashboard/request-coordinator-widget.html' %}
     {% include 'hepdata_dashboard/inspire-widget.html' %}
+
 
 {% endblock %}
 

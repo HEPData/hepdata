@@ -40,7 +40,7 @@ var dashboard = (function () {
       var watch_list = d3.select("#watch_container").append("div").attr("class", "container-fluid watch-list");
       var watch_item = watch_list.selectAll("div.row").data(data).enter()
         .append("div")
-        .attr("class", "row watch-item")
+        .attr("class", "row item")
         .attr("id", function (d) {
           return 'rec' + d.recid;
         });
@@ -73,6 +73,75 @@ var dashboard = (function () {
     })
   };
 
+  var load_permissions = function () {
+
+    $.get('/permissions/list').done(function (data) {
+
+      d3.select("#permissions").html("");
+      var _keys = ['coordinator', 'uploader', 'reviewer'];
+
+      var _has_items = false;
+
+      _keys.forEach(function (key) {
+        if (data[key].length > 0) {
+          _has_items = true;
+        }
+      });
+
+      if(!_has_items) {
+
+        d3.select("#permissions").append("div").attr("class", "alert alert-warning")
+          .html("<strong>No contributions to show</strong>. " +
+            "When you are a coordinator, uploader, or reviewer " +
+            "for HEPData and contribute to a submission, you will see these here.");
+        return;
+      }
+
+      var tabs = d3.select("#permissions").append("ul").attr("class", "nav nav-tabs").attr("role", "tab-list");
+
+      var tab_content = d3.select("#permissions").attr("class", "tab-content");
+
+      _keys.forEach(function (key, i) {
+
+          // <li role="presentation" class="active"><a href="#home" aria-controls="home" role="tab" data-toggle="tab">Home</a></li>
+          tabs.append("li").attr("role", "presentation").attr("class", i == 0 ? "active" : "").append("a").attr("href", "#" + key)
+            .attr("aria-controls", key).attr("class", "tab-list-nav-item").attr("role", "tab").attr("data-toggle", "tab").text(key);
+
+          // <div role="tabpanel" class="tab-pane fade in active" id="home">...</div>
+          var permission_list = tab_content.append("div")
+            .attr("class", "container-fluid permission-list tab-pane fade in " + (i == 0 ? "active" : ""))
+            .attr("role", "tabpanel")
+            .attr("id", key);
+
+          // tab_content = '<div role="tabpanel" class="tab-pane active" id="home">...</div>'
+          var permission_item = permission_list.selectAll("div.row").data(data[key]).enter()
+            .append("div")
+            .attr("class", "row item")
+            .attr("id", function (d) {
+              return 'rec' + d.recid;
+            });
+
+          var permission_item_info = permission_item.append("div").attr("class", "col-md-12");
+
+          permission_item_info.append("h4").attr("class", "title").append("a").attr("href", function (d) {
+            return "/record/" + d.recid;
+          }).text(function (d) {
+            return d.title;
+          });
+
+          permission_item_info.append("p").attr("class", "journal-info").text(function (d) {
+            return d.journal_info;
+          });
+
+          permission_item_info.append("div").attr("class", "label label-info").text(function (d) {
+            return key;
+          });
+        }
+      );
+
+    });
+  };
+
   return {
     initialise: function (data) {
       MathJax.Hub.Config({
@@ -88,6 +157,7 @@ var dashboard = (function () {
       initialise_list_filter();
       initialise_finalise_btn();
       load_watched_records();
+      load_permissions();
 
       $(".inspire-btn").bind("click", function () {
         $("#inspire-add-button").attr('data-recid', $(this).attr("data-recid"));

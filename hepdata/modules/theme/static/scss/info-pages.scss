@@ -6,8 +6,8 @@ body {
 }
 
 a {
-  color:white;
-  font-weight:bolder;
+  color: white;
+  font-weight: bolder;
   &:hover {
     color: $lightgrey;
   }
@@ -47,7 +47,7 @@ p {
   li {
     width: 320px;
     margin: 0 auto;
-    background-color: $navy-light;
+    background-color: $dark-blue;
     padding: 5px;
     border-radius: 5px;
     margin-bottom: 10px;
@@ -64,3 +64,45 @@ p {
 
   }
 }
+
+.filter {
+
+  padding-bottom: 2em;
+  width: 100%;
+
+  input {
+    border: none;
+    background: $navy url(/static/img/icons/icon_filter.svg) 8px 10px no-repeat;
+    background-size: 23px;
+    padding: 10px 10px 10px 35px;
+    width: 100%;
+    border-radius: 5px;
+    color: white;
+    font-size: 1.2em;
+    margin: 0 auto;
+  }
+}
+
+.filter-list {
+
+  list-style: none;
+  padding-left: 0;
+
+  li {
+    padding: 20px;
+    font-weight: normal;
+  }
+}
+
+.btn-default {
+  color: #fff;
+  background-color: $dark-blue;
+  border-color: $dark-blue;
+
+  &:hover {
+    background-color: $darker-blue;
+    border-color: $darker-blue;
+    color: white;
+  }
+}
+

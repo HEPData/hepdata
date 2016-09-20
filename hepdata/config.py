@@ -46,6 +46,7 @@ SQLALCHEMY_ECHO = False
 BABEL_DEFAULT_LANGUAGE = 'en'
 BABEL_DEFAULT_TIMEZONE = 'Europe/Zurich'
 I18N_LANGUAGES = [
+    ('en_gb', _('English')),
     ('fr', _('French')),
     ('it', _('Italian'))
 ]
@@ -229,8 +230,18 @@ OAUTHCLIENT_REMOTE_APPS = dict(
     cern=CERN_REMOTE_APP
 )
 
+ADMIN_APPNAME = "HEPData"
+
 # These values are converted to strings
 SPECIAL_VALUES = ['inf', '+inf', '-inf', 'nan']
+
+# Badges
+BADGES = {
+    'rivet':
+        {
+            'url': 'http://rivet.hepforge.org/list_of_analyses.json'
+        }
+}
 
 # Import local config file if it is present.
 try:

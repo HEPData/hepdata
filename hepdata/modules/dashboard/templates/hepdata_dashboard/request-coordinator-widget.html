@@ -1,0 +1,127 @@
+<!-- Modal -->
+<div class="modal fade" id="requestCoordinatorDialog" tabindex="-1" role="dialog"
+     aria-labelledby="requestCoordinatorDialog"
+     aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content" style="background-color: #2C3E50">
+            <div class="modal-header" style="border: none">
+                <button type="button" class="close" data-dismiss="modal"
+                        aria-label="Close"><span
+                        aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="codeDialogLabel">Request Coordinator Privileges</h4>
+            </div>
+
+            <div class="modal-body">
+
+                <div class="alert alert-info" id="alert-section">
+                    This will send a request to HEPData admins who will approve your request and/or email you
+                    if further information is needed.
+                </div>
+
+                <div id="request_information">
+
+                    <label style="color: white;">Experiment/Collaboration (required)</label>
+                    <input placeholder="Experiment/Group you wish to submit for" type="text" id="experiment"
+                           name="experiment" class="form-control"/>
+                    <br/>
+                    <label style="color: white; font-weight: lighter;">
+                        Please enter any information you think important to support this request (optional)</label>
+                    <textarea class="final_commit_message" name="message" id="request_message"
+                              placeholder="Please enter a message detailing what has been changed in this revision."></textarea>
+                </div>
+
+                <div align="center" style="padding: 40px;"
+                     id="send_request_button_container">
+                    <button class="btn btn-lg btn-primary"
+                            id="send_request" data-recid=""
+                            data-versions=""> Send Request
+                    </button>
+                </div>
+
+                <div class="spinner hidden" id="request_progress"
+                     style="padding-top: 40px; padding-bottom: 40px">
+                    <div class="ball"></div>
+                    <p style="color:white; ">Sending request...</p>
+                </div>
+
+                <div class="hidden" id="error"
+                     style="padding-top: 40px; padding-bottom: 40px">
+                    <div class="alert alert-danger">
+                        <span id="error_message"></span>
+                    </div>
+                </div>
+
+                <div align="center" class="hidden" id="success"
+                     style="padding: 40px">
+                    <div style="color: #4FBA6F; font-weight: bolder">
+                        <span class="fa fa-check"
+                              style="font-size: 3em"></span><br/>
+
+                        <p>
+                            <strong>Request sent.</strong><br/>
+                            Our admins will review your request and contact you shortly.
+
+                            <br/>
+                            This window will close in <span id="request-timer"
+                                                            style="color: white">5</span>
+                            seconds and refresh
+                            the dashboard page.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="clearfix"></div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+
+    $(document).on('click', '#send_request', function () {
+
+        if ($("#experiment").val() == '') {
+            alert("Please enter an experiment/group name/collaboration.");
+            return false;
+        }
+
+        $("#send_request_button_container").addClass("hidden");
+        $("#request_progress").removeClass("hidden");
+        $("#request_information").addClass("hidden");
+        $("#alert-section").addClass("hidden");
+
+        $.ajax({
+            dataType: "json",
+            method: "POST",
+            url: '/permissions/request/coordinator/',
+            data: {'message': $("#request_message").val(), 'experiment': $("#experiment").val()},
+            cache: true,
+            success: function (data) {
+
+                $("#request_progress").addClass("hidden");
+
+                if (data.status === 'error') {
+                    $("#error").removeClass("hidden");
+                    $("#error_message").text(data.message);
+
+                } else {
+                    $("#success").removeClass("hidden");
+                    var count = 5;
+                    setInterval(function () {
+                        count -= 1;
+                        $("#request-timer").text(count);
+                        if (count == 0) {
+                            $("#requestCoordinatorDialog").modal('hide');
+                        }
+                    }, 1000);
+
+                    setTimeout(function () {
+                    }, 5500);
+                }
+
+            }
+        });
+
+    });
+
+</script>

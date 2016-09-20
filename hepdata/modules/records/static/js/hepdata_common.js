@@ -123,7 +123,7 @@ HEPDATA.reindex = function () {
 HEPDATA.update_coordinator = function (recid, coordinator) {
   $.ajax({
     method: 'POST',
-    url: '/dashboard/manage/coordinator/',
+    url: '/permissions/manage/coordinator/',
     data: {'recid': recid, 'coordinator': coordinator},
     success: function (data) {
       if (!data.success) {

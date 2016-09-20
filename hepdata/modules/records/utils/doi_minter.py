@@ -187,5 +187,5 @@ def register_doi(doi, url, xml, uuid):
     except IntegrityError:
         provider.update(url, xml)
     except DataCiteError as dce:
-        log.error('Error registering {0} for URL {1}:\n\n{2}'
+        log.error('Error registering {0} for URL {1}\n\n{2}'
                   .format(doi, url, dce))

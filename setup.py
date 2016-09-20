@@ -171,7 +171,8 @@ setup(
             'hepdata_submissions = hepdata.modules.submission.models',
             'hepdata_stats = hepdata.modules.stats.models',
             'hepdata_subscribers = hepdata.modules.records.subscribers.models',
-            'hepdata_status = hepdata.modules.records.status.models',
+            'hepdata_permissions = hepdata.modules.permissions.models'
+
         ],
         'invenio_base.blueprints': [
             'hepdata_theme = hepdata.modules.theme.views:blueprint',
@@ -179,8 +180,9 @@ setup(
             'hepdata_search = hepdata.modules.search.views:blueprint',
             'hepdata_submission = hepdata.modules.submission.views:blueprint',
             'inspire_api = hepdata.modules.inspire_api.views:blueprint',
-            'hep_conversion = hepdata.modules.converter.views:blueprint',
-            'hep_subscriptions = hepdata.modules.records.subscribers.rest:blueprint',
+            'hepdata_conversion = hepdata.modules.converter.views:blueprint',
+            'hepdata_subscriptions = hepdata.modules.records.subscribers.rest:blueprint',
+            'hepdata_permissions = hepdata.modules.permissions.views:blueprint',
         ],
         'invenio_celery.tasks': [
             'hepdata_records = hepdata.modules.records.migrator.api',
@@ -202,6 +204,12 @@ setup(
 
             'hepdata_record_css = hepdata.modules.theme.bundles:record_css',
             'hepdata_search_css = hepdata.modules.theme.bundles:search_css',
+        ],
+        'invenio_admin.views': [
+            'hepdata_submission_view = hepdata.modules.submission.admin:hep_submission_admin_view',
+            'hepdata_participant_view = hepdata.modules.permissions.admin:hep_participant_admin_view',
+            'hepdata_coordinator_request_view = hepdata.modules.permissions.admin:coordinator_request_admin_view',
+            'hepdata_dataresource_view = hepdata.modules.submission.admin:hep_dataresource_admin_view'
         ]
     },
     extras_require=extras_require,

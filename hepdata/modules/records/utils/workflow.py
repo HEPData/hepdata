@@ -21,6 +21,7 @@
 # In applying this license, CERN does not
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
+
 from datetime import datetime
 import uuid
 
@@ -28,9 +29,9 @@ from flask import render_template, current_app
 from invenio_pidstore.minters import recid_minter
 from invenio_records import Record
 
+from hepdata.modules.permissions.models import SubmissionParticipant
 from hepdata.modules.records.subscribers.api import get_users_subscribed_to_record
-from hepdata.modules.submission.models import SubmissionParticipant, \
-    DataSubmission
+from hepdata.modules.submission.models import DataSubmission
 from invenio_db import db
 
 from hepdata.modules.records.utils.common import get_record_by_id

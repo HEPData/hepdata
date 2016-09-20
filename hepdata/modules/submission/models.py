@@ -26,10 +26,6 @@
 
 from __future__ import absolute_import, print_function
 
-import uuid
-
-from sqlalchemy_utils.types import UUIDType
-
 from invenio_accounts.models import User
 from sqlalchemy import func
 from invenio_db import db
@@ -94,34 +90,6 @@ class HEPSubmission(db.Model):
     doi = db.Column(db.String(128), nullable=True)
 
     reviewers_notified = db.Column(db.Boolean, default=False)
-
-
-class SubmissionParticipant(db.Model):
-    __tablename__ = "submissionparticipant"
-
-    """
-    This table stores information about the reviewers and
-    uploaders of a HEPdata submission
-    """
-    id = db.Column(db.Integer, primary_key=True,
-                   nullable=False, autoincrement=True)
-
-    publication_recid = db.Column(db.Integer)
-
-    full_name = db.Column(db.String(128))
-    email = db.Column(db.String(128))
-    affiliation = db.Column(db.String(128))
-    invitation_cookie = db.Column(UUIDType, default=uuid.uuid4)
-
-    # when the user logs in with their cookie,
-    # this user_account should be updated.
-    user_account = db.Column(db.Integer, db.ForeignKey(User.id))
-
-    # e.g., reviewer or uploader
-    role = db.Column(db.String(32), default='')
-    # e.g. primary or reserve reviewer/uploader
-    status = db.Column(db.String(32), default='reserve')
-    action_date = db.Column(db.DateTime, nullable=True, index=True)
 
 
 datafile_identifier = db.Table(
@@ -253,7 +221,7 @@ class Message(db.Model):
                    autoincrement=True)
 
     user = db.Column(db.Integer, db.ForeignKey(User.id))
-    message = db.Column(db.String(1024))
+    message = db.Column(db.LargeBinary)
 
     creation_date = db.Column(db.DateTime, nullable=False, default=func.now(),
                               index=False)

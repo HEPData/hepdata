@@ -25,8 +25,6 @@
 
 from invenio_db import db
 
-from hepdata.modules.records.utils.common import get_or_create
-
 subscriber = db.Table(
     'subscriber',
     db.Column('publication_recid', db.Integer,

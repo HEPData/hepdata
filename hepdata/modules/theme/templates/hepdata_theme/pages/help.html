@@ -2,100 +2,108 @@
 
 {% block page_body %}
 
-{%- assets "hepdata_info_page_css" %}
+    {%- assets "hepdata_info_page_css" %}
         <link href="{{ ASSET_URL }}" rel="stylesheet">
-{%- endassets %}
+    {%- endassets %}
 
-<div class="row" style="margin: 0; padding:9em 10% 2% 5%; background-color: #894B9D">
-    <div class="section-header" style="width:185px; padding-bottom: 2em"><p>Submission Steps</p></div>
-
-    <div class="col-md-6">
-        <div id="hepdata-loading" style="width:330px; margin: 0 auto;">
-            <img src="{{ url_for('static', filename='img/submission/submission-steps.svg')}}" width="330">
-        </div>
-    </div>
-    <div class="col-md-6">
-        <p>Submissions are handled by coordinators for a paper or
-            project.
-            These coordinators assign uploaders and reviewers to each submission.</p>
-
-        <p>Emails are sent to the assigned uploaders and reviewers with a link which when accessed gives the user the
-            privileges to either upload or review a data submission.</p>
-
-        <p>All past and present submissions are available for a coordinator, reviewer, or uploader to see in the
-            dashboard.</p>
-
-        <p>Once the data is all uploaded and reviewed, the coordinator
-            can make a final check on the submission to ensure its correctness,
-            and the entire submission will be published and searchable in HEPData.</p>
-    </div>
-</div>
-
-<div class="row" style="margin: 0; padding: 0% 10% 2% 5%">
-
-
-    <div class="col-md-12" style="padding-top: 5%">
-        <div class="section-header" style="width:190px; padding-bottom: 2em"><p>Advice for Uploaders</p></div>
-        <br/>
+    <div class="row" style="margin: 0; padding:9em 10% 2% 5%; background-color: #894B9D">
+        <div class="section-header" style="width:185px; padding-bottom: 2em"><p>Submission Steps</p></div>
 
         <div class="col-md-6">
-            <div id="hepdata-file-structure" style="width:330px; margin: 0 auto;">
-                <img src="{{ url_for('static', filename='img/submission/file-structure.svg')}}" width="330">
+            <div id="hepdata-loading" style="width:330px; margin: 0 auto;">
+                <img src="{{ url_for('static', filename='img/submission/submission-steps.svg') }}" width="330">
             </div>
         </div>
         <div class="col-md-6">
-            <p>There are a few examples showing submissions in the
-                HEPData YAML format. While the format is simple, we understand that there
-                is always a learning curve to climb.</p>
+            <p>Submissions are handled by <a href="/permissions/coordinators">coordinators</a> for a paper or
+                project.
+                These coordinators assign uploaders and reviewers to each submission.</p>
 
-            <p>Our submission repository has details on the format and tools to go
-                from the old HEPData format to the new version.</p>
+            <p>Emails are sent to the assigned uploaders and reviewers with a link which when accessed gives the user
+                the
+                privileges to either upload or review a data submission.</p>
+
+            <p>All past and present submissions are available for a coordinator, reviewer, or uploader to see in the
+                dashboard.</p>
+
+            <p>Once the data is all uploaded and reviewed, the coordinator
+                can make a final check on the submission to ensure its correctness,
+                and the entire submission will be published and searchable in HEPData.</p>
+
             <br/>
 
+            <a href="/permissions/coordinator" class="btn btn-default btn-md" target="_blank">View submission coordinators</a>
+        </div>
+    </div>
 
-            <a href="https://github.com/HEPData/hepdata_submission" class="btn btn-primary" target="_blank">Submission
-                Format</a> <a href="https://github.com/HEPData/hepdata_submission/tree/master/examples"
-                              class="btn btn-primary " target="_blank">Example
-            Files</a> <a href="https://github.com/HEPData/hepdata-converter" class="btn btn-primary"
-                         target="_blank">Conversion Tools</a>
+    <div class="row" style="margin: 0; padding: 0% 10% 2% 5%">
 
-            <br/><br/><br/><br/>
 
-            <p>You can also post an issue on github if you find any problems within our submission system.</p><br/>
-            <a href="https://github.com/HEPData/hepdata_submission/issues" target="_blank" class="btn btn-primary">Ask a
-                question...</a>
+        <div class="col-md-12" style="padding-top: 5%">
+            <div class="section-header" style="width:190px; padding-bottom: 2em"><p>Advice for Uploaders</p></div>
+            <br/>
+
+            <div class="col-md-6">
+                <div id="hepdata-file-structure" style="width:330px; margin: 0 auto;">
+                    <img src="{{ url_for('static', filename='img/submission/file-structure.svg') }}" width="330">
+                </div>
+            </div>
+            <div class="col-md-6">
+                <p>There are a few examples showing submissions in the
+                    HEPData YAML format. While the format is simple, we understand that there
+                    is always a learning curve to climb.</p>
+
+                <p>Our submission repository has details on the format and tools to go
+                    from the old HEPData format to the new version.</p>
+                <br/>
+
+
+                <a href="https://github.com/HEPData/hepdata_submission" class="btn btn-primary" target="_blank">Submission
+                    Format</a> <a href="https://github.com/HEPData/hepdata_submission/tree/master/examples"
+                                  class="btn btn-primary " target="_blank">Example
+                Files</a> <a href="https://github.com/HEPData/hepdata-converter" class="btn btn-primary"
+                             target="_blank">Conversion Tools</a>
+
+                <br/><br/><br/><br/>
+
+                <p>You can also post an issue on github if you find any problems within our submission system.</p><br/>
+                <a href="https://github.com/HEPData/hepdata_submission/issues" target="_blank" class="btn btn-primary">Ask
+                    a
+                    question...</a>
+
+            </div>
+
 
         </div>
 
-
     </div>
 
-</div>
+
+    <div class="row" style="margin: 0; padding: 3% 10% 2% 5%; background-color: #f6f6f6; color: #2c3e50">
+        <div class="col-md-12">
+            <div class="section-header" style="width:190px;padding-bottom: 2em"><p>Advice for Reviewers</p></div>
+            <br/>
 
 
-<div class="row" style="margin: 0; padding: 3% 10% 2% 5%; background-color: #f6f6f6; color: #2c3e50">
-    <div class="col-md-12">
-        <div class="section-header" style="width:190px;padding-bottom: 2em"><p>Advice for Reviewers</p></div>
-        <br/>
+            <div class="col-md-6">
+                <div id="hepdata-review" style="width:300px; margin: 0 auto;">
+                    <img src="{{ url_for('static', filename='img/submission/review-system.svg') }}" width="300">
+                </div>
+            </div>
+            <div class="col-md-6">
+                <p>The HEPData review system is completely self contained.
+                    You can have discussions about each data table and its associated plot, as well as approve or reject
+                    a
+                    plot directly from the interface.</p>
 
+                <br/>
 
-        <div class="col-md-6">
-            <div id="hepdata-review" style="width:300px; margin: 0 auto;">
-                <img src="{{ url_for('static', filename='img/submission/review-system.svg')}}" width="300">
+                <p>The data tables have interactive plots automatically
+                    generated given particular data types, so you can also visually query the data to find mistakes in
+                    the
+                    data.</p>
+
             </div>
         </div>
-        <div class="col-md-6">
-            <p>The HEPData review system is completely self contained.
-                You can have discussions about each data table and its associated plot, as well as approve or reject a
-                plot directly from the interface.</p>
-
-            <br/>
-
-            <p>The data tables have interactive plots automatically
-                generated given particular data types, so you can also visually query the data to find mistakes in the
-                data.</p>
-
-        </div>
     </div>
-</div>
 {% endblock %}

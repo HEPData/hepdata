@@ -31,11 +31,11 @@ import time
 from flask import redirect, request, render_template, jsonify, current_app, Response
 from flask.ext.login import current_user
 from invenio_accounts.models import User
-from invenio_db import db
 from sqlalchemy.orm.exc import NoResultFound
 from werkzeug.utils import secure_filename
 
 from hepdata.modules.converter import convert_oldhepdata_to_yaml
+from hepdata.modules.permissions.models import SubmissionParticipant
 from hepdata.modules.records.subscribers.api import is_current_user_subscribed_to_record
 from hepdata.modules.records.utils.common import decode_string, find_file_in_directory, allowed_file, \
     remove_file_extension, truncate_string, get_record_contents
@@ -46,9 +46,9 @@ from hepdata.modules.records.utils.users import get_coordinators_in_system, has_
 from hepdata.modules.records.utils.workflow import update_action_for_submission_participant
 from hepdata.modules.records.utils.yaml_utils import split_files
 from hepdata.modules.stats.views import increment, get_count
-from hepdata.modules.submission.models import RecordVersionCommitMessage, DataSubmission, HEPSubmission, DataReview, \
-    SubmissionParticipant
+from hepdata.modules.submission.models import RecordVersionCommitMessage, DataSubmission, HEPSubmission, DataReview
 from hepdata.utils.file_extractor import extract
+from hepdata.utils.users import get_user_from_id
 
 RECORD_PLAIN_TEXT = {
     "passed": "passed review",
@@ -341,14 +341,6 @@ def check_and_convert_from_oldhepdata(input_directory, id, timestamp):
         converted_path,
         lambda x: x == "submission.yaml"
     )
-
-
-def get_user_from_id(userid):
-    user_query = db.session.query(User).filter(User.id == userid)
-    if user_query.count() > 0:
-        return user_query.one()
-    else:
-        return None
 
 
 def query_messages_for_data_review(data_review_record, messages):

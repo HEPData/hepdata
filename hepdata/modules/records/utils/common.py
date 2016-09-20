@@ -21,7 +21,6 @@
 # In applying this license, CERN does not
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
-import datetime
 
 from flask import current_app
 from invenio_pidstore.errors import PIDDoesNotExistError
@@ -32,7 +31,6 @@ from sqlalchemy.orm.exc import NoResultFound
 
 from hepdata.config import CFG_PUB_TYPE
 from hepdata.ext.elasticsearch.api import get_record
-from hepdata.modules.submission.models import SubmissionParticipant
 
 __author__ = 'eamonnmaguire'
 

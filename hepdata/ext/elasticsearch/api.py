@@ -26,7 +26,8 @@ from elasticsearch.exceptions import NotFoundError, RequestError
 from invenio_pidstore.models import RecordIdentifier
 from sqlalchemy import func
 
-from hepdata.modules.submission.models import SubmissionParticipant, HEPSubmission, DataResource
+from hepdata.modules.permissions.models import SubmissionParticipant
+from hepdata.modules.submission.models import HEPSubmission, DataResource
 from .utils import prepare_author_for_indexing
 from hepdata.config import CFG_PUB_TYPE, CFG_DATA_TYPE
 from query_builder import QueryBuilder, get_query_by_type, get_authors_query, HEPDataQueryParser
@@ -243,7 +244,7 @@ def record_exists(inspire_id, index=None):
     try:
         result = es.search_exists(index=index, doc_type=CFG_PUB_TYPE, body=query)
         return result['exists']
-    except NotFoundError as nfe:
+    except NotFoundError:
         return False
 
 

@@ -38,10 +38,10 @@
     });
 
     $(document).on('click', '.confirm-move-action', function () {
-        console.log('/dashboard/manage/' + window.recid + '/' + window.data_person_type + '/' + window.action + '/' + window.userid);
+        console.log('/permissions/manage/' + window.recid + '/' + window.data_person_type + '/' + window.action + '/' + window.userid);
         $.ajax({
             dataType: "json",
-            url: '/dashboard/manage/' + window.recid + '/' + window.data_person_type + '/' + window.action + '/' + window.userid,
+            url: '/permissions/manage/' + window.recid + '/' + window.data_person_type + '/' + window.action + '/' + window.userid,
             success: function (data) {
                 if (data.success) {
                     process_reviews(data['recid']);
@@ -63,7 +63,7 @@
 
         $.ajax({
             dataType: "json",
-            url: '/dashboard/manage/person/add/' + window.recid,
+            url: '/permissions/manage/person/add/' + window.recid,
             type: 'post',
             data: {'name': name, 'email': email, 'type': type},
             success: function (data) {

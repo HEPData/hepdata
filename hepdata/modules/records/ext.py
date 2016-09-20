@@ -30,11 +30,14 @@ from operator import or_
 
 import pkg_resources
 from invenio_accounts.models import User
-from hepdata.modules.submission.models import SubmissionParticipant
+
+from hepdata.modules.permissions.models import SubmissionParticipant
 from hepdata.modules.theme.views import internal_error
 from hepdata.modules.theme.views import page_not_found
 from flask.ext.login import current_user
 from invenio_db import db
+
+from hepdata.utils.users import user_is_admin_or_coordinator, user_is_admin
 from . import config
 from .views import blueprint
 
@@ -79,16 +82,7 @@ class HEPDataRecords(object):
                 "You must use `pip install flask-cors` to "
                 "enable CORS support.")
 
-        def user_is_admin_or_coordinator():
-            if current_user and current_user.is_authenticated:
-                id = int(current_user.get_id())
-                with db.session.no_autoflush:
-                    roles = User.query.filter(User.id == id).filter(
-                        or_(User.roles.any(name='coordinator'),
-                            User.roles.any(name='admin'))).all()
 
-                return len(roles) > 0
-            return False
 
         @app.context_processor
         def is_coordinator_or_admin():
@@ -98,9 +92,20 @@ class HEPDataRecords(object):
                 :return: true if the user is a coordinator or administrator,
                 false otherwise
             """
-            result = user_is_admin_or_coordinator()
+            result = user_is_admin_or_coordinator(current_user)
             return dict(
                 user_is_coordinator_or_admin=result)
+
+        @app.context_processor
+        def is_admin():
+            """
+                Determines if the user is an admin given their
+                assigned accRoles.
+                :return: true if the user is an administrator,
+                false otherwise
+            """
+            result = user_is_admin(current_user)
+            return dict(user_is_admin=result)
 
         @app.context_processor
         def show_dashboard():
@@ -109,7 +114,7 @@ class HEPDataRecords(object):
             :return:
             """
             if current_user and current_user.is_authenticated:
-                if user_is_admin_or_coordinator():
+                if user_is_admin_or_coordinator(current_user):
                     return dict(show_dashboard=True)
                 else:
                     id = int(current_user.get_id())

@@ -37,9 +37,10 @@ from flask.ext.login import current_user
 from hepdata.config import CFG_DATA_TYPE, CFG_PUB_TYPE
 from hepdata.ext.elasticsearch.api import get_records_matching_field, \
     delete_item_from_index, index_record_ids, push_data_keywords
+from hepdata.modules.permissions.models import SubmissionParticipant
 from hepdata.modules.records.utils.workflow import create_record, send_finalised_email
 from hepdata.modules.submission.models import DataSubmission, DataReview, \
-    DataResource, License, Keyword, HEPSubmission, SubmissionParticipant, RecordVersionCommitMessage
+    DataResource, License, Keyword, HEPSubmission, RecordVersionCommitMessage
 from hepdata.modules.records.utils.common import \
     get_prefilled_dictionary, infer_file_type, encode_string, zipdir, get_record_by_id, contains_accepted_url
 from hepdata.modules.records.utils.common import get_or_create

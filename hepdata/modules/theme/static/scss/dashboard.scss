@@ -3,6 +3,18 @@ body, html {
     background-color: $darker-blue !important;
     height: 100%;
 
+    .tab-list-nav-item {
+      &:hover {
+        color: $purple;
+      }
+
+      a {
+        &:visited {
+          color: $lightgrey;
+        }
+      }
+    }
+
     .filter-section input {
       -webkit-background-size: 9%;
       background-size: 9%;
@@ -160,10 +172,10 @@ body, html {
 
     }
 
-    .watch-list {
+    .watch-list, .permission-list {
       padding: 10px;
 
-      .watch-item {
+      .item {
         padding: 10px;
         h4 {
           font-size: 1.1em;
@@ -385,7 +397,7 @@ body, html {
       ul {
         -webkit-padding-start: 0px;
         list-style: none;
-        padding-left:0px;
+        padding-left: 0px;
         margin: -1px;
 
         li {
@@ -637,8 +649,24 @@ body, html {
       }
     }
 
-    #pending-invite-area {
+    .request-header {
+      color: $grey;
+      font-weight: bolder;
+      text-align: left;
+      text-transform: uppercase;
+      padding-bottom: 10px;
+      border-bottom: 1px solid $darker-blue;
+    }
+
+    .admin-response-area {
+      background-color: $dark-blue;
+      border-radius: 5px;
       margin-bottom: 30px;
+      padding: 10px;
+    }
+
+    .request-item {
+      padding: 20px 0 20px 0;
     }
 
   }

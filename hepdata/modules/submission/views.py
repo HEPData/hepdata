@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, request, jsonify, current_app
 from flask.ext.login import login_required, current_user
 from invenio_db import db
 from hepdata.modules.inspire_api.views import get_inspire_record_information
-from hepdata.modules.submission.models import SubmissionParticipant
+from hepdata.modules.permissions.models import SubmissionParticipant
 from hepdata.modules.records.utils.common import encode_string
 from hepdata.modules.records.utils.submission import \
     get_or_create_hepsubmission

@@ -22,11 +22,12 @@ from flask.ext.login import current_user
 from invenio_accounts.models import User
 from sqlalchemy import and_, or_
 
-from hepdata.modules.records.api import get_user_from_id
+from hepdata.modules.permissions.models import SubmissionParticipant
 from hepdata.modules.records.utils.common import get_record_by_id, encode_string
 from hepdata.modules.records.utils.submission import get_latest_hepsubmission
 from hepdata.modules.records.utils.users import has_role
-from hepdata.modules.submission.models import HEPSubmission, SubmissionParticipant, DataReview
+from hepdata.modules.submission.models import HEPSubmission, DataReview
+from hepdata.utils.users import get_user_from_id
 
 
 def add_user_to_metadata(type, user_info, record_id, submissions):
@@ -237,5 +238,8 @@ def get_pending_invitations_for_user(user):
             {'title': encode_string(publication_record['title'], 'utf-8'),
              'invitation_cookie': invite.invitation_cookie,
              'role': invite.role, 'coordinator': coordinator})
+
+    print("Result")
+    print(result)
 
     return result

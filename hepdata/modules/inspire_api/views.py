@@ -37,7 +37,8 @@ def get_inspire_record_information(inspire_rec_id):
     req = requests.get(url)
     content = req.content
     status = req.status_code
-    if status == 200:
+
+    if content:
         soup = BeautifulSoup(content, "lxml")
 
         collection_type = get_collection(soup)

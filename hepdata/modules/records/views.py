@@ -33,6 +33,8 @@ from flask.ext.login import login_required
 from flask import Blueprint, send_file
 import jsonpatch
 import yaml
+from invenio_db import db
+
 from hepdata.config import CFG_DATA_TYPE, CFG_PUB_TYPE
 from hepdata.ext.elasticsearch.api import get_records_matching_field, get_count_for_collection, get_n_latest_records
 from hepdata.modules.inspire_api.views import get_inspire_record_information
