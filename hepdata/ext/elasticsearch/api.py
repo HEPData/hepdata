@@ -243,8 +243,8 @@ def record_exists(inspire_id, index=None):
 
     try:
         result = es.search_exists(index=index, doc_type=CFG_PUB_TYPE, body=query)
-        return result['exists']
-    except NotFoundError:
+        return result['exists'] if not isinstance(result, bool) else result
+    except NotFoundError as nfe:
         return False
 
 
