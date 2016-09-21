@@ -2,14 +2,14 @@
  HEPData
 ========
 
-.. image:: https://img.shields.io/travis/HEPData/hepdata3.svg
-    :target: https://travis-ci.org/HEPData/hepdata3
+.. image:: https://img.shields.io/travis/HEPData/hepdata.svg
+    :target: https://travis-ci.org/HEPData/hepdata
 
-.. image:: https://coveralls.io/repos/github/HEPData/hepdata3/badge.svg?branch=master
-    :target: https://coveralls.io/github/HEPData/hepdata3?branch=master
+.. image:: https://coveralls.io/repos/github/HEPData/hepdata/badge.svg?branch=master
+    :target: https://coveralls.io/github/HEPData/hepdata?branch=master
 
-.. image:: https://img.shields.io/github/license/HEPData/hepdata3.svg
-    :target: https://github.com/HEPData/hepdata3/blob/master/LICENSE
+.. image:: https://img.shields.io/github/license/HEPData/hepdata.svg
+    :target: https://github.com/HEPData/hepdata/blob/master/LICENSE
 
 
 .. image:: docs/screenshot.jpg
