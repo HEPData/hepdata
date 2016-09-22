@@ -19,15 +19,13 @@ from __future__ import print_function
 
 from collections import defaultdict
 
-import datetime
 from dateutil.parser import parse
 from flask import current_app
 from elasticsearch.exceptions import NotFoundError, RequestError
 from invenio_pidstore.models import RecordIdentifier
 from sqlalchemy import func
 
-from hepdata.modules.permissions.models import SubmissionParticipant
-from hepdata.modules.submission.models import HEPSubmission, DataResource
+from hepdata.ext.elasticsearch.document_enhancers import enhance_data_document, enhance_publication_document
 from .utils import prepare_author_for_indexing
 from hepdata.config import CFG_PUB_TYPE, CFG_DATA_TYPE
 from query_builder import QueryBuilder, get_query_by_type, get_authors_query, HEPDataQueryParser
@@ -356,6 +354,8 @@ def index_record_ids(record_ids, index=None):
                 if field in doc:
                     del doc[field]
 
+            enhance_data_document(doc)
+
             op_dict = {
                 "index": {
                     "_index": index,
@@ -372,25 +372,7 @@ def index_record_ids(record_ids, index=None):
             author_docs = prepare_author_for_indexing(es, doc)
             to_index += author_docs
 
-            if "last_updated" not in doc:
-                last_updated = get_last_submission_event(doc["recid"])
-                if not last_updated:
-                    last_updated = doc["creation_date"]
-
-                doc["last_updated"] = last_updated
-
-            if doc["year"] is not None:
-                doc["publication_date"] = parse(str(doc["year"]))
-
-            doc["summary_authors"] = []
-            if doc['authors']:
-                doc["summary_authors"] = doc["authors"][:10]
-
-            hepforge_resource_count = HEPSubmission.query.filter(HEPSubmission.publication_recid == int(doc["recid"]),
-                                       HEPSubmission.version == int(doc["version"]),
-                                       HEPSubmission.references.any(DataResource.file_type == "hepforge")).count()
-
-            doc["has_rivet_analysis"] = bool(hepforge_resource_count)
+            enhance_publication_document(doc)
 
             op_dict = {
                 "index": {
@@ -504,18 +486,3 @@ def get_count_for_collection(doc_type, index=None):
     :return: the number of records in that collection
     """
     return es.count(index=index, doc_type=doc_type)
-
-
-def get_last_submission_event(recid):
-    submission_participant = SubmissionParticipant.query.filter_by(
-        publication_recid=recid).order_by('action_date').first()
-    last_updated = None
-    if submission_participant:
-        last_action_date = submission_participant.action_date
-        if last_action_date:
-            try:
-                if last_action_date <= datetime.datetime.now():
-                    last_updated = last_action_date.strftime("%Y-%m-%d")
-            except ValueError as ve:
-                print(ve.args)
-    return last_updated

@@ -263,15 +263,22 @@ def process_ctx(ctx, light_mode=False):
         ctx.pop('data_tables', None)
     else:
         SITE_URL = current_app.config['SITE_URL']
+
+        print(ctx)
         for data_table in ctx['data_tables']:
             for key_to_remove in ['review_status', 'review_flag']:
                 data_table.pop(key_to_remove, None)
+
                 data_table['data'] = {
                     'json': '{0}/record/data/{1}/{2}/{3}'.format(
                         SITE_URL, ctx['recid'], data_table['id'], ctx['version']),
-                    'root': '{0}/download/table/{1}/root'.format(SITE_URL, data_table['id']),
-                    'csv': '{0}/download/table/{1}/csv'.format(SITE_URL, data_table['id']),
-                    'yoda': '{0}/download/table/{1}/yoda'.format(SITE_URL, data_table['id']),
-                    'yaml': '{0}/download/table/{1}/yaml'.format(SITE_URL, data_table['id'])}
+                    'root': '{0}/download/table/ins{1}/{2}/root'.format(
+                        SITE_URL, ctx['record']['inspire_id'], data_table['name']),
+                    'csv': '{0}/download/table/ins{1}/{2}/csv'.format(
+                        SITE_URL, ctx['record']['inspire_id'], data_table['name']),
+                    'yoda': '{0}/download/table/ins{1}/{2}/yoda'.format(
+                        SITE_URL, ctx['record']['inspire_id'], data_table['name']),
+                    'yaml': '{0}/download/table/ins{1}/{2}/yaml'.format(
+                        SITE_URL, ctx['record']['inspire_id'], data_table['name'])}
 
     return ctx

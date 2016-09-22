@@ -46,9 +46,6 @@ var hepdata_record = (function () {
       },
 
       perform_upload_action: function (placement, form_name, colors, insertion_type) {
-
-
-
         var html = '<div id="upload-progress"></div>' +
           '<div><p>Uploading and validating files...</p></div>';
         if (insertion_type === 'large_area') {

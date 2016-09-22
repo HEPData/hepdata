@@ -59,6 +59,7 @@ class HEPSubmission(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
 
     publication_recid = db.Column(db.Integer)
+    inspire_id = db.Column(db.String(128))
 
     data_abstract = db.Column(db.LargeBinary)
 
@@ -114,6 +115,8 @@ class DataSubmission(db.Model):
                    autoincrement=True)
 
     publication_recid = db.Column(db.Integer)
+    publication_inspire_id = db.Column(db.String(128))
+
     location_in_publication = db.Column(db.String(256))
     name = db.Column(db.String(64))
     description = db.Column(db.LargeBinary)

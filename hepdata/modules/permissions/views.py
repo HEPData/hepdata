@@ -92,7 +92,7 @@ def add_participant(recid):
     :return:
     """
     try:
-        submission_record = get_latest_hepsubmission(recid)
+        submission_record = get_latest_hepsubmission(recid=recid)
         full_name = request.form['name']
         email = request.form['email']
         participant_type = request.form['type']

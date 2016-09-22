@@ -16,6 +16,7 @@
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
 """HEPData Dashboard API."""
+
 from collections import OrderedDict
 
 from flask.ext.login import current_user
@@ -52,7 +53,7 @@ def create_record_for_dashboard(record_id, submissions, primary_uploader=None,
     if publication_record is not None:
         if record_id not in submissions:
 
-            hepdata_submission_record = get_latest_hepsubmission(record_id)
+            hepdata_submission_record = get_latest_hepsubmission(recid=record_id)
 
             submissions[record_id] = {}
             submissions[record_id]["metadata"] = {"recid": record_id,
@@ -231,15 +232,12 @@ def get_pending_invitations_for_user(user):
 
     for invite in pending_invites:
         publication_record = get_record_by_id(invite.publication_recid)
-        hepsubmission = get_latest_hepsubmission(invite.publication_recid)
+        hepsubmission = get_latest_hepsubmission(recid=invite.publication_recid)
 
         coordinator = get_user_from_id(hepsubmission.coordinator)
         result.append(
             {'title': encode_string(publication_record['title'], 'utf-8'),
              'invitation_cookie': invite.invitation_cookie,
              'role': invite.role, 'coordinator': coordinator})
-
-    print("Result")
-    print(result)
 
     return result

@@ -115,6 +115,7 @@ def get_basic_record_information(record):
         'dissertation': source.get('dissertation', {}),
         'keywords': source.get('keywords', []),
         'data_keywords': source.get('data_keywords', {}),
+        'access_urls': source.get('access_urls', {}),
         'collaborations': collaborations,
         'inspire_id': source.get('inspire_id', ''),
         'year': source.get('year', ''),

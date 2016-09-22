@@ -95,21 +95,9 @@ def format_submission(recid, record, version, version_count, hepdata_submission,
                 ctx['record']['collaborations'] = collaborations
 
             authors = record.get('authors', None)
-            if "first_author" in record and 'full_name' in record["first_author"]:
-                ctx['breadcrumb_text'] = record["first_author"]["full_name"]
-                if authors is not None and len(record['authors']) > 1:
-                    ctx['breadcrumb_text'] += " et al."
 
-            try:
-                commit_message_query = RecordVersionCommitMessage.query \
-                    .filter_by(version=ctx["version"], recid=recid).one()
-
-                ctx["revision_message"] = {
-                    'version': commit_message_query.version,
-                    'message': commit_message_query.message}
-
-            except NoResultFound:
-                pass
+            create_breadcrumb_text(authors, ctx, record)
+            get_commit_message(ctx, recid)
 
             if authors:
                 truncate_author_list(record)
@@ -127,8 +115,8 @@ def format_submission(recid, record, version, version_count, hepdata_submission,
         ctx['reviewers_notified'] = hepdata_submission.reviewers_notified
 
         ctx['record']['last_updated'] = hepdata_submission.last_updated
-
         ctx['record']['hepdata_doi'] = "{0}".format(hepdata_submission.doi)
+
         if ctx['version'] > 1:
             ctx['record']['hepdata_doi'] += ".v{0}".format(ctx['version'])
 
@@ -153,19 +141,8 @@ def format_submission(recid, record, version, version_count, hepdata_submission,
             publication_recid=recid,
             version=ctx["version"]).order_by(DataSubmission.id.asc())
 
-        first_data_id = -1
-        data_table_metadata, first_data_id = process_data_tables(
-            ctx, data_record_query, first_data_id, data_table)
+        format_tables(ctx, data_record_query, data_table, recid)
 
-        assign_or_create_review_status(data_table_metadata, recid, ctx["version"])
-
-        ctx['watched'] = is_current_user_subscribed_to_record(recid)
-        ctx['table_to_show'] = first_data_id
-        if 'table' in request.args:
-            if request.args['table'] is not '':
-                ctx['table_to_show'] = request.args['table']
-
-        ctx['data_tables'] = data_table_metadata.values()
         ctx['access_count'] = get_count(recid)
         ctx['mode'] = 'record'
         ctx['coordinator'] = hepdata_submission.coordinator
@@ -173,6 +150,54 @@ def format_submission(recid, record, version, version_count, hepdata_submission,
         ctx['record'].pop('authors', None)
 
     return ctx
+
+
+def format_tables(ctx, data_record_query, data_table, recid):
+    """
+    Finds all the tables related to a submission and generates formats
+    them for display in the UI or as JSON.
+    :return:
+    """
+    first_data_id = -1
+    data_table_metadata, first_data_id = process_data_tables(
+        ctx, data_record_query, first_data_id, data_table)
+    assign_or_create_review_status(data_table_metadata, recid, ctx["version"])
+    ctx['watched'] = is_current_user_subscribed_to_record(recid)
+    ctx['table_to_show'] = first_data_id
+    if 'table' in request.args:
+        if request.args['table'] is not '':
+            ctx['table_to_show'] = request.args['table']
+    ctx['data_tables'] = data_table_metadata.values()
+
+
+def get_commit_message(ctx, recid):
+    """
+    Returns a commit message for the current version if present
+    :param ctx:
+    :param recid:
+    """
+    try:
+        commit_message_query = RecordVersionCommitMessage.query \
+            .filter_by(version=ctx["version"], recid=recid)
+
+        if commit_message_query.count() > 0:
+            commit_message = commit_message_query.one()
+            ctx["revision_message"] = {
+                'version': commit_message.version,
+                'message': commit_message.message}
+
+    except NoResultFound:
+        pass
+
+
+def create_breadcrumb_text(authors, ctx, record):
+    """
+    Creates the breadcrumb text for a submission
+    """
+    if "first_author" in record and 'full_name' in record["first_author"]:
+        ctx['breadcrumb_text'] = record["first_author"]["full_name"]
+        if authors is not None and len(record['authors']) > 1:
+            ctx['breadcrumb_text'] += " et al."
 
 
 def submission_has_resources(hepsubmission):
@@ -223,7 +248,7 @@ def render_record(recid, record, version, output_format, light_mode=False):
             publication_recid = int(record['related_publication'])
             publication_record = get_record_contents(publication_recid)
 
-            hepdata_submission = get_latest_hepsubmission(publication_recid)
+            hepdata_submission = get_latest_hepsubmission(recid=publication_recid)
 
             ctx = format_submission(publication_recid, publication_record,
                                     hepdata_submission.version, 1, hepdata_submission,
@@ -460,4 +485,3 @@ def process_data_tables(ctx, data_record_query, first_data_id,
 
 def truncate_author_list(record, length=10):
     record['authors'] = record['authors'][:length]
-

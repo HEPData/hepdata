@@ -100,7 +100,9 @@ def get_metadata_by_alternative_id(recid):
             return render_record(recid=record['recid'], record=record, version=version, output_format=output_format,
                                  light_mode=light_mode)
     except Exception as e:
+
         log.error("Unable to find {0}.".format(recid))
+        log.error(e)
         return render_template('hepdata_theme/404.html')
 
 
@@ -276,7 +278,7 @@ def get_table_details(recid, data_recid, version):
 @login_required
 def get_coordinator_view(recid):
     # there should only ever be one rev
-    hepsubmission_record = get_latest_hepsubmission(recid)
+    hepsubmission_record = get_latest_hepsubmission(recid=recid)
 
     participants = {"reviewer": {"reserve": [], "primary": []},
                     "uploader": {"reserve": [], "primary": []}}
@@ -298,9 +300,9 @@ def get_coordinator_view(recid):
 @blueprint.route('/data/review/status/', methods=['POST', ])
 @login_required
 def set_data_review_status():
-    # todo: need to check if the user is a reviewer for this record before being allowed to do this operation.
+    # todo: need to check if the user is involved in this record before being allowed to perform this operation.
+    # same for upload...
 
-    # the recid is required to automatically create a review record if it doesn't already exist in the database.
     recid = int(request.form['publication_recid'])
     data_id = int(request.form['data_recid'])
     status = request.form['status']

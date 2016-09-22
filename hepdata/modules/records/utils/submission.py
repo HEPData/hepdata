@@ -261,7 +261,7 @@ def process_general_submission_info(basepath, submission_info_document, recid):
         or 'modifications' in submission_info_document \
         or 'record_ids' in submission_info_document:
 
-        hepsubmission = get_latest_hepsubmission(recid)
+        hepsubmission = get_latest_hepsubmission(recid=recid)
         hepsubmission.data_abstract = encode_string(
             submission_info_document['comment'])
 
@@ -399,7 +399,7 @@ def process_submission_directory(basepath, submission_file_path, recid, update=F
 
             # process file, extracting contents, and linking
             # the data record with the parent publication
-            hepsubmission = get_latest_hepsubmission(recid)
+            hepsubmission = get_latest_hepsubmission(recid=recid)
             if hepsubmission is None:
                 HEPSubmission(publication_recid=recid,
                               overall_status='todo',
@@ -557,7 +557,7 @@ def get_or_create_hepsubmission(recid, coordinator=1, status="todo"):
     return hepsubmission
 
 
-def get_latest_hepsubmission(recid):
+def get_latest_hepsubmission(*args, **kwargs):
     """
     Gets of creates a new HEPSubmission record
     :param recid: the publication record id
@@ -565,7 +565,12 @@ def get_latest_hepsubmission(recid):
     :param status: e.g. todo, finished.
     :return: the newly created HEPSubmission object
     """
-    hepsubmissions = HEPSubmission.query.filter_by(publication_recid=recid).all()
+
+    if 'inspire_id' in kwargs:
+        hepsubmissions = HEPSubmission.query.filter_by(inspire_id=kwargs.pop('inspire_id')).all()
+
+    if 'recid' in kwargs:
+        hepsubmissions = HEPSubmission.query.filter_by(publication_recid=kwargs.pop('recid')).all()
 
     last = None
     for hepsubmission in hepsubmissions:
@@ -688,6 +693,7 @@ def do_finalise(recid, publication_record=None, force_finalise=False,
 
             record.commit()
 
+            hep_submission.inspire_id = record['inspire_id']
             hep_submission.overall_status = "finished"
             db.session.add(hep_submission)
 
@@ -773,9 +779,8 @@ def finalise_datasubmission(current_time, existing_submissions,
         submission_info["control_number"] = submission_info["recid"]
 
     submission.associated_recid = submission_info['recid']
+    submission.publication_inspire_id = publication_record['inspire_id']
     generated_record_ids.append(submission_info["recid"])
-    submission_info["data_endpoints"] = create_data_endpoints(submission.id,
-                                                              submission_info)
 
     submission.version = version
 
@@ -785,23 +790,3 @@ def finalise_datasubmission(current_time, existing_submissions,
         db.session.add(data_review)
 
     db.session.add(submission)
-
-
-def create_data_endpoints(data_id, info_dict):
-    """ Generate dictionary describing endpoints
-    where different data formats are served"""
-
-    parent_param = "?parent=" + str(info_dict["related_publication"])
-    return {
-        "json": "/".join(["/api",
-                          "record",
-                          CFG_DATA_TYPE,
-                          str(info_dict["recid"]),
-                          "json" + parent_param]),
-        "csv": "/".join(["",
-                         "record",
-                         CFG_DATA_TYPE,
-                         "file",
-                         str(data_id),
-                         "csv"])
-    }
