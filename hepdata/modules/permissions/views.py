@@ -35,7 +35,7 @@ from hepdata.modules.permissions.api import get_records_participated_in_by_user,
     get_pending_request
 from hepdata.modules.permissions.models import SubmissionParticipant, CoordinatorRequest
 from hepdata.modules.records.utils.common import get_record_by_id
-from hepdata.modules.records.utils.submission import get_latest_hepsubmission
+from hepdata.modules.submission.common import get_latest_hepsubmission
 from hepdata.modules.submission.models import HEPSubmission
 from hepdata.modules.submission.views import send_cookie_email
 from hepdata.utils.users import get_user_from_id, user_is_admin
@@ -214,14 +214,18 @@ def respond_coordinator_privileges(request_id, decision):
 @blueprint.route('/assign/<cookie>')
 @login_required
 def assign_role(cookie):
-    participant_record = SubmissionParticipant.query.filter_by(
-        invitation_cookie=cookie).first()
-    participant_record.user_account = current_user.get_id()
+    try:
+        participant_record = SubmissionParticipant.query.filter_by(
+            invitation_cookie=cookie).first()
+        participant_record.user_account = current_user.get_id()
 
-    db.session.add(participant_record)
-    db.session.commit()
+        db.session.add(participant_record)
+        db.session.commit()
 
-    return redirect(url_for('hep_dashboard.dashboard'))
+        return redirect(url_for('hep_dashboard.dashboard'))
+
+    except:
+        abort(404)
 
 
 def check_is_sandbox_record(recid):

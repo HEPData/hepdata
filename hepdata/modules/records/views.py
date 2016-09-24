@@ -37,20 +37,21 @@ from invenio_db import db
 
 from hepdata.config import CFG_DATA_TYPE, CFG_PUB_TYPE
 from hepdata.ext.elasticsearch.api import get_records_matching_field, get_count_for_collection, get_n_latest_records
+from hepdata.modules.email.api import send_new_upload_email, send_new_review_message_email, NoReviewersException, \
+    send_question_email
 from hepdata.modules.inspire_api.views import get_inspire_record_information
 from hepdata.modules.records.api import *
 from hepdata.modules.submission.models import HEPSubmission, DataSubmission, \
-    DataResource, DataReview, Message
+    DataResource, DataReview, Message, Question
 from hepdata.modules.records.utils.common import get_record_by_id, \
     default_time, IMAGE_TYPES
 from hepdata.modules.records.utils.data_processing_utils import \
     generate_table_structure
 from hepdata.modules.records.utils.submission import create_data_review, \
-    get_or_create_hepsubmission, get_latest_hepsubmission
+    get_or_create_hepsubmission
+from hepdata.modules.submission.common import get_latest_hepsubmission
 from hepdata.modules.records.utils.workflow import \
-    update_action_for_submission_participant, send_new_upload_email, NoReviewersException
-from hepdata.modules.records.utils.workflow import \
-    send_new_review_message_email
+    update_action_for_submission_participant
 from hepdata.modules.stats.views import increment
 
 logging.basicConfig()
@@ -104,6 +105,25 @@ def get_metadata_by_alternative_id(recid):
         log.error("Unable to find {0}.".format(recid))
         log.error(e)
         return render_template('hepdata_theme/404.html')
+
+
+
+@login_required
+@blueprint.route('/question/<int:recid>', methods=['POST'])
+def submit_question(recid):
+    question = request.form['question']
+    print('Question is {}'.format(question))
+    try:
+        question = Question(user=int(current_user.get_id()), publication_recid=recid, question=str(question))
+        db.session.add(question)
+        db.session.commit()
+        send_question_email(question)
+    except Exception as e:
+        print(e)
+        db.session.rollback()
+
+
+    return jsonify({'status': 'queued', 'message': 'Your question has been posted.'})
 
 
 @login_required

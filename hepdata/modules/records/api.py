@@ -40,8 +40,9 @@ from hepdata.modules.records.subscribers.api import is_current_user_subscribed_t
 from hepdata.modules.records.utils.common import decode_string, find_file_in_directory, allowed_file, \
     remove_file_extension, truncate_string, get_record_contents
 from hepdata.modules.records.utils.data_processing_utils import process_ctx
-from hepdata.modules.records.utils.submission import process_submission_directory, get_latest_hepsubmission, \
+from hepdata.modules.records.utils.submission import process_submission_directory, \
     remove_submission, create_data_review
+from hepdata.modules.submission.common import get_latest_hepsubmission
 from hepdata.modules.records.utils.users import get_coordinators_in_system, has_role
 from hepdata.modules.records.utils.workflow import update_action_for_submission_participant
 from hepdata.modules.records.utils.yaml_utils import split_files

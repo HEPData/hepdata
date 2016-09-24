@@ -216,7 +216,7 @@ class DataReview(db.Model):
 
 class Message(db.Model):
     """
-    Stores each message made as part of a data review.
+    General message structure.
     """
     __tablename__ = "message"
 
@@ -226,6 +226,24 @@ class Message(db.Model):
     user = db.Column(db.Integer, db.ForeignKey(User.id))
     message = db.Column(db.LargeBinary)
 
+    creation_date = db.Column(db.DateTime, nullable=False, default=func.now(),
+                              index=False)
+
+
+class Question(db.Model):
+    """
+    Questions for a record are stored.
+    """
+
+    __tablename__ = "question"
+
+    id = db.Column(db.Integer, primary_key=True, nullable=False,
+                   autoincrement=True)
+
+    user = db.Column(db.Integer, db.ForeignKey(User.id))
+    publication_recid = db.Column(db.Integer)
+
+    question = db.Column(db.LargeBinary)
     creation_date = db.Column(db.DateTime, nullable=False, default=func.now(),
                               index=False)
 
@@ -243,4 +261,4 @@ class RecordVersionCommitMessage(db.Model):
     creation_date = db.Column(
         db.DateTime, nullable=False, default=func.now(), index=True)
     version = db.Column(db.Integer, default=1)
-    message = db.Column(db.String(1024))
+    message = db.Column(db.LargeBinary)

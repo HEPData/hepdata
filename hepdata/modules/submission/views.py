@@ -1,13 +1,13 @@
-from flask import Blueprint, render_template, request, jsonify, current_app
+from flask import Blueprint, render_template, request, jsonify
 from flask.ext.login import login_required, current_user
 from invenio_db import db
+
+from hepdata.modules.email.api import send_cookie_email
 from hepdata.modules.inspire_api.views import get_inspire_record_information
 from hepdata.modules.permissions.models import SubmissionParticipant
-from hepdata.modules.records.utils.common import encode_string
 from hepdata.modules.records.utils.submission import \
     get_or_create_hepsubmission
 from hepdata.modules.records.utils.workflow import create_record
-from hepdata.utils.mail import create_send_email_task
 
 __author__ = 'eamonnmaguire'
 
@@ -123,29 +123,3 @@ def parse_person_string(person_string, separator="::"):
 
     return {'name': person_string, 'email': person_string}
 
-
-def send_cookie_email(submission_participant,
-                      record_information, message=None):
-    try:
-        message_body = render_template(
-            'hepdata_dashboard/email/invite.html',
-            name=submission_participant.full_name,
-            role=submission_participant.role,
-            title=encode_string(record_information['title'], 'utf-8'),
-            site_url=current_app.config.get('SITE_URL', 'https://www.hepdata.net'),
-            invite_token=submission_participant.invitation_cookie,
-            message=message)
-    except UnicodeDecodeError:
-        message_body = render_template(
-            'hepdata_dashboard/email/invite.html',
-            name=submission_participant.full_name,
-            role=submission_participant.role,
-            site_url=current_app.config.get('SITE_URL', 'https://www.hepdata.net'),
-            title=None,
-            invite_token=submission_participant.invitation_cookie,
-            message=message)
-
-    create_send_email_task(submission_participant.email,
-                           "[HEPData] Invitation to be a {0} of record {1} in HEPData".format(
-                               submission_participant.role,
-                               submission_participant.publication_recid), message_body)

@@ -92,47 +92,41 @@
 
     $("#send").click(function () {
 
-        $(".loading").removeClass("hidden");
         var message = $(".input_box").val();
-        var priority = $("#priority option:selected").attr('id');
 
-        if (message == "") {
-            $(".loading").hide();
-        } else {
-            var DATA = {
-                'message': message,
-                'version': HEPDATA.current_table_version
-            };
-            $.ajax({
-                type: "POST",
-                dataType: "json",
-                url: "/record/data/review/message/" + HEPDATA.current_record_id + "/" + HEPDATA.current_table_id,
-                data: DATA,
-                cache: false,
-                success: function (data) {
+        var DATA = {
+            'message': message,
+            'version': HEPDATA.current_table_version
+        };
+        $.ajax({
+            type: "POST",
+            dataType: "json",
+            url: "/record/data/review/message/" + HEPDATA.current_record_id + "/" + HEPDATA.current_table_id,
+            data: DATA,
+            cache: false,
+            success: function (data) {
 
 
-                    if ($("#review_messages").text() == 'No messages yet...') {
-                        $("#review_messages").text('');
-                    }
-
-                    var message = data.message;
-                    var date_time = data.post_time.split(" ");
-                    var html = '<div class="message-item">' +
-                            '<div class="message-info">' +
-                            '<p class="message-time">' + date_time[0] + ' ' + date_time[1] + '</p>' +
-                            '</div>' +
-                            '<div class="message-content">' +
-                            '<p class="reviewer">Sender:  ' + data.user + '</p>' + message + '</div>' +
-                            '</div>';
-
-                    $("#table-" + HEPDATA.current_table_id + "-messages").removeClass("hidden");
-                    $(html).prependTo("#review_messages").slideDown("slow");
-                    $(".loading").addClass("hidden");
-                    $(".input_box").val('');
+                if ($("#review_messages").text() == 'No messages yet...') {
+                    $("#review_messages").text('');
                 }
-            });
-        }
+
+                var message = data.message;
+                var date_time = data.post_time.split(" ");
+                var html = '<div class="message-item">' +
+                        '<div class="message-info">' +
+                        '<p class="message-time">' + date_time[0] + ' ' + date_time[1] + '</p>' +
+                        '</div>' +
+                        '<div class="message-content">' +
+                        '<p class="reviewer">Sender:  ' + data.user + '</p>' + message + '</div>' +
+                        '</div>';
+
+                $("#table-" + HEPDATA.current_table_id + "-messages").removeClass("hidden");
+                $(html).prependTo("#review_messages").slideDown("slow");
+                $(".input_box").val('');
+            }
+        });
+
         return false;
     });
 

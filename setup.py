@@ -182,7 +182,7 @@ setup(
             'inspire_api = hepdata.modules.inspire_api.views:blueprint',
             'hepdata_conversion = hepdata.modules.converter.views:blueprint',
             'hepdata_subscriptions = hepdata.modules.records.subscribers.rest:blueprint',
-            'hepdata_permissions = hepdata.modules.permissions.views:blueprint',
+            'hepdata_permissions = hepdata.modules.permissions.views:blueprint'
         ],
         'invenio_celery.tasks': [
             'hepdata_records = hepdata.modules.records.migrator.api',

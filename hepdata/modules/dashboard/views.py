@@ -105,7 +105,6 @@ def delete_submission(recid):
 @login_required
 def reindex():
     if has_role(current_user, 'admin'):
-        # we reindex all
         reindex_all(recreate=True)
         push_data_keywords()
         return jsonify({"success": True})

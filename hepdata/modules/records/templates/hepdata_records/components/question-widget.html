@@ -1,0 +1,70 @@
+
+<span class="slider-option question-option table-show "><span
+        class="fa fa-question"></span></span>
+
+<div class="question-view" align="center">
+
+    <div class="review">
+        <h4>Ask a Question</h4>
+        <br/>
+    </div>
+
+    <div id="question-container">
+        <p>Your question will be emailed to those involved with the submission.</p>
+
+            <textarea class="input_box form-control" id="question"
+                      style="height: 200px;"
+                      placeholder="Send question on this data..."></textarea>
+
+        <br/>
+
+        <div id="send" align="center">
+            <div class="btn btn-primary">
+                <span class="fa fa-paper-plane"></span> Ask Question
+            </div>
+        </div>
+
+    </div>
+
+    <div class="clearfix"></div>
+</div>
+<script>
+
+
+    $('.question-option').click(function () {
+        if ($(this).hasClass('table-show')) {
+            $(".question-option, .question-view").animate({
+                right: "+=300"
+            }, 400);
+            $(this).html('<span class="fa fa-chevron-right"></span>').removeClass('table-show').addClass('table-hide');
+        }
+        else {
+            $(".question-option, .question-view").animate({
+                right: "-=300"
+            }, 400);
+            $(this).html('<span class="fa fa-question"></span>').removeClass('table-hide').addClass('table-show');
+
+        }
+    });
+
+    $("#send").click(function () {
+
+        var message = $("#question").val();
+
+        var DATA = {
+            'question': message
+        };
+        $.ajax({
+            type: "POST",
+            dataType: "json",
+            url: "/record/question/" + HEPDATA.current_record_id,
+            data: DATA,
+            cache: false,
+            success: function (data) {
+                $("#question-container").html('<p>Question sent...<br/><br/>A copy has been sent to your email also.</p>');
+            }
+        });
+
+    });
+
+</script>

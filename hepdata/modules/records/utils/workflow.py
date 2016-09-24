@@ -25,17 +25,13 @@
 from datetime import datetime
 import uuid
 
-from flask import render_template, current_app
 from invenio_pidstore.minters import recid_minter
 from invenio_records import Record
 
 from hepdata.modules.permissions.models import SubmissionParticipant
-from hepdata.modules.records.subscribers.api import get_users_subscribed_to_record
-from hepdata.modules.submission.models import DataSubmission
 from invenio_db import db
 
 from hepdata.modules.records.utils.common import get_record_by_id
-from hepdata.utils.mail import create_send_email_task
 
 __author__ = 'eamonnmaguire'
 
@@ -123,131 +119,3 @@ def update_action_for_submission_participant(recid, user_id, action):
         db.session.commit()
     except Exception:
         db.session.rollback()
-
-
-def send_new_review_message_email(review, message, user):
-    """
-    Sends a message to all uploaders to tell them that a
-    comment has been made on a record
-    :param hepsubmission:
-    :param review:
-    :param user:
-    :return:
-    """
-    submission_participants = SubmissionParticipant.query.filter_by(
-        publication_recid=review.publication_recid,
-        status="primary", role="uploader")
-
-    table_information = DataSubmission.query \
-        .filter_by(id=review.data_recid).one()
-
-    record = get_record_by_id(review.publication_recid)
-
-    for participant in submission_participants:
-        message_body = render_template(
-            'hepdata_dashboard/email/review-message.html',
-            name=participant.full_name,
-            actor=user.email,
-            table_name=table_information.name,
-            table_message=message.message,
-            article=review.publication_recid,
-            title=record['title'],
-            link="http://hepdata.net/record/{0}"
-                .format(review.publication_recid))
-
-        create_send_email_task(
-            participant.email,
-            '[HEPData] Submission {0} has a new review message.' \
-                .format(review.publication_recid), message_body)
-
-
-class NoReviewersException(Exception):
-    pass
-
-
-def send_new_upload_email(recid, user, message=None):
-    """
-    :param action: e.g. upload or review_message
-    :param hepsubmission: submission information
-    :param user: user object
-    :return:
-    """
-
-    submission_participants = SubmissionParticipant.query.filter_by(
-        publication_recid=recid, status="primary", role="reviewer")
-
-    if submission_participants.count() == 0:
-        raise NoReviewersException()
-
-    site_url = current_app.config.get('SITE_URL', 'https://www.hepdata.net')
-
-    record = get_record_by_id(recid)
-
-    for participant in submission_participants:
-
-        # TODO: if the submission participant link has not been clicked on, then add the cookie invite
-        # to the upload Email
-        invite_token = None
-        if not participant.user_account:
-            invite_token = participant.invitation_cookie
-
-        message_body = render_template('hepdata_dashboard/email/upload.html',
-                                       name=participant.full_name,
-                                       actor=user.email,
-                                       article=recid,
-                                       message=message,
-                                       invite_token=invite_token,
-                                       role=participant.role,
-                                       title=record['title'],
-                                       site_url=site_url,
-                                       link=site_url + "/record/{0}"
-                                       .format(recid))
-
-        create_send_email_task(participant.email,
-                               '[HEPData] Submission {0} has a new upload available for you to review.'.format(recid),
-                               message_body)
-
-
-def send_finalised_email(hepsubmission):
-
-    submission_participants = SubmissionParticipant.query.filter_by(
-        publication_recid=hepsubmission.publication_recid, status="primary")
-
-    record = get_record_by_id(hepsubmission.publication_recid)
-
-    notify_participants(hepsubmission, record, submission_participants)
-    notify_subscribers(hepsubmission, record)
-
-
-def notify_participants(hepsubmission, record, submission_participants):
-    for participant in submission_participants:
-        message_body = render_template(
-            'hepdata_dashboard/email/finalised.html',
-            name=participant.full_name,
-            article=hepsubmission.publication_recid,
-            version=hepsubmission.version,
-            title=record['title'],
-            link="http://hepdata.net/record/{0}"
-                .format(hepsubmission.publication_recid))
-
-        create_send_email_task(participant.email,
-                               '[HEPData] Submission {0} has been finalised and is publicly available' \
-                               .format(hepsubmission.publication_recid),
-                               message_body)
-
-
-def notify_subscribers(hepsubmission, record):
-    subscribers = get_users_subscribed_to_record(hepsubmission.publication_recid)
-    for subscriber in subscribers:
-        message_body = render_template(
-            'hepdata_dashboard/email/subscriber_notification.html',
-            article=hepsubmission.publication_recid,
-            version=hepsubmission.version,
-            title=record['title'],
-            link="http://hepdata.net/record/{0}"
-                .format(hepsubmission.publication_recid))
-
-        create_send_email_task(subscriber.get('email'),
-                               '[HEPData] Record update available' \
-                               .format(hepsubmission.publication_recid),
-                               message_body)

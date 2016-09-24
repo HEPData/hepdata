@@ -13,7 +13,16 @@ def get_records_participated_in_by_user():
     _current_user_id = int(current_user.get_id())
     as_uploader = SubmissionParticipant.query.filter_by(user_account=_current_user_id, role='uploader').all()
     as_reviewer = SubmissionParticipant.query.filter_by(user_account=_current_user_id, role='reviewer').all()
-    as_coordinator = HEPSubmission.query.filter_by(coordinator=_current_user_id).all()
+
+    as_coordinator_query = HEPSubmission.query.filter_by(coordinator=_current_user_id)
+
+    # special case, since this user ID is the one used for loading all submissions, which is in the 1000s.
+    if _current_user_id == 1:
+        as_coordinator_query = as_coordinator_query.limit(5)
+
+    as_coordinator = as_coordinator_query.all()
+
+
 
     result = {'uploader': [], 'reviewer': [], 'coordinator': []}
     if as_uploader:

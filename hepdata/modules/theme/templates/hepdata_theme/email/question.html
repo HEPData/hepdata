@@ -1,0 +1,27 @@
+{% extends 'hepdata_theme/email/email_container.html' %}
+{% block email_type %}
+    Question for record ins{{ inspire_id }}
+{% endblock %}
+
+{% block email_content %}
+
+    Dear all,
+
+    You have a question from {{ user_email }} for record <a href="{{ site_url }}/record/ins{{ inspire_id }}" target="_new">ins{{ inspire_id }}</a>
+    in HEPData.
+
+    <p style="font-weight: bolder">Message:</p>
+    <p style="padding-left: 20px; font-weight: lighter">{{ message }}</p>
+
+    <br/>
+    <hr>
+    <br/>
+
+    <p style="color: #aaa; font-size: 9px;">You are receiving this email because you were a coordinator, uploader, or reviewer of the submission.</p>
+
+    <p style="color: #aaa; font-size: 9px;">You can reply to the sender directly from this email.</p>
+
+    <p>
+        The <a href="http://www.hepdata.net" style="color: #9b59b6">HEPData</a> team
+    </p>
+{% endblock %}

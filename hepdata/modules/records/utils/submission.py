@@ -37,8 +37,10 @@ from flask.ext.login import current_user
 from hepdata.config import CFG_DATA_TYPE, CFG_PUB_TYPE
 from hepdata.ext.elasticsearch.api import get_records_matching_field, \
     delete_item_from_index, index_record_ids, push_data_keywords
+from hepdata.modules.email.api import send_finalised_email
 from hepdata.modules.permissions.models import SubmissionParticipant
-from hepdata.modules.records.utils.workflow import create_record, send_finalised_email
+from hepdata.modules.records.utils.workflow import create_record
+from hepdata.modules.submission.common import get_latest_hepsubmission
 from hepdata.modules.submission.models import DataSubmission, DataReview, \
     DataResource, License, Keyword, HEPSubmission, RecordVersionCommitMessage
 from hepdata.modules.records.utils.common import \
@@ -58,7 +60,6 @@ import os
 from sqlalchemy.orm.exc import NoResultFound
 import yaml
 from urllib2 import URLError
-
 
 __author__ = 'eamonnmaguire'
 
@@ -557,32 +558,6 @@ def get_or_create_hepsubmission(recid, coordinator=1, status="todo"):
     return hepsubmission
 
 
-def get_latest_hepsubmission(*args, **kwargs):
-    """
-    Gets of creates a new HEPSubmission record
-    :param recid: the publication record id
-    :param coordinator: the user id of the user who owns this record
-    :param status: e.g. todo, finished.
-    :return: the newly created HEPSubmission object
-    """
-
-    if 'inspire_id' in kwargs:
-        hepsubmissions = HEPSubmission.query.filter_by(inspire_id=kwargs.pop('inspire_id')).all()
-
-    if 'recid' in kwargs:
-        hepsubmissions = HEPSubmission.query.filter_by(publication_recid=kwargs.pop('recid')).all()
-
-    last = None
-    for hepsubmission in hepsubmissions:
-        if last is None:
-            last = hepsubmission
-        else:
-            if hepsubmission.version > last.version:
-                last = hepsubmission
-
-    return last
-
-
 def create_data_review(data_recid, publication_recid, version=1):
     """
     Creates a new data review given a data record id and a pubication record id
@@ -637,8 +612,8 @@ def do_finalise(recid, publication_record=None, force_finalise=False,
     print('Finalising record {}'.format(recid))
 
     generated_record_ids = []
-    # check if current user is the coordinator
-    if force_finalise or hep_submission.coordinator == int(current_user.get_id()):
+    if hep_submission \
+            and (force_finalise or hep_submission.coordinator == int(current_user.get_id())):
 
         submissions = DataSubmission.query.filter_by(
             publication_recid=recid,
@@ -683,7 +658,7 @@ def do_finalise(recid, publication_record=None, force_finalise=False,
                 commit_record = RecordVersionCommitMessage(
                     recid=recid,
                     version=version,
-                    message=commit_message)
+                    message=str(commit_message))
 
                 db.session.add(commit_record)
 
