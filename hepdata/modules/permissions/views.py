@@ -31,6 +31,7 @@ from invenio_db import db
 
 from flask import Blueprint, jsonify, url_for, redirect, request, abort, render_template
 
+from hepdata.modules.email.api import send_coordinator_request_mail, send_coordinator_approved_email
 from hepdata.modules.permissions.api import get_records_participated_in_by_user, get_approved_coordinators, \
     get_pending_request
 from hepdata.modules.permissions.models import SubmissionParticipant, CoordinatorRequest
@@ -155,6 +156,8 @@ def request_coordinator_privileges():
 
         db.session.add(coordinator_request)
         db.session.commit()
+
+        send_coordinator_request_mail(coordinator_request)
     except Exception as e:
         db.session.rollback()
         return jsonify({"status": "error", "message": e.__str__()})
@@ -182,7 +185,7 @@ def respond_coordinator_privileges(request_id, decision):
 
                 coordinator_role = Role.query.filter_by(name='coordinator').one()
                 if coordinator_role:
-                    # todo: send email
+
                     user = get_user_from_id(coordinator_request.user)
                     if user:
                         user.roles.append(coordinator_role)
@@ -201,6 +204,7 @@ def respond_coordinator_privileges(request_id, decision):
 
             db.session.add(coordinator_request)
             db.session.commit()
+            send_coordinator_approved_email(coordinator_request)
 
             return redirect(url_for('hep_dashboard.dashboard'))
 

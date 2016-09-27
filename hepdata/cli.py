@@ -253,7 +253,6 @@ def prefetch_converted_files(inspire_ids, force, targets):
     necessary
     :return:
     """
-
     if inspire_ids:
         submission_ids = inspire_ids.split(',')
     else:

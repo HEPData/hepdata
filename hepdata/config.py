@@ -258,6 +258,7 @@ ANALYSES_ENDPOINTS = {
     'madanalysis': {}
 }
 
+ADMIN_EMAIL = 'info@hepdata.net'
 SUBMISSION_FILE_NAME_PATTERN = 'HEPData-{}-v{}-yaml.zip'
 
 # Import local config file if it is present.

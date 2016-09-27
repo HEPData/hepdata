@@ -1,0 +1,24 @@
+{% extends 'hepdata_theme/email/email_container.html' %}
+{% block email_type %}
+    Coordinator Request Approved
+{% endblock %}
+
+
+{% block email_content %}
+
+    <p>
+        Your request to be a coordinator for HEPData of {{ collaboration }} has been approved.
+    </p>
+    <p>
+        You can now create submissions on <a href="{{ site_url }}">HEPData.net</a>. Submission help is available
+        <a href="{{ site_url }}/submission">here</a> with an explanation of how the submission process works.
+    </p>
+
+    <p>
+        We are looking forward to your contributions to <a href="{{ site_url }}">HEPData</a>!
+    </p>
+
+    <p>
+        The <a href="{{ site_url }}" style="color: #9b59b6">HEPData</a> team
+    </p>
+{% endblock %}

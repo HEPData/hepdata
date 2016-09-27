@@ -18,6 +18,7 @@
 #
 
 """Email API provides all email functions for HEPData"""
+import logging
 
 from flask import current_app
 from flask.ext.login import current_user
@@ -30,6 +31,10 @@ from flask import render_template
 
 from hepdata.modules.submission.api import get_latest_hepsubmission, get_submission_participants_for_record
 from hepdata.modules.submission.models import DataSubmission
+from hepdata.utils.users import get_user_from_id
+
+logging.basicConfig()
+log = logging.getLogger(__name__)
 
 
 def send_new_review_message_email(review, message, user):
@@ -184,14 +189,13 @@ def send_cookie_email(submission_participant,
 
 
 def send_question_email(question):
-
     reply_to = current_user.email
 
     submission = get_latest_hepsubmission(publication_recid=question.publication_recid)
     submission_participants = get_submission_participants_for_record(question.publication_recid)
 
     if submission:
-        destinations = ['info@hepdata.net']
+        destinations = [current_app.config['ADMIN_EMAIL']]
         for submission_participant in submission_participants:
             destinations.append(submission_participant.email)
 
@@ -209,3 +213,36 @@ def send_question_email(question):
             create_send_email_task(destination=','.join(destinations),
                                    subject="[HEPData] Question for record ins{0}".format(submission.inspire_id),
                                    message=message_body, reply_to_address=reply_to)
+
+
+def send_coordinator_request_mail(coordinator_request):
+    if current_user.is_authenticated:
+        message_body = render_template(
+            'hepdata_theme/email/coordinator_request.html',
+            collaboration=coordinator_request.collaboration,
+            message=coordinator_request.message,
+            user_email=current_user.email,
+            site_url=current_app.config.get('SITE_URL', 'https://www.hepdata.net')
+        )
+
+        create_send_email_task(current_app.config['ADMIN_EMAIL'],
+                               subject="[HEPData] New Coordinator Request",
+                               message=message_body, reply_to_address=current_user.email)
+    else:
+        log.error('Current user is not authenticated.')
+
+
+def send_coordinator_approved_email(coordinator_request):
+    message_body = render_template(
+        'hepdata_theme/email/coordinator_approved.html',
+        collaboration=coordinator_request.collaboration,
+        message=coordinator_request.message,
+        user_email=current_user.email,
+        site_url=current_app.config.get('SITE_URL', 'https://www.hepdata.net')
+    )
+
+    user = get_user_from_id(coordinator_request.user)
+    if user:
+        create_send_email_task(user.email,
+                               subject="[HEPData] Coordinator Request Approved",
+                               message=message_body)

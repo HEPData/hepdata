@@ -1,0 +1,29 @@
+{% extends 'hepdata_theme/email/email_container.html' %}
+{% block email_type %}
+New Coordinator Request
+{% endblock %}
+
+
+{% block email_content %}
+
+    There has been a request from {{ user_email }} to be a coordinator of {{ collaboration }}.
+
+    <br/>
+
+    {% if message %}
+        <p>
+            <b>A message has been supplied:</b>
+        </p>
+        <div style="padding-left: 20px;">
+            <p>{{ message }}</p>
+        </div>
+    {% endif %}
+
+    <p>
+    You can accept the request in your dashboard view at <a href="{{ site_url }}/dashboard">hepdata.net</a>.
+    </p>
+
+    <p>
+    The <a href="http://www.hepdata.net" style="color: #9b59b6">HEPData</a> team
+    </p>
+{% endblock %}
