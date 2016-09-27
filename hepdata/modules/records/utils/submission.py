@@ -37,6 +37,7 @@ from flask.ext.login import current_user
 from hepdata.config import CFG_DATA_TYPE, CFG_PUB_TYPE
 from hepdata.ext.elasticsearch.api import get_records_matching_field, \
     delete_item_from_index, index_record_ids, push_data_keywords
+from hepdata.modules.converter.tasks import convert_and_store
 from hepdata.modules.email.api import send_finalised_email
 from hepdata.modules.permissions.models import SubmissionParticipant
 from hepdata.modules.records.utils.workflow import create_record
@@ -62,8 +63,6 @@ import yaml
 from urllib2 import URLError
 
 __author__ = 'eamonnmaguire'
-
-SUBMISSION_FILE_NAME_PATTERN = 'HEPData-{}-v{}-yaml.zip'
 
 logging.basicConfig()
 log = logging.getLogger(__name__)
@@ -511,7 +510,7 @@ def package_submission(basepath, recid, hep_submission_obj):
 
     zip_location = os.path.join(
         current_app.config['CFG_DATADIR'], str(recid),
-        SUBMISSION_FILE_NAME_PATTERN
+        current_app.config['SUBMISSION_FILE_NAME_PATTERN']
             .format(recid, version))
     if os.path.exists(zip_location):
         os.remove(zip_location)
@@ -690,6 +689,9 @@ def do_finalise(recid, publication_record=None, force_finalise=False,
             push_data_keywords(pub_ids=[recid])
 
             send_finalised_email(hep_submission)
+
+            for file_format in ['csv', 'yoda', 'root']:
+                convert_and_store.delay(hep_submission.inspire_id, file_format, force=True)
 
             if send_tweet:
                 tweet(record.get('title'), record.get('collaborations'),

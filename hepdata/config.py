@@ -258,6 +258,8 @@ ANALYSES_ENDPOINTS = {
     'madanalysis': {}
 }
 
+SUBMISSION_FILE_NAME_PATTERN = 'HEPData-{}-v{}-yaml.zip'
+
 # Import local config file if it is present.
 try:
     from hepdata.config_local import *

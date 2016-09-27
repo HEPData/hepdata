@@ -72,10 +72,10 @@ def add_analyses(doc):
 
     # look up once per day, and cache the result in REDIS.
 
-    latest_submission = get_latest_hepsubmission(recid=doc['recid'])
+    latest_submission = get_latest_hepsubmission(publication_recid=doc['recid'])
 
     doc["analyses"] = []
-    for reference in latest_submission.references:
+    for reference in latest_submission.resources:
         if reference.file_type in current_app.config['ANALYSES_ENDPOINTS']:
             doc["analyses"].append({'type': reference.file_type, 'analysis': reference.file_location})
 

@@ -29,6 +29,9 @@ from __future__ import absolute_import, print_function
 import click
 from flask.ext.cli import with_appcontext
 from invenio_base.app import create_cli
+
+from hepdata.modules.converter.tasks import convert_and_store
+from hepdata.modules.submission.models import HEPSubmission
 from .factory import create_app
 from hepdata.config import CFG_PUB_TYPE
 from hepdata.ext.elasticsearch.api import reindex_all, \
@@ -58,10 +61,10 @@ def populate(inspireids, recreate_index, tweet):
         :param recreate_index:
 
     """
-    from hepdata.ext.elasticsearch.api import recreate_index
+    from hepdata.ext.elasticsearch.api import recreate_index as reindex
 
     if recreate_index:
-        recreate_index()
+        reindex()
 
     files_to_load = parse_inspireids_from_string(inspireids)
     load_files(files_to_load, send_tweet=tweet)
@@ -233,3 +236,34 @@ def do_unload(records_to_unload):
 @with_appcontext
 def find_and_add_record_analyses():
     update_analyses.delay()
+
+
+@cli.command()
+@click.option('--inspire_ids', '-i', type=str,
+              help='Specify inspire ids of submissions to generate the cached files for.')
+@click.option('--force', '-f', type=bool, default=False,
+              help='Force re-creation of converted files.')
+@click.option('--targets', '-t', type=str, default='root,csv,yoda',
+              help='Force re-creation of converted files.')
+def prefetch_converted_files(inspire_ids, force, targets):
+    """
+    Goes through all HEPData submissions and creates their ROOT, CSV, and YODA representations.
+    This avoids any wait time for users when trying to retrieve converted files.
+    NOTE: Does not pre-fetch all individual files, since this would be too much and probably not
+    necessary
+    :return:
+    """
+
+    if inspire_ids:
+        submission_ids = inspire_ids.split(',')
+    else:
+        submissions = HEPSubmission.query.filter_by(overall_status='finished')\
+            .with_entities(HEPSubmission.inspire_id).all()
+        submission_ids = [i for (i,) in submissions]
+
+    submission_ids = set(submission_ids)
+
+    file_formats = targets.split(',')
+    for inspire_id in submission_ids:
+        for file_format in file_formats:
+            convert_and_store.delay(inspire_id, file_format, force=force)

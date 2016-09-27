@@ -16,9 +16,11 @@
 # along with HEPData; if not, write to the Free Software Foundation, Inc.,
 # 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
 #
-
+from __future__ import absolute_import, print_function
+import logging
 import os
 
+from celery import shared_task
 from flask import Blueprint, send_file, render_template, \
     request, current_app
 import time
@@ -30,8 +32,10 @@ from invenio_db import db
 from hepdata.modules.converter import convert_zip_archive
 from hepdata.modules.submission.api import get_latest_hepsubmission
 from hepdata.modules.submission.models import HEPSubmission, DataResource, DataSubmission
-from hepdata.modules.records.utils.submission import SUBMISSION_FILE_NAME_PATTERN
 from hepdata.utils.file_extractor import extract, get_file_in_directory
+
+logging.basicConfig()
+log = logging.getLogger(__name__)
 
 blueprint = Blueprint('converter', __name__,
                       url_prefix="/download",
@@ -146,7 +150,8 @@ def download_submission_with_recid(*args, **kwargs):
     return download_submission(submission, kwargs.pop('file_format'))
 
 
-def download_submission(submission, file_format):
+@shared_task()
+def download_submission(submission, file_format, offline=False, force=False):
     """
     Gets the submission file and either serves it back directly from YAML, or converts it
     for other formats.
@@ -157,6 +162,8 @@ def download_submission(submission, file_format):
     """
 
     if file_format not in CFG_SUPPORTED_FORMATS:
+        if offline:
+            log.error('Format not supported')
         return display_error(
             title="The " + file_format + " output format is not supported",
             description="This output format is not supported. " +
@@ -166,25 +173,36 @@ def download_submission(submission, file_format):
     version = submission.version
 
     path = os.path.join(current_app.config['CFG_DATADIR'], str(submission.publication_recid))
-    data_filename = SUBMISSION_FILE_NAME_PATTERN.format(submission.publication_recid, version)
+    data_filename = current_app.config['SUBMISSION_FILE_NAME_PATTERN'].format(submission.publication_recid, version)
 
     # If a YAML file is requested, we just need to send this back.
     if file_format == 'yaml' and os.path.exists(os.path.join(path, data_filename)):
-        return send_file(os.path.join(path, data_filename), as_attachment=True)
+        if not offline:
+            return send_file(os.path.join(path, data_filename), as_attachment=True)
 
     file_identifier = submission.publication_recid
     if submission.inspire_id:
         file_identifier = 'ins{0}'.format(submission.inspire_id)
 
     output_file = 'HEPData-{0}-{1}-{2}.tar.gz'.format(file_identifier, submission.version, file_format)
-    output_path = os.path.join(current_app.config['CFG_TMPDIR'], output_file)
 
-    # If the file is already available in the tmp dir, send it back.
-    if os.path.exists(output_path):
-        return send_file(
-            output_path,
-            as_attachment=True,
-        )
+    converted_dir = os.path.join(current_app.config['CFG_DATADIR'], 'converted')
+    if not os.path.exists(converted_dir):
+        os.mkdir(converted_dir)
+
+    output_path = os.path.join(converted_dir, output_file)
+
+    # If the file is already available in the dir, send it back
+    # unless we are forcing recreation of the file.
+    if os.path.exists(output_path) and not force:
+        if not offline:
+            return send_file(
+                output_path,
+                as_attachment=True,
+            )
+        else:
+            print('File already downloaded at {0}'.format(output_path))
+            return
 
     converter_options = {
         'input_format': 'yaml',
@@ -194,11 +212,11 @@ def download_submission(submission, file_format):
 
     data_filepath = os.path.join(path, data_filename)
 
-    converted_file = convert_zip_archive(data_filepath,
-                                         output_path,
-                                         converter_options)
-
-    return send_file(converted_file, as_attachment=True)
+    converted_file = convert_zip_archive(data_filepath, output_path, converter_options)
+    if not offline:
+        return send_file(converted_file, as_attachment=True)
+    else:
+        print('File for {0} create successfully at {1}'.format(file_identifier, output_path))
 
 
 @blueprint.route('/table/<string:inspire_id>/<string:table_name>/<int:version>/<string:file_format>')

@@ -26,20 +26,21 @@ def increment(recid):
     :param recid: id of the record accessed
     :return:
     """
-    dt = get_date()
-    try:
-        available_access_stats = DailyAccessStatistic.query.filter_by(
-            publication_recid=recid, day=dt.strftime('%Y-%m-%d')).first()
+    if recid:
+        dt = get_date()
+        try:
+            available_access_stats = DailyAccessStatistic.query.filter_by(
+                publication_recid=recid, day=dt.strftime('%Y-%m-%d')).first()
 
-        if available_access_stats:
-            available_access_stats.count += 1
-        else:
-            stats = DailyAccessStatistic(
-                publication_recid=recid, day=dt, count=1)
-            db.session.add(stats)
-        db.session.commit()
-    except:
-        db.session.rollback()
+            if available_access_stats:
+                available_access_stats.count += 1
+            else:
+                stats = DailyAccessStatistic(
+                    publication_recid=recid, day=dt, count=1)
+                db.session.add(stats)
+            db.session.commit()
+        except:
+            db.session.rollback()
 
 
 def get_count(recid):
@@ -48,12 +49,13 @@ def get_count(recid):
     :param recid: record id to get the count for
     :return: dict with sum as a key {"sum": 2}
     """
-    try:
-        result = DailyAccessStatistic.query.with_entities(
-            func.sum(DailyAccessStatistic.count).label('sum')).filter(
-            DailyAccessStatistic.publication_recid == recid).one()
-        return {"sum": int(result.sum)}
+    if recid:
+        try:
+            result = DailyAccessStatistic.query.with_entities(
+                func.sum(DailyAccessStatistic.count).label('sum')).filter(
+                DailyAccessStatistic.publication_recid == recid).one()
+            return {"sum": int(result.sum)}
 
-    except Exception as e:
-        log.error(e)
-        return {"sum": 1}
+        except Exception as e:
+            log.error(e)
+            return {"sum": 1}

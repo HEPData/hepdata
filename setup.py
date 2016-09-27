@@ -188,6 +188,7 @@ setup(
             'hepdata_records = hepdata.modules.records.migrator.api',
             'hepdata_doi = hepdata.modules.records.utils.doi_minter',
             'hepdata_mail = hepdata.utils.mail',
+            'hepdata_conversion = hepdata.modules.converter.tasks',
         ],
         'invenio_i18n.translations': [
             'messages = hepdata',

@@ -21,7 +21,7 @@
 # In applying this license, CERN does not
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
-import json
+from __future__ import absolute_import, print_function
 import socket
 from datetime import datetime, timedelta
 from urllib2 import HTTPError
@@ -118,7 +118,7 @@ def update_submissions(inspire_ids_to_update, only_record_information=False):
         _cleaned_id = inspire_id.replace("ins", "")
         _matching_records = get_records_matching_field('inspire_id', _cleaned_id)
         if len(_matching_records['hits']['hits']) >= 1:
-            print 'The record with id {} will be updated now'.format(inspire_id)
+            print('The record with id {} will be updated now'.format(inspire_id))
             recid = _matching_records['hits']['hits'][0]['_source']['recid']
             if 'related_publication' in _matching_records['hits']['hits'][0]['_source']:
                 recid = _matching_records['hits']['hits'][0]['_source']['related_publication']
@@ -189,8 +189,7 @@ def load_files(inspire_ids, send_tweet=False, synchronous=False):
     for index, inspire_id in enumerate(inspire_ids):
         _cleaned_id = inspire_id.replace("ins", "")
         if not record_exists(_cleaned_id):
-            print 'The record with id {0} does not exist in the database, so we\'re loading it.' \
-                .format(inspire_id)
+            print('The record with id {0} does not exist in the database, so we\'re loading it.'.format(inspire_id))
             try:
                 log.info('Loading {0}'.format(inspire_id))
                 if synchronous:
@@ -198,13 +197,13 @@ def load_files(inspire_ids, send_tweet=False, synchronous=False):
                 else:
                     migrator.load_file.delay(inspire_id, send_tweet)
             except socket.error as se:
-                print 'socket error...'
-                print se.message
+                print('socket error...')
+                log.error(se.message)
             except Exception as e:
+                print('Failed to load {0}. {1} '.format(inspire_id, e))
                 log.error('Failed to load {0}. {1} '.format(inspire_id, e))
-                print e
         else:
-            print 'The record with inspire id {0} already exists. Updating instead.'.format(inspire_id)
+            print('The record with inspire id {0} already exists. Updating instead.'.format(inspire_id))
             log.info('Updating {}'.format(inspire_id))
             if synchronous:
                 update_submissions([inspire_id], send_tweet)
@@ -220,16 +219,6 @@ class Migrator(object):
 
     def __init__(self, base_url="http://hepdata.cedar.ac.uk/view/{0}/yaml"):
         self.base_url = base_url
-
-    def retrieve_publication_information(self, inspire_id):
-        """
-        Downloads the publication information from inspire
-        and creates the record structure for loading
-        :param inspire_id:
-        :return: created record
-        """
-        record_information = self.retrieve_publication_information(inspire_id)
-        return create_record(record_information)
 
     def prepare_files_for_submission(self, inspire_id, force_retrieval=False):
         """
@@ -331,6 +320,7 @@ class Migrator(object):
             log.error(e.message)
             return None
 
+
     def retrieve_publication_information(self, inspire_id):
         """
         :param inspire_id: id for record to get. If this contains
@@ -349,7 +339,7 @@ class Migrator(object):
         content, status = get_inspire_record_information(inspire_id)
 
         content["inspire_id"] = inspire_id
-        return content
+        return create_record(content)
 
     def load_submission(self, record_information, file_base_path,
                         submission_yaml_file_location, update=False):
@@ -372,8 +362,8 @@ class Migrator(object):
                                               record_information["recid"], update=update)
 
         if len(errors) > 0:
-            print 'ERRORS ARE: '
-            print errors
+            print('ERRORS ARE: ')
+            print(errors)
 
         if errors:
             raise FailedSubmission("Submission failed for {0}.".format(
