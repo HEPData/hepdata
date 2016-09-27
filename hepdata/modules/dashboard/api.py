@@ -53,7 +53,7 @@ def create_record_for_dashboard(record_id, submissions, primary_uploader=None,
     if publication_record is not None:
         if record_id not in submissions:
 
-            hepdata_submission_record = get_latest_hepsubmission(recid=record_id)
+            hepdata_submission_record = get_latest_hepsubmission(publication_recid=record_id)
 
             submissions[record_id] = {}
             submissions[record_id]["metadata"] = {"recid": record_id,
@@ -232,7 +232,7 @@ def get_pending_invitations_for_user(user):
 
     for invite in pending_invites:
         publication_record = get_record_by_id(invite.publication_recid)
-        hepsubmission = get_latest_hepsubmission(recid=invite.publication_recid)
+        hepsubmission = get_latest_hepsubmission(publication_recid=invite.publication_recid)
 
         coordinator = get_user_from_id(hepsubmission.coordinator)
         result.append(

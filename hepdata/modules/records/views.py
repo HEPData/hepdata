@@ -112,14 +112,13 @@ def get_metadata_by_alternative_id(recid):
 @blueprint.route('/question/<int:recid>', methods=['POST'])
 def submit_question(recid):
     question = request.form['question']
-    print('Question is {}'.format(question))
     try:
         question = Question(user=int(current_user.get_id()), publication_recid=recid, question=str(question))
         db.session.add(question)
         db.session.commit()
         send_question_email(question)
     except Exception as e:
-        print(e)
+        log.error(e)
         db.session.rollback()
 
     return jsonify({'status': 'queued', 'message': 'Your question has been posted.'})
@@ -194,11 +193,9 @@ def get_latest():
     for record in latest_records:
         record_information = record['_source']
         if 'recid' in record_information:
-            collaborations = []
-            if 'collaborations' in record_information:
-                collaborations = record_information['collaborations']
 
             last_updated = record_information['creation_date']
+
             if "last_updated" in record_information:
                 last_updated = record_information["last_updated"]
                 last_updated = parser.parse(last_updated).strftime("%Y-%m-%d")
@@ -210,17 +207,11 @@ def get_latest():
                 author_count = 0
             else:
                 author_count = len(authors)
-            result['latest'].append({
-                'id': record_information['recid'],
-                'inspire_id': record_information['inspire_id'],
-                'title': record_information['title'],
-                'collaborations': collaborations,
-                'journal': record_information['journal_info'],
-                'author_count': author_count,
-                'first_author': record_information.get('first_author', None),
-                'creation_date': record_information['creation_date'],
-                'last_updated': last_updated})
 
+            record_information['author_count'] = author_count
+            record_information['last_updated'] = last_updated
+
+            result['latest'].append(record_information)
     return jsonify(result)
 
 
@@ -260,7 +251,7 @@ def get_table_details(recid, data_recid, version):
 
         # we create a map of files mainly to accommodate the use of thumbnails for images where possible.
         tmp_assoc_files = {}
-        for associated_data_file in datasub_record.additional_files:
+        for associated_data_file in datasub_record.resources:
             alt_location = associated_data_file.file_location
             location_parts = alt_location.split('/')
 
@@ -297,7 +288,7 @@ def get_table_details(recid, data_recid, version):
 @login_required
 def get_coordinator_view(recid):
     # there should only ever be one rev
-    hepsubmission_record = get_latest_hepsubmission(recid=recid)
+    hepsubmission_record = get_latest_hepsubmission(publication_recid=recid)
 
     participants = {"reviewer": {"reserve": [], "primary": []},
                     "uploader": {"reserve": [], "primary": []}}
@@ -319,30 +310,34 @@ def get_coordinator_view(recid):
 @blueprint.route('/data/review/status/', methods=['POST', ])
 @login_required
 def set_data_review_status():
-    # todo: need to check if the user is involved in this record before being allowed to perform this operation.
-    # same for upload...
 
     recid = int(request.form['publication_recid'])
     data_id = int(request.form['data_recid'])
     status = request.form['status']
     version = int(request.form['version'])
 
-    record_sql = DataReview.query.filter_by(data_recid=data_id,
-                                            version=version)
-    try:
-        record = record_sql.one()
-    except NoResultFound:
-        record = create_data_review(data_id, recid, version)
+    if user_allowed_to_perform_action(recid):
 
-    record_sql.update({"status": status}, synchronize_session='fetch')
-    try:
-        db.session.commit()
-    except Exception:
-        db.session.rollback()
+        record_sql = DataReview.query.filter_by(data_recid=data_id,
+                                                version=version)
+        try:
+            record = record_sql.one()
+        except NoResultFound:
+            record = create_data_review(data_id, recid, version)
 
-    return json.dumps(
-        {"recid": record.publication_recid, "data_id": record.data_recid,
-         "status": record.status})
+        record_sql.update({"status": status}, synchronize_session='fetch')
+        try:
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+
+        return jsonify(
+            {"recid": record.publication_recid, "data_id": record.data_recid,
+             "status": record.status})
+
+    return jsonify(
+        {"recid": recid, "data_id": data_id, 'message': 'You are not authorised to update the review status for '
+                                                        'this data record.'})
 
 
 @blueprint.route('/data/review/', methods=['GET', ])
@@ -351,17 +346,18 @@ def get_data_reviews_for_record():
     recid = int(request.args.get('publication_recid'))
     record_sql = DataReview.query.filter_by(publication_recid=recid)
 
-    try:
-        records = record_sql.all()
-        record_result = []
-        for record in records:
-            record_result.append(
-                {"data_recid": record.data_recid, "status": record.status,
-                 "last_updated": record.modification_date})
+    if user_allowed_to_perform_action(recid):
+        try:
+            records = record_sql.all()
+            record_result = []
+            for record in records:
+                record_result.append(
+                    {"data_recid": record.data_recid, "status": record.status,
+                     "last_updated": record.modification_date})
 
-        return json.dumps(record_result, default=default_time)
-    except:
-        return json.dumps({"error": "no reviews found"})
+            return json.dumps(record_result, default=default_time)
+        except:
+            return jsonify({"error": "no reviews found"})
 
 
 @blueprint.route('/data/review/status/', methods=['GET', ])
@@ -372,11 +368,11 @@ def get_data_review_status():
 
     try:
         record = record_sql.one()
-        return json.dumps(
+        return jsonify(
             {"publication_recid": record.publication_recid,
              "data_recid": record.data_recid, "status": record.status})
     except:
-        return json.dumps({"error": "no review found."})
+        return jsonify({"error": "no review found."})
 
 
 @blueprint.route(
@@ -483,11 +479,10 @@ def get_resources(recid, version):
     """
 
     result = []
-    submission = HEPSubmission.query.filter_by(publication_recid=recid, version=version)
+    submission = get_latest_hepsubmission(publication_recid=recid, version=version)
 
-    if submission.count() > 0:
-        submission_obj = submission.first()
-        for reference in submission_obj.references:
+    if submission:
+        for reference in submission.resources:
             result.append(
                 {'id': reference.id, 'file_type': reference.file_type,
                  'file_description': reference.file_description,

@@ -185,7 +185,7 @@
                                        itemtype="http://schema.org/CreativeWork"
                                        target="_blank"><span
                                             class="link"><span
-                                            class="link-type">View paper in Inspire</span></span><span
+                                            class="link-type">INSPIRE Record</span></span><span
                                             class="hidden"
                                             itemprop="url">http://inspirehep.net/record/{{ ctx.record.inspire_id }}</span>
                                     </a></li>
@@ -194,16 +194,16 @@
                                        itemprop="citation" itemscope
                                        itemtype="http://schema.org/CreativeWork"
                                        target="_blank"><span
-                                            class="link"><span class="link-type">View old HepData</span></span><span
+                                            class="link"><span class="link-type">HepData</span></span><span
                                             class="hidden"
                                             itemprop="url">http://hepdata.cedar.ac.uk/view/ins{{ ctx.record.inspire_id }}</span>
                                     </a></li>
 
                                 {% if ctx.additional_resources %}
                                     <li>
-                                        <button id="show_resources" class="link"
+                                        <button id="show_resources" class="btn btn-primary btn-sm"
                                                 data-recid="{{ ctx.record.recid }}">
-                                            Additional Resources
+                                            Resources
                                         </button>
                                     </li>
                                 {% endif %}

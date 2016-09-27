@@ -135,7 +135,7 @@ def download_submission_with_recid(*args, **kwargs):
         submission = HEPSubmission.query.filter_by(publication_recid=recid, version=kwargs.pop('version')) \
             .first()
     else:
-        submission = get_latest_hepsubmission(recid=recid)
+        submission = get_latest_hepsubmission(publication_recid=recid)
 
     if not submission:
         return display_error(

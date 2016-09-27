@@ -69,6 +69,18 @@
             </div>
         </div>
 
+        {% if not current_user.confirmed_at %}
+            <div class="container-fluid">
+                <div class="row-fluid">
+                    <div class="col-md-12">
+                        <div class="alert alert-info">
+                            <strong>Please verify your email address.</strong> You can resend the confirmation email from the <a href="/account/settings/profile" style="color: #3498db; font-weight: bolder">profile edit screen</a>.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
         <div class="clearfix"></div>
 
         {% if ctx.pending_invites | length > 0 %}
@@ -144,10 +156,12 @@
 
                                     <div class="col-md-3">
                                         <a href="/permissions/coordinator/response/{{ request.id }}/approve"
-                                           class="btn btn-success pull-right" style="margin-right: 3px; margin-top: -5px;">Approve
+                                           class="btn btn-success pull-right"
+                                           style="margin-right: 3px; margin-top: -5px;">Approve
                                             Request</a>
                                         <a href="/permissions/coordinator/response/{{ request.id }}/reject"
-                                           class="btn btn-danger pull-right" style="margin-right: 3px; margin-top: -5px;">Reject
+                                           class="btn btn-danger pull-right"
+                                           style="margin-right: 3px; margin-top: -5px;">Reject
                                             Request</a>
                                     </div>
                                 </div>
@@ -302,6 +316,10 @@
                                 {% if user_is_coordinator_or_admin %}
                                     <div class="alert alert-info"><i class="fa fa-gavel"></i> <strong>You are a HEPData
                                         coordinator</strong>.<br/> <span class="text-muted">You are able to create and manage HEPData submissions.</span>
+                                    </div>
+                                {% elif not current_user.confirmed_at %}
+                                    <div class="alert alert-info">
+                                        You are not able to request coordinator privileges until your email address is confirmed.
                                     </div>
                                 {% else %}
                                     <p class="text-small text-muted">You are not able to create or manage HEPData

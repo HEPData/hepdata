@@ -15,7 +15,7 @@ def is_resource_added_to_submission(recid, version, resource_url):
     """
     return HEPSubmission.query.filter(HEPSubmission.publication_recid == recid,
                                       HEPSubmission.version == version,
-                                      HEPSubmission.references.any(
+                                      HEPSubmission.resources.any(
                                           DataResource.file_location == resource_url)).count() > 0
 
 
@@ -27,11 +27,8 @@ def get_latest_hepsubmission(*args, **kwargs):
     :param status: e.g. todo, finished.
     :return: the newly created HEPSubmission object
     """
-    if 'inspire_id' in kwargs:
-        hepsubmissions = HEPSubmission.query.filter_by(inspire_id=kwargs.pop('inspire_id')).all()
 
-    if 'recid' in kwargs:
-        hepsubmissions = HEPSubmission.query.filter_by(publication_recid=kwargs.pop('recid')).all()
+    hepsubmissions = HEPSubmission.query.filter_by(**kwargs).all()
 
     last = None
     for hepsubmission in hepsubmissions:

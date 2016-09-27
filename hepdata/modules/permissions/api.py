@@ -92,6 +92,9 @@ def get_approved_coordinators():
 
 def user_allowed_to_perform_action(recid):
     """Determines if a user is allowed to perform an action on a record"""
+    if not current_user.is_authenticated:
+        return False
+
     if user_is_admin(current_user):
         return True
 

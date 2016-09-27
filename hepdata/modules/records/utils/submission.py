@@ -191,7 +191,7 @@ def cleanup_data_resources(data_submission):
     :param data_submission: DataSubmission object to be cleaned
     :return:
     """
-    for additional_file in data_submission.additional_files:
+    for additional_file in data_submission.resources:
         db.session.delete(additional_file)
     db.session.commit()
 
@@ -242,7 +242,7 @@ def process_data_file(recid, version, basepath, data_obj, datasubmission, main_f
     if "additional_resources" in data_obj:
         resources = parse_additional_resources(basepath, recid, version, data_obj)
         for resource in resources:
-            datasubmission.additional_files.append(resource)
+            datasubmission.resources.append(resource)
 
     db.session.commit()
 
@@ -262,7 +262,7 @@ def process_general_submission_info(basepath, submission_info_document, recid):
         or 'modifications' in submission_info_document \
         or 'record_ids' in submission_info_document:
 
-        hepsubmission = get_latest_hepsubmission(recid=recid)
+        hepsubmission = get_latest_hepsubmission(publication_recid=recid)
         hepsubmission.data_abstract = encode_string(
             submission_info_document['comment'])
 
@@ -277,13 +277,13 @@ def process_general_submission_info(basepath, submission_info_document, recid):
 
         if 'additional_resources' in submission_info_document:
 
-            for reference in hepsubmission.references:
+            for reference in hepsubmission.resources:
                 db.session.delete(reference)
 
             resources = parse_additional_resources(basepath,
                                                    recid, hepsubmission.version, submission_info_document)
             for resource in resources:
-                hepsubmission.references.append(resource)
+                hepsubmission.resources.append(resource)
 
         if hepsubmission.last_updated is not None:
             print('hepsubmission.last_updated = {}'.format(hepsubmission.last_updated.isoformat(' ')))
@@ -400,7 +400,7 @@ def process_submission_directory(basepath, submission_file_path, recid, update=F
 
             # process file, extracting contents, and linking
             # the data record with the parent publication
-            hepsubmission = get_latest_hepsubmission(recid=recid)
+            hepsubmission = get_latest_hepsubmission(publication_recid=recid)
             if hepsubmission is None:
                 HEPSubmission(publication_recid=recid,
                               overall_status='todo',

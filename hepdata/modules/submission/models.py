@@ -63,7 +63,7 @@ class HEPSubmission(db.Model):
 
     data_abstract = db.Column(db.LargeBinary)
 
-    references = db.relationship("DataResource",
+    resources = db.relationship("DataResource",
                                  secondary="data_resource_link",
                                  cascade="all,delete")
 
@@ -127,7 +127,7 @@ class DataSubmission(db.Model):
     data_file = db.Column(db.Integer, db.ForeignKey("dataresource.id"))
 
     # supplementary files, such as code, links out to other resources etc.
-    additional_files = db.relationship("DataResource", secondary="datafile_identifier",
+    resources = db.relationship("DataResource", secondary="datafile_identifier",
                                        cascade="all,delete")
 
     doi = db.Column(db.String(128), nullable=True)

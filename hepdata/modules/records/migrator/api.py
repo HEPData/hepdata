@@ -98,7 +98,7 @@ def update_analyses():
                                     file_location=_resource_url,
                                     file_type=analysis_endpoint)
 
-                                submission.references.append(new_resource)
+                                submission.resources.append(new_resource)
 
                         try:
                             db.session.add(submission)
@@ -179,6 +179,7 @@ def get_all_ids_in_current_system(date=None, prepend_id_with="ins"):
 
 def load_files(inspire_ids, send_tweet=False, synchronous=False):
     """
+    :param synchronous: if should be run immediately
     :param send_tweet: whether or not to tweet this entry.
     :param inspire_ids: array of inspire ids to load (in the format insXXX).
     :return: None
@@ -188,10 +189,10 @@ def load_files(inspire_ids, send_tweet=False, synchronous=False):
     for index, inspire_id in enumerate(inspire_ids):
         _cleaned_id = inspire_id.replace("ins", "")
         if not record_exists(_cleaned_id):
-            print 'The record with id {} does not exist in the database, so we\'re loading it.' \
+            print 'The record with id {0} does not exist in the database, so we\'re loading it.' \
                 .format(inspire_id)
             try:
-                log.info('Loading {}'.format(inspire_id))
+                log.info('Loading {0}'.format(inspire_id))
                 if synchronous:
                     migrator.load_file(inspire_id, send_tweet)
                 else:
@@ -220,20 +221,49 @@ class Migrator(object):
     def __init__(self, base_url="http://hepdata.cedar.ac.uk/view/{0}/yaml"):
         self.base_url = base_url
 
+    def retrieve_publication_information(self, inspire_id):
+        """
+        Downloads the publication information from inspire
+        and creates the record structure for loading
+        :param inspire_id:
+        :return: created record
+        """
+        record_information = self.retrieve_publication_information(inspire_id)
+        return create_record(record_information)
+
+    def prepare_files_for_submission(self, inspire_id, force_retrieval=False):
+        """
+        Either returns a file if it already exists, or downloads it and
+        splits it.
+        :param inspire_id:
+        :return: output location if succesful, None if not
+        """
+        output_location = os.path.join(current_app.config['CFG_DATADIR'], inspire_id)
+
+        if not os.path.exists(output_location) or force_retrieval:
+            print('Downloading file for {0}'.format(inspire_id))
+            file_location = self.download_file(inspire_id)
+
+            if file_location:
+                output_location = os.path.join(current_app.config['CFG_DATADIR'], inspire_id)
+                split_files(file_location, output_location, '{0}.zip'.format(output_location))
+            else:
+                return None
+        else:
+            print('File for {0} already in system...no download required.'.format(inspire_id))
+
+        return output_location
+
     @shared_task
     def update_file(inspire_id, recid, only_record_information=False, send_tweet=False):
         self = Migrator()
 
-        file_location = self.download_file(inspire_id)
-        if file_location:
+        output_location = self.prepare_files_for_submission(inspire_id, force_retrieval=True)
+        if output_location:
             updated_record_information = self.retrieve_publication_information(inspire_id)
             record_information = update_record(recid, updated_record_information)
 
             if not only_record_information:
-                split_files(file_location, os.path.join(current_app.config['CFG_DATADIR'], inspire_id),
-                            os.path.join(current_app.config['CFG_DATADIR'], inspire_id + ".zip"))
-                output_location = os.path.join(current_app.config['CFG_DATADIR'], inspire_id)
-
                 try:
                     recid = self.load_submission(
                         record_information, output_location, os.path.join(output_location, "submission.yaml"),
@@ -256,16 +286,11 @@ class Migrator(object):
     @shared_task
     def load_file(inspire_id, send_tweet):
         self = Migrator()
-        file_location = self.download_file(inspire_id)
-        if file_location:
-
-            split_files(file_location, os.path.join(current_app.config['CFG_DATADIR'], inspire_id),
-                        os.path.join(current_app.config['CFG_DATADIR'], inspire_id + ".zip"))
+        output_location = self.prepare_files_for_submission(inspire_id)
+        if output_location:
 
             record_information = self.retrieve_publication_information(inspire_id)
             record_information = create_record(record_information)
-
-            output_location = os.path.join(current_app.config['CFG_DATADIR'], inspire_id)
 
             try:
                 recid = self.load_submission(

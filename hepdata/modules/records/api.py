@@ -35,6 +35,7 @@ from sqlalchemy.orm.exc import NoResultFound
 from werkzeug.utils import secure_filename
 
 from hepdata.modules.converter import convert_oldhepdata_to_yaml
+from hepdata.modules.permissions.api import user_allowed_to_perform_action
 from hepdata.modules.permissions.models import SubmissionParticipant
 from hepdata.modules.records.subscribers.api import is_current_user_subscribed_to_record
 from hepdata.modules.records.utils.common import decode_string, find_file_in_directory, allowed_file, \
@@ -207,7 +208,7 @@ def submission_has_resources(hepsubmission):
     :param hepsubmission: HEPSubmission object
     :return: bool
     """
-    return len(hepsubmission.references) > 0
+    return len(hepsubmission.resources) > 0
 
 
 def extract_journal_info(record):
@@ -223,14 +224,18 @@ def extract_journal_info(record):
 
 
 def render_record(recid, record, version, output_format, light_mode=False):
-    version_count = HEPSubmission.query.filter_by(
-        publication_recid=recid).count()
+
+    if user_allowed_to_perform_action(recid):
+        version_count = HEPSubmission.query.filter_by(
+            publication_recid=recid).count()
+    else:
+        version_count = HEPSubmission.query.filter_by(
+            publication_recid=recid, overall_status='finished').count()
 
     if version == -1:
         version = version_count
 
-    hepdata_submission = HEPSubmission.query.filter_by(
-        publication_recid=recid, version=version).first()
+    hepdata_submission = get_latest_hepsubmission(publication_recid=recid, version=version)
 
     if hepdata_submission is not None:
         ctx = format_submission(recid, record, version, version_count, hepdata_submission)

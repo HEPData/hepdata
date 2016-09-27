@@ -187,7 +187,7 @@ def send_question_email(question):
 
     reply_to = current_user.email
 
-    submission = get_latest_hepsubmission(recid=question.publication_recid)
+    submission = get_latest_hepsubmission(publication_recid=question.publication_recid)
     submission_participants = get_submission_participants_for_record(question.publication_recid)
 
     if submission:
