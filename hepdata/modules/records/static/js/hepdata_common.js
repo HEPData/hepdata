@@ -35,7 +35,15 @@ HEPDATA.review_classes = {
 HEPDATA.file_type_to_details = {
   "image": {"icon": "image", "description": "Image File"},
   "github": {"icon": "github", "description": "GitHub Repository"},
-  "hepforge": {"icon": "area-chart", "description": "Rivet Analysis"},
+  "gitlab": {"icon": "gitlab", "description": "GitLab Repository"},
+  "bitbucket": {"icon": "bitbucket", "description": "Bitbucket Repository"},
+  "fastnlo": {"icon": "area-chart", "description": "fastNLO Analysis"},
+  "hepforge": {"icon": "check-square-o", "description": "Rivet Analysis"},
+  "rivet": {"icon": "check-square-o", "description": "Rivet Analysis"},
+  "madanalysis": {"icon": "repeat", "description": "MAD Analysis"},
+  "xfitter": {"icon": "area-chart", "description": "xFitter Analysis"},
+  "applgrid": {"icon": "area-chart", "description": "APPLgrid Analysis"},
+  "ufo": {"icon": "rocket", "description": "Universal Feynrules Output (UFO)"},
   "html": {"icon": "link", "description": "External Link"},
   "oldhepdata": {"icon": "file-text-o", "description": "Legacy HEPData Format"},
   "root": {"icon": "line-chart", "description": "ROOT File"}
@@ -180,8 +188,6 @@ HEPDATA.count_decimals = function (number) {
 
 HEPDATA.is_image = function (file_type) {
   var image_file_types = ["png", "jpeg", "jpg", "tiff"];
-  console.log(file_type);
-  console.log(image_file_types.indexOf(file_type.toLowerCase()));
   return image_file_types.indexOf(file_type.toLowerCase()) != -1
 };
 
@@ -191,6 +197,7 @@ HEPDATA.is_image = function (file_type) {
  */
 HEPDATA.map_file_type_to_property = function (file_type, property) {
 
+  file_type = file_type.toLowerCase();
   var mapping = HEPDATA.file_type_to_details[file_type];
   if (mapping) {
     return HEPDATA.file_type_to_details[file_type][property];

@@ -28,7 +28,7 @@ from hepdata.config import CFG_CONVERTER_URL, CFG_SUPPORTED_FORMATS
 from hepdata_converter_ws_client import convert
 from invenio_db import db
 from hepdata.modules.converter import convert_zip_archive
-from hepdata.modules.submission.common import get_latest_hepsubmission
+from hepdata.modules.submission.api import get_latest_hepsubmission
 from hepdata.modules.submission.models import HEPSubmission, DataResource, DataSubmission
 from hepdata.modules.records.utils.submission import SUBMISSION_FILE_NAME_PATTERN
 from hepdata.utils.file_extractor import extract, get_file_in_directory

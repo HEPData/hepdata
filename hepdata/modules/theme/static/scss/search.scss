@@ -349,7 +349,7 @@ body {
 }
 
 
-.version, .rivet {
+.version, .analysis {
   padding: 4px 6px;
   border-radius: 4px;
   font-size: .6em;
@@ -359,7 +359,17 @@ body {
   display: inline-block;
 }
 
-.rivet {
-  background-color: $yellow;
+.version {
+  background-color: $orange;
+  color: $dark-blue;
+}
+
+.analysis {
+  background-color: $purple;
   color: $navy;
+  text-transform: capitalize;
+
+  a {
+    color: white;
+  }
 }

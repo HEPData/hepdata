@@ -62,7 +62,7 @@ class HEPSubmissionAdminView(ModelView):
 
 class DataResourceAdminView(ModelView):
     can_view_details = True
-    can_delete = False
+    can_delete = True
 
     column_list = (
         'id',

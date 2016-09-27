@@ -2,60 +2,58 @@
 
 <div class="record-content">
 
-    <div class="record-info">
+    <div class="record-info row-fluid">
 
-        <div style="padding: 3px 0">
-            {% if record.collaborations %}
-                <span class="collaboration-group"> The
-                    {% for col in record.collaborations %}
-                        {% set link = ctx.modify_query('.search', collaboration=col) %}
-                        <span class="info_group"> <a href={{ link }}> {{ col }} </a></span>
-                    {% endfor %} collaboration{% if record.collaborations|length > 1 %}s{% endif %}</span>
+        {% if record.collaborations %}
+            <span class="collaboration-group"> The
+                {% for col in record.collaborations %}
+                    {% set link = ctx.modify_query('.search', collaboration=col) %}
+                    <span class="info_group"> <a href={{ link }}> {{ col }} </a></span>
+                {% endfor %} collaboration{% if record.collaborations|length > 1 %}s{% endif %}</span>
+        {% endif %}
+
+        {% if record.authors %}
+            {% for author_name in record.authors[:max_authors] %}
+                {% set link = ctx.modify_query('.search', author=author_name) %}
+                <a href={{ link }}>
+                    {{ author_name }}
+                </a>;
+            {% endfor %}
+            {% if record.authors|length > max_authors %}
+                <em>et al. </em>
             {% endif %}
+        {% endif %}
 
-            {% if record.authors %}
-                {% for author_name in record.authors[:max_authors] %}
-                    {% set link = ctx.modify_query('.search', author=author_name) %}
-                    <a href={{ link }}>
-                        {{ author_name }}
-                    </a>;
-                {% endfor %}
-                {% if record.authors|length > max_authors %}
-                    <em>et al. </em>
-                {% endif %}
-            {% endif %}
-        </div>
 
-        <div style="padding: 3px 0">
+        <div class="record-journal">
             {% include "hepdata_records/components/journal_info.html" %}
         </div>
 
-        <div style="padding: 3px 0">
-            {% if record.inspire_id %}
-                <span itemprop="citation" itemscope itemtype="http://schema.org/CreativeWork" class="info-group">
-            <span class="hidden" itemprop="url">http://inspirehep.net/record/{{ record.inspire_id }}</span>
-            <i class="fa fa-link"></i> Inspire Record <a href="http://inspirehep.net/record/{{ record.inspire_id }}"
-                                                         target="_blank"> {{ record.inspire_id }}</a>
-        </span>
-            {% endif %}
+        {% if record.inspire_id %}
+            <span itemprop="citation" itemscope itemtype="http://schema.org/CreativeWork" class="info-group">
+                        <span class="hidden" itemprop="url">http://inspirehep.net/record/{{ record.inspire_id }}</span>
+                        <i class="fa fa-file-text-o"></i> Inspire Record
+                        <a href="http://inspirehep.net/record/{{ record.inspire_id }}"
+                           target="_blank"> {{ record.inspire_id }}</a>
+                    </span>
+        {% endif %}
 
-            {% if record.hepdata_doi %}
+        {% if record.hepdata_doi %}
+            {% set doi_link = 'http://dx.doi.org/' + record.hepdata_doi %}
+            <span class="info-group">
+                        <i class="fa fa-link"></i> DOI
+                        <a href="{{ doi_link }}" title="DOI" target="_blank">{{ record.hepdata_doi }}</a>
+                    </span>
+            <span class="hidden" itemprop="citation">{{ doi_link }}</span>
+        {% endif %}
 
-                {% set doi_link = 'http://dx.doi.org/' + record.hepdata_doi %}
-                <span class="info-group">
-                <i class="fa fa-link"></i> DOI <a href={{ doi_link }} title="DOI"
-                                                  target="_blank">{{ record.hepdata_doi }}</a>
-            </span>
-                <span class="hidden" itemprop="citation">{{ doi_link }}</span>
-            {% endif %}
 
-        </div>
+
+        {% if record.abstract %}
+            <p class="truncated-record-abstract" itemprop="description" style="padding-top: 10px;">
+                {{ record.abstract }}
+            </p>
+        {% endif %}
+
     </div>
-
-    {% if record.abstract %}
-        <p class="truncated-record-abstract" itemprop="description" style="padding-top: 10px;">
-            {{ record.abstract }}
-        </p>
-    {% endif %}
-
 </div>

@@ -35,7 +35,7 @@ from hepdata.modules.permissions.api import get_records_participated_in_by_user,
     get_pending_request
 from hepdata.modules.permissions.models import SubmissionParticipant, CoordinatorRequest
 from hepdata.modules.records.utils.common import get_record_by_id
-from hepdata.modules.submission.common import get_latest_hepsubmission
+from hepdata.modules.submission.api import get_latest_hepsubmission
 from hepdata.modules.submission.models import HEPSubmission
 from hepdata.modules.submission.views import send_cookie_email
 from hepdata.utils.users import get_user_from_id, user_is_admin

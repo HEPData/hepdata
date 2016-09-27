@@ -42,7 +42,7 @@ from hepdata.modules.records.utils.common import decode_string, find_file_in_dir
 from hepdata.modules.records.utils.data_processing_utils import process_ctx
 from hepdata.modules.records.utils.submission import process_submission_directory, \
     remove_submission, create_data_review
-from hepdata.modules.submission.common import get_latest_hepsubmission
+from hepdata.modules.submission.api import get_latest_hepsubmission
 from hepdata.modules.records.utils.users import get_coordinators_in_system, has_role
 from hepdata.modules.records.utils.workflow import update_action_for_submission_participant
 from hepdata.modules.records.utils.yaml_utils import split_files

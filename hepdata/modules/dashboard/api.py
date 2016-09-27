@@ -25,7 +25,7 @@ from sqlalchemy import and_, or_
 
 from hepdata.modules.permissions.models import SubmissionParticipant
 from hepdata.modules.records.utils.common import get_record_by_id, encode_string
-from hepdata.modules.submission.common import get_latest_hepsubmission
+from hepdata.modules.submission.api import get_latest_hepsubmission
 from hepdata.modules.records.utils.users import has_role
 from hepdata.modules.submission.models import HEPSubmission, DataReview
 from hepdata.utils.users import get_user_from_id

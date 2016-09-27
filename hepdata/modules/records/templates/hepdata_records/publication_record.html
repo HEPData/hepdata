@@ -128,12 +128,24 @@
                 <span itemprop="url"
                       class="hidden">http://hepdata.net/record/{{ ctx.record.recid }}</span>
 
+                    <br/>
+                        <div class="collaborations">
+                             <span class="collaboration-group"> The
+                                 {% for collaboration in ctx.record.collaborations %}
+                                     <span class="info_group"> <a
+                                             href="/search/?collaboration={{ collaboration }}"> {{ collaboration }} </a></span>
+                                 {% endfor %} collaboration{% if ctx.record.collaborations|length > 1 %}
+                                     s{% endif %}</span>
+
+                        </div>
+
                         <div class="record-authors">
                             {% for author in ctx.record.summary_authors %}
                                 <a href="/search?author={{ author.full_name }}"
                                    itemprop="author" itemscope
-                                   itemtype="http://schema.org/Person">{{ author.full_name }} <span
-                                        itemprop="affiliation"
+                                   itemtype="http://schema.org/Person">
+                                    <span itemprop="name">{{ author.full_name }}</span>
+                                    <span itemprop="affiliation"
                                         itemtype="http://schema.org/Organization"
                                         itemscope class="hidden"><span
                                         itemprop="name">{{ author.affiliation }}</span></span>
@@ -142,12 +154,6 @@
                             {% endfor %}
                         </div>
 
-                        <div class="collaborations">
-                            {% for collaboration in ctx.record.collaborations %}
-                                <a href="/search/?collaboration={{ collaboration }}"
-                                   class="collaboration">{{ collaboration }}</a>
-                            {% endfor %}
-                        </div>
 
                         <div class="record-journal">
                             {{ ctx.record.journal_info }}, {{ ctx.record.year }}
@@ -318,6 +324,8 @@
                     {% else %}
 
                         {% include 'hepdata_records/components/table_list.html' %}
+
+                        {% set table_details_class="col-lg-7 col-md-7" %}
                         {% include 'hepdata_records/components/table_details.html' %}
 
                     {% endif %}

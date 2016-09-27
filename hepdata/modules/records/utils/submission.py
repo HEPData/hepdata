@@ -40,7 +40,7 @@ from hepdata.ext.elasticsearch.api import get_records_matching_field, \
 from hepdata.modules.email.api import send_finalised_email
 from hepdata.modules.permissions.models import SubmissionParticipant
 from hepdata.modules.records.utils.workflow import create_record
-from hepdata.modules.submission.common import get_latest_hepsubmission
+from hepdata.modules.submission.api import get_latest_hepsubmission
 from hepdata.modules.submission.models import DataSubmission, DataReview, \
     DataResource, License, Keyword, HEPSubmission, RecordVersionCommitMessage
 from hepdata.modules.records.utils.common import \
@@ -404,6 +404,7 @@ def process_submission_directory(basepath, submission_file_path, recid, update=F
             if hepsubmission is None:
                 HEPSubmission(publication_recid=recid,
                               overall_status='todo',
+                              inspire_id=hepsubmission.inspire_id,
                               coordinator=int(current_user.get_id()),
                               version=hepsubmission.version + 1)
 
@@ -416,6 +417,7 @@ def process_submission_directory(basepath, submission_file_path, recid, update=F
                 # we create a new HEPSubmission object
                 _rev_hepsubmission = HEPSubmission(publication_recid=recid,
                                                    overall_status='todo',
+                                                   inspire_id=hepsubmission.inspire_id,
                                                    coordinator=hepsubmission.coordinator,
                                                    version=hepsubmission.version + 1)
                 db.session.add(_rev_hepsubmission)
@@ -613,7 +615,7 @@ def do_finalise(recid, publication_record=None, force_finalise=False,
 
     generated_record_ids = []
     if hep_submission \
-            and (force_finalise or hep_submission.coordinator == int(current_user.get_id())):
+        and (force_finalise or hep_submission.coordinator == int(current_user.get_id())):
 
         submissions = DataSubmission.query.filter_by(
             publication_recid=recid,

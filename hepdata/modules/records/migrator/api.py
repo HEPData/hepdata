@@ -21,14 +21,17 @@
 # In applying this license, CERN does not
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
-
+import json
 import socket
 from datetime import datetime, timedelta
 from urllib2 import HTTPError
 
+import requests
 from celery import shared_task
 from flask import current_app
 import os
+
+from invenio_db import db
 
 from hepdata.ext.elasticsearch.api import get_records_matching_field, index_record_ids
 from hepdata.modules.inspire_api.views import get_inspire_record_information
@@ -41,6 +44,8 @@ from hepdata.modules.records.utils.workflow import create_record, update_record
 import logging
 
 from hepdata.modules.records.utils.yaml_utils import split_files
+from hepdata.modules.submission.api import get_latest_hepsubmission, is_resource_added_to_submission
+from hepdata.modules.submission.models import DataResource
 
 __author__ = 'eamonnmaguire'
 
@@ -64,6 +69,47 @@ class FailedSubmission(Exception):
             for error_message in self.errors[file]:
                 print("\t{0} for {1}".format(error_message, self.record_id))
 
+
+@shared_task
+def update_analyses():
+
+    endpoints = current_app.config['ANALYSES_ENDPOINTS']
+    for analysis_endpoint in endpoints:
+
+        if 'endpoint_url' in endpoints[analysis_endpoint]:
+
+            log.info('Updating analyses from {0}...'.format(analysis_endpoint))
+
+            response = requests.get(endpoints[analysis_endpoint]['endpoint_url'])
+
+            if response:
+
+                analyses = response.json()
+
+                for record in analyses:
+                    submission = get_latest_hepsubmission(inspire_id=record)
+
+                    if submission:
+                        for analysis in analyses[record]:
+                            _resource_url = endpoints[analysis_endpoint]['url_template'].format(analysis)
+                            if not is_resource_added_to_submission(submission.publication_recid, submission.version,
+                                                                   _resource_url):
+                                new_resource = DataResource(
+                                    file_location=_resource_url,
+                                    file_type=analysis_endpoint)
+
+                                submission.references.append(new_resource)
+
+                        try:
+                            db.session.add(submission)
+                            db.session.commit()
+                        except Exception as e:
+                            db.session.rollback()
+                            log.error(e)
+                    else:
+                        log.debug('An analysis is available in {0} but with no equivalent in HEPData (ins{1}).'.format(analysis_endpoint, record))
+        else:
+            log.debug('No endpoint url configured for {0}'.format(analysis_endpoint))
 
 @shared_task
 def update_submissions(inspire_ids_to_update, only_record_information=False):
@@ -185,7 +231,7 @@ class Migrator(object):
 
             if not only_record_information:
                 split_files(file_location, os.path.join(current_app.config['CFG_DATADIR'], inspire_id),
-                                 os.path.join(current_app.config['CFG_DATADIR'], inspire_id + ".zip"))
+                            os.path.join(current_app.config['CFG_DATADIR'], inspire_id + ".zip"))
                 output_location = os.path.join(current_app.config['CFG_DATADIR'], inspire_id)
 
                 try:

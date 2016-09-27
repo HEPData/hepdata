@@ -19,13 +19,21 @@
 
 """Enchancers for the document sent to elastic search """
 import datetime
+import json
+import logging
+
+import requests
 from dateutil.parser import parse
 from flask import current_app
 
 from hepdata.modules.permissions.models import SubmissionParticipant
-from hepdata.modules.submission.models import HEPSubmission, DataResource
+from hepdata.modules.submission.api import get_latest_hepsubmission
+from hepdata.utils import session
 
 FORMATS = ['json', 'root', 'yaml', 'csv']
+
+logging.basicConfig()
+log = logging.getLogger(__name__)
 
 
 def add_data_submission_urls(doc):
@@ -52,18 +60,24 @@ def add_shortened_authors(doc):
         doc["summary_authors"] = doc["authors"][:10]
 
 
-def add_badges(doc):
+def add_analyses(doc):
     """
     TODO: Generalise for other badges other than rivit
     :param doc:
     :return:
     """
-    hepforge_resource_count = HEPSubmission.query.filter(HEPSubmission.publication_recid == int(doc["recid"]),
-                                                         HEPSubmission.version == int(doc["version"]),
-                                                         HEPSubmission.references.any(
-                                                             DataResource.file_type == "hepforge")).count()
 
-    doc["has_rivet_analysis"] = bool(hepforge_resource_count)
+    # do lookup from http://rivet.hepforge.org/list_of_analyses.json
+    # for HEPforge. But only one lookup.
+
+    # look up once per day, and cache the result in REDIS.
+
+    latest_submission = get_latest_hepsubmission(recid=doc['recid'])
+
+    doc["analyses"] = []
+    for reference in latest_submission.references:
+        if reference.file_type in current_app.config['ANALYSES_ENDPOINTS']:
+            doc["analyses"].append({'type': reference.file_type, 'analysis': reference.file_location})
 
 
 def get_last_submission_event(recid):
@@ -101,4 +115,4 @@ def enhance_publication_document(doc):
     add_data_submission_urls(doc)
     add_shortened_authors(doc)
     process_last_updates(doc)
-    add_badges(doc)
+    add_analyses(doc)

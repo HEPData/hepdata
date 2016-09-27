@@ -82,53 +82,21 @@ def get_basic_record_information(record):
     from utils import parse_and_format_date
     source = record['_source']
 
-    datestring = source.get('creation_date')
-
     # Collaborations
     collaborations = source.get('collaborations', [])
     if isinstance(collaborations, basestring):
         collaborations = [collaborations]
 
-    # Highlights
-    highlights = record.get('highlight', {})
-    field_mapping = {
-        'abstract.summary': 'abstract',
-        'title.title': 'title'
-    }
-    for key, val in highlights.items():
-        if key in field_mapping:
-            new_key = field_mapping[key]
-            highlights[new_key] = highlights[key]
-            del highlights[key]
-
     authors = source.get('summary_authors', None)
     if authors:
         authors = map(lambda x: x['full_name'], authors)
 
-    res = {
-        'recid': record['_id'],
-        'title': source.get('title', ''),
-        'abstract': source.get('abstract', ''),
-        'doi': source.get('doi'),
-        'hepdata_doi': source.get('hepdata_doi'),
-        'type': source.get('type', []),
-        'dissertation': source.get('dissertation', {}),
-        'keywords': source.get('keywords', []),
-        'data_keywords': source.get('data_keywords', {}),
-        'access_urls': source.get('access_urls', {}),
-        'collaborations': collaborations,
-        'inspire_id': source.get('inspire_id', ''),
-        'year': source.get('year', ''),
-        'version': source.get('version', 1),
-        'has_rivet_analysis': source.get('has_rivet_analysis', False),
-        'authors': authors,
-        'date': parse_and_format_date(datestring),
-        'highlight': highlights,
-        'journal_info': source.get('journal_info', '')
-    }
+    datestring = source.get('creation_date')
 
-    if 'related_publication' in source:
-        res['related_publication'] = source['related_publication']
+    res = source
+    res['collaborations'] = collaborations
+    res['authors'] = authors
+    res['date'] = parse_and_format_date(datestring)
 
     return res
 

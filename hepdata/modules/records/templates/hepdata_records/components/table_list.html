@@ -4,11 +4,11 @@
         {% if ctx.show_upload_widget and ctx.status != 'finished' %}
 
             {% if not ctx.reviewers_notified and ctx.mode != 'sandbox' %}
-            <button type="button" class="btn btn-warning btn-md" data-toggle="modal" style="width: 100%"
-                    id="notify-reviewer-btn" data-target="#notifyReviewer"><span
-                    class="fa fa-bell"></span> Notify Reviewer
-            </button>
-                {% endif %}
+                <button type="button" class="btn btn-warning btn-md" data-toggle="modal" style="width: 100%"
+                        id="notify-reviewer-btn" data-target="#notifyReviewer"><span
+                        class="fa fa-bell"></span> Notify Reviewer
+                </button>
+            {% endif %}
 
             <button type="button" class="btn btn-success btn-md" data-toggle="modal" style="width: 100%"
                     data-target="#uploadDialog"><span
@@ -24,33 +24,56 @@
             </button>
         {% endif %}
 
+        <div class="dropdown">
+            <button id="dLabel" type="button"
+                    class="btn btn-md btn-primary"
+                    data-toggle="dropdown"
+                    aria-haspopup="true" aria-expanded="false" style="width: 100%">
+                <i class="fa fa-download"></i> Download All
+                <span class="caret"></span>
+            </button>
+            {% if ctx.mode == 'sandbox' %}
+                {% set download_base_url = "/download/submission/" + ctx.recid|string + "/" + ctx.version|string %}
+            {% else %}
+                {% set download_base_url = "/download/submission/ins" + ctx.record.inspire_id|string + "/" + ctx.version|string %}
+            {% endif %}
+            <ul class="dropdown-menu" aria-labelledby="dLabel"
+                style="height: auto;">
 
+                <li><a href="{{ download_base_url }}/yaml"
+                       id="download_yaml">YAML</a></li>
+                <li><a href="{{ download_base_url }}/yoda"
+                       id="download_yoda">YODA</a></li>
+                <li><a href="{{ download_base_url }}/root"
+                       id="download_root">ROOT</a></li>
+                <li><a href="{{ download_base_url }}/csv"
+                       id="download_csv">CSV</a></li>
+            </ul>
+        </div>
+
+        {% if ctx.record.analyses | length > 0 %}
             <div class="dropdown">
                 <button id="dLabel" type="button"
-                        class="btn btn-md btn-primary"
+                        class="btn btn-md btn-inverse"
                         data-toggle="dropdown"
                         aria-haspopup="true" aria-expanded="false" style="width: 100%">
-                    <i class="fa fa-download"></i> Download All
+                    <i class="fa fa-line-chart"></i> View Analyses
                     <span class="caret"></span>
                 </button>
-                {% if ctx.mode == 'sandbox' %}
-                    {% set download_base_url = "/download/submission/" + ctx.recid|string + "/" + ctx.version|string %}
-                {% else %}
-                    {% set download_base_url = "/download/submission/ins" + ctx.record.inspire_id|string + "/" + ctx.version|string %}
-                {% endif %}
+
                 <ul class="dropdown-menu" aria-labelledby="dLabel"
                     style="height: auto;">
 
-                    <li><a href="{{ download_base_url }}/yaml"
-                           id="download_yaml">YAML</a></li>
-                    <li><a href="{{ download_base_url }}/yoda"
-                           id="download_yoda">YODA</a></li>
-                    <li><a href="{{ download_base_url }}/root"
-                           id="download_root">ROOT</a></li>
-                    <li><a href="{{ download_base_url }}/csv"
-                           id="download_csv">CSV</a></li>
+                    {% for analysis in ctx.record.analyses %}
+                        <li style="text-transform: capitalize">
+                            <a href="{{ analysis.analysis }}" target="_new"><span
+                                    class="fa fa-line-chart"></span> {{ analysis.type }}</a>
+                        </li>
+                    {% endfor %}
+
                 </ul>
             </div>
+        {% endif %}
 
 
         {% if ctx.version_count and ctx.version_count > 1 %}

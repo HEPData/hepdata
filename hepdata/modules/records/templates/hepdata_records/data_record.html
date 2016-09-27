@@ -33,21 +33,6 @@
         <link href="{{ ASSET_URL }}" rel="stylesheet">
     {%- endassets %}
 
-    <style>
-        #hepdata_table_detail {
-            width: 76% !important;
-        }
-
-        #data_link_container {
-            display: none;
-        }
-
-        @media (max-width: 991px) {
-            #hepdata_table_detail {
-                width: 100% !important;
-            }
-        }
-    </style>
 
 {%- endblock additional_assets %}
 
@@ -56,7 +41,8 @@
 
 {% block page_body %}
     <div itemtype="http://schema.org/DataCatalog" itemscope>
-        <div class="hep_breadcrumbs">
+    <div class="hep_breadcrumbs">
+        <div class="col-md-12 no-padding">
             <ul>
                 <a href="/search">
                     <li class="active"><span class="fa fa-search"></span>
@@ -81,11 +67,13 @@
 
             </ul>
         </div>
+    </div>
 
-        <div class="clearfix"></div>
+    <div class="clearfix"></div>
 
-        <!--top level publication information-->
-        <div class="detailed-record-info">
+    <!--top level publication information-->
+    <div class="row" style="padding-top: 120px;">
+        <div class="detailed-record-info col-lg-3 col-md-3">
 
             <button class="btn btn-xs btn-link hide-publication-info"
                     style="margin-bottom: 10px"><span
@@ -137,7 +125,8 @@
                                 <a href="http://dx.doi.org/{{ ctx.record.doi }}"
                                    target="_blank"><span class="link">
                     <span class="link-value">DOI<span class="hidden"
-                                                      itemprop="citation">http://dx.doi.org/{{ ctx.record.doi }}</span></span></a>
+                                                      itemprop="citation">http://dx.doi.org/{{ ctx.record.doi }}</span></span>
+                                </span></a>
                             </li>
                         {% endif %}
                         <li>
@@ -202,7 +191,6 @@
 
             <div class="clearfix"></div>
             <br/>
-
         </div>
 
         {% if ctx.show_upload_area == False %}
@@ -223,8 +211,8 @@
         <!--if there is data, we show it. If not, we show the upload screen if the logged in user is an uploader-->
 
         {% if ctx.data_tables|length == 0 %}
-            <div id="hepdata_table_detail"
-                 style="width: 76%; text-align: center">
+
+            <div id="hepdata_table_detail" align="center">
                 <div id="hepdata-loading"
                      style="width: 200px; height: 200px; margin: 0 auto; margin-top: 5em"></div>
                 <h4 style="color: #894B9D">No data has been uploaded
@@ -235,13 +223,13 @@
                     attractiveness...</p>
             </div>
         {% else %}
-
+            {% set table_details_class="col-lg-9 col-md-9" %}
             {% include 'hepdata_records/components/table_details.html' %}
 
         {% endif %}
 
-
     </div>
+
 
     {% include 'hepdata_records/components/code-view-widget.html' %}
     {% include 'hepdata_records/components/resources-widget.html' %}

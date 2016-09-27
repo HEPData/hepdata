@@ -53,7 +53,7 @@
             </form>
         </div>
 
-        <div class="search-results">
+        <div class="search-results container-fluid">
             {% include "hepdata_search/display_results_options.html" %}
             <div class="row-fluid">
                 {% include "hepdata_search/facet_column.html" %}
@@ -70,16 +70,21 @@
                             <div class="search-result-item">
                                 <div class="record-brief">
                                     <h4 class="record-header">
-                                        {% if record.has_rivet_analysis %}
-                                            <div itemprop="version" class="rivet">
-                                                Rivet Analysis
-                                            </div>
-                                        {% endif %}
+
                                         {% if record.version > 1 %}
                                             <div itemprop="version" class="version">
-                                                {{ record.version }} Versions
+                                                Version {{ record.version }}
                                             </div>
                                         {% endif %}
+
+                                        {% for analysis in record.analyses %}
+                                            <div class="analysis">
+                                                <a href="{{ analysis.analysis }}" target="_blank"><span
+                                                        class="fa fa-line-chart"></span> {{ analysis.type }}
+                                                    Analysis</a>
+                                            </div>
+                                        {% endfor %}
+
 
                                         {% set record_link = '/record/ins' + record.inspire_id|string %}
                                         <a href={{ record_link }} itemprop="name">
@@ -91,7 +96,8 @@
                                     <div style="padding: 5px 0px; color: #7F8C8D">
                                         <i class="fa fa-table"></i>
                                         <span style="font-weight: bolder">{{ record.total_tables }}</span>
-                                        data table{% if record.total_tables > 1 or record.total_tables == 0 %}s{% endif %}
+                                        data table{% if record.total_tables > 1 or record.total_tables == 0 %}
+                                        s{% endif %}
                                         {% if ctx %}{% if ctx.q %} match query{% endif %}{% endif %}
                                     </div>
                                 </div>

@@ -28,7 +28,7 @@ from hepdata.modules.records.subscribers.api import get_users_subscribed_to_reco
 from hepdata.modules.records.utils.common import get_record_by_id, encode_string
 from flask import render_template
 
-from hepdata.modules.submission.common import get_latest_hepsubmission, get_submission_participants_for_record
+from hepdata.modules.submission.api import get_latest_hepsubmission, get_submission_participants_for_record
 from hepdata.modules.submission.models import DataSubmission
 
 

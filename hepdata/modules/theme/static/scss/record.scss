@@ -504,7 +504,6 @@
   display: inline-block;
   height: calc(100vh);
   overflow-y: scroll;
-  width: 58%;
 }
 
 #hep_table_data, #hep_table_chart {
@@ -1041,5 +1040,18 @@ g.node {
         font-size: 2em;
       }
     }
+  }
+}
+
+.add-resource-container {
+  padding: 20px;
+  background-color: $dark-blue;
+  margin-bottom: 20px;
+  border-radius: 4px;
+
+  border-bottom: solid 5px $purple;
+
+  h4 {
+    font-weight: bolder;
   }
 }

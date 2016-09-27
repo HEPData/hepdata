@@ -73,6 +73,18 @@ mapping = {
         "type": "string"
     },
 
+    "analyses": {
+        "type": "nested",
+        "properties": {
+            "type": {
+                "type": "string"
+            },
+            "analysis": {
+                "type": "string"
+            }
+        }
+    },
+
     "dissertation": {
         "type": "nested",
         "properties": {

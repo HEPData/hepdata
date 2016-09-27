@@ -33,6 +33,7 @@ from flask.ext.login import login_required
 from flask import Blueprint, send_file
 import jsonpatch
 import yaml
+from flask.ext.restful import abort
 from invenio_db import db
 
 from hepdata.config import CFG_DATA_TYPE, CFG_PUB_TYPE
@@ -40,6 +41,7 @@ from hepdata.ext.elasticsearch.api import get_records_matching_field, get_count_
 from hepdata.modules.email.api import send_new_upload_email, send_new_review_message_email, NoReviewersException, \
     send_question_email
 from hepdata.modules.inspire_api.views import get_inspire_record_information
+from hepdata.modules.permissions.api import user_allowed_to_perform_action
 from hepdata.modules.records.api import *
 from hepdata.modules.submission.models import HEPSubmission, DataSubmission, \
     DataResource, DataReview, Message, Question
@@ -49,7 +51,7 @@ from hepdata.modules.records.utils.data_processing_utils import \
     generate_table_structure
 from hepdata.modules.records.utils.submission import create_data_review, \
     get_or_create_hepsubmission
-from hepdata.modules.submission.common import get_latest_hepsubmission
+from hepdata.modules.submission.api import get_latest_hepsubmission, is_resource_added_to_submission
 from hepdata.modules.records.utils.workflow import \
     update_action_for_submission_participant
 from hepdata.modules.stats.views import increment
@@ -107,7 +109,6 @@ def get_metadata_by_alternative_id(recid):
         return render_template('hepdata_theme/404.html')
 
 
-
 @login_required
 @blueprint.route('/question/<int:recid>', methods=['POST'])
 def submit_question(recid):
@@ -121,7 +122,6 @@ def submit_question(recid):
     except Exception as e:
         print(e)
         db.session.rollback()
-
 
     return jsonify({'status': 'queued', 'message': 'Your question has been posted.'})
 
@@ -607,3 +607,54 @@ def update_sandbox_payload(recid):
 
     file = request.files['hep_archive']
     return process_payload(recid, file, '/record/sandbox/{}')
+
+
+@login_required
+@blueprint.route('/add_resource/<int:recid>/<int:version>', methods=['POST'])
+def add_resource(recid, version):
+    """
+    Adds a DataResource
+    :param recid:
+    :param version:
+    :return:
+    """
+    if not user_allowed_to_perform_action(recid):
+        abort(403)
+
+    analysis_type = request.form.get('analysisType', None)
+    analysis_other = request.form.get('analysisOther', None)
+    analysis_url = request.form.get('analysisURL', None)
+
+    if analysis_type == 'other':
+        analysis_type = analysis_other
+
+    if is_resource_added_to_submission(recid, version, analysis_url):
+        return render_template('hepdata_records/error_page.html', recid=None,
+                               header_message='This analysis already exists for this submission (and this version).',
+                               message='This resource already exists.',
+                               errors={})
+
+    if analysis_type and analysis_url:
+
+        submission = HEPSubmission.query.filter_by(publication_recid=recid,
+                                                   version=version).one()
+        if submission:
+            new_resource = DataResource(file_location=analysis_url, file_type=analysis_type)
+            db.session.add(new_resource)
+            submission.references.append(new_resource)
+
+            try:
+                db.session.add(submission)
+                db.session.commit()
+                if submission.inspire_id:
+                    return redirect('/record/ins{}'.format(submission.inspire_id))
+                else:
+                    return redirect('/record/'.format(submission.publication_recid))
+            except Exception as e:
+                db.session.rollback()
+                raise e
+
+    return render_template('hepdata_records/error_page.html', recid=None,
+                           header_message='Error adding resource.',
+                           message='Unable to add resource. Please try again.',
+                           errors={})

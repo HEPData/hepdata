@@ -6,7 +6,7 @@ from flask.ext.login import current_user
 from hepdata.modules.permissions.models import SubmissionParticipant, CoordinatorRequest
 from hepdata.modules.records.utils.common import get_record_contents
 from hepdata.modules.submission.models import HEPSubmission
-from hepdata.utils.users import get_user_from_id
+from hepdata.utils.users import get_user_from_id, user_is_admin
 
 
 def get_records_participated_in_by_user():
@@ -21,8 +21,6 @@ def get_records_participated_in_by_user():
         as_coordinator_query = as_coordinator_query.limit(5)
 
     as_coordinator = as_coordinator_query.all()
-
-
 
     result = {'uploader': [], 'reviewer': [], 'coordinator': []}
     if as_uploader:
@@ -90,3 +88,20 @@ def get_approved_coordinators():
     result = process_coordinators(coordinators)
 
     return result
+
+
+def user_allowed_to_perform_action(recid):
+    """Determines if a user is allowed to perform an action on a record"""
+    if user_is_admin(current_user):
+        return True
+
+    is_participant = SubmissionParticipant.query.filter_by(
+        user_account=int(current_user.get_id()), publication_recid=recid).count() > 0
+
+    if is_participant:
+        return True
+
+    is_coordinator = HEPSubmission.query.filter_by(publication_recid=recid,
+                                                   coordinator=int(current_user.get_id())).count() > 0
+
+    return is_coordinator

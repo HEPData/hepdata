@@ -23,211 +23,211 @@
 {%- extends "hepdata_theme/page.html" %}
 
 {%- block additional_assets %}
-  {%- assets "hepdata_record_css" %}
-    <link href="{{ ASSET_URL }}" rel="stylesheet">
-  {%- endassets %}
-
+    {%- assets "hepdata_record_css" %}
+        <link href="{{ ASSET_URL }}" rel="stylesheet">
+    {%- endassets %}
 {%- endblock additional_assets %}
 
 
 
 {% block page_body %}
 
-  <div class="container-fluid">
-    <div class="hep_breadcrumbs row">
-      <div class="col-md-12 no-padding">
-        <ul>
-          <a href="/record/sandbox">
-            <li class="active"><span class="fa fa-cube"></span> HEPData Sandbox
-            </li>
-          </a>
+    <div class="container-fluid">
+        <div class="hep_breadcrumbs row">
+            <div class="col-md-12 no-padding">
+                <ul>
+                    <a href="/record/sandbox">
+                        <li class="active"><span class="fa fa-cube"></span> HEPData Sandbox
+                        </li>
+                    </a>
 
-          {% if ctx.data_tables|length != 0 %}
-            <li class="pull-right">
+                    {% if ctx.data_tables|length != 0 %}
+                        <li class="pull-right">
 
-              <div class="dropdown"
-                   style="float: right; margin-left: 15px; margin-top: -4px;">
-                <button id="dLabel" type="button"
-                        class="btn btn-sm btn-primary"
-                        data-toggle="dropdown" aria-haspopup="true"
-                        aria-expanded="false">
-                  Download Submission as
-                  <span class="caret"></span>
-                </button>
-                {% set download_base_url = "/download/submission/" + ctx.recid|string + "/" + ctx.version|string %}
-                <ul class="dropdown-menu" aria-labelledby="dLabel"
-                    style="height: auto;">
-                  <li><a href="{{ download_base_url }}/yaml"
-                         id="download_yaml">YAML</a></li>
-                  <li><a href="{{ download_base_url }}/yoda"
-                         id="download_yoda">YODA</a></li>
-                  <li><a href="{{ download_base_url }}/root"
-                         id="download_root">ROOT</a></li>
-                  <li><a href="{{ download_base_url }}/csv"
-                         id="download_csv">CSV</a></li>
+                            <div class="dropdown"
+                                 style="float: right; margin-left: 15px; margin-top: -4px;">
+                                <button id="dLabel" type="button"
+                                        class="btn btn-sm btn-primary"
+                                        data-toggle="dropdown" aria-haspopup="true"
+                                        aria-expanded="false">
+                                    Download Submission as
+                                    <span class="caret"></span>
+                                </button>
+                                {% set download_base_url = "/download/submission/" + ctx.recid|string + "/" + ctx.version|string %}
+                                <ul class="dropdown-menu" aria-labelledby="dLabel"
+                                    style="height: auto;">
+                                    <li><a href="{{ download_base_url }}/yaml"
+                                           id="download_yaml">YAML</a></li>
+                                    <li><a href="{{ download_base_url }}/yoda"
+                                           id="download_yoda">YODA</a></li>
+                                    <li><a href="{{ download_base_url }}/root"
+                                           id="download_root">ROOT</a></li>
+                                    <li><a href="{{ download_base_url }}/csv"
+                                           id="download_csv">CSV</a></li>
+                                </ul>
+                            </div>
+
+                        </li>
+                    {% endif %}
                 </ul>
-              </div>
-
-            </li>
-          {% endif %}
-        </ul>
-      </div>
-    </div>
-
-    <div class="clearfix"></div>
-
-    <div class="row" style="padding-top: 120px;">
-
-      {% if ctx.data_tables|length == 0 %}
-        <div class="container">
-          <div class="row">
-            <div class="sandbox-upload-area col-md-7 text-center" id="sandbox-upload-area">
-
-              <img src="{{ url_for('static', filename='img/icon-upload.svg') }}"
-                   width="70">
-
-              <h4>Upload an archive to the sandbox</h4>
-              <br/>
-              <div class="upload-form">
-                <div class="alert alert-info">This is a private upload area.</div>
-
-                {% include 'hepdata_records/components/uploader_info.html' %}
-
-                <form action="/record/sandbox/consume" name="sandbox-upload-form" method="post"
-                      enctype=multipart/form-data>
-                  <input type="file" name="hep_archive" id="root_file_upload"
-                         data-iconName="fa fa-upload"
-                         class="filestyle">
-                  <br/>
-
-                  <input type="submit" value="Upload and Process"
-                         class="btn btn-primary"
-                         onclick="hepdata_record.perform_upload_action('#sandbox-upload-area', 'sandbox-upload-form', ['#955BA5', '#2C3E50'], 'large_area')">
-                </form>
-              </div>
-
             </div>
-
-            <div id="past_submissions" class="col-md-offset-1 col-md-4">
-              <div class="well">
-                <h4>Your sandbox submissions</h4>
-
-                {% if ctx.submissions|length > 0 %}
-                  <div class="scrollable height30 row-fluid">
-                    {% for submission in ctx.submissions %}
-                      {% if submission.data_abstract != None %}
-                        <div class="col-md-10 col-sm-10 col-xs-10">
-                          <a href="/record/sandbox/{{ submission.publication_recid }}"
-                             style="text-align: left">
-                            <div class="truncated-record-abstract">{{ submission.data_abstract }}</div>
-                          </a>
-                          <p style="font-weight: bolder; color: #a1aec7; font-size: .7em; text-align: left">{{ submission.created.strftime('%Y-%m-%d %H:%M%p') }}</p>
-                        </div>
-                        <div class="col-md-2 col-sm-2 col-xs-2">
-                          <button class="btn btn-sm btn-danger delete_button"
-                                  data-recid="{{ submission.publication_recid }}"><i
-                                  class="fa fa-trash"></i>
-                          </button>
-                        </div>
-                      {% endif %}
-                    {% endfor %}
-                  </div>
-                  <div class="clearfix"></div>
-                {% endif %}
-              </div>
-            </div>
-          </div>
         </div>
 
         <div class="clearfix"></div>
 
+        <div class="row" style="padding-top: 120px;">
 
-      {% else %}
-        <div class="detailed-record-info col-lg-3 col-md-3">
+            {% if ctx.data_tables|length == 0 %}
+                <div class="container">
+                    <div class="row">
+                        <div class="sandbox-upload-area col-md-7 text-center" id="sandbox-upload-area">
 
-          <button class="btn btn-xs btn-link hide-publication-info"
-                  style="margin-bottom: 10px"><span
-                  class="fa fa-chevron-left"></span> Hide Publication
-            Information
-            Information
-          </button>
+                            <img src="{{ url_for('static', filename='img/icon-upload.svg') }}"
+                                 width="70">
+
+                            <h4>Upload an archive to the sandbox</h4>
+                            <br/>
+                            <div class="upload-form">
+                                <div class="alert alert-info">This is a private upload area.</div>
+
+                                {% include 'hepdata_records/components/uploader_info.html' %}
+
+                                <form action="/record/sandbox/consume" name="sandbox-upload-form" method="post"
+                                      enctype=multipart/form-data>
+                                    <input type="file" name="hep_archive" id="root_file_upload"
+                                           data-iconName="fa fa-upload"
+                                           class="filestyle">
+                                    <br/>
+
+                                    <input type="submit" value="Upload and Process"
+                                           class="btn btn-primary"
+                                           onclick="hepdata_record.perform_upload_action('#sandbox-upload-area', 'sandbox-upload-form', ['#955BA5', '#2C3E50'], 'large_area')">
+                                </form>
+                            </div>
+
+                        </div>
+
+                        <div id="past_submissions" class="col-md-offset-1 col-md-4">
+                            <div class="well">
+                                <h4>Your sandbox submissions</h4>
+
+                                {% if ctx.submissions|length > 0 %}
+                                    <div class="scrollable height30 row-fluid">
+                                        {% for submission in ctx.submissions %}
+                                            {% if submission.data_abstract != None %}
+                                                <div class="col-md-10 col-sm-10 col-xs-10">
+                                                    <a href="/record/sandbox/{{ submission.publication_recid }}"
+                                                       style="text-align: left">
+                                                        <div class="truncated-record-abstract">{{ submission.data_abstract }}</div>
+                                                    </a>
+                                                    <p style="font-weight: bolder; color: #a1aec7; font-size: .7em; text-align: left">{{ submission.created.strftime('%Y-%m-%d %H:%M%p') }}</p>
+                                                </div>
+                                                <div class="col-md-2 col-sm-2 col-xs-2">
+                                                    <button class="btn btn-sm btn-danger delete_button"
+                                                            data-recid="{{ submission.publication_recid }}"><i
+                                                            class="fa fa-trash"></i>
+                                                    </button>
+                                                </div>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                    <div class="clearfix"></div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="clearfix"></div>
+
+
+            {% else %}
+                <div class="detailed-record-info col-lg-3 col-md-3">
+
+                    <button class="btn btn-xs btn-link hide-publication-info"
+                            style="margin-bottom: 10px"><span
+                            class="fa fa-chevron-left"></span> Hide Publication
+                        Information
+                        Information
+                    </button>
 
         <span id="show-publication-info"
               class="slider-option paper-info-option" style="left: -40px"><span
                 class="fa fa-chevron-right"></span></span>
 
-          <div>
+                    <div>
                 <span itemprop="url"
                       class="hidden">http://hepdata.net/record/sandbox/{{ ctx.recid }}</span>
-            <br/>
+                        <br/>
 
-            <div class="record-links">
-              <ul>
-                {% if ctx.additional_resources %}
-                  <li>
-                    <button id="show_resources" class="btn btn-sm btn-primary"
-                            data-recid="{{ ctx.recid }}">Additional Resources
-                    </button>
-                  </li>
-                {% endif %}
-              </ul>
-            </div>
-            {% if ctx.record.publication_info %}
-              <div class="publication-details">
+                        <div class="record-links">
+                            <ul>
+                                {% if ctx.additional_resources %}
+                                    <li>
+                                        <button id="show_resources" class="btn btn-sm btn-primary"
+                                                data-recid="{{ ctx.recid }}">Additional Resources
+                                        </button>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </div>
+                        {% if ctx.record.publication_info %}
+                            <div class="publication-details">
                         <span itemprop="publisher" itemscope
                               typeof="http://schema.org/Organization"><span
                                 itemprop="name">{{ ctx.record.publication_info.journal_title }}</span> </span>,
-                Volume {{ ctx.record.publication_info.journal_volume }},
-                pages
-                <span itemprop="pagination">{{ ctx.record.publication_info.page_artid }}</span>, <span
-                      itemprop="copyrightYear"
-                      typeof="http://schema.org/Number">{{ ctx.record.publication_info.year }}</span>
-              </div>
+                                Volume {{ ctx.record.publication_info.journal_volume }},
+                                pages
+                                <span itemprop="pagination">{{ ctx.record.publication_info.page_artid }}</span>, <span
+                                    itemprop="copyrightYear"
+                                    typeof="http://schema.org/Number">{{ ctx.record.publication_info.year }}</span>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="clearfix"></div>
+
+                    <div class="record-abstract" itemprop="description">
+                        <strong>Abstract {% if ctx.record.data_abstract %}(data
+                            abstract){% endif %}</strong><br/>
+
+                        <div class="record-abstract-content scrollable" style="min-height: 550px">
+                            {% if ctx.record.data_abstract %}
+                                {{ ctx.record.data_abstract }}
+                            {% elif ctx.record.abstract %}
+                                {{ ctx.record.abstract }}
+                            {% else %}
+                                No abstract available.
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="clearfix"></div>
+                    <br/>
+
+                </div>
+                {% include 'hepdata_records/components/table_list.html' %}
+                {% set table_details_class="col-lg-7 col-md-7" %}
+                {% include 'hepdata_records/components/table_details.html' %}
+                {% include 'hepdata_records/components/uploader-modal.html' %}
+                {% include 'hepdata_records/components/resources-widget.html' %}
             {% endif %}
-          </div>
 
-          <div class="clearfix"></div>
-
-          <div class="record-abstract" itemprop="description">
-            <strong>Abstract {% if ctx.record.data_abstract %}(data
-              abstract){% endif %}</strong><br/>
-
-            <div class="record-abstract-content scrollable" style="min-height: 550px">
-              {% if ctx.record.data_abstract %}
-                {{ ctx.record.data_abstract }}
-              {% elif ctx.record.abstract %}
-                {{ ctx.record.abstract }}
-              {% else %}
-                No abstract available.
-              {% endif %}
-            </div>
-          </div>
-
-          <div class="clearfix"></div>
-          <br/>
+            {% set delete_redirect_url = '/record/sandbox' %}
+            {% include 'hepdata_dashboard/delete-widget.html' %}
 
         </div>
-        {% include 'hepdata_records/components/table_list.html' %}
-        {% include 'hepdata_records/components/table_details.html' %}
-        {% include 'hepdata_records/components/uploader-modal.html' %}
-        {% include 'hepdata_records/components/resources-widget.html' %}
-      {% endif %}
-
-      {% set delete_redirect_url = '/record/sandbox' %}
-      {% include 'hepdata_dashboard/delete-widget.html' %}
-
     </div>
-  </div>
 
 {% endblock %}
 {%- block javascript %}
-  {% include 'hepdata_records/components/record-javascript.html' %}
-  <script type="text/javascript">
-    $(".delete_button").on('click', function () {
-      $("#deleteWidget").modal('show');
-      window.recid = $(this).attr('data-recid');
-    })
-  </script>
+    {% include 'hepdata_records/components/record-javascript.html' %}
+    <script type="text/javascript">
+        $(".delete_button").on('click', function () {
+            $("#deleteWidget").modal('show');
+            window.recid = $(this).attr('data-recid');
+        })
+    </script>
 {% endblock %}
 
 
