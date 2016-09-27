@@ -62,6 +62,11 @@ CELERYBEAT_SCHEDULE = {
         'task': 'hepdata.modules.records.migrator.api.add_or_update_records_since_date',
         'schedule': timedelta(hours=6)
     },
+
+    'update_analyses': {
+        'task': 'hepdata.modules.records.migrator.api.update_analyses',
+        'schedule': timedelta(hours=12)
+    }
 }
 
 # Cache
@@ -240,12 +245,17 @@ ADMIN_APPNAME = "HEPData"
 # These values are converted to strings
 SPECIAL_VALUES = ['inf', '+inf', '-inf', 'nan']
 
-# Badges
-BADGES = {
-    'rivet':
-        {
-            'url': 'http://rivet.hepforge.org/list_of_analyses.json'
-        }
+# ANALYSES_ENDPOINTS
+ANALYSES_ENDPOINTS = {
+    'rivet': {
+        'endpoint_url': 'http://rivet.hepforge.org/list_of_analyses.json',
+        'url_template': 'http://rivet.hepforge.org/analyses#{0}'
+    },
+    'ufo': {},
+    'xfitter': {},
+    'applgrid': {},
+    'fastnlo': {},
+    'madanalysis': {}
 }
 
 # Import local config file if it is present.

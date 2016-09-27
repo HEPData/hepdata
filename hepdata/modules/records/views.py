@@ -33,7 +33,6 @@ from flask.ext.login import login_required
 from flask import Blueprint, send_file
 import jsonpatch
 import yaml
-from flask.ext.restful import abort
 from invenio_db import db
 
 from hepdata.config import CFG_DATA_TYPE, CFG_PUB_TYPE
@@ -619,7 +618,10 @@ def add_resource(recid, version):
     :return:
     """
     if not user_allowed_to_perform_action(recid):
-        abort(403)
+        return render_template('hepdata_records/error_page.html', recid=None,
+                               header_message='Not authorised.',
+                               message='You are not authorised to add a resource to this record.',
+                               errors={})
 
     analysis_type = request.form.get('analysisType', None)
     analysis_other = request.form.get('analysisOther', None)

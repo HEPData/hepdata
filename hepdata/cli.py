@@ -35,7 +35,7 @@ from hepdata.ext.elasticsearch.api import reindex_all, \
     get_records_matching_field, record_exists
 from hepdata.modules.records.utils.submission import unload_submission
 from hepdata.modules.records.migrator.api import load_files, update_submissions, get_all_ids_in_current_system, \
-    add_or_update_records_since_date
+    add_or_update_records_since_date, update_analyses
 
 cli = create_cli(create_app=create_app)
 
@@ -227,3 +227,9 @@ def unload(recids):
 def do_unload(records_to_unload):
     for record_id in records_to_unload:
         unload_submission(record_id)
+
+
+@cli.command()
+@with_appcontext
+def find_and_add_record_analyses():
+    update_analyses.delay()
