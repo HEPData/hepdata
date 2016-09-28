@@ -18,10 +18,10 @@
 
 <script>
 
-
     $(document).ready(function () {
 
         hepdata_record.initialise();
+        hepdata_resources.initialise({{ ctx.recid|safe }}, {{ ctx.version|safe }});
 
         HEPDATA.render_loader("#hepdata-loading", [
                     {x: 26, y: 30, color: "#955BA5"},
@@ -44,6 +44,7 @@
             {% if ctx.record.inspire_id %}
                 HEPDATA.current_inspire_id = {{ctx.record.inspire_id | safe}};
             {% endif %}
+
             HEPDATA.current_record_id = {{ctx.recid | safe}};
             HEPDATA.current_table_version = {{ctx.version | safe}};
             var table_to_show = "{{ctx.table_to_show}}";
@@ -83,76 +84,6 @@
             {% endif %}
         {%endif %}
 
-
-
-        $("#show_resources").bind("click", function () {
-            var recid = $(this).attr('data-recid');
-            var version = 1;
-            {% if ctx.version %}
-                version = {{ ctx.version |safe }};
-            {% endif %}
-            $("#resourceModal").modal();
-            $.ajax({
-                type: 'GET',
-                dataType: 'json',
-                url: '/record/resources/' + recid + '/' + version,
-                success: function (data) {
-
-                    var placement = d3.select("#resource-list");
-                    placement.html("");
-                    var resource_item_container = placement.selectAll(".resource-item-container").data(data).enter().append("div").attr("class", "col-md-6 resource-item-container");
-
-                    var resource_item = resource_item_container.append("div").attr("class", "resource-item");
-
-                    resource_item.append("div").html(function(d) {
-                        if(HEPDATA.is_image(d.file_type)) {
-                            d.file_type = 'image';
-                            return '<i class="fa fa-' + HEPDATA.map_file_type_to_property(d.file_type, 'icon') + '"></i>';
-
-                        } else {
-                            return '<i class="fa fa-' + HEPDATA.map_file_type_to_property(d.file_type, 'icon') + '"></i>';
-                        }
-                    });
-
-                    resource_item.append("h4").text(function (d) {
-                        return HEPDATA.map_file_type_to_property(d.file_type, 'description');
-                    });
-
-                    resource_item.append("p").text(function (d) {
-                        return d['file_description'];
-                    });
-
-                    resource_item.append("a").attr("class", "btn btn-primary btn-sm").attr("href", function (d) {
-                        var download_location = d.location;
-                        if (d.location.indexOf('http') == -1) {
-                            download_location = '/record/resource/' + d.id + '?view=true';
-                        }
-
-                        return download_location;
-                    }).text(function(d) {
-                        if (d.location.indexOf('http') == -1) {
-                            return "Download"
-                        }
-                        return "View Resource";
-                    });
-
-
-                    MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
-                }
-            })
-        });
-        $(document).on('click', '#resource-list ul li', function () {
-            var id = $(this).attr('data-id');
-            var type = $(this).attr('data-type');
-            var location = $(this).attr('data-location');
-
-            $("#resource-list ul li").each(function () {
-                $(this).removeClass("active");
-            });
-
-            $(this).addClass("active");
-            hepdata_record.show_resource(id, type, location);
-        })
     });
 
     $('.hide-publication-info').click(function () {

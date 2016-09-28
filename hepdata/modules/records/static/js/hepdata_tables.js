@@ -84,7 +84,9 @@ HEPDATA.table_renderer = {
         // display the table
         d3.select(table_placement).html('');
         d3.select("#table_options_region").html('');
-
+      
+        HEPDATA.current_table_name = table_data.name;
+        
         $("#table_name").html(table_data.name);
         $("#table_doi_contents").html('<a href="http://dx.doi.org/' + table_data.doi + '" target="_blank">' + table_data.doi + '</a>');
 

@@ -35,6 +35,7 @@ vis_js = NpmBundle(
     'node_modules/d3/d3.min.js',
     'node_modules/d3-tip/index.js',
     'js/hepdata_common.js',
+    'js/hepdata_resources.js',
     'js/hepdata_loaders.js',
     'js/hepdata_reviews.js',
     'js/hepdata_tables.js',

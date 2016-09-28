@@ -48,7 +48,7 @@ record_css = NpmBundle(
     output='gen/hepdata_record.%(version)s.css',
     npm={
         "bootstrap-sass": "~3.3.5",
-        "font-awesome": "~4.4.0"
+        "font-awesome": "~4.6.3"
     }
 )
 

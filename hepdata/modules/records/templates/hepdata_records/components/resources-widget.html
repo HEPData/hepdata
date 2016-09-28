@@ -2,89 +2,114 @@
      aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
-            <div class="modal-header">
+            <div class="modal-header" >
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
                         aria-hidden="true">&times;</span></button>
                 <h4 class="modal-title" id="additionalResource">Additional Publication Resources</h4>
             </div>
 
             <div class="modal-body" id="resource-modal-contents">
-                <div class="alert alert-info"><p class="text-center">Here you'll find any code, additional papers, etc.
-                    relating to the entire
-                    publication.</p></div>
 
-                {% if (ctx.show_review_widget or ctx.show_upload_widget or ctx.is_submission_coordinator_or_admin) %}
+
+                <div class="col-md-3" id="resource-filter">
+                    <div class="filter">
+                        <input type="text" placeholder="filter" id="resource-filter-input" onkeyup="HEPDATA.filter_content('#resource-filter-input', '#resource-list-items');">
+                    </div>
+                    <ul class="scrollable" id="resource-list-items">
+                        {# automatically populated #}
+                    </ul>
+                </div>
+
+                <div class="col-md-9" id="resource-details">
+                    {% if (ctx.show_review_widget or ctx.show_upload_widget or ctx.is_submission_coordinator_or_admin) %}
+
+                        <div class="container-fluid">
+
+                            <div class="row-fluid">
+
+                                <div class="col-md-12 add-resource-container">
+
+                                    <h4>Add Resource for <span id="selected_resource_item">Submission</span></h4>
+
+                                    <form class="form-horizontal" id="add-resource-form"
+                                          action="/record/add_resource/{{ ctx.recid }}/{{ ctx.version }}" method="post">
+                                        <div class="form-group">
+                                            <label for="analysisType" class="col-sm-2 control-label">Type</label>
+                                            <div class="col-sm-5">
+                                                <select name="analysisType" id="analysisType" class="form-control">
+                                                    <option disabled>Analyses</option>
+                                                    <option value="applgrid">APPLgrid Analysis</option>
+                                                    <option value="madanalysis">MAD Analysis</option>
+                                                    <option value="rivet">Rivet Analysis</option>
+                                                    <option value="fastnlo">fastNLO</option>
+                                                    <option value="ufo">Universal Feynrules Output</option>
+                                                    <option value="xfitter">XFitter</option>
+
+                                                    <option disabled></option>
+                                                    <option disabled>Code Repositories</option>
+                                                    <option value="github">Github Repository</option>
+                                                    <option value="gitlab">Gitlab Repository</option>
+                                                    <option value="bitbucket">Bitbucket Repository</option>
+
+                                                    <option disabled></option>
+                                                    <option value="other">Other</option>
+                                                </select>
+
+
+                                            </div>
+                                            <div id="other_container" class="col-sm-5 hidden">
+                                                <input type="text" class="form-control" id="analysisOther"
+                                                       name="analysisOther"
+                                                       placeholder="e.g. an analysis type such as UFO">
+                                            </div>
+                                        </div>
+
+
+                                        <div class="form-group" id="url">
+                                            <label for="analysisURL" class="col-sm-2 control-label">URL</label>
+                                            <div class="col-sm-10">
+                                                <input type="url" class="form-control" id="analysisURL"
+                                                       name="analysisURL"
+                                                       placeholder="URL">
+                                            </div>
+                                        </div>
+
+                                        <div class="form-group" id="url">
+                                            <label for="analysisDescription"
+                                                   class="col-sm-2 control-label">Description</label>
+                                            <div class="col-sm-10">
+                                                <input type="text" class="form-control" id="analysisDescription"
+                                                       name="analysisDescription"
+                                                       placeholder="Short description (optional)">
+                                            </div>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <div class="col-sm-10 pull-right text-right">
+                                                <button type="submit" id="addAnalysisBtn" class="btn btn-success"
+                                                        disabled>
+                                                    Add new Resource
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                            <div class="clearfix"></div>
+                        </div>
+
+                    {% endif %}
 
                     <div class="container-fluid">
-
-                        <div class="row-fluid">
-
-                            <div class="col-md-12 add-resource-container">
-
-                                <h4>Add Resource</h4>
-
-                                <form class="form-horizontal"
-                                      action="/record/add_resource/{{ ctx.recid }}/{{ ctx.version }}" method="post">
-                                    <div class="form-group">
-                                        <label for="analysisType" class="col-sm-2 control-label">Type</label>
-                                        <div class="col-sm-5">
-                                            <select name="analysisType" id="analysisType" class="form-control">
-                                                <option disabled>Analyses</option>
-                                                <option value="applgrid">APPLgrid Analysis</option>
-                                                <option value="madanalysis">MAD Analysis</option>
-                                                <option value="rivet">Rivet Analysis</option>
-                                                <option value="fastnlo">fastNLO</option>
-                                                <option value="ufo">Universal Feynrules Output</option>
-                                                <option value="xfitter">XFitter</option>
-
-                                                <option disabled></option>
-                                                <option disabled>Code Repositories</option>
-                                                <option value="github">Github Repository</option>
-                                                <option value="gitlab">Gitlab Repository</option>
-                                                <option value="bitbucket">Bitbucket Repository</option>
-
-                                                <option disabled></option>
-                                                <option value="other">Other</option>
-                                            </select>
-
-
-                                        </div>
-                                        <div id="other_container" class="col-sm-5 hidden">
-                                            <input type="text" class="form-control" id="analysisOther"
-                                                   name="analysisOther"
-                                                   placeholder="e.g. an analysis type such as UFO">
-                                        </div>
-                                    </div>
-
-
-                                    <div class="form-group" id="url">
-                                        <label for="analysisURL" class="col-sm-2 control-label">URL</label>
-                                        <div class="col-sm-10">
-                                            <input type="url" class="form-control" id="analysisURL" name="analysisURL"
-                                                   placeholder="URL">
-                                        </div>
-                                    </div>
-
-                                    <div class="form-group">
-                                        <div class="col-sm-10 pull-right text-right">
-                                            <button type="submit" id="addAnalysisBtn" class="btn btn-success" disabled>
-                                                Add new Resource
-                                            </button>
-                                        </div>
-                                    </div>
-                                </form>
-                            </div>
+                        {% set resource_class='' %}
+                        {% if not(ctx.show_review_widget or ctx.show_upload_widget or ctx.is_submission_coordinator_or_admin) %}
+                            {% set resource_class='full' %}
+                        {% endif %}
+                        <div class="row scrollable {{ resource_class }}" id="resource-list">
+                            <!-- automatically populated -->
                         </div>
                     </div>
 
-                {% endif %}
-
-                <div class="clearfix"></div>
-
-                <div class="container-fluid">
-                    <div class="row" id="resource-list">
-                        <!-- automatically populated -->
-                    </div>
                 </div>
 
                 <div class="clearfix"></div>
@@ -94,7 +119,6 @@
 </div>
 
 <script type="text/javascript">
-
 
     var update_action = function () {
         var _analysis_type = $('#analysisType').val();

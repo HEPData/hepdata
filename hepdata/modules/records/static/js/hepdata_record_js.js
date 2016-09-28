@@ -20,31 +20,6 @@ var hepdata_record = (function () {
         initialise_clipboard('.copy-btn');
       },
 
-      show_resource: function (id, file_type, location) {
-        if (file_type == 'html' && location.indexOf(".html") != -1 && location.indexOf('http') != 0) {
-          $("#resource-detail").load('/record/resource/' + id, function () {
-            MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
-          });
-        } else {
-          if (HEPDATA.is_image(location)) {
-            $("#resource-detail").html('<img src="' + location + '" width="400"/>');
-          } else {
-
-            var download_location = location;
-            var file_name = 'Open Link';
-
-            if (location.indexOf('http') == -1) {
-              file_name = 'Download ' + location.substring(location.lastIndexOf('/') + 1);
-              download_location = '/record/resource/' + id + '?view=true';
-            }
-
-            $("#resource-detail").html('<p>This is a link to an external resource which you can ' +
-              'view by clicking the button below.</p><a href="' + download_location + '" ' +
-              'class="btn btn-primary btn-large" target="_new">' + file_name + '</a>');
-          }
-        }
-      },
-
       perform_upload_action: function (placement, form_name, colors, insertion_type) {
         var html = '<div id="upload-progress"></div>' +
           '<div><p>Uploading and validating files...</p></div>';

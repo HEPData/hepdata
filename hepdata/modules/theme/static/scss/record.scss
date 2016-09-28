@@ -1007,15 +1007,30 @@ g.node {
 
 #resourceModal .modal-dialog {
 
+  .add-resource-container {
+    padding: 10px;
+    background-color: $dark-blue;
+    margin-bottom: 20px;
+    border-radius: 4px;
+
+    border-bottom: solid 5px $purple;
+
+    h4 {
+      font-weight: bolder;
+      margin: 10px 0;
+    }
+  }
+
   .modal-header {
     border: none;
-    background-color: $darker-blue;
+    background-color: $dark-blue;
     color: white;
   }
 
   .modal-body {
     background-color: $darker-blue;
     color: white;
+    padding: 0;
   }
 
   .resource-item-container {
@@ -1024,8 +1039,9 @@ g.node {
     .resource-item {
       background-color: $navy;
       border-radius: 4px;
-      min-height: 190px;
-      padding: 20px;
+      min-height: 200px;
+
+      padding: 20px 10px;
       text-align: center;
 
       h4 {
@@ -1041,17 +1057,73 @@ g.node {
       }
     }
   }
-}
 
-.add-resource-container {
-  padding: 20px;
-  background-color: $dark-blue;
-  margin-bottom: 20px;
-  border-radius: 4px;
+  #resource-list {
 
-  border-bottom: solid 5px $purple;
+    height: 40vh;
+    overflow-y: auto;
 
-  h4 {
-    font-weight: bolder;
+    &.full {
+      height: 70vh;
+    }
+
+  }
+
+  .filter {
+
+    padding: 1em 0;
+    width: 100%;
+
+    input {
+      border: none;
+      background: $darker-blue url(/static/img/icons/icon_filter.svg) 5px 6px no-repeat;
+      background-size: 21px;
+      padding: 5px 5px 5px 31px;
+      width: 100%;
+      border-radius: 5px;
+      color: white;
+      font-size: 1.2em;
+      margin: 0 auto;
+    }
+  }
+
+  #resource-details {
+    padding: 10px 0;
+  }
+
+  #resource-filter {
+
+    padding: 10px;
+    background-color: $dark-blue;
+
+    ul {
+      padding-left: 0;
+      margin-left: 0;
+      list-style: none;
+      height: 65vh;
+      overflow-y: auto;
+
+      li {
+        cursor: pointer;
+        margin: 5px 0;
+        padding: 5px 6px;
+        border-radius: 3px;
+        .badge {
+          background-color: $dark-blue;
+          color: white;
+        }
+
+        &.active {
+          background-color: $purple;
+
+          .badge {
+            background-color: white;
+            color: $darker-blue;
+          }
+        }
+      }
+    }
   }
 }
+
+

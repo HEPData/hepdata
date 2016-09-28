@@ -81,6 +81,11 @@ def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
 
+def is_image(filename):
+    if '.' in filename:
+        extension = filename.rsplit(".", 1)[1]
+        return extension.tolower() in IMAGE_TYPES
+    return False
 
 def infer_file_type(file):
     if "." in file:

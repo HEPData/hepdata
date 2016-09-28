@@ -12,6 +12,7 @@ HEPDATA.default_errors_to_show = 3;
 HEPDATA.default_row_limit = 50;
 HEPDATA.current_record_id = undefined;
 HEPDATA.current_table_id = undefined;
+HEPDATA.current_table_name = undefined;
 HEPDATA.current_table_version = undefined;
 HEPDATA.clipboard = undefined;
 HEPDATA.selected = undefined;
@@ -38,13 +39,13 @@ HEPDATA.file_type_to_details = {
   "gitlab": {"icon": "gitlab", "description": "GitLab Repository"},
   "bitbucket": {"icon": "bitbucket", "description": "Bitbucket Repository"},
   "fastnlo": {"icon": "area-chart", "description": "fastNLO Analysis"},
-  "hepforge": {"icon": "check-square-o", "description": "Rivet Analysis"},
-  "rivet": {"icon": "check-square-o", "description": "Rivet Analysis"},
-  "madanalysis": {"icon": "repeat", "description": "MAD Analysis"},
+  "hepforge": {"icon": "area-chart", "description": "Rivet Analysis"},
+  "rivet": {"icon": "area-chart", "description": "Rivet Analysis"},
+  "madanalysis": {"icon": "area-chart", "description": "MAD Analysis"},
   "xfitter": {"icon": "area-chart", "description": "xFitter Analysis"},
   "applgrid": {"icon": "area-chart", "description": "APPLgrid Analysis"},
   "ufo": {"icon": "rocket", "description": "Universal Feynrules Output (UFO)"},
-  "html": {"icon": "link", "description": "External Link"},
+  "html": {"icon": "code", "description": "External Link"},
   "oldhepdata": {"icon": "file-text-o", "description": "Legacy HEPData Format"},
   "root": {"icon": "line-chart", "description": "ROOT File"}
 };
@@ -211,22 +212,18 @@ HEPDATA.map_file_type_to_property = function (file_type, property) {
 HEPDATA.render_associated_files = function (associated_files, placement) {
   $(placement).html('');
   $("#figures").html('');
+
   for (var file_index in associated_files) {
     var file = associated_files[file_index];
     var html = '';
-    var link = file['alt_location'];
+    $(placement).append('button').attr('class', 'btn btn-primary').attr('id', 'show_resources').text('Resources');
 
-    if (link.indexOf('http') >= 0) {
-      html = '<a href="' + link + '" class="btn btn-md support-file-link" target="_blank">' + file.type + '</a>'
-    } else if (HEPDATA.is_image(link.toLowerCase())) {
-      html = '<button type="button" class="btn btn-md support-file" data-file-id="' + file.id + '">Associated Figure</button>';
-    }
-    else if ('preview_location' in file) {
+    if ('preview_location' in file) {
       $("#figures").append('<a type="button" class="support-file" data-file-id="' + file.id + '"><img src="' + file['preview_location'] + '"/></a>');
     }
-    else {
-      html = '<button type="button" class="btn btn-md support-file" data-file-id="' + file.id + '">' + file.type + '</button>';
-    }
+
     $(placement).append(html);
+
+
   }
 };

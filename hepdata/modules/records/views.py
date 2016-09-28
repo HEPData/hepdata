@@ -30,17 +30,17 @@ import logging
 import json
 from dateutil import parser
 from flask.ext.login import login_required
-from flask import Blueprint, send_file
+from flask import Blueprint, send_file, abort
 import jsonpatch
 import yaml
 from invenio_db import db
 
 from hepdata.config import CFG_DATA_TYPE, CFG_PUB_TYPE
-from hepdata.ext.elasticsearch.api import get_records_matching_field, get_count_for_collection, get_n_latest_records
+from hepdata.ext.elasticsearch.api import get_records_matching_field, get_count_for_collection, get_n_latest_records, \
+    index_record_ids
 from hepdata.modules.email.api import send_new_upload_email, send_new_review_message_email, NoReviewersException, \
     send_question_email
 from hepdata.modules.inspire_api.views import get_inspire_record_information
-from hepdata.modules.permissions.api import user_allowed_to_perform_action
 from hepdata.modules.records.api import *
 from hepdata.modules.submission.models import HEPSubmission, DataSubmission, \
     DataResource, DataReview, Message, Question
@@ -50,7 +50,7 @@ from hepdata.modules.records.utils.data_processing_utils import \
     generate_table_structure
 from hepdata.modules.records.utils.submission import create_data_review, \
     get_or_create_hepsubmission
-from hepdata.modules.submission.api import get_latest_hepsubmission, is_resource_added_to_submission
+from hepdata.modules.submission.api import get_latest_hepsubmission
 from hepdata.modules.records.utils.workflow import \
     update_action_for_submission_participant
 from hepdata.modules.stats.views import increment
@@ -298,7 +298,6 @@ def get_coordinator_view(recid):
             {"full_name": participant.full_name, "email": participant.email,
              "id": participant.id})
 
-    print(participants)
     return json.dumps(
         {"recid": recid,
          "primary-reviewers": participants["reviewer"]["primary"],
@@ -310,7 +309,6 @@ def get_coordinator_view(recid):
 @blueprint.route('/data/review/status/', methods=['POST', ])
 @login_required
 def set_data_review_status():
-
     recid = int(request.form['publication_recid'])
     data_id = int(request.form['data_recid'])
     status = request.form['status']
@@ -477,18 +475,39 @@ def get_resources(recid, version):
     :param recid:
     :return: json
     """
-
-    result = []
+    result = OrderedDict()
+    result['Common Resources'] = {'type': 'submission', 'version': version, 'id': recid, 'resources': []}
     submission = get_latest_hepsubmission(publication_recid=recid, version=version)
 
     if submission:
         for reference in submission.resources:
-            result.append(
-                {'id': reference.id, 'file_type': reference.file_type,
-                 'file_description': reference.file_description,
-                 'location': reference.file_location})
+            result['Common Resources']['resources'].append(process_reference(reference))
+
+    datasubmissions = DataSubmission.query.filter_by(publication_recid=recid, version=version).all()
+
+    for datasubmission in datasubmissions:
+        result[datasubmission.name] = {'type': 'data', 'id': datasubmission.id, 'resources': [],
+                                       'version': datasubmission.version}
+        for reference in datasubmission.resources:
+            result[datasubmission.name]['resources'].append(process_reference(reference))
 
     return json.dumps(result)
+
+
+def process_reference(reference):
+    _location = '/record/resource/{0}?view=true'.format(reference.id)
+
+    if 'http' in reference.file_location:
+        _location = reference.file_location
+
+    _reference_data = {'id': reference.id, 'file_type': reference.file_type,
+                       'file_description': reference.file_description,
+                       'location': _location}
+
+    if reference.file_type.lower() in IMAGE_TYPES:
+        _reference_data['preview_location'] = _location
+
+    return _reference_data
 
 
 @blueprint.route('/resource/<int:resource_id>', methods=['GET'])
@@ -604,49 +623,64 @@ def update_sandbox_payload(recid):
 
 
 @login_required
-@blueprint.route('/add_resource/<int:recid>/<int:version>', methods=['POST'])
-def add_resource(recid, version):
+@blueprint.route('/add_resource/<string:type>/<int:identifier>/<int:version>', methods=['POST'])
+def add_resource(type, identifier, version):
     """
-    Adds a DataResource
-    :param recid:
+    Adds a data resource to either the submission or individual data files.
+    :param type:
+    :param identifier:
     :param version:
     :return:
     """
+
+    submission = None
+    inspire_id = None
+    recid = None
+
+    if type == 'submission':
+        submission = HEPSubmission.query.filter_by(publication_recid=identifier, version=version).one()
+        if submission:
+            inspire_id = submission.inspire_id
+            recid = submission.publication_recid
+
+    elif type == 'data':
+        submission = DataSubmission.query.filter_by(id=identifier).one()
+        if submission:
+            inspire_id = submission.publication_inspire_id
+            recid = submission.publication_recid
+
     if not user_allowed_to_perform_action(recid):
-        return render_template('hepdata_records/error_page.html', recid=None,
-                               header_message='Not authorised.',
-                               message='You are not authorised to add a resource to this record.',
-                               errors={})
+        abort(403)
 
     analysis_type = request.form.get('analysisType', None)
     analysis_other = request.form.get('analysisOther', None)
     analysis_url = request.form.get('analysisURL', None)
+    analysis_description = request.form.get('analysisDescription', None)
 
     if analysis_type == 'other':
         analysis_type = analysis_other
 
-    if is_resource_added_to_submission(recid, version, analysis_url):
-        return render_template('hepdata_records/error_page.html', recid=None,
-                               header_message='This analysis already exists for this submission (and this version).',
-                               message='This resource already exists.',
-                               errors={})
-
     if analysis_type and analysis_url:
 
-        submission = HEPSubmission.query.filter_by(publication_recid=recid,
-                                                   version=version).one()
         if submission:
-            new_resource = DataResource(file_location=analysis_url, file_type=analysis_type)
-            db.session.add(new_resource)
-            submission.references.append(new_resource)
+            new_resource = DataResource(file_location=analysis_url, file_type=analysis_type,
+                                        file_description=str(analysis_description))
+
+            submission.resources.append(new_resource)
 
             try:
                 db.session.add(submission)
                 db.session.commit()
-                if submission.inspire_id:
-                    return redirect('/record/ins{}'.format(submission.inspire_id))
+
+                try:
+                    index_record_ids([recid])
+                except:
+                    log.error('Failed to reindex {0}'.format(recid))
+
+                if inspire_id:
+                    return redirect('/record/ins{0}'.format(inspire_id))
                 else:
-                    return redirect('/record/'.format(submission.publication_recid))
+                    return redirect('/record/{0}'.format(recid))
             except Exception as e:
                 db.session.rollback()
                 raise e
