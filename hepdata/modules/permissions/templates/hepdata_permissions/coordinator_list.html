@@ -29,13 +29,11 @@
                     <li id="coordinator-{{ coordinator.recid }}" class="coordinator-item">
                         <div class="container-fluid">
                             <div class="row">
-                                <div class="col-md-2">
-                                    <a href="/search/?q=&collaboration={{ coordinator.collaboration }}">
-                                        <span class="label label-info"
-                                              style="font-size: 1em;">{{ coordinator.collaboration }}</span>
-                                    </a>
+                                <div class="col-md-2 col-sm-3 col-xs-3">
+                                    <span class="label label-info"
+                                          style="font-size: 1em;">{{ coordinator.collaboration }}</span>
                                 </div>
-                                <div class="col-md-10">
+                                <div class="col-md-10 col-sm-9 col-xs-9">
                                     {{ coordinator.user.email }}
                                 </div>
                             </div>
