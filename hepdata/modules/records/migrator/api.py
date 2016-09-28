@@ -279,7 +279,6 @@ class Migrator(object):
         if output_location:
 
             record_information = self.retrieve_publication_information(inspire_id)
-            record_information = create_record(record_information)
 
             try:
                 recid = self.load_submission(
