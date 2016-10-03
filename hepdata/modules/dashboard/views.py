@@ -2,6 +2,8 @@ from __future__ import absolute_import, print_function
 
 from flask import Blueprint, jsonify, request, render_template
 from flask.ext.login import login_required, current_user
+
+from hepdata.ext.elasticsearch.admin_view.api import AdminIndexer
 from hepdata.ext.elasticsearch.api import reindex_all
 from hepdata.ext.elasticsearch.api import push_data_keywords
 from hepdata.modules.dashboard.api import prepare_submissions, get_pending_invitations_for_user
@@ -121,3 +123,12 @@ def finalise(recid, publication_record=None, force_finalise=False):
 
     return do_finalise(recid, publication_record, force_finalise,
                        commit_message=commit_message, send_tweet=True)
+
+
+@blueprint.route('/submissions', methods=['GET'])
+@login_required
+def submissions():
+    admin_idx = AdminIndexer()
+    summary = admin_idx.get_summary()
+
+    return jsonify(summary)

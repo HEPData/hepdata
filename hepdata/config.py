@@ -26,7 +26,7 @@ from __future__ import absolute_import, print_function
 import copy
 import os
 import tempfile
-from datetime import timedelta
+from datetime import timedelta, datetime
 
 from invenio_oauthclient.contrib.orcid import REMOTE_APP as ORCID_REMOTE_APP
 from invenio_oauthclient.contrib import cern
@@ -66,7 +66,16 @@ CELERYBEAT_SCHEDULE = {
     'update_analyses': {
         'task': 'hepdata.modules.records.migrator.api.update_analyses',
         'schedule': timedelta(hours=12)
-    }
+    },
+
+    'update-index': {
+        'task': 'invenio_trends.tasks.update_index',
+        'schedule': timedelta(hours=24)
+    },
+    'update-trends': {
+        'task': 'invenio_trends.tasks.update_trends',
+        'schedule': timedelta(hours=24)
+    },
 }
 
 # Cache
@@ -114,6 +123,7 @@ COVER_TEMPLATE = "hepdata_theme/page_cover.html"
 SETTINGS_TEMPLATE = "invenio_theme/page_settings.html"
 
 ELASTICSEARCH_INDEX = 'hepdata'
+SUBMISSION_INDEX = 'submission'
 SEARCH_ELASTIC_HOSTS = [
     'localhost:9200'
 ]
@@ -122,6 +132,7 @@ SEARCH_AUTOINDEX = []
 
 CFG_PUB_TYPE = 'publication'
 CFG_DATA_TYPE = 'datatable'
+CFG_SUBMISSIONS_TYPE = 'submission'
 CFG_ES_AUTHORS = ('authors', 'author')  # (index_name, doc_type)
 CFG_DATA_KEYWORDS = ['observables', 'reactions', 'cmenergies', 'phrases']
 

@@ -55,7 +55,6 @@ def test_search_from_home(live_server, env_browser, search_tests):
             assert (publication)
 
             selector = ".{0} .record-header a".format(search_config['exp_hepdata_id'])
-            print 'SELECTOR IS {}'.format(selector)
 
             element = WebDriverWait(browser, 10).until(
                 EC.presence_of_element_located((By.CSS_SELECTOR, selector))

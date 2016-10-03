@@ -216,14 +216,15 @@ HEPDATA.render_associated_files = function (associated_files, placement) {
   for (var file_index in associated_files) {
     var file = associated_files[file_index];
     var html = '';
-    $(placement).append('button').attr('class', 'btn btn-primary').attr('id', 'show_resources').text('Resources');
+    $(placement).append('button').attr('class', 'btn btn-primary pull-right')
+      .attr('id', 'show_resources').text('Resources');
 
     if ('preview_location' in file) {
-      $("#figures").append('<a type="button" class="support-file" data-file-id="' + file.id + '"><img src="' + file['preview_location'] + '"/></a>');
+      $("#figures")
+        .append('<a class="support-file" data-file-id="' + file.id + '">' +
+          '<img src="' + file['preview_location'] + '"/>' +
+          '</a>');
     }
-
     $(placement).append(html);
-
-
   }
 };

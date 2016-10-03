@@ -272,7 +272,7 @@ def process_general_submission_info(basepath, submission_info_document, recid):
                 hepsubmission.last_updated = datetime.now()
 
         if "modifications" in submission_info_document:
-            parse_modifications(recid, submission_info_document)
+            parse_modifications(hepsubmission, recid, submission_info_document)
 
         if 'additional_resources' in submission_info_document:
 
@@ -348,7 +348,7 @@ def parse_additional_resources(basepath, recid, version, yaml_document):
     return resources
 
 
-def parse_modifications(recid, submission_info_document):
+def parse_modifications(hepsubmission, recid, submission_info_document):
     for modification in submission_info_document['modifications']:
         try:
             date = parse(modification['date'])
@@ -366,6 +366,7 @@ def parse_modifications(recid, submission_info_document):
             participant = SubmissionParticipant(
                 publication_recid=recid, full_name=modification["who"],
                 role=modification["action"], action_date=date)
+            hepsubmission.participants.append(participant)
             db.session.add(participant)
 
 

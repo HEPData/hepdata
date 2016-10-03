@@ -19,16 +19,12 @@
 
 """Enchancers for the document sent to elastic search """
 import datetime
-import json
 import logging
-
-import requests
 from dateutil.parser import parse
 from flask import current_app
 
 from hepdata.modules.permissions.models import SubmissionParticipant
 from hepdata.modules.submission.api import get_latest_hepsubmission
-from hepdata.utils import session
 
 FORMATS = ['json', 'root', 'yaml', 'csv']
 

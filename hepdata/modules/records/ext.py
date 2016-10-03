@@ -26,10 +26,7 @@
 
 from __future__ import absolute_import, print_function
 
-from operator import or_
-
 import pkg_resources
-from invenio_accounts.models import User
 
 from hepdata.modules.permissions.models import SubmissionParticipant
 from hepdata.modules.theme.views import internal_error
@@ -81,8 +78,6 @@ class HEPDataRecords(object):
             raise RuntimeError(
                 "You must use `pip install flask-cors` to "
                 "enable CORS support.")
-
-
 
         @app.context_processor
         def is_coordinator_or_admin():

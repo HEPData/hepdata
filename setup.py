@@ -166,7 +166,6 @@ setup(
         'invenio_base.apps': [
             'hepdata_records = hepdata.modules.records.ext:HEPDataRecords'
         ],
-
         'invenio_db.models': [
             'hepdata_submissions = hepdata.modules.submission.models',
             'hepdata_stats = hepdata.modules.stats.models',

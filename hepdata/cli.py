@@ -27,9 +27,10 @@
 from __future__ import absolute_import, print_function
 
 import click
-from flask.ext.cli import with_appcontext
+from flask.cli import with_appcontext
 from invenio_base.app import create_cli
 
+from hepdata.ext.elasticsearch.admin_view.api import AdminIndexer
 from hepdata.modules.converter.tasks import convert_and_store
 from hepdata.modules.submission.models import HEPSubmission
 from .factory import create_app
@@ -256,7 +257,7 @@ def prefetch_converted_files(inspire_ids, force, targets):
     if inspire_ids:
         submission_ids = inspire_ids.split(',')
     else:
-        submissions = HEPSubmission.query.filter_by(overall_status='finished')\
+        submissions = HEPSubmission.query.filter_by(overall_status='finished') \
             .with_entities(HEPSubmission.inspire_id).all()
         submission_ids = [i for (i,) in submissions]
 
@@ -266,3 +267,17 @@ def prefetch_converted_files(inspire_ids, force, targets):
     for inspire_id in submission_ids:
         for file_format in file_formats:
             convert_and_store.delay(inspire_id, file_format, force=force)
+
+
+@cli.group()
+def submissions():
+    """Submissions"""
+
+
+@submissions.command(name="reindex")
+@with_appcontext
+def reindex():
+    """Reindexes HEPSubmissions and adds to the submission index"""
+
+    admin_idx = AdminIndexer()
+    admin_idx.reindex(recreate=True)
