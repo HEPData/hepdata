@@ -30,3 +30,23 @@ dashboard_js = NpmBundle(
     filters='jsmin,uglifyjs',
     output="gen/hepdata.dashboard.%(version)s.js"
 )
+submission_vis_js = NpmBundle(
+    'node_modules/crossfilter/crossfilter.min.js',
+    'node_modules/dc/dc.min.js',
+    'js/submissions_vis.js',
+    filters='jsmin,uglifyjs',
+    output="gen/hepdata.submissions-vis.%(version)s.js",
+    npm={
+        "dc": "1.7.5",
+        "crossfilter": "1.3.12"
+    }
+)
+
+submission_css = NpmBundle(
+    'node_modules/dc/dc.min.css',
+    filters='cleancss',
+    output='gen/hepdata.submission.%(version)s.css',
+    npm={
+        "dc": "1.7.5"
+    }
+)

@@ -1,0 +1,105 @@
+{%- extends "hepdata_dashboard/dashboard.html" %}
+
+{% block dashboard_content %}
+
+    {%- assets "hepdata_submission_css" %}
+        <link href="{{ ASSET_URL }}" rel="stylesheet">
+    {%- endassets %}
+
+    <div class="container-fluid">
+        <div class="row-fluid breadcrumb">
+            <a href="/dashboard"><i class="fa fa-chevron-left"></i> Back to Dashboard</a>
+        </div>
+        <br/>
+
+        <div class="row-fluid visualization-container">
+            <div id="time-series" class="col-md-8">
+                <h4>Submissions By Last Update Time</h4>
+                <div id="submission_vis"></div>
+            </div>
+
+            <div id="time-series" class="col-md-4">
+                <h4>Data Records Per Submission</h4>
+                <div id="data_count_vis"></div>
+            </div>
+        </div>
+
+        <div class="clearfix"></div>
+        <br/><br/>
+
+        <div class="row-fluid visualization-container">
+            <div id="status" class="col-md-4">
+                <h4>Submission Status</h4>
+                <div id="status_vis"></div>
+            </div>
+
+            <div id="collaboration" class="col-md-4">
+                <h4>Collaboration</h4>
+                <div id="collaboration_vis"></div>
+            </div>
+
+            <div id="version" class="col-md-4">
+                <h4>Version</h4>
+                <div id="version_vis"></div>
+            </div>
+        </div>
+
+        <div class="clearfix"></div>
+        <br/><br/>
+
+        <div class="row-fluid">
+            <div id="table-view" class="col-md-12">
+                <div class="row-fluid visualization-container">
+                    <div class="col-md-12 col-sm-10 col-xs-8">
+                        <h4>Detailed Submission Information</h4>
+                        <div class="visualization-panel col-md-12 scrollable"
+                             style="height: 300px; overflow-y: scroll">
+
+
+                            <table class="table dc-data-table">
+
+                                <thead>
+                                <tr class="header">
+                                    <th></th>
+                                    <th>Inspire ID</th>
+                                    <th>Title</th>
+                                    <th>Version</th>
+                                    <th>Data Count</th>
+                                    <th>Status</th>
+                                    <th>Collaboration</th>
+
+                                </tr>
+                                </thead>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+
+{%- block javascript %}
+
+
+    <script type="text/javascript"
+            src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    {%- assets "hepdata_vis_js" %}
+        <script src="{{ ASSET_URL }}"></script>
+    {%- endassets %}
+
+    {%- assets "hepdata_submission_vis_js" %}
+        <script src="{{ ASSET_URL }}"></script>
+    {%- endassets %}
+
+
+
+    <script>
+
+        $(document).ready(function () {
+            submissions_vis.render('/dashboard/submissions/list', {});
+        });
+
+    </script>
+{% endblock %}

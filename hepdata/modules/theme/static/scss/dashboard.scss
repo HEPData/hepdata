@@ -15,6 +15,12 @@ body, html {
       }
     }
 
+    .breadcrumb {
+      background-color: #2c3e50;
+      padding: 8px 10px;
+      border-radius: 4px;
+    }
+
     .filter-section input {
       -webkit-background-size: 9%;
       background-size: 9%;
@@ -671,4 +677,46 @@ body, html {
 
   }
 
+  .axis path, .axis line {
+    fill: none;
+    stroke: white !important;
+    stroke-width: 1;
+    shape-rendering: crispEdges;
+
+  }
+
+  path, circle, .dc-chart .row rect {
+    pointer-events: auto;
+  }
+
+  .dc-chart g.row rect {
+    fill-opacity: 1;
+    cursor: pointer;
+
+    &:hover {
+      fill-opacity: 1;
+      fill: $lightblue;
+    }
+  }
+
+  .axis text {
+    font-size: 10px;
+    fill: white;
+  }
+
+  .brush rect.extent {
+    fill: white;
+    fill-opacity: .125;
+  }
+
+  .brush .resize path {
+    fill: white;
+    stroke: $grey;
+  }
+
+  .visualization-container {
+    margin-bottom: 50px;
+  }
+
 }
+

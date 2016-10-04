@@ -6,7 +6,7 @@ from elasticsearch_dsl.connections import connections
 from flask import current_app
 
 from hepdata.modules.records.utils.common import get_record_by_id, get_record_contents
-from hepdata.modules.submission.models import HEPSubmission
+from hepdata.modules.submission.models import HEPSubmission, DataSubmission
 
 logging.basicConfig()
 log = logging.getLogger(__name__)
@@ -17,14 +17,15 @@ class ESSubmissionParticipant(InnerObjectWrapper):
 
 
 class ESSubmission(DocType):
-    recid = Integer(),
-    inspire_id = String(),
-    version = Integer(),
+    recid = Integer()
+    inspire_id = String()
+    version = Integer()
     title = String()
     collaboration = String()
     status = String()
     creation_date = Date()
     last_updated = Date()
+    data_count = Integer()
     participants = Nested(
         doc_class=ESSubmissionParticipant,
         properties={
@@ -32,6 +33,20 @@ class ESSubmission(DocType):
             'full_name': String()
         }
     )
+
+    def as_custom_dict(self, exclude=None):
+        _dict_ = vars(self)
+
+        data = _dict_['_d_']
+        data['creation_date'] = data['creation_date'].strftime('%Y-%m-%d')
+        data['last_updated'] = data['last_updated'].strftime('%Y-%m-%d')
+
+        if exclude:
+            for field in exclude:
+                if field in data:
+                    del data[field]
+
+        return data
 
     class Meta:
         index = 'submission'
@@ -49,13 +64,14 @@ class AdminIndexer:
         self.search_fields = kwargs.get('fields',
                                         ['title', 'inspire_id', 'recid', 'collaboration', 'participants.full_name'])
 
-    def search(self, term=None):
+    def search(self, term=None, fields=None):
         search = ESSubmission.search(using=self.client, index=self.index)[0:10000]
 
         if term is not None:
-            search = search.query(Q("multi_match", query=term, fields=self.search_fields))
+            if fields is None:
+                fields = self.search_fields
+            search = search.query(Q("multi_match", query=term, fields=fields))
 
-        print(search.to_dict())
         result = search.execute()
 
         return result
@@ -65,12 +81,20 @@ class AdminIndexer:
         s.aggs.bucket('daily_workflows', 'date_histogram',
                       field='last_updated',
                       format="yyyy-MM-dd", interval='day') \
-            .bucket('collaboration', 'terms', field='collaboration') \
-            .bucket('status', 'terms', field='status') \
             .bucket('inspire_ids', 'terms', field='inspire_id')
+        result = s.execute().aggregations.to_dict()
 
-        result = s.execute()
-        return result.aggregations.to_dict()
+        # flatten summary
+        processed_result = []
+        _daily_workflows = result['daily_workflows']
+        for day in _daily_workflows['buckets']:
+            for inspire_id in day['inspire_ids']['buckets']:
+                record_search = self.search(term=inspire_id['key'], fields=['inspire_id'])
+                record = record_search[0] if len(record_search) == 1 else record_search[1]
+
+                processed_result.append(record.as_custom_dict(exclude=['participants']))
+
+        return processed_result
 
     def reindex(self, *args, **kwargs):
 
@@ -88,8 +112,10 @@ class AdminIndexer:
 
             record_information = get_record_contents(submission.publication_recid)
 
-            collaboration = ','.join(record_information['collaborations'])
+            data_count = DataSubmission.query.filter(DataSubmission.publication_recid == submission.publication_recid,
+                                                     DataSubmission.version == submission.version).count()
 
+            collaboration = ','.join(record_information['collaborations'])
 
             self.add_to_index(_id=submission.id,
                               title=record_information['title'],
@@ -97,6 +123,7 @@ class AdminIndexer:
                               recid=submission.publication_recid,
                               inspire_id=submission.inspire_id,
                               status=submission.overall_status,
+                              data_count=data_count,
                               creation_date=submission.created,
                               last_updated=submission.last_updated,
                               version=submission.version,

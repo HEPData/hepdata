@@ -125,10 +125,21 @@ def finalise(recid, publication_record=None, force_finalise=False):
                        commit_message=commit_message, send_tweet=True)
 
 
-@blueprint.route('/submissions', methods=['GET'])
+@blueprint.route('/submissions/', methods=['GET'])
 @login_required
 def submissions():
+
+    user_profile = current_userprofile.query.filter_by(user_id=current_user.get_id()).first()
+
+    ctx = {'user_is_admin': has_role(current_user, 'admin'),
+           'user_profile': user_profile}
+
+    return render_template('hepdata_dashboard/submissions.html', ctx=ctx)
+
+
+@blueprint.route('/submissions/list', methods=['GET'])
+@login_required
+def submissions_list():
     admin_idx = AdminIndexer()
     summary = admin_idx.get_summary()
-
     return jsonify(summary)
