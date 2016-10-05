@@ -41,11 +41,11 @@ def test_create_index(app, admin_idx):
 
 def test_add_to_index(app, admin_idx):
     files = [{'_id': 1, 'title': 'Test Submission', 'collaboration': 'ATLAS', 'version': 1, 'inspire_id': '122111',
-              'status': 'finished', 'creation_date': '2016-06-01'},
+              'status': 'finished', 'creation_date': '2016-06-01', 'last_updated': '2016-06-01'},
              {'_id': 2, 'title': 'Test Submission', 'collaboration': 'ATLAS', 'version': 1, 'inspire_id': '122112',
-              'status': 'finished', 'creation_date': '2016-06-02'},
+              'status': 'finished', 'creation_date': '2016-06-02', 'last_updated': '2016-06-02'},
              {'_id': 3, 'title': 'Test Submission', 'collaboration': 'ALICE', 'version': 1, 'inspire_id': '122113',
-              'status': 'finished', 'creation_date': '2016-06-02'}
+              'status': 'finished', 'creation_date': '2016-06-02', 'last_updated': '2016-06-02'}
              ]
 
     for file in files:
@@ -59,14 +59,14 @@ def test_search_index(app, admin_idx):
     results_122111 = admin_idx.search(term='122111')
     assert (len(results_122111) == 1)
 
-    results_atlas = admin_idx.search(term='atlas')
+    results_atlas = admin_idx.search(term='atlas', fields=['collaboration'])
     assert (len(results_atlas) == 2)
 
-    results_alice = admin_idx.search(term='alice')
+    results_alice = admin_idx.search(term='alice', fields=['collaboration'])
     assert (len(results_alice) == 1)
 
 
 def test_summary(app, admin_idx):
     summary = admin_idx.get_summary()
     assert (summary is not None)
-    assert (len(summary['daily_workflows']['buckets']) == 2)
+    assert (len(summary) == 3)
