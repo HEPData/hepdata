@@ -41,6 +41,11 @@ class ESSubmission(DocType):
         data['creation_date'] = data['creation_date'].strftime('%Y-%m-%d')
         data['last_updated'] = data['last_updated'].strftime('%Y-%m-%d')
 
+        participants = data['participants']
+        data['participants'] = []
+        for participant in participants:
+            data['participants'].append(participant['full_name'] + ' (' + participant['role'] + ')')
+
         if exclude:
             for field in exclude:
                 if field in data:
@@ -92,7 +97,7 @@ class AdminIndexer:
                 record_search = self.search(term=inspire_id['key'], fields=['inspire_id'])
                 record = record_search[0] if len(record_search) == 1 else record_search[1]
 
-                processed_result.append(record.as_custom_dict(exclude=['participants']))
+                processed_result.append(record.as_custom_dict(exclude=[]))
 
         return processed_result
 

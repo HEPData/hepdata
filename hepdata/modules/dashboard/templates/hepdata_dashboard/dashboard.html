@@ -62,10 +62,6 @@
                         {% endif %}
                         <a href="/account/settings/profile"
                            class="btn-profile"><i class="fa fa-pencil"></i> Edit Profile</a>
-
-                        <a href="{{ url_for('security.logout') }}"
-                           class="btn-profile danger"><i
-                                class="fa fa-power-off"></i> Log out</a>
                     </div>
                 </div>
             </div>
@@ -153,11 +149,11 @@
                                         </div>
 
                                         <div class="col-md-2">
-                                            <em>{{ request.collaboration }}</em></p>
+                                            <em>{{ request.collaboration }}</em>
                                         </div>
 
                                         <div class="col-md-4">
-                                            <em>{{ request.message }}</em></p>
+                                            <em>{{ request.message }}</em>
                                         </div>
 
                                         <div class="col-md-3">

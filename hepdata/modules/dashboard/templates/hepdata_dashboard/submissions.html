@@ -10,50 +10,76 @@
         <div class="row-fluid breadcrumb">
             <a href="/dashboard"><i class="fa fa-chevron-left"></i> Back to Dashboard</a>
         </div>
-        <br/>
 
         <div class="row-fluid visualization-container">
-            <div id="time-series" class="col-md-8">
+            <div id="time-series" class="col-md-12">
                 <h4>Submissions By Last Update Time</h4>
                 <div id="submission_vis"></div>
             </div>
 
-            <div id="time-series" class="col-md-4">
-                <h4>Data Records Per Submission</h4>
-                <div id="data_count_vis"></div>
-            </div>
         </div>
 
         <div class="clearfix"></div>
-        <br/><br/>
+        <br/>
 
         <div class="row-fluid visualization-container">
-            <div id="status" class="col-md-4">
-                <h4>Submission Status</h4>
-                <div id="status_vis"></div>
+
+
+            <div class="col-md-8">
+                <div class="row-fluid">
+                    <div id="time-series" class="col-md-6">
+                        <h4>Data Records Per Submission</h4>
+                        <br/>
+                        <div id="data_count_vis"></div>
+                    </div>
+
+                    <div id="collaboration" class="col-md-6">
+                        <h4>Collaboration <span class="text-muted text-small">TOP 10</span></h4>
+                        <br/>
+                        <div id="collaboration_vis"></div>
+                    </div>
+                </div>
+
+
+                <div class="clearfix"></div>
+                <br/>
+
+
+                <div id="status" class="col-md-6">
+                    <h4>Submission Status</h4>
+                    <br/>
+                    <div id="status_vis"></div>
+                </div>
+
+                <div id="version" class="col-md-6">
+                    <h4>Version</h4>
+                    <br/>
+                    <div id="version_vis"></div>
+                </div>
             </div>
 
-            <div id="collaboration" class="col-md-4">
-                <h4>Collaboration</h4>
-                <div id="collaboration_vis"></div>
+            <div class="col-md-4">
+                <div id="participants">
+                    <h4>Submission Participants</h4>
+                    <div id="participants_vis">
+                    </div>
+                </div>
             </div>
 
-            <div id="version" class="col-md-4">
-                <h4>Version</h4>
-                <div id="version_vis"></div>
-            </div>
         </div>
 
+
         <div class="clearfix"></div>
-        <br/><br/>
+        <br/>
 
         <div class="row-fluid">
             <div id="table-view" class="col-md-12">
                 <div class="row-fluid visualization-container">
                     <div class="col-md-12 col-sm-10 col-xs-8">
-                        <h4>Detailed Submission Information</h4>
-                        <div class="visualization-panel col-md-12 scrollable"
-                             style="height: 300px; overflow-y: scroll">
+                        <h4>Detailed Submission Information <span class="pull-right btn btn-default" id="download">Download</span>
+                        </h4>
+                        <br/>
+                        <div class="visualization-panel col-md-12 scrollable">
 
 
                             <table class="table dc-data-table">
@@ -63,7 +89,6 @@
                                     <th></th>
                                     <th>Inspire ID</th>
                                     <th>Title</th>
-                                    <th>Version</th>
                                     <th>Data Count</th>
                                     <th>Status</th>
                                     <th>Collaboration</th>

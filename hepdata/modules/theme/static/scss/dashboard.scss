@@ -679,15 +679,20 @@ body, html {
 
   .axis path, .axis line {
     fill: none;
-    stroke: white !important;
+    stroke: $grey !important;
     stroke-width: 1;
     shape-rendering: crispEdges;
 
   }
 
+  .axis path {
+    display: none;
+  }
+
   path, circle, .dc-chart .row rect {
     pointer-events: auto;
   }
+
 
   .dc-chart g.row rect {
     fill-opacity: 1;
@@ -701,7 +706,7 @@ body, html {
 
   .axis text {
     font-size: 10px;
-    fill: white;
+    fill: $grey;
   }
 
   .brush rect.extent {
@@ -712,6 +717,56 @@ body, html {
   .brush .resize path {
     fill: white;
     stroke: $grey;
+  }
+
+  .dc-data-table {
+    border-collapse: collapse;
+
+    tr {
+      td {
+        padding-top: 20px;
+      }
+
+    }
+
+    .dc-table-label {
+      margin-top: 15px;
+      font-weight: bolder;
+    }
+
+    .label {
+
+      padding: 3px 5px;
+      border-radius: 3px;
+      margin-right: 3px;
+      text-transform: uppercase;
+      background-color: $purple;
+      color: white;
+      font-size: .9em;
+      display: inline-block;
+
+
+      &.version {
+        padding: 0;
+        color: $yellow;
+        background-color: $darker-blue;
+      }
+
+      &.finished {
+        background-color: $green;
+        color: $darker-blue;
+      }
+
+      &.todo {
+        background-color: $red;
+      }
+    }
+
+  }
+
+  .table > tbody + tbody {
+    border: none;
+    margin-top: 10px;
   }
 
   .visualization-container {

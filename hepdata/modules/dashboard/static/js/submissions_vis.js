@@ -5,7 +5,7 @@
 var submissions_vis = (function () {
 
 
-  var status_colors = d3.scale.ordinal().domain(["todo", "finished", "in progress"]).range(["#e74c3c", "#2ecc71", "#f39c12"]);
+  var status_colors = d3.scale.ordinal().domain(["finished", "todo", "in progress"]).range(["#1abc9c", "#e74c3c", "#f39c12"]);
   var general_colors = d3.scale.ordinal().range(["#2980b9"]);
 
   var date_format = "%d %b %Y";
@@ -30,6 +30,22 @@ var submissions_vis = (function () {
 
   };
 
+  function getTopValues(map, count) {
+
+    var tupleArray = [];
+    for (var key in map) tupleArray.push([key, map[key]]);
+    tupleArray.sort(function (a, b) {
+      return b[1] - a[1];
+    });
+
+    var result = [];
+    for (var i =0 ; i < Math.min(count, tupleArray.length); i++) {
+      result.push({key: tupleArray[i][0], value: tupleArray[i][1]});
+    }
+    return result;
+  }
+
+
   var calculate_window_width = function () {
     return $(window).width();
   };
@@ -50,9 +66,30 @@ var submissions_vis = (function () {
     });
   };
 
+  function getHighestValues(source_group) {
+    return {
+      all: function () {
+        var values = getTopValues(source_group, 20);
+        values['all'] = source_group.all;
+        return values;
+      }
+    };
+  }
+
+
   function getTops(source_group) {
     return {
       all: function () {
+        console.log(source_group.top(5));
+        return source_group.top(10);
+      }
+    };
+  }
+
+  function getContributors(source_group) {
+    return {
+      all: function () {
+        console.log(source_group);
         return source_group.top(10);
       }
     };
@@ -66,6 +103,25 @@ var submissions_vis = (function () {
         });
       }
     };
+  }
+
+  function reduceAdd(p, v) {
+    v.participants.forEach(function (val, idx) {
+      p[val] = (p[val] || 0) + 1; //increment counts
+    });
+    return p;
+  }
+
+  function reduceRemove(p, v) {
+    v.participants.forEach(function (val, idx) {
+      p[val] = (p[val] || 0) - 1; //decrement counts
+    });
+    return p;
+
+  }
+
+  function reduceInitial() {
+    return {};
   }
 
   return {
@@ -90,6 +146,10 @@ var submissions_vis = (function () {
             return d.data_count;
           }),
 
+          participants = submissions.dimension(function (d) {
+            return d.participants;
+          }),
+
           collaboration = submissions.dimension(function (d) {
             return d.collaboration == '' ? 'No collaboration' : d.collaboration;
           }),
@@ -102,6 +162,8 @@ var submissions_vis = (function () {
             return d.version;
           }),
 
+          participantsGroup = participants.groupAll().reduce(reduceAdd, reduceRemove, reduceInitial).value(),
+
           submissions_by_date_count_group = submissions_by_date.group(),
           cumulative_count = submissions_by_date.group().reduceSum(),
           collaboration_count_group = collaboration.group(),
@@ -110,18 +172,30 @@ var submissions_vis = (function () {
           version_count_group = version.group();
 
 
+        participantsGroup.all = function () {
+          var newObject = [];
+          for (var key in this) {
+            if (this.hasOwnProperty(key) && key != "all") {
+              newObject.push({
+                key: key,
+                value: this[key]
+              });
+            }
+          }
+          return newObject;
+        };
+
         var minDate = new Date(submissions_by_date.bottom(1)[0].last_updated);
         var maxDate = new Date(submissions_by_date.top(1)[0].last_updated);
 
         minDate.setDate(minDate.getDate() - 1);
         maxDate.setDate(maxDate.getDate() + 1);
 
-
         var window_width = calculate_window_width();
 
-
         var submission_chart = dc.barChart("#submission_vis")
-          .width(calculate_vis_width(window_width, 0.65))
+          .height(200)
+          .width(calculate_vis_width(window_width, 0.95))
           .x(d3.time.scale().domain([minDate, maxDate]))
           .dimension(submissions_by_date, 'Submissions')
           .group(submissions_by_date_count_group)
@@ -143,25 +217,37 @@ var submissions_vis = (function () {
 
         var collaboration_chart = dc.rowChart("#collaboration_vis")
           .width(calculate_vis_width(window_width, 0.3))
-          .height(300)
+          .height(250)
           .dimension(collaboration, 'collaborations')
           .group(getTops(collaboration_count_group))
           .colors(general_colors);
 
 
-        var status_chart = dc.pieChart("#status_vis")
+        var participant_chart = dc.rowChart("#participants_vis")
           .width(calculate_vis_width(window_width, 0.3))
+          .height(575)
+          .dimension(participants, 'participants')
+          .group(getHighestValues(participantsGroup))
+          .colors(general_colors);
+
+        var status_chart = dc.pieChart("#status_vis")
+
+          .width(calculate_vis_width(window_width, 0.12))
           .dimension(status, 'status')
           .group(status_count_group)
+          .innerRadius(40)
           .colors(status_colors);
 
         var version_chart = dc.pieChart("#version_vis")
-          .width(calculate_vis_width(window_width, 0.3))
+
+          .width(calculate_vis_width(window_width, 0.12))
           .dimension(version, 'versions')
           .group(version_count_group)
+          .innerRadius(40)
           .colors(general_colors);
 
         var data_count = dc.barChart("#data_count_vis")
+          .height(250)
           .width(calculate_vis_width(window_width, 0.3))
           .x(d3.scale.linear().domain([0, 45]))
           .dimension(data, 'data')
@@ -171,9 +257,9 @@ var submissions_vis = (function () {
         var detailTable = dc.dataTable('.dc-data-table');
         detailTable.dimension(submissions_by_date)
           .group(function (d) {
-            return formatDate(d.last_updated);
+            return '<i class="fa fa-calendar"></i> ' + formatDate(d.last_updated);
           })
-          .size(100)
+
           .columns([
             function () {
               return ""
@@ -183,22 +269,20 @@ var submissions_vis = (function () {
             },
 
             function (d) {
-              return '<a href="/record/ins' + d.inspire_id + '" target="_blank">' + d.title + '</a>';
+              return '<div class="label version">Version ' + d.version + '</div>' +
+                '<a href="/record/ins' + d.inspire_id + '" target="_blank">' + d.title + '</a>';
             },
 
             function (d) {
-              return d.version;
+              return '<span class="badge badge-success">' + d.data_count + '</span>';
             },
 
             function (d) {
-              return d.data_count;
-            },
-
-            function (d) {
-              return d.status;
+              return '<span class="label ' + d.status + '">' + d.status + '</span>';
             },
             function (d) {
-              return '<a href="/search/?q=&collaboration=' + d.collaboration + '" target="_blank">' + d.collaboration + '</a>';
+              return '<a href="/search/?q=&collaboration=' +
+                d.collaboration + '" target="_blank">' + '<span class="label ' + d.collaboration + '">' + d.collaboration + '</span>' + '</a>';
             }
           ]).sortBy(function (d) {
           return d.last_updated;
@@ -209,6 +293,22 @@ var submissions_vis = (function () {
           alert("filtered");
           MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
         });
+
+        d3.select('#download')
+          .on('click', function () {
+            var data = submissions_by_date.top(Infinity);
+
+            data = data.map(function (d) {
+              var row = {};
+              detailTable.columns().forEach(function (c) {
+                row[detailTable._doColumnHeaderFormat(c)] = detailTable._doColumnValueFormat(c, d);
+              });
+              return row;
+            });
+
+            var blob = new Blob([d3.csv.format(data)], {type: "text/csv;charset=utf-8"});
+            saveAs(blob, 'data.csv');
+          });
 
         dc.renderAll();
       });
