@@ -40,11 +40,11 @@ def test_create_index(app, admin_idx):
 
 
 def test_add_to_index(app, admin_idx):
-    files = [{'_id': 1, 'title': 'Test Submission', 'collaboration': 'ATLAS', 'version': 1, 'inspire_id': '122111',
+    files = [{'_id': 1, 'recid': 1, 'title': 'Test Submission', 'collaboration': 'ATLAS', 'version': 1, 'inspire_id': '122111',
               'status': 'finished', 'creation_date': '2016-06-01', 'last_updated': '2016-06-01'},
-             {'_id': 2, 'title': 'Test Submission', 'collaboration': 'ATLAS', 'version': 1, 'inspire_id': '122112',
+             {'_id': 2, 'recid': 2, 'title': 'Test Submission', 'collaboration': 'ATLAS', 'version': 1, 'inspire_id': '122112',
               'status': 'finished', 'creation_date': '2016-06-02', 'last_updated': '2016-06-02'},
-             {'_id': 3, 'title': 'Test Submission', 'collaboration': 'ALICE', 'version': 1, 'inspire_id': '122113',
+             {'_id': 3, 'recid': 3, 'title': 'Test Submission', 'collaboration': 'ALICE', 'version': 1, 'inspire_id': '122113',
               'status': 'finished', 'creation_date': '2016-06-02', 'last_updated': '2016-06-02'}
              ]
 

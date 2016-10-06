@@ -36,6 +36,7 @@ from invenio_db import db
 from hepdata.ext.elasticsearch.api import get_records_matching_field, index_record_ids
 from hepdata.modules.inspire_api.views import get_inspire_record_information
 from hepdata.modules.dashboard.views import do_finalise
+from hepdata.modules.records.utils.common import record_exists
 
 from hepdata.modules.records.utils.submission import \
     process_submission_directory, get_or_create_hepsubmission, \
@@ -185,10 +186,10 @@ def load_files(inspire_ids, send_tweet=False, synchronous=False):
     :return: None
     """
     migrator = Migrator()
-    from hepdata.ext.elasticsearch.api import record_exists
+
     for index, inspire_id in enumerate(inspire_ids):
         _cleaned_id = inspire_id.replace("ins", "")
-        if not record_exists(_cleaned_id):
+        if not record_exists(inspire_id=_cleaned_id):
             print('The record with id {0} does not exist in the database, so we\'re loading it.'.format(inspire_id))
             try:
                 log.info('Loading {0}'.format(inspire_id))

@@ -91,6 +91,9 @@ def delete_submission(recid):
     if has_role(current_user, 'admin') or has_role(current_user, 'coordinator') \
         or check_is_sandbox_record(recid):
         unload_submission(recid)
+
+        admin_idx = AdminIndexer()
+        admin_idx.reindex(recreate=True)
         return json.dumps({"success": True,
                            "recid": recid,
                            "errors": [

@@ -1,0 +1,27 @@
+dependent_variables:
+- header: {name: 10**6 * 1/SIG(fiducial) * D(SIG(fiducial))/DPT, units: GEV**-1}
+  qualifiers:
+  - {name: RE, value: P P --> Z0 < LEPTON+ LEPTON- > Z0 < NU NUBAR > X}
+  - {name: SQRT(S), units: GeV, value: '7000.0'}
+  values:
+  - errors:
+    - {label: stat, symerror: 3340.0}
+    - {label: 'sys,detector', symerror: 80.0}
+    - {label: 'sys,background', symerror: 740.0}
+    value: 9930.0
+  - errors:
+    - {label: stat, symerror: 3210.0}
+    - {label: 'sys,detector', symerror: 200.0}
+    - {label: 'sys,background', symerror: 260.0}
+    value: 8280.0
+  - errors:
+    - {label: stat, symerror: 1490.0}
+    - {label: 'sys,detector', symerror: 120.0}
+    - {label: 'sys,background', symerror: 390.0}
+    value: 3900.0
+independent_variables:
+- header: {name: Leading dilepton PT, units: GEV}
+  values:
+  - {high: 90.0, low: 50.0}
+  - {high: 130.0, low: 90.0}
+  - {high: 200.0, low: 130.0}

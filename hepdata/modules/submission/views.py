@@ -1,3 +1,27 @@
+# -*- coding: utf-8 -*-
+#
+# This file is part of HEPData.
+# Copyright (C) 2016 CERN.
+#
+# HEPData is free software; you can redistribute it
+# and/or modify it under the terms of the GNU General Public License as
+# published by the Free Software Foundation; either version 2 of the
+# License, or (at your option) any later version.
+#
+# HEPData is distributed in the hope that it will be
+# useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with HEPData; if not, write to the
+# Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston,
+# MA 02111-1307, USA.
+#
+# In applying this license, CERN does not
+# waive the privileges and immunities granted to it by virtue of its status
+# as an Intergovernmental Organization or submit itself to any jurisdiction.
+
 from flask import Blueprint, render_template, request, jsonify
 from flask.ext.login import login_required, current_user
 from invenio_db import db
@@ -70,7 +94,7 @@ def process_submission_payload(*args, **kwargs):
     record_information = create_record(content)
     submitter_id = kwargs.get('submitter_id')
     if submitter_id is None:
-        submitter_id = int(current_user.get_id())
+        submitter_id = kwargs.get('user_id') if 'user_id' in kwargs else int(current_user.get_id())
 
     hepsubmission = get_or_create_hepsubmission(record_information["recid"], submitter_id)
 

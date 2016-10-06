@@ -1,7 +1,6 @@
 [run]
 source = hepdata
-omit = hepdata/ext*
-       hepdata/wsgi.py
+omit = hepdata/wsgi.py
        hepdata/cli.py
        hepdata/celery.py
        hepdata/utils/mail.py
@@ -14,5 +13,4 @@ omit = hepdata/ext*
        hepdata/modules/search/views.py
        hepdata/modules/converter/__init__.py
        hepdata/modules/converter/views.py
-       hepdata/modules/submission/views.py
-
+       hepdata/modules/records/migrator/api.py

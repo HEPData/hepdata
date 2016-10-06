@@ -232,9 +232,6 @@ def render_record(recid, record, version, output_format, light_mode=False):
         version_count = HEPSubmission.query.filter_by(
             publication_recid=recid, overall_status='finished').count()
 
-    print(recid)
-    print(version_count)
-
     if version == -1:
         version = version_count
 

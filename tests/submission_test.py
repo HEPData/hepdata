@@ -1,4 +1,35 @@
-from hepdata.modules.records.utils.common import infer_file_type, contains_accepted_url, allowed_file
+# -*- coding: utf-8 -*-
+#
+# This file is part of HEPData.
+# Copyright (C) 2016 CERN.
+#
+# HEPData is free software; you can redistribute it
+# and/or modify it under the terms of the GNU General Public License as
+# published by the Free Software Foundation; either version 2 of the
+# License, or (at your option) any later version.
+#
+# HEPData is distributed in the hope that it will be
+# useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with HEPData; if not, write to the
+# Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston,
+# MA 02111-1307, USA.
+#
+# In applying this license, CERN does not
+# waive the privileges and immunities granted to it by virtue of its status
+# as an Intergovernmental Organization or submit itself to any jurisdiction.
+
+import os
+
+from hepdata.ext.elasticsearch.api import get_records_matching_field
+from hepdata.modules.records.api import format_submission
+from hepdata.modules.records.utils.common import infer_file_type, contains_accepted_url, allowed_file, record_exists, \
+    get_record_contents
+from hepdata.modules.records.utils.submission import process_submission_directory, do_finalise
+from hepdata.modules.submission.models import DataSubmission
 from hepdata.modules.submission.views import process_submission_payload
 
 
@@ -49,3 +80,60 @@ def test_file_extension_pattern():
     for file_group in test_files:
         extension = infer_file_type(file_group["file"])
         assert (file_group["exp_result"] == extension)
+
+
+def test_create_submission(app):
+    """
+    Test the whole submission pipeline in loading a file, ensuring the HEPSubmission object is created,
+    all the files have been added, and the record has been indexed.
+    :return:
+    """
+    with app.app_context():
+        # test submission part works
+
+        record = {'inspire_id': '19999999',
+                  'title': 'HEPData Testing 1',
+                  'reviewer': {'name': 'Testy McTester', 'email': 'test@test.com'},
+                  'uploader': {'name': 'Testy McTester', 'email': 'test@test.com'},
+                  'message': 'This is ready',
+                  'user_id': 1}
+
+        hepdata_submission = process_submission_payload(**record)
+
+        assert (hepdata_submission.version == 1)
+        assert (hepdata_submission.overall_status == 'todo')
+
+        # test upload works
+        base_dir = os.path.dirname(os.path.realpath(__file__))
+
+        directory = os.path.join(base_dir, 'test_data/test_submission')
+        process_submission_directory(directory, os.path.join(directory, 'submission.yaml'),
+                                     hepdata_submission.publication_recid)
+
+        data_submissions = DataSubmission.query.filter_by(
+            publication_recid=hepdata_submission.publication_recid).count()
+        assert (data_submissions == 8)
+        assert (len(hepdata_submission.resources) == 4)
+        assert (len(hepdata_submission.participants) == 4)
+
+        do_finalise(hepdata_submission.publication_recid, force_finalise=True)
+
+        assert (record_exists(inspire_id=record['inspire_id']))
+
+        # Test record is in index...
+        index_records = get_records_matching_field('inspire_id', record['inspire_id'], doc_type='publication')
+        print(index_records)
+        assert (len(index_records['hits']['hits']) == 1)
+
+        publication_record = get_record_contents(hepdata_submission.publication_recid)
+
+        print(publication_record)
+        assert (publication_record is not None)
+
+        ctx = format_submission(hepdata_submission.publication_recid, publication_record, hepdata_submission.version, 1,
+                                hepdata_submission)
+
+        assert(ctx is not None)
+
+        assert(ctx['version'] == 1)
+        assert (ctx['recid'] == hepdata_submission.publication_recid)

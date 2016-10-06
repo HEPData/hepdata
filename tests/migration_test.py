@@ -28,6 +28,7 @@ from invenio_records.models import RecordMetadata
 from hepdata.config import CFG_TMPDIR
 import os
 
+from hepdata.modules.records.migrator.api import get_all_ids_in_current_system
 from hepdata.modules.records.utils.yaml_utils import split_files
 
 __author__ = 'eamonnmaguire'
@@ -37,7 +38,6 @@ def test_file_download_and_split(app, migrator, identifiers):
     """___test_file_download_and_split___"""
     with app.app_context():
         for test_id in identifiers:
-            print test_id["inspire_id"]
             file = migrator.download_file(test_id["hepdata_id"])
             assert file is not None
 
@@ -59,7 +59,7 @@ def test_inspire_record_retrieval(app, migrator, identifiers):
 
 
 def test_migration(app, migrator, load_default_data, identifiers):
-    print '___test_migration___'
+    print('___test_migration___')
     with app.app_context():
         records = RecordMetadata.query.all()
         all_exist = True
@@ -76,3 +76,9 @@ def test_migration(app, migrator, load_default_data, identifiers):
 
         assert(total_expected_records == len(records))
         assert(all_exist)
+
+
+def test_get_ids_in_current_system():
+    ids = get_all_ids_in_current_system()
+
+    assert(ids is not None)

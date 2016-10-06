@@ -21,22 +21,11 @@
 # In applying this license, CERN does not
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
-from flask import session
-
-"""Provides setter and getter for storing things in the REDIS Cache"""
+from hepdata.utils.session import set_session_item, get_session_item
 
 
-def set_session_item(key, value):
-    """
-    Stores a key and value in the session.
-    By default we use REDIS
-    :param key: e.g. my_key
-    :param value: anything, dict, array, string, int, etc.
-    :return: 'ok'
-    """
-    session[key] = value
-    return 'ok'
+def test_session(app):
+    with app.app_context():
+        set_session_item('test', 'value_1')
 
-
-def get_session_item(key):
-    return session.get(key, [])
+        assert(get_session_item('test') == 'value_1')

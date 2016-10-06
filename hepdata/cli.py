@@ -32,11 +32,11 @@ from invenio_base.app import create_cli
 
 from hepdata.ext.elasticsearch.admin_view.api import AdminIndexer
 from hepdata.modules.converter.tasks import convert_and_store
+from hepdata.modules.records.utils.common import record_exists
 from hepdata.modules.submission.models import HEPSubmission
 from .factory import create_app
 from hepdata.config import CFG_PUB_TYPE
-from hepdata.ext.elasticsearch.api import reindex_all, \
-    get_records_matching_field, record_exists
+from hepdata.ext.elasticsearch.api import reindex_all, get_records_matching_field
 from hepdata.modules.records.utils.submission import unload_submission
 from hepdata.modules.records.migrator.api import load_files, update_submissions, get_all_ids_in_current_system, \
     add_or_update_records_since_date, update_analyses
@@ -147,6 +147,10 @@ def find_duplicates_and_remove():
     print('There are {} duplicates. Going to remove.'.format(len(duplicates)))
     do_unload(duplicates)
 
+    # reindex submissions for dashboard view
+    admin_indexer = AdminIndexer()
+    admin_indexer.reindex(recreate=True)
+
 
 @cli.command()
 @with_appcontext
@@ -159,7 +163,7 @@ def get_missing_records():
     inspire_ids = get_all_ids_in_current_system(prepend_id_with="")
     missing_ids = []
     for inspire_id in inspire_ids:
-        if not record_exists(inspire_id):
+        if not record_exists(inspire_id=inspire_id):
             missing_ids.append(inspire_id)
 
     print("Missing {} records.".format(len(missing_ids)))

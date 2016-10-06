@@ -31,6 +31,7 @@ from sqlalchemy.orm.exc import NoResultFound
 
 from hepdata.config import CFG_PUB_TYPE
 from hepdata.ext.elasticsearch.api import get_record
+from hepdata.modules.submission.models import HEPSubmission
 
 __author__ = 'eamonnmaguire'
 
@@ -230,3 +231,8 @@ def get_record_by_id(recid):
     except PIDDoesNotExistError:
         current_app.logger.exception('The PID {0} does not exist'.format(recid))
         return None
+
+
+def record_exists(*args, **kwargs):
+    count = HEPSubmission.query.filter_by(**kwargs).count()
+    return count > 0

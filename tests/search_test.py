@@ -31,3 +31,10 @@ def test_query_parser():
     assert (parsed_query_string2 == 'data_keywords.observables:ASYM '
                                     'AND data_keywords.phrases:Elastic Scattering '
                                     'OR data_keywords.cmenergies:1.34')
+
+def test_search():
+    """
+    Test the search functions work correctly, also with the new query syntax.
+    :return:
+    """
+    pass

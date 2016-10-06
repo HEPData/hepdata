@@ -21,8 +21,8 @@
 import requests
 from bs4 import BeautifulSoup
 from flask import request, Blueprint, jsonify
-from hepdata.ext.elasticsearch.api import record_exists
 
+from hepdata.modules.records.utils.common import record_exists
 from marcxml_parser import get_doi, get_title, get_authors, get_abstract, \
     get_arxiv, get_collaborations, get_keywords, get_date, get_journal_info, get_year, get_collection, get_dissertation, \
     expand_date
@@ -83,17 +83,17 @@ def get_record_from_inspire():
     if 'id' not in request.args:
         return jsonify({'status': 'no inspire id provided'})
 
-    rec_id = request.args['id']
+    inspire_id = request.args['id']
 
     # check that id is not present already.
-    exists = record_exists(rec_id)
+    exists = record_exists(inspire_id=inspire_id)
 
     if exists:
-        return jsonify({'status': 'exists', 'id': rec_id})
+        return jsonify({'status': 'exists', 'id': inspire_id})
 
-    content, status = get_inspire_record_information(rec_id)
+    content, status = get_inspire_record_information(inspire_id)
 
     return jsonify({'source': 'inspire',
-                    'id': rec_id,
+                    'id': inspire_id,
                     'query': content,
                     'status': status})

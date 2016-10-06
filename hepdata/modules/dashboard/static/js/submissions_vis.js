@@ -39,7 +39,7 @@ var submissions_vis = (function () {
     });
 
     var result = [];
-    for (var i =0 ; i < Math.min(count, tupleArray.length); i++) {
+    for (var i = 0; i < Math.min(count, tupleArray.length); i++) {
       result.push({key: tupleArray[i][0], value: tupleArray[i][1]});
     }
     return result;
@@ -60,7 +60,9 @@ var submissions_vis = (function () {
 
   var process_data = function (data) {
     data.forEach(function (d, i) {
+      console.log(d.collaboration);
       d.index = i;
+
       d.last_updated = parseDate(d.last_updated);
       d.creation_date = parseDate(d.creation_date);
     });
@@ -80,7 +82,7 @@ var submissions_vis = (function () {
   function getTops(source_group) {
     return {
       all: function () {
-        console.log(source_group.top(5));
+
         return source_group.top(10);
       }
     };
@@ -254,7 +256,7 @@ var submissions_vis = (function () {
           .group(data_count_group)
           .colors(general_colors);
 
-        var detailTable = dc.dataTable('.dc-data-table');
+        var detailTable = dc.dataTable('#data_table');
         detailTable.dimension(submissions_by_date)
           .group(function (d) {
             return '<i class="fa fa-calendar"></i> ' + formatDate(d.last_updated);
@@ -281,8 +283,10 @@ var submissions_vis = (function () {
               return '<span class="label ' + d.status + '">' + d.status + '</span>';
             },
             function (d) {
-              return '<a href="/search/?q=&collaboration=' +
-                d.collaboration + '" target="_blank">' + '<span class="label ' + d.collaboration + '">' + d.collaboration + '</span>' + '</a>';
+              if (d.collaboration) {
+                return '<a href="/search/?q=&collaboration=' +
+                  d.collaboration + '" target="_blank">' + '<span class="label ' + d.collaboration + '">' + d.collaboration + '</span>' + '</a>';
+              }
             }
           ]).sortBy(function (d) {
           return d.last_updated;
@@ -294,21 +298,6 @@ var submissions_vis = (function () {
           MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
         });
 
-        d3.select('#download')
-          .on('click', function () {
-            var data = submissions_by_date.top(Infinity);
-
-            data = data.map(function (d) {
-              var row = {};
-              detailTable.columns().forEach(function (c) {
-                row[detailTable._doColumnHeaderFormat(c)] = detailTable._doColumnValueFormat(c, d);
-              });
-              return row;
-            });
-
-            var blob = new Blob([d3.csv.format(data)], {type: "text/csv;charset=utf-8"});
-            saveAs(blob, 'data.csv');
-          });
 
         dc.renderAll();
       });

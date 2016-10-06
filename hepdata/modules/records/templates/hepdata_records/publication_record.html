@@ -199,7 +199,7 @@
                                             itemprop="url">http://hepdata.cedar.ac.uk/view/ins{{ ctx.record.inspire_id }}</span>
                                     </a></li>
 
-                                {% if ctx.additional_resources %}
+                                {% if ctx.additional_resources or (ctx.show_review_widget or ctx.show_upload_widget or ctx.is_submission_coordinator_or_admin) %}
                                     <li>
                                         <button id="show_all_resources" class="btn btn-primary btn-sm"
                                                 data-recid="{{ ctx.record.recid }}">

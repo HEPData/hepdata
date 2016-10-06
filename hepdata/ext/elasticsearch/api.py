@@ -222,32 +222,6 @@ def get_record(record_id, doc_type, index=None, parent=None):
 
 
 @default_index
-def record_exists(inspire_id, index=None):
-    """ Checks if a record with a given HEPData ID exists in the index """
-    # Strip the ins from the beginning
-    if isinstance(inspire_id, basestring) and inspire_id[:3] == 'ins':
-        inspire_id = inspire_id[3:]
-
-    inspire_id = int(inspire_id)
-    print("Checking for presence of {}".format(inspire_id))
-
-    query = {
-        'query': {
-            'match': {
-                'inspire_id': inspire_id
-            }
-        }
-    }
-
-    try:
-        result = es.search_exists(index=index, doc_type=CFG_PUB_TYPE, body=query)
-        return result['exists'] if not isinstance(result, bool) else result
-    except NotFoundError as nfe:
-        return False
-
-
-
-@default_index
 def get_records_matching_field(field, id, index=None, doc_type=None):
     """ Checks if a record with a given ID exists in the index """
 

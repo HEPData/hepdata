@@ -35,6 +35,7 @@ from flask import current_app
 from flask.ext.celeryext import create_celery_app
 from flask.ext.login import current_user
 from hepdata.config import CFG_DATA_TYPE, CFG_PUB_TYPE
+from hepdata.ext.elasticsearch.admin_view.api import AdminIndexer
 from hepdata.ext.elasticsearch.api import get_records_matching_field, \
     delete_item_from_index, index_record_ids, push_data_keywords
 from hepdata.modules.converter.tasks import convert_and_store
@@ -284,8 +285,6 @@ def process_general_submission_info(basepath, submission_info_document, recid):
             for resource in resources:
                 hepsubmission.resources.append(resource)
 
-        if hepsubmission.last_updated is not None:
-            print('hepsubmission.last_updated = {}'.format(hepsubmission.last_updated.isoformat(' ')))
         db.session.add(hepsubmission)
         db.session.commit()
 
@@ -370,7 +369,7 @@ def parse_modifications(hepsubmission, recid, submission_info_document):
             db.session.add(participant)
 
 
-def process_submission_directory(basepath, submission_file_path, recid, update=False):
+def process_submission_directory(basepath, submission_file_path, recid, update=False, *args, **kwargs):
     """
     Goes through an entire submission directory and processes the
     files within to create DataSubmissions
@@ -405,7 +404,7 @@ def process_submission_directory(basepath, submission_file_path, recid, update=F
                 HEPSubmission(publication_recid=recid,
                               overall_status='todo',
                               inspire_id=hepsubmission.inspire_id,
-                              coordinator=int(current_user.get_id()),
+                              coordinator=kwargs.get('user_id') if 'user_id' in kwargs else int(current_user.get_id()),
                               version=hepsubmission.version + 1)
 
             # On a new upload, we reset the flag to notify reviewers
@@ -473,6 +472,9 @@ def process_submission_directory(basepath, submission_file_path, recid, update=F
             if len(errors) is 0:
                 package_submission(basepath, recid, hepsubmission)
                 reserve_dois_for_data_submissions(recid, hepsubmission.version)
+
+                admin_indexer = AdminIndexer()
+                admin_indexer.index_submission(hepsubmission)
         else:
             errors = process_validation_errors_for_display(
                 submission_file_validator.get_messages())
@@ -601,7 +603,6 @@ def do_finalise(recid, publication_record=None, force_finalise=False,
     """
         Creates record SIP for each data record with a link to the associated
         publication
-        and submits to bibupload.
         :param synchronous: if true then workflow execution and creation is
         waited on, then everything is indexed in one go.
         If False, object creation is asynchronous, however reindexing is not
@@ -688,6 +689,9 @@ def do_finalise(recid, publication_record=None, force_finalise=False,
             # Reindex everything.
             index_record_ids([recid] + generated_record_ids)
             push_data_keywords(pub_ids=[recid])
+
+            admin_indexer = AdminIndexer()
+            admin_indexer.index_submission(hep_submission)
 
             send_finalised_email(hep_submission)
 
