@@ -28,7 +28,7 @@ from hepdata.ext.elasticsearch.api import get_records_matching_field
 from hepdata.modules.records.api import format_submission
 from hepdata.modules.records.utils.common import infer_file_type, contains_accepted_url, allowed_file, record_exists, \
     get_record_contents
-from hepdata.modules.records.utils.submission import process_submission_directory, do_finalise
+from hepdata.modules.records.utils.submission import process_submission_directory, do_finalise, unload_submission
 from hepdata.modules.submission.models import DataSubmission
 from hepdata.modules.submission.views import process_submission_payload
 
@@ -137,3 +137,14 @@ def test_create_submission(app):
 
         assert(ctx['version'] == 1)
         assert (ctx['recid'] == hepdata_submission.publication_recid)
+
+        # remove the submission and test that all is remove
+
+        unload_submission(hepdata_submission.publication_recid)
+
+        assert (not record_exists(inspire_id=record['inspire_id']))
+
+        data_submissions = DataSubmission.query.filter_by(
+            publication_recid=hepdata_submission.publication_recid).count()
+
+        assert (data_submissions == 0)
