@@ -72,7 +72,6 @@ var submissions_vis = (function () {
     return {
       all: function () {
         var values = getTopValues(source_group, 20);
-        values['all'] = source_group.all;
         return values;
       }
     };
@@ -91,7 +90,6 @@ var submissions_vis = (function () {
   function getContributors(source_group) {
     return {
       all: function () {
-        console.log(source_group);
         return source_group.top(10);
       }
     };
