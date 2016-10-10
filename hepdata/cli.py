@@ -54,9 +54,12 @@ default_recids = 'ins1283842,ins1245023'
               help='Whether or not to recreate the index')
 @click.option('--tweet', '-t', default=False, type=bool,
               help='Whether or not to send a tweet announcing the arrival of these records.')
-def populate(inspireids, recreate_index, tweet):
+@click.option('--convert', '-c', default=False, type=bool,
+              help='Whether or not to create conversions for all loaded files to ROOT, YODA, and CSV.')
+def populate(inspireids, recreate_index, tweet, convert):
     """Populate the DB with records.
         Usage: hepdata populate -i 'ins1262703' -rc False -t False
+        :param convert:
         :param inspireids:
         :param tweet:
         :param recreate_index:
@@ -68,7 +71,7 @@ def populate(inspireids, recreate_index, tweet):
         reindex()
 
     files_to_load = parse_inspireids_from_string(inspireids)
-    load_files(files_to_load, send_tweet=tweet)
+    load_files(files_to_load, send_tweet=tweet, convert=convert)
 
 
 @cli.command()
@@ -192,16 +195,19 @@ def reindex(recreate, start, end, batch):
               help='Load specific recids in to the system.')
 @click.option('--tweet', '-t', default=False, type=bool,
               help='Whether or not to send a tweet announcing the arrival of these records.')
-def load(inspireids, tweet):
+@click.option('--convert', '-c', default=False, type=bool,
+              help='Whether or not to create conversions for all loaded files to ROOT, YODA, and CSV.')
+def load(inspireids, tweet, convert):
     """
     Remove records given their HEPData IDs from the database.
     Removes all database entries, leaves the files on the server.
+    :param convert:
+    :param tweet:
     :param inspireids: list of record IDs to load
-    :return:
     """
     processed_record_ids = parse_inspireids_from_string(inspireids)
 
-    load_files(processed_record_ids, send_tweet=tweet)
+    load_files(processed_record_ids, send_tweet=tweet, convert=convert)
 
 
 def parse_inspireids_from_string(records_to_unload):

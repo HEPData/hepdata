@@ -48,7 +48,7 @@ from hepdata.modules.records.utils.yaml_utils import split_files
 from hepdata.modules.submission.api import get_latest_hepsubmission, is_resource_added_to_submission
 from hepdata.modules.submission.models import DataResource
 
-__author__ = 'eamonnmaguire'
+__author__ = "eamonnmaguire"
 
 logging.basicConfig()
 log = logging.getLogger(__name__)
@@ -73,15 +73,14 @@ class FailedSubmission(Exception):
 
 @shared_task
 def update_analyses():
-
-    endpoints = current_app.config['ANALYSES_ENDPOINTS']
+    endpoints = current_app.config["ANALYSES_ENDPOINTS"]
     for analysis_endpoint in endpoints:
 
-        if 'endpoint_url' in endpoints[analysis_endpoint]:
+        if "endpoint_url" in endpoints[analysis_endpoint]:
 
-            log.info('Updating analyses from {0}...'.format(analysis_endpoint))
+            log.info("Updating analyses from {0}...".format(analysis_endpoint))
 
-            response = requests.get(endpoints[analysis_endpoint]['endpoint_url'])
+            response = requests.get(endpoints[analysis_endpoint]["endpoint_url"])
 
             if response:
 
@@ -92,7 +91,7 @@ def update_analyses():
 
                     if submission:
                         for analysis in analyses[record]:
-                            _resource_url = endpoints[analysis_endpoint]['url_template'].format(analysis)
+                            _resource_url = endpoints[analysis_endpoint]["url_template"].format(analysis)
                             if not is_resource_added_to_submission(submission.publication_recid, submission.version,
                                                                    _resource_url):
                                 new_resource = DataResource(
@@ -108,29 +107,31 @@ def update_analyses():
                             db.session.rollback()
                             log.error(e)
                     else:
-                        log.debug('An analysis is available in {0} but with no equivalent in HEPData (ins{1}).'.format(analysis_endpoint, record))
+                        log.debug("An analysis is available in {0} but with no equivalent in HEPData (ins{1}).".format(
+                            analysis_endpoint, record))
         else:
-            log.debug('No endpoint url configured for {0}'.format(analysis_endpoint))
+            log.debug("No endpoint url configured for {0}".format(analysis_endpoint))
+
 
 @shared_task
 def update_submissions(inspire_ids_to_update, only_record_information=False):
     migrator = Migrator()
     for index, inspire_id in enumerate(inspire_ids_to_update):
         _cleaned_id = inspire_id.replace("ins", "")
-        _matching_records = get_records_matching_field('inspire_id', _cleaned_id)
-        if len(_matching_records['hits']['hits']) >= 1:
-            print('The record with id {} will be updated now'.format(inspire_id))
-            recid = _matching_records['hits']['hits'][0]['_source']['recid']
-            if 'related_publication' in _matching_records['hits']['hits'][0]['_source']:
-                recid = _matching_records['hits']['hits'][0]['_source']['related_publication']
+        _matching_records = get_records_matching_field("inspire_id", _cleaned_id)
+        if len(_matching_records["hits"]["hits"]) >= 1:
+            print("The record with id {} will be updated now".format(inspire_id))
+            recid = _matching_records["hits"]["hits"][0]["_source"]["recid"]
+            if "related_publication" in _matching_records["hits"]["hits"][0]["_source"]:
+                recid = _matching_records["hits"]["hits"][0]["_source"]["related_publication"]
             migrator.update_file.delay(inspire_id, recid,
                                        only_record_information)
         else:
-            log.error('No record exists with id {0}. You should load this file first.'.format(inspire_id))
+            log.error("No record exists with id {0}. You should load this file first.".format(inspire_id))
 
 
 @shared_task
-def add_or_update_records_since_date(date=None):
+def add_or_update_records_since_date(date=None, convert=False):
     """
     Given a date, gets all the records updated or added since that
     date and updates or adds the corresponding records
@@ -144,7 +145,7 @@ def add_or_update_records_since_date(date=None):
 
     inspire_ids = get_all_ids_in_current_system(date)
     print("{0} records to be added or updated since {1}.".format(len(inspire_ids), date))
-    load_files(inspire_ids)
+    load_files(inspire_ids, convert=False)
 
 
 def get_all_ids_in_current_system(date=None, prepend_id_with="ins"):
@@ -156,30 +157,31 @@ def get_all_ids_in_current_system(date=None, prepend_id_with="ins"):
     """
     import requests, re
 
-    brackets_re = re.compile(r'\[+|\]+')
+    brackets_re = re.compile(r"\[+|\]+")
     inspire_ids = []
-    base_url = 'http://hepdata.cedar.ac.uk/allids/{0}'
+    base_url = "http://hepdata.cedar.ac.uk/allids/{0}"
     if date:
         base_url = base_url.format(date)
     else:
-        base_url = base_url.format('')
+        base_url = base_url.format("")
 
     response = requests.get(base_url)
     if response.ok:
         _all_ids = response.text
-        for match in re.finditer('\[[0-9]+,[0-9]+,[0-9]+\]', _all_ids):
+        for match in re.finditer("\[[0-9]+,[0-9]+,[0-9]+\]", _all_ids):
             start = match.start()
             end = match.end()
             # process the block which is of the form [inspire_id,xxx,xxx]
             id_block = brackets_re.sub("", _all_ids[start:end])
-            id = id_block.split(',')[0].strip()
-            if id != '0':
+            id = id_block.split(",")[0].strip()
+            if id != "0":
                 inspire_ids.append("{0}{1}".format(prepend_id_with, id))
     return inspire_ids
 
 
-def load_files(inspire_ids, send_tweet=False, synchronous=False):
+def load_files(inspire_ids, send_tweet=False, synchronous=False, convert=False):
     """
+    :param convert:
     :param synchronous: if should be run immediately
     :param send_tweet: whether or not to tweet this entry.
     :param inspire_ids: array of inspire ids to load (in the format insXXX).
@@ -190,22 +192,22 @@ def load_files(inspire_ids, send_tweet=False, synchronous=False):
     for index, inspire_id in enumerate(inspire_ids):
         _cleaned_id = inspire_id.replace("ins", "")
         if not record_exists(inspire_id=_cleaned_id):
-            print('The record with id {0} does not exist in the database, so we\'re loading it.'.format(inspire_id))
+            print("The record with id {0} does not exist in the database, so we\"re loading it.".format(inspire_id))
             try:
-                log.info('Loading {0}'.format(inspire_id))
+                log.info("Loading {0}".format(inspire_id))
                 if synchronous:
-                    migrator.load_file(inspire_id, send_tweet)
+                    migrator.load_file(inspire_id, send_tweet, convert=convert)
                 else:
-                    migrator.load_file.delay(inspire_id, send_tweet)
+                    migrator.load_file.delay(inspire_id, send_tweet, convert=convert)
             except socket.error as se:
-                print('socket error...')
+                print("socket error...")
                 log.error(se.message)
             except Exception as e:
-                print('Failed to load {0}. {1} '.format(inspire_id, e))
-                log.error('Failed to load {0}. {1} '.format(inspire_id, e))
+                print("Failed to load {0}. {1} ".format(inspire_id, e))
+                log.error("Failed to load {0}. {1} ".format(inspire_id, e))
         else:
-            print('The record with inspire id {0} already exists. Updating instead.'.format(inspire_id))
-            log.info('Updating {}'.format(inspire_id))
+            print("The record with inspire id {0} already exists. Updating instead.".format(inspire_id))
+            log.info("Updating {}".format(inspire_id))
             if synchronous:
                 update_submissions([inspire_id], send_tweet)
             else:
@@ -228,24 +230,24 @@ class Migrator(object):
         :param inspire_id:
         :return: output location if succesful, None if not
         """
-        output_location = os.path.join(current_app.config['CFG_DATADIR'], inspire_id)
+        output_location = os.path.join(current_app.config["CFG_DATADIR"], inspire_id)
 
         if not os.path.exists(output_location) or force_retrieval:
-            print('Downloading file for {0}'.format(inspire_id))
+            print("Downloading file for {0}".format(inspire_id))
             file_location = self.download_file(inspire_id)
 
             if file_location:
-                output_location = os.path.join(current_app.config['CFG_DATADIR'], inspire_id)
-                split_files(file_location, output_location, '{0}.zip'.format(output_location))
+                output_location = os.path.join(current_app.config["CFG_DATADIR"], inspire_id)
+                split_files(file_location, output_location, "{0}.zip".format(output_location))
             else:
                 return None
         else:
-            print('File for {0} already in system...no download required.'.format(inspire_id))
+            print("File for {0} already in system...no download required.".format(inspire_id))
 
         return output_location
 
     @shared_task
-    def update_file(inspire_id, recid, only_record_information=False, send_tweet=False):
+    def update_file(inspire_id, recid, only_record_information=False, send_tweet=False, convert=False):
         self = Migrator()
 
         output_location = self.prepare_files_for_submission(inspire_id, force_retrieval=True)
@@ -261,20 +263,20 @@ class Migrator(object):
 
                     if recid is not None:
                         do_finalise(recid, publication_record=record_information,
-                                    force_finalise=True, send_tweet=send_tweet, update=True)
+                                    force_finalise=True, send_tweet=send_tweet, update=True, convert=convert)
 
                 except FailedSubmission as fe:
                     log.error(fe.message)
                     fe.print_errors()
                     remove_submission(fe.record_id)
             else:
-                index_record_ids([record_information['recid']])
+                index_record_ids([record_information["recid"]])
 
         else:
-            log.error('Failed to load {0}'.format(inspire_id))
+            log.error("Failed to load {0}".format(inspire_id))
 
     @shared_task
-    def load_file(inspire_id, send_tweet):
+    def load_file(inspire_id, send_tweet=False, convert=False):
         self = Migrator()
         output_location = self.prepare_files_for_submission(inspire_id)
         if output_location:
@@ -287,14 +289,14 @@ class Migrator(object):
                     os.path.join(output_location, "submission.yaml"))
                 if recid is not None:
                     do_finalise(recid, publication_record=record_information,
-                                force_finalise=True, send_tweet=send_tweet)
+                                force_finalise=True, send_tweet=send_tweet, convert=convert)
 
             except FailedSubmission as fe:
                 log.error(fe.message)
                 fe.print_errors()
                 remove_submission(fe.record_id)
         else:
-            log.error('Failed to load ' + inspire_id)
+            log.error("Failed to load " + inspire_id)
 
     def download_file(self, inspire_id):
         """
@@ -309,22 +311,21 @@ class Migrator(object):
             yaml = response.read()
             # save to tmp file
 
-            tmp_file = tempfile.NamedTemporaryFile(dir=current_app.config['CFG_TMPDIR'],
+            tmp_file = tempfile.NamedTemporaryFile(dir=current_app.config["CFG_TMPDIR"],
                                                    delete=False)
             tmp_file.write(yaml)
             tmp_file.close()
             return tmp_file.name
 
         except HTTPError as e:
-            log.error('Failed to download {0}'.format(inspire_id))
+            log.error("Failed to download {0}".format(inspire_id))
             log.error(e.message)
             return None
-
 
     def retrieve_publication_information(self, inspire_id):
         """
         :param inspire_id: id for record to get. If this contains
-        'ins', the 'ins' is removed.
+        "ins", the "ins" is removed.
         :return: dict containing keys for:
             title
             doi
@@ -362,12 +363,12 @@ class Migrator(object):
                                               record_information["recid"], update=update)
 
         if len(errors) > 0:
-            print('ERRORS ARE: ')
+            print("ERRORS ARE: ")
             print(errors)
 
         if errors:
             raise FailedSubmission("Submission failed for {0}.".format(
-                record_information['recid']), errors,
-                record_information['recid'])
+                record_information["recid"]), errors,
+                record_information["recid"])
         else:
             return record_information["recid"]

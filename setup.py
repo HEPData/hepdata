@@ -41,7 +41,7 @@ tests_require = [
     'pydocstyle>=1.0.0',
     'pytest-cache>=1.0',
     'pytest-cov>=1.8.0',
-    'pytest-flask>=0.11.0',
+    'pytest-flask>=0.10.0',
     'pytest-pep8>=1.0.6',
     'pytest>=2.8.0',
     # 2.53.0 introduced a Python 3 compatibility issue. Wait for it to be fixed

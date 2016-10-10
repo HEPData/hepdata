@@ -46,6 +46,8 @@ def test_file_download_and_split(app, migrator, identifiers):
                 os.path.join(CFG_TMPDIR, test_id[
                     "hepdata_id"] + ".zip"))
 
+            assert(os.path.exists(os.path.join(CFG_TMPDIR, test_id["hepdata_id"])))
+
 
 def test_inspire_record_retrieval(app, migrator, identifiers):
     """___test_inspire_record_retrieval___"""
