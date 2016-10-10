@@ -70,3 +70,9 @@ def test_summary(app, admin_idx):
     summary = admin_idx.get_summary()
     assert (summary is not None)
     assert (len(summary) == 3)
+
+
+def test_find_and_delete(app, admin_idx):
+    delete_count, success = admin_idx.find_and_delete(term='ATLAS', fields=['collaboration'])
+    assert (success)
+    assert(delete_count == 2)

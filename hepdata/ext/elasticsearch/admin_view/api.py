@@ -125,6 +125,26 @@ class AdminIndexer:
 
         return processed_result
 
+    def find_and_delete(self, term, fields=None):
+        """
+        Finds records by first searching for them, then deleting
+        them all
+        :param term: e.g. ATLAS
+        :param fields: array of fields to search on, e.g. ['collaboration']
+        :return: True
+        """
+        results = self.search(term, fields=fields)
+        delete_count = 0
+        for result in results:
+            try:
+                result.delete()
+                delete_count += 1
+            except:
+                return delete_count, False
+
+        return delete_count, True
+
+
     def index_submission(self, submission):
         participants = []
 
@@ -136,19 +156,20 @@ class AdminIndexer:
         data_count = DataSubmission.query.filter(DataSubmission.publication_recid == submission.publication_recid,
                                                  DataSubmission.version == submission.version).count()
 
-        collaboration = ','.join(record_information.get('collaborations', []))
+        if record_information:
+            collaboration = ','.join(record_information.get('collaborations', []))
 
-        self.add_to_index(_id=submission.publication_recid,
-                          title=record_information['title'],
-                          collaboration=collaboration,
-                          recid=submission.publication_recid,
-                          inspire_id=submission.inspire_id,
-                          status=submission.overall_status,
-                          data_count=data_count,
-                          creation_date=submission.created,
-                          last_updated=submission.last_updated,
-                          version=submission.version,
-                          participants=participants)
+            self.add_to_index(_id=submission.publication_recid,
+                              title=record_information['title'],
+                              collaboration=collaboration,
+                              recid=submission.publication_recid,
+                              inspire_id=submission.inspire_id,
+                              status=submission.overall_status,
+                              data_count=data_count,
+                              creation_date=submission.created,
+                              last_updated=submission.last_updated,
+                              version=submission.version,
+                              participants=participants)
 
     def reindex(self, *args, **kwargs):
 

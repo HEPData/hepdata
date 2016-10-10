@@ -33,6 +33,8 @@ import flask_login
 from invenio_accounts.models import Role, User
 from invenio_db import db
 import pytest
+
+from hepdata.ext.elasticsearch.admin_view.api import AdminIndexer
 from hepdata.ext.elasticsearch.api import reindex_all
 from hepdata.factory import create_app
 from hepdata.modules.records.migrator.api import Migrator, load_files
@@ -81,6 +83,11 @@ def app(request):
     ctx.pop()
     return app
 
+
+@pytest.fixture()
+def admin_idx(app):
+    admin_idx = AdminIndexer()
+    return admin_idx
 
 @pytest.fixture()
 def load_default_data(app):

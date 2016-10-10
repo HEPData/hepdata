@@ -196,7 +196,8 @@ def create_breadcrumb_text(authors, ctx, record):
     """
     Creates the breadcrumb text for a submission
     """
-    if "first_author" in record and 'full_name' in record["first_author"]:
+    if "first_author" in record and 'full_name' in record["first_author"]\
+        and record["first_author"]["full_name"] is not None:
         ctx['breadcrumb_text'] = record["first_author"]["full_name"]
         if authors is not None and len(record['authors']) > 1:
             ctx['breadcrumb_text'] += " et al."

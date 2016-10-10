@@ -475,22 +475,25 @@ def get_resources(recid, version):
     :param recid:
     :return: json
     """
-    result = OrderedDict()
-    result['Common Resources'] = {'type': 'submission', 'version': version, 'id': recid, 'resources': []}
+    result = {'submission_items': []}
+    common_resources = {'name': 'Common Resources', 'type': 'submission', 'version': version, 'id': recid, 'resources': []}
     submission = get_latest_hepsubmission(publication_recid=recid, version=version)
 
     if submission:
         for reference in submission.resources:
-            result['Common Resources']['resources'].append(process_reference(reference))
+            common_resources['resources'].append(process_reference(reference))
+
+    result['submission_items'].append(common_resources)
 
     datasubmissions = DataSubmission.query.filter_by(publication_recid=recid, version=version).all()
 
     for datasubmission in datasubmissions:
-        result[datasubmission.name] = {'type': 'data', 'id': datasubmission.id, 'resources': [],
+        submission_item = {'name': datasubmission.name, 'type': 'data', 'id': datasubmission.id, 'resources': [],
                                        'version': datasubmission.version}
         for reference in datasubmission.resources:
-            result[datasubmission.name]['resources'].append(process_reference(reference))
+            submission_item['resources'].append(process_reference(reference))
 
+        result['submission_items'].append(submission_item)
     return json.dumps(result)
 
 

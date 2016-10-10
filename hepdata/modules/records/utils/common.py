@@ -215,7 +215,10 @@ def get_record_contents(recid):
     """
     record = get_record(recid, doc_type=CFG_PUB_TYPE)
     if record is None:
-        record = get_record_by_id(recid)
+        try:
+            record = get_record_by_id(recid)
+        except PIDDoesNotExistError:
+            return None
 
     return record
 

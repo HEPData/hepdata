@@ -104,6 +104,9 @@ def remove_submission(record_id):
         except NoResultFound as nrf:
             print(nrf.args)
 
+        admin_idx = AdminIndexer()
+        admin_idx.find_and_delete(term=record_id, fields=['recid'])
+
         submissions = DataSubmission.query.filter_by(
             publication_recid=record_id).all()
 
@@ -141,6 +144,7 @@ def remove_submission(record_id):
                         data_record_obj.delete()
             if record:
                 record.delete()
+
         except PIDDoesNotExistError as e:
             print('No record entry exists for {0}. Proceeding to delete other files.'.format(record_id))
 
@@ -599,7 +603,7 @@ def unload_submission(record_id):
 
 
 def do_finalise(recid, publication_record=None, force_finalise=False,
-                commit_message=None, send_tweet=False, update=False):
+                commit_message=None, send_tweet=False, update=False, convert=True):
     """
         Creates record SIP for each data record with a link to the associated
         publication
@@ -695,8 +699,9 @@ def do_finalise(recid, publication_record=None, force_finalise=False,
 
             send_finalised_email(hep_submission)
 
-            for file_format in ['csv', 'yoda', 'root']:
-                convert_and_store.delay(hep_submission.inspire_id, file_format, force=True)
+            if convert:
+                for file_format in ['csv', 'yoda', 'root']:
+                    convert_and_store.delay(hep_submission.inspire_id, file_format, force=True)
 
             if send_tweet:
                 tweet(record.get('title'), record.get('collaborations'),

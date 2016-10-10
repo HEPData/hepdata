@@ -66,20 +66,22 @@ var hepdata_resources = (function () {
       url: '/record/resources/' + recid + '/' + version,
       success: function (data) {
 
-        resources = data;
+
 
         var resource_list = d3.select("#resource-filter ul");
         resource_list.html('');
 
-        for (var key in data) {
+        console.log(data);
+        data.submission_items.forEach(function(item) {
+          resources[item.name] = item;
           var _li = resource_list.append('li')
-            .attr('data-name', key)
+            .attr('data-name', item.name)
             .attr('class', function () {
-              return (initial_resource === key ? 'active' : '');
+              return (initial_resource === item.name ? 'active' : '');
             });
-          _li.text(key);
-          _li.append('span').attr('class', 'badge pull-right').text(data[key]['resources'].length);
-        }
+          _li.text(item.name);
+          _li.append('span').attr('class', 'badge pull-right').text(item.resources.length);
+        });
 
         show_resource(initial_resource);
       }

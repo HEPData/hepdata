@@ -26,6 +26,7 @@ from flask import Blueprint, render_template, request, jsonify
 from flask.ext.login import login_required, current_user
 from invenio_db import db
 
+from hepdata.ext.elasticsearch.admin_view.api import AdminIndexer
 from hepdata.modules.email.api import send_cookie_email
 from hepdata.modules.inspire_api.views import get_inspire_record_information
 from hepdata.modules.permissions.models import SubmissionParticipant
@@ -119,6 +120,9 @@ def process_submission_payload(*args, **kwargs):
         # review only when an upload has been performed.
         message = kwargs.get('message', None)
         send_cookie_email(uploader, record_information, message)
+
+    admin_idx = AdminIndexer()
+    admin_idx.index_submission(hepsubmission)
 
     return hepsubmission
 

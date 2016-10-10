@@ -24,6 +24,7 @@
 
 import os
 
+from hepdata.ext.elasticsearch.admin_view.api import AdminIndexer
 from hepdata.ext.elasticsearch.api import get_records_matching_field
 from hepdata.modules.records.api import format_submission
 from hepdata.modules.records.utils.common import infer_file_type, contains_accepted_url, allowed_file, record_exists, \
@@ -82,7 +83,7 @@ def test_file_extension_pattern():
         assert (file_group["exp_result"] == extension)
 
 
-def test_create_submission(app):
+def test_create_submission(app, admin_idx):
     """
     Test the whole submission pipeline in loading a file, ensuring the HEPSubmission object is created,
     all the files have been added, and the record has been indexed.
@@ -110,13 +111,17 @@ def test_create_submission(app):
         process_submission_directory(directory, os.path.join(directory, 'submission.yaml'),
                                      hepdata_submission.publication_recid)
 
+        admin_idx_results = admin_idx.search(term=hepdata_submission.publication_recid, fields=['recid'])
+        print(admin_idx_results)
+        assert(admin_idx_results is not None)
+
         data_submissions = DataSubmission.query.filter_by(
             publication_recid=hepdata_submission.publication_recid).count()
         assert (data_submissions == 8)
         assert (len(hepdata_submission.resources) == 4)
         assert (len(hepdata_submission.participants) == 4)
 
-        do_finalise(hepdata_submission.publication_recid, force_finalise=True)
+        do_finalise(hepdata_submission.publication_recid, force_finalise=True, convert=False)
 
         assert (record_exists(inspire_id=record['inspire_id']))
 
@@ -148,3 +153,6 @@ def test_create_submission(app):
             publication_recid=hepdata_submission.publication_recid).count()
 
         assert (data_submissions == 0)
+
+        admin_idx_results = admin_idx.search(term=hepdata_submission.publication_recid, fields=['recid'])
+        assert (len(admin_idx_results) == 0)
