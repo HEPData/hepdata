@@ -269,10 +269,9 @@ var submissions_vis = (function () {
             },
 
             function (d) {
-              // TODO: Use recid if inspire_id is not defined.
-
+              var link_id = d.inspire_id ? 'ins' + d.inspire_id : d.recid;
               return '<div class="label version">Version ' + d.version + '</div>' +
-                '<a href="/record/ins' + d.inspire_id + '" target="_blank">' + d.title + '</a>';
+                '<a href="/record/' + link_id + '" target="_blank">' + d.title + '</a>';
             },
 
             function (d) {

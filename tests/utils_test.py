@@ -22,7 +22,9 @@
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
 """HEPData utils test cases."""
+import os
 
+from hepdata.utils.file_extractor import extract, get_file_in_directory
 from hepdata.utils.miscellanous import splitter
 
 
@@ -40,3 +42,23 @@ def test_utils():
     assert (publications[0]['id'] == 1)
     assert (publications[0]['type'] == 'publication')
     assert (datatables[0]['type'] == 'data_table')
+
+
+def test_file_extractor(app):
+    with app.app_context():
+        base_dir = os.path.dirname(os.path.realpath(__file__))
+        test_data_directory = os.path.join(base_dir, 'test_data')
+
+        files = [{'file': '1396331.zip', 'extract_as': '1396331'},
+                 {'file': '1396331.tar', 'extract_as': '1396331-tar'},
+                 {'file': '1396331.tar.gz', 'extract_as': '1396331-targz'}]
+
+        for file in files:
+            extract_dir = os.path.join(app.config['CFG_TMPDIR'], file['extract_as'])
+            extract(file['file'], os.path.join(test_data_directory, file['file']), extract_dir)
+
+            assert(os.path.exists(extract_dir))
+
+            file = get_file_in_directory(extract_dir, 'yaml')
+            assert (file is not None)
+

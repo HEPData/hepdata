@@ -1,22 +1,28 @@
-#
 # This file is part of HEPData.
-# Copyright (C) 2015 CERN.
+# Copyright (C) 2016 CERN.
 #
-# HEPData is free software; you can redistribute it and/or
-# modify it under the terms of the GNU General Public License as
+# HEPData is free software; you can redistribute it
+# and/or modify it under the terms of the GNU General Public License as
 # published by the Free Software Foundation; either version 2 of the
 # License, or (at your option) any later version.
 #
-# HEPData is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the implied warranty of
+# HEPData is distributed in the hope that it will be
+# useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 # General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with HEPData; if not, write to the Free Software Foundation, Inc.,
-# 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
+# along with HEPData; if not, write to the
+# Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston,
+# MA 02111-1307, USA.
 #
+# In applying this license, CERN does not
+# waive the privileges and immunities granted to it by virtue of its status
+# as an Intergovernmental Organization or submit itself to any jurisdiction.
+
 from collections import defaultdict
+
+from flask import current_app
 
 
 def parse_and_format_date(datestring):
@@ -36,11 +42,11 @@ def flip_sort_order(order):
         return 'asc'
 
 
-def prepare_author_for_indexing(es, document):
+def prepare_author_for_indexing(document):
     """ Extract the author list from the document and index it in a separate
      index. """
-    from hepdata.config import CFG_ES_AUTHORS
-    index, doc_type = CFG_ES_AUTHORS
+
+    index, doc_type = current_app.config['CFG_ES_AUTHORS']
 
     author_data = []
     authors = document.get('authors', None)

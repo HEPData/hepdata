@@ -23,6 +23,7 @@
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
 import os
+from time import sleep
 
 from hepdata.ext.elasticsearch.admin_view.api import AdminIndexer
 from hepdata.ext.elasticsearch.api import get_records_matching_field
@@ -127,12 +128,10 @@ def test_create_submission(app, admin_idx):
 
         # Test record is in index...
         index_records = get_records_matching_field('inspire_id', record['inspire_id'], doc_type='publication')
-        print(index_records)
         assert (len(index_records['hits']['hits']) == 1)
 
         publication_record = get_record_contents(hepdata_submission.publication_recid)
 
-        print(publication_record)
         assert (publication_record is not None)
 
         ctx = format_submission(hepdata_submission.publication_recid, publication_record, hepdata_submission.version, 1,
@@ -153,6 +152,8 @@ def test_create_submission(app, admin_idx):
             publication_recid=hepdata_submission.publication_recid).count()
 
         assert (data_submissions == 0)
+
+        sleep(2)
 
         admin_idx_results = admin_idx.search(term=hepdata_submission.publication_recid, fields=['recid'])
         assert (len(admin_idx_results) == 0)

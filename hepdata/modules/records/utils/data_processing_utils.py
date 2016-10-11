@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # This file is part of HEPData.
-# Copyright (C) 2015 CERN.
+# Copyright (C) 2016 CERN.
 #
 # HEPData is free software; you can redistribute it
 # and/or modify it under the terms of the GNU General Public License as
@@ -25,8 +25,6 @@ from __future__ import absolute_import, print_function
 
 from flask import current_app
 from ordereddict import OrderedDict
-
-__author__ = 'eamonnmaguire'
 
 
 def pad_independent_variables(table_contents):

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # This file is part of HEPData.
-# Copyright (C) 2015 CERN.
+# Copyright (C) 2016 CERN.
 #
 # HEPData is free software; you can redistribute it
 # and/or modify it under the terms of the GNU General Public License as
@@ -32,8 +32,6 @@ from sqlalchemy.orm.exc import NoResultFound
 from hepdata.config import CFG_PUB_TYPE
 from hepdata.ext.elasticsearch.api import get_record
 from hepdata.modules.submission.models import HEPSubmission
-
-__author__ = 'eamonnmaguire'
 
 FILE_TYPES = {
     "py": "Python",

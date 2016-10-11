@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # This file is part of HEPData.
-# Copyright (C) 2015 CERN.
+# Copyright (C) 2016 CERN.
 #
 # HEPData is free software; you can redistribute it
 # and/or modify it under the terms of the GNU General Public License as
@@ -22,8 +22,6 @@
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 from invenio_accounts.models import User
-
-__author__ = 'eamonnmaguire'
 
 
 def get_coordinators_in_system():

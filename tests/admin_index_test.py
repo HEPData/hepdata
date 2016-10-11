@@ -39,12 +39,15 @@ def test_create_index(app, admin_idx):
     assert (index.exists())
 
 
-def test_add_to_index(app, admin_idx):
-    files = [{'_id': 1, 'recid': 1, 'title': 'Test Submission', 'collaboration': 'ATLAS', 'version': 1, 'inspire_id': '122111',
+def test_add_to_index(admin_idx):
+    files = [{'_id': 1, 'recid': 1, 'title': 'Test Submission', 'collaboration': 'ATLAS', 'version': 1,
+              'inspire_id': '122111',
               'status': 'finished', 'creation_date': '2016-06-01', 'last_updated': '2016-06-01'},
-             {'_id': 2, 'recid': 2, 'title': 'Test Submission', 'collaboration': 'ATLAS', 'version': 1, 'inspire_id': '122112',
+             {'_id': 2, 'recid': 2, 'title': 'Test Submission', 'collaboration': 'ATLAS', 'version': 1,
+              'inspire_id': '122112',
               'status': 'finished', 'creation_date': '2016-06-02', 'last_updated': '2016-06-02'},
-             {'_id': 3, 'recid': 3, 'title': 'Test Submission', 'collaboration': 'ALICE', 'version': 1, 'inspire_id': '122113',
+             {'_id': 3, 'recid': 3, 'title': 'Test Submission', 'collaboration': 'ALICE', 'version': 1,
+              'inspire_id': '122113',
               'status': 'finished', 'creation_date': '2016-06-02', 'last_updated': '2016-06-02'}
              ]
 
@@ -52,7 +55,7 @@ def test_add_to_index(app, admin_idx):
         assert (admin_idx.add_to_index(**file))
 
 
-def test_search_index(app, admin_idx):
+def test_search_index(admin_idx):
     all_results = admin_idx.search()
     assert (len(all_results) == 3)
 
@@ -66,13 +69,13 @@ def test_search_index(app, admin_idx):
     assert (len(results_alice) == 1)
 
 
-def test_summary(app, admin_idx):
+def test_summary(admin_idx):
     summary = admin_idx.get_summary()
     assert (summary is not None)
     assert (len(summary) == 3)
 
 
-def test_find_and_delete(app, admin_idx):
+def test_find_and_delete(admin_idx):
     delete_count, success = admin_idx.find_and_delete(term='ATLAS', fields=['collaboration'])
     assert (success)
-    assert(delete_count == 2)
+    assert (delete_count == 2)

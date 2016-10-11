@@ -144,7 +144,6 @@ class AdminIndexer:
 
         return delete_count, True
 
-
     def index_submission(self, submission):
         participants = []
 

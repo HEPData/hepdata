@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # This file is part of HEPData.
-# Copyright (C) 2015 CERN.
+# Copyright (C) 2016 CERN.
 #
 # HEPData is free software; you can redistribute it
 # and/or modify it under the terms of the GNU General Public License as
@@ -62,8 +62,6 @@ import os
 from sqlalchemy.orm.exc import NoResultFound
 import yaml
 from urllib2 import URLError
-
-__author__ = 'eamonnmaguire'
 
 logging.basicConfig()
 log = logging.getLogger(__name__)

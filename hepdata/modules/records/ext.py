@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # This file is part of HEPData.
-# Copyright (C) 2015 CERN.
+# Copyright (C) 2016 CERN.
 #
 # HEPData is free software; you can redistribute it
 # and/or modify it under the terms of the GNU General Public License as
@@ -37,9 +37,6 @@ from invenio_db import db
 from hepdata.utils.users import user_is_admin_or_coordinator, user_is_admin
 from . import config
 from .views import blueprint
-
-__author__ = 'eamonnmaguire'
-
 
 class HEPDataRecords(object):
     """HEPData records extension."""

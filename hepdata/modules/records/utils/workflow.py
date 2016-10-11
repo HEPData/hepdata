@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # This file is part of HEPData.
-# Copyright (C) 2015 CERN.
+# Copyright (C) 2016 CERN.
 #
 # HEPData is free software; you can redistribute it
 # and/or modify it under the terms of the GNU General Public License as
@@ -32,9 +32,6 @@ from hepdata.modules.permissions.models import SubmissionParticipant
 from invenio_db import db
 
 from hepdata.modules.records.utils.common import get_record_by_id
-
-__author__ = 'eamonnmaguire'
-
 
 def create_data_structure(ctx):
     """

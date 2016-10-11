@@ -1,6 +1,6 @@
 #
 # This file is part of HEPData.
-# Copyright (C) 2015 CERN.
+# Copyright (C) 2016 CERN.
 #
 # HEPData is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License as
@@ -343,7 +343,7 @@ def index_record_ids(record_ids, index=None):
             to_index.append(op_dict)
 
         else:
-            author_docs = prepare_author_for_indexing(es, doc)
+            author_docs = prepare_author_for_indexing(doc)
             to_index += author_docs
 
             enhance_publication_document(doc)

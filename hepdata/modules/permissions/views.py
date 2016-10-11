@@ -41,8 +41,6 @@ from hepdata.modules.submission.models import HEPSubmission
 from hepdata.modules.submission.views import send_cookie_email
 from hepdata.utils.users import get_user_from_id, user_is_admin
 
-__author__ = 'eamonnmaguire'
-
 blueprint = Blueprint('hep_permissions', __name__, url_prefix="/permissions",
                       template_folder='templates')
 

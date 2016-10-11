@@ -1,3 +1,8 @@
+# This file is part of HEPData.
+# Copyright (C) 2016 CERN.
+#
+# HEPData is free software; you can redistribute it
+# and/or modify it under the terms of the GNU General Public License as
 # published by the Free Software Foundation; either version 2 of the
 # License, or (at your option) any later version.
 #
@@ -41,9 +46,7 @@ def add_user_to_metadata(type, user_info, record_id, submissions):
             'name': 'No primary ' + type}
 
 
-def create_record_for_dashboard(record_id, submissions, primary_uploader=None,
-                                primary_reviewer=None, coordinator=None,
-                                user_role=None,
+def create_record_for_dashboard(record_id, submissions, coordinator=None, user_role=None,
                                 status="todo"):
     if user_role is None:
         user_role = ["coordinator"]
@@ -173,8 +176,6 @@ def prepare_submissions(current_user):
 
         if str(hepdata_submission.publication_recid) not in submissions:
 
-            primary_uploader = primary_reviewer = None
-
             coordinator = User.query.get(hepdata_submission.coordinator)
 
             if hepdata_submission.participants:
@@ -185,17 +186,8 @@ def prepare_submissions(current_user):
                     if int(current_user.get_id()) == participant.user_account:
                         current_user_roles.append(participant.role)
 
-                    if participant.status == 'primary' and participant.role == "uploader":
-                        primary_uploader = {'full_name': participant.full_name,
-                                            'email': participant.email}
-                    if participant.status == 'primary' and participant.role == "reviewer":
-                        primary_reviewer = {'full_name': participant.full_name,
-                                            'email': participant.email}
-
                 create_record_for_dashboard(
                     str(hepdata_submission.publication_recid), submissions,
-                    primary_uploader=primary_uploader,
-                    primary_reviewer=primary_reviewer,
                     coordinator=coordinator,
                     user_role=current_user_roles,
                     status=hepdata_submission.overall_status)
@@ -221,6 +213,11 @@ def prepare_submissions(current_user):
 
 
 def get_pending_invitations_for_user(user):
+    """
+    Returns pending invites for upload or review of records.
+    :param user: User object
+    :return: array of pending invites
+    """
     pending_invites = SubmissionParticipant.query.filter(
         SubmissionParticipant.email == user.email,
         or_(SubmissionParticipant.role == 'reviewer',

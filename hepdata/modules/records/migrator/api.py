@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # This file is part of HEPData.
-# Copyright (C) 2015 CERN.
+# Copyright (C) 2016 CERN.
 #
 # HEPData is free software; you can redistribute it
 # and/or modify it under the terms of the GNU General Public License as
@@ -21,6 +21,7 @@
 # In applying this license, CERN does not
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
+
 from __future__ import absolute_import, print_function
 import socket
 from datetime import datetime, timedelta
@@ -47,8 +48,8 @@ import logging
 from hepdata.modules.records.utils.yaml_utils import split_files
 from hepdata.modules.submission.api import get_latest_hepsubmission, is_resource_added_to_submission
 from hepdata.modules.submission.models import DataResource
+from hepdata.utils.file_extractor import get_file_in_directory
 
-__author__ = "eamonnmaguire"
 
 logging.basicConfig()
 log = logging.getLogger(__name__)
@@ -232,13 +233,21 @@ class Migrator(object):
         """
         output_location = os.path.join(current_app.config["CFG_DATADIR"], inspire_id)
 
-        if not os.path.exists(output_location) or force_retrieval:
+        download = not os.path.exists(output_location) or (get_file_in_directory(output_location, 'yaml') is None)
+
+        if download or force_retrieval:
             print("Downloading file for {0}".format(inspire_id))
             file_location = self.download_file(inspire_id)
 
             if file_location:
                 output_location = os.path.join(current_app.config["CFG_DATADIR"], inspire_id)
                 split_files(file_location, output_location, "{0}.zip".format(output_location))
+
+                # remove temporary download file after processing
+                try:
+                    os.remove(file_location)
+                except:
+                    log.info('Unable to remove {0}'.format(file_location))
             else:
                 return None
         else:
@@ -290,32 +299,40 @@ class Migrator(object):
                 if recid is not None:
                     do_finalise(recid, publication_record=record_information,
                                 force_finalise=True, send_tweet=send_tweet, convert=convert)
+                    return True
 
             except FailedSubmission as fe:
                 log.error(fe.message)
                 fe.print_errors()
                 remove_submission(fe.record_id)
+                return False
         else:
             log.error("Failed to load " + inspire_id)
+            return False
 
     def download_file(self, inspire_id):
         """
         :param inspire_id:
         :return:
         """
-        import urllib2
+        import requests
         import tempfile
 
         try:
-            response = urllib2.urlopen(self.base_url.format(inspire_id))
-            yaml = response.read()
-            # save to tmp file
+            url = self.base_url.format(inspire_id)
+            response = requests.get(url)
+            if response.ok:
+                yaml = response.text
+                # save to tmp file
 
-            tmp_file = tempfile.NamedTemporaryFile(dir=current_app.config["CFG_TMPDIR"],
-                                                   delete=False)
-            tmp_file.write(yaml)
-            tmp_file.close()
-            return tmp_file.name
+                tmp_file = tempfile.NamedTemporaryFile(dir=current_app.config["CFG_TMPDIR"],
+                                                       delete=False)
+                tmp_file.write(yaml)
+                tmp_file.close()
+                return tmp_file.name
+            else:
+                log.error('Non OK response from endpoint at {0}'.format(url))
+                return None
 
         except HTTPError as e:
             log.error("Failed to download {0}".format(inspire_id))
