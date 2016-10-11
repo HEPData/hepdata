@@ -32,7 +32,8 @@ marc_tags = {
     'collection': ('980', 'a'),
     'year': ('260', 'c'),
     'journal': ('773', ['p', 'v', 'y', 'c']),
-    'dissertation_note': ('502', 'b', 'c', 'd')
+    'dissertation_note': ('502', 'b', 'c', 'd'),
+    'subject_area': ('650', 'a')
 }
 
 DEFAULT_JOURNAL = 'No Journal Information'
@@ -191,16 +192,29 @@ def get_keywords(soup):
     return make_keyword_dicts(keywords)
 
 
-def get_collection(soup):
+def get_collection(soup, marc_tag='collection'):
     """
     Finds the 980 code relating to thesis type.
     """
-    (tag, code) = marc_tags['collection']
+    (tag, code) = marc_tags[marc_tag]
     datafields = soup.find_all(tag=tag)
     collections = [df.find_all(code=code)[0].string for df in datafields if df.find_all(code=code)]
     collections = filter(lambda x: x is not None, collections)
     collections = map(lambda x: x.lower(), collections)
     return collections
+
+
+def get_subject_areas(soup):
+    subject_areas = get_collection(soup, marc_tag='subject_area')
+
+    filtered = []
+    for subject_area in subject_areas:
+        if 'experiment' in subject_area or subject_area == 'hep-ex':
+            filtered.append('HEP Experiment')
+        elif 'theory' in subject_area or subject_area == 'hep-th':
+            filtered.append('HEP Theory')
+
+    return list(set(filtered))
 
 
 def get_dissertation(soup):

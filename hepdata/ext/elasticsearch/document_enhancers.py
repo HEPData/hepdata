@@ -42,7 +42,7 @@ def add_data_submission_urls(doc):
     for format in FORMATS:
         doc['access_urls']['links'][format] = '{0}/download/submission/ins{1}/{2}/{3}'.format(
             current_app.config['SITE_URL'],
-            doc['inspire_id'], doc['version'],
+            doc['inspire_id'], doc['version'] if 'version' in doc else 1,
             format)
 
 
@@ -66,12 +66,6 @@ def add_analyses(doc):
     :param doc:
     :return:
     """
-
-    # do lookup from http://rivet.hepforge.org/list_of_analyses.json
-    # for HEPforge. But only one lookup.
-
-    # look up once per day, and cache the result in REDIS.
-
     latest_submission = get_latest_hepsubmission(publication_recid=doc['recid'])
 
     if latest_submission:

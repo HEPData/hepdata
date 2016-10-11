@@ -109,14 +109,14 @@ def sort_facets(facets):
     order = {
         'date': 1,
         'collaboration': 2,
-        'phrases': 3,
-        'reactions': 4,
-        'observables': 5,
-        'cmenergies': 6,
-        'author': 7
+        'subject_areas': 3,
+        'phrases': 4,
+        'reactions': 5,
+        'observables': 6,
+        'cmenergies': 7,
+        'author': 8
     }
     facets = sorted(facets, key=lambda x: order[x['type']])
-
     return facets
 
 

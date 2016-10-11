@@ -22,6 +22,7 @@ HEPDATA_CFG_FACETS = ['author',
                       'collaboration',
                       'date',
                       'reactions',
+                      'subject_areas',
                       'phrases',
                       'observables',
                       'cmenergies']

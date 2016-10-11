@@ -40,7 +40,8 @@ def test_parser():
     test_data = [{"inspire_id": "1245023",
                   "title": "High-statistics study of $K^0_S$ pair "
                            "production in two-photon collisions",
-                  "creation_date": "2013-07-29", "year": 2013},
+                  "creation_date": "2013-07-29", "year": 2013,
+                  "subject_area": ['HEP Experiment']},
 
                  {"inspire_id": "1183818",
                   "title": "Measurements of the pseudorapidity dependence "
@@ -48,7 +49,8 @@ def test_parser():
                            "in proton-proton "
                            "collisions at $\sqrt{s}=7$ TeV with ATLAS",
                   "creation_date": "2012-08-01",
-                  "year": 2012},
+                  "year": 2012,
+                  "subject_area": ["HEP Experiment"]},
                  {"inspire_id": "1407276",
                   "title": "Elastic scattering of negative pions by protons at 2 BeV/c",
                   "creation_date": "1963-01-01",
@@ -76,3 +78,5 @@ def test_parser():
         assert (decode_string(content["title"]) == decode_string(test["title"]))
         assert (content["creation_date"] == test["creation_date"])
         assert (int(content["year"]) == test["year"])
+        if 'subject_area' in test:
+            assert (content["subject_area"] == test["subject_area"])

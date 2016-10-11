@@ -27,8 +27,8 @@ from flask import request, Blueprint, jsonify
 
 from hepdata.modules.records.utils.common import record_exists
 from marcxml_parser import get_doi, get_title, get_authors, get_abstract, \
-    get_arxiv, get_collaborations, get_keywords, get_date, get_journal_info, get_year, get_collection, get_dissertation, \
-    expand_date
+    get_arxiv, get_collaborations, get_keywords, get_date, get_journal_info, get_year, get_collection, \
+    get_dissertation, expand_date, get_subject_areas
 
 blueprint = Blueprint('inspire_datasource',
                       __name__,
@@ -66,7 +66,8 @@ def get_inspire_record_information(inspire_rec_id):
             'collaborations': get_collaborations(soup),
             'keywords': get_keywords(soup),
             'journal_info': journal_info,
-            'year': year
+            'year': year,
+            'subject_area': get_subject_areas(soup)
         }
 
         if 'thesis' in collection_type:

@@ -69,6 +69,17 @@ mapping = {
             }
         }
     },
+
+    "subject_area": {
+        "type": "string",
+        "fields": {
+            "raw": {
+                "type": "string",
+                "index": "not_analyzed"
+            }
+        }
+    },
+
     "type": {
         "type": "string"
     },

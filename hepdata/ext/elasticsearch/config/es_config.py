@@ -41,6 +41,12 @@ def default_aggregations():
                 "size": 0,
             }
         },
+        "subject_areas": {
+            "terms": {
+                "field": "subject_area.raw",
+                "size": 0,
+            }
+        },
         "dates": {
             "date_histogram": {
                 "field": "publication_date",
@@ -102,6 +108,15 @@ def get_filter_clause(name, value):
             }
         }
 
+    elif name == 'subject_areas':
+        clause = {
+            "bool": {
+                "must": {
+                    "term": {"subject_area.raw": value}
+                }
+            }
+        }
+
     elif name == 'date':
         or_clause = []
         for year in value:
@@ -134,7 +149,7 @@ def default_queryable_fields(es_type):
         return ["title^10", "abstract^6", "keywords.name^4", "hepdata_doi", "year",
                 "keywords.value^6", "doi", "inspire_id", "authors.full_name", "authors.affiliation",
                 "data_keywords.observables^4", "data_keywords.cmenergies^4",
-                "data_keywords.reactions^4"]
+                "data_keywords.reactions^4", "subject_areas^3"]
     else:
         raise ValueError(es_type + ' is not a valid ElasticSearch type')
 
