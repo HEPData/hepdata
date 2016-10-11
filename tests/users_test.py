@@ -21,12 +21,26 @@
 # In applying this license, CERN does not
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
+from hepdata.utils.users import get_user_from_id, user_is_admin, user_is_admin_or_coordinator
+from tests.conftest import TEST_EMAIL
 
-from hepdata.utils.session import set_session_item, get_session_item
 
-
-def test_session(app):
+def test_get_user_from_id(app):
     with app.app_context():
-        response = set_session_item('test', 'value_1')
-        assert(response == "ok")
-        assert(get_session_item('test') == 'value_1')
+        user = get_user_from_id(1)
+
+        assert (user)
+        assert (user.email == TEST_EMAIL)
+
+        assert (user_is_admin(user))
+        assert (user_is_admin(None) is False)
+
+        assert (user_is_admin_or_coordinator(user))
+
+        assert (user_is_admin_or_coordinator(None) is False)
+
+
+def test_get_nonexistant_user(app):
+    with app.app_context():
+        user = get_user_from_id(5)
+        assert (user is None)

@@ -193,7 +193,6 @@ class AdminIndexer:
 
     def add_to_index(self, *args, **kwargs):
         """
-
         :param args:
         :param kwargs:
         :return:

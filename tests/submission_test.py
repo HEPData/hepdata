@@ -91,6 +91,9 @@ def test_create_submission(app, admin_idx):
     :return:
     """
     with app.app_context():
+
+        admin_idx.recreate_index()
+
         # test submission part works
 
         record = {'inspire_id': '19999999',

@@ -86,8 +86,10 @@ def app(request):
 
 @pytest.fixture()
 def admin_idx(app):
-    admin_idx = AdminIndexer()
-    return admin_idx
+    with app.app_context():
+        admin_idx = AdminIndexer()
+        return admin_idx
+
 
 @pytest.fixture()
 def load_default_data(app):

@@ -16,6 +16,7 @@
 # along with HEPData; if not, write to the Free Software Foundation, Inc.,
 # 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
 import logging
+from time import sleep
 
 import pytest
 from elasticsearch_dsl import Index
@@ -26,13 +27,7 @@ logging.basicConfig()
 log = logging.getLogger(__name__)
 
 
-@pytest.fixture()
-def admin_idx(app):
-    admin_idx = AdminIndexer()
-    return admin_idx
-
-
-def test_create_index(app, admin_idx):
+def test_recreate_index(admin_idx):
     admin_idx.recreate_index()
 
     index = Index(admin_idx.index)
@@ -62,10 +57,10 @@ def test_search_index(admin_idx):
     results_122111 = admin_idx.search(term='122111')
     assert (len(results_122111) == 1)
 
-    results_atlas = admin_idx.search(term='atlas', fields=['collaboration'])
+    results_atlas = admin_idx.search(term='ATLAS', fields=['collaboration'])
     assert (len(results_atlas) == 2)
 
-    results_alice = admin_idx.search(term='alice', fields=['collaboration'])
+    results_alice = admin_idx.search(term='ALICE', fields=['collaboration'])
     assert (len(results_alice) == 1)
 
 
