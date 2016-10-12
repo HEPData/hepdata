@@ -47,6 +47,7 @@ this part of the documentation is for you.
    :maxdepth: 2
 
    api
+   modules
 
 Additional Notes
 ----------------
@@ -62,3 +63,4 @@ interested.
    license
    authors
    branding
+
