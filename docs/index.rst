@@ -22,7 +22,6 @@
     as an Intergovernmental Organization or submit itself to any jurisdiction.
 
 
-
 .. include:: info.rst
 
 User's Guide

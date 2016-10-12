@@ -139,7 +139,6 @@ html_theme_options = {
     'show_powered_by': False,
     'extra_nav_links': {
         'HEPData@GitHub': 'http://github.com/HEPData/hepdata',
-        'HEPData.net': 'http://hepdata.net',
     }
 }
 
