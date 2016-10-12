@@ -22,13 +22,14 @@
     as an Intergovernmental Organization or submit itself to any jurisdiction.
 
 
+
 .. include:: info.rst
 
 User's Guide
 ------------
 
 This part of the documentation will show you how to get started in using
-Invenio-Base.
+HEPData.
 
 .. toctree::
    :maxdepth: 2

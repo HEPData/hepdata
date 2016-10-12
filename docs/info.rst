@@ -1,6 +1,3 @@
-.. image:: hepdata_logo.svg
-    :width: 260 px
-    :align: center
 
 .. image:: https://img.shields.io/travis/HEPData/hepdata.svg
     :target: https://travis-ci.org/HEPData/hepdata

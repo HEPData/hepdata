@@ -139,6 +139,7 @@ html_theme_options = {
     'show_powered_by': False,
     'extra_nav_links': {
         'HEPData@GitHub': 'http://github.com/HEPData/hepdata',
+        'HEPData.net': 'http://hepdata.net',
     }
 }
 
@@ -310,7 +311,7 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
   (master_doc, 'HEPData', u'HEPData Documentation',
-   author, 'HEPData', 'Invenio module that adds a trends api to the platform.',
+   author, 'HEPData', 'HEPData - High Energy Physics Data Repository.',
    'Miscellaneous'),
 ]
 
