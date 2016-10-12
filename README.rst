@@ -11,6 +11,8 @@
 .. image:: https://img.shields.io/github/license/HEPData/hepdata.svg
     :target: https://github.com/HEPData/hepdata/blob/master/LICENSE
 
+.. image:: https://readthedocs.org/projects/hepdata/badge/?version=latest
+    :target: http://hepdata.readthedocs.io/
 
 .. image:: docs/screenshot.jpg
 
@@ -23,3 +25,5 @@ by a grant from the UK STFC and is based at the IPPP at Durham University.
 HEPData is built upon Invenio 3 and is open source and free to use!
 
 * Free software: GPLv2 license
+
+* Documentation: http://hepdata.readthedocs.io/
