@@ -1,6 +1,6 @@
-========
- HEPData
-========
+=======
+HEPData
+=======
 
 .. image:: https://img.shields.io/travis/HEPData/hepdata.svg
     :target: https://travis-ci.org/HEPData/hepdata
@@ -11,8 +11,16 @@
 .. image:: https://img.shields.io/github/license/HEPData/hepdata.svg
     :target: https://github.com/HEPData/hepdata/blob/master/LICENSE
 
+.. image:: https://img.shields.io/github/release/hepdata/hepdata.svg?maxAge=2592000
+    :target: https://github.com/HEPData/hepdata/releases
+
+.. image:: https://img.shields.io/github/issues/hepdata/hepdata.svg?maxAge=2592000
+    :target: https://github.com/HEPData/hepdata/issues
+
 .. image:: https://readthedocs.org/projects/hepdata/badge/?version=latest
     :target: http://hepdata.readthedocs.io/
+
+|
 
 .. image:: docs/screenshot.jpg
 

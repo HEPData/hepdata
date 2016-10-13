@@ -100,7 +100,7 @@ install_requires = [
     'timestring',
     'cryptography',
     'beautifulsoup4',
-    'hepdata_validator==0.1.10',
+    'hepdata_validator==0.1.13',
     'hepdata-converter-ws-client',
     'datacite'
 ]
