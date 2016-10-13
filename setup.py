@@ -207,7 +207,6 @@ setup(
             'hepdata_search_css = hepdata.modules.theme.bundles:search_css',
         ],
         'invenio_admin.views': [
-            'hepdata_submission_view = hepdata.modules.submission.admin:hep_submission_admin_view',
             'hepdata_participant_view = hepdata.modules.permissions.admin:hep_participant_admin_view',
             'hepdata_coordinator_request_view = hepdata.modules.permissions.admin:coordinator_request_admin_view',
             'hepdata_dataresource_view = hepdata.modules.submission.admin:hep_dataresource_admin_view'
