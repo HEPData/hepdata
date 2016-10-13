@@ -255,7 +255,7 @@ def render_record(recid, record, version, output_format, light_mode=False):
             publication_recid = int(record['related_publication'])
             publication_record = get_record_contents(publication_recid)
 
-            hepdata_submission = get_latest_hepsubmission(recid=publication_recid)
+            hepdata_submission = get_latest_hepsubmission(publication_recid=publication_recid)
 
             ctx = format_submission(publication_recid, publication_record,
                                     hepdata_submission.version, 1, hepdata_submission,
@@ -269,7 +269,8 @@ def render_record(recid, record, version, output_format, light_mode=False):
                 return jsonify(ctx)
             else:
                 return render_template('hepdata_records/data_record.html', ctx=ctx)
-        except Exception:
+        except Exception as e:
+            raise e
             return render_template('hepdata_theme/404.html')
 
 

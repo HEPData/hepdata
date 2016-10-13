@@ -163,9 +163,6 @@ def metadata(recid):
     except Exception as e:
         record = None
 
-    if record is None:
-        return render_template('hepdata_theme/404.html')
-
     return render_record(recid=recid, record=record, version=version, output_format=serialization_format)
 
 
