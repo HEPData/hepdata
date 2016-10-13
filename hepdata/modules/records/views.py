@@ -103,7 +103,7 @@ def get_metadata_by_alternative_id(recid):
                                  light_mode=light_mode)
     except Exception as e:
 
-        log.error("Unable to find %d.", recid)
+        log.error("Unable to find %s.", recid)
         log.error(e)
         return render_template('hepdata_theme/404.html')
 
