@@ -66,16 +66,7 @@ CELERYBEAT_SCHEDULE = {
     'update_analyses': {
         'task': 'hepdata.modules.records.migrator.api.update_analyses',
         'schedule': timedelta(hours=12)
-    },
-
-    'update-index': {
-        'task': 'invenio_trends.tasks.update_index',
-        'schedule': timedelta(hours=24)
-    },
-    'update-trends': {
-        'task': 'invenio_trends.tasks.update_trends',
-        'schedule': timedelta(hours=24)
-    },
+    }
 }
 
 # Cache
