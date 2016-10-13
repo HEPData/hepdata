@@ -103,7 +103,7 @@ def get_metadata_by_alternative_id(recid):
                                  light_mode=light_mode)
     except Exception as e:
 
-        log.error("Unable to find {0}.".format(recid))
+        log.error("Unable to find %d.", recid)
         log.error(e)
         return render_template('hepdata_theme/404.html')
 
@@ -162,9 +162,6 @@ def metadata(recid):
         record = get_record_contents(recid)
     except Exception as e:
         record = None
-
-    if record is None:
-        return render_template('hepdata_theme/404.html')
 
     return render_record(recid=recid, record=record, version=version, output_format=serialization_format)
 
