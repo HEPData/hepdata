@@ -71,7 +71,7 @@
                                 <div class="record-brief">
                                     <h4 class="record-header">
 
-                                        {% if record.version > 1 %}
+                                        {% if 'version' in record and record.version > 1 %}
                                             <div itemprop="version" class="version">
                                                 Version {{ record.version }}
                                             </div>
