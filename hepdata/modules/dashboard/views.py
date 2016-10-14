@@ -114,7 +114,8 @@ def delete_submission(recid):
         unload_submission(recid)
 
         admin_idx = AdminIndexer()
-        admin_idx.reindex(recreate=True)
+        admin_idx.find_and_delete('recid', recid)
+
         return json.dumps({"success": True,
                            "recid": recid,
                            "errors": [
