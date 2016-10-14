@@ -74,24 +74,27 @@ def populate(inspireids, recreate_index, tweet, convert):
     load_files(files_to_load, send_tweet=tweet, convert=convert)
 
 
-@cli.command()
+@cli.group()
+def migrator():
+    """Migrator from existing HEPData System to new Version"""
+
+
+@migrator.command()
 @with_appcontext
+@click.option('--missing', is_flag=True,
+              help='This option will automatically find the inspire ids in the current '
+                   'hepdata but not in this version and migrate them.')
 @click.option('--start', '-s', type=int, default=None,
               help='The start index from the total inspireids to load.')
 @click.option('--end', '-e', default=None, type=int,
               help='The end index from the total inspireids to load.')
 @click.option('--date', '-d', type=str, default=None,
               help='Filter all records modified since some point in time, e.g. 20160705 for the 5th July 2016.')
-@click.option('--missing-only', '-m', default=False,
-              type=bool,
-              help='This option will automatically find the inspire ids in the current '
-                   'hepdata but not in this version and migrate them.')
-def migrate(start, end, date=None, missing_only=False):
+def migrate(missing, start, end, date=None):
     """
     Migrates all content from HEPData
-    :return:
     """
-    if missing_only:
+    if missing:
         inspire_ids = get_missing_records()
     else:
         inspire_ids = get_all_ids_in_current_system(date)
@@ -101,19 +104,25 @@ def migrate(start, end, date=None, missing_only=False):
         _slice = slice(int(start), end)
         inspire_ids = inspire_ids[_slice]
         print("Sliced, going to load {} records.".format(len(inspire_ids)))
-        print(inspire_ids)
 
-    load_files(inspire_ids)
+    print(inspire_ids)
+
+    # load_files(inspire_ids)
 
 
-@cli.command()
+@migrator.command()
 @with_appcontext
 @click.option('--date', '-d', type=str, default=None, help='Date in the format YYYYddMM, e.g 20160627')
 def add_or_update(date):
+    """
+    Provided a date, will find all records after that date and either load them if they don't exist in the system.
+    or update if they already exist.
+    :param date:
+    """
     add_or_update_records_since_date.delay(date)
 
 
-@cli.command()
+@migrator.command()
 @with_appcontext
 @click.option('--inspireids', '-i',
               help='A comma separated list of recids to load.')
@@ -126,7 +135,6 @@ def update(inspireids, update_record_info_only):
     Usage: hepdata update -i 'insXXX' -ro True|False
     :param inspireids: comma separated list of inspire ids, e.g. ins222121
     :param update_record_info_only: if True, will only up the record information, and won't update the data files.
-    :return:
     """
     records_to_update = parse_inspireids_from_string(inspireids)
     update_submissions.delay(records_to_update, update_record_info_only)
@@ -137,7 +145,6 @@ def update(inspireids, update_record_info_only):
 def find_duplicates_and_remove():
     """
     Will go through the application to find any duplicates then remove them.
-    :return:
     """
     inspire_ids = get_all_ids_in_current_system(prepend_id_with="")
 
@@ -155,13 +162,13 @@ def find_duplicates_and_remove():
     admin_indexer.reindex(recreate=True)
 
 
-@cli.command()
+@migrator.command()
 @with_appcontext
 def get_missing_records():
     """
     Finds all records that are missing in the new system (compared to the legacy environment)
     and returns the IDs as a list
-    :return: an array of missing IDd
+    :return: an array of missing IDs
     """
     inspire_ids = get_all_ids_in_current_system(prepend_id_with="")
     missing_ids = []
@@ -174,7 +181,13 @@ def get_missing_records():
     return missing_ids
 
 
-@cli.command()
+
+@cli.group()
+def utils():
+    """Utils"""
+
+
+@utils.command()
 @with_appcontext
 @click.option('--recreate', '-rc', type=bool, default=False,
               help='Whether or not to recreate the index mappings as well. '
@@ -189,7 +202,7 @@ def reindex(recreate, start, end, batch):
     reindex_all(recreate=recreate, start=start, end=end, batch=batch)
 
 
-@cli.command()
+@utils.command()
 @with_appcontext
 @click.option('--inspireids', '-i', type=str,
               help='Load specific recids in to the system.')
@@ -218,7 +231,7 @@ def parse_inspireids_from_string(records_to_unload):
     return processed_record_ids
 
 
-@cli.command()
+@utils.command()
 @with_appcontext
 @click.option('--recids', '-r', type=str,
               help='Unload specific recids in to the system.')
@@ -243,13 +256,21 @@ def do_unload(records_to_unload):
         unload_submission(record_id)
 
 
-@cli.command()
+@utils.command()
 @with_appcontext
 def find_and_add_record_analyses():
+    """
+    Finds analyses such as RIVET and add them to records
+    """
     update_analyses.delay()
 
 
-@cli.command()
+@cli.group()
+def converter():
+    """Converter utils"""
+
+
+@converter.command()
 @click.option('--inspire_ids', '-i', type=str,
               help='Specify inspire ids of submissions to generate the cached files for.')
 @click.option('--force', '-f', type=bool, default=False,
@@ -262,7 +283,6 @@ def prefetch_converted_files(inspire_ids, force, targets):
     This avoids any wait time for users when trying to retrieve converted files.
     NOTE: Does not pre-fetch all individual files, since this would be too much and probably not
     necessary
-    :return:
     """
     if inspire_ids:
         submission_ids = inspire_ids.split(',')
@@ -288,6 +308,5 @@ def submissions():
 @with_appcontext
 def reindex():
     """Reindexes HEPSubmissions and adds to the submission index"""
-
     admin_idx = AdminIndexer()
     admin_idx.reindex(recreate=True)
