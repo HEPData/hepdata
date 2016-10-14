@@ -30,7 +30,7 @@ import zipfile
 from datetime import datetime
 from dateutil.parser import parse
 
-from elasticsearch import NotFoundError
+from elasticsearch import NotFoundError, ConnectionTimeout
 from flask import current_app
 from flask.ext.celeryext import create_celery_app
 from flask.ext.login import current_user
@@ -689,15 +689,18 @@ def do_finalise(recid, publication_record=None, force_finalise=False,
             if not current_app.config.get('TESTING', False) and not current_app.config.get('NO_DOI_MINTING', False):
                 for submission in submissions:
                     generate_doi_for_data_submission.delay(submission.id, submission.version)
-
+                log.info("Generating DOIs for ins{0}".format(hep_submission.inspire_id))
                 generate_doi_for_submission.delay(recid, version)
 
             # Reindex everything.
             index_record_ids([recid] + generated_record_ids)
             push_data_keywords(pub_ids=[recid])
 
-            admin_indexer = AdminIndexer()
-            admin_indexer.index_submission(hep_submission)
+            try:
+                admin_indexer = AdminIndexer()
+                admin_indexer.index_submission(hep_submission)
+            except ConnectionTimeout as ct:
+                log.error('Unable to add ins{0} to admin index.\n{1}'.format(hep_submission.inspire_id, ct))
 
             send_finalised_email(hep_submission)
 
