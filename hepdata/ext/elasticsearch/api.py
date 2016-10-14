@@ -363,7 +363,8 @@ def index_record_ids(record_ids, index=None):
             doc["last_updated"] = parse(doc["last_updated"]).isoformat()
         to_index.append(doc)
 
-    es.bulk(index=index, body=to_index, refresh=True)
+    if to_index:
+        es.bulk(index=index, body=to_index, refresh=True)
 
     return indexed_result
 

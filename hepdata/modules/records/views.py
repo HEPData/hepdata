@@ -291,9 +291,10 @@ def get_coordinator_view(recid):
                     "uploader": {"reserve": [], "primary": []}}
 
     for participant in hepsubmission_record.participants:
-        participants[participant.role][participant.status].append(
-            {"full_name": participant.full_name, "email": participant.email,
-             "id": participant.id})
+        if participant.role in participants:
+            participants[participant.role][participant.status].append(
+                {"full_name": participant.full_name, "email": participant.email,
+                 "id": participant.id})
 
     return json.dumps(
         {"recid": recid,
@@ -378,47 +379,51 @@ def add_data_review_messsage(publication_recid, data_recid):
     # need to set up a session and query for the data review.
 
     trace = []
-    message = request.form['message']
+    message = str(request.form.get('message', ''))
     version = request.form['version']
     userid = current_user.get_id()
 
-    datareview_query = DataReview.query.filter_by(data_recid=data_recid,
-                                                  version=version)
-
-    # if the data review is not already created, create one.
     try:
-        data_review_record = datareview_query.one()
-        trace.append("adding data review record")
-    except:
-        data_review_record = create_data_review(data_recid, publication_recid)
-        trace.append("created a new data review record")
+        datareview_query = DataReview.query.filter_by(data_recid=data_recid,
+                                                      version=version)
 
-    data_review_message = Message(user=userid, message=message)
-    data_review_record.messages.append(data_review_message)
+        # if the data review is not already created, create one.
+        try:
+            data_review_record = datareview_query.one()
+            trace.append("adding data review record")
+        except:
+            data_review_record = create_data_review(data_recid, publication_recid)
+            trace.append("created a new data review record")
 
-    db.session.commit()
+        data_review_message = Message(user=userid, message=message)
+        data_review_record.messages.append(data_review_message)
 
-    current_user_obj = get_user_from_id(userid)
+        db.session.commit()
 
-    update_action_for_submission_participant(publication_recid, userid,
-                                             'reviewer')
-    send_new_review_message_email(data_review_record, data_review_message,
-                                  current_user_obj)
+        current_user_obj = get_user_from_id(userid)
 
-    return json.dumps(
-        {"publication_recid": data_review_record.publication_recid,
-         "data_recid": data_review_record.data_recid,
-         "status": data_review_record.status,
-         "message": data_review_message.message,
-         "post_time": data_review_message.creation_date,
-         'user': current_user_obj.email}, default=default_time)
+        update_action_for_submission_participant(publication_recid, userid,
+                                                 'reviewer')
+        send_new_review_message_email(data_review_record, data_review_message,
+                                      current_user_obj)
+
+        return json.dumps(
+            {"publication_recid": data_review_record.publication_recid,
+             "data_recid": data_review_record.data_recid,
+             "status": data_review_record.status,
+             "message": str(data_review_message.message),
+             "post_time": data_review_message.creation_date,
+             'user': current_user_obj.email}, default=default_time)
+    except Exception as e:
+        db.session.rollback()
+        raise e
 
 
 @blueprint.route(
-    '/data/review/message/<int:publication_recid>/<int:data_recid>/<int:version>',
+    '/data/review/message/<int:data_recid>/<int:version>',
     methods=['GET', ])
 @login_required
-def get_review_messages_for_data_table(publication_recid, data_recid, version):
+def get_review_messages_for_data_table(data_recid, version):
     datareview_query = DataReview.query.filter_by(data_recid=data_recid,
                                                   version=version)
 

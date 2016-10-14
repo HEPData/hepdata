@@ -87,7 +87,7 @@ HEPDATA.load_review_messages = function (placement, record_id, table_id) {
   d3.select(placement).html('');
   $.ajax({
       type: "GET",
-      url: "/record/data/review/message/" + record_id + "/" + table_id + "/" + HEPDATA.current_table_version,
+      url: "/record/data/review/message/" + table_id + "/" + HEPDATA.current_table_version,
       dataType: "json",
       cache: false,
       success: function (data) {

@@ -144,7 +144,7 @@ def download_submission_with_recid(*args, **kwargs):
     if not submission:
         return display_error(
             title="No submission found",
-            description="A submission with record id {0} does not exist".format(kwargs.pop('recid'))
+            description="A submission with record id {0} does not exist".format(recid)
         )
 
     return download_submission(submission, kwargs.pop('file_format'))
