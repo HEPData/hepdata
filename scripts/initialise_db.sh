@@ -8,7 +8,7 @@ hepdata roles create coordinator
 hepdata roles create admin
 
 # Next, create the users
-hepdata users create eamonnmag@gmail.com --password hello1 -a
+hepdata users create eamonnmag@gmail.com --password -a
 
 # Finally, add the roles to the user
 hepdata roles add eamonnmag@gmail.com coordinator
