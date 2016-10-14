@@ -271,8 +271,8 @@ def get_table_details(recid, data_recid, version):
     table_contents["review"] = {}
 
     data_review_record = create_data_review(data_recid, recid, version)
-    table_contents["review"]["review_flag"] = data_review_record.status
-    table_contents["review"]["messages"] = len(data_review_record.messages) > 0
+    table_contents["review"]["review_flag"] = data_review_record.status if data_review_record else "todo"
+    table_contents["review"]["messages"] = len(data_review_record.messages) > 0 if data_review_record else False
 
     # translate the table_contents to an easy to render format of the qualifiers (with colspan),
     # x and y headers (should not require a colspan)
