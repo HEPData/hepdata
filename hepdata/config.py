@@ -124,7 +124,7 @@ SEARCH_AUTOINDEX = []
 CFG_PUB_TYPE = 'publication'
 CFG_DATA_TYPE = 'datatable'
 CFG_SUBMISSIONS_TYPE = 'submission'
-CFG_ES_AUTHORS = ('authors', 'author')  # (index_name, doc_type)
+CFG_ES_AUTHORS = ('authors', 'author')
 CFG_DATA_KEYWORDS = ['observables', 'reactions', 'cmenergies', 'phrases']
 
 CFG_CONVERTER_URL = 'http://172.99.65.51:5000'

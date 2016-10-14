@@ -284,7 +284,10 @@ def get_table_details(recid, data_recid, version):
 @blueprint.route('/coordinator/view/<int:recid>', methods=['GET', ])
 @login_required
 def get_coordinator_view(recid):
-    # there should only ever be one rev
+    """
+    Returns the coordinator view for a record
+    :param recid:
+    """
     hepsubmission_record = get_latest_hepsubmission(publication_recid=recid)
 
     participants = {"reviewer": {"reserve": [], "primary": []},
@@ -338,7 +341,10 @@ def set_data_review_status():
 
 @blueprint.route('/data/review/', methods=['GET', ])
 def get_data_reviews_for_record():
-    # need to check if the user is a reviewer for this record before being allowed to do this operation.
+    """
+    Get the data reviews for a record
+    :return: json response with reviews (or a json with an error key if not)
+    """
     recid = int(request.args.get('publication_recid'))
     record_sql = DataReview.query.filter_by(publication_recid=recid)
 
@@ -376,7 +382,11 @@ def get_data_review_status():
     methods=['POST', ])
 @login_required
 def add_data_review_messsage(publication_recid, data_recid):
-    # need to set up a session and query for the data review.
+    """
+    Adds a new review message for a data submission
+    :param publication_recid:
+    :param data_recid:
+    """
 
     trace = []
     message = str(request.form.get('message', ''))
@@ -443,11 +453,17 @@ def get_review_messages_for_data_table(data_recid, version):
                  methods=['GET', ])
 @login_required
 def get_all_review_messages(publication_recid):
-    # stores messages by the data table they refer to.
+    """
+    Gets the review messages for a publication id
+    :param publication_recid:
+    :return:
+    """
     messages = OrderedDict()
 
+    latest_submission = get_latest_hepsubmission(publication_recid=publication_recid)
+
     datareview_query = DataReview.query.filter_by(
-        publication_recid=publication_recid).order_by(
+        publication_recid=publication_recid, version=latest_submission.version).order_by(
         DataReview.id.asc())
 
     if datareview_query.count() > 0:
@@ -478,12 +494,13 @@ def get_resources(recid, version):
     :return: json
     """
     result = {'submission_items': []}
-    common_resources = {'name': 'Common Resources', 'type': 'submission', 'version': version, 'id': recid, 'resources': []}
+    common_resources = {'name': 'Common Resources', 'type': 'submission', 'version': version, 'id': recid,
+                        'resources': []}
     submission = get_latest_hepsubmission(publication_recid=recid, version=version)
 
     if submission:
         for reference in submission.resources:
-            common_resources['resources'].append(process_reference(reference))
+            common_resources['resources'].append(process_resource(reference))
 
     result['submission_items'].append(common_resources)
 
@@ -491,15 +508,20 @@ def get_resources(recid, version):
 
     for datasubmission in datasubmissions:
         submission_item = {'name': datasubmission.name, 'type': 'data', 'id': datasubmission.id, 'resources': [],
-                                       'version': datasubmission.version}
+                           'version': datasubmission.version}
         for reference in datasubmission.resources:
-            submission_item['resources'].append(process_reference(reference))
+            submission_item['resources'].append(process_resource(reference))
 
         result['submission_items'].append(submission_item)
     return json.dumps(result)
 
 
-def process_reference(reference):
+def process_resource(reference):
+    """
+    For a submission resource, create the link to the location, or the image file if an image.
+    :param reference:
+    :return: dict
+    """
     _location = '/record/resource/{0}?view=true'.format(reference.id)
 
     if 'http' in reference.file_location:
@@ -608,7 +630,10 @@ def attach_information_to_record(recid):
 @login_required
 @blueprint.route('/sandbox/consume', methods=['POST'])
 def consume_sandbox_payload():
-    # generate a unique id
+    """
+    Creates a new sandbox submission with a new file upload
+    :param recid:
+    """
     import time
 
     id = (int(current_user.get_id())) + int(round(time.time()))
@@ -621,7 +646,10 @@ def consume_sandbox_payload():
 @login_required
 @blueprint.route('/sandbox/<int:recid>/consume', methods=['POST'])
 def update_sandbox_payload(recid):
-    # generate a unique id
+    """
+    Updates the Sandbox submission with a new file upload
+    :param recid:
+    """
 
     file = request.files['hep_archive']
     return process_payload(recid, file, '/record/sandbox/{}')
