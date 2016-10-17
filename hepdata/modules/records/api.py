@@ -196,7 +196,7 @@ def create_breadcrumb_text(authors, ctx, record):
     """
     Creates the breadcrumb text for a submission
     """
-    if "first_author" in record and 'full_name' in record["first_author"]\
+    if "first_author" in record and 'full_name' in record["first_author"] \
         and record["first_author"]["full_name"] is not None:
         ctx['breadcrumb_text'] = record["first_author"]["full_name"]
         if authors is not None and len(record['authors']) > 1:
@@ -225,7 +225,6 @@ def extract_journal_info(record):
 
 
 def render_record(recid, record, version, output_format, light_mode=False):
-
     if user_allowed_to_perform_action(recid):
         version_count = HEPSubmission.query.filter_by(
             publication_recid=recid).count()
@@ -248,7 +247,7 @@ def render_record(recid, record, version, output_format, light_mode=False):
             return render_template('hepdata_records/publication_record.html',
                                    ctx=ctx)
 
-    else:  # this happens when we access an id of a data record
+    elif record is not None:  # this happens when we access an id of a data record
         # in which case, we find the related publication, and
         # make the front end focus on the relevant data table.
         try:
@@ -272,6 +271,8 @@ def render_record(recid, record, version, output_format, light_mode=False):
         except Exception as e:
             raise e
             return render_template('hepdata_theme/404.html')
+    else:
+        return render_template('hepdata_theme/404.html')
 
 
 def process_payload(recid, file, redirect_url):
