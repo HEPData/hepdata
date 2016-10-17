@@ -572,15 +572,15 @@ def create_data_review(data_recid, publication_recid, version=1):
     :return:
     """
 
-    submission_count = DataSubmission.query.filter_by(id=data_recid, version=version)
-    if submission_count.count() == 0:
-        data_review = get_or_create(db.session, DataReview,
+    submission_count = DataSubmission.query.filter_by(id=data_recid).count()
+    if submission_count > 0:
+        record = get_or_create(db.session, DataReview,
                                publication_recid=publication_recid,
                                data_recid=data_recid,
                                version=version)
-        return data_review
-    else:
-        return submission_count.first()
+        return record
+
+    return None
 
 
 def unload_submission(record_id):
