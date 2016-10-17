@@ -1,10 +1,27 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+{% extends "hepdata_theme/page.html" %}
 
-</body>
-</html>
+{% block title %}
+    HEPData | Edit {{ ctx.record.title }}
+{% endblock %}
+
+{%- block additional_assets %}
+    {%- assets "hepdata_record_css" %}
+        <link href="{{ ASSET_URL }}" rel="stylesheet">
+    {%- endassets %}
+
+{%- endblock additional_assets %}
+
+{% block page_description %}{{ ctx.record.title }}{% endblock %}
+
+{% block page_body %}
+
+    <div class="container-fluid">
+
+        <div class="row-fluid">
+            <div class="col-md-2"></div>
+
+            <div class="col-md-6"></div>
+            <div class="col-md-4"></div>
+        </div>
+    </div>
+{% endblock %}

@@ -66,7 +66,7 @@ def get_count(recid):
     :param recid: record id to get the count for
     :return: dict with sum as a key {"sum": 2}
     """
-    if recid:
+    if recid is not None:
         try:
             result = DailyAccessStatistic.query.with_entities(
                 func.sum(DailyAccessStatistic.count).label('sum')).filter(
@@ -74,5 +74,7 @@ def get_count(recid):
             return {"sum": int(result.sum)}
 
         except Exception as e:
-            log.error(e)
-            return {"sum": 1}
+            log.info('No stats record found for {0}. Returning one.'.format(recid))
+            log.info(e)
+
+    return {"sum": 1}
