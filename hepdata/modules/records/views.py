@@ -320,7 +320,7 @@ def set_data_review_status():
         record_sql = DataReview.query.filter_by(data_recid=data_id,
                                                 version=version)
         try:
-            record = record_sql.one()
+            record = record_sql.first()
         except NoResultFound:
             record = create_data_review(data_id, recid, version)
 
