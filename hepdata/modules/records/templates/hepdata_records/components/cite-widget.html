@@ -8,93 +8,96 @@
                 <h4 class="modal-title" id="citing">Citing this record</h4>
             </div>
             <div class="modal-body" id="codeDialogContents" style="padding: 0">
-                <div>
-                    <ul class="nav nav-tabs" role="tablist">
-                        <li role="presentation" class="active"><a href="#html" aria-controls="home" role="tab"
-                                                                  data-toggle="tab">HTML</a></li>
-                        <li role="presentation"><a href="#bibtex" aria-controls="profile" role="tab" data-toggle="tab">BibTex</a>
-                        </li>
-                    </ul>
 
-                    <div class="tab-content">
+                {% if ctx.record %}
+                    <div>
+                        <ul class="nav nav-tabs" role="tablist">
+                            <li role="presentation" class="active"><a href="#html" aria-controls="home" role="tab"
+                                                                      data-toggle="tab">HTML</a></li>
+                            <li role="presentation"><a href="#bibtex" aria-controls="profile" role="tab"
+                                                       data-toggle="tab">BibTex</a>
+                            </li>
+                        </ul>
 
-                        <div role="tabpanel" class="tab-pane in active" id="html">
-                            <div style="background-color: #ecf0f1; padding: 15px; font-size: .9em">
-                                <p>When using this data, please cite the original publication:</p>
+                        <div class="tab-content">
 
-                                <div class="well well-small" style="background: white">
-                                    {% include "hepdata_records/components/cite/publication.html" %}
+                            <div role="tabpanel" class="tab-pane in active" id="html">
+                                <div style="background-color: #ecf0f1; padding: 15px; font-size: .9em">
+                                    <p>When using this data, please cite the original publication:</p>
+
+                                    <div class="well well-small" style="background: white">
+                                        {% include "hepdata_records/components/cite/publication.html" %}
+                                    </div>
+
+                                    <p>Additionally, you should also cite the <img
+                                            src="{{ url_for('static', filename='img/hepdata_logo.svg') }}" height="30">
+                                        record:
+                                    </p>
+                                    <div class="well well-small" style="background: white">
+                                        {% if ctx.record.collaborations %}
+                                            <p><i>The
+                                                {% for collaboration in ctx.record.collaborations %}
+                                                    {{ collaboration }}{% endfor %}
+                                                collaboration ({{ ctx.record.year }})</i>.</p>
+                                        {% else %}
+                                            {% for author in ctx.record.summary_authors %}
+                                                {{ author.full_name }}
+                                                {% if loop.index < ctx.record.summary_authors|length %},
+                                                {% else %} (
+                                                    {{ ctx.record.year }}){% endif %}
+                                            {% endfor %}
+                                        {% endif %}
+                                        <p>{{ ctx.record.title }}. HEPData.</p>
+                                        <p><strong>http://dx.doi.org/{{ ctx.record.hepdata_doi }}</strong></p>
+                                    </div>
+
                                 </div>
 
-                                <p>Additionally, you should also cite the <img
-                                        src="{{ url_for('static', filename='img/hepdata_logo.svg') }}" height="30">
-                                    record:
-                                </p>
-                                <div class="well well-small" style="background: white">
-                                    {% if ctx.record.collaborations %}
-                                        <p><i>The
-                                            {% for collaboration in ctx.record.collaborations %}
-                                                {{ collaboration }}{% endfor %}
-                                            collaboration ({{ ctx.record.year }})</i>.</p>
-                                    {% else %}
-                                        {% for author in ctx.record.summary_authors %}
-                                            {{ author.full_name }}
-                                            {% if loop.index < ctx.record.summary_authors|length %},
-                                            {% else %} (
-                                                {{ ctx.record.year }}){% endif %}
+                                <div class="clearfix"></div>
+
+                                <div style="padding: 15px">
+                                    <p>You can also cite the {{ ctx.data_tables|length }} data table
+                                        {% if ctx.data_tables|length > 1 %}s{% endif %} individually:</p>
+
+                                    <div class="scrollable" style="height: 25vh; font-size: .8em">
+                                        {% for table in ctx.data_tables %}
+                                            <div class="well well-small">
+                                                {% if ctx.record.collaborations %}
+                                                    <p><i>The
+                                                        {% for collaboration in ctx.record.collaborations %}
+                                                            {{ collaboration }}{% endfor %}
+                                                        collaboration ({{ ctx.record.year }})</i>.</p>
+                                                {% else %}
+                                                    {% for author in ctx.record.authors %}
+                                                        {{ author.full_name }}
+                                                        {% if loop.index < ctx.record.authors|length %},
+                                                        {% else %} ({{ ctx.record.year }})
+                                                        {% endif %}
+                                                    {% endfor %}
+                                                {% endif %}
+                                                <p>{{ table.name }} of {{ ctx.record.title }}. HEPData.</p>
+                                                <p><strong>http://dx.doi.org/{{ table.doi }}</strong></p>
+                                            </div>
                                         {% endfor %}
-                                    {% endif %}
-                                    <p>{{ ctx.record.title }}. HEPData.</p>
-                                    <p><strong>http://dx.doi.org/{{ ctx.record.hepdata_doi }}</strong></p>
+                                    </div>
                                 </div>
 
                             </div>
 
-                            <div class="clearfix"></div>
+                            <div role="tabpanel" class="tab-pane" id="bibtex">
+                                <div style="background-color: #ecf0f1; padding: 15px; font-size: .9em">
+                                    <p>When using this data, please cite the original publication:</p>
 
-                            <div style="padding: 15px">
-                                <p>You can also cite the {{ ctx.data_tables|length }} data table
-                                    {% if ctx.data_tables|length > 1 %}s{% endif %} individually:</p>
+                                    <div class="well well-small" style="background: white">
+                                        {% include "hepdata_records/components/cite/publication.html" %}
+                                    </div>
 
-                                <div class="scrollable" style="height: 25vh; font-size: .8em">
-                                    {% for table in ctx.data_tables %}
-                                        <div class="well well-small">
-                                            {% if ctx.record.collaborations %}
-                                                <p><i>The
-                                                    {% for collaboration in ctx.record.collaborations %}
-                                                        {{ collaboration }}{% endfor %}
-                                                    collaboration ({{ ctx.record.year }})</i>.</p>
-                                            {% else %}
-                                                {% for author in ctx.record.authors %}
-                                                    {{ author.full_name }}
-                                                    {% if loop.index < ctx.record.authors|length %},
-                                                    {% else %} ({{ ctx.record.year }})
-                                                    {% endif %}
-                                                {% endfor %}
-                                            {% endif %}
-                                            <p>{{ table.name }} of {{ ctx.record.title }}. HEPData.</p>
-                                            <p><strong>http://dx.doi.org/{{ table.doi }}</strong></p>
-                                        </div>
-                                    {% endfor %}
-                                </div>
-                            </div>
-
-                        </div>
-
-                        <div role="tabpanel" class="tab-pane" id="bibtex">
-                            <div style="background-color: #ecf0f1; padding: 15px; font-size: .9em">
-                                <p>When using this data, please cite the original publication:</p>
-
-                                <div class="well well-small" style="background: white">
-                                    {% include "hepdata_records/components/cite/publication.html" %}
-                                </div>
-
-                                <p>Additionally, you should also cite the <img
-                                        src="{{ url_for('static', filename='img/hepdata_logo.svg') }}" height="30">
-                                    record:
-                                </p>
-                                <div class="well well-small" style="background: white">
-                                    {% set title = '"{' + ctx.record.title + '}"' %}
+                                    <p>Additionally, you should also cite the <img
+                                            src="{{ url_for('static', filename='img/hepdata_logo.svg') }}" height="30">
+                                        record:
+                                    </p>
+                                    <div class="well well-small" style="background: white">
+                                        {% set title = '"{' + ctx.record.title + '}"' %}
                                     <textarea readonly style="width: 100%; height: 100px; white-space: pre-wrap;
                                         border: none; padding: 10px; resize: none;">@misc {
     {{ ctx.record.inspire_id }},
@@ -103,22 +106,25 @@
     doi = "{{ ctx.record.hepdata_doi }}",
     year = "{{ ctx.record.year }}",
     type = "Data Collection",
-    {% if ctx.record.collaborations %}collaboration = "{% for collaboration in ctx.record.collaborations %}{{ collaboration }}{% endfor %}",{% endif %}
-    {% if ctx.record.summary_authors %}authors = "{{ ctx.record.summary_authors[0].full_name }} and others"{% endif %}
-}
+                                        {% if ctx.record.collaborations %}collaboration = "
+                                            {% for collaboration in ctx.record.collaborations %}
+                                                {{ collaboration }}{% endfor %}",{% endif %}
+                                        {% if ctx.record.summary_authors %}authors = "
+                                            {{ ctx.record.summary_authors[0].full_name }} and others"{% endif %}
+                                        }
  </textarea>
-</div>
-                            </div>
-                            <div class="clearfix"></div>
-                            <div style="padding: 15px">
-                                <p>You can also cite the {{ ctx.data_tables|length }} data table
-                                    {% if ctx.data_tables|length > 1 %}s{% endif %} individually:</p>
+                                    </div>
+                                </div>
+                                <div class="clearfix"></div>
+                                <div style="padding: 15px">
+                                    <p>You can also cite the {{ ctx.data_tables|length }} data table
+                                        {% if ctx.data_tables|length > 1 %}s{% endif %} individually:</p>
 
-                                <div class="scrollable" style="height: 25vh; font-size: .8em">
-                                    {% for table in ctx.data_tables %}
-                                        <div class="well well-small" style="background: white">
-                                        <h4>{{ table.name }}</h4>
-                                        {% set title = '"{' +  table.name + ' of ' + ctx.record.title + '}"' %}
+                                    <div class="scrollable" style="height: 25vh; font-size: .8em">
+                                        {% for table in ctx.data_tables %}
+                                            <div class="well well-small" style="background: white">
+                                                <h4>{{ table.name }}</h4>
+                                                {% set title = '"{' +  table.name + ' of ' + ctx.record.title + '}"' %}
                                     <textarea readonly style="width: 100%; height: 100px; white-space: pre-wrap; resize: none;
                                         border: none; background-color: transparent; padding: 10px;">@misc {
     {{ ctx.record.inspire_id }}/t{{ loop.index }},
@@ -127,22 +133,26 @@
     doi = "{{ table.doi }}",
     year = "{{ ctx.record.year }}",
     type = "Data Set",
-    {% if ctx.record.collaborations %}collaboration = "{% for collaboration in ctx.record.collaborations %}{{ collaboration }}{% endfor %}",{% endif %}
-    {% if ctx.record.summary_authors %}authors = "{{ ctx.record.summary_authors[0].full_name }} and others"{% endif %}
-}
+                                        {% if ctx.record.collaborations %}collaboration = "
+                                            {% for collaboration in ctx.record.collaborations %}
+                                                {{ collaboration }}{% endfor %}",{% endif %}
+                                        {% if ctx.record.summary_authors %}authors = "
+                                            {{ ctx.record.summary_authors[0].full_name }} and others"{% endif %}
+                                        }
  </textarea>
-                                        </div>
-                                    {% endfor %}
+                                            </div>
+                                        {% endfor %}
+                                    </div>
                                 </div>
-                            </div>
 
+                            </div>
                         </div>
                     </div>
-                </div>
+                {% endif %}
             </div>
         </div>
     </div>
 </div>
 <script>
-    $().tab
+    $().tab;
 </script>
