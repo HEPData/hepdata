@@ -45,8 +45,12 @@ cli = create_cli(create_app=create_app)
 
 default_recids = 'ins1283842,ins1245023'
 
+@cli.group()
+def migrator():
+    """Migrator from existing HEPData System to new Version"""
 
-@cli.command()
+
+@migrator.command()
 @with_appcontext
 @click.option('--inspireids', '-i', default=default_recids,
               help='A comma separated list of recids to load.')
@@ -74,11 +78,6 @@ def populate(inspireids, recreate_index, tweet, convert):
     load_files(files_to_load, send_tweet=tweet, convert=convert)
 
 
-@cli.group()
-def migrator():
-    """Migrator from existing HEPData System to new Version"""
-
-
 @migrator.command()
 @with_appcontext
 @click.option('--missing', is_flag=True,
@@ -94,6 +93,7 @@ def migrate(missing, start, end, date=None):
     """
     Migrates all content from HEPData
     """
+    print(missing)
     if missing:
         inspire_ids = get_missing_records()
     else:
@@ -107,7 +107,7 @@ def migrate(missing, start, end, date=None):
 
     print(inspire_ids)
 
-    # load_files(inspire_ids)
+    load_files(inspire_ids)
 
 
 @migrator.command()
@@ -164,12 +164,16 @@ def find_duplicates_and_remove():
 
 @migrator.command()
 @with_appcontext
-def get_missing_records():
+def find_missing_records():
     """
     Finds all records that are missing in the new system (compared to the legacy environment)
     and returns the IDs as a list
     :return: an array of missing IDs
     """
+    return get_missing_records()
+
+
+def get_missing_records():
     inspire_ids = get_all_ids_in_current_system(prepend_id_with="")
     missing_ids = []
     for inspire_id in inspire_ids:
@@ -179,7 +183,6 @@ def get_missing_records():
     print("Missing {} records.".format(len(missing_ids)))
     print(missing_ids)
     return missing_ids
-
 
 
 @cli.group()
