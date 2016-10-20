@@ -213,17 +213,19 @@ def reindex(recreate, start, end, batch):
               help='Whether or not to send a tweet announcing the arrival of these records.')
 @click.option('--convert', '-c', default=False, type=bool,
               help='Whether or not to create conversions for all loaded files to ROOT, YODA, and CSV.')
-def load(inspireids, tweet, convert):
+@click.option('--base_url', '-url', default='http://hepdata.cedar.ac.uk/view/{0}/yaml', type=str,
+              help='Override default base URL of YAML format from old HepData site.')
+def load(inspireids, tweet, convert, base_url):
     """
-    Remove records given their HEPData IDs from the database.
-    Removes all database entries, leaves the files on the server.
+    Load records given their Inspire IDs into the database.
+    :param base_url: override default base URL
     :param convert:
     :param tweet:
     :param inspireids: list of record IDs to load
     """
     processed_record_ids = parse_inspireids_from_string(inspireids)
 
-    load_files(processed_record_ids, send_tweet=tweet, convert=convert)
+    load_files(processed_record_ids, send_tweet=tweet, convert=convert, base_url=base_url)
 
 
 def parse_inspireids_from_string(records_to_unload):
