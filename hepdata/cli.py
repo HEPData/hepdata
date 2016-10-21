@@ -45,6 +45,7 @@ cli = create_cli(create_app=create_app)
 
 default_recids = 'ins1283842,ins1245023'
 
+
 @cli.group()
 def migrator():
     """Migrator from existing HEPData System to new Version"""
@@ -80,7 +81,7 @@ def populate(inspireids, recreate_index, tweet, convert):
 
 @migrator.command()
 @with_appcontext
-@click.option('--missing', is_flag=True,
+@click.option('--missing', '-m', is_flag=True,
               help='This option will automatically find the inspire ids in the current '
                    'hepdata but not in this version and migrate them.')
 @click.option('--start', '-s', type=int, default=None,
@@ -140,28 +141,6 @@ def update(inspireids, update_record_info_only):
     update_submissions.delay(records_to_update, update_record_info_only)
 
 
-@cli.command()
-@with_appcontext
-def find_duplicates_and_remove():
-    """
-    Will go through the application to find any duplicates then remove them.
-    """
-    inspire_ids = get_all_ids_in_current_system(prepend_id_with="")
-
-    duplicates = []
-    for inspire_id in inspire_ids:
-        matches = get_records_matching_field('inspire_id', inspire_id,
-                                             doc_type=CFG_PUB_TYPE)
-        if len(matches['hits']['hits']) > 1:
-            duplicates.append(matches['hits']['hits'][0]['_source']['recid'])
-    print('There are {} duplicates. Going to remove.'.format(len(duplicates)))
-    do_unload(duplicates)
-
-    # reindex submissions for dashboard view
-    admin_indexer = AdminIndexer()
-    admin_indexer.reindex(recreate=True)
-
-
 @migrator.command()
 @with_appcontext
 def find_missing_records():
@@ -203,6 +182,28 @@ def utils():
               help='Number of records to index at a time.')
 def reindex(recreate, start, end, batch):
     reindex_all(recreate=recreate, start=start, end=end, batch=batch)
+
+
+@utils.command()
+@with_appcontext
+def find_duplicates_and_remove():
+    """
+    Will go through the application to find any duplicates then remove them.
+    """
+    inspire_ids = get_all_ids_in_current_system(prepend_id_with="")
+
+    duplicates = []
+    for inspire_id in inspire_ids:
+        matches = get_records_matching_field('inspire_id', inspire_id,
+                                             doc_type=CFG_PUB_TYPE)
+        if len(matches['hits']['hits']) > 1:
+            duplicates.append(matches['hits']['hits'][0]['_source']['recid'])
+    print('There are {} duplicates. Going to remove.'.format(len(duplicates)))
+    do_unload(duplicates)
+
+    # reindex submissions for dashboard view
+    admin_indexer = AdminIndexer()
+    admin_indexer.reindex(recreate=True)
 
 
 @utils.command()
