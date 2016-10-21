@@ -102,7 +102,8 @@ install_requires = [
     'beautifulsoup4',
     'hepdata_validator==0.1.13',
     'hepdata-converter-ws-client',
-    'datacite'
+    'datacite',
+    'elasticsearch<3.0.0'
 ]
 
 packages = find_packages()

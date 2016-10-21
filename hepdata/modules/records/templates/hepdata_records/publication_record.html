@@ -338,7 +338,7 @@
     {% include 'hepdata_records/components/code-view-widget.html' %}
     {% include 'hepdata_records/components/resources-widget.html' %}
     {% include 'hepdata_records/components/cite-widget.html' %}
-    {% if ctx.status == 'finished' %}
+    {% if ctx.status == 'finished' and current_user.is_authenticated %}
         {% include 'hepdata_records/components/question-widget.html' %}
     {% endif %}
     {% include 'hepdata_records/components/notify-reviewer-widget.html' %}

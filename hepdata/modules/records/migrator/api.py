@@ -180,8 +180,9 @@ def get_all_ids_in_current_system(date=None, prepend_id_with="ins"):
     return inspire_ids
 
 
-def load_files(inspire_ids, send_tweet=False, synchronous=False, convert=False):
+def load_files(inspire_ids, send_tweet=False, synchronous=False, convert=False, base_url='http://hepdata.cedar.ac.uk/view/{0}/yaml'):
     """
+    :param base_url: override default base URL
     :param convert:
     :param synchronous: if should be run immediately
     :param send_tweet: whether or not to tweet this entry.
@@ -193,13 +194,13 @@ def load_files(inspire_ids, send_tweet=False, synchronous=False, convert=False):
     for index, inspire_id in enumerate(inspire_ids):
         _cleaned_id = inspire_id.replace("ins", "")
         if not record_exists(inspire_id=_cleaned_id):
-            print("The record with id {0} does not exist in the database, so we\"re loading it.".format(inspire_id))
+            print("The record with id {0} does not exist in the database, so we're loading it.".format(inspire_id))
             try:
                 log.info("Loading {0}".format(inspire_id))
                 if synchronous:
-                    migrator.load_file(inspire_id, send_tweet, convert=convert)
+                    migrator.load_file(inspire_id, send_tweet, convert=convert, base_url=base_url)
                 else:
-                    migrator.load_file.delay(inspire_id, send_tweet, convert=convert)
+                    migrator.load_file.delay(inspire_id, send_tweet, convert=convert, base_url=base_url)
             except socket.error as se:
                 print("socket error...")
                 log.error(se.message)
@@ -285,8 +286,8 @@ class Migrator(object):
             log.error("Failed to load {0}".format(inspire_id))
 
     @shared_task
-    def load_file(inspire_id, send_tweet=False, convert=False):
-        self = Migrator()
+    def load_file(inspire_id, send_tweet=False, convert=False, base_url='http://hepdata.cedar.ac.uk/view/{0}/yaml'):
+        self = Migrator(base_url)
         output_location = self.prepare_files_for_submission(inspire_id)
         if output_location:
 
@@ -320,6 +321,7 @@ class Migrator(object):
 
         try:
             url = self.base_url.format(inspire_id)
+            log.info("Trying URL " + url)
             response = requests.get(url)
             if response.ok:
                 yaml = response.text

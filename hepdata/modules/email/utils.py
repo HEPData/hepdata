@@ -55,11 +55,11 @@ def send_email(destination, subject, message, reply_to_address=None):
         connection = connect()
         mmp_msg = MIMEMultipart('alternative')
         mmp_msg['Subject'] = subject
-        mmp_msg['From'] = current_app.config['MAIL_DEFAULT_SENDER']
+        mmp_msg['From'] = reply_to_address if reply_to_address else current_app.config['MAIL_DEFAULT_SENDER']
         mmp_msg['To'] = destination
 
-        if reply_to_address:
-            mmp_msg.add_header('reply-to', reply_to_address)
+        #if reply_to_address:
+        #    mmp_msg.add_header('reply-to', reply_to_address)
 
         part1 = MIMEText(message, 'html')
         mmp_msg.attach(part1)
