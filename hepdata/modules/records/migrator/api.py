@@ -47,7 +47,7 @@ import logging
 
 from hepdata.modules.records.utils.yaml_utils import split_files
 from hepdata.modules.submission.api import get_latest_hepsubmission, is_resource_added_to_submission
-from hepdata.modules.submission.models import DataResource
+from hepdata.modules.submission.models import DataResource, HEPSubmission
 from hepdata.utils.file_extractor import get_file_in_directory
 
 
@@ -132,11 +132,13 @@ def update_submissions(inspire_ids_to_update, only_record_information=False):
 
 
 @shared_task
-def add_or_update_records_since_date(date=None, convert=False):
+def add_or_update_records_since_date(date=None, send_tweet=False, convert=False):
     """
     Given a date, gets all the records updated or added since that
     date and updates or adds the corresponding records
     :param date: in the format YYYYddMM (e.g. 20160705 for the 5th July 2016)
+    :param send_tweet
+    :param convert
     :return:
     """
     if not date:
@@ -146,7 +148,7 @@ def add_or_update_records_since_date(date=None, convert=False):
 
     inspire_ids = get_all_ids_in_current_system(date)
     print("{0} records to be added or updated since {1}.".format(len(inspire_ids), date))
-    load_files(inspire_ids, convert=False)
+    load_files(inspire_ids, send_tweet=send_tweet, convert=convert)
 
 
 def get_all_ids_in_current_system(date=None, prepend_id_with="ins"):
@@ -211,9 +213,9 @@ def load_files(inspire_ids, send_tweet=False, synchronous=False, convert=False, 
             print("The record with inspire id {0} already exists. Updating instead.".format(inspire_id))
             log.info("Updating {}".format(inspire_id))
             if synchronous:
-                update_submissions([inspire_id], send_tweet)
+                update_submissions([inspire_id])
             else:
-                update_submissions.delay([inspire_id], send_tweet)
+                update_submissions.delay([inspire_id])
 
 
 class Migrator(object):
@@ -265,7 +267,10 @@ class Migrator(object):
             updated_record_information = self.retrieve_publication_information(inspire_id)
             record_information = update_record(recid, updated_record_information)
 
-            if not only_record_information:
+            hep_submission = HEPSubmission.query.filter_by(publication_recid=recid).first()
+            oldsite_last_updated = datetime.strptime(record_information["last_updated"], '%Y-%m-%d %H:%M:%S')
+
+            if not only_record_information and hep_submission.last_updated < oldsite_last_updated:
                 try:
                     recid = self.load_submission(
                         record_information, output_location, os.path.join(output_location, "submission.yaml"),
@@ -291,7 +296,7 @@ class Migrator(object):
         output_location = self.prepare_files_for_submission(inspire_id)
         if output_location:
 
-            record_information = self.retrieve_publication_information(inspire_id)
+            record_information = create_record(self.retrieve_publication_information(inspire_id))
 
             try:
                 recid = self.load_submission(
@@ -359,7 +364,7 @@ class Migrator(object):
         content, status = get_inspire_record_information(inspire_id)
 
         content["inspire_id"] = inspire_id
-        return create_record(content)
+        return content
 
     def load_submission(self, record_information, file_base_path,
                         submission_yaml_file_location, update=False):

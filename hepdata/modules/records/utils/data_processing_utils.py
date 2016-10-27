@@ -165,7 +165,7 @@ def process_dependent_variables(group_count, record, table_contents,
                 # process the labels to ensure uniqueness
                 observed_error_labels = {}
                 for error in y_record["errors"]:
-                    error_label = error.get("label")
+                    error_label = error.get("label", "error")
 
                     if error_label not in observed_error_labels:
                         observed_error_labels[error_label] = 0
@@ -178,7 +178,7 @@ def process_dependent_variables(group_count, record, table_contents,
                     # append "_1" to first error label that has a duplicate
                     if observed_error_labels[error_label] == 2:
                         for error1 in y_record["errors"]:
-                            error1_label = error1.get("label")
+                            error1_label = error1.get("label", "error")
                             if error1_label == error_label:
                                 error1["label"] = error1_label + "_1"
                                 break

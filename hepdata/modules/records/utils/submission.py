@@ -424,7 +424,7 @@ def process_submission_directory(basepath, submission_file_path, recid, update=F
                 db.session.add(_rev_hepsubmission)
                 hepsubmission = _rev_hepsubmission
 
-            reserve_doi_for_hepsubmission(hepsubmission)
+            reserve_doi_for_hepsubmission(hepsubmission, update)
 
             for yaml_document in submission_processed:
                 if 'record_ids' in yaml_document or 'comment' in yaml_document or 'modifications' in yaml_document:
@@ -709,7 +709,7 @@ def do_finalise(recid, publication_record=None, force_finalise=False,
 
             if send_tweet:
                 tweet(record.get('title'), record.get('collaborations'),
-                      "http://www.hepdata.net/record/ins{0}".format(record.get('inspire_id')))
+                      "http://www.hepdata.net/record/ins{0}".format(record.get('inspire_id')), version)
 
             return json.dumps({"success": True, "recid": recid,
                                "data_count": len(submissions),
