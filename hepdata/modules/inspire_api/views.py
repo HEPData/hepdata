@@ -97,6 +97,6 @@ def get_record_from_inspire():
         status = 'exists'
 
     return jsonify({'source': 'inspire',
-                        'id': inspire_id,
-                        'query': content,
-                        'status': status})
+                    'id': inspire_id,
+                    'query': content,
+                    'status': status})
