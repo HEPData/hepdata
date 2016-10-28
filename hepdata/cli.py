@@ -294,7 +294,7 @@ def send_tweet(inspireids):
         if submission:
             record = get_record_by_id(submission.publication_recid)
             url = "http://www.hepdata.net/record/ins{0}".format(record['inspire_id'])
-            tweet(record['title'], record['collaborations'], url, ecord['version'])
+            tweet(record['title'], record['collaborations'], url, record['version'])
         else:
             print("No records found for Inspire ID {}".format(inspireid))
 
