@@ -26,8 +26,8 @@ from __future__ import absolute_import, print_function
 from hepdata.modules.records.utils.common import encode_string, truncate_string
 from twitter import Twitter
 from twitter import OAuth
-from hepdata.config import OAUTH_TOKEN, OAUTH_SECRET, CONSUMER_KEY, CONSUMER_SECRET, USE_TWITTER, \
-    TWITTER_HANDLE_MAPPINGS
+from hepdata.config import USE_TWITTER, TWITTER_HANDLE_MAPPINGS
+from flask import current_app
 import json
 
 
@@ -40,6 +40,12 @@ def tweet(title, collaborations, url, version=1):
     :return:
     """
     if USE_TWITTER:
+
+        OAUTH_TOKEN = current_app.config['OAUTH_TOKEN']
+        OAUTH_SECRET = current_app.config['OAUTH_SECRET']
+        CONSUMER_KEY = current_app.config['CONSUMER_KEY']
+        CONSUMER_SECRET = current_app.config['CONSUMER_SECRET']
+
         if not OAUTH_TOKEN or not OAUTH_SECRET or not CONSUMER_KEY or not CONSUMER_SECRET:
             # log this error
             print("Twitter credentials must be supplied!")
