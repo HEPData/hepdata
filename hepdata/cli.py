@@ -33,6 +33,7 @@ from hepdata.ext.elasticsearch.admin_view.api import AdminIndexer
 from hepdata.modules.converter.tasks import convert_and_store
 from hepdata.modules.records.utils.common import record_exists, get_record_by_id
 from hepdata.modules.submission.models import HEPSubmission
+from hepdata.modules.submission.api import get_latest_hepsubmission
 from .factory import create_app
 from hepdata.config import CFG_PUB_TYPE
 from hepdata.ext.elasticsearch.api import reindex_all, get_records_matching_field
@@ -289,15 +290,11 @@ def send_tweet(inspireids):
     processed_inspireids = parse_inspireids_from_string(inspireids)
     for inspireid in processed_inspireids:
         _cleaned_id = inspireid.replace("ins", "")
-        _matching_records = get_records_matching_field("inspire_id", _cleaned_id)
-        if len(_matching_records["hits"]["hits"]) >= 1:
-            recid = _matching_records["hits"]["hits"][0]["_source"]["related_publication"]
-            record = get_record_by_id(recid)
-            title = record.get('title')
-            collaborations = record.get('collaborations')
-            url = "http://www.hepdata.net/record/ins{0}".format(record.get('inspire_id'))
-            version = record.get('version')
-            tweet(title, collaborations, url, version)
+        submission = get_latest_hepsubmission(inspire_id=_cleaned_id)
+        if submission:
+            record = get_record_by_id(submission.publication_recid)
+            url = "http://www.hepdata.net/record/ins{0}".format(record['inspire_id'])
+            tweet(record['title'], record['collaborations'], url, ecord['version'])
         else:
             print("No records found for Inspire ID {}".format(inspireid))
 
