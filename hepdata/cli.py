@@ -29,10 +29,9 @@ from __future__ import absolute_import, print_function
 import click
 from flask.cli import with_appcontext
 from invenio_base.app import create_cli
-
 from hepdata.ext.elasticsearch.admin_view.api import AdminIndexer
 from hepdata.modules.converter.tasks import convert_and_store
-from hepdata.modules.records.utils.common import record_exists
+from hepdata.modules.records.utils.common import record_exists, get_record_by_id
 from hepdata.modules.submission.models import HEPSubmission
 from .factory import create_app
 from hepdata.config import CFG_PUB_TYPE
@@ -40,6 +39,7 @@ from hepdata.ext.elasticsearch.api import reindex_all, get_records_matching_fiel
 from hepdata.modules.records.utils.submission import unload_submission
 from hepdata.modules.records.migrator.api import load_files, update_submissions, get_all_ids_in_current_system, \
     add_or_update_records_since_date, update_analyses
+from hepdata.utils.twitter import tweet
 
 cli = create_cli(create_app=create_app)
 
@@ -114,13 +114,19 @@ def migrate(missing, start, end, date=None):
 @migrator.command()
 @with_appcontext
 @click.option('--date', '-d', type=str, default=None, help='Date in the format YYYYddMM, e.g 20160627')
-def add_or_update(date):
+@click.option('--tweet', '-t', default=False, type=bool,
+              help='Whether or not to send a tweet announcing the arrival of these records.')
+@click.option('--convert', '-c', default=False, type=bool,
+              help='Whether or not to create conversions for all loaded files to ROOT, YODA, and CSV.')
+def add_or_update(date, tweet, convert):
     """
     Provided a date, will find all records after that date and either load them if they don't exist in the system.
     or update if they already exist.
     :param date:
+    :param tweet:
+    :param convert:
     """
-    add_or_update_records_since_date.delay(date)
+    add_or_update_records_since_date.delay(date, send_tweet=tweet, convert=convert)
 
 
 @migrator.command()
@@ -269,6 +275,31 @@ def find_and_add_record_analyses():
     Finds analyses such as RIVET and add them to records
     """
     update_analyses.delay()
+
+
+@utils.command()
+@with_appcontext
+@click.option('--inspireids', '-i', type=str, help='Specific Inspire IDs of records to be tweeted.')
+def send_tweet(inspireids):
+    """
+    Send tweet announcing that records have been added or revised (in case it wasn't done automatically).
+
+    :param inspireids: list of record IDs to tweet
+    """
+    processed_inspireids = parse_inspireids_from_string(inspireids)
+    for inspireid in processed_inspireids:
+        _cleaned_id = inspireid.replace("ins", "")
+        _matching_records = get_records_matching_field("inspire_id", _cleaned_id)
+        if len(_matching_records["hits"]["hits"]) >= 1:
+            recid = _matching_records["hits"]["hits"][0]["_source"]["related_publication"]
+            record = get_record_by_id(recid)
+            title = record.get('title')
+            collaborations = record.get('collaborations')
+            url = "http://www.hepdata.net/record/ins{0}".format(record.get('inspire_id'))
+            version = record.get('version')
+            tweet(title, collaborations, url, version)
+        else:
+            print("No records found for Inspire ID {}".format(inspireid))
 
 
 @cli.group()

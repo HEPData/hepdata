@@ -131,8 +131,7 @@
                     <div id="inspire-result">
                         <div class="spinner" style="margin-top: 9em">
                             <div class="ball ball-purple"></div>
-                            <p class="text-grey">Loading information from
-                                inspire.</p>
+                            <p class="text-grey">Loading information from Inspire.</p>
                         </div>
                     </div>
 
@@ -355,7 +354,7 @@
             toggle_div("#inspire_preview", default_options, 'hide', function () {
                 $("#inspire-result").html('<div class="spinner" style="margin-top: 9em">' +
                         '<div class="ball ball-purple"></div>' +
-                        '<p class="text-grey">Loading information from inspire.</p></div>');
+                        '<p class="text-grey">Loading information from Inspire.</p></div>');
                 $("#preview_back_btn").addClass("hidden");
                 $("#preview_continue_btn").addClass("hidden");
                 toggle_div("#inspire_details", default_options, 'show')
@@ -436,15 +435,15 @@
             }
             else if (data.status == 'exists') {
                 html = '<div class="alert alert-danger">A ' +
-                        '<a href="/record/ins"' + data.id + '" target="_blank">' +
-                        'record</a> with this inspire id already exists in HEPData.' +
+                        '<a href="/record/ins' + data.id + '" target="_blank">' +
+                        'record</a> with this Inspire ID already exists in HEPData.' +
                         '</div>';
                 html = inspire_ds.create_html_summary(data, html);
 
                 $("#preview_back_btn").removeClass("hidden");
                 $("#preview_continue_btn").addClass("hidden");
             } else {
-                html = '<div class="alert alert-danger">An error occurred while trying to find the inspire record.</div>';
+                html = '<div class="alert alert-danger">An error occurred while trying to find the Inspire record.</div>';
                 $("#preview_back_btn").removeClass("hidden");
                 $("#preview_continue_btn").addClass("hidden");
             }

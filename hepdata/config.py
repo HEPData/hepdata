@@ -60,7 +60,8 @@ CELERYBEAT_SCHEDULE = {
     # Executes every 6 hours
     'get-updated-content': {
         'task': 'hepdata.modules.records.migrator.api.add_or_update_records_since_date',
-        'schedule': timedelta(hours=6)
+        'schedule': timedelta(hours=6),
+        'kwargs': {'send_tweet': True}
     },
 
     'update_analyses': {

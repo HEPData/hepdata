@@ -89,13 +89,12 @@ def get_record_from_inspire():
 
     inspire_id = request.args['id']
 
+    content, status = get_inspire_record_information(inspire_id)
+
     # check that id is not present already.
     exists = record_exists(inspire_id=inspire_id)
-
     if exists:
-        return jsonify({'status': 'exists', 'id': inspire_id})
-
-    content, status = get_inspire_record_information(inspire_id)
+        status = 'exists'
 
     return jsonify({'source': 'inspire',
                     'id': inspire_id,

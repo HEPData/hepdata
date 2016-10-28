@@ -44,7 +44,7 @@ var inspire_ds = (function () {
                 html = '<div class="alert alert-info">A preview of the publication (not everything is displayed).</div>';
                 html = inspire_ds.create_html_summary(data, html);
                 html += '<p style="font-weight: bolder;">If you\'re happy that ' +
-                    'this is the correct INSPIRE Id, you just need to click ' +
+                    'this is the correct Inspire ID, you just need to click ' +
                     'on \'confirm\'. If not, you can retrieve another record.</p>';
 
                 $("#success").removeClass("hidden");
@@ -52,8 +52,8 @@ var inspire_ds = (function () {
 
             } else if (data.status == 'exists') {
                 html = '<div class="alert alert-danger">A ' +
-                    '<a href="/record/ins"' + data.id + '" target="_blank">' +
-                    'record</a> with this inspire id already exists in HEPData.' +
+                    '<a href="/record/ins' + data.id + '" target="_blank">' +
+                    'record</a> with this Inspire ID already exists in HEPData.' +
                     '</div>';
                 html = inspire_ds.create_html_summary(data, html);
 
@@ -62,7 +62,7 @@ var inspire_ds = (function () {
 
             }
             else {
-                html = '<div class="alert alert-danger">An error occurred while trying to find the inspire record.</div>';
+                html = '<div class="alert alert-danger">An error occurred while trying to find the Inspire record.</div>';
                 $("#inspire-add-button").addClass("hidden");
             }
 

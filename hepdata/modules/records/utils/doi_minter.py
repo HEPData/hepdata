@@ -100,7 +100,7 @@ def generate_doi_for_data_submission(data_submission_id, version):
                  xml, publication_info['uuid'])
 
 
-def reserve_doi_for_hepsubmission(hepsubmission):
+def reserve_doi_for_hepsubmission(hepsubmission, update=False):
     base_doi = "{0}/hepdata.{1}".format(
         current_app.config.get('DOI_PREFIX'), hepsubmission.publication_recid)
 
@@ -114,7 +114,8 @@ def reserve_doi_for_hepsubmission(hepsubmission):
         db.session.add(hepsubmission)
         db.session.commit()
 
-    create_doi(base_doi + ".v{0}".format(version))
+    if not update:
+        create_doi(base_doi + ".v{0}".format(version))
 
 
 def reserve_dois_for_data_submissions(publication_recid, version):

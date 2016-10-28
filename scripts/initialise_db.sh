@@ -16,4 +16,4 @@ hepdata roles add eamonnmag@gmail.com admin
 
 # now populate the database with some records. NOTE:
 # Celery needs to be running.
-hepdata populate
+hepdata migrator populate
