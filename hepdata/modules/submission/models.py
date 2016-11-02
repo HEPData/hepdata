@@ -105,7 +105,7 @@ keyword_identifier = db.Table(
     db.Column('submission_id', db.Integer,
               db.ForeignKey('datasubmission.id')),
 
-    db.Column('keyword_id', db.Integer, db.ForeignKey('keyword.id')))
+    db.Column('keyword_id', db.Integer, db.ForeignKey('keyword.id', ondelete='CASCADE')))
 
 
 class DataSubmission(db.Model):

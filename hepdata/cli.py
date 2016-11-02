@@ -41,6 +41,7 @@ from hepdata.modules.records.utils.submission import unload_submission
 from hepdata.modules.records.migrator.api import load_files, update_submissions, get_all_ids_in_current_system, \
     add_or_update_records_since_date, update_analyses
 from hepdata.utils.twitter import tweet
+from invenio_db import db
 
 cli = create_cli(create_app=create_app)
 
@@ -297,6 +298,24 @@ def send_tweet(inspireids):
             tweet(record['title'], record['collaborations'], url, record['version'])
         else:
             print("No records found for Inspire ID {}".format(inspireid))
+
+
+@utils.command()
+@with_appcontext
+def alter_table_keyword_submission():
+    """
+    Temporary: alter table keyword_submission to add "ON DELETE CASCADE" foreign key constraint.
+    Constraint will be added in database model, so only needed once to modify existing database.
+
+    :return:
+    """
+    query = '''ALTER TABLE keyword_submission DROP CONSTRAINT keyword_submission_keyword_id_fkey,
+ADD CONSTRAINT keyword_submission_keyword_id_fkey
+   FOREIGN KEY (keyword_id)
+   REFERENCES keyword(id)
+   ON DELETE CASCADE'''
+    db.session.execute(query)
+    db.session.commit()
 
 
 @cli.group()

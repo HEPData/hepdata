@@ -198,6 +198,19 @@ def cleanup_data_resources(data_submission):
     db.session.commit()
 
 
+def cleanup_data_keywords(data_submission):
+    """
+    Removes keywords from the submission to avoid duplications.
+    This ensures that when users replace a submission,
+    old keywords are not left behind.
+    :param data_submission: DataSubmission object to be cleaned
+    :return:
+    """
+    for keyword in data_submission.keywords:
+        db.session.delete(keyword)
+    db.session.commit()
+
+
 def process_data_file(recid, version, basepath, data_obj, datasubmission, main_file_path):
     """
     Takes a data file and any supplementary files and persists their
@@ -231,6 +244,8 @@ def process_data_file(recid, version, basepath, data_obj, datasubmission, main_f
 
     if "location" in data_obj:
         datasubmission.location_in_publication = data_obj["location"]
+
+    cleanup_data_keywords(datasubmission)
 
     if "keywords" in data_obj:
         for keyword in data_obj["keywords"]:
