@@ -29,7 +29,7 @@ from elasticsearch_dsl import DocType, String, Date, Integer, Nested, InnerObjec
 from elasticsearch_dsl.connections import connections
 from flask import current_app
 
-from hepdata.modules.records.utils.common import get_record_by_id, get_record_contents
+from hepdata.modules.records.utils.common import get_record_contents
 from hepdata.modules.submission.models import HEPSubmission, DataSubmission
 
 logging.basicConfig()

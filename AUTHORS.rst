@@ -25,16 +25,18 @@
 Authors
 =======
 
-* **Principle Investigator:**
+* **Database Manager:**
 
-  * Frank Krauss
+  * Graeme Watt
 
 * **Lead Developer:**
 
   * Eamonn Maguire
 
-* **Developers:**
+* **Developer:**
 
-  * Graeme Watt
   * Jan Stypka
 
+* **Principle Investigator:**
+
+  * Frank Krauss

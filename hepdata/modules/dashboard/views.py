@@ -134,6 +134,8 @@ def reindex():
     if has_role(current_user, 'admin'):
         reindex_all(recreate=True)
         push_data_keywords()
+        admin_idx = AdminIndexer()
+        admin_idx.reindex(recreate=True)
         return jsonify({"success": True})
     else:
         return jsonify({"success": False,

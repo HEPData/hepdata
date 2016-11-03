@@ -302,20 +302,18 @@ def send_tweet(inspireids):
 
 @utils.command()
 @with_appcontext
-def alter_table_keyword_submission():
+@click.option('--query', '-q', type=str, help='SQL query to execute via SQLAlchemy Engine.')
+def execute(query):
     """
-    Temporary: alter table keyword_submission to add "ON DELETE CASCADE" foreign key constraint.
-    Constraint will be added in database model, so only needed once to modify existing database.
+    Execute a SQL query via SQLAlchemy Engine.
 
+    :param query: SQL query as a string
     :return:
     """
-    query = '''ALTER TABLE keyword_submission DROP CONSTRAINT keyword_submission_keyword_id_fkey,
-ADD CONSTRAINT keyword_submission_keyword_id_fkey
-   FOREIGN KEY (keyword_id)
-   REFERENCES keyword(id)
-   ON DELETE CASCADE'''
-    db.session.execute(query)
-    db.session.commit()
+    print("Executing query: {}".format(query))
+    if query:
+        result = db.session.execute(query)
+        db.session.commit()
 
 
 @cli.group()

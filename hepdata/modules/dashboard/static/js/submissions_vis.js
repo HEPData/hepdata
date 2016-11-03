@@ -14,7 +14,7 @@ var submissions_vis = (function () {
 
   var parseDate = function (d) {
     return new Date(d.substring(0, 4),
-      d.substring(5, 7),
+      d.substring(5, 7) - 1,
       d.substring(8));
   };
 
