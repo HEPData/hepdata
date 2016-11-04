@@ -629,10 +629,10 @@ def do_finalise(recid, publication_record=None, force_finalise=False,
         performed. This is only really useful for the full migration of
         content.
     """
+    print('Finalising record {}'.format(recid))
+
     hep_submission = HEPSubmission.query.filter_by(
         publication_recid=recid, overall_status="todo").first()
-
-    print('Finalising record {}'.format(recid))
 
     generated_record_ids = []
     if hep_submission \

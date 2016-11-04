@@ -135,18 +135,23 @@ def add_or_update(date, tweet, convert):
 @with_appcontext
 @click.option('--inspireids', '-i',
               help='A comma separated list of recids to load.')
+@click.option('--force', '-f', default=False, type=bool,
+              help='Whether or not to force an update regardless of last_updated date.')
 @click.option('--update_record_info_only', '-ro', default=False, type=bool,
               help='True if you just want to update the publication information.')
-def update(inspireids, update_record_info_only):
+def update(inspireids, force, update_record_info_only):
     """
     Given a list of record ids, can update the contents of the whole submission, or just the record information
-    via the update_record_info_only option.
-    Usage: hepdata update -i 'insXXX' -ro True|False
+    via the update_record_info_only option.  By default, a record will only be updated if the last_updated date
+    is not more recent than the equivalent on the old site, but this behaviour can be overriden with --force.
+    Usage: hepdata migrator update -i 'insXXX' -f True|False -ro True|False
+
     :param inspireids: comma separated list of inspire ids, e.g. ins222121
+    :param force: force an update for any last_updated value
     :param update_record_info_only: if True, will only up the record information, and won't update the data files.
     """
     records_to_update = parse_inspireids_from_string(inspireids)
-    update_submissions.delay(records_to_update, update_record_info_only)
+    update_submissions.delay(records_to_update, force, update_record_info_only)
 
 
 @migrator.command()

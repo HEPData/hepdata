@@ -79,10 +79,11 @@ def update_record(recid, ctx):
     :param ctx:
     :return:
     """
-    print('Recid is {}'.format(recid))
+    print('Updating record {}'.format(recid))
     record = get_record_by_id(recid)
     for key, value in ctx.iteritems():
         record[key] = value
+    print('Updated record {}'.format(record["recid"]))
 
     record.commit()
     db.session.commit()

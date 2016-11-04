@@ -309,7 +309,15 @@ def process_zip_archive(file, id):
         if 'yaml' in filename:
             # we split the singular yaml file and create a submission directory
 
-            split_files(file_path, submission_path)
+            error = split_files(file_path, submission_path)
+            if error:
+                return {
+                    "Single YAML file splitter": [{
+                        "level": "error",
+                        "message": str(error)
+                    }]
+                }
+
         else:
             # we are dealing with a zip, tar, etc. so we extract the contents
             extract(filename, file_path, submission_path)
@@ -368,7 +376,6 @@ def check_and_convert_from_oldhepdata(input_directory, id, timestamp):
                 "level": "error",
                 "message": "The conversion from oldhepdata "
                            "to the YAML format has not succeeded. "
-                           "Please submit archives in the new format."
             }]
         }
 

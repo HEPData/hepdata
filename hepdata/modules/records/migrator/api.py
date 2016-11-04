@@ -115,18 +115,17 @@ def update_analyses():
 
 
 @shared_task
-def update_submissions(inspire_ids_to_update, only_record_information=False):
+def update_submissions(inspire_ids_to_update, force=False, only_record_information=False):
     migrator = Migrator()
     for index, inspire_id in enumerate(inspire_ids_to_update):
         _cleaned_id = inspire_id.replace("ins", "")
         _matching_records = get_records_matching_field("inspire_id", _cleaned_id)
         if len(_matching_records["hits"]["hits"]) >= 1:
-            print("The record with id {} will be updated now".format(inspire_id))
             recid = _matching_records["hits"]["hits"][0]["_source"]["recid"]
             if "related_publication" in _matching_records["hits"]["hits"][0]["_source"]:
                 recid = _matching_records["hits"]["hits"][0]["_source"]["related_publication"]
-            migrator.update_file.delay(inspire_id, recid,
-                                       only_record_information)
+            print("The record with inspire_id {} and recid {} will be updated now".format(inspire_id, recid))
+            migrator.update_file.delay(inspire_id, recid, force, only_record_information)
         else:
             log.error("No record exists with id {0}. You should load this file first.".format(inspire_id))
 
@@ -182,7 +181,8 @@ def get_all_ids_in_current_system(date=None, prepend_id_with="ins"):
     return inspire_ids
 
 
-def load_files(inspire_ids, send_tweet=False, synchronous=False, convert=False, base_url='http://hepdata.cedar.ac.uk/view/{0}/yaml'):
+def load_files(inspire_ids, send_tweet=False, synchronous=False, convert=False,
+               base_url='http://hepdata.cedar.ac.uk/view/{0}/yaml'):
     """
     :param base_url: override default base URL
     :param convert:
@@ -259,7 +259,7 @@ class Migrator(object):
         return output_location
 
     @shared_task
-    def update_file(inspire_id, recid, only_record_information=False, send_tweet=False, convert=False):
+    def update_file(inspire_id, recid, force=False, only_record_information=False, send_tweet=False, convert=False):
         self = Migrator()
 
         output_location = self.prepare_files_for_submission(inspire_id, force_retrieval=True)
@@ -270,11 +270,12 @@ class Migrator(object):
             hep_submission = HEPSubmission.query.filter_by(publication_recid=recid).first()
             oldsite_last_updated = datetime.strptime(record_information["last_updated"], '%Y-%m-%d %H:%M:%S')
 
-            if not only_record_information and hep_submission.last_updated < oldsite_last_updated:
+            if not only_record_information and (hep_submission.last_updated < oldsite_last_updated or force):
                 try:
                     recid = self.load_submission(
                         record_information, output_location, os.path.join(output_location, "submission.yaml"),
                         update=True)
+                    print('Loaded record {}'.format(recid))
 
                     if recid is not None:
                         do_finalise(recid, publication_record=record_information,
@@ -284,6 +285,8 @@ class Migrator(object):
                     log.error(fe.message)
                     fe.print_errors()
                     remove_submission(fe.record_id)
+            elif not only_record_information:
+                print('Record on old site not more recent than on new site')
             else:
                 index_record_ids([record_information["recid"]])
 

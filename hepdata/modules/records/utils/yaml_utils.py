@@ -101,10 +101,13 @@ def split_files(file_location, output_location,
             os.chdir(output_location)
             zipdir(".", zipf)
             zipf.close()
+    except yaml.scanner.ScannerError as se:
+        return se
     except Exception as e:
         current_app.logger.exception(e)
         current_app.logger.error(
             'Error parsing {0}, {1}'.format(file_location, e.message))
+        return e
 
 
 def cleanup_data_yaml(yaml):
