@@ -83,7 +83,7 @@ def update_record(recid, ctx):
     record = get_record_by_id(recid)
     for key, value in ctx.iteritems():
         record[key] = value
-    print('Updated record {}'.format(record["recid"]))
+    record["recid"] = recid
 
     record.commit()
     db.session.commit()

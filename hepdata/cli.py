@@ -143,7 +143,7 @@ def update(inspireids, force, update_record_info_only):
     """
     Given a list of record ids, can update the contents of the whole submission, or just the record information
     via the update_record_info_only option.  By default, a record will only be updated if the last_updated date
-    is not more recent than the equivalent on the old site, but this behaviour can be overriden with --force.
+    is not more recent than the equivalent on the old site, but this behaviour can be overridden with --force.
     Usage: hepdata migrator update -i 'insXXX' -f True|False -ro True|False
 
     :param inspireids: comma separated list of inspire ids, e.g. ins222121
