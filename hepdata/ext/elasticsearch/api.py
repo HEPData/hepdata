@@ -183,13 +183,14 @@ def reindex_all(index=None, recreate=False, batch=50, start=-1, end=-1):
             min_recid = max(start, min_recid)
         if end != -1:
             max_recid = min(end, max_recid)
-
-        rec_ids = range(min_recid, max_recid)
+        print('min_recid = {}'.format(min_recid))
+        print('max_recid = {}'.format(max_recid))
 
         count = min_recid
         while count <= max_recid:
-            print("Indexing {0} to {1}".format(count, count + batch))
-            indexed_result = index_record_ids(rec_ids[count - 1:count + batch - 1], index=index)
+            print('Indexing record IDs {0} to {1}'.format(count, min(count + batch - 1, max_recid)))
+            rec_ids = range(count, min(count + batch, max_recid + 1))
+            indexed_result = index_record_ids(rec_ids, index=index)
             indexed_publications += indexed_result[CFG_PUB_TYPE]
             count += batch
 
@@ -317,6 +318,8 @@ def index_record_ids(record_ids, index=None):
     from hepdata.modules.records.utils.common import get_record_by_id
 
     docs = filter(None, [get_record_by_id(recid) for recid in record_ids])
+    existing_record_ids = [doc['recid'] for doc in docs]
+    print('Indexing existing record IDs:', existing_record_ids)
 
     to_index = []
     indexed_result = {CFG_DATA_TYPE: [], CFG_PUB_TYPE: []}

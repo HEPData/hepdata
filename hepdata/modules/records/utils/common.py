@@ -227,10 +227,10 @@ def get_record_by_id(recid):
         pid, record = resolver.resolve(recid)
         return record
     except NoResultFound:
-        current_app.logger.exception('No record found for recid {}'.format(recid))
+        current_app.logger.error('No record found for recid {}'.format(recid))
         return None
     except PIDDoesNotExistError:
-        current_app.logger.exception('The PID {0} does not exist'.format(recid))
+        current_app.logger.error('The PID {0} does not exist'.format(recid))
         return None
 
 
