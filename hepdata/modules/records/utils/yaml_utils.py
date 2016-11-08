@@ -26,13 +26,15 @@
 
 import os
 
-from flask import current_app
 from hepdata.modules.records.utils.common import zipdir
 from hepdata.modules.records.utils.data_processing_utils import str_presenter
 import shutil
 import yaml
 import zipfile
 
+import logging
+logging.basicConfig()
+log = logging.getLogger(__name__)
 
 def write_submission_yaml_block(document, submission_yaml,
                                 type="info"):
@@ -104,7 +106,7 @@ def split_files(file_location, output_location,
     except yaml.scanner.ScannerError as se:
         return se
     except Exception as e:
-        print('Error parsing {0}, {1}'.format(file_location, e.message))
+        log.error('Error parsing {0}, {1}'.format(file_location, e.message))
         return e
 
 

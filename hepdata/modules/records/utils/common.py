@@ -22,7 +22,6 @@
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
-from flask import current_app
 from invenio_pidstore.errors import PIDDoesNotExistError
 from invenio_pidstore.resolver import Resolver
 from invenio_records.api import Record
@@ -32,6 +31,10 @@ from sqlalchemy.orm.exc import NoResultFound
 from hepdata.config import CFG_PUB_TYPE
 from hepdata.ext.elasticsearch.api import get_record
 from hepdata.modules.submission.models import HEPSubmission
+
+import logging
+logging.basicConfig()
+log = logging.getLogger(__name__)
 
 FILE_TYPES = {
     "py": "Python",
@@ -227,10 +230,10 @@ def get_record_by_id(recid):
         pid, record = resolver.resolve(recid)
         return record
     except NoResultFound:
-        print('No record found for recid {}'.format(recid))
+        log.error('No record found for recid {}'.format(recid))
         return None
     except PIDDoesNotExistError:
-        print('The PID {0} does not exist'.format(recid))
+        log.error('The PID {0} does not exist'.format(recid))
         return None
 
 
