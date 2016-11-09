@@ -96,9 +96,11 @@ def get_metadata_by_alternative_id(recid):
             if len(records['hits']['hits']) > 1:
                 log.error('{} records match inspire_id ins{}'.format(len(records['hits']['hits']), recid))
             for record in records['hits']['hits']:
-                source = record.get("_source")
+                source = record.get('_source')
+                id = source['related_publication'] if 'related_publication' in source else source['recid']
+                
                 try:
-                    get_record_by_id(source['recid'])
+                    get_record_by_id(id)
                     break
                 except NoResultFound:
                     pass
