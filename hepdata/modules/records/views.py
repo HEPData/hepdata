@@ -93,12 +93,15 @@ def get_metadata_by_alternative_id(recid):
             recid = recid.replace("ins", "")
             records = get_records_matching_field('inspire_id', recid,
                                                 doc_type=CFG_PUB_TYPE)
-            print('{} records match inspire_id ins{}'.format(len(records['hits']['hits']), recid))
-            for index, record in enumerate(records['hits']['hits']):
+            if len(records['hits']['hits']) > 1:
+                log.error('{} records match inspire_id ins{}'.format(len(records['hits']['hits']), recid))
+            for record in records['hits']['hits']:
                 source = record.get("_source")
-                print('index = {}, recid = {}'.format(index, source['recid']))
-                if get_record_by_id(source['recid']):
+                try:
+                    get_record_by_id(source['recid'])
                     break
+                except NoResultFound:
+                    pass
 
             version = int(request.args.get('version', -1))
             output_format = request.args.get('format', 'html')
