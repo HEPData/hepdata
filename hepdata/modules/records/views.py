@@ -91,15 +91,20 @@ def get_metadata_by_alternative_id(recid):
     try:
         if "ins" in recid:
             recid = recid.replace("ins", "")
-            record = get_records_matching_field('inspire_id', recid,
+            records = get_records_matching_field('inspire_id', recid,
                                                 doc_type=CFG_PUB_TYPE)
-            record = record['hits']['hits'][0].get("_source")
-            version = int(request.args.get('version', -1))
+            print('{} records match inspire_id ins{}'.format(len(records['hits']['hits']), recid))
+            for index, record in enumerate(records['hits']['hits']):
+                source = record.get("_source")
+                print('index = {}, recid = {}'.format(index, source['recid']))
+                if get_record_by_id(source['recid']):
+                    break
 
+            version = int(request.args.get('version', -1))
             output_format = request.args.get('format', 'html')
             light_mode = bool(request.args.get('light', False))
 
-            return render_record(recid=record['recid'], record=record, version=version, output_format=output_format,
+            return render_record(recid=source['recid'], record=source, version=version, output_format=output_format,
                                  light_mode=light_mode)
     except Exception as e:
         log.error("Unable to find %s.", recid)

@@ -60,7 +60,7 @@ def download_resource_file(recid, resource_path):
     if file_name == "":
         file_name = "index.html"
 
-    with open(os.path.join(output_location, file_name), 'w+') as resource_file:
+    with open(os.path.join(output_location, file_name), 'wb+') as resource_file:
         try:
             resource_file.write(contents)
         except IOError as ioe:
