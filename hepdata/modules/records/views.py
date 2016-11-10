@@ -91,27 +91,18 @@ def get_metadata_by_alternative_id(recid):
     try:
         if "ins" in recid:
             recid = recid.replace("ins", "")
-            records = get_records_matching_field('inspire_id', recid,
+            record = get_records_matching_field('inspire_id', recid,
                                                 doc_type=CFG_PUB_TYPE)
-            if len(records['hits']['hits']) > 1:
-                log.error('{} records match inspire_id ins{}'.format(len(records['hits']['hits']), recid))
-            for record in records['hits']['hits']:
-                source = record.get('_source')
-                id = source['related_publication'] if 'related_publication' in source else source['recid']
-                
-                try:
-                    get_record_by_id(id)
-                    break
-                except NoResultFound:
-                    pass
-
+            record = record['hits']['hits'][0].get("_source")
             version = int(request.args.get('version', -1))
+
             output_format = request.args.get('format', 'html')
             light_mode = bool(request.args.get('light', False))
 
-            return render_record(recid=source['recid'], record=source, version=version, output_format=output_format,
+            return render_record(recid=record['recid'], record=record, version=version, output_format=output_format,
                                  light_mode=light_mode)
     except Exception as e:
+
         log.error("Unable to find %s.", recid)
         log.error(e)
         return render_template('hepdata_theme/404.html')

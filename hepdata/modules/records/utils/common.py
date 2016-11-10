@@ -32,10 +32,6 @@ from hepdata.config import CFG_PUB_TYPE
 from hepdata.ext.elasticsearch.api import get_record
 from hepdata.modules.submission.models import HEPSubmission
 
-import logging
-logging.basicConfig()
-log = logging.getLogger(__name__)
-
 FILE_TYPES = {
     "py": "Python",
     "c": "C",
@@ -230,10 +226,10 @@ def get_record_by_id(recid):
         pid, record = resolver.resolve(recid)
         return record
     except NoResultFound:
-        log.error('No record found for recid {}'.format(recid))
+        print('No record found for recid {}'.format(recid))
         return None
     except PIDDoesNotExistError:
-        log.error('The PID {0} does not exist'.format(recid))
+        print('The PID {0} does not exist'.format(recid))
         return None
 
 
