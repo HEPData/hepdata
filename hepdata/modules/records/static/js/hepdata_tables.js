@@ -84,9 +84,9 @@ HEPDATA.table_renderer = {
         // display the table
         d3.select(table_placement).html('');
         d3.select("#table_options_region").html('');
-      
+
         HEPDATA.current_table_name = table_data.name;
-        
+
         $("#table_name").html(table_data.name);
         $("#table_doi_contents").html('<a href="http://dx.doi.org/' + table_data.doi + '" target="_blank">' + table_data.doi + '</a>');
 
@@ -244,8 +244,11 @@ HEPDATA.table_renderer = {
 
       for (var x_idx in value_obj.x) {
         var td;
-        if ('high' in value_obj.x[x_idx]) {
-          td = tr.append('td').text(value_obj.x[x_idx]['low'].toFixed(2) + ' - ' + value_obj.x[x_idx]['high'].toFixed(2));
+        if ('value' in value_obj.x[x_idx] && 'low' in value_obj.x[x_idx] && 'high' in value_obj.x[x_idx]) {
+          tr.append("td").text(value_obj.x[x_idx]['value'] + ' (bin: ' +
+            value_obj.x[x_idx]['low'] + ' - ' + value_obj.x[x_idx]['high'] + ')');
+        } else if ('low' in value_obj.x[x_idx] && 'high' in value_obj.x[x_idx]) {
+          td = tr.append('td').text(value_obj.x[x_idx]['low'] + ' - ' + value_obj.x[x_idx]['high']);
         } else {
           td = tr.append("td").text(value_obj.x[x_idx]['value']);
         }
@@ -270,6 +273,8 @@ HEPDATA.table_renderer = {
 
               var plus_error = errors[error_idx]['asymerror']['plus'];
               var min_error = errors[error_idx]['asymerror']['minus'];
+              /*
+              // Remove rounding as it can give misleading results, e.g. if least significant digit of value is zero.
               if (plus_error.toString().toLowerCase().indexOf('e') == -1 && value.toString().toLowerCase().indexOf('e') == -1) {
                 var plus_error_rounded = HEPDATA.visualization.utils.round(plus_error, decimal_places);
                 if (plus_error_rounded != 0)
@@ -280,6 +285,7 @@ HEPDATA.table_renderer = {
                 if (min_error_rounded != 0)
                   min_error = min_error_rounded;
               }
+              */
 
               var plus_error_num = HEPDATA.dataprocessing.process_error_value(errors[error_idx]['asymerror']['plus'], value);
               var min_error_num = HEPDATA.dataprocessing.process_error_value(errors[error_idx]['asymerror']['minus'], value);
@@ -296,11 +302,14 @@ HEPDATA.table_renderer = {
             } else if ("symerror" in errors[error_idx]) {
               if (errors[error_idx]['symerror'] != 0) {
                 var sym_error = errors[error_idx]['symerror'];
+                /*
+                // Remove rounding as it can give misleading results, e.g. if least significant digit of value is zero.
                 if (sym_error.toString().toLowerCase().indexOf('e') == -1 && value.toString().toLowerCase().indexOf('e') == -1) {
                   var sym_error_rounded = HEPDATA.visualization.utils.round(sym_error, decimal_places);
                   if (sym_error_rounded != 0)
                     sym_error = sym_error_rounded;
                 }
+                */
                 var error = div.append('div').attr('class', err_class + ' sym');
                 error.append('div').attr('class', 'value').html('&#177;' + sym_error);
 
