@@ -504,7 +504,8 @@ def get_resources(recid, version):
 
     result['submission_items'].append(common_resources)
 
-    datasubmissions = DataSubmission.query.filter_by(publication_recid=recid, version=version).all()
+    datasubmissions = DataSubmission.query.filter_by(publication_recid=recid, version=version).\
+        order_by(DataSubmission.id.asc()).all()
 
     for datasubmission in datasubmissions:
         submission_item = {'name': datasubmission.name, 'type': 'data', 'id': datasubmission.id, 'resources': [],
