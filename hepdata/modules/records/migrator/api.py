@@ -235,6 +235,7 @@ class Migrator(object):
         :return: output location if succesful, None if not
         """
         output_location = os.path.join(current_app.config["CFG_DATADIR"], inspire_id)
+        last_updated = datetime.now()
 
         download = not os.path.exists(output_location) or (get_file_in_directory(output_location, 'yaml') is None)
 
@@ -244,7 +245,7 @@ class Migrator(object):
 
             if file_location:
                 output_location = os.path.join(current_app.config["CFG_DATADIR"], inspire_id)
-                split_files(file_location, output_location, "{0}.zip".format(output_location))
+                error, last_updated = split_files(file_location, output_location, "{0}.zip".format(output_location))
 
                 # remove temporary download file after processing
                 try:
@@ -252,25 +253,30 @@ class Migrator(object):
                 except:
                     log.info('Unable to remove {0}'.format(file_location))
             else:
-                return None
+                output_location = None
         else:
             print("File for {0} already in system...no download required.".format(inspire_id))
 
-        return output_location
+        return output_location, last_updated
 
     @shared_task
     def update_file(inspire_id, recid, force=False, only_record_information=False, send_tweet=False, convert=False):
         self = Migrator()
 
-        output_location = self.prepare_files_for_submission(inspire_id, force_retrieval=True)
+        output_location, oldsite_last_updated = self.prepare_files_for_submission(inspire_id, force_retrieval=True)
         if output_location:
             updated_record_information = self.retrieve_publication_information(inspire_id)
             record_information = update_record(recid, updated_record_information)
 
             hep_submission = HEPSubmission.query.filter_by(publication_recid=recid).first()
-            oldsite_last_updated = datetime.strptime(record_information["last_updated"], '%Y-%m-%d %H:%M:%S')
+            version_count = HEPSubmission.query.filter_by(publication_recid=recid).count()
+            print('Old site last updated {}'.format(str(oldsite_last_updated)))
+            print('New site last updated {}'.format(str(hep_submission.last_updated)))
+            print('Coordinator ID is {}, version count is {}'.format(hep_submission.coordinator, version_count))
+            allow_update = hep_submission.last_updated < oldsite_last_updated and \
+                           hep_submission.coordinator == 1 and version_count == 1
 
-            if not only_record_information and (hep_submission.last_updated < oldsite_last_updated or force):
+            if not only_record_information and (allow_update or force):
                 try:
                     recid = self.load_submission(
                         record_information, output_location, os.path.join(output_location, "submission.yaml"),
@@ -286,7 +292,7 @@ class Migrator(object):
                     fe.print_errors()
                     remove_submission(fe.record_id)
             elif not only_record_information:
-                print('Record on old site not more recent than on new site')
+                print('Not updating record {}'.format(recid))
             else:
                 index_record_ids([record_information["recid"]])
 
@@ -296,7 +302,7 @@ class Migrator(object):
     @shared_task
     def load_file(inspire_id, send_tweet=False, convert=False, base_url='http://hepdata.cedar.ac.uk/view/{0}/yaml'):
         self = Migrator(base_url)
-        output_location = self.prepare_files_for_submission(inspire_id)
+        output_location, oldsite_last_updated = self.prepare_files_for_submission(inspire_id)
         if output_location:
 
             record_information = create_record(self.retrieve_publication_information(inspire_id))

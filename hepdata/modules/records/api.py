@@ -301,15 +301,15 @@ def process_zip_archive(file, id):
     if not os.path.exists(file_save_directory):
         os.makedirs(file_save_directory)
 
-    if '.oldhepdata' not in filename:
+    if not filename.endswith('.oldhepdata'):
         file_path = os.path.join(file_save_directory, filename)
         file.save(file_path)
 
         submission_path = os.path.join(file_save_directory, remove_file_extension(filename))
-        if 'yaml' in filename:
+        if filename.endswith('.yaml'):
             # we split the singular yaml file and create a submission directory
 
-            error = split_files(file_path, submission_path)
+            error, last_updated = split_files(file_path, submission_path)
             if error:
                 return {
                     "Single YAML file splitter": [{

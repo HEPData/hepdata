@@ -31,6 +31,8 @@ from hepdata.modules.records.utils.data_processing_utils import str_presenter
 import shutil
 import yaml
 import zipfile
+from datetime import datetime
+from dateutil.parser import parse
 
 import logging
 logging.basicConfig()
@@ -56,6 +58,7 @@ def split_files(file_location, output_location,
     :param archive_location: if present will create a zipped
     representation of the split files
     """
+    last_updated = datetime.now()
     try:
         try:
             file_documents = yaml.load_all(open(file_location, 'r'), Loader=yaml.CSafeLoader)
@@ -73,6 +76,11 @@ def split_files(file_location, output_location,
                   'w') as submission_yaml:
             for document in file_documents:
                 if "record_ids" in document:
+                    if "dateupdated" in document:
+                        try:
+                            last_updated = parse(document['dateupdated'], dayfirst=True)
+                        except ValueError as ve:
+                            last_updated = datetime.now()
                     write_submission_yaml_block(
                         document, submission_yaml)
                 else:
@@ -104,10 +112,11 @@ def split_files(file_location, output_location,
             zipdir(".", zipf)
             zipf.close()
     except yaml.scanner.ScannerError as se:
-        return se
+        return se, last_updated
     except Exception as e:
         log.error('Error parsing {0}, {1}'.format(file_location, e.message))
-        return e
+        return e, last_updated
+    return None, last_updated
 
 
 def cleanup_data_yaml(yaml):
