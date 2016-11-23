@@ -32,7 +32,7 @@
                 <i class="fa fa-download"></i> Download All
                 <span class="caret"></span>
             </button>
-            {% if ctx.mode == 'sandbox' %}
+            {% if ctx.status != 'finished' %}
                 {% set download_base_url = "/download/submission/" + ctx.recid|string + "/" + ctx.version|string %}
             {% else %}
                 {% set download_base_url = "/download/submission/ins" + ctx.record.inspire_id|string + "/" + ctx.version|string %}
