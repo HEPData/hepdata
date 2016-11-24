@@ -329,8 +329,6 @@ def process_zip_archive(file, id):
         if not os.path.exists(file_path):
             os.makedirs(file_path)
 
-        if filename.endswith('.txt'):
-            filename = filename.replace(".txt", "")
         print('Saving file to {}'.format(os.path.join(file_path, filename)))
         file.save(os.path.join(file_path, filename))
 
