@@ -51,6 +51,7 @@ from hepdata.modules.stats.views import increment, get_count
 from hepdata.modules.submission.models import RecordVersionCommitMessage, DataSubmission, HEPSubmission, DataReview
 from hepdata.utils.file_extractor import extract
 from hepdata.utils.users import get_user_from_id
+from bs4 import BeautifulSoup
 
 RECORD_PLAIN_TEXT = {
     "passed": "passed review",
@@ -369,11 +370,16 @@ def check_and_convert_from_oldhepdata(input_directory, id, timestamp):
     successful = convert_oldhepdata_to_yaml(oldhepdata_found[1],
                                             converted_path)
     if not successful:
+        # Parse error message from title of HTML file, removing part of string after last colon.
+        soup = BeautifulSoup(open(converted_path), "lxml")
+        errormsg = ":".join(soup.title.string.split(":")[:-1])
+
         return {
             "Converter": [{
                 "level": "error",
                 "message": "The conversion from oldhepdata "
                            "to the YAML format has not succeeded. "
+                           "Error message from converter follows.\n" + errormsg
             }]
         }
 
