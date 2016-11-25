@@ -8,7 +8,7 @@
 
     Hi {{ name }},
 
-    <p>You have been requested to be a {{ role }} of a record in <a href="http://www.hepdata.net"
+    <p>You have been requested to be a {{ role }} of a record in <a href="{{ site_url }}"
                                                                     style="color: #9b59b6">HEPData.net</a>
         {% if title %}entitled:
 
@@ -28,6 +28,6 @@
     {% endif %}
 
     <p>
-        The <a href="http://www.hepdata.net" style="color: #9b59b6">HEPData</a> team
+        The <a href="{{ site_url }}" style="color: #9b59b6">HEPData</a> team
     </p>
 {% endblock %}

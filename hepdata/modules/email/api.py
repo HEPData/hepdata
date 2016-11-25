@@ -70,6 +70,7 @@ def send_new_review_message_email(review, message, user):
             table_message=message.message,
             article=review.publication_recid,
             title=record['title'],
+            site_url=site_url,
             link=site_url + "/record/{0}"
                 .format(review.publication_recid))
 
@@ -148,6 +149,7 @@ def notify_participants(hepsubmission, record):
         article=hepsubmission.publication_recid,
         version=hepsubmission.version,
         title=record['title'],
+        site_url=site_url,
         link=site_url + "/record/{0}"
         .format(hepsubmission.publication_recid))
 
@@ -166,6 +168,7 @@ def notify_subscribers(hepsubmission, record):
             article=hepsubmission.publication_recid,
             version=hepsubmission.version,
             title=record['title'],
+            site_url=site_url,
             link=site_url + "/record/{0}"
                 .format(hepsubmission.publication_recid))
 
