@@ -58,13 +58,13 @@ def send_email(destination, subject, message, reply_to_address=None):
         mmp_msg['From'] = reply_to_address if reply_to_address else current_app.config['MAIL_DEFAULT_SENDER']
         mmp_msg['To'] = destination
 
-        #if reply_to_address:
-        #    mmp_msg.add_header('reply-to', reply_to_address)
-
         part1 = MIMEText(message, 'html')
         mmp_msg.attach(part1)
 
-        connection.sendmail(current_app.config['MAIL_DEFAULT_SENDER'], destination, mmp_msg.as_string())
+        recipients = destination.split(',')
+        recipients.append(current_app.config['ADMIN_EMAIL'])
+
+        connection.sendmail(current_app.config['MAIL_DEFAULT_SENDER'], recipients, mmp_msg.as_string())
         connection.quit()
     except SMTPRecipientsRefused as smtp_error:
         send_error_mail(smtp_error)

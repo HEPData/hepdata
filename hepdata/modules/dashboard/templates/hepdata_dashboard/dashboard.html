@@ -57,7 +57,7 @@
                             </a>
 
                         {% endif %}
-                        {% if user_is_coordinator_or_admin %}
+                        {% if ctx.user_is_admin %}
                             <a href="/dashboard/submissions" class="btn-profile">Submissions Overview</a>
                         {% endif %}
                         <a href="/account/settings/profile"

@@ -35,6 +35,7 @@ from flask import render_template
 from hepdata.modules.submission.api import get_latest_hepsubmission, get_submission_participants_for_record
 from hepdata.modules.submission.models import DataSubmission
 from hepdata.utils.users import get_user_from_id
+from invenio_accounts.models import User
 
 logging.basicConfig()
 log = logging.getLogger(__name__)
@@ -56,6 +57,8 @@ def send_new_review_message_email(review, message, user):
     table_information = DataSubmission.query \
         .filter_by(id=review.data_recid).one()
 
+    site_url = current_app.config.get('SITE_URL', 'https://www.hepdata.net')
+
     record = get_record_by_id(review.publication_recid)
 
     for participant in submission_participants:
@@ -67,7 +70,7 @@ def send_new_review_message_email(review, message, user):
             table_message=message.message,
             article=review.publication_recid,
             title=record['title'],
-            link="http://hepdata.net/record/{0}"
+            link=site_url + "/record/{0}"
                 .format(review.publication_recid))
 
         create_send_email_task(
@@ -121,33 +124,41 @@ def send_new_upload_email(recid, user, message=None):
 
 
 def send_finalised_email(hepsubmission):
-    submission_participants = get_submission_participants_for_record(
-        hepsubmission.publication_recid)
 
     record = get_record_by_id(hepsubmission.publication_recid)
 
-    notify_participants(hepsubmission, record, submission_participants)
+    notify_participants(hepsubmission, record)
     notify_subscribers(hepsubmission, record)
 
 
-def notify_participants(hepsubmission, record, submission_participants):
-    for participant in submission_participants:
-        message_body = render_template(
-            'hepdata_theme/email/finalised.html',
-            name=participant.full_name,
-            article=hepsubmission.publication_recid,
-            version=hepsubmission.version,
-            title=record['title'],
-            link="http://hepdata.net/record/{0}"
-                .format(hepsubmission.publication_recid))
+def notify_participants(hepsubmission, record):
 
-        create_send_email_task(participant.email,
-                               '[HEPData] Submission {0} has been finalised and is publicly available' \
-                               .format(hepsubmission.publication_recid),
-                               message_body)
+    destinations = []
+    coordinator = User.query.get(hepsubmission.coordinator)
+    if coordinator.id > 1:
+        destinations.append(coordinator.email)
+    submission_participants = get_submission_participants_for_record(hepsubmission.publication_recid)
+    for participant in submission_participants:
+        destinations.append(participant.email)
+
+    site_url = current_app.config.get('SITE_URL', 'https://www.hepdata.net')
+
+    message_body = render_template(
+        'hepdata_theme/email/finalised.html',
+        article=hepsubmission.publication_recid,
+        version=hepsubmission.version,
+        title=record['title'],
+        link=site_url + "/record/{0}"
+        .format(hepsubmission.publication_recid))
+
+    create_send_email_task(','.join(destinations),
+                           '[HEPData] Submission {0} has been finalised and is publicly available' \
+                           .format(hepsubmission.publication_recid),
+                           message_body)
 
 
 def notify_subscribers(hepsubmission, record):
+    site_url = current_app.config.get('SITE_URL', 'https://www.hepdata.net')
     subscribers = get_users_subscribed_to_record(hepsubmission.publication_recid)
     for subscriber in subscribers:
         message_body = render_template(
@@ -155,7 +166,7 @@ def notify_subscribers(hepsubmission, record):
             article=hepsubmission.publication_recid,
             version=hepsubmission.version,
             title=record['title'],
-            link="http://hepdata.net/record/{0}"
+            link=site_url + "/record/{0}"
                 .format(hepsubmission.publication_recid))
 
         create_send_email_task(subscriber.get('email'),
@@ -202,8 +213,9 @@ def send_question_email(question):
         for submission_participant in submission_participants:
             destinations.append(submission_participant.email)
 
-        if submission.coordinator > 1:
-            destinations.append(submission.coordinator.email)
+        coordinator = User.query.get(submission.coordinator)
+        if coordinator.id > 1:
+            destinations.append(coordinator.email)
 
         if len(destinations) > 0:
             message_body = render_template(
