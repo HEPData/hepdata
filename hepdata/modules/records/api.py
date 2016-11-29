@@ -370,9 +370,9 @@ def check_and_convert_from_oldhepdata(input_directory, id, timestamp):
     successful = convert_oldhepdata_to_yaml(oldhepdata_found[1],
                                             converted_path)
     if not successful:
-        # Parse error message from title of HTML file, removing part of string after last colon.
+        # Parse error message from title of HTML file, removing part of string after "//".
         soup = BeautifulSoup(open(converted_path), "lxml")
-        errormsg = ":".join(soup.title.string.split(":")[:-1])
+        errormsg = soup.title.string.rsplit("//")[0]
 
         return {
             "Converter": [{
