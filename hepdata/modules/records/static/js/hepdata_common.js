@@ -39,7 +39,6 @@ HEPDATA.file_type_to_details = {
   "gitlab": {"icon": "gitlab", "description": "GitLab Repository"},
   "bitbucket": {"icon": "bitbucket", "description": "Bitbucket Repository"},
   "fastnlo": {"icon": "area-chart", "description": "fastNLO Analysis"},
-  "hepforge": {"icon": "area-chart", "description": "Rivet Analysis"},
   "rivet": {"icon": "area-chart", "description": "Rivet Analysis"},
   "madanalysis": {"icon": "area-chart", "description": "MadAnalysis5 Analysis"},
   "xfitter": {"icon": "area-chart", "description": "xFitter Analysis"},
