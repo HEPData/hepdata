@@ -141,6 +141,8 @@ def notify_participants(hepsubmission, record):
     submission_participants = get_submission_participants_for_record(hepsubmission.publication_recid)
     for participant in submission_participants:
         destinations.append(participant.email)
+    if not destinations:
+        destinations.append(current_app.config['ADMIN_EMAIL'])
 
     site_url = current_app.config.get('SITE_URL', 'https://www.hepdata.net')
 

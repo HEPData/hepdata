@@ -41,8 +41,7 @@ from hepdata.modules.records.subscribers.api import is_current_user_subscribed_t
 from hepdata.modules.records.utils.common import decode_string, find_file_in_directory, allowed_file, \
     remove_file_extension, truncate_string, get_record_contents
 from hepdata.modules.records.utils.data_processing_utils import process_ctx
-from hepdata.modules.records.utils.submission import process_submission_directory, \
-    remove_submission, create_data_review
+from hepdata.modules.records.utils.submission import process_submission_directory, create_data_review
 from hepdata.modules.submission.api import get_latest_hepsubmission
 from hepdata.modules.records.utils.users import get_coordinators_in_system, has_role
 from hepdata.modules.records.utils.workflow import update_action_for_submission_participant
@@ -241,12 +240,19 @@ def render_record(recid, record, version, output_format, light_mode=False):
     if hepdata_submission is not None:
         ctx = format_submission(recid, record, version, version_count, hepdata_submission)
         increment(recid)
-        if output_format == "json":
-            ctx = process_ctx(ctx, light_mode)
-            return jsonify(ctx)
+
+        if output_format == 'html':
+            return render_template('hepdata_records/publication_record.html', ctx=ctx)
+        elif 'table' not in request.args:
+            if output_format == 'json':
+                ctx = process_ctx(ctx, light_mode)
+                return jsonify(ctx)
+            else:
+                return redirect('/download/submission/{0}/{1}/{2}'.format(recid, version, output_format))
         else:
-            return render_template('hepdata_records/publication_record.html',
-                                   ctx=ctx)
+            file_identifier = 'ins{}'.format(hepdata_submission.inspire_id) if hepdata_submission.inspire_id else recid
+            return redirect('/download/table/{0}/{1}/{2}/{3}'.format(file_identifier, request.args['table'],
+                                                                     version, output_format))
 
     elif record is not None:  # this happens when we access an id of a data record
         # in which case, we find the related publication, and
@@ -263,12 +269,12 @@ def render_record(recid, record, version, output_format, light_mode=False):
             ctx['related_publication_id'] = publication_recid
             ctx['table_name'] = record['title']
 
-            if output_format == "json":
-                ctx = process_ctx(ctx, light_mode)
-
-                return jsonify(ctx)
-            else:
+            if output_format == 'html':
                 return render_template('hepdata_records/data_record.html', ctx=ctx)
+            else:
+                return redirect('/download/table/{0}/{1}/{2}/{3}'.format(publication_recid, ctx['table_name'],
+                                                                     hepdata_submission.version, output_format))
+
         except Exception as e:
             raise e
             return render_template('hepdata_theme/404.html')
@@ -280,7 +286,7 @@ def process_payload(recid, file, redirect_url):
     if file and (allowed_file(file.filename)):
         errors = process_zip_archive(file, recid)
         if errors:
-            remove_submission(recid)
+            #remove_submission(recid) # This line removes all versions of a submission!  Not appropriate for revisions!
             return render_template('hepdata_records/error_page.html',
                                    recid=None, errors=errors)
         else:
@@ -370,9 +376,9 @@ def check_and_convert_from_oldhepdata(input_directory, id, timestamp):
     successful = convert_oldhepdata_to_yaml(oldhepdata_found[1],
                                             converted_path)
     if not successful:
-        # Parse error message from title of HTML file, removing part of string after "//".
+        # Parse error message from title of HTML file, removing part of string after final "//".
         soup = BeautifulSoup(open(converted_path), "lxml")
-        errormsg = soup.title.string.rsplit("//")[0]
+        errormsg = soup.title.string.rsplit("//", 1)[0]
 
         return {
             "Converter": [{

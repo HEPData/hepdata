@@ -58,6 +58,9 @@ def send_email(destination, subject, message, reply_to_address=None):
         mmp_msg['From'] = reply_to_address if reply_to_address else current_app.config['MAIL_DEFAULT_SENDER']
         mmp_msg['To'] = destination
 
+        #if reply_to_address:
+        #    mmp_msg.add_header('Reply-To', reply_to_address)
+
         part1 = MIMEText(message, 'html')
         mmp_msg.attach(part1)
 

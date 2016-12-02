@@ -318,6 +318,9 @@ def execute(query):
     print("Executing query: {}".format(query))
     if query:
         result = db.session.execute(query)
+        if result.returns_rows:
+            for i, row in enumerate(result):
+                print('Row {}:'.format(i), row)
         db.session.commit()
 
 
@@ -335,7 +338,7 @@ def converter():
               help='Force re-creation of converted files.')
 def prefetch_converted_files(inspire_ids, force, targets):
     """
-    Goes through all HEPData submissions and creates their ROOT, CSV, and YODA representations.
+    Goes through all HEPData submissions and creates their YAML, ROOT, CSV, and YODA representations.
     This avoids any wait time for users when trying to retrieve converted files.
     NOTE: Does not pre-fetch all individual files, since this would be too much and probably not
     necessary

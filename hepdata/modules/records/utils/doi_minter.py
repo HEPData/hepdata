@@ -95,8 +95,8 @@ def generate_doi_for_data_submission(data_submission_id, version):
                           license=license,
                           publication_info=publication_info)
 
-    register_doi(data_submission.doi, 'http://www.hepdata.net/record/{0}?version={1}&table={2}'.format(
-        hep_submission.publication_recid, data_submission.version, data_submission.name),
+    register_doi(data_submission.doi, 'http://www.hepdata.net/record/ins{0}?version={1}&table={2}'.format(
+        publication_info['inspire_id'], data_submission.version, data_submission.name),
                  xml, publication_info['uuid'])
 
 

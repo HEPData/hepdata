@@ -62,7 +62,7 @@ def add_shortened_authors(doc):
 
 def add_analyses(doc):
     """
-    TODO: Generalise for other badges other than rivit
+    TODO: Generalise for badges other than Rivet
     :param doc:
     :return:
     """

@@ -22,8 +22,8 @@ HEPDATA.switch_table = function (listId, table_requested) {
     {"width": 200, "height": 200}
   );
 
-  var _recid = HEPDATA.current_inspire_id ? HEPDATA.current_inspire_id : HEPDATA.current_record_id;
-  var direct_link = 'http://www.hepdata.net/record/ins' + _recid
+  var _recid = HEPDATA.current_inspire_id ? 'ins' + HEPDATA.current_inspire_id : HEPDATA.current_record_id;
+  var direct_link = 'http://www.hepdata.net/record/' + _recid
     + '?version=' + HEPDATA.current_table_version + "&table="
     + $('#' + table_requested + " h4").text().replace(" ", "");
 
@@ -61,15 +61,15 @@ HEPDATA.switch_table = function (listId, table_requested) {
     '#data_table_region',
     '#data_visualization_region');
 
+  var _name = $('#' + table_requested + " h4").text().replace(" ", "");
+
   $(".data_download_link").each(function () {
     var data_format = $(this).text().toLowerCase();
-    var data_url = '/download/table/'
-      + HEPDATA.current_table_id + '/'
-      + data_format;
+    var data_url = '/download/table/' + _recid + '/' + _name + '/' + HEPDATA.current_table_version + '/' + data_format;
     $(this).attr('href', data_url);
   });
 
-  $("#json_link").attr('href', '/record/data/' + HEPDATA.current_record_id + "/" + HEPDATA.current_table_id + "/" + HEPDATA.current_table_version)
+  $("#json_link").attr('href', '/download/table/' + _recid + '/' + _name + '/' + HEPDATA.current_table_version + '/json')
 };
 
 HEPDATA.table_renderer = {

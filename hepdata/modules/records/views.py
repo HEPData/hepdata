@@ -157,13 +157,15 @@ def metadata(recid):
     """
     version = int(request.args.get('version', -1))
     serialization_format = request.args.get('format', 'html')
+    light_mode = bool(request.args.get('light', False))
 
     try:
         record = get_record_contents(recid)
     except Exception as e:
         record = None
 
-    return render_record(recid=recid, record=record, version=version, output_format=serialization_format)
+    return render_record(recid=recid, record=record, version=version, output_format=serialization_format,
+                         light_mode=light_mode)
 
 
 @blueprint.route('/count')

@@ -59,10 +59,9 @@ IMAGE_TYPES = [
 URL_PATTERNS = [
     "github",
     "bitbucket",
-    "hepforge",
+    "rivet",
     "zenodo",
     "sourceforge",
-    "sf"
 ]
 
 ALLOWED_EXTENSIONS = ['zip', "tar", "gz", "oldhepdata", "yaml"]

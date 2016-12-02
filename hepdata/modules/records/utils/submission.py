@@ -719,7 +719,7 @@ def do_finalise(recid, publication_record=None, force_finalise=False,
             send_finalised_email(hep_submission)
 
             if convert:
-                for file_format in ['csv', 'yoda', 'root']:
+                for file_format in ['yaml', 'csv', 'yoda', 'root']:
                     convert_and_store.delay(hep_submission.inspire_id, file_format, force=True)
 
             if send_tweet:

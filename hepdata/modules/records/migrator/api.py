@@ -95,6 +95,8 @@ def update_analyses():
                             _resource_url = endpoints[analysis_endpoint]["url_template"].format(analysis)
                             if not is_resource_added_to_submission(submission.publication_recid, submission.version,
                                                                    _resource_url):
+                                print('Adding {} analysis to ins{} with URL {}'
+                                      .format(analysis_endpoint, record, _resource_url))
                                 new_resource = DataResource(
                                     file_location=_resource_url,
                                     file_type=analysis_endpoint)
