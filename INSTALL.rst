@@ -1,50 +1,48 @@
 Installation
 ============
 
-First install HEPData all requirements:
+First install all requirements:
 
 .. code-block:: console
 
-   $ mkvirtualenv hepdata3
-   (hepdata3)$ pip install -r requirements.txt --pre --src ~/src/ --exists-action i
-   (hepdata3)$ pip install -e .[postgresql]
+   $ mkvirtualenv hepdata
+   $ mkdir ~/src/
+   $ cd ~/src/
+   $ git clone https://github.com/HEPData/hepdata
+   $ cd hepdata
+   (hepdata)$ pip install -e . --pre --upgrade
 
 Next, install and build assets:
 
 .. code-block:: console
 
-   (hepdata3)$ npm update && npm install --silent -g node-sass clean-css uglify-js requirejs
-   (hepdata3)$ hepdata npm
-   (hepdata3)$ cdvirtualenv var/hepdata-instance/static
-   (hepdata3)$ npm install
-   (hepdata3)$ hepdata collect -v
-   (hepdata3)$ hepdata assets build
+   (hepdata)$ npm update && npm install --silent -g node-sass clean-css uglify-js requirejs
+   (hepdata)$ ./scripts/clean_assets.sh
 
-
-Next, create the database and database tables if you haven't already done so:
-
-.. code-block:: console
-
-   (hepdata3)$ hepdata db init
-   (hepdata3)$ hepdata db create
-
-Run Celery
+Run Celery:
 
 .. code-block:: console
 
     # -B runs celery beat
-   (hepdata3)$ celery worker -E -B -A hepdata.celery
+   (hepdata)$ celery worker -E -B -A hepdata.celery
 
+Next, create the database and database tables if you haven't already done so.
+Also create a user (pass your email address as an argument to the script) and populate the database with some records:
+
+.. code-block:: console
+
+   (hepdata)$ ./scripts/initialise_db.sh your@email.com
 
 Now, start HEPData:
 
 .. code-block:: console
 
-   (hepdata3)$ hepdata --debug run
+   (hepdata)$ hepdata run --debugger --reload
+   (hepdata)$ firefox http://localhost:5000/
 
 
 Run using honcho
-============
+================
 
 Honcho will run elasticsearch, redis, celery, and the web application for you automatically.
 Just workon your virtual environment, go to the root directory of hepdata source where you can see a file called
@@ -52,5 +50,5 @@ Procfile. Then install flower if you haven't done so already, and then start hon
 
 .. code-block:: console
 
-   (hepdata3)$ pip install flower
-   (hepdata3)$ honcho start
+   (hepdata)$ pip install flower
+   (hepdata)$ honcho start

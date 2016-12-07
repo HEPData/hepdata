@@ -1,4 +1,10 @@
 #!/usr/bin/env bash
+
+if [ $# -ne 1 ]; then
+    echo "Usage: $0 your_email_address"
+    exit 1
+fi
+
 hepdata db drop
 hepdata db init
 hepdata db create
@@ -8,11 +14,11 @@ hepdata roles create coordinator
 hepdata roles create admin
 
 # Next, create the users
-hepdata users create eamonnmag@gmail.com --password -a
+hepdata users create $1 --password -a
 
 # Finally, add the roles to the user
-hepdata roles add eamonnmag@gmail.com coordinator
-hepdata roles add eamonnmag@gmail.com admin
+hepdata roles add $1 coordinator
+hepdata roles add $1 admin
 
 # now populate the database with some records. NOTE:
 # Celery needs to be running.
