@@ -64,15 +64,13 @@
                     {% endif %}
                     {% for record in ctx.results %}
                         {% set pub_index = loop.index %}
-                        <div id="publication-{{ pub_index }}" class="row ins{{ record.inspire_id|string }}"
-                             itemtype="http://schema.org/DataCatalog"
-                             itemscope>
+                        <div id="publication-{{ pub_index }}" class="row ins{{ record.inspire_id|string }}">
                             <div class="search-result-item">
                                 <div class="record-brief">
                                     <h4 class="record-header">
 
                                         {% if 'version' in record and record.version > 1 %}
-                                            <div itemprop="version" class="version">
+                                            <div class="version">
                                                 Version {{ record.version }}
                                             </div>
                                         {% endif %}
@@ -87,7 +85,7 @@
 
 
                                         {% set record_link = '/record/ins' + record.inspire_id|string %}
-                                        <a href={{ record_link }} itemprop="name">
+                                        <a href={{ record_link }}>
                                             {{ record.title }}
                                         </a>
 
@@ -105,23 +103,18 @@
                                     <div class="data-brief
                                 {% if loop.index > max_datatables %}
                                     hidden
-                                {% endif %}"
-                                         itemprop="dataset" itemscope
-                                         itemtype="http://schema.org/Dataset">
+                                {% endif %}">
 
                                         <div>
                                             <div class="pull-left"
                                                  style="width: 7%; min-width: 60px">
-                                                <a href="/record/{{ datatable.recid }}"
-                                                   itemprop="name">
+                                                <a href="/record/{{ datatable.recid }}">
                                                     {{ datatable.title }}
                                                 </a>
                                             </div>
                                             <div class="pull-left"
                                                  style="width: 90%">
-                                                <p class="truncated-record-abstract"
-                                                   itemprop="description"
-                                                   style="color: #7F8C8D">
+                                                <p class="truncated-record-abstract" style="color: #7F8C8D">
                                                     {% if datatable.abstract != '.' %}
                                                         {{ datatable.abstract }}
                                                     {% else %}
@@ -129,16 +122,6 @@
                                                     {% endif %}
                                                 </p>
                                             </div>
-                            <span class="hidden" itemscope
-                                  itemprop="distribution"
-                                  itemtype="http://schema.org/DataDownload"><span
-                                    itemprop="contentUrl">https://hepdata.net/record/data/file/{{ datatable.recid }}/yaml</span><span
-                                    itemprop="encodingFormat">yaml</span></span>
-                            <span class="hidden" itemscope
-                                  itemprop="distribution"
-                                  itemtype="http://schema.org/DataDownload"><span
-                                    itemprop="contentUrl">https://hepdata.net/record/data/file/{{ datatable.recid }}/csv</span><span
-                                    itemprop="encodingFormat">csv</span></span>
                                         </div>
                                         <div class="clearfix"></div>
 

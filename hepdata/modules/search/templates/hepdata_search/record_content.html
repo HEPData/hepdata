@@ -30,8 +30,8 @@
         </div>
 
         {% if record.inspire_id %}
-            <span itemprop="citation" itemscope itemtype="http://schema.org/CreativeWork" class="info-group">
-                        <span class="hidden" itemprop="url">http://inspirehep.net/record/{{ record.inspire_id }}</span>
+            <span class="info-group">
+                        <span class="hidden">http://inspirehep.net/record/{{ record.inspire_id }}</span>
                         <i class="fa fa-file-text-o"></i> Inspire Record
                         <a href="http://inspirehep.net/record/{{ record.inspire_id }}"
                            target="_blank"> {{ record.inspire_id }}</a>
@@ -44,13 +44,13 @@
                         <i class="fa fa-link"></i> DOI
                         <a href="{{ doi_link }}" title="DOI" target="_blank">{{ record.hepdata_doi }}</a>
                     </span>
-            <span class="hidden" itemprop="citation">{{ doi_link }}</span>
+            <span class="hidden">{{ doi_link }}</span>
         {% endif %}
 
 
 
         {% if record.abstract %}
-            <p class="truncated-record-abstract" itemprop="description" style="padding-top: 10px;">
+            <p class="truncated-record-abstract" style="padding-top: 10px;">
                 {{ record.abstract }}
             </p>
         {% endif %}

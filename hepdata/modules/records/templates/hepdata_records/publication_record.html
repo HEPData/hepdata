@@ -161,9 +161,9 @@
 
 
                         <div class="record-doi">
-                            <a itemprop="citation" href="http://dx.doi.org/{{ ctx.record.hepdata_doi }}"
+                            <a itemprop="identifier" href="http://dx.doi.org/{{ ctx.record.hepdata_doi }}"
                                target="_blank">http://dx.doi.org/{{ ctx.record.hepdata_doi }}</a>
-                            <a itemprop="citation" class="hidden" href="http://dx.doi.org/{{ ctx.record.doi }}"
+                            <a itemprop="identifier" class="hidden" href="http://dx.doi.org/{{ ctx.record.doi }}"
                                target="_blank">http://dx.doi.org/{{ ctx.record.doi }}</a>
                         </div>
 
@@ -176,27 +176,27 @@
                                         <a href="http://dx.doi.org/{{ ctx.record.doi }}"
                                            target="_blank"><span class="link">
                     <span class="link-value">DOI<span class="hidden"
-                                                      itemprop="citation">http://dx.doi.org/{{ ctx.record.doi }}</span></span></a>
+                                                      itemprop="identifier">http://dx.doi.org/{{ ctx.record.doi }}</span></span></a>
                                     </li>
                                 {% endif %}
                                 <li>
+                                    <span itemprop="identifier" class="hidden">
+                                        http://inspirehep.net/record/{{ ctx.record.inspire_id }}
+                                    </span>
+
                                     <a href="http://inspirehep.net/record/{{ ctx.record.inspire_id }}"
-                                       itemprop="citation" itemscope
-                                       itemtype="http://schema.org/CreativeWork"
                                        target="_blank"><span
                                             class="link"><span
                                             class="link-type">INSPIRE Record</span></span><span
-                                            class="hidden"
-                                            itemprop="url">http://inspirehep.net/record/{{ ctx.record.inspire_id }}</span>
+                                            class="hidden">http://inspirehep.net/record/{{ ctx.record.inspire_id }}</span>
                                     </a></li>
                                 <li>
-                                    <a href="http://hepdata.cedar.ac.uk/view/ins{{ ctx.record.inspire_id }}"
-                                       itemprop="citation" itemscope
-                                       itemtype="http://schema.org/CreativeWork"
-                                       target="_blank"><span
-                                            class="link"><span class="link-type">HepData</span></span><span
-                                            class="hidden"
-                                            itemprop="url">http://hepdata.cedar.ac.uk/view/ins{{ ctx.record.inspire_id }}</span>
+                                    <span itemprop="identifier" class="hidden">
+                                        http://hepdata.cedar.ac.uk/view/ins{{ ctx.record.inspire_id }}
+                                    </span>
+
+                                    <a href="http://hepdata.cedar.ac.uk/view/ins{{ ctx.record.inspire_id }}" target="_blank"><span
+                                            class="link"><span class="link-type">HepData</span></span>
                                     </a></li>
 
                                 {% if ctx.additional_resources or (ctx.show_review_widget or ctx.show_upload_widget or ctx.is_submission_coordinator_or_admin) %}
