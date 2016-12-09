@@ -31,6 +31,7 @@ from hepdata.config import CFG_PUB_TYPE, CFG_DATA_TYPE
 from query_builder import QueryBuilder, get_query_by_type, get_authors_query, HEPDataQueryParser
 from process_results import map_result, merge_results
 from invenio_db import db
+from hepdata.modules.submission.models import HEPSubmission
 import logging
 
 from invenio_search import current_search_client as es
@@ -318,8 +319,13 @@ def index_record_ids(record_ids, index=None):
 
     docs = filter(None, [get_record_by_id(recid) for recid in record_ids])
     for doc in docs:
-        if 'related_publication' not in doc and 'version' not in doc:
-            docs.remove(doc)
+        if 'related_publication' not in doc:
+            if 'version' not in doc:
+                docs.remove(doc)
+            else:
+                submission = HEPSubmission.query.filter_by(publication_recid=doc['recid'], version=doc['version']).one()
+                if submission.overall_status != 'finished':
+                    docs.remove(doc)
 
     existing_record_ids = [doc['recid'] for doc in docs]
     print('Indexing existing record IDs:', existing_record_ids)
