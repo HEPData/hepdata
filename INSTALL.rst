@@ -19,19 +19,19 @@ Next, install and build assets:
    (hepdata)$ npm update && npm install --silent -g node-sass clean-css uglify-js requirejs
    (hepdata)$ ./scripts/clean_assets.sh
 
-Run Celery:
+Run Celery (-B runs celery beat):
 
 .. code-block:: console
 
-    # -B runs celery beat
    (hepdata)$ celery worker -E -B -A hepdata.celery
 
 Next, create the database and database tables if you haven't already done so.
-Also create a user (pass your email address as an argument to the script) and populate the database with some records:
+Also create a user and populate the database with some records.
+Pass your email address and a password as an argument to the script:
 
 .. code-block:: console
 
-   (hepdata)$ ./scripts/initialise_db.sh your@email.com
+   (hepdata)$ ./scripts/initialise_db.sh your@email.com password
 
 Now, start HEPData:
 
