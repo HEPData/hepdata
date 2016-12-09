@@ -175,8 +175,6 @@ def reindex_all(index=None, recreate=False, batch=50, start=-1, end=-1):
     min_recid = res.min_recid
     max_recid = res.max_recid
 
-    indexed_publications = []
-
     if max_recid and min_recid:
 
         if start != -1:
@@ -189,13 +187,14 @@ def reindex_all(index=None, recreate=False, batch=50, start=-1, end=-1):
         count = min_recid
         while count <= max_recid:
             print('Indexing record IDs {0} to {1}'.format(count, min(count + batch - 1, max_recid)))
+            indexed_publications = []
             rec_ids = range(count, min(count + batch, max_recid + 1))
             indexed_result = index_record_ids(rec_ids, index=index)
             indexed_publications += indexed_result[CFG_PUB_TYPE]
             count += batch
 
-        print('######\nFinished indexing, now pushing data keywords\n######')
-        push_data_keywords(pub_ids=indexed_publications)
+            print('Finished indexing, now pushing data keywords\n######')
+            push_data_keywords(pub_ids=indexed_publications)
 
 
 @default_index

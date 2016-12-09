@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-if [ $# -ne 1 ]; then
-    echo "Usage: $0 your@email.com"
+if [ $# -ne 2 ]; then
+    echo "Usage: $0 your@email.com password"
     exit 1
 fi
 
@@ -14,7 +14,7 @@ hepdata roles create coordinator
 hepdata roles create admin
 
 # Next, create the users
-hepdata users create $1 --password -a
+hepdata users create $1 --password $2 -a
 
 # Finally, add the roles to the user
 hepdata roles add $1 coordinator
