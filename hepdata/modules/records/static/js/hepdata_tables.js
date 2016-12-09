@@ -201,7 +201,7 @@ HEPDATA.table_renderer = {
         .enter().append('li').attr('class', 'chip');
 
       var individual_kw_link = individual_kw.append('a').attr('href', function (d) {
-        return '/search?q=&' + d.key + "=" + d.value.trim().replace(/\s/g, "+");
+        return '/search?q=&' + d.key + "=" + d.value.trim().replace(/\+/g, "%2B").replace(/\s/g, "+");
       });
 
       individual_kw_link.append('i').attr('class', 'fa fa-tag').style({'margin-right': '5px', 'display': 'inline'});

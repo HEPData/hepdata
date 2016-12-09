@@ -176,7 +176,7 @@ class AdminIndexer:
         if recreate:
             self.recreate_index()
 
-        submissions = HEPSubmission.query.all()
+        submissions = HEPSubmission.query.filter(HEPSubmission.overall_status != 'sandbox').all()
 
         for submission in submissions:
             self.index_submission(submission)

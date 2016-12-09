@@ -6,10 +6,10 @@ First install all requirements:
 .. code-block:: console
 
    $ mkvirtualenv hepdata
-   $ mkdir ~/src/
-   $ cd ~/src/
-   $ git clone https://github.com/HEPData/hepdata
-   $ cd hepdata
+   (hepdata)$ mkdir ~/src/
+   (hepdata)$ cd ~/src/
+   (hepdata)$ git clone https://github.com/HEPData/hepdata
+   (hepdata)$ cd hepdata
    (hepdata)$ pip install -e . --pre --upgrade
 
 Next, install and build assets:

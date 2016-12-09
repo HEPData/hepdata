@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 if [ $# -ne 1 ]; then
-    echo "Usage: $0 your_email_address"
+    echo "Usage: $0 your@email.com"
     exit 1
 fi
 

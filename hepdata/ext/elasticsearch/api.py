@@ -318,6 +318,10 @@ def index_record_ids(record_ids, index=None):
     from hepdata.modules.records.utils.common import get_record_by_id
 
     docs = filter(None, [get_record_by_id(recid) for recid in record_ids])
+    for doc in docs:
+        if 'related_publication' not in doc and 'version' not in doc:
+            docs.remove(doc)
+
     existing_record_ids = [doc['recid'] for doc in docs]
     print('Indexing existing record IDs:', existing_record_ids)
 
