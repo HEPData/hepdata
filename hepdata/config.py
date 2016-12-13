@@ -128,7 +128,7 @@ CFG_SUBMISSIONS_TYPE = 'submission'
 CFG_ES_AUTHORS = ('authors', 'author')
 CFG_DATA_KEYWORDS = ['observables', 'reactions', 'cmenergies', 'phrases']
 
-CFG_CONVERTER_URL = 'http://146.20.68.68:5000'
+CFG_CONVERTER_URL = 'http://188.184.67.236'
 CFG_SUPPORTED_FORMATS = ['yaml', 'root', 'csv', 'yoda']
 
 CFG_TMPDIR = tempfile.gettempdir()
