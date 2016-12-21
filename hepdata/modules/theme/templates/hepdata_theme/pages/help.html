@@ -16,19 +16,20 @@
         </div>
         <div class="col-md-6">
             <p>Submissions are handled by <a href="/permissions/coordinators">Coordinators</a> for a paper or
-                project.
-                These Coordinators assign Uploaders and Reviewers to each submission.</p>
+                project.  These Coordinators assign an Uploader and a Reviewer to each submission after clicking the
+                "Submit" button when they are logged in.</p>
 
-            <p>Emails are sent to the assigned Uploaders and Reviewers with a link which when accessed gives the user
-                the
-                privileges to either upload or review a data submission.</p>
+            <p>An email is sent to the designated Uploader with a link which gives the privileges to upload
+                a data submission.  Once the Uploader thinks their submission is ready for review, they should
+                click the "Notify Reviewer" button.</p>
 
-            <p>All current submissions are available for a Coordinator, Reviewer, or Uploader to see in the
-                dashboard.</p>
+            <p>An email is then sent to the designated Reviewer with a link which
+                assigns the appropriate privileges.  The Reviewer needs to mark each table as having "Passed" review
+                before the Coordinator can "Finalise" the submission from their <a href="/dashboard">Dashboard</a>.
+                The entire submission will then be published and made searchable in HEPData.</p>
 
-            <p>Once the data is all uploaded and reviewed, the Coordinator
-                can make a final check on the submission to ensure its correctness,
-                and the entire submission will be published and searchable in HEPData.</p>
+            <p>All current submissions are available for a Coordinator, Reviewer, or Uploader to see in their
+                <a href="/dashboard">Dashboard</a>.</p>
 
             <br/>
 
@@ -58,18 +59,19 @@
                 <br/>
 
 
-                <a href="https://github.com/HEPData/hepdata-submission" class="btn btn-primary" target="_blank">Submission
-                    Format</a> <a href="https://github.com/HEPData/hepdata-submission/tree/master/examples"
-                                  class="btn btn-primary " target="_blank">Example
-                Files</a> <a href="https://github.com/HEPData/hepdata-converter" class="btn btn-primary"
-                             target="_blank">Conversion Tools</a>
+                <a href="https://github.com/HEPData/hepdata-submission" class="btn btn-primary" target="_blank">
+                    Submission Format</a>
+                <a href="https://github.com/HEPData/hepdata-submission/tree/master/examples" class="btn btn-primary"
+                   target="_blank">Example Files</a>
+                <a href="https://github.com/HEPData/hepdata-converter" class="btn btn-primary" target="_blank">
+                    Conversion Tools</a>
 
                 <br/><br/><br/><br/>
 
-                <p>You can also post an issue on GitHub if you find any problems within our submission system.</p><br/>
-                <a href="https://github.com/HEPData/hepdata-submission/issues" target="_blank" class="btn btn-primary">Ask
-                    a
-                    question...</a>
+                <p>The link below gives more documentation on the submission process and also provides some C++ code
+                to convert .txt files to .yaml files.</p><br/>
+                <a href="https://doi.org/10.5281/zenodo.197109">
+                    <img src="https://zenodo.org/badge/DOI/10.5281/zenodo.197109.svg" alt="DOI"></a>
 
             </div>
 
@@ -93,7 +95,8 @@
             <div class="col-md-6">
                 <p>The HEPData review system is completely self contained.
                     You can have discussions about each data table and its associated plot, as well as approve or reject
-                    a data table directly from the interface.</p>
+                    a data table directly from the interface, which can be accessed by clicking the speech bubble to
+                    the right of each data table (provided review privileges have been granted).</p>
 
                 <br/>
 
