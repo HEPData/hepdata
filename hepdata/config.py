@@ -251,7 +251,7 @@ SPECIAL_VALUES = ['inf', '+inf', '-inf', 'nan']
 # ANALYSES_ENDPOINTS
 ANALYSES_ENDPOINTS = {
     'rivet': {
-        'endpoint_url': 'http://rivet.hepforge.org/list_of_analyses.json',
+        'endpoint_url': 'http://rivet.hepforge.org/analyses.json',
         'url_template': 'http://rivet.hepforge.org/analyses#{0}'
     },
     'ufo': {},

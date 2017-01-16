@@ -188,6 +188,7 @@ def respond_coordinator_privileges(request_id, decision):
                     if user:
                         user.roles.append(coordinator_role)
                         db.session.add(user)
+                        send_coordinator_approved_email(coordinator_request)
                     else:
                         return render_template('hepdata_records/error_page.html',
                                                recid=None,
@@ -202,7 +203,6 @@ def respond_coordinator_privileges(request_id, decision):
 
             db.session.add(coordinator_request)
             db.session.commit()
-            send_coordinator_approved_email(coordinator_request)
 
             return redirect(url_for('hep_dashboard.dashboard'))
 

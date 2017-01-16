@@ -15,12 +15,14 @@
 
                 <div class="alert alert-info" id="alert-section">
                     This will send a request to HEPData admins who will approve your request and/or email you
-                    if further information is needed.
+                    if further information is needed.  The Experiment/Group you enter below will appear in the first
+                    column in the list of
+                    <a href="/permissions/coordinators" target="_blank"  style="color: navy">Coordinators</a>.
                 </div>
 
                 <div id="request_information">
 
-                    <label style="color: white;">Experiment/Collaboration (required)</label>
+                    <label style="color: white;">Experiment/Group (required)</label>
                     <input placeholder="Experiment/Group you wish to submit for" type="text" id="experiment"
                            name="experiment" class="form-control"/>
                     <br/>
@@ -80,7 +82,7 @@
     $(document).on('click', '#send_request', function () {
 
         if ($("#experiment").val() == '') {
-            alert("Please enter an experiment/group name/collaboration.");
+            alert("Please enter an Experiment/Group.");
             return false;
         }
 
