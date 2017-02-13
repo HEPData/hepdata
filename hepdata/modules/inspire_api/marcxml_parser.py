@@ -48,11 +48,12 @@ def get_journal_info(soup):
         year = None
 
         for code in codes:
-            value = datafield.find_all(code=code)[0].string
-            if code == 'y':
-                year = value
-                value = '(' + value + ')'
-            journal_info += value + ' '
+            if datafield.find_all(code=code):
+                value = datafield.find_all(code=code)[0].string
+                if code == 'y':
+                    year = value
+                    value = '(' + value + ')'
+                journal_info += value + ' '
 
         return journal_info[:-1], year
     except Exception:
@@ -72,9 +73,12 @@ def get_doi(soup):
     """ Parse the DOI from the xml """
     try:
         (tag, ind1, code1, code2) = marc_tags['doi']
-        datafield = soup.find_all(tag=tag, ind1=ind1)[0]
-        assert datafield.find_all(code=code2)[0].string.lower() == 'doi'
-        return datafield.find_all(code=code1)[0].string
+        datafields = soup.find_all(tag=tag, ind1=ind1)
+        for datafield in datafields:
+            if datafield.find_all(code=code1) and datafield.find_all(code=code2):
+                assert datafield.find_all(code=code2)[0].string.lower() == 'doi'
+                return datafield.find_all(code=code1)[0].string
+        return None
     except (IndexError, AssertionError):
         return None
 
