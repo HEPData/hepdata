@@ -265,16 +265,21 @@ def process_ctx(ctx, light_mode=False):
             for key_to_remove in ['review_status', 'review_flag']:
                 data_table.pop(key_to_remove, None)
 
+                if ctx['status'] == 'finished' and ctx['record']['inspire_id']:
+                    _recid = 'ins{}'.format(ctx['record']['inspire_id'])
+                else:
+                    _recid = ctx['record']['recid']
+
                 data_table['data'] = {
-                    'json': '{0}/download/table/ins{1}/{2}/json'.format(
-                        site_url, ctx['record']['inspire_id'], data_table['name'].replace(' ','')),
-                    'root': '{0}/download/table/ins{1}/{2}/root'.format(
-                        site_url, ctx['record']['inspire_id'], data_table['name'].replace(' ','')),
-                    'csv': '{0}/download/table/ins{1}/{2}/csv'.format(
-                        site_url, ctx['record']['inspire_id'], data_table['name'].replace(' ','')),
-                    'yoda': '{0}/download/table/ins{1}/{2}/yoda'.format(
-                        site_url, ctx['record']['inspire_id'], data_table['name'].replace(' ','')),
-                    'yaml': '{0}/download/table/ins{1}/{2}/yaml'.format(
-                        site_url, ctx['record']['inspire_id'], data_table['name'].replace(' ',''))}
+                    'json': '{0}/download/table/{1}/{2}/json'.format(
+                        site_url, _recid, data_table['name'].replace(' ','')),
+                    'root': '{0}/download/table/{1}/{2}/root'.format(
+                        site_url, _recid, data_table['name'].replace(' ','')),
+                    'csv': '{0}/download/table/{1}/{2}/csv'.format(
+                        site_url, _recid, data_table['name'].replace(' ','')),
+                    'yoda': '{0}/download/table/{1}/{2}/yoda'.format(
+                        site_url, _recid, data_table['name'].replace(' ','')),
+                    'yaml': '{0}/download/table/{1}/{2}/yaml'.format(
+                        site_url, _recid, data_table['name'].replace(' ',''))}
 
     return ctx

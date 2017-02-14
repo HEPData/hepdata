@@ -3,7 +3,7 @@
  */
 
 
-HEPDATA.switch_table = function (listId, table_requested) {
+HEPDATA.switch_table = function (listId, table_requested, status) {
   // clear the active class
   $(listId + '>li').each(function () {
     $(this).removeClass("active")
@@ -22,7 +22,7 @@ HEPDATA.switch_table = function (listId, table_requested) {
     {"width": 200, "height": 200}
   );
 
-  var _recid = HEPDATA.current_inspire_id ? 'ins' + HEPDATA.current_inspire_id : HEPDATA.current_record_id;
+  var _recid = HEPDATA.current_inspire_id && status == 'finished' ? 'ins' + HEPDATA.current_inspire_id : HEPDATA.current_record_id;
   var direct_link = 'http://www.hepdata.net/record/' + _recid
     + '?version=' + HEPDATA.current_table_version + "&table="
     + $('#' + table_requested + " h4").text().replace(" ", "");

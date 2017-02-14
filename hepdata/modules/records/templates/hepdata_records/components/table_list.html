@@ -109,7 +109,7 @@
 
             <li id="{{ table.id }}" itemprop="dataset" itemscope itemtype="http://schema.org/Dataset"
                 class="{{ table.processed_name }} {% if loop.index == 1 %}active{% endif %}"
-                onclick="HEPDATA.switch_table('#table-list', '{{ table.id }}')">
+                onclick="HEPDATA.switch_table('#table-list', '{{ table.id }}', '{{ ctx.status }}')">
                 <div class="content">
                     <h4 itemprop="name">{{ table.name }}</h4>
 

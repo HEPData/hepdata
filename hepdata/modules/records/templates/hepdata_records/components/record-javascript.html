@@ -55,7 +55,8 @@
                 table_to_show = table_id;
             }
 
-            HEPDATA.switch_table('#table-list', table_to_show);
+            var status = "{{ ctx.status }}";
+            HEPDATA.switch_table('#table-list', table_to_show, status);
 
             if (window.location.href.indexOf("table=") > -1) {
                 $('#table-list').animate({
