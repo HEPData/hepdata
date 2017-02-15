@@ -16,7 +16,7 @@ Next, install and build assets:
 
 .. code-block:: console
 
-   (hepdata)$ npm update && npm install --silent -g node-sass@3.8.0 clean-css uglify-js requirejs
+   (hepdata)$ npm update && npm install --silent -g node-sass@3.8.0 clean-css@3.4.24 uglify-js requirejs
    (hepdata)$ ./scripts/clean_assets.sh
 
 Run Celery (-B runs celery beat):
