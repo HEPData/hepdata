@@ -451,6 +451,7 @@ def determine_user_privileges(recid, ctx):
     ctx['show_review_widget'] = False
     ctx['show_upload_widget'] = False
     ctx['is_submission_coordinator_or_admin'] = False
+    ctx['is_admin'] = False
 
     if current_user.is_authenticated:
         user_id = current_user.get_id()
@@ -468,6 +469,7 @@ def determine_user_privileges(recid, ctx):
         user = User.query.get(current_user.get_id())
         if has_role(user, 'admin'):
             ctx['is_submission_coordinator_or_admin'] = True
+            ctx['is_admin'] = True
         else:
             matching_records = HEPSubmission.query.filter_by(
                 publication_recid=recid,

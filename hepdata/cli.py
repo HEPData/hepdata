@@ -320,7 +320,7 @@ def execute(query):
         result = db.session.execute(query)
         if result.returns_rows:
             for i, row in enumerate(result):
-                print('Row {}:'.format(i), row)
+                print('Row {}:'.format(i+1), row)
         db.session.commit()
 
 

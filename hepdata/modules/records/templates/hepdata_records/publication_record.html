@@ -274,7 +274,7 @@
                     {% endif %}
 
 
-                    {% if ctx.is_submission_coordinator_or_admin %}
+                    {% if ctx.is_admin %}
                         {% set delete_redirect_url = '/search' %}
                         {% include 'hepdata_records/components/admin-widget.html' %}
                         {% include 'hepdata_dashboard/delete-widget.html' %}
