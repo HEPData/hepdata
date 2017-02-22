@@ -151,6 +151,10 @@ HEPDATA.dataprocessing = {
             var summed_uncertainties = {"up": 0, "down": 0};
 
             if (record.x.length == 1) {
+
+              if (record.y[y_idx].value > HEPDATA.stats.max_y) HEPDATA.stats.max_y = record.y[y_idx].value;
+              if (record.y[y_idx].value < HEPDATA.stats.min_y) HEPDATA.stats.min_y = record.y[y_idx].value;
+
               for (var error_idx in record.y[y_idx].errors) {
 
                 var errors_obj = $.extend(record.y[y_idx].errors[error_idx], {});
