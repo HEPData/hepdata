@@ -114,7 +114,7 @@ def split_files(file_location, output_location,
     except yaml.scanner.ScannerError as se:
         return se, last_updated
     except Exception as e:
-        log.error('Error parsing {0}, {1}'.format(file_location, e.message))
+        log.error('Error parsing %s, %s', file_location, e.message)
         return e, last_updated
     return None, last_updated
 
