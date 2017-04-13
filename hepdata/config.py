@@ -238,6 +238,7 @@ CERN_REMOTE_APP["params"].update({
 })
 
 #: Definition of OAuth client applications.
+ORCID_REMOTE_APP['params']['access_token_url'] = 'https://orcid.org/oauth/token'
 OAUTHCLIENT_REMOTE_APPS = dict(
     orcid=ORCID_REMOTE_APP,
     cern=CERN_REMOTE_APP
