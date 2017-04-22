@@ -26,11 +26,11 @@
                        onkeyup="HEPDATA.filter_content('#coordinator-filter','#coordinators')">
             </div>
 
+            <div class="container-fluid">
+                <ul id="coordinators" class="filter-list" style="height: 38vh;">
+                    {% for coordinator in coordinators %}
+                        <li id="coordinator-{{ coordinator.recid }}" class="coordinator-item">
 
-            <ul id="coordinators" class="filter-list" style="height: 38vh;">
-                {% for coordinator in coordinators %}
-                    <li id="coordinator-{{ coordinator.recid }}" class="coordinator-item">
-                        <div class="container-fluid">
                             <div class="row">
                                 <div class="col-md-6 col-sm-7 col-xs-7">
                                     <span class="label label-info"
@@ -39,12 +39,13 @@
                                 <div class="col-md-6 col-sm-5 col-xs-5">
                                     {{ coordinator.user.email }}
                                 </div>
-                            </div>
-                        </div>
-                    </li>
 
-                {% endfor %}
-            </ul>
+                            </div>
+                        </li>
+
+                    {% endfor %}
+                </ul>
+            </div>
         </div>
 
     </div>
