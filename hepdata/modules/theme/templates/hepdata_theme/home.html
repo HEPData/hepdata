@@ -71,8 +71,8 @@
             </div>
 
             <div class="disclaimer-area">
-            <p class="disclaimer">This new site replaces
-                the old site at <a href="http://hepdata.cedar.ac.uk" target="_blank">http://hepdata.cedar.ac.uk</a>.
+                <p class="disclaimer">This new site replaces
+                    the old site at <a href="http://hepdata.cedar.ac.uk" target="_blank">http://hepdata.cedar.ac.uk</a>.
                 </p>
             </div>
 
@@ -87,9 +87,12 @@
                 </form>
 
                 <p class="search-examples">e.g.
-                    <a href='/search?q=reactions:"P P --> LQ LQ X"'><span class="text-muted">reaction</span> P P --> LQ LQ X</a>,
-                    <a href='/search?q=title:"photon collisions"'><span class="text-muted">title has</span> "photon collisions"</a>,
-                    <a href="/search?q=collaborations:LHCf OR collaborations:D0"><span class="text-muted">collaboration is</span> LHCf or D0</a>.
+                    <a href='/search?q=reactions:"P P --> LQ LQ X"'><span class="text-muted">reaction</span> P P --> LQ
+                        LQ X</a>,
+                    <a href='/search?q=title:"photon collisions"'><span class="text-muted">title has</span> "photon
+                        collisions"</a>,
+                    <a href="/search?q=collaborations:LHCf OR collaborations:D0"><span class="text-muted">collaboration is</span>
+                        LHCf or D0</a>.
                 </p>
             </div>
 
@@ -137,7 +140,7 @@
 
         {% endblock page_body %}
 
-    {% include "hepdata_search/modals/search_help.html" %}
+        {% include "hepdata_search/modals/search_help.html" %}
 
     </div>
     {%- block javascript %}
@@ -145,8 +148,6 @@
         <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
         <script type="text/javascript"
                 src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-
-
 
 
         {%- assets "hepdata_bootstrap_js" %}
@@ -163,14 +164,20 @@
 
                         var record_html_block = '<div class="latest-record col-md-4 col-xs-12" id="ins' + data[record]['inspire_id'] + '">';
 
-                        if (data[record]['collaborations'].length > 0)
+                        if (data[record]['version'] > 1) {
+                            record_html_block += ' <div class="version"><i class="fa fa-code-fork"></i> Version ' + data[record]['version'] + '</div>';
+                        }
+                        record_html_block += '<a href="/record/ins' + data[record]['inspire_id'] + '" class="title">' + data[record]['title'] + '</a><br/><br/>';
+
+
+                        if (data[record]['collaborations'].length > 0) {
+                            record_html_block += 'The ';
                             for (var collaboration in data[record]['collaborations']) {
                                 record_html_block += ' <a href="/search?q=&collaboration=' + data[record]['collaborations'][collaboration] + '" class="collaboration">' + data[record]['collaborations'] + '</a> ';
                             }
+                            record_html_block += 'collaboration' + (data[record]['collaborations'].length > 1 ? 's' : '');
+                        } else if (data[record]['first_author']) {
 
-                        record_html_block += '<a href="/record/ins' + data[record]['inspire_id'] + '" class="title">' + data[record]['title'] + '</a><br/>';
-
-                        if (data[record]['first_author']) {
                             record_html_block += '<a href="/search/?q=&author=' + data[record]['first_author']['full_name'] + '" class="author">' + data[record]['first_author']['full_name'];
                             if (data[record]['author_count'] > 1) {
                                 record_html_block += ' <i>et al</i>';
@@ -178,11 +185,13 @@
                             record_html_block += ' </a>';
                         }
 
+
+                        record_html_block += '<br/>';
+
                         record_html_block += "<br/>";
 
                         if (data[record]['journal_info'])
                             record_html_block += '<span class="journal"> ' + data[record]['journal_info'] + '</span><br/>';
-
 
                         record_html_block += "<br/>";
 

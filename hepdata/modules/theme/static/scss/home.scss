@@ -117,7 +117,7 @@
 
 #latest_records .latest-record {
   font-size: 1em;
-  text-align: center;
+  text-align: left;
   padding: 10px;
   color: $navy;
 
@@ -125,18 +125,18 @@
     font-weight: bolder;
   }
 
-  .collaboration {
-    margin-right: 5px;
-  }
-
   .title {
-    font-size: 1em;
+    font-size: 1.2em;
     font-weight: bolder;
     margin-bottom: 8px;
   }
 
   .author {
     font-weight: normal;
+  }
+
+  .version {
+    font-size: 0.8em;
   }
 
 }
@@ -146,7 +146,7 @@
   background-color: $darker-blue;
   color: white;
 
-  .version {
+  .sw-version {
     color: $navy-light;
   }
 
