@@ -102,10 +102,9 @@ def get_metadata_by_alternative_id(recid):
             return render_record(recid=record['recid'], record=record, version=version, output_format=output_format,
                                  light_mode=light_mode)
     except Exception as e:
-
         log.error("Unable to find %s.", recid)
         log.error(e)
-        return render_template('hepdata_theme/404.html')
+        return abort(404)
 
 
 @login_required

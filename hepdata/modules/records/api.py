@@ -28,7 +28,7 @@ from collections import OrderedDict
 from functools import wraps
 
 import time
-from flask import redirect, request, render_template, jsonify, current_app, Response
+from flask import redirect, request, render_template, jsonify, current_app, Response, abort
 from flask.ext.login import current_user
 from invenio_accounts.models import User
 from sqlalchemy.orm.exc import NoResultFound
@@ -273,20 +273,18 @@ def render_record(recid, record, version, output_format, light_mode=False):
                 return render_template('hepdata_records/data_record.html', ctx=ctx)
             else:
                 return redirect('/download/table/{0}/{1}/{2}/{3}'.format(publication_recid, ctx['table_name'],
-                                                                     hepdata_submission.version, output_format))
+                                                                         hepdata_submission.version, output_format))
 
         except Exception as e:
-            raise e
-            return render_template('hepdata_theme/404.html')
+            abort(404)
     else:
-        return render_template('hepdata_theme/404.html')
+        abort(404)
 
 
 def process_payload(recid, file, redirect_url):
     if file and (allowed_file(file.filename)):
         errors = process_zip_archive(file, recid)
         if errors:
-            #remove_submission(recid) # This line removes all versions of a submission!  Not appropriate for revisions!
             return render_template('hepdata_records/error_page.html',
                                    recid=None, errors=errors)
         else:
