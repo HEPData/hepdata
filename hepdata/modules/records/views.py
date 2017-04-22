@@ -185,9 +185,7 @@ def get_latest():
     :return:
     """
     n = int(request.args.get('n', 3))
-
     latest_records = get_n_latest_records(n)
-
     result = {"latest": []}
     for record in latest_records:
         record_information = record['_source']
@@ -200,11 +198,10 @@ def get_latest():
                 last_updated = parser.parse(last_updated).strftime("%Y-%m-%d")
 
             extract_journal_info(record_information)
-
             record_information['author_count'] = len(record_information.get('summary_authors', []))
             record_information['last_updated'] = last_updated
-
             result['latest'].append(record_information)
+
     return jsonify(result)
 
 
@@ -219,7 +216,6 @@ def get_table_details(recid, data_recid, version):
     """
     datasub_query = DataSubmission.query.filter_by(id=data_recid,
                                                    version=version)
-
     table_contents = {}
 
     if datasub_query.count() > 0:

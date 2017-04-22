@@ -10,11 +10,11 @@
 
     <div class="admin-section">
         <p>Change Submission Coordinator</p>
-        <select id="coordinator" style="width: 86%;">
+        <select id="coordinator" style="width: 86%; color: #2c3e50">
             {% for coordinator in ctx.coordinators %}
                 <option value="{{ coordinator.id }}"
                         {% if ctx.coordinator == coordinator.id %}selected{% endif %}>
-                    {{ coordinator.nickname }} - {{ coordinator.email }}
+                    {{ coordinator.email }}
                 </option>
             {% endfor %}
         </select>

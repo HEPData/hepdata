@@ -123,7 +123,8 @@ mapping = {
         "format": "yyyy-MM-dd'T'HH:mm:ss"
     },
     "doi": {
-        "type": "string"
+        "type": "string",
+        "index": "not_analyzed"
     },
     "hepdata_doi": {
         "type": "string"
