@@ -41,11 +41,13 @@ from hepdata.modules.records.utils.submission import unload_submission
 from hepdata.modules.records.migrator.api import load_files, update_submissions, get_all_ids_in_current_system, \
     add_or_update_records_since_date, update_analyses
 from hepdata.utils.twitter import tweet
+from hepdata.modules.records.utils.doi_minter import generate_dois_for_submission
+
 from invenio_db import db
 
 cli = create_cli(create_app=create_app)
 
-default_recids = 'ins1283842,ins1245023'
+default_recids = 'ins1283842,ins1245023,ins1311487'
 
 
 @cli.group()
@@ -320,9 +322,32 @@ def execute(query):
         result = db.session.execute(query)
         if result.returns_rows:
             for i, row in enumerate(result):
-                print('Row {}:'.format(i+1), row)
+                print('Row {}:'.format(i + 1), row)
         db.session.commit()
 
+
+@cli.group()
+def doi_utils():
+    """DOI utils"""
+
+
+@doi_utils.command()
+@click.option('--inspire_ids', '-i', type=str, help='Specify inspire ids of submissions to generate the DOIs for.')
+def register_dois(inspire_ids):
+    """
+
+    :param inspire_ids:
+    :return:
+    """
+
+    if inspire_ids:
+        inspire_ids = inspire_ids.split(',')
+
+    # find publication ids for these inspire_ids
+    # register and mint the dois for the records
+    for inspire_id in inspire_ids:
+        print('Generating for {0}'.format(inspire_id))
+        generate_dois_for_submission.delay(inspire_id)
 
 @cli.group()
 def converter():

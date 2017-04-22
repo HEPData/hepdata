@@ -143,4 +143,3 @@ def parse_person_string(person_string, separator="::"):
         return {'name': string_parts[0], 'email': string_parts[1]},
 
     return {'name': person_string, 'email': person_string}
-

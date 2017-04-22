@@ -32,6 +32,8 @@ from celery import shared_task
 from flask import current_app
 from flask.ext.celeryext import create_celery_app
 
+from hepdata.modules.records.utils.common import decode_string, encode_string
+
 
 def create_send_email_task(destination, subject, message, reply_to_address=None):
     """
@@ -54,14 +56,11 @@ def send_email(destination, subject, message, reply_to_address=None):
     try:
         connection = connect()
         mmp_msg = MIMEMultipart('alternative')
-        mmp_msg['Subject'] = subject
+        mmp_msg['Subject'] = encode_string(subject)
         mmp_msg['From'] = reply_to_address if reply_to_address else current_app.config['MAIL_DEFAULT_SENDER']
         mmp_msg['To'] = destination
 
-        #if reply_to_address:
-        #    mmp_msg.add_header('Reply-To', reply_to_address)
-
-        part1 = MIMEText(message, 'html')
+        part1 = MIMEText(encode_string(message), 'html')
         mmp_msg.attach(part1)
 
         recipients = destination.split(',')
