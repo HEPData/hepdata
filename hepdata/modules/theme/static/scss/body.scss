@@ -223,3 +223,18 @@ body::-webkit-scrollbar-thumb {
   }
 }
 
+
+.version, .analysis {
+  padding: 4px 6px;
+  border-radius: 4px;
+  font-size: .6em;
+  background-color: $navy;
+  color: white;
+  margin-right: 5px;
+  display: inline-block;
+}
+
+.version {
+  background-color: $orange;
+  color: $dark-blue;
+}

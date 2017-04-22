@@ -41,193 +41,195 @@
 
 {% block page_body %}
     <div itemtype="http://schema.org/DataCatalog" itemscope>
-    <div class="hep_breadcrumbs">
-        <div class="col-md-12 no-padding">
-            <ul>
-                <a href="/search">
-                    <li class="active"><span class="fa fa-search"></span>
-                        Browse all
+    <div class="container-fluid">
+        <div class="hep_breadcrumbs row">
+            <div class="col-md-12 no-padding">
+                <ul>
+                    <a href="/search">
+                        <li class="active"><span class="fa fa-search"></span>
+                            Browse all
+                        </li>
+                    </a>
+
+                    <a href="/record/ins{{ ctx.record.inspire_id }}">
+                        <li class="active bg-purple-2"><span
+                                class="fa fa-list"></span> View all Publication
+                            Data
+                        </li>
+                    </a>
+
+                    <li><span class="fa fa-book"></span> {{ ctx.table_name }}
+                        from {{ ctx.breadcrumb_text }}
+                        {% if ctx.record.accelerator_experiment %},
+                            conducted on the
+                            <strong>{{ ctx.record.accelerator_experiment.experiment }}</strong>
+                            experiment.{% endif %}
                     </li>
-                </a>
 
-                <a href="/record/ins{{ ctx.record.inspire_id }}">
-                    <li class="active bg-purple-2"><span
-                            class="fa fa-list"></span> View all Publication
-                        Data
-                    </li>
-                </a>
-
-                <li><span class="fa fa-book"></span> {{ ctx.table_name }}
-                    from {{ ctx.breadcrumb_text }}
-                    {% if ctx.record.accelerator_experiment %},
-                        conducted on the
-                        <strong>{{ ctx.record.accelerator_experiment.experiment }}</strong>
-                        experiment.{% endif %}
-                </li>
-
-            </ul>
+                </ul>
+            </div>
         </div>
-    </div>
 
-    <div class="clearfix"></div>
+        <div class="clearfix"></div>
 
-    <!--top level publication information-->
-    <div class="row" style="padding-top: 120px;">
-        <div class="detailed-record-info col-lg-3 col-md-3">
+        <!--top level publication information-->
+        <div class="row" style="padding-top: 120px;">
+            <div class="detailed-record-info col-lg-3 col-md-3">
 
-            <button class="btn btn-xs btn-link hide-publication-info"
-                    style="margin-bottom: 10px"><span
-                    class="fa fa-chevron-left"></span> Hide Publication
-                Information
-            </button>
+                <button class="btn btn-xs btn-link hide-publication-info"
+                        style="margin-bottom: 10px"><span
+                        class="fa fa-chevron-left"></span> Hide Publication
+                    Information
+                </button>
 
             <span id="show-publication-info"
                   class="slider-option paper-info-option"
                   style="left: -40px"><span class="fa fa-chevron-right"></span></span>
 
-            <div>
-                <div class="record-title" itemprop="name">
-                    {{ ctx.record.title }}
-                </div>
+                <div>
+                    <div class="record-title" itemprop="name">
+                        {{ ctx.record.title }}
+                    </div>
                 <span itemprop="url"
                       class="hidden">http://hepdata.net/record/{{ ctx.record.recid }}</span>
 
-                <div class="record-authors">
-                    {% for author in ctx.record.authors %}
-                        <a href="/search?author={{ author.full_name }}"
-                           itemprop="author" itemscope
-                           itemtype="http://schema.org/Person">{{ author.full_name }} <span
-                                itemprop="affiliation"
-                                itemtype="http://schema.org/Organization"
-                                itemscope class="hidden"><span
-                                itemprop="name">{{ author.affiliation }}</span></span>
-                        </a>{% if loop.index < ctx.record.authors|length %},
-                    {% endif %}
-                    {% endfor %}
-                </div>
-                <div class="record-journal">
-                    {{ ctx.record.journal_info }}
-                </div>
+                    <div class="record-authors">
+                        {% for author in ctx.record.authors %}
+                            <a href="/search?author={{ author.full_name }}"
+                               itemprop="author" itemscope
+                               itemtype="http://schema.org/Person">{{ author.full_name }} <span
+                                    itemprop="affiliation"
+                                    itemtype="http://schema.org/Organization"
+                                    itemscope class="hidden"><span
+                                    itemprop="name">{{ author.affiliation }}</span></span>
+                            </a>{% if loop.index < ctx.record.authors|length %},
+                        {% endif %}
+                        {% endfor %}
+                    </div>
+                    <div class="record-journal">
+                        {{ ctx.record.journal_info }}
+                    </div>
 
-                <div class="collaborations">
-                    {% for collaboration in ctx.record.collaborations %}
-                        <a href="/search/?collaboration={{ collaboration }}"
-                           class="collaboration">{{ collaboration }}</a>
-                    {% endfor %}
-                </div>
-                <div class="clearfix"></div>
-                <br/>
+                    <div class="collaborations">
+                        {% for collaboration in ctx.record.collaborations %}
+                            <a href="/search/?collaboration={{ collaboration }}"
+                               class="collaboration">{{ collaboration }}</a>
+                        {% endfor %}
+                    </div>
+                    <div class="clearfix"></div>
+                    <br/>
 
-                <div class="record-links">
-                    <ul>
-                        {% if ctx.record.doi %}
-                            <li>
-                                <a href="http://dx.doi.org/{{ ctx.record.doi }}"
-                                   target="_blank"><span class="link">
+                    <div class="record-links">
+                        <ul>
+                            {% if ctx.record.doi %}
+                                <li>
+                                    <a href="http://dx.doi.org/{{ ctx.record.doi }}"
+                                       target="_blank"><span class="link">
                     <span class="link-value">DOI<span class="hidden"
                                                       itemprop="citation">http://dx.doi.org/{{ ctx.record.doi }}</span></span>
                                 </span></a>
-                            </li>
-                        {% endif %}
-                        <li>
-                            <a href="http://inspirehep.net/record/{{ ctx.record.inspire_id }}"
-                               itemprop="citation" itemscope
-                               itemtype="http://schema.org/CreativeWork"
-                               target="_blank"><span
-                                    class="link"><span class="link-type">View paper in Inspire</span></span><span
-                                    class="hidden"
-                                    itemprop="url">http://inspirehep.net/record/{{ ctx.record.inspire_id }}</span>
-                            </a></li>
-                        <li>
-                            <a href="http://hepdata.cedar.ac.uk/view/ins{{ ctx.record.inspire_id }}"
-                               itemprop="citation" itemscope
-                               itemtype="http://schema.org/CreativeWork"
-                               target="_blank"><span
-                                    class="link"><span class="link-type">View old HepData</span></span><span
-                                    class="hidden"
-                                    itemprop="url">http://hepdata.cedar.ac.uk/view/ins{{ ctx.record.inspire_id }}</span>
-                            </a></li>
-
-                        {% if ctx.additional_resources %}
+                                </li>
+                            {% endif %}
                             <li>
-                                <button id="show_resources" class="link"
-                                        data-recid="{{ ctx.record.recid }}">
-                                    Additional Resources
-                                </button>
-                            </li>
-                        {% endif %}
-                    </ul>
-                </div>
-                {% if ctx.record.publication_info %}
-                    <div class="publication-details">
+                                <a href="http://inspirehep.net/record/{{ ctx.record.inspire_id }}"
+                                   itemprop="citation" itemscope
+                                   itemtype="http://schema.org/CreativeWork"
+                                   target="_blank"><span
+                                        class="link"><span class="link-type">View paper in Inspire</span></span><span
+                                        class="hidden"
+                                        itemprop="url">http://inspirehep.net/record/{{ ctx.record.inspire_id }}</span>
+                                </a></li>
+                            <li>
+                                <a href="http://hepdata.cedar.ac.uk/view/ins{{ ctx.record.inspire_id }}"
+                                   itemprop="citation" itemscope
+                                   itemtype="http://schema.org/CreativeWork"
+                                   target="_blank"><span
+                                        class="link"><span class="link-type">View old HepData</span></span><span
+                                        class="hidden"
+                                        itemprop="url">http://hepdata.cedar.ac.uk/view/ins{{ ctx.record.inspire_id }}</span>
+                                </a></li>
+
+                            {% if ctx.additional_resources %}
+                                <li>
+                                    <button id="show_resources" class="link"
+                                            data-recid="{{ ctx.record.recid }}">
+                                        Additional Resources
+                                    </button>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                    {% if ctx.record.publication_info %}
+                        <div class="publication-details">
                         <span itemprop="publisher" itemscope
                               typeof="http://schema.org/Organization"><span
                                 itemprop="name">{{ ctx.record.publication_info.journal_title }}</span> </span>,
-                        Volume {{ ctx.record.publication_info.journal_volume }},
-                        pages
-                        <span itemprop="pagination">{{ ctx.record.publication_info.page_artid }}</span>,
+                            Volume {{ ctx.record.publication_info.journal_volume }},
+                            pages
+                            <span itemprop="pagination">{{ ctx.record.publication_info.page_artid }}</span>,
                         <span itemprop="copyrightYear"
                               typeof="http://schema.org/Number">{{ ctx.record.publication_info.year }}</span>
-                    </div>
-                {% endif %}
-            </div>
-
-            <div class="clearfix"></div>
-
-            <div class="record-abstract" itemprop="description">
-                <strong>Abstract  {% if ctx.record.data_abstract %}(data
-                    abstract){% endif %}</strong><br/>
-
-                <div class="record-abstract-content scrollable">
-                    {% if ctx.record.data_abstract %}
-                        {{ ctx.record.data_abstract }}
-                    {% elif ctx.record.abstract %}
-                        {{ ctx.record.abstract.summary }}
-                    {% else %}
-                        No abstract available.
+                        </div>
                     {% endif %}
                 </div>
+
+                <div class="clearfix"></div>
+
+                <div class="record-abstract" itemprop="description">
+                    <strong>Abstract  {% if ctx.record.data_abstract %}(data
+                        abstract){% endif %}</strong><br/>
+
+                    <div class="record-abstract-content scrollable">
+                        {% if ctx.record.data_abstract %}
+                            {{ ctx.record.data_abstract }}
+                        {% elif ctx.record.abstract %}
+                            {{ ctx.record.abstract.summary }}
+                        {% else %}
+                            No abstract available.
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="clearfix"></div>
+                <br/>
             </div>
 
-            <div class="clearfix"></div>
-            <br/>
-        </div>
+            {% if ctx.show_upload_area == False %}
 
-        {% if ctx.show_upload_area == False %}
-
-            {% if ctx.show_review_widget or ctx.show_upload_widget or ctx.submission_coordinator_or_admin %}
-                {% if ctx.status != 'finished' %}
-                    {% include 'hepdata_records/components/reviewer-widget.html' %}
+                {% if ctx.show_review_widget or ctx.show_upload_widget or ctx.submission_coordinator_or_admin %}
+                    {% if ctx.status != 'finished' %}
+                        {% include 'hepdata_records/components/reviewer-widget.html' %}
+                    {% endif %}
                 {% endif %}
+
+                {% if ctx.show_upload_widget %}
+                    {% include 'hepdata_records/components/uploader-modal.html' %}
+                {% endif %}
+
             {% endif %}
 
-            {% if ctx.show_upload_widget %}
-                {% include 'hepdata_records/components/uploader-modal.html' %}
+
+            <!--if there is data, we show it. If not, we show the upload screen if the logged in user is an uploader-->
+
+            {% if ctx.data_tables|length == 0 %}
+
+                <div id="hepdata_table_detail" align="center">
+                    <div id="hepdata-loading"
+                         style="width: 200px; height: 200px; margin: 0 auto; margin-top: 5em"></div>
+                    <h4 style="color: #894B9D">No data has been uploaded
+                        for this submission yet.</h4>
+
+                    <p style="color:#95A5A5; font-size: 1.2em">Come back
+                        soon and you’ll see some plots of various
+                        attractiveness...</p>
+                </div>
+            {% else %}
+                {% set table_details_class="col-lg-9 col-md-9" %}
+                {% include 'hepdata_records/components/table_details.html' %}
+
             {% endif %}
 
-        {% endif %}
-
-
-        <!--if there is data, we show it. If not, we show the upload screen if the logged in user is an uploader-->
-
-        {% if ctx.data_tables|length == 0 %}
-
-            <div id="hepdata_table_detail" align="center">
-                <div id="hepdata-loading"
-                     style="width: 200px; height: 200px; margin: 0 auto; margin-top: 5em"></div>
-                <h4 style="color: #894B9D">No data has been uploaded
-                    for this submission yet.</h4>
-
-                <p style="color:#95A5A5; font-size: 1.2em">Come back
-                    soon and you’ll see some plots of various
-                    attractiveness...</p>
-            </div>
-        {% else %}
-            {% set table_details_class="col-lg-9 col-md-9" %}
-            {% include 'hepdata_records/components/table_details.html' %}
-
-        {% endif %}
-
+        </div>
     </div>
 
 

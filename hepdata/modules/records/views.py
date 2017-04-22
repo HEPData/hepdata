@@ -201,13 +201,7 @@ def get_latest():
 
             extract_journal_info(record_information)
 
-            authors = record_information.get('authors', [])
-            if authors is None:
-                author_count = 0
-            else:
-                author_count = len(authors)
-
-            record_information['author_count'] = author_count
+            record_information['author_count'] = len(record_information.get('summary_authors', []))
             record_information['last_updated'] = last_updated
 
             result['latest'].append(record_information)

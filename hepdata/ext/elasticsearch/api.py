@@ -453,7 +453,8 @@ def get_n_latest_records(n_latest, field="last_updated", index=None):
             field: {
                 "order": "desc"
             }
-        }]
+        }],
+        "_source": {"exclude": ["authors", "keywords"]}
     }
 
     query_result = es.search(index=index, doc_type=CFG_PUB_TYPE, body=query)
