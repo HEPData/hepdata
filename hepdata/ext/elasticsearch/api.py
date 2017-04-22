@@ -222,7 +222,7 @@ def get_record(record_id, doc_type, index=None, parent=None):
 
 
 @default_index
-def get_records_matching_field(field, id, index=None, doc_type=None):
+def get_records_matching_field(field, id, index=None, doc_type=None, source=None):
     """ Checks if a record with a given ID exists in the index """
 
     query = {
@@ -233,6 +233,9 @@ def get_records_matching_field(field, id, index=None, doc_type=None):
             }
         }
     }
+
+    if source:
+        query["_source"] = source
 
     return es.search(index=index, doc_type=doc_type, body=query)
 
