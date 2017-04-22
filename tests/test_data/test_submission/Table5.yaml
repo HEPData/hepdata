@@ -1,0 +1,33 @@
+dependent_variables:
+- header: {name: '10**6 * 1/SIG(fiducial) * D(SIG(fiducial))/DDELTA(PHI(LEPTON+,LEPTON-))'}
+  qualifiers:
+  - {name: RE, value: P P --> Z0 < LEPTON+ LEPTON- > Z0 < LEPTON+ LEPTON- > X}
+  - {name: SQRT(S), units: GeV, value: '7000.0'}
+  values:
+  - errors:
+    - {label: stat, symerror: 69000.0}
+    - {label: 'sys,detector', symerror: 6600.0}
+    - {label: 'sys,background', symerror: 10.0}
+    value: 130000.0
+  - errors:
+    - {label: stat, symerror: 100000.0}
+    - {label: 'sys,detector', symerror: 9000.0}
+    - {label: 'sys,background', symerror: 400.0}
+    value: 280000.0
+  - errors:
+    - {label: stat, symerror: 80000.0}
+    - {label: 'sys,detector', symerror: 10000.0}
+    - {label: 'sys,background', symerror: 300.0}
+    value: 260000.0
+  - errors:
+    - {label: stat, symerror: 50000.0}
+    - {label: 'sys,detector', symerror: 2000.0}
+    - {label: 'sys,background', symerror: 300.0}
+    value: 420000.0
+independent_variables:
+- header: {name: 'Leading dilepton DELTA(PHI(LEPTON+,LEPTON-))'}
+  values:
+  - {high: 0.5, low: 0.0}
+  - {high: 1.0, low: 0.5}
+  - {high: 1.7, low: 1.0}
+  - {high: 3.14159, low: 1.7}
