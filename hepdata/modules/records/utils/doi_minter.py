@@ -38,15 +38,47 @@ log = logging.getLogger(__name__)
 
 
 @shared_task
-def generate_doi_for_submission(recid, version):
-    data_submissions = DataSubmission.query.filter_by(publication_recid=recid, version=version).order_by(
-        DataSubmission.id.asc())
+def generate_dois_for_submission(*args, **kwargs):
+    """
+    Generate DOIs for all the submission components
+    :param inspire_id:
+    :param version:
+    :param kwargs:
 
-    hep_submission = HEPSubmission.query.filter_by(publication_recid=recid).first()
-    publication_info = get_record_by_id(recid)
+    :return:
+    """
+
+    hep_submissions = HEPSubmission.query.filter_by(**kwargs).all()
+
+    for hep_submission in hep_submissions:
+        data_submissions = DataSubmission.query.filter_by(publication_inspire_id=hep_submission.inspire_id,
+                                                          version=hep_submission.version).order_by(
+            DataSubmission.id.asc())
+
+        publication_info = get_record_by_id(hep_submission.publication_recid)
+
+        create_container_doi(hep_submission, data_submissions, publication_info)
+
+        for data_submission in data_submissions:
+            create_data_doi(hep_submission, data_submission, publication_info)
+
+
+
+
+def create_container_doi(hep_submission, data_submissions, publication_info):
+    """
+    Creates the payload to wrap the whole submission
+    :param hep_submission:
+    :param data_submissions:
+    :param publication_info:
+    :return:
+    """
+
+    if hep_submission.doi is None:
+        reserve_doi_for_hepsubmission(hep_submission)
+        reserve_dois_for_data_submissions(data_submissions)
 
     version_doi = hep_submission.doi + ".v{0}".format(hep_submission.version)
-
     hep_submission.data_abstract = decode_string(hep_submission.data_abstract)
     publication_info['title'] = decode_string(publication_info['title'])
     publication_info['abstract'] = decode_string(publication_info['abstract'])
@@ -56,7 +88,6 @@ def generate_doi_for_submission(recid, version):
                                overall_submission=hep_submission,
                                data_submissions=data_submissions,
                                publication_info=publication_info)
-
     version_xml = render_template('hepdata_records/formats/datacite/datacite_container_submission.xml',
                                   doi=version_doi,
                                   overall_submission=hep_submission,
@@ -71,13 +102,13 @@ def generate_doi_for_submission(recid, version):
         publication_info['inspire_id'], hep_submission.version), version_xml, publication_info['uuid'])
 
 
-@shared_task
-def generate_doi_for_data_submission(data_submission_id, version):
-    data_submission = DataSubmission.query.filter_by(id=data_submission_id).first()
-
-    hep_submission = HEPSubmission.query.filter_by(publication_recid=data_submission.publication_recid).first()
-
-    publication_info = get_record_by_id(data_submission.publication_recid)
+def create_data_doi(hep_submission, data_submission, publication_info):
+    """
+    Generate DOI record for a data record
+    :param data_submission_id:
+    :param version:
+    :return:
+    """
 
     data_file = DataResource.query.filter_by(id=data_submission.data_file).first()
 
@@ -118,15 +149,21 @@ def reserve_doi_for_hepsubmission(hepsubmission, update=False):
         create_doi(base_doi + ".v{0}".format(version))
 
 
-def reserve_dois_for_data_submissions(publication_recid, version):
+def reserve_dois_for_data_submissions(*args, **kwargs):
     """
     Reserves a DOI for a data submission and saves to the datasubmission object.
     :param data_submission: DataSubmission object representing a data table.
     :return:
     """
 
-    data_submissions = DataSubmission.query.filter_by(publication_recid=publication_recid, version=version) \
-        .order_by(DataSubmission.id.asc())
+    print(kwargs)
+
+    if kwargs.get('data_submissions'):
+        data_submissions = kwargs.get('data_submissions')
+    elif kwargs.get('publication_inspire_id') or kwargs.get('publication_recid'):
+        data_submissions = DataSubmission.query.filter_by(**kwargs).order_by(DataSubmission.id.asc())
+    else:
+        raise KeyError('No inspire_id or data_submissions parameter provided')
 
     for index, data_submission in enumerate(data_submissions):
         # using the index of the sorted submissions should do a good job of maintaining the order of the tables.
@@ -135,7 +172,7 @@ def reserve_dois_for_data_submissions(publication_recid, version):
             version += 1
 
         doi_value = "{0}/hepdata.{1}.v{2}/t{3}".format(
-            current_app.config.get('DOI_PREFIX'), publication_recid, version, (index + 1))
+            current_app.config.get('DOI_PREFIX'), data_submission.publication_recid, version, (index + 1))
 
         if data_submission.doi is None:
             create_doi(doi_value)

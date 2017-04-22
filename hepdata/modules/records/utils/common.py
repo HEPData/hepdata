@@ -119,7 +119,7 @@ def remove_file_extension(filename):
 
 def encode_string(string, type="utf-8"):
     try:
-        return string.encode(type)
+        return string.encode(type, errors='replace')
     except AttributeError:
         return string
 

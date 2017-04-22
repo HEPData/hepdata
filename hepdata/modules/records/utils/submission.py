@@ -49,7 +49,7 @@ from hepdata.modules.records.utils.common import \
     get_prefilled_dictionary, infer_file_type, encode_string, zipdir, get_record_by_id, contains_accepted_url
 from hepdata.modules.records.utils.common import get_or_create
 from hepdata.modules.records.utils.doi_minter import reserve_dois_for_data_submissions, reserve_doi_for_hepsubmission, \
-    generate_doi_for_data_submission, generate_doi_for_submission
+    generate_dois_for_submission
 from hepdata.modules.records.utils.resources import download_resource_file
 from hepdata.utils.twitter import tweet
 from hepdata_validator.data_file_validator import DataFileValidator
@@ -488,7 +488,7 @@ def process_submission_directory(basepath, submission_file_path, recid, update=F
 
             if len(errors) is 0:
                 package_submission(basepath, recid, hepsubmission)
-                reserve_dois_for_data_submissions(recid, hepsubmission.version)
+                reserve_dois_for_data_submissions(publication_recid=recid, version=hepsubmission.version)
 
                 admin_indexer = AdminIndexer()
                 admin_indexer.index_submission(hepsubmission)
@@ -701,10 +701,8 @@ def do_finalise(recid, publication_record=None, force_finalise=False,
 
             # only mint DOIs if not testing.
             if not current_app.config.get('TESTING', False) and not current_app.config.get('NO_DOI_MINTING', False):
-                for submission in submissions:
-                    generate_doi_for_data_submission.delay(submission.id, submission.version)
-                log.info("Generating DOIs for ins{0}".format(hep_submission.inspire_id))
-                generate_doi_for_submission.delay(recid, version)
+                generate_dois_for_submission.delay(inspire_id=hep_submission.inspire_id, version=version)
+                log.info("Generated DOIs for ins{0}".format(hep_submission.inspire_id))
 
             # Reindex everything.
             index_record_ids([recid] + generated_record_ids)
