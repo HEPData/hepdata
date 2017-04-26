@@ -229,7 +229,40 @@
         <div class="col-md-6 text-center" style="padding-top: 5%">
             <div class="section-header" style="width:250px"><p>HEPData Papers</p></div>
             <br/>
-            <p>Coming soon...</p>
+
+            <ul class="talks">
+
+                {% with papers = [
+                {'title': 'HEPData: a repository for high energy physics data',
+                 'authors': 'Eamonn Maguire, Lukas Heinrich, Graeme Watt',
+                 'date': 'Apr 2017',
+                 'link': 'https://inspirehep.net/record/1592380'}
+                ] %}
+
+                {% for paper in papers %}
+                <li>
+                    <div class="row-fluid">
+                        <div class="col-md-2 col-sm-2 col-xs-2">
+                            {{ paper.date }}
+                        </div>
+
+                        <div class="col-md-7 col-sm-7 col-xs-7">
+                            <p class="title">{{ paper.title }}</p>
+                            <p>{{ paper.authors }}</p>
+                        </div>
+
+                        <div class="col-md-3 col-sm-3 col-xs-3">
+                            <a href="{{ paper.link }}" class="btn btn-md btn-primary">View</a>
+                        </div>
+                    </div>
+                    <div class="clearfix"></div>
+                </li>
+                {% endfor %}
+
+            {% endwith %}
+
+            </ul>
+
         </div>
         <div class="col-md-6 text-center" style="padding-top: 5%">
             <div class="section-header" style="width:250px"><p>HEPData Presentations</p></div>
@@ -238,6 +271,16 @@
             <ul class="talks">
 
                 {% with talks = [
+                {'meeting': 'IPPP/NuSTEC topical meeting on neutrino-nucleus scattering',
+                 'location': 'IPPP, Durham',
+                 'speaker': 'Graeme Watt',
+                 'date': 'Apr 2017',
+                 'link': 'https://conference.ippp.dur.ac.uk/event/583/session/6/contribution/29/material/slides/0.pdf'},
+                {'meeting': '2nd DPHEP Collaboration Workshop',
+                 'location': 'CERN, Geneva',
+                 'speaker': 'Graeme Watt',
+                 'date': 'Mar 2017',
+                 'link': 'https://indico.cern.ch/event/588219/contributions/2507600/attachments/1426555/2188807/watt_hepdata_dphep_mar2017.pdf'},
                 {'meeting': '(Re)interpreting the results of new physics searches at the LHC',
                  'location': 'CERN, Geneva',
                  'speaker': 'Graeme Watt',
