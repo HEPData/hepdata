@@ -386,6 +386,22 @@ def parse_modifications(hepsubmission, recid, submission_info_document):
             db.session.add(participant)
 
 
+def _fix_eos_metadata(submission_file_path):
+    """Just make sure that the submission file has proper mtime.
+
+    This might be caused by non-closed file descriptors combined with eos
+    leading to strange mtime. Probably finding out the leaked file
+    descriptors and closing them is enough. It happens in the validation
+    step, with the sumbission.yaml file.
+    """
+    if not os.path.exists(submission_file_path):
+        return
+
+    with open(submission_file_path, 'a') as submission_file_descriptor:
+        submission_file_descriptor.write('')
+
+
+
 def process_submission_directory(basepath, submission_file_path, recid, update=False, *args, **kwargs):
     """
     Goes through an entire submission directory and processes the
@@ -398,6 +414,7 @@ def process_submission_directory(basepath, submission_file_path, recid, update=F
     """
     added_file_names = []
     errors = {}
+
 
     if submission_file_path is not None:
         submission_file = open(submission_file_path, 'r')
@@ -473,6 +490,8 @@ def process_submission_directory(basepath, submission_file_path, recid, update=F
                                                   yaml_document["data_file"])
 
                     if data_file_validator.validate(file_path=main_file_path):
+                        _fix_eos_metadata(
+                            submission_file_path=basepath + '/submission.yaml')
                         process_data_file(recid, hepsubmission.version, basepath, yaml_document,
                                           datasubmission, main_file_path)
                     else:
