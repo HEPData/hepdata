@@ -25,6 +25,7 @@ from __future__ import absolute_import, print_function
 
 import json
 import logging
+import subprocess
 import uuid
 import zipfile
 from datetime import datetime
@@ -401,6 +402,26 @@ def _fix_eos_metadata(submission_file_path):
         submission_file_descriptor.write('')
 
 
+def _fix_force_eos_metadata_reload(refresh_path):
+    """Force eos to refresh the file metadata cache.
+
+    :param refresh_path: path to refresh the metadata for, it can be a file or
+    directory.
+
+    We do that by running a subprocess that requests it, this fixes issues
+    where the uploaded file show empty content.
+    """
+    if os.path.isfile(refresh_path):
+        files = [refresh_path]
+        base_path = '/'
+    else:
+        base_path, _, files = next(os.walk(refresh_path))
+
+    for file_name in files:
+        full_file_name = os.path.join(base_path, file_name)
+        subprocess.check_output(['stat', full_file_name])
+
+
 
 def process_submission_directory(basepath, submission_file_path, recid, update=False, *args, **kwargs):
     """
@@ -458,6 +479,7 @@ def process_submission_directory(basepath, submission_file_path, recid, update=F
 
             reserve_doi_for_hepsubmission(hepsubmission, update)
 
+            _fix_force_eos_metadata_reload(basepath)
             for yaml_document in submission_processed:
                 if 'record_ids' in yaml_document or 'comment' in yaml_document or 'modifications' in yaml_document:
                     # comments are only present in the general submission
