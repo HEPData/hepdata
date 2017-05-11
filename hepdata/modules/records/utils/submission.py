@@ -25,6 +25,7 @@ from __future__ import absolute_import, print_function
 
 import json
 import logging
+import subprocess
 import uuid
 import zipfile
 from datetime import datetime
@@ -386,6 +387,42 @@ def parse_modifications(hepsubmission, recid, submission_info_document):
             db.session.add(participant)
 
 
+def _fix_eos_metadata(submission_file_path):
+    """Just make sure that the submission file has proper mtime.
+
+    This might be caused by non-closed file descriptors combined with eos
+    leading to strange mtime. Probably finding out the leaked file
+    descriptors and closing them is enough. It happens in the validation
+    step, with the sumbission.yaml file.
+    """
+    if not os.path.exists(submission_file_path):
+        return
+
+    with open(submission_file_path, 'a') as submission_file_descriptor:
+        submission_file_descriptor.write('')
+
+
+def _fix_force_eos_metadata_reload(refresh_path):
+    """Force eos to refresh the file metadata cache.
+
+    :param refresh_path: path to refresh the metadata for, it can be a file or
+    directory.
+
+    We do that by running a subprocess that requests it, this fixes issues
+    where the uploaded file show empty content.
+    """
+    if os.path.isfile(refresh_path):
+        files = [refresh_path]
+        base_path = '/'
+    else:
+        base_path, _, files = next(os.walk(refresh_path))
+
+    for file_name in files:
+        full_file_name = os.path.join(base_path, file_name)
+        subprocess.check_output(['stat', full_file_name])
+
+
+
 def process_submission_directory(basepath, submission_file_path, recid, update=False, *args, **kwargs):
     """
     Goes through an entire submission directory and processes the
@@ -398,6 +435,7 @@ def process_submission_directory(basepath, submission_file_path, recid, update=F
     """
     added_file_names = []
     errors = {}
+
 
     if submission_file_path is not None:
         submission_file = open(submission_file_path, 'r')
@@ -441,6 +479,7 @@ def process_submission_directory(basepath, submission_file_path, recid, update=F
 
             reserve_doi_for_hepsubmission(hepsubmission, update)
 
+            _fix_force_eos_metadata_reload(basepath)
             for yaml_document in submission_processed:
                 if 'record_ids' in yaml_document or 'comment' in yaml_document or 'modifications' in yaml_document:
                     # comments are only present in the general submission
@@ -473,6 +512,8 @@ def process_submission_directory(basepath, submission_file_path, recid, update=F
                                                   yaml_document["data_file"])
 
                     if data_file_validator.validate(file_path=main_file_path):
+                        _fix_eos_metadata(
+                            submission_file_path=basepath + '/submission.yaml')
                         process_data_file(recid, hepsubmission.version, basepath, yaml_document,
                                           datasubmission, main_file_path)
                     else:
