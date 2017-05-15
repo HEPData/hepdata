@@ -584,8 +584,10 @@ def consume_data_payload(recid):
 @login_required
 def sandbox():
     current_id = current_user.get_id()
-    submissions = HEPSubmission.query.filter_by(coordinator=current_id,
-                                                overall_status='sandbox').all()
+    submissions = HEPSubmission.query.filter_by(coordinator=current_id, overall_status='sandbox').order_by(
+        HEPSubmission.id.desc()).all()
+    for submission in submissions:
+        submission.data_abstract = decode_string(submission.data_abstract)
     return render_template('hepdata_records/sandbox.html',
                            ctx={"submissions": submissions})
 

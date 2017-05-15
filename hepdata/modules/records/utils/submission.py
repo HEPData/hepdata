@@ -481,9 +481,9 @@ def process_submission_directory(basepath, submission_file_path, recid, update=F
 
             _fix_force_eos_metadata_reload(basepath)
             for yaml_document in submission_processed:
-                if 'record_ids' in yaml_document or 'comment' in yaml_document or 'modifications' in yaml_document:
-                    # comments are only present in the general submission
-                    # information document.
+                if not yaml_document:
+                    continue
+                elif 'name' not in yaml_document:
                     process_general_submission_info(basepath, yaml_document, recid)
                 else:
                     existing_datasubmission_query = DataSubmission.query \

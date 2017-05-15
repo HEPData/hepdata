@@ -51,6 +51,10 @@ def generate_dois_for_submission(*args, **kwargs):
     hep_submissions = HEPSubmission.query.filter_by(**kwargs).all()
 
     for hep_submission in hep_submissions:
+
+        if hep_submission.overall_status != 'finished':
+            continue
+
         data_submissions = DataSubmission.query.filter_by(publication_inspire_id=hep_submission.inspire_id,
                                                           version=hep_submission.version).order_by(
             DataSubmission.id.asc())

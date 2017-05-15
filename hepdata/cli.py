@@ -332,7 +332,7 @@ def doi_utils():
 
 
 @doi_utils.command()
-@click.option('--inspire_ids', '-i', type=str, help='Specify inspire ids of submissions to generate the DOIs for.')
+@click.option('--inspire_ids', '-i', type=str, default='', help='Specify inspire ids of submissions to generate the DOIs for.')
 def register_dois(inspire_ids):
     """
 
@@ -342,12 +342,15 @@ def register_dois(inspire_ids):
 
     if inspire_ids:
         inspire_ids = inspire_ids.split(',')
+    else:
+        generate_dois_for_submission.delay()
 
     # find publication ids for these inspire_ids
     # register and mint the dois for the records
     for inspire_id in inspire_ids:
         print('Generating for {0}'.format(inspire_id))
-        generate_dois_for_submission.delay(inspire_id)
+        _cleaned_id = inspire_id.replace("ins", "")
+        generate_dois_for_submission.delay(inspire_id=_cleaned_id)
 
 @cli.group()
 def converter():

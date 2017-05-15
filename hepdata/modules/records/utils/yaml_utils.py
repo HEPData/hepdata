@@ -75,7 +75,9 @@ def split_files(file_location, output_location,
         with open(os.path.join(output_location, "submission.yaml"),
                   'w') as submission_yaml:
             for document in file_documents:
-                if "record_ids" in document:
+                if not document:
+                    continue
+                elif "name" not in document:
                     if "dateupdated" in document:
                         try:
                             last_updated = parse(document['dateupdated'], dayfirst=True)
@@ -113,6 +115,8 @@ def split_files(file_location, output_location,
             zipf.close()
     except yaml.scanner.ScannerError as se:
         return se, last_updated
+    except yaml.parser.ParserError as pe:
+        return pe, last_updated
     except Exception as e:
         log.error('Error parsing %s, %s', file_location, e.message)
         return e, last_updated

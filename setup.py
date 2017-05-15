@@ -100,13 +100,15 @@ install_requires = [
     'timestring',
     'cryptography',
     'beautifulsoup4',
-    'hepdata-validator==0.1.14',
+    'hepdata-validator==0.1.15',
     'hepdata-converter-ws-client',
     'datacite',
     'elasticsearch<3.0.0',
     'elasticsearch-dsl<2.2.0',
     'Flask-Login<0.4.0',
-    'oauthlib!=2.0.0,>=1.1.2'
+    'oauthlib!=2.0.0,>=1.1.2',
+    'twitter',
+    'psycopg2'
 ]
 
 packages = find_packages()
