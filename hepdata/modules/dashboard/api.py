@@ -29,7 +29,7 @@ from invenio_accounts.models import User
 from sqlalchemy import and_, or_
 
 from hepdata.modules.permissions.models import SubmissionParticipant
-from hepdata.modules.records.utils.common import get_record_by_id, encode_string
+from hepdata.modules.records.utils.common import get_record_by_id, decode_string
 from hepdata.modules.submission.api import get_latest_hepsubmission
 from hepdata.modules.records.utils.users import has_role
 from hepdata.modules.submission.models import HEPSubmission, DataReview
@@ -233,7 +233,7 @@ def get_pending_invitations_for_user(user):
 
         coordinator = get_user_from_id(hepsubmission.coordinator)
         result.append(
-            {'title': encode_string(publication_record['title'], 'utf-8'),
+            {'title': decode_string(publication_record['title']),
              'invitation_cookie': invite.invitation_cookie,
              'role': invite.role, 'coordinator': coordinator})
 

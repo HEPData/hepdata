@@ -187,7 +187,7 @@ def send_cookie_email(submission_participant,
             'hepdata_theme/email/invite.html',
             name=submission_participant.full_name,
             role=submission_participant.role,
-            title=encode_string(record_information['title'], 'utf-8'),
+            title=encode_string(record_information['title']),
             site_url=current_app.config.get('SITE_URL', 'https://www.hepdata.net'),
             invite_token=submission_participant.invitation_cookie,
             message=message)
