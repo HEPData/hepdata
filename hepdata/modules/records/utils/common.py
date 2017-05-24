@@ -36,6 +36,9 @@ FILE_TYPES = {
     "py": "Python",
     "c": "C",
     "cpp": "C++",
+    "cxx": "C++",
+    "cc": "C++",
+    "C": "C++",
     "sh": "Bash Shell",
     "pl": "Perl",
     "cs": "C# Source Code",
@@ -44,9 +47,10 @@ FILE_TYPES = {
     "json": "JSON",
     "yaml": "YAML",
     "txt": "Text",
-    "RTF": "Text",
+    "rtf": "Text",
     "xls": "Excel",
     "xlsx": "Excel",
+    "slha": "SUSY Les Houches Accord"
 }
 
 IMAGE_TYPES = [

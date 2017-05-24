@@ -197,14 +197,14 @@ HEPDATA.is_image = function (file_type) {
  */
 HEPDATA.map_file_type_to_property = function (file_type, property) {
 
-  file_type = file_type.toLowerCase();
-  var mapping = HEPDATA.file_type_to_details[file_type];
+  file_type_lower = file_type.toLowerCase();
+  var mapping = HEPDATA.file_type_to_details[file_type_lower];
   if (mapping) {
-    return HEPDATA.file_type_to_details[file_type][property];
+    return HEPDATA.file_type_to_details[file_type_lower][property];
   }
 
-  if (property === "icon") return 'link';
-  if (property === "description") return 'No description available';
+  if (property === "icon") return 'file-text-o';
+  if (property === "description") return file_type + ' File';
 
 };
 

@@ -278,11 +278,13 @@ def process_general_submission_info(basepath, submission_info_document, recid):
 
     if 'comment' in submission_info_document \
         or 'modifications' in submission_info_document \
-        or 'record_ids' in submission_info_document:
+        or 'record_ids' in submission_info_document \
+        or 'additional_resources' in submission_info_document:
 
         hepsubmission = get_latest_hepsubmission(publication_recid=recid)
-        hepsubmission.data_abstract = encode_string(
-            submission_info_document['comment'])
+
+        if "comment" in submission_info_document:
+            hepsubmission.data_abstract = encode_string(submission_info_document['comment'])
 
         if "dateupdated" in submission_info_document:
             try:
