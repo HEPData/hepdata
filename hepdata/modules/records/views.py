@@ -33,6 +33,10 @@ from flask.ext.login import login_required
 from flask import Blueprint, send_file, abort
 import jsonpatch
 import yaml
+try:
+    from yaml import CSafeLoader as Loader
+except ImportError: #pragma: no cover
+    from yaml import SafeLoader as Loader #pragma: no cover
 from invenio_db import db
 
 from hepdata.config import CFG_DATA_TYPE, CFG_PUB_TYPE
@@ -227,10 +231,7 @@ def get_table_details(recid, data_recid, version):
             data_record = data_query.one()
             file_location = data_record.file_location
 
-            try:
-                table_contents = yaml.load(file(file_location), Loader=yaml.CSafeLoader)
-            except:
-                table_contents = yaml.load(file(file_location))
+            table_contents = yaml.load(file(file_location), Loader=Loader)
 
             table_contents["name"] = datasub_record.name
             table_contents["title"] = datasub_record.description

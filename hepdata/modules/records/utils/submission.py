@@ -62,6 +62,10 @@ from invenio_records import Record
 import os
 from sqlalchemy.orm.exc import NoResultFound
 import yaml
+try:
+    from yaml import CSafeLoader as Loader
+except ImportError: #pragma: no cover
+    from yaml import SafeLoader as Loader #pragma: no cover
 from urllib2 import URLError
 
 logging.basicConfig()
@@ -449,10 +453,7 @@ def process_submission_directory(basepath, submission_file_path, recid, update=F
         data_file_validator = DataFileValidator()
 
         if is_valid_submission_file:
-            try:
-                submission_processed = yaml.load_all(submission_file, Loader=yaml.CSafeLoader)
-            except:
-                submission_processed = yaml.safe_load_all(submission_file)
+            submission_processed = yaml.load_all(submission_file, Loader=Loader)
 
             # process file, extracting contents, and linking
             # the data record with the parent publication

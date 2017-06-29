@@ -30,6 +30,10 @@ from hepdata.modules.records.utils.common import zipdir
 from hepdata.modules.records.utils.data_processing_utils import str_presenter
 import shutil
 import yaml
+try:
+    from yaml import CSafeLoader as Loader, CSafeDumper as Dumper
+except ImportError: #pragma: no cover
+    from yaml import SafeLoader as Loader, SafeDumper as Dumper #pragma: no cover
 import zipfile
 from datetime import datetime
 from dateutil.parser import parse
@@ -42,11 +46,8 @@ def write_submission_yaml_block(document, submission_yaml,
                                 type="info"):
     submission_yaml.write("---\n")
     cleanup_yaml(document, type)
-    yaml.add_representer(str, str_presenter)
-    try:
-        yaml.dump(document, submission_yaml, allow_unicode=True, dumper=yaml.CDumper)
-    except:
-        yaml.dump(document, submission_yaml, allow_unicode=True)
+    Dumper.add_representer(str, str_presenter)
+    yaml.dump(document, submission_yaml, allow_unicode=True, Dumper=Dumper)
     submission_yaml.write("\n")
 
 
@@ -60,10 +61,7 @@ def split_files(file_location, output_location,
     """
     last_updated = datetime.now()
     try:
-        try:
-            file_documents = yaml.load_all(open(file_location, 'r'), Loader=yaml.CSafeLoader)
-        except:
-            file_documents = yaml.safe_load_all(open(file_location, 'r'))
+        file_documents = yaml.load_all(open(file_location, 'r'), Loader=Loader)
 
         # make a submission directory where all the files will be stored.
         # delete a directory in the event that it exists.
@@ -91,7 +89,7 @@ def split_files(file_location, output_location,
 
                     with open(os.path.join(output_location, file_name),
                               'w') as data_file:
-                        yaml.add_representer(str, str_presenter)
+                        Dumper.add_representer(str, str_presenter)
                         yaml.dump(
                             {"independent_variables":
                                 cleanup_data_yaml(
@@ -99,7 +97,7 @@ def split_files(file_location, output_location,
                                 "dependent_variables":
                                     cleanup_data_yaml(
                                         document["dependent_variables"])},
-                            data_file, allow_unicode=True)
+                            data_file, allow_unicode=True, Dumper=Dumper)
 
                     write_submission_yaml_block(document,
                                                 submission_yaml,

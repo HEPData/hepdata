@@ -30,7 +30,7 @@ from flask import current_app
 from hepdata.modules.permissions.models import SubmissionParticipant
 from hepdata.modules.submission.api import get_latest_hepsubmission
 
-FORMATS = ['json', 'root', 'yaml', 'csv']
+FORMATS = ['json', 'root', 'yaml', 'csv', 'yoda']
 
 logging.basicConfig()
 log = logging.getLogger(__name__)

@@ -192,8 +192,8 @@ def download_submission(submission, file_format, offline=False, force=False):
     output_path = os.path.join(converted_dir, output_file)
 
     # If the file is already available in the dir, send it back
-    # unless we are forcing recreation of the file.
-    if os.path.exists(output_path) and not force:
+    # unless we are forcing recreation of the file or the submission is not finished.
+    if os.path.exists(output_path) and not force and submission.overall_status == 'finished':
         if not offline:
             return send_file(
                 output_path,
