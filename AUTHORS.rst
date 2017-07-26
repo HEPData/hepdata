@@ -36,7 +36,3 @@ Authors
 * **Developer:**
 
   * Jan Stypka
-
-* **Principle Investigator:**
-
-  * Frank Krauss
