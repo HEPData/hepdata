@@ -428,6 +428,17 @@ def _fix_force_eos_metadata_reload(refresh_path):
         subprocess.check_output(['stat', full_file_name])
 
 
+def _eos_fix_read_data(data_file_path):
+    """This gets rid of the issues where reading the file returns empty
+    string because eos has not yet flushed the file contents.
+    """
+    data = yaml.load(open(data_file_path, 'r'), Loader=Loader)
+    if data is None:
+        # force eos to refresh local cache
+        os.stat(data_file_path)
+        data = yaml.load(open(data_file_path, 'r'), Loader=Loader)
+    return data
+
 
 def process_submission_directory(basepath, submission_file_path, recid, update=False, *args, **kwargs):
     """
@@ -514,16 +525,28 @@ def process_submission_directory(basepath, submission_file_path, recid, update=F
                     main_file_path = os.path.join(basepath,
                                                   yaml_document["data_file"])
 
-                    if data_file_validator.validate(file_path=main_file_path):
-                        _fix_eos_metadata(
-                            submission_file_path=basepath + '/submission.yaml')
-                        process_data_file(recid, hepsubmission.version, basepath, yaml_document,
-                                          datasubmission, main_file_path)
-                    else:
-                        errors = process_validation_errors_for_display(
-                            data_file_validator.get_messages())
+                    data = _eos_fix_read_data(main_file_path)
 
-                        data_file_validator.clear_messages()
+                    if data is None:
+
+                        stat = os.stat(main_file_path)
+                        errors[yaml_document["data_file"]] = \
+                            [{"level": "error", "message": "Failed to load data file {0}, stat of the file {1}."
+                                                               .format(main_file_path, stat) +
+                                                           "  Please check the original file is not empty."}]
+
+                    else:
+
+                        if data_file_validator.validate(file_path=main_file_path, data=data):
+                            _fix_eos_metadata(
+                                submission_file_path=basepath + '/submission.yaml')
+                            process_data_file(recid, hepsubmission.version, basepath, yaml_document,
+                                              datasubmission, main_file_path)
+                        else:
+                            errors = process_validation_errors_for_display(
+                                data_file_validator.get_messages())
+
+                            data_file_validator.clear_messages()
 
             cleanup_submission(recid, hepsubmission.version,
                                added_file_names)
