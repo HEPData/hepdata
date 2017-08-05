@@ -29,7 +29,6 @@ import subprocess
 import uuid
 import zipfile
 from datetime import datetime
-from time import sleep
 from dateutil.parser import parse
 
 from elasticsearch import NotFoundError, ConnectionTimeout
@@ -433,9 +432,10 @@ def _eos_fix_read_data(data_file_path):
     """This gets rid of the issues where reading the file returns empty
     string because eos has not yet flushed the file contents.
     """
-    data = yaml.load(open(data_file_path, 'r'), Loader=Loader)
+    data_file = open(data_file_path, 'r')
+    data = yaml.load(data_file, Loader=Loader)
     if data is None:
-        sleep(1) # wait a second
+        data_file.close()
         # force eos to refresh local cache
         os.stat(data_file_path)
         data = yaml.load(open(data_file_path, 'r'), Loader=Loader)
