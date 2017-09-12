@@ -527,28 +527,34 @@ def process_submission_directory(basepath, submission_file_path, recid, update=F
                     main_file_path = os.path.join(basepath,
                                                   yaml_document["data_file"])
 
-                    data = _eos_fix_read_data(main_file_path)
-
-                    if data is None:
-
-                        stat = os.stat(main_file_path)
+                    try:
+                        data = _eos_fix_read_data(main_file_path)
+                    except Exception as e:
                         errors[yaml_document["data_file"]] = \
-                            [{"level": "error", "message": "Failed to load data file {0}, stat of the file {1}."
-                                                               .format(main_file_path, stat) +
-                                                           "  Please check the original file is not empty."}]
+                            [{"level": "error", "message": "There was a problem parsing the file.\n" + e.__str__()}]
 
-                    else:
+                    if not yaml_document["data_file"] in errors:
 
-                        if data_file_validator.validate(file_path=main_file_path, data=data):
-                            _fix_eos_metadata(
-                                submission_file_path=basepath + '/submission.yaml')
-                            process_data_file(recid, hepsubmission.version, basepath, yaml_document,
-                                              datasubmission, main_file_path)
+                        if data is None:
+
+                            stat = os.stat(main_file_path)
+                            errors[yaml_document["data_file"]] = \
+                                [{"level": "error", "message": "Failed to load data file {0}, stat of the file {1}."
+                                                                   .format(main_file_path, stat) +
+                                                               "  Please check the original file is not empty."}]
+
                         else:
-                            errors = process_validation_errors_for_display(
-                                data_file_validator.get_messages())
 
-                            data_file_validator.clear_messages()
+                            if data_file_validator.validate(file_path=main_file_path, data=data):
+                                _fix_eos_metadata(
+                                    submission_file_path=basepath + '/submission.yaml')
+                                process_data_file(recid, hepsubmission.version, basepath, yaml_document,
+                                                  datasubmission, main_file_path)
+                            else:
+                                errors = process_validation_errors_for_display(
+                                    data_file_validator.get_messages())
+
+                                data_file_validator.clear_messages()
 
             cleanup_submission(recid, hepsubmission.version,
                                added_file_names)
