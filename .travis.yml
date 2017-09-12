@@ -56,7 +56,7 @@ install:
   - "travis_retry hepdata utils reindex -rc True"
   - "travis_retry npm update && npm install --silent -g node-sass@3.8.0 clean-css@3.4.24 uglify-js requirejs"
   - "hepdata npm"
-  - "cd /home/travis/virtualenv/python2.7.9/var/hepdata-instance/static/"
+  - "cd /home/travis/virtualenv/python2.7.13/var/hepdata-instance/static/"
   - "travis_retry npm install"
   - "hepdata collect -v"
   - "hepdata assets build"
