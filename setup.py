@@ -108,7 +108,8 @@ install_requires = [
     'Flask-Login<0.4.0',
     'oauthlib!=2.0.0,>=1.1.2',
     'twitter',
-    'psycopg2'
+    'psycopg2',
+    'simplekv<0.11',
 ]
 
 packages = find_packages()
