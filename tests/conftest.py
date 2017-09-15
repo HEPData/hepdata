@@ -26,10 +26,8 @@
 
 from __future__ import absolute_import, print_function
 
-import functools
 import os
 
-import flask_login
 from invenio_accounts.models import Role, User
 from invenio_db import db
 import pytest
@@ -80,8 +78,9 @@ def app(request):
             db.session.add(coordinator_role)
             db.session.add(user)
             db.session.commit()
-    ctx.pop()
-    return app
+
+        yield app
+        ctx.pop()
 
 
 @pytest.fixture()
@@ -100,7 +99,8 @@ def load_default_data(app):
 
 @pytest.fixture()
 def client(app):
-    return app.test_client()
+    with app.test_client() as client:
+        yield client
 
 
 @pytest.fixture()
