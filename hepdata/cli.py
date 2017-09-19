@@ -41,6 +41,7 @@ from hepdata.modules.records.utils.submission import unload_submission
 from hepdata.modules.records.migrator.api import load_files, update_submissions, get_all_ids_in_current_system, \
     add_or_update_records_since_date, update_analyses
 from hepdata.utils.twitter import tweet
+from hepdata.modules.email.api import send_finalised_email
 from hepdata.modules.records.utils.doi_minter import generate_dois_for_submission
 
 from invenio_db import db
@@ -305,6 +306,25 @@ def send_tweet(inspireids):
             tweet(record['title'], record['collaborations'], url, record['version'])
         else:
             print("No records found for Inspire ID {}".format(inspireid))
+
+
+@utils.command()
+@with_appcontext
+@click.option('--inspireids', '-i', type=str, help='Specific Inspire IDs of records to send finalised email for.')
+def send_email(inspireids):
+    """
+    Send finalised email announcing that records have been added or revised (in case it wasn't done automatically).
+
+    :param inspireids: list of record IDs to send finalised email for
+    """
+    processed_inspireids = parse_inspireids_from_string(inspireids)
+    for inspireid in processed_inspireids:
+        _cleaned_id = inspireid.replace("ins", "")
+        submission = get_latest_hepsubmission(inspire_id=_cleaned_id)
+        if submission:
+            send_finalised_email(submission)
+        else:
+            print("No records found for Inspire ID {}".format(inspireid))\
 
 
 @utils.command()
