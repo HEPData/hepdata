@@ -32,7 +32,7 @@ from celery import shared_task
 from flask import current_app
 from flask.ext.celeryext import create_celery_app
 
-from hepdata.modules.records.utils.common import decode_string, encode_string
+from hepdata.modules.records.utils.common import encode_string
 
 
 def create_send_email_task(destination, subject, message, reply_to_address=None):

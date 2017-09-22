@@ -35,11 +35,11 @@
     <version>{{ data_submission.version }}</version>
     <descriptions>
         <description descriptionType="Abstract">
-            {{ overall_submission.data_abstract }}
+            {{ overall_submission.data_abstract.decode('utf-8') }}
         </description>
 
         <description descriptionType="Other">
-            {{ table_description }}
+            {{ table_description.decode('utf-8') }}
         </description>
     </descriptions>
 

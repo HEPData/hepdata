@@ -30,7 +30,7 @@ from invenio_pidstore.providers.datacite import DataCiteProvider
 from sqlalchemy.exc import IntegrityError
 
 from hepdata.modules.submission.models import DataSubmission, HEPSubmission, DataResource, License
-from hepdata.modules.records.utils.common import get_record_by_id, decode_string
+from hepdata.modules.records.utils.common import get_record_by_id
 import logging
 
 logging.basicConfig()
@@ -83,15 +83,13 @@ def create_container_doi(hep_submission, data_submissions, publication_info):
         reserve_dois_for_data_submissions(data_submissions)
 
     version_doi = hep_submission.doi + ".v{0}".format(hep_submission.version)
-    hep_submission.data_abstract = decode_string(hep_submission.data_abstract)
-    publication_info['title'] = decode_string(publication_info['title'])
-    publication_info['abstract'] = decode_string(publication_info['abstract'])
 
     base_xml = render_template('hepdata_records/formats/datacite/datacite_container_submission.xml',
                                doi=hep_submission.doi,
                                overall_submission=hep_submission,
                                data_submissions=data_submissions,
                                publication_info=publication_info)
+
     version_xml = render_template('hepdata_records/formats/datacite/datacite_container_submission.xml',
                                   doi=version_doi,
                                   overall_submission=hep_submission,
@@ -123,8 +121,8 @@ def create_data_doi(hep_submission, data_submission, publication_info):
 
     xml = render_template('hepdata_records/formats/datacite/datacite_data_record.xml',
                           doi=data_submission.doi,
-                          table_name=decode_string(data_submission.name),
-                          table_description=decode_string(data_submission.description),
+                          table_name=data_submission.name,
+                          table_description=data_submission.description,
                           overall_submission=hep_submission,
                           data_submission=data_submission,
                           license=license,

@@ -36,7 +36,7 @@ from hepdata.modules.submission.models import HEPSubmission
 from hepdata.modules.submission.api import get_latest_hepsubmission
 from .factory import create_app
 from hepdata.config import CFG_PUB_TYPE
-from hepdata.ext.elasticsearch.api import reindex_all, get_records_matching_field
+from hepdata.ext.elasticsearch.api import reindex_all, get_records_matching_field, index_record_ids
 from hepdata.modules.records.utils.submission import unload_submission
 from hepdata.modules.records.migrator.api import load_files, update_submissions, get_all_ids_in_current_system, \
     add_or_update_records_since_date, update_analyses
@@ -45,6 +45,8 @@ from hepdata.modules.email.api import send_finalised_email
 from hepdata.modules.records.utils.doi_minter import generate_dois_for_submission
 
 from invenio_db import db
+from invenio_pidstore.resolver import Resolver
+from invenio_records.api import Record
 
 cli = create_cli(create_app=create_app)
 
@@ -324,7 +326,7 @@ def send_email(inspireids):
         if submission:
             send_finalised_email(submission)
         else:
-            print("No records found for Inspire ID {}".format(inspireid))\
+            print("No records found for Inspire ID {}".format(inspireid))
 
 
 @utils.command()
@@ -371,6 +373,72 @@ def register_dois(inspire_ids):
         print('Generating for {0}'.format(inspire_id))
         _cleaned_id = inspire_id.replace("ins", "")
         generate_dois_for_submission.delay(inspire_id=_cleaned_id)
+
+
+@doi_utils.command()
+@with_appcontext
+@click.option('--inspire_ids', '-i', type=str, default='', help='Specify inspire ids of submissions.')
+def fix_uuids_and_register_dois(inspire_ids):
+    """
+    Add the missing 'uuid' key to affected records and mint the DOIs.
+    Pass selected Inspire IDs as command-line argument, or omit to loop over all affected records.
+    This function can probably be removed once the problem is resolved.
+
+    :param inspire_ids:
+    :return:
+    """
+
+    if inspire_ids:
+        print('Restricting fix to Inspire IDs %s.' % inspire_ids)
+        inspire_ids = inspire_ids.replace('ins', '').split(',')
+        hepsubmissions = HEPSubmission.query.filter(
+            HEPSubmission.coordinator > 1, HEPSubmission.inspire_id.in_(
+                inspire_ids)).order_by(HEPSubmission.id.asc()).all()
+    else:
+        print('Applying fix to all affected Inspire IDs.')
+        hepsubmissions = HEPSubmission.query.filter(
+            HEPSubmission.coordinator > 1).order_by(
+                HEPSubmission.id.asc()).all()
+
+    resolver = Resolver(pid_type='recid', object_type='rec', getter=Record.get_record)
+
+    # Loop over all submissions.
+    for hepsubmission in hepsubmissions:
+
+        recid = hepsubmission.publication_recid
+        pid, record = resolver.resolve(recid)
+
+        # Find records where the 'uuid' is missing.
+        if 'uuid' not in record:
+
+            # Add 'uuid' to record.
+            record['uuid'] = str(pid.object_uuid)
+
+            # Add 'control_number' to record.
+            if 'control_number' not in record:
+                record['control_number'] = recid
+
+            # Add 'first_author' to record.
+            if 'first_author' not in record and 'authors' in record:
+                first_author = {}
+                authors = record['authors']
+                if authors is not None and len(authors) > 0:
+                    first_author = authors[0]
+                record['first_author'] = first_author
+
+            # Commit to database and index record.
+            record.commit()
+            db.session.commit()
+            index_record_ids([recid])
+
+            print('Added UUID {} to ins{} (recid {}).'.format(
+                record['uuid'], hepsubmission.inspire_id, recid))
+            print('Also added control_number {} and first_author {}.\n'.format(
+                record['control_number'], record['first_author']))
+
+            # Now go ahead and mint the DOIs for all versions of this record!
+            generate_dois_for_submission.delay(inspire_id=hepsubmission.inspire_id)
+
 
 @cli.group()
 def converter():

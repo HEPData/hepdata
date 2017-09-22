@@ -57,13 +57,6 @@ CELERY_RESULT_BACKEND = "redis://localhost:6379/1"
 CELERY_ACCEPT_CONTENT = ['json', 'msgpack', 'yaml']
 
 CELERYBEAT_SCHEDULE = {
-    # Executes every 6 hours
-    'get-updated-content': {
-        'task': 'hepdata.modules.records.migrator.api.add_or_update_records_since_date',
-        'schedule': timedelta(hours=6),
-        'kwargs': {'send_tweet': True}
-    },
-
     'update_analyses': {
         'task': 'hepdata.modules.records.migrator.api.update_analyses',
         'schedule': timedelta(hours=12)

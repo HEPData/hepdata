@@ -72,24 +72,6 @@ logging.basicConfig()
 log = logging.getLogger(__name__)
 
 
-def assign_record_id(record_information, id=None):
-    """
-    :param record_information:
-    :return:
-    """
-    if id:
-        record_information['recid'] = id
-    else:
-        record_id = Record.create(record_information).id
-        PersistentIdentifier.create('recid', record_id,
-                                    object_type='rec',
-                                    object_uuid=uuid.uuid4(),
-                                    status=PIDStatus.REGISTERED)
-
-    # bit redundant, but the recid is used in many places.
-    record_information['control_number'] = record_information['recid']
-
-
 def remove_submission(record_id):
     """
     Removes the database entries related to a record.

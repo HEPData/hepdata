@@ -31,7 +31,6 @@ import json
 from dateutil import parser
 from flask.ext.login import login_required
 from flask import Blueprint, send_file, abort
-import jsonpatch
 import yaml
 try:
     from yaml import CSafeLoader as Loader
@@ -610,9 +609,7 @@ def attach_information_to_record(recid):
     record = get_record_by_id(recid)
     if record is not None:
         content['recid'] = recid
-
-        patch = jsonpatch.JsonPatch.from_diff(record, content)
-        record = record.patch(patch=patch)
+        record.update(content)
         record.commit()
         db.session.commit()
 
