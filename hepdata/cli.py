@@ -47,6 +47,8 @@ from hepdata.modules.records.utils.doi_minter import generate_dois_for_submissio
 from invenio_db import db
 from invenio_pidstore.resolver import Resolver
 from invenio_records.api import Record
+from invenio_pidstore.errors import PIDDoesNotExistError
+from sqlalchemy.orm.exc import NoResultFound
 
 cli = create_cli(create_app=create_app)
 
@@ -392,13 +394,14 @@ def fix_uuids_and_register_dois(inspire_ids):
         print('Restricting fix to Inspire IDs %s.' % inspire_ids)
         inspire_ids = inspire_ids.replace('ins', '').split(',')
         hepsubmissions = HEPSubmission.query.filter(
-            HEPSubmission.coordinator > 1, HEPSubmission.inspire_id.in_(
-                inspire_ids)).order_by(HEPSubmission.id.asc()).all()
+            HEPSubmission.coordinator > 1,
+            HEPSubmission.overall_status != 'sandbox',
+            HEPSubmission.inspire_id.in_(inspire_ids)).order_by(HEPSubmission.id.asc()).all()
     else:
         print('Applying fix to all affected Inspire IDs.')
         hepsubmissions = HEPSubmission.query.filter(
-            HEPSubmission.coordinator > 1).order_by(
-                HEPSubmission.id.asc()).all()
+            HEPSubmission.coordinator > 1,
+            HEPSubmission.overall_status != 'sandbox').order_by(HEPSubmission.id.asc()).all()
 
     resolver = Resolver(pid_type='recid', object_type='rec', getter=Record.get_record)
 
@@ -406,7 +409,15 @@ def fix_uuids_and_register_dois(inspire_ids):
     for hepsubmission in hepsubmissions:
 
         recid = hepsubmission.publication_recid
-        pid, record = resolver.resolve(recid)
+
+        try:
+            pid, record = resolver.resolve(recid)
+        except NoResultFound:
+            print('No record found for recid {}.'.format(recid))
+            continue
+        except PIDDoesNotExistError:
+            print('The record {} does not exist.'.format(recid))
+            continue
 
         # Find records where the 'uuid' is missing.
         if 'uuid' not in record:
@@ -437,7 +448,9 @@ def fix_uuids_and_register_dois(inspire_ids):
                 record['control_number'], record['first_author']))
 
             # Now go ahead and mint the DOIs for all versions of this record!
-            generate_dois_for_submission.delay(inspire_id=hepsubmission.inspire_id)
+            if hepsubmission.inspire_id:
+                print('Minting DOIs for all versions of {} (recid {}).\n').format(hepsubmission.inspire_id, recid)
+                generate_dois_for_submission.delay(inspire_id=hepsubmission.inspire_id)
 
 
 @cli.group()
