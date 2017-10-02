@@ -437,19 +437,20 @@ def fix_uuids_and_register_dois(inspire_ids):
                     first_author = authors[0]
                 record['first_author'] = first_author
 
-            # Commit to database and index record.
+            # Commit to database.
             record.commit()
             db.session.commit()
-            index_record_ids([recid])
 
             print('Added UUID {} to ins{} (recid {}).'.format(
                 record['uuid'], hepsubmission.inspire_id, recid))
             print('Also added control_number {} and first_author {}.\n'.format(
                 record['control_number'], record['first_author']))
 
-            # Now go ahead and mint the DOIs for all versions of this record!
+            # Now reindex record and go ahead and mint the DOIs for all versions!
             if hepsubmission.inspire_id:
-                print('Minting DOIs for all versions of {} (recid {}).\n').format(hepsubmission.inspire_id, recid)
+                index_record_ids([recid])
+                print('Minting DOIs for all versions of ins{} (recid {}).\n').format(
+                    hepsubmission.inspire_id, recid)
                 generate_dois_for_submission.delay(inspire_id=hepsubmission.inspire_id)
 
 
