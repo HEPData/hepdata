@@ -109,9 +109,17 @@ def search(query,
     query_builder.add_aggregations()
     query_builder.add_source_filter(include, exclude)
 
-    pub_result = es.search(index=index,
-                           body=query_builder.query,
-                           doc_type=CFG_PUB_TYPE)
+    if query:
+        # Randomize search among the available shard copies.
+        pub_result = es.search(index=index,
+                               body=query_builder.query,
+                               doc_type=CFG_PUB_TYPE)
+    else:
+        # Execute search only on the primary shards (to ensure no missing or duplicate results).
+        pub_result = es.search(index=index,
+                               body=query_builder.query,
+                               doc_type=CFG_PUB_TYPE,
+                               preference="_primary")
 
     parent_filter = {
         "filtered": {
