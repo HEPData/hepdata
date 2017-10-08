@@ -130,9 +130,9 @@ CFG_DATADIR = tempfile.gettempdir()
 MAIL_SERVER = 'mail.smtp2go.com'
 MAIL_PORT = 2525
 MAIL_DEFAULT_SENDER = 'submissions@hepdata.net'
-SMTP_NO_PASSWORD = True
-SMTP_ENCRYPTION = False
-MAIL_USERNAME = 'submissions@hepdata.net'
+SMTP_NO_PASSWORD = False
+SMTP_ENCRYPTION = True
+MAIL_USERNAME = 'info@hepdata.net'
 MAIL_PASSWORD = ''
 
 if MAIL_PASSWORD is '':
