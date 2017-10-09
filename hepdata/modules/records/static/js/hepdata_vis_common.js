@@ -152,9 +152,6 @@ HEPDATA.dataprocessing = {
 
             if (record.x.length == 1) {
 
-              if (record.y[y_idx].value > HEPDATA.stats.max_y) HEPDATA.stats.max_y = record.y[y_idx].value;
-              if (record.y[y_idx].value < HEPDATA.stats.min_y) HEPDATA.stats.min_y = record.y[y_idx].value;
-
               for (var error_idx in record.y[y_idx].errors) {
 
                 var errors_obj = $.extend(record.y[y_idx].errors[error_idx], {});
@@ -294,6 +291,13 @@ HEPDATA.dataprocessing = {
         processed_value_obj[key] = val["value"];
         HEPDATA.stats['max_' + key] = null;
         HEPDATA.stats['min_' + key] = null;
+
+      } else if (key == 'y' && !isNaN(parseFloat(val))) {
+
+        processed_value_obj[key] = +val;
+        if (processed_value_obj[key] > HEPDATA.stats['max_' + key])  HEPDATA.stats['max_' + key] = processed_value_obj[key];
+        if (processed_value_obj[key] < HEPDATA.stats['min_' + key])  HEPDATA.stats['min_' + key] = processed_value_obj[key];
+
       } else {
         if (key == 'x') {
           processed_value_obj[key] = val;

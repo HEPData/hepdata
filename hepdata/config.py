@@ -136,7 +136,6 @@ MAIL_USERNAME = 'info@hepdata.net'
 MAIL_PASSWORD = ''
 
 if MAIL_PASSWORD is '':
-    # this is used primarily for travis.
     MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD', '')
 
 ACCOUNTS_USE_CELERY = False
