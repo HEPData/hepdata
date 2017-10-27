@@ -81,6 +81,8 @@ def split_files(file_location, output_location,
                             last_updated = parse(document['dateupdated'], dayfirst=True)
                         except ValueError as ve:
                             last_updated = datetime.now()
+                    else:
+                        last_updated = datetime.now()
                     write_submission_yaml_block(
                         document, submission_yaml)
                 else:

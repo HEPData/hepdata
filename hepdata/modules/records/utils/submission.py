@@ -26,7 +26,6 @@ from __future__ import absolute_import, print_function
 import json
 import logging
 import subprocess
-import uuid
 import zipfile
 from datetime import datetime
 from dateutil.parser import parse
@@ -57,8 +56,6 @@ from hepdata_validator.data_file_validator import DataFileValidator
 from hepdata_validator.submission_file_validator import SubmissionFileValidator
 from invenio_db import db
 from invenio_pidstore.errors import PIDDoesNotExistError
-from invenio_pidstore.models import PersistentIdentifier, PIDStatus
-from invenio_records import Record
 import os
 from sqlalchemy.orm.exc import NoResultFound
 import yaml
@@ -262,37 +259,34 @@ def process_general_submission_info(basepath, submission_info_document, recid):
     :return:
     """
 
-    if 'comment' in submission_info_document \
-        or 'modifications' in submission_info_document \
-        or 'record_ids' in submission_info_document \
-        or 'additional_resources' in submission_info_document:
+    hepsubmission = get_latest_hepsubmission(publication_recid=recid)
 
-        hepsubmission = get_latest_hepsubmission(publication_recid=recid)
+    if "comment" in submission_info_document:
+        hepsubmission.data_abstract = encode_string(submission_info_document['comment'])
 
-        if "comment" in submission_info_document:
-            hepsubmission.data_abstract = encode_string(submission_info_document['comment'])
+    if "dateupdated" in submission_info_document:
+        try:
+            hepsubmission.last_updated = parse(submission_info_document['dateupdated'], dayfirst=True)
+        except ValueError:
+            hepsubmission.last_updated = datetime.now()
+    else:
+        hepsubmission.last_updated = datetime.now()
 
-        if "dateupdated" in submission_info_document:
-            try:
-                hepsubmission.last_updated = parse(submission_info_document['dateupdated'], dayfirst=True)
-            except ValueError as ve:
-                hepsubmission.last_updated = datetime.now()
+    if "modifications" in submission_info_document:
+        parse_modifications(hepsubmission, recid, submission_info_document)
 
-        if "modifications" in submission_info_document:
-            parse_modifications(hepsubmission, recid, submission_info_document)
+    if 'additional_resources' in submission_info_document:
 
-        if 'additional_resources' in submission_info_document:
+        for reference in hepsubmission.resources:
+            db.session.delete(reference)
 
-            for reference in hepsubmission.resources:
-                db.session.delete(reference)
-
-            resources = parse_additional_resources(basepath,
+        resources = parse_additional_resources(basepath,
                                                    recid, hepsubmission.version, submission_info_document)
-            for resource in resources:
-                hepsubmission.resources.append(resource)
+        for resource in resources:
+            hepsubmission.resources.append(resource)
 
-        db.session.add(hepsubmission)
-        db.session.commit()
+    db.session.add(hepsubmission)
+    db.session.commit()
 
 
 def parse_additional_resources(basepath, recid, version, yaml_document):
@@ -478,10 +472,12 @@ def process_submission_directory(basepath, submission_file_path, recid, update=F
             reserve_doi_for_hepsubmission(hepsubmission, update)
 
             _fix_force_eos_metadata_reload(basepath)
+            no_general_submission_info = True
             for yaml_document in submission_processed:
                 if not yaml_document:
                     continue
                 elif 'name' not in yaml_document:
+                    no_general_submission_info = False
                     process_general_submission_info(basepath, yaml_document, recid)
                 else:
                     existing_datasubmission_query = DataSubmission.query \
@@ -537,6 +533,11 @@ def process_submission_directory(basepath, submission_file_path, recid, update=F
                                     data_file_validator.get_messages())
 
                                 data_file_validator.clear_messages()
+
+            if no_general_submission_info:
+                hepsubmission.last_updated = datetime.now()
+                db.session.add(hepsubmission)
+                db.session.commit()
 
             cleanup_submission(recid, hepsubmission.version,
                                added_file_names)
@@ -730,11 +731,11 @@ def do_finalise(recid, publication_record=None, force_finalise=False,
             # last_updated flag for the record.
             record['hepdata_doi'] = hep_submission.doi
 
-            if commit_message:
-                # On a revision, the last updated date will
-                # be the current date.
+            # The last updated date will be the current date (if record not migrated from the old site).
+            if hep_submission.coordinator > 1:
                 hep_submission.last_updated = datetime.now()
 
+            if commit_message:
                 commit_record = RecordVersionCommitMessage(
                     recid=recid,
                     version=version,
