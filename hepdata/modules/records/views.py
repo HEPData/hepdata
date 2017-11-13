@@ -75,7 +75,7 @@ blueprint = Blueprint(
 @blueprint.route('/sandbox/<int:id>', methods=['GET'])
 def sandbox_display(id):
     hepdata_submission = HEPSubmission.query.filter_by(
-        publication_recid=id).first()
+        publication_recid=id, overall_status='sandbox').first()
 
     if hepdata_submission is not None:
         ctx = format_submission(id, None, 1, 1, hepdata_submission)
