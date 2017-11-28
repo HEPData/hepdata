@@ -52,9 +52,11 @@ def tweet(title, collaborations, url, version=1):
         else:
             twitter = Twitter(auth=OAuth(OAUTH_TOKEN, OAUTH_SECRET, CONSUMER_KEY, CONSUMER_SECRET))
 
-            # Try to tweet with paper title truncated to 10 words.
-            # If tweet exceeds 140 characters, keep trying with one less word each time.
-            words = 10
+            cleaned_title = encode_string(cleanup_latex(title))
+            words = len(cleaned_title.split())
+
+            # Try to tweet with complete paper title.
+            # If tweet exceeds 280 characters, keep trying with one less word each time.
             tweeted = False
             while words and not tweeted:
 
@@ -63,11 +65,11 @@ def tweet(title, collaborations, url, version=1):
                     if version == 1:
                         status = "Added{0} data on \"{1}\" to {2}".format(
                             get_collaboration_string(collaborations),
-                            truncate_string(encode_string(cleanup_latex(title)), words), url)
+                            truncate_string(cleaned_title, words), url)
                     else:
                         status = "Revised{0} data on \"{1}\" at {2}?version={3}".format(
                             get_collaboration_string(collaborations),
-                            truncate_string(encode_string(cleanup_latex(title)), words), url, version)
+                            truncate_string(cleaned_title, words), url, version)
 
                     twitter.statuses.update(status=status)
                     tweeted = True

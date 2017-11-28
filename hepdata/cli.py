@@ -27,6 +27,7 @@
 from __future__ import absolute_import, print_function
 
 import click
+from flask import current_app
 from flask.cli import with_appcontext
 from invenio_base.app import create_cli
 from hepdata.ext.elasticsearch.admin_view.api import AdminIndexer
@@ -306,7 +307,8 @@ def send_tweet(inspireids):
         submission = get_latest_hepsubmission(inspire_id=_cleaned_id)
         if submission:
             record = get_record_by_id(submission.publication_recid)
-            url = "http://www.hepdata.net/record/ins{0}".format(record['inspire_id'])
+            site_url = current_app.config.get('SITE_URL', 'https://www.hepdata.net')
+            url = site_url + '/record/ins{0}'.format(record['inspire_id'])
             tweet(record['title'], record['collaborations'], url, record['version'])
         else:
             print("No records found for Inspire ID {}".format(inspireid))
