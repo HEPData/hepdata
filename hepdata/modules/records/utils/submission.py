@@ -394,14 +394,11 @@ def _fix_force_eos_metadata_reload(refresh_path):
     where the uploaded file show empty content.
     """
     if os.path.isfile(refresh_path):
-        files = [refresh_path]
-        base_path = '/'
+        subprocess.check_output(['stat', refresh_path])
     else:
-        base_path, _, files = next(os.walk(refresh_path))
-
-    for file_name in files:
-        full_file_name = os.path.join(base_path, file_name)
-        subprocess.check_output(['stat', full_file_name])
+        for root, dirs, files in os.walk(refresh_path):
+            for file in files:
+                subprocess.check_output(['stat', os.path.join(root, file)])
 
 
 def _eos_fix_read_data(data_file_path):
@@ -545,7 +542,7 @@ def process_submission_directory(basepath, submission_file_path, recid, update=F
             db.session.commit()
 
             if len(errors) is 0:
-                package_submission(basepath, recid, hepsubmission)
+                errors = package_submission(basepath, recid, hepsubmission)
                 reserve_dois_for_data_submissions(publication_recid=recid, version=hepsubmission.version)
 
                 admin_indexer = AdminIndexer()
@@ -595,8 +592,13 @@ def package_submission(basepath, recid, hep_submission_obj):
 
     zipf = zipfile.ZipFile(zip_location, 'w')
     os.chdir(basepath)
-    zipdir(".", zipf)
-    zipf.close()
+    try:
+        zipdir(".", zipf)
+        return {}
+    except ValueError as ve:
+        return {zip_location: [{"level": "error", "message": str(ve)}]}
+    finally:
+        zipf.close()
 
 
 def process_validation_errors_for_display(errors):
@@ -779,8 +781,9 @@ def do_finalise(recid, publication_record=None, force_finalise=False,
                     convert_and_store.delay(hep_submission.inspire_id, file_format, force=True)
 
             if send_tweet:
+                site_url = current_app.config.get('SITE_URL', 'https://www.hepdata.net')
                 tweet(record.get('title'), record.get('collaborations'),
-                      "http://www.hepdata.net/record/ins{0}".format(record.get('inspire_id')), version)
+                      site_url + '/record/ins{0}'.format(record.get('inspire_id')), version)
 
             return json.dumps({"success": True, "recid": recid,
                                "data_count": len(submissions),

@@ -111,8 +111,12 @@ def split_files(file_location, output_location,
 
             zipf = zipfile.ZipFile(archive_location, 'w')
             os.chdir(output_location)
-            zipdir(".", zipf)
-            zipf.close()
+            try:
+                zipdir(".", zipf)
+            except ValueError as ve:
+                return ve, last_updated
+            finally:
+                zipf.close()
     except yaml.scanner.ScannerError as se:
         return se, last_updated
     except yaml.parser.ParserError as pe:
