@@ -375,7 +375,7 @@ def _fix_eos_metadata(submission_file_path):
     This might be caused by non-closed file descriptors combined with eos
     leading to strange mtime. Probably finding out the leaked file
     descriptors and closing them is enough. It happens in the validation
-    step, with the sumbission.yaml file.
+    step, with the submission.yaml file.
     """
     if not os.path.exists(submission_file_path):
         return
@@ -398,6 +398,7 @@ def _fix_force_eos_metadata_reload(refresh_path):
     else:
         for root, dirs, files in os.walk(refresh_path):
             for file in files:
+                _fix_eos_metadata(os.path.join(root, file))
                 subprocess.check_output(['stat', os.path.join(root, file)])
 
 
@@ -405,14 +406,21 @@ def _eos_fix_read_data(data_file_path):
     """This gets rid of the issues where reading the file returns empty
     string because eos has not yet flushed the file contents.
     """
-    data_file = open(data_file_path, 'r')
-    data = yaml.load(data_file, Loader=Loader)
-    if data is None:
-        data_file.close()
-        # force eos to refresh local cache
-        os.stat(data_file_path)
-        data = yaml.load(open(data_file_path, 'r'), Loader=Loader)
-    return data
+    attempts = 0
+    while True:
+        data = {}
+        ex = None
+        try:
+            with open(data_file_path, 'r') as data_file:
+                data = yaml.load(data_file, Loader=Loader)
+        except Exception as ex:
+            # force eos to refresh local cache
+            subprocess.check_output(['stat', file_location])
+            attempts += 1
+        # allow multiple attempts to read file in case of temporary EOS problems
+        if (data and data is not None) or attempts > 5:
+            break
+    return data, ex
 
 
 def process_submission_directory(basepath, submission_file_path, recid, update=False, *args, **kwargs):
@@ -428,17 +436,14 @@ def process_submission_directory(basepath, submission_file_path, recid, update=F
     added_file_names = []
     errors = {}
 
-
     if submission_file_path is not None:
-        submission_file = open(submission_file_path, 'r')
 
         submission_file_validator = SubmissionFileValidator()
-        is_valid_submission_file = submission_file_validator.validate(
-            file_path=submission_file_path)
-
-        data_file_validator = DataFileValidator()
+        is_valid_submission_file = submission_file_validator.validate(file_path=submission_file_path)
 
         if is_valid_submission_file:
+
+            submission_file = open(submission_file_path, 'r')
             submission_processed = yaml.load_all(submission_file, Loader=Loader)
 
             # process file, extracting contents, and linking
@@ -470,6 +475,9 @@ def process_submission_directory(basepath, submission_file_path, recid, update=F
 
             _fix_force_eos_metadata_reload(basepath)
             no_general_submission_info = True
+
+            data_file_validator = DataFileValidator()
+
             for yaml_document in submission_processed:
                 if not yaml_document:
                     continue
@@ -502,34 +510,23 @@ def process_submission_directory(basepath, submission_file_path, recid, update=F
                     main_file_path = os.path.join(basepath,
                                                   yaml_document["data_file"])
 
-                    try:
-                        data = _eos_fix_read_data(main_file_path)
-                    except Exception as e:
+                    data, ex = _eos_fix_read_data(main_file_path)
+
+                    if not data or data is None or ex is not None:
+
                         errors[yaml_document["data_file"]] = \
-                            [{"level": "error", "message": "There was a problem parsing the file.\n" + e.__str__()}]
+                            [{"level": "error", "message": "There was a problem parsing the file.\n" + str(ex)}]
 
-                    if not yaml_document["data_file"] in errors:
+                    else:
 
-                        if data is None:
-
-                            stat = os.stat(main_file_path)
-                            errors[yaml_document["data_file"]] = \
-                                [{"level": "error", "message": "Failed to load data file {0}, stat of the file {1}."
-                                                                   .format(main_file_path, stat) +
-                                                               "  Please check the original file is not empty."}]
-
+                        if data_file_validator.validate(file_path=main_file_path, data=data):
+                            process_data_file(recid, hepsubmission.version, basepath, yaml_document,
+                                              datasubmission, main_file_path)
                         else:
+                            errors = process_validation_errors_for_display(data_file_validator.get_messages())
+                            data_file_validator.clear_messages()
 
-                            if data_file_validator.validate(file_path=main_file_path, data=data):
-                                _fix_eos_metadata(
-                                    submission_file_path=basepath + '/submission.yaml')
-                                process_data_file(recid, hepsubmission.version, basepath, yaml_document,
-                                                  datasubmission, main_file_path)
-                            else:
-                                errors = process_validation_errors_for_display(
-                                    data_file_validator.get_messages())
-
-                                data_file_validator.clear_messages()
+            submission_file.close()
 
             if no_general_submission_info:
                 hepsubmission.last_updated = datetime.now()
@@ -595,8 +592,8 @@ def package_submission(basepath, recid, hep_submission_obj):
     try:
         zipdir(".", zipf)
         return {}
-    except ValueError as ve:
-        return {zip_location: [{"level": "error", "message": str(ve)}]}
+    except Exception as e:
+        return {zip_location: [{"level": "error", "message": str(e)}]}
     finally:
         zipf.close()
 

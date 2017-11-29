@@ -26,6 +26,7 @@
 
 from __future__ import absolute_import, print_function
 
+import subprocess
 import logging
 import json
 from dateutil import parser
@@ -230,7 +231,18 @@ def get_table_details(recid, data_recid, version):
             data_record = data_query.one()
             file_location = data_record.file_location
 
-            table_contents = yaml.load(file(file_location), Loader=Loader)
+            attempts = 0
+            while True:
+                try:
+                    with open(file_location, 'r') as table_file:
+                        table_contents = yaml.load(table_file, Loader=Loader)
+                except:
+                    # force eos to refresh local cache
+                    subprocess.check_output(['stat', file_location])
+                    attempts += 1
+                # allow multiple attempts to read file in case of temporary EOS problems
+                if (table_contents and table_contents is not None) or attempts > 5:
+                    break
 
             table_contents["name"] = datasub_record.name
             table_contents["title"] = datasub_record.description
