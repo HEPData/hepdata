@@ -40,9 +40,8 @@ def extract(file_name, file_path, unzipped_path):
     elif 'zip' in file_name:
         zipped_submission = zipfile.ZipFile(file_path)
         zipped_submission.printdir()
-
         zipped_submission.extractall(path=unzipped_path)
-
+        zipped_submission.close()
     return unzipped_path
 
 

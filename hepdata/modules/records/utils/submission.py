@@ -438,6 +438,8 @@ def process_submission_directory(basepath, submission_file_path, recid, update=F
 
     if submission_file_path is not None:
 
+        _fix_force_eos_metadata_reload(basepath)
+
         submission_file_validator = SubmissionFileValidator()
         is_valid_submission_file = submission_file_validator.validate(file_path=submission_file_path)
 
@@ -534,18 +536,16 @@ def process_submission_directory(basepath, submission_file_path, recid, update=F
             db.session.commit()
 
             if len(errors) is 0:
-                _fix_force_eos_metadata_reload(basepath)
                 errors = package_submission(basepath, recid, hepsubmission)
                 reserve_dois_for_data_submissions(publication_recid=recid, version=hepsubmission.version)
 
                 admin_indexer = AdminIndexer()
                 admin_indexer.index_submission(hepsubmission)
         else:
-            errors = process_validation_errors_for_display(
-                submission_file_validator.get_messages())
 
+            errors = process_validation_errors_for_display(submission_file_validator.get_messages())
             submission_file_validator.clear_messages()
-            data_file_validator.clear_messages()
+
     else:
         # return an error
         errors = {"submission.yaml": [
