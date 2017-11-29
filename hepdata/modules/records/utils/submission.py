@@ -415,7 +415,7 @@ def _eos_fix_read_data(data_file_path):
                 data = yaml.load(data_file, Loader=Loader)
         except Exception as ex:
             # force eos to refresh local cache
-            subprocess.check_output(['stat', file_location])
+            subprocess.check_output(['stat', data_file_path])
             attempts += 1
         # allow multiple attempts to read file in case of temporary EOS problems
         if (data and data is not None) or attempts > 5:
@@ -473,7 +473,6 @@ def process_submission_directory(basepath, submission_file_path, recid, update=F
 
             reserve_doi_for_hepsubmission(hepsubmission, update)
 
-            _fix_force_eos_metadata_reload(basepath)
             no_general_submission_info = True
 
             data_file_validator = DataFileValidator()
@@ -496,19 +495,16 @@ def process_submission_directory(basepath, submission_file_path, recid, update=F
                         datasubmission = DataSubmission(
                             publication_recid=recid,
                             name=encode_string(yaml_document["name"]),
-                            description=encode_string(
-                                yaml_document["description"]),
+                            description=encode_string(yaml_document["description"]),
                             version=hepsubmission.version)
 
                     else:
                         datasubmission = existing_datasubmission_query.one()
-                        datasubmission.description = encode_string(
-                            yaml_document["description"])
+                        datasubmission.description = encode_string(yaml_document["description"])
 
                     db.session.add(datasubmission)
 
-                    main_file_path = os.path.join(basepath,
-                                                  yaml_document["data_file"])
+                    main_file_path = os.path.join(basepath, yaml_document["data_file"])
 
                     data, ex = _eos_fix_read_data(main_file_path)
 
@@ -533,12 +529,12 @@ def process_submission_directory(basepath, submission_file_path, recid, update=F
                 db.session.add(hepsubmission)
                 db.session.commit()
 
-            cleanup_submission(recid, hepsubmission.version,
-                               added_file_names)
+            cleanup_submission(recid, hepsubmission.version, added_file_names)
 
             db.session.commit()
 
             if len(errors) is 0:
+                _fix_force_eos_metadata_reload(basepath)
                 errors = package_submission(basepath, recid, hepsubmission)
                 reserve_dois_for_data_submissions(publication_recid=recid, version=hepsubmission.version)
 
