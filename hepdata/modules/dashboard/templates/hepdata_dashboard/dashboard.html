@@ -272,15 +272,14 @@
                                                             class="fa fa-cogs"></span>
                                                     </button>
 
-                                                    {% if submission.versions == 1 %}
-                                                        <button class="btn btn-sm btn-danger pull-right delete-submission-trigger"
-                                                                data-recid="{{ submission.recid }}"
-                                                                data-toggle="modal"
-                                                                data-target="#deleteWidget"
-                                                                style="margin-right: 5px;">
-                                                            <span class="fa fa-trash-o"></span>
-                                                        </button>
-                                                    {% endif %}
+                                                    <button class="btn btn-sm btn-danger pull-right delete-submission-trigger"
+                                                            data-recid="{{ submission.recid }}"
+                                                            data-toggle="modal"
+                                                            data-target="#deleteWidget"
+                                                            style="margin-right: 5px;">
+                                                      <span class="fa fa-trash-o"></span>
+                                                    </button>
+
                                                 {% else %}
                                                     <button class="btn btn-sm btn-default pull-right conversation-trigger"
                                                             data-recid="{{ submission.recid }}"

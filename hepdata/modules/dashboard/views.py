@@ -33,6 +33,7 @@ from hepdata.modules.dashboard.api import prepare_submissions, get_pending_invit
 from hepdata.modules.permissions.api import get_pending_request, get_pending_coordinator_requests
 from hepdata.modules.permissions.views import check_is_sandbox_record
 from hepdata.modules.records.utils.submission import unload_submission, do_finalise
+from hepdata.modules.submission.api import get_latest_hepsubmission
 from hepdata.modules.records.utils.users import has_role
 import json
 
@@ -106,15 +107,21 @@ def delete_submission(recid):
     """
     Submissions can only be removed if they are not finalised,
     meaning they should never be in the index.
+    Only delete the latest version of a submission.
+    Delete indexed information only if version = 1.
+
     :param recid:
     :return:
     """
     if has_role(current_user, 'admin') or has_role(current_user, 'coordinator') \
         or check_is_sandbox_record(recid):
-        unload_submission(recid)
 
-        admin_idx = AdminIndexer()
-        admin_idx.find_and_delete('recid', recid)
+        submission = get_latest_hepsubmission(publication_recid=recid)
+        unload_submission(recid, submission.version)
+
+        if submission.version == 1:
+            admin_idx = AdminIndexer()
+            admin_idx.find_and_delete('recid', recid)
 
         return json.dumps({"success": True,
                            "recid": recid,

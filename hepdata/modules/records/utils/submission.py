@@ -69,15 +69,16 @@ logging.basicConfig()
 log = logging.getLogger(__name__)
 
 
-def remove_submission(record_id):
+def remove_submission(record_id, version=1):
     """
     Removes the database entries related to a record.
     :param record_id:
+    :param version:
     :return: True if Successful, False if the record does not exist.
     """
 
     hepdata_submissions = HEPSubmission.query.filter_by(
-        publication_recid=record_id).all()
+        publication_recid=record_id, version=version).all()
 
     try:
         try:
@@ -86,14 +87,16 @@ def remove_submission(record_id):
         except NoResultFound as nrf:
             print(nrf.args)
 
-        admin_idx = AdminIndexer()
-        admin_idx.find_and_delete(term=record_id, fields=['recid'])
+        if version == 1:
+
+            admin_idx = AdminIndexer()
+            admin_idx.find_and_delete(term=record_id, fields=['recid'])
 
         submissions = DataSubmission.query.filter_by(
-            publication_recid=record_id).all()
+            publication_recid=record_id, version=version).all()
 
         reviews = DataReview.query.filter_by(
-            publication_recid=record_id).all()
+            publication_recid=record_id, version=version).all()
 
         for review in reviews:
             db.session.delete(review)
@@ -108,27 +111,30 @@ def remove_submission(record_id):
             if resource:
                 db.session.delete(resource)
 
-        try:
-            SubmissionParticipant.query.filter_by(
-                publication_recid=record_id).delete()
-        except Exception:
-            print("Unable to find a submission participant for {0}".format(record_id))
+        if version == 1:
 
-        try:
-            record = get_record_by_id(record_id)
-            data_records = get_records_matching_field(
-                'related_publication', record_id, doc_type=CFG_DATA_TYPE)
+            try:
+                SubmissionParticipant.query.filter_by(
+                    publication_recid=record_id).delete()
+            except Exception:
+                print("Unable to find a submission participant for {0}".format(record_id))
 
-            if 'hits' in data_records:
-                for data_record in data_records['hits']['hits']:
-                    data_record_obj = get_record_by_id(data_record['_source']['recid'])
-                    if data_record_obj:
-                        data_record_obj.delete()
-            if record:
-                record.delete()
+            try:
+                record = get_record_by_id(record_id)
+                data_records = get_records_matching_field(
+                    'related_publication', record_id, doc_type=CFG_DATA_TYPE)
 
-        except PIDDoesNotExistError as e:
-            print('No record entry exists for {0}. Proceeding to delete other files.'.format(record_id))
+                if 'hits' in data_records:
+                    for data_record in data_records['hits']['hits']:
+                        data_record_obj = get_record_by_id(data_record['_source']['recid'])
+                        if data_record_obj:
+                            data_record_obj.delete()
+
+                if record:
+                    record.delete()
+
+            except PIDDoesNotExistError as e:
+                print('No record entry exists for {0}. Proceeding to delete other files.'.format(record_id))
 
         db.session.commit()
         db.session.flush()
@@ -650,25 +656,33 @@ def create_data_review(data_recid, publication_recid, version=1):
     return None
 
 
-def unload_submission(record_id):
-    print('unloading {}...'.format(record_id))
-    remove_submission(record_id)
+def unload_submission(record_id, version=1):
 
-    data_records = get_records_matching_field("related_publication", record_id)
-    for record in data_records["hits"]["hits"]:
-        print("\t Removed data table {0} from index".format(record["_id"]))
+    submission = get_latest_hepsubmission(publication_recid=record_id)
+    if version == submission.version:
+        print('Unloading record {0} version {1}...'.format(record_id, version))
+        remove_submission(record_id, version)
+    else:
+        print('Not unloading record {0} version {1} (latest version {2})...'.format(record_id, version, submission.version))
+        return
+
+    if version == 1:
+
+        data_records = get_records_matching_field("related_publication", record_id)
+        for record in data_records["hits"]["hits"]:
+            print("\t Removed data table {0} from index".format(record["_id"]))
+            try:
+                delete_item_from_index(doc_type=CFG_DATA_TYPE, id=record["_id"], parent=record_id)
+            except Exception as e:
+                logging.error("Unable to remove {0} from index. {1}".format(record["_id"], e))
+
         try:
-            delete_item_from_index(doc_type=CFG_DATA_TYPE, id=record["_id"], parent=record_id)
-        except Exception as e:
-            logging.error("Unable to remove {0} from index. {1}".format(record["_id"], e))
+            delete_item_from_index(doc_type=CFG_PUB_TYPE, id=record_id)
+            print("Removed publication {0} from index".format(record_id))
+        except NotFoundError as nfe:
+            print(nfe.message)
 
-    try:
-        delete_item_from_index(doc_type=CFG_PUB_TYPE, id=record_id)
-        print("Removed publication {0} from index".format(record_id))
-    except NotFoundError as nfe:
-        print(nfe.message)
-
-    print('Finished unloading {0}.'.format(record_id))
+    print('Finished unloading record {0} version {1}.'.format(record_id, version))
 
 
 def do_finalise(recid, publication_record=None, force_finalise=False,

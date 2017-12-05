@@ -74,7 +74,7 @@ HEPDATA.delete_submission = function (record_id, redirect_url) {
     success: function (data) {
       console.log(data);
       if (data.success) {
-        $("#deleteDialogLabel").text("Submisson Deleted");
+        $("#deleteDialogLabel").text("Submission Deleted");
         $("#progress").addClass("hidden");
         $("#delete-success").removeClass("hidden");
 
