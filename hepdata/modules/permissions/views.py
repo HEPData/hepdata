@@ -28,6 +28,7 @@ import json
 from flask.ext.login import login_required, current_user
 from invenio_accounts.models import Role
 from invenio_db import db
+from sqlalchemy import func
 
 from flask import Blueprint, jsonify, url_for, redirect, request, abort, render_template
 
@@ -217,8 +218,9 @@ def respond_coordinator_privileges(request_id, decision):
 @login_required
 def assign_role(cookie):
     try:
-        participant_record = SubmissionParticipant.query.filter_by(
-            invitation_cookie=cookie).first()
+        participant_record = SubmissionParticipant.query.filter(
+            func.lower(SubmissionParticipant.email) == func.lower(current_user.email),
+            SubmissionParticipant.invitation_cookie == cookie).first()
         participant_record.user_account = current_user.get_id()
 
         db.session.add(participant_record)
