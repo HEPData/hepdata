@@ -26,7 +26,7 @@ from collections import OrderedDict
 
 from flask.ext.login import current_user
 from invenio_accounts.models import User
-from sqlalchemy import and_, or_
+from sqlalchemy import and_, or_, func
 
 from hepdata.modules.permissions.models import SubmissionParticipant
 from hepdata.modules.records.utils.common import get_record_by_id, decode_string
@@ -160,7 +160,7 @@ def prepare_submissions(current_user):
             status='primary').all()
 
         for participant_record in participant_records:
-            hepdata_submission_records = HEPSubmission.query.filter(
+            hepdata_submission_records += HEPSubmission.query.filter(
                 HEPSubmission.publication_recid == participant_record.publication_recid,
                 and_(HEPSubmission.overall_status != 'finished',
                      HEPSubmission.overall_status != 'sandbox')).all()
@@ -219,7 +219,7 @@ def get_pending_invitations_for_user(user):
     :return: array of pending invites
     """
     pending_invites = SubmissionParticipant.query.filter(
-        SubmissionParticipant.email == user.email,
+        func.lower(SubmissionParticipant.email) == func.lower(user.email),
         or_(SubmissionParticipant.role == 'reviewer',
             SubmissionParticipant.role == 'uploader'),
         SubmissionParticipant.user_account == None
