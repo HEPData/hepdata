@@ -203,6 +203,7 @@ TWITTER_HANDLE_MAPPINGS = {
     "bicep2": "@BICEPTWO",
 }
 
+INVALID_DOI_TEMPLATE = "hepdata_theme/invalid_doi.html"
 THEME_404_TEMPLATE = "hepdata_theme/404.html"
 THEME_500_TEMPLATE = "hepdata_theme/500.html"
 
