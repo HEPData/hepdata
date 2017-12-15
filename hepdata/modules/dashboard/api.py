@@ -157,18 +157,18 @@ def prepare_submissions(current_user):
 
         participant_records = SubmissionParticipant.query.filter_by(
             user_account=int(current_user.get_id()),
-            status='primary').all()
+            status='primary').order_by(SubmissionParticipant.id.desc()).all()
 
         for participant_record in participant_records:
             hepdata_submission_records += HEPSubmission.query.filter(
                 HEPSubmission.publication_recid == participant_record.publication_recid,
                 and_(HEPSubmission.overall_status != 'finished',
-                     HEPSubmission.overall_status != 'sandbox')).all()
+                     HEPSubmission.overall_status != 'sandbox')).order_by(HEPSubmission.created.desc()).all()
 
         coordinator_submissions = HEPSubmission.query.filter(
             HEPSubmission.coordinator == int(current_user.get_id()),
             and_(HEPSubmission.overall_status != 'finished',
-                 HEPSubmission.overall_status != 'sandbox')).all()
+                 HEPSubmission.overall_status != 'sandbox')).order_by(HEPSubmission.created.desc()).all()
 
         hepdata_submission_records += coordinator_submissions
 

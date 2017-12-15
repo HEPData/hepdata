@@ -66,7 +66,7 @@ def terms():
 
 @blueprint.route('/record/invalid_doi')
 def invalid_doi():
-    return render_template(current_app.config['INVALID_DOI_TEMPLATE']), 404
+    return render_template(current_app.config['INVALID_DOI_TEMPLATE']), 410
 
 
 def page_not_found(e):

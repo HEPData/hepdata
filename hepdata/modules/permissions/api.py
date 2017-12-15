@@ -34,10 +34,13 @@ from hepdata.utils.users import get_user_from_id, user_is_admin
 
 def get_records_participated_in_by_user():
     _current_user_id = int(current_user.get_id())
-    as_uploader = SubmissionParticipant.query.filter_by(user_account=_current_user_id, role='uploader').all()
-    as_reviewer = SubmissionParticipant.query.filter_by(user_account=_current_user_id, role='reviewer').all()
+    as_uploader = SubmissionParticipant.query.filter_by(user_account=_current_user_id, role='uploader').order_by(
+        SubmissionParticipant.id.desc()).all()
+    as_reviewer = SubmissionParticipant.query.filter_by(user_account=_current_user_id, role='reviewer').order_by(
+        SubmissionParticipant.id.desc()).all()
 
-    as_coordinator_query = HEPSubmission.query.filter_by(coordinator=_current_user_id)
+    as_coordinator_query = HEPSubmission.query.filter_by(coordinator=_current_user_id).order_by(
+        HEPSubmission.created.desc())
 
     # special case, since this user ID is the one used for loading all submissions, which is in the 1000s.
     if _current_user_id == 1:

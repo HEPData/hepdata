@@ -226,7 +226,7 @@ def assign_role(cookie):
         db.session.add(participant_record)
         db.session.commit()
 
-        return redirect(url_for('hep_dashboard.dashboard'))
+        return redirect('/record/{0}'.format(participant_record.publication_recid))
 
     except:
         abort(404)
