@@ -53,7 +53,7 @@ def test_allowed_file():
 
 def test_url_pattern():
     test_urls = [
-        {"url": "http://rivet.hepforge.org/analyses#ATLAS_2012_I1203852",
+        {"url": "http://rivet.hepforge.org/analyses/ATLAS_2012_I1203852",
          "exp_result": "rivet"},
         {"url": "https://bitbucket.org/eamonnmag/automacron-evaluation",
          "exp_result": "bitbucket"},

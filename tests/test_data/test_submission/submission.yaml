@@ -1,7 +1,7 @@
 ---
 additional_resources:
 - {description: web page with auxiliary material, location: 'http://atlas.web.cern.ch/Atlas/GROUPS/PHYSICS/PAPERS/STDM-2012-02/'}
-- {description: Rivet analysis, location: 'http://rivet.hepforge.org/analyses#ATLAS_2012_I1203852'}
+- {description: Rivet analysis, location: 'http://rivet.hepforge.org/analyses/ATLAS_2012_I1203852'}
 - {description: Image file, location: figFigure8A_whole_v1.png}
 - {description: Thumbnail image file, location: thumb_figFigure8A_whole_v1.png}
 comment: |
