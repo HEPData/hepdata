@@ -106,6 +106,7 @@ def update_analyses():
                         try:
                             db.session.add(submission)
                             db.session.commit()
+                            index_record_ids([submission.publication_recid])
                         except Exception as e:
                             db.session.rollback()
                             log.error(e)
