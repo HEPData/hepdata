@@ -92,6 +92,10 @@ def process_submission_payload(*args, **kwargs):
 
     hepsubmission = get_or_create_hepsubmission(record_information["recid"], submitter_id)
 
+    if kwargs.get('inspire_id'):
+        hepsubmission.inspire_id = kwargs.get('inspire_id')
+        db.session.add(hepsubmission)
+
     reviewer_details = kwargs.get('reviewer')
 
     reviewer = create_participant_record(

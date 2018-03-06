@@ -304,7 +304,7 @@ def send_tweet(inspireids):
     processed_inspireids = parse_inspireids_from_string(inspireids)
     for inspireid in processed_inspireids:
         _cleaned_id = inspireid.replace("ins", "")
-        submission = get_latest_hepsubmission(inspire_id=_cleaned_id)
+        submission = get_latest_hepsubmission(inspire_id=_cleaned_id, overall_status='finished')
         if submission:
             record = get_record_by_id(submission.publication_recid)
             site_url = current_app.config.get('SITE_URL', 'https://www.hepdata.net')
@@ -326,7 +326,7 @@ def send_email(inspireids):
     processed_inspireids = parse_inspireids_from_string(inspireids)
     for inspireid in processed_inspireids:
         _cleaned_id = inspireid.replace("ins", "")
-        submission = get_latest_hepsubmission(inspire_id=_cleaned_id)
+        submission = get_latest_hepsubmission(inspire_id=_cleaned_id, overall_status='finished')
         if submission:
             send_finalised_email(submission)
         else:
@@ -377,83 +377,6 @@ def register_dois(inspire_ids):
         print('Generating for {0}'.format(inspire_id))
         _cleaned_id = inspire_id.replace("ins", "")
         generate_dois_for_submission.delay(inspire_id=_cleaned_id)
-
-
-@doi_utils.command()
-@with_appcontext
-@click.option('--inspire_ids', '-i', type=str, default='', help='Specify inspire ids of submissions.')
-def fix_uuids_and_register_dois(inspire_ids):
-    """
-    Add the missing 'uuid' key to affected records and mint the DOIs.
-    Pass selected Inspire IDs as command-line argument, or omit to loop over all affected records.
-    This function can probably be removed once the problem is resolved.
-
-    :param inspire_ids:
-    :return:
-    """
-
-    if inspire_ids:
-        print('Restricting fix to Inspire IDs %s.' % inspire_ids)
-        inspire_ids = inspire_ids.replace('ins', '').split(',')
-        hepsubmissions = HEPSubmission.query.filter(
-            HEPSubmission.coordinator > 1,
-            HEPSubmission.overall_status != 'sandbox',
-            HEPSubmission.inspire_id.in_(inspire_ids)).order_by(HEPSubmission.id.asc()).all()
-    else:
-        print('Applying fix to all affected Inspire IDs.')
-        hepsubmissions = HEPSubmission.query.filter(
-            HEPSubmission.coordinator > 1,
-            HEPSubmission.overall_status != 'sandbox').order_by(HEPSubmission.id.asc()).all()
-
-    resolver = Resolver(pid_type='recid', object_type='rec', getter=Record.get_record)
-
-    # Loop over all submissions.
-    for hepsubmission in hepsubmissions:
-
-        recid = hepsubmission.publication_recid
-
-        try:
-            pid, record = resolver.resolve(recid)
-        except NoResultFound:
-            print('No record found for recid {}.'.format(recid))
-            continue
-        except PIDDoesNotExistError:
-            print('The record {} does not exist.'.format(recid))
-            continue
-
-        # Find records where the 'uuid' is missing.
-        if 'uuid' not in record:
-
-            # Add 'uuid' to record.
-            record['uuid'] = str(pid.object_uuid)
-
-            # Add 'control_number' to record.
-            if 'control_number' not in record:
-                record['control_number'] = recid
-
-            # Add 'first_author' to record.
-            if 'first_author' not in record and 'authors' in record:
-                first_author = {}
-                authors = record['authors']
-                if authors is not None and len(authors) > 0:
-                    first_author = authors[0]
-                record['first_author'] = first_author
-
-            # Commit to database.
-            record.commit()
-            db.session.commit()
-
-            print('Added UUID {} to ins{} (recid {}).'.format(
-                record['uuid'], hepsubmission.inspire_id, recid))
-            print('Also added control_number {} and first_author {}.\n'.format(
-                record['control_number'], record['first_author']))
-
-            # Now reindex record and go ahead and mint the DOIs for all versions!
-            if hepsubmission.inspire_id:
-                index_record_ids([recid])
-                print('Minting DOIs for all versions of ins{} (recid {}).\n').format(
-                    hepsubmission.inspire_id, recid)
-                generate_dois_for_submission.delay(inspire_id=hepsubmission.inspire_id)
 
 
 @cli.group()

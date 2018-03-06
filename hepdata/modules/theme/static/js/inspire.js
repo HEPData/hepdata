@@ -51,15 +51,15 @@ var inspire_ds = (function () {
                 $("#inspire-add-button").removeClass("hidden");
 
             } else if (data.status == 'exists') {
+                $("#inspire-retrieve-progress").addClass("hidden");
+
                 html = '<div class="alert alert-danger">A ' +
                     '<a href="/record/ins' + data.id + '" target="_blank">' +
                     'record</a> with this Inspire ID already exists in HEPData.' +
                     '</div>';
                 html = inspire_ds.create_html_summary(data, html);
 
-                $("#success").removeClass("hidden");
-                $("#inspire-add-button").removeClass("hidden");
-
+                $("#inspire-add-button").addClass("hidden");
             }
             else {
                 html = '<div class="alert alert-danger">An error occurred while trying to find the Inspire record.</div>';

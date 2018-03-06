@@ -88,7 +88,7 @@ def update_analyses():
                 analyses = response.json()
 
                 for record in analyses:
-                    submission = get_latest_hepsubmission(inspire_id=record)
+                    submission = get_latest_hepsubmission(inspire_id=record, overall_status='finished')
 
                     if submission:
                         for analysis in analyses[record]:

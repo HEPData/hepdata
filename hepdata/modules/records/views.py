@@ -623,6 +623,12 @@ def attach_information_to_record(recid):
         content['recid'] = recid
         record.update(content)
         record.commit()
+
+        hep_submission = HEPSubmission.query.filter_by(
+            publication_recid=recid, overall_status="todo").first()
+        hep_submission.inspire_id = inspire_id
+        db.session.add(hep_submission)
+
         db.session.commit()
 
         return jsonify({'status': 'success'})
