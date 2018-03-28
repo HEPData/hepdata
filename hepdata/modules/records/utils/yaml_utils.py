@@ -86,7 +86,7 @@ def split_files(file_location, output_location,
                     write_submission_yaml_block(
                         document, submission_yaml)
                 else:
-                    file_name = document["name"].replace(' ', '') + ".yaml"
+                    file_name = document["name"].replace(' ', '_').replace('/', '-') + ".yaml"
                     document["data_file"] = file_name
 
                     with open(os.path.join(output_location, file_name),

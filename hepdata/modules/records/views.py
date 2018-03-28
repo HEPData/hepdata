@@ -248,6 +248,7 @@ def get_table_details(recid, data_recid, version):
             table_contents["title"] = datasub_record.description
             table_contents["keywords"] = datasub_record.keywords
             table_contents["doi"] = datasub_record.doi
+            table_contents["location"] = datasub_record.location_in_publication
 
         # we create a map of files mainly to accommodate the use of thumbnails for images where possible.
         tmp_assoc_files = {}

@@ -98,6 +98,7 @@ def test_data_processing(app):
     data["title"] = 'test'
     data["keywords"] = None
     data["doi"] = 'doi/10.2342'
+    data["location"] = 'Data from Figure 2 of preprint'
     data["review"] = []
     data["associated_files"] = []
 

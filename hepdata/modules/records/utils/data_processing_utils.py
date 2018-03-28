@@ -197,6 +197,7 @@ def generate_table_structure(table_contents):
     """
 
     record = {"name": table_contents["name"], "doi": table_contents["doi"],
+              "location": table_contents["location"],
               "description": table_contents["title"], "qualifiers": {},
               "qualifier_order": [], "headers": [],
               "review": table_contents["review"],
@@ -267,19 +268,22 @@ def process_ctx(ctx, light_mode=False):
 
                 if ctx['status'] == 'finished' and ctx['record']['inspire_id']:
                     _recid = 'ins{}'.format(ctx['record']['inspire_id'])
-                else:
+                elif 'recid' in ctx['record']:
                     _recid = ctx['record']['recid']
+                else:
+                    _recid = ctx['recid']
 
+                _cleaned_table_name = data_table['name'].replace('Table ','Table')
                 data_table['data'] = {
                     'json': '{0}/download/table/{1}/{2}/json'.format(
-                        site_url, _recid, data_table['name'].replace(' ','')),
+                        site_url, _recid, _cleaned_table_name),
                     'root': '{0}/download/table/{1}/{2}/root'.format(
-                        site_url, _recid, data_table['name'].replace(' ','')),
+                        site_url, _recid, _cleaned_table_name),
                     'csv': '{0}/download/table/{1}/{2}/csv'.format(
-                        site_url, _recid, data_table['name'].replace(' ','')),
+                        site_url, _recid, _cleaned_table_name),
                     'yoda': '{0}/download/table/{1}/{2}/yoda'.format(
-                        site_url, _recid, data_table['name'].replace(' ','')),
+                        site_url, _recid, _cleaned_table_name),
                     'yaml': '{0}/download/table/{1}/{2}/yaml'.format(
-                        site_url, _recid, data_table['name'].replace(' ',''))}
+                        site_url, _recid, _cleaned_table_name)}
 
     return ctx

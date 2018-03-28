@@ -113,7 +113,9 @@
                 <div class="content">
                     <h4 itemprop="name">{{ table.name }}</h4>
 
-                    <p>{{ table.location }}</p>
+                    {% if table.location %}
+                        <p>{{ table.location }}</p>
+                    {% endif %}
                     {% if ctx.mode != 'sandbox' %}
                         <p>{{ table.doi }}</p>
                     {% endif %}

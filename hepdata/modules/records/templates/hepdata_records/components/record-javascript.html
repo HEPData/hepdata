@@ -48,11 +48,29 @@
             HEPDATA.current_record_id = {{ctx.recid | safe}};
             HEPDATA.current_table_version = {{ctx.version | safe}};
             var table_to_show = "{{ctx.table_to_show}}";
-            table_to_show = table_to_show.replace(/\s/g, "");
 
-            var table_id = $("." + table_to_show).attr("id");
-            if (table_id != undefined) {
-                table_to_show = table_id;
+            // If table_to_show is an integer, replace with table name.
+            if (table_to_show.match(/^\d+$/)) {
+              var table_name = $('#' + table_to_show + " h4").text();
+              if (table_name) {
+                table_to_show = table_name;
+              }
+            }
+
+            // Remove whitespace from table name and escape special characters.
+            table_to_show = table_to_show.replace(/\s/g, "");
+            table_to_show = CSS.escape(table_to_show);
+
+            // Find table_id from table name.
+            var table_id = undefined;
+            if (table_to_show) {
+              table_id = $("." + table_to_show).attr("id");
+            }
+            if (table_id == undefined) {
+              // Just return first table.
+              table_to_show = {{ ctx.data_tables[0].id }};
+            } else {
+              table_to_show = table_id;
             }
 
             var status = "{{ ctx.status }}";

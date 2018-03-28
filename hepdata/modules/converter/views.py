@@ -34,6 +34,8 @@ from hepdata.modules.submission.models import HEPSubmission, DataResource, DataS
 from hepdata.utils.file_extractor import extract, get_file_in_directory
 from hepdata.modules.records.utils.common import get_record_contents
 
+from sqlalchemy.orm.exc import NoResultFound
+
 logging.basicConfig()
 log = logging.getLogger(__name__)
 
@@ -209,7 +211,7 @@ def download_submission(submission, file_format, offline=False, force=False):
         'filename': 'HEPData-{0}-v{1}-{2}'.format(file_identifier, submission.version, file_format),
     }
 
-    if submission.doi:
+    if submission.doi and submission.overall_status != 'sandbox':
         converter_options['hepdata_doi'] = '{0}.v{1}'.format(submission.doi, version)
 
     if submission.inspire_id and file_format == 'yoda':
@@ -227,8 +229,8 @@ def download_submission(submission, file_format, offline=False, force=False):
         print('File for {0} created successfully at {1}'.format(file_identifier, output_path))
 
 
-@blueprint.route('/table/<string:inspire_id>/<string:table_name>/<int:version>/<string:file_format>')
-@blueprint.route('/table/<string:inspire_id>/<string:table_name>/<string:file_format>')
+@blueprint.route('/table/<string:inspire_id>/<path:table_name>/<int:version>/<string:file_format>')
+@blueprint.route('/table/<string:inspire_id>/<path:table_name>/<string:file_format>')
 def download_data_table_by_inspire_id(*args, **kwargs):
     """
     Downloads the latest data file given the url /download/submission/ins1283842/Table 1/yaml or
@@ -244,24 +246,27 @@ def download_data_table_by_inspire_id(*args, **kwargs):
     if 'ins' in inspire_id:
         inspire_id = inspire_id.replace('ins', '')
 
-    # Allow space in table_name to be omitted from URL.
-    if ' ' not in table_name:
-        table_name = table_name.replace('Table', 'Table ')
-
     if 'version' not in kwargs:
         version = get_latest_hepsubmission(inspire_id=inspire_id).version
     else:
         version = kwargs.pop('version')
 
-    datasubmission = DataSubmission.query.filter_by(publication_inspire_id=inspire_id,
-                                                    version=version, name=table_name).one()
+    try:
+        datasubmission = DataSubmission.query.filter_by(publication_inspire_id=inspire_id,
+                                                        version=version, name=table_name).one()
+    except NoResultFound:
+        # Allow space in table_name to be omitted from URL.
+        if ' ' not in table_name:
+            table_name = table_name.replace('Table', 'Table ')
+            datasubmission = DataSubmission.query.filter_by(publication_inspire_id=inspire_id,
+                                                            version=version, name=table_name).one()
 
     return download_datatable(datasubmission, kwargs.pop('file_format'),
                               submission_id='ins{0}'.format(inspire_id), table_name=table_name)
 
 
-@blueprint.route('/table/<int:recid>/<string:table_name>/<int:version>/<string:file_format>')
-@blueprint.route('/table/<int:recid>/<string:table_name>/<string:file_format>')
+@blueprint.route('/table/<int:recid>/<path:table_name>/<int:version>/<string:file_format>')
+@blueprint.route('/table/<int:recid>/<path:table_name>/<string:file_format>')
 def download_data_table_by_recid(*args, **kwargs):
     """
     Record ID download
@@ -275,16 +280,19 @@ def download_data_table_by_recid(*args, **kwargs):
     recid = kwargs.pop('recid')
     table_name = kwargs.pop('table_name')
 
-    # Allow space in table_name to be omitted from URL.
-    if ' ' not in table_name:
-        table_name = table_name.replace('Table', 'Table ')
-
     if 'version' not in kwargs:
         version = get_latest_hepsubmission(publication_recid=recid).version
     else:
         version = kwargs.pop('version')
 
-    datasubmission = DataSubmission.query.filter_by(publication_recid=recid, version=version, name=table_name).one()
+    try:
+        datasubmission = DataSubmission.query.filter_by(publication_recid=recid, version=version, name=table_name).one()
+    except NoResultFound:
+        # Allow space in table_name to be omitted from URL.
+        if ' ' not in table_name:
+            table_name = table_name.replace('Table', 'Table ')
+            datasubmission = DataSubmission.query.filter_by(publication_recid=recid, version=version,
+                                                            name=table_name).one()
 
     return download_datatable(datasubmission, kwargs.pop('file_format'),
                               submission_id='{0}'.format(recid), table_name=table_name)
@@ -317,7 +325,7 @@ def download_datatable(datasubmission, file_format, *args, **kwargs):
 
     filename = 'HEPData-{0}-v{1}'.format(kwargs.pop('submission_id'), datasubmission.version)
     if 'table_name' in kwargs:
-        filename += '-' + kwargs.pop('table_name').replace(' ', '')
+        filename += '-' + kwargs.pop('table_name').replace(' ', '_').replace('/', '_')
 
     output_path = os.path.join(current_app.config['CFG_TMPDIR'], filename)
 
@@ -335,7 +343,10 @@ def download_datatable(datasubmission, file_format, *args, **kwargs):
         'filename': table_name.split('.')[0],
     }
 
-    if datasubmission.doi:
+    hepsubmission = HEPSubmission.query.filter_by(publication_recid=datasubmission.publication_recid,
+                                                  version=datasubmission.version).first()
+
+    if datasubmission.doi and hepsubmission.overall_status != 'sandbox':
         options['hepdata_doi'] = datasubmission.doi.rsplit('/', 1)[0].encode('ascii')
 
     if datasubmission.publication_inspire_id and file_format == 'yoda':

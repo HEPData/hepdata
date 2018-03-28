@@ -231,7 +231,7 @@
 
                         <div class="record-abstract-content scrollable">
                             {% if ctx.record.data_abstract %}
-                                {{ ctx.record.data_abstract }}
+                                {{ ctx.record.data_abstract | safe }}
                             {% elif ctx.record.abstract %}
                                 {{ ctx.record.abstract }}
                             {% else %}

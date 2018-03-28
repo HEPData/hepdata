@@ -25,4 +25,5 @@
 Usage
 =====
 
-.. automodule:: HEPData
+.. automodule:: hepdata
+   :members:

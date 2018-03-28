@@ -485,6 +485,12 @@ def process_submission_directory(basepath, submission_file_path, recid, update=F
 
             data_file_validator = DataFileValidator()
 
+            # Delete all data records associated with this submission.
+            # Fixes problems with ordering where the table names are changed between uploads.
+            # See https://github.com/HEPData/hepdata/issues/112
+            # Side effect that reviews will be deleted between uploads.
+            cleanup_submission(recid, hepsubmission.version, added_file_names)
+
             for yaml_document in submission_processed:
                 if not yaml_document:
                     continue
@@ -537,7 +543,9 @@ def process_submission_directory(basepath, submission_file_path, recid, update=F
                 db.session.add(hepsubmission)
                 db.session.commit()
 
-            cleanup_submission(recid, hepsubmission.version, added_file_names)
+            # The line below is commented out since it does not preserve the order of tables.
+            # Delete all tables above instead: side effect of deleting reviews between uploads.
+            #cleanup_submission(recid, hepsubmission.version, added_file_names)
 
             db.session.commit()
 

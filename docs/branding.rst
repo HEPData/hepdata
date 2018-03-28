@@ -23,7 +23,7 @@
 
 
 Branding
-====
+========
 
 The HEPData logo is free to use as-is, with no changes permitted.
 

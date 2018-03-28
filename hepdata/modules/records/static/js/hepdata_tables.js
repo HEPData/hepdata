@@ -25,7 +25,7 @@ HEPDATA.switch_table = function (listId, table_requested, status) {
   var _recid = HEPDATA.current_inspire_id && status == 'finished' ? 'ins' + HEPDATA.current_inspire_id : HEPDATA.current_record_id;
   var direct_link = 'http://www.hepdata.net/record/' + _recid
     + '?version=' + HEPDATA.current_table_version + "&table="
-    + $('#' + table_requested + " h4").text().replace(" ", "");
+    + $('#' + table_requested + " h4").text().replace("Table ", "Table");
 
   $("#direct_data_link").val(direct_link);
   $(".copy-btn").attr('data-clipboard-text', direct_link);
@@ -61,7 +61,7 @@ HEPDATA.switch_table = function (listId, table_requested, status) {
     '#data_table_region',
     '#data_visualization_region');
 
-  var _name = $('#' + table_requested + " h4").text().replace(" ", "");
+  var _name = $('#' + table_requested + " h4").text().replace("Table ", "Table");
 
   $(".data_download_link").each(function () {
     var data_format = $(this).text().toLowerCase();
@@ -88,6 +88,7 @@ HEPDATA.table_renderer = {
         HEPDATA.current_table_name = table_data.name;
 
         $("#table_name").html(table_data.name);
+        $("#table_location").html(table_data.location);
         $("#table_doi_contents").html('<a href="http://dx.doi.org/' + table_data.doi + '" target="_blank">' + table_data.doi + '</a>');
 
         $("#table_description").html((table_data.description.indexOf('.') == 0) ? '' : table_data.description.trim());
