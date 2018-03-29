@@ -10,7 +10,8 @@ First install all requirements:
    (hepdata)$ cd ~/src/
    (hepdata)$ git clone https://github.com/HEPData/hepdata
    (hepdata)$ cd hepdata
-   (hepdata)$ pip install -e . --pre --upgrade
+   (hepdata)$ pip install --upgrade pip
+   (hepdata)$ pip install -e . --pre --upgrade -r requirements.txt
 
 Next, install and build assets:
 

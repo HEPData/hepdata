@@ -23,7 +23,7 @@
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
 addons:
-  postgresql: "9.3"
+  postgresql: "9.6"
 
 notifications:
   email: false
