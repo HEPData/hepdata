@@ -5,7 +5,9 @@
 # * pytest==2.8.7 --> pytest==3.5.0
 # * funcsigs==0.4 --> funcsigs==1.0.2
 # * pluggy==0.4.0 --> pluggy==0.6.0
-# * py==1.4.31    --> py==1.5.3
+# * py==1.4.31 --> py==1.5.3
+# * psycopg2==2.6.1 --> psycopg2-binary
+# * isbnid==0.4.2.1 --> isbnid
 alembic==0.9.6
 amqp==2.1.4
 aniso8601==1.1.0
@@ -104,7 +106,7 @@ invenio-theme==1.0.0b2
 invenio-userprofiles==1.0.0a9
 ipaddr==2.1.11
 ipaddress==1.0.17
-isbnid==0.4.2.1
+isbnid
 itsdangerous==0.24
 Jinja2==2.10
 jinja2-time==0.2.0
@@ -134,7 +136,7 @@ Pillow==3.1.0
 pipdeptree==0.6.0
 pluggy==0.6.0
 poyo==0.4.0
-psycopg2==2.6.1
+psycopg2-binary
 py==1.5.3
 pyasn1==0.1.9
 pycparser==2.14

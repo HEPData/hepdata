@@ -189,7 +189,7 @@
 
                         <div class="record-abstract-content scrollable" style="min-height: 550px">
                             {% if ctx.record.data_abstract %}
-                              {{ ctx.record.data_abstract | safe }}
+                              {{ ctx.record.data_abstract }}
                             {% elif ctx.record.abstract %}
                                 {{ ctx.record.abstract }}
                             {% else %}
