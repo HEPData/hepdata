@@ -48,12 +48,6 @@ var hepdata_record = (function () {
 
         document.forms[form_name].submit();
 
-        alert('Attention (added 5 April 2018)!' +
-          '  Problems have emerged since yesterday saving uploaded files to the CERN EOS disk.' +
-          '  These problems should be fixed in the week beginning 9 April 2018.' +
-          '  Until then, uploaded submissions are likely to fail.' +
-          '  Apologies for the inconvenience!');
-
         return false;
 
       }
