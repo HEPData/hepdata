@@ -25,7 +25,7 @@
 Authors
 =======
 
-* **Database Manager:**
+* **Project Manager:**
 
   * Graeme Watt
 

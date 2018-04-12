@@ -26,6 +26,7 @@ from __future__ import absolute_import, print_function
 from flask import current_app
 from ordereddict import OrderedDict
 
+import re
 
 def pad_independent_variables(table_contents):
     """
@@ -273,7 +274,11 @@ def process_ctx(ctx, light_mode=False):
                 else:
                     _recid = ctx['recid']
 
-                _cleaned_table_name = data_table['name'].replace('Table ','Table')
+                _cleaned_table_name = data_table['name']
+                if re.match('^Table \d+$', _cleaned_table_name):
+                    _cleaned_table_name = _cleaned_table_name.replace('Table ', 'Table')
+                print(data_table['name'], _cleaned_table_name)
+
                 data_table['data'] = {
                     'json': '{0}/download/table/{1}/{2}/json'.format(
                         site_url, _recid, _cleaned_table_name),

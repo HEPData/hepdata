@@ -21,7 +21,8 @@
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
-"""Enchancers for the document sent to elastic search """
+"""Enhancers for the document sent to elastic search """
+import re
 import datetime
 import logging
 from dateutil.parser import parse
@@ -49,9 +50,14 @@ def add_data_submission_urls(doc):
 def add_data_table_urls(doc):
     doc['access_urls'] = {'links': {}}
     for format in FORMATS:
+
+        _cleaned_table_name = doc['title']
+        if re.match('^Table \d+$', _cleaned_table_name):
+            _cleaned_table_name = _cleaned_table_name.replace('Table ', 'Table')
+
         doc['access_urls']['links'][format] = '{0}/download/table/ins{1}/{2}/{3}'.format(
             current_app.config['SITE_URL'],
-            doc['inspire_id'], doc['title'], format)
+            doc['inspire_id'], _cleaned_table_name, format)
 
 
 def add_shortened_authors(doc):
