@@ -277,7 +277,6 @@ def process_ctx(ctx, light_mode=False):
                 _cleaned_table_name = data_table['name']
                 if re.match('^Table \d+$', _cleaned_table_name):
                     _cleaned_table_name = _cleaned_table_name.replace('Table ', 'Table')
-                print(data_table['name'], _cleaned_table_name)
 
                 data_table['data'] = {
                     'json': '{0}/download/table/{1}/{2}/json'.format(

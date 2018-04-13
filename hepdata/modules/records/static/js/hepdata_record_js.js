@@ -48,6 +48,12 @@ var hepdata_record = (function () {
 
         document.forms[form_name].submit();
 
+        alert('Attention (added 13 April 2018)! ' +
+          ' Problems have emerged since today writing the contents of uploaded archive files to the' +
+          ' CERN EOS disk.  This typically results in some YAML data files appearing as empty and an' +
+          ' error message "[Errno 34] Numerical result out of range".  We are working to find a' +
+          ' solution as soon as possible.  Thank you for your patience in the meantime.');
+
         return false;
 
       }
