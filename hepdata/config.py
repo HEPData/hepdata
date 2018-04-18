@@ -201,6 +201,7 @@ TWITTER_HANDLE_MAPPINGS = {
     "star": "@RHIC_STAR",
     "minerva": "@minervaexpt",
     "bicep2": "@BICEPTWO",
+    "xenon": "@Xenon1T",
 }
 
 INVALID_DOI_TEMPLATE = "hepdata_theme/invalid_doi.html"
@@ -260,6 +261,8 @@ SUBMISSION_FILE_NAME_PATTERN = 'HEPData-{}-v{}-yaml.zip'
 # For ignoring URLLIB3 errors on the server where we use https for elastic search,
 # but the certificate is generated on our side.
 PYTHONWARNINGS="ignore:Unverified HTTPS request"
+
+PRODUCTION_MODE = False
 
 # Import local config file if it is present.
 try:

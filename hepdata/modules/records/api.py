@@ -26,6 +26,7 @@
 import os
 from collections import OrderedDict
 from functools import wraps
+import subprocess
 
 import time
 from flask import redirect, request, render_template, jsonify, current_app, Response, abort
@@ -51,6 +52,9 @@ from hepdata.modules.submission.models import RecordVersionCommitMessage, DataSu
 from hepdata.utils.file_extractor import extract
 from hepdata.utils.users import get_user_from_id
 from bs4 import BeautifulSoup
+
+import tempfile
+from shutil import rmtree
 
 RECORD_PLAIN_TEXT = {
     "passed": "passed review",
@@ -308,13 +312,16 @@ def process_zip_archive(file, id):
 
     if not filename.endswith('.oldhepdata'):
         file_path = os.path.join(file_save_directory, filename)
+        print('Saving file to {}'.format(filename))
         file.save(file_path)
 
         submission_path = os.path.join(file_save_directory, remove_file_extension(filename))
+        submission_temp_path = tempfile.mkdtemp(dir=current_app.config["CFG_TMPDIR"])
+
         if filename.endswith('.yaml'):
             # we split the singular yaml file and create a submission directory
 
-            error, last_updated = split_files(file_path, submission_path)
+            error, last_updated = split_files(file_path, submission_temp_path)
             if error:
                 return {
                     "Single YAML file splitter": [{
@@ -325,7 +332,16 @@ def process_zip_archive(file, id):
 
         else:
             # we are dealing with a zip, tar, etc. so we extract the contents
-            extract(filename, file_path, submission_path)
+            extract(filename, file_path, submission_temp_path)
+
+        if not os.path.exists(submission_path):
+            os.makedirs(submission_path)
+
+        # Move files from submission_temp_path to submission_path (try to avoid problems with EOS disk).
+        copy_command = 'xrdcp' if current_app.config.get('PRODUCTION_MODE', False) else 'cp'
+        print('Copying with: {} -r {} {}'.format(copy_command, submission_temp_path, submission_path))
+        subprocess.check_output([copy_command, '-r',  submission_temp_path, submission_path])
+        #rmtree(submission_temp_path) # can uncomment when this is definitely working
 
         submission_found = find_file_in_directory(submission_path,
                                                   lambda x: x == "submission.yaml")
@@ -337,14 +353,12 @@ def process_zip_archive(file, id):
         print('Saving file to {}'.format(os.path.join(file_path, filename)))
         file.save(os.path.join(file_path, filename))
 
-        submission_path = os.path.join(file_save_directory, 'oldhepdata')
         submission_found = False
 
     if submission_found:
         basepath, submission_file_path = submission_found
     else:
-        result = check_and_convert_from_oldhepdata(submission_path, id,
-                                                   time_stamp)
+        result = check_and_convert_from_oldhepdata(file_path, id, time_stamp)
 
         # Check for errors
         if type(result) == dict:
@@ -359,6 +373,10 @@ def check_and_convert_from_oldhepdata(input_directory, id, timestamp):
     """ Check if the input directory contains a .oldhepdata file
     and convert it to YAML if it happens. """
     converted_path = os.path.join(current_app.config['CFG_DATADIR'], str(id), timestamp, 'yaml')
+
+    if not os.path.exists(converted_path):
+        os.makedirs(converted_path)
+
     oldhepdata_found = find_file_in_directory(
         input_directory,
         lambda x: x.endswith('.oldhepdata'),
@@ -371,11 +389,12 @@ def check_and_convert_from_oldhepdata(input_directory, id, timestamp):
                            " file has been found in the archive."
             }]
         }
-    successful = convert_oldhepdata_to_yaml(oldhepdata_found[1],
-                                            converted_path)
+    converted_temp_path = tempfile.mkdtemp(dir=current_app.config["CFG_TMPDIR"])
+
+    successful = convert_oldhepdata_to_yaml(oldhepdata_found[1], converted_temp_path)
     if not successful:
         # Parse error message from title of HTML file, removing part of string after final "//".
-        soup = BeautifulSoup(open(converted_path), "lxml")
+        soup = BeautifulSoup(open(converted_temp_path), "lxml")
         errormsg = soup.title.string.rsplit("//", 1)[0]
 
         return {
@@ -386,6 +405,12 @@ def check_and_convert_from_oldhepdata(input_directory, id, timestamp):
                            "Error message from converter follows.\n" + errormsg
             }]
         }
+    else:
+        # Move files from converted_temp_path to converted_path (try to avoid problems on EOS disk).
+        copy_command = 'xrdcp' if current_app.config.get('PRODUCTION_MODE', False) else 'cp'
+        print('Copying with: {} -r {} {}'.format(copy_command, converted_temp_path, converted_path))
+        subprocess.check_output([copy_command, '-r', converted_temp_path + '/hepdata-converter-ws-data', converted_path])
+        #rmtree(converted_temp_path) # can uncomment when this is definitely working
 
     return find_file_in_directory(
         converted_path,

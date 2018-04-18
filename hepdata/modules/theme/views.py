@@ -71,12 +71,14 @@ def invalid_doi():
 
 def page_not_found(e):
     """Error handler to show a 404.html page in case of a 404 error."""
-    return render_template(current_app.config['THEME_404_TEMPLATE']), 404
+    return render_template(current_app.config['THEME_404_TEMPLATE'],
+                           ctx={"name": type(e).__name__, "error": str(e)}), 404
 
 
 def internal_error(e):
     """Error handler to show a 500.html page in case of a 500 error."""
-    return render_template(current_app.config['THEME_500_TEMPLATE']), 500
+    return render_template(current_app.config['THEME_500_TEMPLATE'],
+                           ctx={"name": type(e).__name__, "error": str(e)}), 500
 
 
 @blueprint.route('/ping')

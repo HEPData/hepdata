@@ -404,8 +404,9 @@ def _fix_force_eos_metadata_reload(refresh_path):
     else:
         for root, dirs, files in os.walk(refresh_path):
             for file in files:
-                _fix_eos_metadata(os.path.join(root, file))
                 subprocess.check_output(['stat', os.path.join(root, file)])
+                # The next line now seems to give an "Input/output error", so try without it.
+                #_fix_eos_metadata(os.path.join(root, file))
 
 
 def _eos_fix_read_data(data_file_path):
