@@ -9,6 +9,10 @@
 # * psycopg2==2.6.1 --> psycopg2-binary
 # * isbnid==0.4.2.1 --> isbnid
 # * remove MySQL-python (unnecessary and fails to build on macOS)
+# * contextlib2==0.5.1 --> contextlib2==0.5.5
+# * raven==5.1.0 --> raven==6.7.0
+# * cryptography==1.5.2 --> cryptography>=2.1.4
+# * unpin cffi, idna, ipaddress, pycparser
 alembic==0.9.6
 amqp==2.1.4
 aniso8601==1.1.0
@@ -24,13 +28,13 @@ binaryornot==0.4.0
 blinker==1.4
 celery==4.0.2
 Cerberus==0.7
-cffi==1.8.3
+cffi
 chardet==2.3.0
 click==6.7
-contextlib2==0.5.1
+contextlib2==0.5.5
 cookiecutter==1.4.0
 coverage==4.1b1
-cryptography==1.5.2
+cryptography>=2.1.4
 datacite==0.2.2
 decorator==4.0.10
 dojson==1.0.0
@@ -80,7 +84,7 @@ greenlet==0.4.12
 gunicorn==19.4.5
 hepdata-converter-ws-client==0.1.3
 hepdata-validator==0.1.16
-idna==2.1
+idna
 IDUtils==0.2.3
 infinity==1.4
 intbitset==2.2.1
@@ -106,7 +110,7 @@ invenio-search==1.0.0a9
 invenio-theme==1.0.0b2
 invenio-userprofiles==1.0.0a9
 ipaddr==2.1.11
-ipaddress==1.0.17
+ipaddress
 isbnid
 itsdangerous==0.24
 Jinja2==2.10
@@ -139,7 +143,7 @@ poyo==0.4.0
 psycopg2-binary
 py==1.5.3
 pyasn1==0.1.9
-pycparser==2.14
+pycparser
 pycrypto==2.6.1
 pyPEG2==2.15.2
 pytest==3.5.0
@@ -151,7 +155,7 @@ python-dateutil==2.6.1
 python-editor==1.0.3
 pytz==2013b0
 PyYAML==3.12
-raven==5.1.0
+raven==6.7.0
 redis==2.10.5
 reportlab==3.1.44
 requests==2.11.1

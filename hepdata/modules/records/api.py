@@ -312,7 +312,7 @@ def process_zip_archive(file, id):
 
     if not filename.endswith('.oldhepdata'):
         file_path = os.path.join(file_save_directory, filename)
-        print('Saving file to {}'.format(filename))
+        print('Saving file to {}'.format(file_path))
         file.save(file_path)
 
         submission_path = os.path.join(file_save_directory, remove_file_extension(filename))
@@ -338,10 +338,10 @@ def process_zip_archive(file, id):
             os.makedirs(submission_path)
 
         # Move files from submission_temp_path to submission_path (try to avoid problems with EOS disk).
-        copy_command = 'xrdcp' if current_app.config.get('PRODUCTION_MODE', False) else 'cp'
-        print('Copying with: {} -r {} {}'.format(copy_command, submission_temp_path, submission_path))
-        subprocess.check_output([copy_command, '-r',  submission_temp_path, submission_path])
-        #rmtree(submission_temp_path) # can uncomment when this is definitely working
+        copy_command = ['xrdcp', '-N'] if current_app.config.get('PRODUCTION_MODE', False) else ['cp']
+        print('Copying with: {} -r {} {}'.format(' '.join(copy_command), submission_temp_path + '/.', submission_path))
+        subprocess.check_output(copy_command + ['-r',  submission_temp_path + '/.', submission_path])
+        rmtree(submission_temp_path) # can uncomment when this is definitely working
 
         submission_found = find_file_in_directory(submission_path,
                                                   lambda x: x == "submission.yaml")
@@ -407,10 +407,10 @@ def check_and_convert_from_oldhepdata(input_directory, id, timestamp):
         }
     else:
         # Move files from converted_temp_path to converted_path (try to avoid problems on EOS disk).
-        copy_command = 'xrdcp' if current_app.config.get('PRODUCTION_MODE', False) else 'cp'
-        print('Copying with: {} -r {} {}'.format(copy_command, converted_temp_path, converted_path))
-        subprocess.check_output([copy_command, '-r', converted_temp_path + '/hepdata-converter-ws-data', converted_path])
-        #rmtree(converted_temp_path) # can uncomment when this is definitely working
+        copy_command = ['xrdcp', '-N'] if current_app.config.get('PRODUCTION_MODE', False) else ['cp']
+        print('Copying with: {} -r {} {}'.format(' '.join(copy_command), converted_temp_path + '/hepdata-converter-ws-data/.', converted_path))
+        subprocess.check_output(copy_command + ['-r', converted_temp_path + '/hepdata-converter-ws-data/.', converted_path])
+        rmtree(converted_temp_path) # can uncomment when this is definitely working
 
     return find_file_in_directory(
         converted_path,
