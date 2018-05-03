@@ -341,7 +341,7 @@ def process_zip_archive(file, id):
         copy_command = ['xrdcp', '-N'] if current_app.config.get('PRODUCTION_MODE', False) else ['cp']
         print('Copying with: {} -r {} {}'.format(' '.join(copy_command), submission_temp_path + '/.', submission_path))
         subprocess.check_output(copy_command + ['-r',  submission_temp_path + '/.', submission_path])
-        rmtree(submission_temp_path) # can uncomment when this is definitely working
+        rmtree(submission_temp_path, ignore_errors=True) # can uncomment when this is definitely working
 
         submission_found = find_file_in_directory(submission_path,
                                                   lambda x: x == "submission.yaml")
@@ -389,13 +389,16 @@ def check_and_convert_from_oldhepdata(input_directory, id, timestamp):
                            " file has been found in the archive."
             }]
         }
-    converted_temp_path = tempfile.mkdtemp(dir=current_app.config["CFG_TMPDIR"])
+    
+    converted_temp_dir = tempfile.mkdtemp(dir=current_app.config["CFG_TMPDIR"])
+    converted_temp_path = os.path.join(converted_temp_dir, 'yaml')
 
     successful = convert_oldhepdata_to_yaml(oldhepdata_found[1], converted_temp_path)
     if not successful:
         # Parse error message from title of HTML file, removing part of string after final "//".
         soup = BeautifulSoup(open(converted_temp_path), "lxml")
         errormsg = soup.title.string.rsplit("//", 1)[0]
+        rmtree(converted_temp_dir, ignore_errors=True) # can uncomment when this is definitely working
 
         return {
             "Converter": [{
@@ -408,9 +411,9 @@ def check_and_convert_from_oldhepdata(input_directory, id, timestamp):
     else:
         # Move files from converted_temp_path to converted_path (try to avoid problems on EOS disk).
         copy_command = ['xrdcp', '-N'] if current_app.config.get('PRODUCTION_MODE', False) else ['cp']
-        print('Copying with: {} -r {} {}'.format(' '.join(copy_command), converted_temp_path + '/hepdata-converter-ws-data/.', converted_path))
-        subprocess.check_output(copy_command + ['-r', converted_temp_path + '/hepdata-converter-ws-data/.', converted_path])
-        rmtree(converted_temp_path) # can uncomment when this is definitely working
+        print('Copying with: {} -r {} {}'.format(' '.join(copy_command), converted_temp_path + '/.', converted_path))
+        subprocess.check_output(copy_command + ['-r', converted_temp_path + '/.', converted_path])
+        rmtree(converted_temp_dir, ignore_errors=True) # can uncomment when this is definitely working
 
     return find_file_in_directory(
         converted_path,
