@@ -255,7 +255,8 @@ def render_record(recid, record, version, output_format, light_mode=False):
                 return redirect('/download/submission/{0}/{1}/{2}'.format(recid, version, output_format))
         else:
             file_identifier = 'ins{}'.format(hepdata_submission.inspire_id) if hepdata_submission.inspire_id else recid
-            return redirect('/download/table/{0}/{1}/{2}/{3}'.format(file_identifier, request.args['table'],
+            return redirect('/download/table/{0}/{1}/{2}/{3}'.format(file_identifier,
+                                                                     request.args['table'].replace('%', '%25'),
                                                                      version, output_format))
 
     elif record is not None:  # this happens when we access an id of a data record
@@ -276,7 +277,8 @@ def render_record(recid, record, version, output_format, light_mode=False):
             if output_format == 'html':
                 return render_template('hepdata_records/data_record.html', ctx=ctx)
             else:
-                return redirect('/download/table/{0}/{1}/{2}/{3}'.format(publication_recid, ctx['table_name'],
+                return redirect('/download/table/{0}/{1}/{2}/{3}'.format(publication_recid,
+                                                                         ctx['table_name'].replace('%', '%25'),
                                                                          hepdata_submission.version, output_format))
 
         except Exception as e:
@@ -290,7 +292,7 @@ def process_payload(recid, file, redirect_url):
         errors = process_zip_archive(file, recid)
         if errors:
             return render_template('hepdata_records/error_page.html',
-                                   recid=None, errors=errors)
+                                   redirect_url=redirect_url.format(recid), errors=errors)
         else:
             update_action_for_submission_participant(recid, current_user.get_id(), 'uploader')
             return redirect(redirect_url.format(recid))
@@ -389,7 +391,7 @@ def check_and_convert_from_oldhepdata(input_directory, id, timestamp):
                            " file has been found in the archive."
             }]
         }
-    
+
     converted_temp_dir = tempfile.mkdtemp(dir=current_app.config["CFG_TMPDIR"])
     converted_temp_path = os.path.join(converted_temp_dir, 'yaml')
 

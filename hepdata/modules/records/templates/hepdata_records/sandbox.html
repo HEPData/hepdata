@@ -92,7 +92,7 @@
 
                                 {% include 'hepdata_records/components/uploader_info.html' %}
 
-                                <form action="/record/sandbox/consume" name="sandbox-upload-form" method="post"
+                                <form action="/record/sandbox{% if ctx.recid %}/{% endif %}{{ ctx.recid }}/consume" name="sandbox-upload-form" method="post"
                                       enctype=multipart/form-data>
                                     <input type="file" name="hep_archive" id="root_file_upload"
                                            data-iconName="fa fa-upload"
@@ -108,10 +108,10 @@
                         </div>
 
                         <div id="past_submissions" class="col-md-offset-1 col-md-4">
+                          {% if ctx.submissions|length > 0 %}
                             <div class="well">
                                 <h4>Your sandbox submissions</h4>
 
-                                {% if ctx.submissions|length > 0 %}
                                     <div class="scrollable height30 row-fluid">
                                         {% for submission in ctx.submissions %}
                                             <div class="col-md-10 col-sm-10 col-xs-10">
@@ -130,8 +130,8 @@
                                         {% endfor %}
                                     </div>
                                     <div class="clearfix"></div>
-                                {% endif %}
                             </div>
+                          {% endif %}
                         </div>
                     </div>
                 </div>

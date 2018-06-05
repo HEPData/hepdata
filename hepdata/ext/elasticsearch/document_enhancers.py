@@ -51,7 +51,7 @@ def add_data_table_urls(doc):
     doc['access_urls'] = {'links': {}}
     for format in FORMATS:
 
-        _cleaned_table_name = doc['title']
+        _cleaned_table_name = doc['title'].replace('%', '%25')
         if re.match('^Table \d+$', _cleaned_table_name):
             _cleaned_table_name = _cleaned_table_name.replace('Table ', 'Table')
 

@@ -497,7 +497,17 @@ def process_submission_directory(basepath, submission_file_path, recid, update=F
             for yaml_document in submission_processed:
                 if not yaml_document:
                     continue
-                elif 'name' not in yaml_document:
+
+                # Check for presence of local files given as additional_resources.
+                if 'additional_resources' in yaml_document:
+                    for resource in yaml_document['additional_resources']:
+                        location = os.path.join(basepath, resource['location'])
+                        if not resource['location'].startswith(('http', '/resource/')):
+                            if not os.path.isfile(location):
+                                errors[resource['location']] = [{"level": "error", "message":
+                                    "Missing 'additional_resources' file from uploaded archive."}]
+
+                if 'name' not in yaml_document:
                     no_general_submission_info = False
                     process_general_submission_info(basepath, yaml_document, recid)
                 else:
@@ -539,6 +549,16 @@ def process_submission_directory(basepath, submission_file_path, recid, update=F
                             errors = process_validation_errors_for_display(data_file_validator.get_messages())
                             data_file_validator.clear_messages()
 
+                        # Check that that the length of the 'values' list is consistent
+                        # for each of the independent_variables and dependent_variables.
+                        indep_count = [len(indep['values']) for indep in data['independent_variables']]
+                        dep_count = [len(dep['values']) for dep in data['dependent_variables']]
+                        if len(set(indep_count + dep_count)) > 1: # if more than one unique count
+                            errors[yaml_document["data_file"]] = \
+                                [{"level": "error", "message": "Inconsistent length of 'values' list:\n" +
+                                  "independent_variables{}, dependent_variables{}".format(
+                                      str(indep_count), str(dep_count))}]
+
             submission_file.close()
 
             if no_general_submission_info:
@@ -558,6 +578,10 @@ def process_submission_directory(basepath, submission_file_path, recid, update=F
 
                 admin_indexer = AdminIndexer()
                 admin_indexer.index_submission(hepsubmission)
+
+            else: # delete all tables if errors
+                cleanup_submission(recid, hepsubmission.version, {})
+
         else:
 
             errors = process_validation_errors_for_display(submission_file_validator.get_messages())

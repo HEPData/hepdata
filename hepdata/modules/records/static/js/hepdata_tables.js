@@ -67,11 +67,11 @@ HEPDATA.switch_table = function (listId, table_requested, status) {
 
   $(".data_download_link").each(function () {
     var data_format = $(this).text().toLowerCase();
-    var data_url = '/download/table/' + _recid + '/' + _name + '/' + HEPDATA.current_table_version + '/' + data_format;
+    var data_url = '/download/table/' + _recid + '/' + _name.replace(/%/g, '%25') + '/' + HEPDATA.current_table_version + '/' + data_format;
     $(this).attr('href', data_url);
   });
 
-  $("#json_link").attr('href', '/download/table/' + _recid + '/' + _name + '/' + HEPDATA.current_table_version + '/json')
+  $("#json_link").attr('href', '/download/table/' + _recid + '/' + _name.replace(/%/g, '%25') + '/' + HEPDATA.current_table_version + '/json')
 };
 
 HEPDATA.table_renderer = {

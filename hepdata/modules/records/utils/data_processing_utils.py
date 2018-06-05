@@ -274,7 +274,7 @@ def process_ctx(ctx, light_mode=False):
                 else:
                     _recid = ctx['recid']
 
-                _cleaned_table_name = data_table['name']
+                _cleaned_table_name = data_table['name'].replace('%', '%25')
                 if re.match('^Table \d+$', _cleaned_table_name):
                     _cleaned_table_name = _cleaned_table_name.replace('Table ', 'Table')
 
