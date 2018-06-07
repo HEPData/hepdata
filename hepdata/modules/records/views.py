@@ -72,7 +72,6 @@ blueprint = Blueprint(
 )
 
 
-@login_required
 @blueprint.route('/sandbox/<int:id>', methods=['GET'])
 def sandbox_display(id):
     hepdata_submission = HEPSubmission.query.filter_by(
@@ -111,8 +110,8 @@ def get_metadata_by_alternative_id(recid):
         return abort(404)
 
 
-@login_required
 @blueprint.route('/question/<int:recid>', methods=['POST'])
+@login_required
 def submit_question(recid):
     question = request.form['question']
     try:
@@ -127,8 +126,8 @@ def submit_question(recid):
     return jsonify({'status': 'queued', 'message': 'Your question has been posted.'})
 
 
-@login_required
 @blueprint.route('/<int:recid>/<int:version>/notify', methods=['POST'], strict_slashes=True)
+@login_required
 def notify_reviewers(recid, version):
     message = request.form['message']
 
@@ -605,8 +604,8 @@ def sandbox():
                            ctx={"submissions": submissions})
 
 
-@login_required
 @blueprint.route('/attach_information/<int:recid>', methods=['POST'])
+@login_required
 def attach_information_to_record(recid):
     """
     Given an INSPIRE data representation, this will process the data, and update information
@@ -638,7 +637,6 @@ def attach_information_to_record(recid):
                         'message': 'No record with that recid was found.'})
 
 
-@login_required
 @blueprint.route('/sandbox/consume', methods=['POST'])
 def consume_sandbox_payload():
     """
@@ -654,7 +652,6 @@ def consume_sandbox_payload():
     return process_payload(id, file, '/record/sandbox/{}')
 
 
-@login_required
 @blueprint.route('/sandbox/<int:recid>/consume', methods=['POST'])
 def update_sandbox_payload(recid):
     """
@@ -666,8 +663,8 @@ def update_sandbox_payload(recid):
     return process_payload(recid, file, '/record/sandbox/{}')
 
 
-@login_required
 @blueprint.route('/add_resource/<string:type>/<int:identifier>/<int:version>', methods=['POST'])
+@login_required
 def add_resource(type, identifier, version):
     """
     Adds a data resource to either the submission or individual data files.

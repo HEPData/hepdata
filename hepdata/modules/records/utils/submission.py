@@ -58,6 +58,7 @@ from invenio_db import db
 from invenio_pidstore.errors import PIDDoesNotExistError
 import os
 from sqlalchemy.orm.exc import NoResultFound
+from sqlalchemy.exc import SQLAlchemyError
 import yaml
 try:
     from yaml import CSafeLoader as Loader
@@ -205,6 +206,7 @@ def process_data_file(recid, version, basepath, data_obj, datasubmission, main_f
     """
     Takes a data file and any supplementary files and persists their
     metadata to the database whilst recording their upload path.
+
     :param recid: the record id
     :param version: version of the resource to be stored
     :param basepath: the path the submission has been loaded to
@@ -543,21 +545,27 @@ def process_submission_directory(basepath, submission_file_path, recid, update=F
                     else:
 
                         if data_file_validator.validate(file_path=main_file_path, data=data):
-                            process_data_file(recid, hepsubmission.version, basepath, yaml_document,
+                            try:
+                                process_data_file(recid, hepsubmission.version, basepath, yaml_document,
                                               datasubmission, main_file_path)
+                            except SQLAlchemyError as sqlex:
+                                errors[yaml_document["data_file"]] = [{"level": "error", "message":
+                                    "There was a problem processing the file.\n" + str(sqlex)}]
+                                db.session.rollback()
                         else:
                             errors = process_validation_errors_for_display(data_file_validator.get_messages())
                             data_file_validator.clear_messages()
 
-                        # Check that that the length of the 'values' list is consistent
+                        # Check that the length of the 'values' list is consistent
                         # for each of the independent_variables and dependent_variables.
                         indep_count = [len(indep['values']) for indep in data['independent_variables']]
                         dep_count = [len(dep['values']) for dep in data['dependent_variables']]
                         if len(set(indep_count + dep_count)) > 1: # if more than one unique count
-                            errors[yaml_document["data_file"]] = \
-                                [{"level": "error", "message": "Inconsistent length of 'values' list:\n" +
+                            errors.setdefault(yaml_document["data_file"], []).append(
+                                {"level": "error", "message": "Inconsistent length of 'values' list:\n" +
                                   "independent_variables{}, dependent_variables{}".format(
-                                      str(indep_count), str(dep_count))}]
+                                      str(indep_count), str(dep_count))}
+                            )
 
             submission_file.close()
 

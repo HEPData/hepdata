@@ -38,14 +38,14 @@ blueprint = Blueprint(
 )
 
 
-@login_required
 @blueprint.route('', methods=['GET'])
+@login_required
 def submit_ui():
     return render_template('hepdata_submission/submit.html')
 
 
-@login_required
 @blueprint.route('', methods=['POST'])
+@login_required
 def submit_post():
     inspire_id = request.form['inspire_id']
     title = request.form['title']

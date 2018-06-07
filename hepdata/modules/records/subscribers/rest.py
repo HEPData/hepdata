@@ -8,27 +8,28 @@ from hepdata.modules.records.utils.common import get_or_create
 from .models import Subscribers
 
 blueprint = Blueprint(
-    'subcribers',
+    'subscribers',
     __name__,
     url_prefix='/subscriptions'
 )
 
 
-@login_required
 @blueprint.route('/list/record/<int:recid>', methods=['GET'])
+@login_required
 def list_subscribers_to_record(recid):
     subscribers = get_users_subscribed_to_record(recid)
     return jsonify(subscribers)
 
 
-@login_required
 @blueprint.route('/list/', methods=['GET'])
+@login_required
 def list_subscriptions_for_user():
     subscribers = get_records_subscribed_by_current_user()
     return jsonify(subscribers)
 
-@login_required
+
 @blueprint.route('/subscribe/<int:recid>', methods=['POST'])
+@login_required
 def subscribe(recid):
     record_subscribers = get_or_create(db.session, Subscribers, publication_recid=recid)
 
@@ -44,8 +45,8 @@ def subscribe(recid):
         return jsonify({"success": False, "status_code": 500})
 
 
-@login_required
 @blueprint.route('/unsubscribe/<int:recid>', methods=['POST'])
+@login_required
 def unsubscribe(recid):
     record_subscribers = get_or_create(db.session, Subscribers,
                                        publication_recid=recid)
