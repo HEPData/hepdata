@@ -94,9 +94,9 @@ def convert_endpoint():
     return send_file(conversion_result, as_attachment=True)
 
 
-@blueprint.route('/submission/<string:inspire_id>/<string:file_format>')
-@blueprint.route('/submission/<string:inspire_id>/<int:version>/<string:file_format>')
-@blueprint.route('/submission/<string:inspire_id>/<int:version>/<string:file_format>/<string:rivet>')
+@blueprint.route('/submission/<inspire_id>/<file_format>')
+@blueprint.route('/submission/<inspire_id>/<int:version>/<file_format>')
+@blueprint.route('/submission/<inspire_id>/<int:version>/<file_format>/<rivet>')
 def download_submission_with_inspire_id(*args, **kwargs):
     """
        Gets the submission file and either serves it back directly from YAML, or converts it
@@ -128,9 +128,9 @@ def download_submission_with_inspire_id(*args, **kwargs):
     return download_submission(submission, kwargs.pop('file_format'), rivet_analysis_name=kwargs.pop('rivet', ''))
 
 
-@blueprint.route('/submission/<int:recid>/<string:file_format>')
-@blueprint.route('/submission/<int:recid>/<int:version>/<string:file_format>')
-@blueprint.route('/submission/<int:recid>/<int:version>/<string:file_format>/<string:rivet>')
+@blueprint.route('/submission/<int:recid>/<file_format>')
+@blueprint.route('/submission/<int:recid>/<int:version>/<file_format>')
+@blueprint.route('/submission/<int:recid>/<int:version>/<file_format>/<rivet>')
 def download_submission_with_recid(*args, **kwargs):
     """
         Gets the submission file and either serves it back directly from YAML, or converts it
@@ -240,9 +240,9 @@ def download_submission(submission, file_format, offline=False, force=False, riv
         print('File for {0} created successfully at {1}'.format(file_identifier, output_path))
 
 
-@blueprint.route('/table/<string:inspire_id>/<path:table_name>/<string:file_format>')
-@blueprint.route('/table/<string:inspire_id>/<path:table_name>/<int:version>/<string:file_format>')
-@blueprint.route('/table/<string:inspire_id>/<path:table_name>/<int:version>/<string:file_format>/<string:rivet>')
+@blueprint.route('/table/<inspire_id>/<path:table_name>/<file_format>')
+@blueprint.route('/table/<inspire_id>/<path:table_name>/<int:version>/<file_format>')
+@blueprint.route('/table/<inspire_id>/<path:table_name>/<int:version>/<file_format>/<rivet>')
 def download_data_table_by_inspire_id(*args, **kwargs):
     """
     Downloads the latest data file given the url /download/submission/ins1283842/Table 1/yaml or
@@ -279,9 +279,9 @@ def download_data_table_by_inspire_id(*args, **kwargs):
                               rivet_analysis_name=rivet)
 
 
-@blueprint.route('/table/<int:recid>/<path:table_name>/<string:file_format>')
-@blueprint.route('/table/<int:recid>/<path:table_name>/<int:version>/<string:file_format>')
-@blueprint.route('/table/<int:recid>/<path:table_name>/<int:version>/<string:file_format>/<string:rivet>')
+@blueprint.route('/table/<int:recid>/<path:table_name>/<file_format>')
+@blueprint.route('/table/<int:recid>/<path:table_name>/<int:version>/<file_format>')
+@blueprint.route('/table/<int:recid>/<path:table_name>/<int:version>/<file_format>/<rivet>')
 def download_data_table_by_recid(*args, **kwargs):
     """
     Record ID download
@@ -292,6 +292,7 @@ def download_data_table_by_recid(*args, **kwargs):
     :param kwargs: inspire_id, table_name, version (optional), and file_format
     :return:
     """
+    print(kwargs)
     recid = kwargs.pop('recid')
     table_name = kwargs.pop('table_name')
     rivet = kwargs.pop('rivet', '')
@@ -315,7 +316,7 @@ def download_data_table_by_recid(*args, **kwargs):
                               rivet_analysis_name=rivet)
 
 
-@blueprint.route('/table/<int:data_id>/<string:file_format>')
+@blueprint.route('/table/<int:data_id>/<file_format>')
 def download_datatable_by_dataid(data_id, file_format):
     """ Download a particular data table in a given format. """
 

@@ -259,7 +259,7 @@ def render_record(recid, record, version, output_format, light_mode=False):
         else:
             file_identifier = 'ins{}'.format(hepdata_submission.inspire_id) if hepdata_submission.inspire_id else recid
             if output_format == 'yoda' and 'rivet' in request.args:
-                redirect('/download/table/{0}/{1}/{2}/{3}/{4}'.format(
+                return redirect('/download/table/{0}/{1}/{2}/{3}/{4}'.format(
                     file_identifier, request.args['table'].replace('%', '%25'), version, output_format,
                     request.args['rivet']))
             else:
