@@ -251,13 +251,20 @@ def render_record(recid, record, version, output_format, light_mode=False):
             if output_format == 'json':
                 ctx = process_ctx(ctx, light_mode)
                 return jsonify(ctx)
+            elif output_format == 'yoda' and 'rivet' in request.args:
+                return redirect('/download/submission/{0}/{1}/{2}/{3}'.format(recid, version, output_format,
+                                                                              request.args['rivet']))
             else:
                 return redirect('/download/submission/{0}/{1}/{2}'.format(recid, version, output_format))
         else:
             file_identifier = 'ins{}'.format(hepdata_submission.inspire_id) if hepdata_submission.inspire_id else recid
-            return redirect('/download/table/{0}/{1}/{2}/{3}'.format(file_identifier,
-                                                                     request.args['table'].replace('%', '%25'),
-                                                                     version, output_format))
+            if output_format == 'yoda' and 'rivet' in request.args:
+                redirect('/download/table/{0}/{1}/{2}/{3}/{4}'.format(
+                    file_identifier, request.args['table'].replace('%', '%25'), version, output_format,
+                    request.args['rivet']))
+            else:
+                return redirect('/download/table/{0}/{1}/{2}/{3}'.format(
+                    file_identifier, request.args['table'].replace('%', '%25'), version, output_format))
 
     elif record is not None:  # this happens when we access an id of a data record
         # in which case, we find the related publication, and
@@ -276,10 +283,13 @@ def render_record(recid, record, version, output_format, light_mode=False):
 
             if output_format == 'html':
                 return render_template('hepdata_records/data_record.html', ctx=ctx)
+            elif output_format == 'yoda' and 'rivet' in request.args:
+                return redirect('/download/table/{0}/{1}/{2}/{3}/{4}'.format(
+                    publication_recid, ctx['table_name'].replace('%', '%25'), hepdata_submission.version, output_format,
+                    request.args['rivet']))
             else:
-                return redirect('/download/table/{0}/{1}/{2}/{3}'.format(publication_recid,
-                                                                         ctx['table_name'].replace('%', '%25'),
-                                                                         hepdata_submission.version, output_format))
+                return redirect('/download/table/{0}/{1}/{2}/{3}'.format(
+                    publication_recid, ctx['table_name'].replace('%', '%25'), hepdata_submission.version, output_format))
 
         except Exception as e:
             abort(404)

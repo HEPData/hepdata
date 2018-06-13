@@ -94,8 +94,9 @@ def convert_endpoint():
     return send_file(conversion_result, as_attachment=True)
 
 
-@blueprint.route('/submission/<string:inspire_id>/<int:version>/<string:file_format>')
 @blueprint.route('/submission/<string:inspire_id>/<string:file_format>')
+@blueprint.route('/submission/<string:inspire_id>/<int:version>/<string:file_format>')
+@blueprint.route('/submission/<string:inspire_id>/<int:version>/<string:file_format>/<string:rivet>')
 def download_submission_with_inspire_id(*args, **kwargs):
     """
        Gets the submission file and either serves it back directly from YAML, or converts it
@@ -104,6 +105,7 @@ def download_submission_with_inspire_id(*args, **kwargs):
        :param inspire_id: inspire id
        :param version: version of submission to export. If absent, returns the latest.
        :param file_format: yaml, csv, root, or yoda
+       :param rivet: Rivet analysis name to override default written in YODA export
        :return:
     """
 
@@ -123,11 +125,12 @@ def download_submission_with_inspire_id(*args, **kwargs):
             description="A submission with Inspire ID {0} does not exist".format(inspire_id)
         )
 
-    return download_submission(submission, kwargs.pop('file_format'))
+    return download_submission(submission, kwargs.pop('file_format'), rivet_analysis_name=kwargs.pop('rivet', ''))
 
 
-@blueprint.route('/submission/<int:recid>/<int:version>/<string:file_format>')
 @blueprint.route('/submission/<int:recid>/<string:file_format>')
+@blueprint.route('/submission/<int:recid>/<int:version>/<string:file_format>')
+@blueprint.route('/submission/<int:recid>/<int:version>/<string:file_format>/<string:rivet>')
 def download_submission_with_recid(*args, **kwargs):
     """
         Gets the submission file and either serves it back directly from YAML, or converts it
@@ -136,6 +139,7 @@ def download_submission_with_recid(*args, **kwargs):
         :param recid: submissions recid
         :param version: version of submission to export. If absent, returns the latest.
         :param file_format: yaml, csv, root, or yoda
+        :param rivet: Rivet analysis name to override default written in YODA export
         :return:
     """
     recid = kwargs.pop('recid')
@@ -151,17 +155,20 @@ def download_submission_with_recid(*args, **kwargs):
             description="A submission with record ID {0} does not exist".format(recid)
         )
 
-    return download_submission(submission, kwargs.pop('file_format'))
+    return download_submission(submission, kwargs.pop('file_format'), rivet_analysis_name=kwargs.pop('rivet', ''))
 
 
 @shared_task()
-def download_submission(submission, file_format, offline=False, force=False):
+def download_submission(submission, file_format, offline=False, force=False, rivet_analysis_name=''):
     """
     Gets the submission file and either serves it back directly from YAML, or converts it
     for other formats.
 
     :param submission: HEPSubmission
     :param file_format: yaml, csv, root, or yoda
+    :param offline: offline creation of the conversion when a record is finalised
+    :param force: force recreation of the conversion
+    :param rivet_analysis_name: Rivet analysis name to override default written in YODA export
     :return:
     """
 
@@ -191,19 +198,20 @@ def download_submission(submission, file_format, offline=False, force=False):
     if not os.path.exists(converted_dir):
         os.mkdir(converted_dir)
 
-    output_path = os.path.join(converted_dir, output_file)
+    if file_format == 'yoda' and rivet_analysis_name:
+        # Don't store in converted_dir since rivet_analysis_name might possibly change between calls.
+        output_path = os.path.join(current_app.config['CFG_TMPDIR'], output_file)
+    else:
+        output_path = os.path.join(converted_dir, output_file)
 
-    # If the file is already available in the dir, send it back
-    # unless we are forcing recreation of the file or the submission is not finished.
-    if os.path.exists(output_path) and not force and submission.overall_status == 'finished':
-        if not offline:
-            return send_file(
-                output_path,
-                as_attachment=True,
-            )
-        else:
-            print('File already downloaded at {0}'.format(output_path))
-            return
+        # If the file is already available in the dir, send it back
+        # unless we are forcing recreation of the file or the submission is not finished.
+        if os.path.exists(output_path) and not force and submission.overall_status == 'finished':
+            if not offline:
+                return send_file(output_path, as_attachment=True)
+            else:
+                print('File already downloaded at {0}'.format(output_path))
+                return
 
     converter_options = {
         'input_format': 'yaml',
@@ -214,11 +222,14 @@ def download_submission(submission, file_format, offline=False, force=False):
     if submission.doi and submission.overall_status != 'sandbox':
         converter_options['hepdata_doi'] = '{0}.v{1}'.format(submission.doi, version)
 
-    if submission.inspire_id and file_format == 'yoda':
-        record = get_record_contents(submission.publication_recid)
-        if record:
-            converter_options['rivet_analysis_name'] = '{0}_{1}_I{2}'.format(
-                ''.join(record['collaborations']).upper(), record['year'], submission.inspire_id)
+    if file_format == 'yoda':
+        if rivet_analysis_name:
+            converter_options['rivet_analysis_name'] = rivet_analysis_name
+        elif submission.inspire_id:
+            record = get_record_contents(submission.publication_recid)
+            if record:
+                converter_options['rivet_analysis_name'] = '{0}_{1}_I{2}'.format(
+                    ''.join(record['collaborations']).upper(), record['year'], submission.inspire_id)
 
     data_filepath = os.path.join(path, data_filename)
 
@@ -229,8 +240,9 @@ def download_submission(submission, file_format, offline=False, force=False):
         print('File for {0} created successfully at {1}'.format(file_identifier, output_path))
 
 
-@blueprint.route('/table/<string:inspire_id>/<path:table_name>/<int:version>/<string:file_format>')
 @blueprint.route('/table/<string:inspire_id>/<path:table_name>/<string:file_format>')
+@blueprint.route('/table/<string:inspire_id>/<path:table_name>/<int:version>/<string:file_format>')
+@blueprint.route('/table/<string:inspire_id>/<path:table_name>/<int:version>/<string:file_format>/<string:rivet>')
 def download_data_table_by_inspire_id(*args, **kwargs):
     """
     Downloads the latest data file given the url /download/submission/ins1283842/Table 1/yaml or
@@ -242,6 +254,7 @@ def download_data_table_by_inspire_id(*args, **kwargs):
     """
     inspire_id = kwargs.pop('inspire_id')
     table_name = kwargs.pop('table_name')
+    rivet = kwargs.pop('rivet', '')
 
     if 'ins' in inspire_id:
         inspire_id = inspire_id.replace('ins', '')
@@ -262,11 +275,13 @@ def download_data_table_by_inspire_id(*args, **kwargs):
                                                             version=version, name=table_name).one()
 
     return download_datatable(datasubmission, kwargs.pop('file_format'),
-                              submission_id='ins{0}'.format(inspire_id), table_name=table_name)
+                              submission_id='ins{0}'.format(inspire_id), table_name=table_name,
+                              rivet_analysis_name=rivet)
 
 
-@blueprint.route('/table/<int:recid>/<path:table_name>/<int:version>/<string:file_format>')
 @blueprint.route('/table/<int:recid>/<path:table_name>/<string:file_format>')
+@blueprint.route('/table/<int:recid>/<path:table_name>/<int:version>/<string:file_format>')
+@blueprint.route('/table/<int:recid>/<path:table_name>/<int:version>/<string:file_format>/<string:rivet>')
 def download_data_table_by_recid(*args, **kwargs):
     """
     Record ID download
@@ -279,6 +294,7 @@ def download_data_table_by_recid(*args, **kwargs):
     """
     recid = kwargs.pop('recid')
     table_name = kwargs.pop('table_name')
+    rivet = kwargs.pop('rivet', '')
 
     if 'version' not in kwargs:
         version = get_latest_hepsubmission(publication_recid=recid).version
@@ -295,7 +311,8 @@ def download_data_table_by_recid(*args, **kwargs):
                                                             name=table_name).one()
 
     return download_datatable(datasubmission, kwargs.pop('file_format'),
-                              submission_id='{0}'.format(recid), table_name=table_name)
+                              submission_id='{0}'.format(recid), table_name=table_name,
+                              rivet_analysis_name=rivet)
 
 
 @blueprint.route('/table/<int:data_id>/<string:file_format>')
@@ -349,23 +366,23 @@ def download_datatable(datasubmission, file_format, *args, **kwargs):
     if datasubmission.doi and hepsubmission.overall_status != 'sandbox':
         options['hepdata_doi'] = datasubmission.doi.rsplit('/', 1)[0].encode('ascii')
 
-    if datasubmission.publication_inspire_id and file_format == 'yoda':
-        record = get_record_contents(datasubmission.publication_recid)
-        if record:
-            options['rivet_analysis_name'] = '{0}_{1}_I{2}'.format(
-                ''.join(record['collaborations']).upper(), record['year'], datasubmission.publication_inspire_id)
+    if file_format == 'yoda':
+        rivet_analysis_name = kwargs.pop('rivet_analysis_name', '')
+        if rivet_analysis_name:
+            options['rivet_analysis_name'] = rivet_analysis_name
+        elif datasubmission.publication_inspire_id:
+            record = get_record_contents(datasubmission.publication_recid)
+            if record:
+                options['rivet_analysis_name'] = '{0}_{1}_I{2}'.format(
+                    ''.join(record['collaborations']).upper(), record['year'], datasubmission.publication_inspire_id)
 
-    if not os.path.exists(output_path):
-
-        successful = convert(
-            CFG_CONVERTER_URL,
-            record_path,
-            output=output_path + '-dir',
-            options=options,
-            extract=False,
-        )
-    else:
-        successful = True
+    successful = convert(
+        CFG_CONVERTER_URL,
+        record_path,
+        output=output_path + '-dir',
+        options=options,
+        extract=False,
+    )
 
     # Error occurred, the output is a HTML file
     if successful:
