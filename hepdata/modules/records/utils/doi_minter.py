@@ -133,7 +133,7 @@ def create_data_doi(hep_submission, data_submission, publication_info, site_url)
                           site_url=site_url)
 
     register_doi(data_submission.doi, site_url + '/record/ins{0}?version={1}&table={2}'.format(
-        publication_info['inspire_id'], data_submission.version, data_submission.name),
+        publication_info['inspire_id'], data_submission.version, data_submission.name.replace('+', '%2B')),
                  xml, publication_info['uuid'])
 
 

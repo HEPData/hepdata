@@ -172,7 +172,7 @@ def format_tables(ctx, data_record_query, data_table, recid):
     ctx['watched'] = is_current_user_subscribed_to_record(recid)
     ctx['table_to_show'] = first_data_id
     if 'table' in request.args:
-        if request.args['table'] is not '':
+        if request.args['table']:
             ctx['table_to_show'] = request.args['table']
     ctx['data_tables'] = data_table_metadata.values()
 
@@ -308,7 +308,7 @@ def process_payload(recid, file, redirect_url):
             update_action_for_submission_participant(recid, current_user.get_id(), 'uploader')
             return redirect(redirect_url.format(recid))
     else:
-        return render_template('hepdata_records/error_page.html', recid=recid,
+        return render_template('hepdata_records/error_page.html', redirect_url=redirect_url.format(recid),
                                message="Incorrect file type uploaded.",
                                errors={"Submission": [{"level": "error",
                                                        "message": "You must upload a .zip, .tar, or .tar.gz file"

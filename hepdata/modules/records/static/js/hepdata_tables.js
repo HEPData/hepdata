@@ -32,7 +32,7 @@ HEPDATA.switch_table = function (listId, table_requested, status) {
 
   var _recid = HEPDATA.current_inspire_id && status == 'finished' ? 'ins' + HEPDATA.current_inspire_id : HEPDATA.current_record_id;
   var direct_link = HEPDATA.site_url + '/record/' + _recid
-    + '?version=' + HEPDATA.current_table_version + "&table=" + _name;
+    + '?version=' + HEPDATA.current_table_version + "&table=" + _name.replace(/\+/g, '%2B');
 
   $("#direct_data_link").val(direct_link);
   $(".copy-btn").attr('data-clipboard-text', direct_link);
