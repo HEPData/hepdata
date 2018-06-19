@@ -48,6 +48,7 @@ def generate_dois_for_submission(*args, **kwargs):
     :return:
     """
 
+    site_url = current_app.config.get('SITE_URL', 'https://www.hepdata.net')
     hep_submissions = HEPSubmission.query.filter_by(**kwargs).all()
 
     for hep_submission in hep_submissions:
@@ -61,15 +62,15 @@ def generate_dois_for_submission(*args, **kwargs):
 
         publication_info = get_record_by_id(hep_submission.publication_recid)
 
-        create_container_doi(hep_submission, data_submissions, publication_info)
+        create_container_doi(hep_submission, data_submissions, publication_info, site_url)
 
         for data_submission in data_submissions:
-            create_data_doi(hep_submission, data_submission, publication_info)
+            create_data_doi(hep_submission, data_submission, publication_info, site_url)
 
 
 
 
-def create_container_doi(hep_submission, data_submissions, publication_info):
+def create_container_doi(hep_submission, data_submissions, publication_info, site_url):
     """
     Creates the payload to wrap the whole submission
     :param hep_submission:
@@ -88,23 +89,25 @@ def create_container_doi(hep_submission, data_submissions, publication_info):
                                doi=hep_submission.doi,
                                overall_submission=hep_submission,
                                data_submissions=data_submissions,
-                               publication_info=publication_info)
+                               publication_info=publication_info,
+                               site_url=site_url)
 
     version_xml = render_template('hepdata_records/formats/datacite/datacite_container_submission.xml',
                                   doi=version_doi,
                                   overall_submission=hep_submission,
                                   data_submissions=data_submissions,
-                                  publication_info=publication_info)
+                                  publication_info=publication_info,
+                                  site_url=site_url)
 
     # Register DOI for the version, and update the base DOI to resolve to the latest submission version.
-    register_doi(hep_submission.doi, 'http://www.hepdata.net/record/ins{0}'.format(publication_info['inspire_id']),
+    register_doi(hep_submission.doi, site_url + '/record/ins{0}'.format(publication_info['inspire_id']),
                  base_xml, publication_info['uuid'])
 
-    register_doi(version_doi, 'http://www.hepdata.net/record/ins{0}?version={1}'.format(
+    register_doi(version_doi, site_url + '/record/ins{0}?version={1}'.format(
         publication_info['inspire_id'], hep_submission.version), version_xml, publication_info['uuid'])
 
 
-def create_data_doi(hep_submission, data_submission, publication_info):
+def create_data_doi(hep_submission, data_submission, publication_info, site_url):
     """
     Generate DOI record for a data record
     :param data_submission_id:
@@ -126,9 +129,10 @@ def create_data_doi(hep_submission, data_submission, publication_info):
                           overall_submission=hep_submission,
                           data_submission=data_submission,
                           license=license,
-                          publication_info=publication_info)
+                          publication_info=publication_info,
+                          site_url=site_url)
 
-    register_doi(data_submission.doi, 'http://www.hepdata.net/record/ins{0}?version={1}&table={2}'.format(
+    register_doi(data_submission.doi, site_url + '/record/ins{0}?version={1}&table={2}'.format(
         publication_info['inspire_id'], data_submission.version, data_submission.name),
                  xml, publication_info['uuid'])
 
@@ -157,8 +161,6 @@ def reserve_dois_for_data_submissions(*args, **kwargs):
     :param data_submission: DataSubmission object representing a data table.
     :return:
     """
-
-    print(kwargs)
 
     if kwargs.get('data_submissions'):
         data_submissions = kwargs.get('data_submissions')

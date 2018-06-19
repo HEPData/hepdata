@@ -42,27 +42,27 @@
     <alternateIdentifiers>
 
         <alternateIdentifier alternateIdentifierType="HEPDataRecord">
-            http://www.hepdata.net/record/ins{{ publication_info.inspire_id }}
+            {{ site_url }}/record/ins{{ publication_info.inspire_id }}
         </alternateIdentifier>
 
         <alternateIdentifier alternateIdentifierType="HEPDataRecordAlt">
-            http://www.hepdata.net/record/{{ publication_info.recid }}
+            {{ site_url }}/record/{{ publication_info.recid }}
         </alternateIdentifier>
 
         <alternateIdentifier alternateIdentifierType="ROOTDownload">
-            http://www.hepdata.net/download/submission/{{ publication_info.recid }}/root
+            {{ site_url }}/download/submission/{{ publication_info.recid }}/root
         </alternateIdentifier>
 
         <alternateIdentifier alternateIdentifierType="YAMLDownload">
-            http://www.hepdata.net/download/submission/{{ publication_info.recid }}/yaml
+            {{ site_url }}/download/submission/{{ publication_info.recid }}/yaml
         </alternateIdentifier>
 
         <alternateIdentifier alternateIdentifierType="CSVDownload">
-            http://www.hepdata.net/download/submission/{{ publication_info.recid }}/csv
+            {{ site_url }}/download/submission/{{ publication_info.recid }}/csv
         </alternateIdentifier>
 
         <alternateIdentifier alternateIdentifierType="YODADownload">
-            http://www.hepdata.net/download/submission/{{ publication_info.recid }}/yoda
+            {{ site_url }}/download/submission/{{ publication_info.recid }}/yoda
         </alternateIdentifier>
     </alternateIdentifiers>
 

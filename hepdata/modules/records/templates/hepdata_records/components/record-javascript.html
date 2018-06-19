@@ -45,6 +45,7 @@
                 HEPDATA.current_inspire_id = {{ctx.record.inspire_id | safe}};
             {% endif %}
 
+            HEPDATA.site_url = "{{ ctx.site_url }}";
             HEPDATA.current_record_id = {{ctx.recid | safe}};
             HEPDATA.current_table_version = {{ctx.version | safe}};
             var table_to_show = "{{ctx.table_to_show}}";
@@ -57,20 +58,26 @@
               }
             }
 
-            // Remove whitespace from table name and escape special characters.
-            table_to_show = table_to_show.replace(/\s/g, "");
-            table_to_show = CSS.escape(table_to_show);
+            // If table_to_show is the table name, replace with table id.
+            if (!table_to_show.match(/^\d+$/)) {
 
-            // Find table_id from table name.
-            var table_id = undefined;
-            if (table_to_show) {
-              table_id = $("." + table_to_show).attr("id");
-            }
-            if (table_id == undefined) {
-              // Just return first table.
-              table_to_show = {{ ctx.data_tables[0].id }};
-            } else {
-              table_to_show = table_id;
+              // Remove whitespace from table name and escape special characters.
+              table_to_show = table_to_show.replace(/\s/g, "");
+              table_to_show = CSS.escape(table_to_show);
+
+              // Find table_id from table name.
+              var table_id = undefined;
+              if (table_to_show) {
+                table_id = $("." + table_to_show).attr("id");
+              }
+
+              if (table_id == undefined) {
+                // Just return first table.
+                table_to_show = {{ ctx.data_tables[0].id }};
+              } else {
+                table_to_show = table_id;
+              }
+
             }
 
             var status = "{{ ctx.status }}";

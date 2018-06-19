@@ -262,7 +262,7 @@ def process_ctx(ctx, light_mode=False):
     if light_mode:
         ctx.pop('data_tables', None)
     else:
-        site_url = current_app.config['SITE_URL']
+        site_url = current_app.config.get('SITE_URL', 'https://www.hepdata.net')
         for data_table in ctx['data_tables']:
             for key_to_remove in ['review_status', 'review_flag']:
                 data_table.pop(key_to_remove, None)

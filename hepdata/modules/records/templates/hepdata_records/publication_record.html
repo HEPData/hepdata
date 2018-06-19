@@ -126,7 +126,7 @@
                             {{ ctx.record.title }}
                         </div>
                 <span itemprop="url"
-                      class="hidden">http://hepdata.net/record/{{ ctx.record.recid }}</span>
+                      class="hidden">{{ ctx.site_url }}/record/{{ ctx.record.recid }}</span>
 
                     <br/>
                         <div class="collaborations">
@@ -161,10 +161,10 @@
 
 
                         <div class="record-doi">
-                            <a itemprop="identifier" href="http://dx.doi.org/{{ ctx.record.hepdata_doi }}"
-                               target="_blank">http://dx.doi.org/{{ ctx.record.hepdata_doi }}</a>
-                            <a itemprop="identifier" class="hidden" href="http://dx.doi.org/{{ ctx.record.doi }}"
-                               target="_blank">http://dx.doi.org/{{ ctx.record.doi }}</a>
+                            <a itemprop="identifier" href="https://doi.org/{{ ctx.record.hepdata_doi }}"
+                               target="_blank">https://doi.org/{{ ctx.record.hepdata_doi }}</a>
+                            <a itemprop="identifier" class="hidden" href="https://doi.org/{{ ctx.record.doi }}"
+                               target="_blank">https://doi.org/{{ ctx.record.doi }}</a>
                         </div>
 
                         <br/>
@@ -173,10 +173,9 @@
                             <ul>
                                 {% if ctx.record.doi %}
                                     <li>
-                                        <a href="http://dx.doi.org/{{ ctx.record.doi }}"
+                                        <a href="https://doi.org/{{ ctx.record.doi }}"
                                            target="_blank"><span class="link">
-                    <span class="link-value">DOI<span class="hidden"
-                                                      itemprop="identifier">http://dx.doi.org/{{ ctx.record.doi }}</span></span></a>
+                                          <span class="link-value">Journal<span class="hidden" itemprop="identifier">https://doi.org/{{ ctx.record.doi }}</span></span></a>
                                     </li>
                                 {% endif %}
                                 <li>
@@ -187,17 +186,20 @@
                                     <a href="http://inspirehep.net/record/{{ ctx.record.inspire_id }}"
                                        target="_blank"><span
                                             class="link"><span
-                                            class="link-type">INSPIRE Record</span></span><span
+                                            class="link-type">INSPIRE</span></span><span
                                             class="hidden">http://inspirehep.net/record/{{ ctx.record.inspire_id }}</span>
                                     </a></li>
-                                <li>
-                                    <span itemprop="identifier" class="hidden">
+
+                                {%  if ctx.coordinator == 1  %}
+                                  <li>
+                                      <span itemprop="identifier" class="hidden">
                                         http://hepdata.cedar.ac.uk/view/ins{{ ctx.record.inspire_id }}
                                     </span>
 
                                     <a href="http://hepdata.cedar.ac.uk/view/ins{{ ctx.record.inspire_id }}" target="_blank"><span
                                             class="link"><span class="link-type">HepData</span></span>
                                     </a></li>
+                                {%  endif %}
 
                                 {% if ctx.additional_resources or (ctx.show_review_widget or ctx.show_upload_widget or ctx.is_submission_coordinator_or_admin) %}
                                     <li>
@@ -207,6 +209,12 @@
                                         </button>
                                     </li>
                                 {% endif %}
+                            </ul>
+                            <ul>
+                              {% for analysis in ctx.record.analyses %}
+                                <li><div class="analysis"><a href="{{ analysis.analysis }}" target="_blank"><span
+                                  class="fa fa-line-chart"></span> {{ analysis.type }} Analysis</a></div></li>
+                              {% endfor %}
                             </ul>
                         </div>
                         {% if ctx.record.publication_info %}

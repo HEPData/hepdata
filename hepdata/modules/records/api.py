@@ -86,6 +86,7 @@ def format_submission(recid, record, version, version_count, hepdata_submission,
     ctx = {}
     if hepdata_submission is not None:
 
+        ctx['site_url'] = current_app.config.get('SITE_URL', 'https://www.hepdata.net')
         ctx['record'] = record
         ctx["version_count"] = version_count
 

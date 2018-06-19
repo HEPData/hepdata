@@ -46,10 +46,7 @@ from hepdata.modules.email.api import send_finalised_email
 from hepdata.modules.records.utils.doi_minter import generate_dois_for_submission
 
 from invenio_db import db
-from invenio_pidstore.resolver import Resolver
-from invenio_records.api import Record
-from invenio_pidstore.errors import PIDDoesNotExistError
-from sqlalchemy.orm.exc import NoResultFound
+
 
 cli = create_cli(create_app=create_app)
 

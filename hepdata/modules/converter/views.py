@@ -292,7 +292,6 @@ def download_data_table_by_recid(*args, **kwargs):
     :param kwargs: inspire_id, table_name, version (optional), and file_format
     :return:
     """
-    print(kwargs)
     recid = kwargs.pop('recid')
     table_name = kwargs.pop('table_name')
     rivet = kwargs.pop('rivet', '')

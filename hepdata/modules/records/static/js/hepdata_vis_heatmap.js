@@ -20,7 +20,7 @@ HEPDATA.visualization.heatmap = {
     margins: {"left": 60, "right": 30, "top": 10, "bottom": 30},
     // todo: improve the scale used here.
     colors: d3.scale.threshold()
-      .domain([0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1])
+      .domain([0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.01])
       .range(["#fff5eb", "#fee6ce", "#fdd0a2", "#fdae6b", "#fd8d3c", "#f16913", "#d94801", "#a63603", "#7f2704"]),
     height: 400,
     width: 400,
@@ -124,19 +124,19 @@ HEPDATA.visualization.heatmap = {
       return 'row-' + d.row;
     }).attr("transform", "translate(-2.5,-2.5)").append("rect")
       .attr("x", function (d) {
-        return HEPDATA.visualization.heatmap.x_scale(d.x_min ? d.x_min : (d.x));
+        return HEPDATA.visualization.heatmap.x_scale(d.x_min != undefined ? d.x_min : (d.x));
       })
       .attr("y", function (d) {
-        return HEPDATA.visualization.heatmap.y_scale(d.y_max ? d.y_max : d.y);
+        return HEPDATA.visualization.heatmap.y_scale(d.y_max != undefined ? d.y_max : d.y);
       })
       .attr("width", function (d) {
-        if (d.x_min && d.x_max) {
+        if (d.x_min != undefined && d.x_max != undefined) {
           return HEPDATA.visualization.heatmap.x_scale(d.x_max) - HEPDATA.visualization.heatmap.x_scale(d.x_min);
         }
         return 5;
       })
       .attr("height", function (d) {
-        if (d.y_min && d.y_max) {
+        if (d.y_min != undefined && d.y_max != undefined) {
           return HEPDATA.visualization.heatmap.y_scale(d.y_min) - HEPDATA.visualization.heatmap.y_scale(d.y_max);
         }
         return 5;

@@ -39,7 +39,7 @@
         {% endif %}
 
         {% if record.hepdata_doi %}
-            {% set doi_link = 'http://dx.doi.org/' + record.hepdata_doi %}
+            {% set doi_link = 'https://doi.org/' + record.hepdata_doi %}
             <span class="info-group">
                         <i class="fa fa-link"></i> DOI
                         <a href="{{ doi_link }}" title="DOI" target="_blank">{{ record.hepdata_doi }}</a>

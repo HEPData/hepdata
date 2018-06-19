@@ -91,7 +91,7 @@
                         {{ ctx.record.title }}
                     </div>
                 <span itemprop="url"
-                      class="hidden">http://hepdata.net/record/{{ ctx.record.recid }}</span>
+                      class="hidden">{{ ctx.site_url }}/record/{{ ctx.record.recid }}</span>
 
                     <div class="record-authors">
                         {% for author in ctx.record.authors %}
@@ -123,10 +123,9 @@
                         <ul>
                             {% if ctx.record.doi %}
                                 <li>
-                                    <a href="http://dx.doi.org/{{ ctx.record.doi }}"
-                                       target="_blank"><span class="link">
-                    <span class="link-value">DOI<span class="hidden"
-                                                      itemprop="citation">http://dx.doi.org/{{ ctx.record.doi }}</span></span>
+                                    <a href="https://doi.org/{{ ctx.record.doi }}"
+                                       target="_blank"><span class="link"><span class="link-value">Journal<span class="hidden"
+                                                      itemprop="citation">https://doi.org/{{ ctx.record.doi }}</span></span>
                                 </span></a>
                                 </li>
                             {% endif %}
@@ -135,28 +134,36 @@
                                    itemprop="citation" itemscope
                                    itemtype="http://schema.org/CreativeWork"
                                    target="_blank"><span
-                                        class="link"><span class="link-type">View paper in Inspire</span></span><span
+                                        class="link"><span class="link-type">INSPIRE</span></span><span
                                         class="hidden"
                                         itemprop="url">http://inspirehep.net/record/{{ ctx.record.inspire_id }}</span>
                                 </a></li>
-                            <li>
+                            {%  if ctx.coordinator == 1  %}
+                              <li>
                                 <a href="http://hepdata.cedar.ac.uk/view/ins{{ ctx.record.inspire_id }}"
                                    itemprop="citation" itemscope
                                    itemtype="http://schema.org/CreativeWork"
                                    target="_blank"><span
-                                        class="link"><span class="link-type">View old HepData</span></span><span
+                                        class="link"><span class="link-type">HepData</span></span><span
                                         class="hidden"
                                         itemprop="url">http://hepdata.cedar.ac.uk/view/ins{{ ctx.record.inspire_id }}</span>
                                 </a></li>
+                            {% endif %}
 
                             {% if ctx.additional_resources %}
                                 <li>
                                     <button id="show_resources" class="link"
                                             data-recid="{{ ctx.record.recid }}">
-                                        Additional Resources
+                                        Resources
                                     </button>
                                 </li>
                             {% endif %}
+                        </ul>
+                        <ul>
+                          {% for analysis in ctx.record.analyses %}
+                            <li><div class="analysis"><a href="{{ analysis.analysis }}" target="_blank"><span
+                              class="fa fa-line-chart"></span> {{ analysis.type }} Analysis</a></div></li>
+                          {% endfor %}
                         </ul>
                     </div>
                     {% if ctx.record.publication_info %}

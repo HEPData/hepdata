@@ -1,5 +1,16 @@
 @import "variables";
 
+.analysis {
+  background-color: $purple;
+  color: $navy;
+  text-transform: capitalize;
+  font-size: .8em;
+
+  a {
+    color: white;
+  }
+}
+
 .record-title {
   font-weight: normal;
   font-size: 1.4em;

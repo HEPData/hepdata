@@ -23,12 +23,15 @@ HEPDATA.switch_table = function (listId, table_requested, status) {
   );
 
   var _name = $('#' + table_requested + " h4").text();
+  if (!_name) {
+    _name = $('[value="' + table_requested + '"]').text();
+  }
   if (_name.match(/^Table \d+$/)) {
     _name = _name.replace("Table ", "Table");
   }
 
   var _recid = HEPDATA.current_inspire_id && status == 'finished' ? 'ins' + HEPDATA.current_inspire_id : HEPDATA.current_record_id;
-  var direct_link = 'http://www.hepdata.net/record/' + _recid
+  var direct_link = HEPDATA.site_url + '/record/' + _recid
     + '?version=' + HEPDATA.current_table_version + "&table=" + _name;
 
   $("#direct_data_link").val(direct_link);
@@ -91,7 +94,7 @@ HEPDATA.table_renderer = {
 
         $("#table_name").html(table_data.name);
         $("#table_location").html(table_data.location);
-        $("#table_doi_contents").html('<a href="http://dx.doi.org/' + table_data.doi + '" target="_blank">' + table_data.doi + '</a>');
+        $("#table_doi_contents").html('<a href="https://doi.org/' + table_data.doi + '" target="_blank">' + table_data.doi + '</a>');
 
         $("#table_description").html((table_data.description.indexOf('.') == 0) ? '' : table_data.description.trim());
 
@@ -105,7 +108,6 @@ HEPDATA.table_renderer = {
 
         HEPDATA.render_associated_files(table_data.associated_files, '#support-files');
 
-        console.log(table_data["values"].length);
         if (table_data["x_count"] > 1) {
           HEPDATA.visualization.heatmap.reset();
           HEPDATA.visualization.heatmap.render(table_data, visualization_placement, {
