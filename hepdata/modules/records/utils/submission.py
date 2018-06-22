@@ -556,16 +556,17 @@ def process_submission_directory(basepath, submission_file_path, recid, update=F
                             errors = process_validation_errors_for_display(data_file_validator.get_messages())
                             data_file_validator.clear_messages()
 
-                        # Check that the length of the 'values' list is consistent
-                        # for each of the independent_variables and dependent_variables.
-                        indep_count = [len(indep['values']) for indep in data['independent_variables']]
-                        dep_count = [len(dep['values']) for dep in data['dependent_variables']]
-                        if len(set(indep_count + dep_count)) > 1: # if more than one unique count
-                            errors.setdefault(yaml_document["data_file"], []).append(
-                                {"level": "error", "message": "Inconsistent length of 'values' list:\n" +
-                                  "independent_variables{}, dependent_variables{}".format(
-                                      str(indep_count), str(dep_count))}
-                            )
+                        if yaml_document["data_file"] not in errors:
+                            # Check that the length of the 'values' list is consistent
+                            # for each of the independent_variables and dependent_variables.
+                            indep_count = [len(indep['values']) for indep in data['independent_variables']]
+                            dep_count = [len(dep['values']) for dep in data['dependent_variables']]
+                            if len(set(indep_count + dep_count)) > 1: # if more than one unique count
+                                errors.setdefault(yaml_document["data_file"], []).append(
+                                    {"level": "error", "message": "Inconsistent length of 'values' list:\n" +
+                                                                  "independent_variables{}, dependent_variables{}".format(
+                                                                      str(indep_count), str(dep_count))}
+                                )
 
             submission_file.close()
 

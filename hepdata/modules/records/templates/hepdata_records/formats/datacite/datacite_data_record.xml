@@ -58,7 +58,6 @@
             </rights>
         </rightsList>
     {% endif %}
-{{ site_url }}
 
     <alternateIdentifiers>
         <alternateIdentifier alternateIdentifierType="HEPDataRecord">
