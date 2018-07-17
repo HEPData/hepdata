@@ -13,6 +13,10 @@
 # * raven==5.1.0 --> raven==6.7.0
 # * cryptography==1.5.2 --> cryptography>=2.1.4
 # * unpin cffi, idna, ipaddress, pycparser
+# * gunicorn==19.4.5 --> gunicorn==19.5.0
+# * paramiko==1.16.0 --> paramiko==1.17.6
+# * Pillow==3.1.0 --> Pillow==5.2.0
+# * remove pycrypto==2.6.1
 alembic==0.9.6
 amqp==2.1.4
 aniso8601==1.1.0
@@ -81,7 +85,7 @@ functools32==3.2.3.post2
 future==0.15.2
 gevent==1.2.2
 greenlet==0.4.12
-gunicorn==19.4.5
+gunicorn==19.5.0
 hepdata-converter-ws-client==0.1.3
 hepdata-validator==0.1.16
 idna
@@ -132,11 +136,11 @@ msgpack-python==0.4.8
 node-semver==0.1.1
 oauthlib==1.1.2
 ordereddict==1.1
-paramiko==1.16.0
+paramiko==1.17.6
 passlib==1.6.5
 pbr==1.8.1
 pep8==1.7.0
-Pillow==3.1.0
+Pillow==5.2.0
 pipdeptree==0.6.0
 pluggy==0.6.0
 poyo==0.4.0
@@ -144,7 +148,6 @@ psycopg2-binary
 py==1.5.3
 pyasn1==0.1.9
 pycparser
-pycrypto==2.6.1
 pyPEG2==2.15.2
 pytest==3.5.0
 pytest-cache==1.0

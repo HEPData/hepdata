@@ -335,6 +335,17 @@ class Migrator(object):
         """
         import requests
         import tempfile
+        from shutil import copyfile
+
+        # Check if single YAML file exists in static directory.
+        base_dir = os.path.dirname(os.path.realpath(__file__))
+        yaml_file = os.path.join(base_dir, 'static', inspire_id + '.yaml')
+        if os.path.isfile(yaml_file):
+            print("Found {}".format(yaml_file))
+            tmp_file = tempfile.NamedTemporaryFile(dir=current_app.config["CFG_TMPDIR"], delete=False)
+            tmp_file.close()
+            copyfile(yaml_file, tmp_file.name)
+            return tmp_file.name
 
         try:
             url = self.base_url.format(inspire_id)

@@ -1,0 +1,745 @@
+---
+record_ids: # optional
+  - {type: inspire, id: 1487726}
+  - {type: red, id: 6693}
+preprintyear: 2016
+dateupdated: '07/10/2016 16:57:18'
+modifications: # what, by whom and when encoded or changed
+  - {action: 'Encoded', date: '23 SEP 2016', who: 'Miles Wu for ATLAS'}
+comment: | # preserve newlines
+    CERN-LHC.  The $W$ boson angular distribution in events with high transverse momentum jets is measured using data collected by the ATLAS experiment from proton--proton collisions at a centre-of-mass energy $\sqrt{s}=$ 8 TeV at the Large Hadron Collider, corresponding to an integrated luminosity of 20.3 fb$^{-1}$. The focus is on the contributions to $W$ + jets processes from real $W$ emission, which is achieved by studying events where a muon is observed close to a high transverse momentum jet. At small angular separations, these contributions are expected to be large. Various theoretical models of this process are compared to the data in terms of the absolute cross-section and the angular distributions of the muon from the leptonic $W$ decay.
+additional_resources:
+  - {location: 'https://atlas.web.cern.ch/Atlas/GROUPS/PHYSICS/PAPERS/STDM-2015-16/', description: 'web page with auxiliary material'}
+
+---
+name: 'Table 1'
+label: 'Data from Table 3, 4, 5'
+description: |
+    Measured integrated cross-sections as a function of leading jet transverse momentum for the collinear region ($0.2 < \Delta R < 2.4$), the back-to-back region ($\Delta R > 2.4$) and inclusively.
+keywords:
+  - {name: observables, values: ['SIG']}
+  - {name: phrases, values: ['Integrated Cross Section', 'Cross Section', 'Proton-Proton Scattering', 'Jet Production']}
+  - {name: cmenergies, values: [8000.0]}
+additional_resources:
+independent_variables:
+  - header: {name: '$p_{\text{T}}^{\text{leading jet}}$', units: 'GeV'}
+    values:
+      - {value: '> 500.0'}
+      - {low: 500, high: 600}
+      - {value: '> 650.0'}
+dependent_variables:
+  - header: {name: '$\sigma_{W \rightarrow \mu\nu}$', units: 'fb'}
+    qualifiers:
+      - {name: 'ABS(ETARAP(JET))', value: '< 2.1'}
+      - {name: 'ABS(ETARAP(MUON))', value: '< 2.4'}
+      - {name: 'DELTAR(MUON, CLOSEST JET)', value: '0.2-2.4'}
+      - {name: 'PT(JET)', value: '> 100', units: 'GEV'}
+      - {name: 'PT(MUON)', value: '> 25', units: 'GEV'}
+      - {name: 'RE', value: 'P P --> W JET(S) X'}
+      - {name: 'SQRT(S)', value: '8000.0', units: 'GeV'}
+      - {name: '', value: 'Measured integrated cross-section'}
+    values:
+      - value: 116.2
+        errors:
+          - {symerror: 3.2, label: 'stat'}
+          - {symerror: 8.8, label: 'sys,syst'}
+          - {symerror: 2.3, label: 'sys,lumi'}
+      - value: 70.2
+        errors:
+          - {symerror: 2.5, label: 'stat'}
+          - {symerror: 5.6, label: 'sys,syst'}
+          - {symerror: 1.4, label: 'sys,lumi'}
+      - value: 29.6
+        errors:
+          - {symerror: 1.6, label: 'stat'}
+          - {symerror: 2.9, label: 'sys,syst'}
+          - {symerror: 0.6, label: 'sys,lumi'}
+  - header: {name: '$\sigma_{W \rightarrow \mu\nu}$', units: 'fb'}
+    qualifiers:
+      - {name: 'ABS(ETARAP(JET))', value: '< 2.1'}
+      - {name: 'ABS(ETARAP(MUON))', value: '< 2.4'}
+      - {name: 'DELTAR(MUON, CLOSEST JET)', value: '> 2.4'}
+      - {name: 'PT(JET)', value: '> 100', units: 'GEV'}
+      - {name: 'PT(MUON)', value: '> 25', units: 'GEV'}
+      - {name: 'RE', value: 'P P --> W JET(S) X'}
+      - {name: 'SQRT(S)', value: '8000.0', units: 'GeV'}
+      - {name: '', value: 'Measured integrated cross-section'}
+    values:
+      - value: 53.0
+        errors:
+          - {symerror: 1.9, label: 'stat'}
+          - {symerror: 3.9, label: 'sys,syst'}
+          - {symerror: 1.0, label: 'sys,lumi'}
+      - value: 36.5
+        errors:
+          - {symerror: 1.6, label: 'stat'}
+          - {symerror: 2.7, label: 'sys,syst'}
+          - {symerror: 0.7, label: 'sys,lumi'}
+      - value: 9.1
+        errors:
+          - {symerror: 0.9, label: 'stat'}
+          - {symerror: 0.8, label: 'sys,syst'}
+          - {symerror: 0.2, label: 'sys,lumi'}
+  - header: {name: '$\sigma_{W \rightarrow \mu\nu}$', units: 'fb'}
+    qualifiers:
+      - {name: 'ABS(ETARAP(JET))', value: '< 2.1'}
+      - {name: 'ABS(ETARAP(MUON))', value: '< 2.4'}
+      - {name: 'DELTAR(MUON, CLOSEST JET)', value: '> 0.2'}
+      - {name: 'PT(JET)', value: '> 100', units: 'GEV'}
+      - {name: 'PT(MUON)', value: '> 25', units: 'GEV'}
+      - {name: 'RE', value: 'P P --> W JET(S) X'}
+      - {name: 'SQRT(S)', value: '8000.0', units: 'GeV'}
+      - {name: '', value: 'Measured integrated cross-section'}
+    values:
+      - value: 169.2
+        errors:
+          - {symerror: 3.7, label: 'stat'}
+          - {symerror: 12.3, label: 'sys,syst'}
+          - {symerror: 3.3, label: 'sys,lumi'}
+      - value: 106.8
+        errors:
+          - {symerror: 3.0, label: 'stat'}
+          - {symerror: 7.9, label: 'sys,syst'}
+          - {symerror: 2.1, label: 'sys,lumi'}
+      - value: 38.7
+        errors:
+          - {symerror: 1.8, label: 'stat'}
+          - {symerror: 3.7, label: 'sys,syst'}
+          - {symerror: 0.8, label: 'sys,lumi'}
+
+---
+name: 'Table 2'
+label: 'Data from Figure 3'
+description: |
+    Measured cross-section as a function of angular separation between the muon and the closest jet. Multiplicative correction factors for using prompt muons and prompt dressing photons in the particle-level selection, derived from ALPGEN 2.14 interfaced with PYTHIA 6.426, are also shown.
+keywords:
+  - {name: reactions, values: ['P P --> W JET(S) X']}
+  - {name: observables, values: ['DSIG/DDR']}
+  - {name: phrases, values: ['Inclusive', 'Differential Cross Section', 'Proton-Proton Scattering', 'Jet Production']}
+  - {name: cmenergies, values: [8000.0]}
+additional_resources:
+independent_variables:
+  - header: {name: '$ \Delta R (\mu, \text{closest jet}) $'}
+    values:
+      - {low: 0.2, high: 0.4}
+      - {low: 0.4, high: 0.6}
+      - {low: 0.6, high: 0.8}
+      - {low: 0.8, high: 1.0}
+      - {low: 1.0, high: 1.2}
+      - {low: 1.2, high: 1.4}
+      - {low: 1.4, high: 1.6}
+      - {low: 1.6, high: 1.8}
+      - {low: 1.8, high: 2.0}
+      - {low: 2.0, high: 2.2}
+      - {low: 2.2, high: 2.4}
+      - {low: 2.4, high: 2.6}
+      - {low: 2.6, high: 2.8}
+      - {low: 2.8, high: 3.0}
+      - {low: 3.0, high: 3.2}
+      - {low: 3.2, high: 3.4}
+      - {low: 3.4, high: 3.6}
+      - {low: 3.6, high: 3.8}
+      - {low: 3.8, high: 4.0}
+dependent_variables:
+  - header: {name: '$d\sigma_{W \rightarrow \mu\nu}/d(\Delta R)$', units: 'fb'}
+    qualifiers:
+      - {name: 'ABS(ETARAP(JET))', value: '< 2.1'}
+      - {name: 'ABS(ETARAP(MUON))', value: '< 2.4'}
+      - {name: 'PT(JET)', value: '> 100', units: 'GEV'}
+      - {name: 'PT(LEADING JET)', value: '> 500', units: 'GEV'}
+      - {name: 'PT(MUON)', value: '> 25', units: 'GEV'}
+      - {name: 'RE', value: 'P P --> W JET(S) X'}
+      - {name: 'SQRT(S)', value: '8000.0', units: 'GeV'}
+      - {name: '', value: 'Measured cross-section'}
+    values:
+      - value: 34.48
+        errors:
+          - {symerror: 5.12, label: 'stat'}
+          - {symerror: 5.36, label: 'sys,syst'}
+          - {symerror: 0.68, label: 'sys,lumi'}
+      - value: 61.44
+        errors:
+          - {symerror: 5.75, label: 'stat'}
+          - {symerror: 5.67, label: 'sys,syst'}
+          - {symerror: 1.19, label: 'sys,lumi'}
+      - value: 68.28
+        errors:
+          - {symerror: 5.18, label: 'stat'}
+          - {symerror: 5.51, label: 'sys,syst'}
+          - {symerror: 1.33, label: 'sys,lumi'}
+      - value: 66.0
+        errors:
+          - {symerror: 5.17, label: 'stat'}
+          - {symerror: 4.58, label: 'sys,syst'}
+          - {symerror: 1.29, label: 'sys,lumi'}
+      - value: 72.14
+        errors:
+          - {symerror: 5.36, label: 'stat'}
+          - {symerror: 5.47, label: 'sys,syst'}
+          - {symerror: 1.39, label: 'sys,lumi'}
+      - value: 68.96
+        errors:
+          - {symerror: 5.15, label: 'stat'}
+          - {symerror: 5.24, label: 'sys,syst'}
+          - {symerror: 1.34, label: 'sys,lumi'}
+      - value: 64.57
+        errors:
+          - {symerror: 4.67, label: 'stat'}
+          - {symerror: 4.09, label: 'sys,syst'}
+          - {symerror: 1.26, label: 'sys,lumi'}
+      - value: 55.24
+        errors:
+          - {symerror: 4.69, label: 'stat'}
+          - {symerror: 4.22, label: 'sys,syst'}
+          - {symerror: 1.08, label: 'sys,lumi'}
+      - value: 38.67
+        errors:
+          - {symerror: 4.46, label: 'stat'}
+          - {symerror: 3.17, label: 'sys,syst'}
+          - {symerror: 0.75, label: 'sys,lumi'}
+      - value: 30.94
+        errors:
+          - {symerror: 3.21, label: 'stat'}
+          - {symerror: 2.13, label: 'sys,syst'}
+          - {symerror: 0.6, label: 'sys,lumi'}
+      - value: 20.43
+        errors:
+          - {symerror: 2.68, label: 'stat'}
+          - {symerror: 1.78, label: 'sys,syst'}
+          - {symerror: 0.4, label: 'sys,lumi'}
+      - value: 19.69
+        errors:
+          - {symerror: 2.62, label: 'stat'}
+          - {symerror: 1.56, label: 'sys,syst'}
+          - {symerror: 0.38, label: 'sys,lumi'}
+      - value: 27.64
+        errors:
+          - {symerror: 3.41, label: 'stat'}
+          - {symerror: 2.18, label: 'sys,syst'}
+          - {symerror: 0.54, label: 'sys,lumi'}
+      - value: 50.27
+        errors:
+          - {symerror: 4.55, label: 'stat'}
+          - {symerror: 4.71, label: 'sys,syst'}
+          - {symerror: 0.99, label: 'sys,lumi'}
+      - value: 107.59
+        errors:
+          - {symerror: 5.45, label: 'stat'}
+          - {symerror: 6.75, label: 'sys,syst'}
+          - {symerror: 2.14, label: 'sys,lumi'}
+      - value: 33.87
+        errors:
+          - {symerror: 3.35, label: 'stat'}
+          - {symerror: 2.13, label: 'sys,syst'}
+          - {symerror: 0.67, label: 'sys,lumi'}
+      - value: 15.35
+        errors:
+          - {symerror: 2.47, label: 'stat'}
+          - {symerror: 1.53, label: 'sys,syst'}
+          - {symerror: 0.31, label: 'sys,lumi'}
+      - value: 7.24
+        errors:
+          - {symerror: 1.69, label: 'stat'}
+          - {symerror: 1.65, label: 'sys,syst'}
+          - {symerror: 0.14, label: 'sys,lumi'}
+      - value: 2.16
+        errors:
+          - {symerror: 0.76, label: 'stat'}
+          - {symerror: 1.2, label: 'sys,syst'}
+          - {symerror: 0.04, label: 'sys,lumi'}
+  - header: {name: '$d\sigma_{\rm prompt}/d(\Delta R)~/~d\sigma/d(\Delta R)$'}
+    qualifiers:
+      - {name: 'ABS(ETARAP(JET))', value: '< 2.1'}
+      - {name: 'ABS(ETARAP(MUON))', value: '< 2.4'}
+      - {name: 'PT(JET)', value: '> 100', units: 'GEV'}
+      - {name: 'PT(LEADING JET)', value: '> 500', units: 'GEV'}
+      - {name: 'PT(MUON)', value: '> 25', units: 'GEV'}
+      - {name: 'RE', value: 'P P --> W JET(S) X'}
+      - {name: 'SQRT(S)', value: '8000.0', units: 'GeV'}
+      - {name: '', value: 'Multiplicative correction factor for using prompt muons and photons at particle-level'}
+    values:
+      - value: 1.025
+      - value: 1.028
+      - value: 1.021
+      - value: 1.025
+      - value: 1.022
+      - value: 1.025
+      - value: 1.028
+      - value: 1.02
+      - value: 1.029
+      - value: 1.03
+      - value: 1.03
+      - value: 1.018
+      - value: 1.004
+      - value: 1.007
+      - value: 1.007
+      - value: 1.007
+      - value: 1.011
+      - value: 1.001
+      - value: 1.023
+
+---
+name: 'Table 3'
+label: 'Data from Table 1'
+description: |
+    Breakdown of uncertainties in percent.
+keywords:
+  - {name: reactions, values: ['P P --> W JET(S) X']}
+  - {name: observables, values: ['SIG']}
+  - {name: phrases, values: ['Inclusive', 'Integrated Cross Section', 'Cross Section', 'Proton-Proton Scattering', 'Jet Production']}
+  - {name: cmenergies, values: [8000.0]}
+additional_resources:
+independent_variables:
+  - header: {name: 'Source'}
+    values:
+      - {value: 'Scaling of dijets to data'}
+      - {value: 'Scaling of $t\bar{t}$ to data'}
+      - {value: 'Scaling of $Z$ + jets to data'}
+      - {value: 'Jet energy scale'}
+      - {value: '$b$-tagging efficiency'}
+      - {value: 'Data/MC disagreement for dijets'}
+      - {value: 'Data/MC disagreement for $t\bar{t}$'}
+      - {value: 'Data/MC disagreement for $Z$ + jets'}
+      - {value: 'Diboson background estimate'}
+      - {value: 'Unfolding dependence on prior'}
+      - {value: 'Muon momentum scale and resolution'}
+      - {value: 'Muon reconstruction efficiency'}
+      - {value: 'Muon trigger efficiency'}
+      - {value: 'Jet energy resolution'}
+      - {value: 'MC background statistical'}
+      - {value: 'MC response statistical'}
+      - {value: 'Luminosity'}
+      - {value: 'Data statistical'}
+dependent_variables:
+  - header: {name: 'Uncertainty (in %)'}
+    qualifiers:
+      - {name: 'ABS(ETARAP(JET))', value: '< 2.1'}
+      - {name: 'ABS(ETARAP(MUON))', value: '< 2.4'}
+      - {name: 'Cross section', value: '$d\sigma_{W \rightarrow \mu\nu}/d(\Delta R)$'}
+      - {name: 'DELTAR(MUON, CLOSEST JET)', value: '0.2-2.4'}
+      - {name: 'PT(JET)', value: '> 100', units: 'GEV'}
+      - {name: 'PT(LEADING JET)', value: '> 500', units: 'GEV'}
+      - {name: 'PT(MUON)', value: '> 25', units: 'GEV'}
+      - {name: 'RE', value: 'P P --> W JET(S) X'}
+      - {name: 'SQRT(S)', value: '8000.0', units: 'GeV'}
+    values:
+      - value: 0.436
+      - value: 0.62
+      - value: 0.55
+      - value: 4.59
+      - value: 3.651
+      - value: 0.918
+      - value: 1.208
+      - value: 0.579
+      - value: 2.24
+      - value: 1.092
+      - value: 0.045
+      - value: 0.361
+      - value: 1.957
+      - value: 0.552
+      - value: 2.44
+      - value: 1.739
+      - value: 1.949
+      - value: 2.717
+  - header: {name: 'Uncertainty (in %)'}
+    qualifiers:
+      - {name: 'ABS(ETARAP(JET))', value: '< 2.1'}
+      - {name: 'ABS(ETARAP(MUON))', value: '< 2.4'}
+      - {name: 'Cross section', value: '$d\sigma_{W \rightarrow \mu\nu}/d(\Delta R)$'}
+      - {name: 'DELTAR(MUON, CLOSEST JET)', value: '> 2.4'}
+      - {name: 'PT(JET)', value: '> 100', units: 'GEV'}
+      - {name: 'PT(LEADING JET)', value: '> 500', units: 'GEV'}
+      - {name: 'PT(MUON)', value: '> 25', units: 'GEV'}
+      - {name: 'RE', value: 'P P --> W JET(S) X'}
+      - {name: 'SQRT(S)', value: '8000.0', units: 'GeV'}
+    values:
+      - value: 0.118
+      - value: 0.152
+      - value: 0.344
+      - value: 5.805
+      - value: 1.176
+      - value: 0.558
+      - value: 0.392
+      - value: 1.469
+      - value: 0.11
+      - value: 1.762
+      - value: 0.078
+      - value: 0.425
+      - value: 1.914
+      - value: 0.773
+      - value: 1.848
+      - value: 2.234
+      - value: 1.977
+      - value: 3.583
+  - header: {name: 'Uncertainty (in %)'}
+    qualifiers:
+      - {name: 'ABS(ETARAP(JET))', value: '< 2.1'}
+      - {name: 'ABS(ETARAP(MUON))', value: '< 2.4'}
+      - {name: 'Cross section', value: '$d\sigma_{W \rightarrow \mu\nu}/d(\Delta R)$'}
+      - {name: 'DELTAR(MUON, CLOSEST JET)', value: '> 0.2'}
+      - {name: 'PT(JET)', value: '> 100', units: 'GEV'}
+      - {name: 'PT(LEADING JET)', value: '> 500', units: 'GEV'}
+      - {name: 'PT(MUON)', value: '> 25', units: 'GEV'}
+      - {name: 'RE', value: 'P P --> W JET(S) X'}
+      - {name: 'SQRT(S)', value: '8000.0', units: 'GeV'}
+    values:
+      - value: 0.336
+      - value: 0.474
+      - value: 0.486
+      - value: 4.962
+      - value: 2.867
+      - value: 0.806
+      - value: 0.953
+      - value: 0.858
+      - value: 1.504
+      - value: 1.302
+      - value: 0.053
+      - value: 0.381
+      - value: 1.944
+      - value: 0.621
+      - value: 2.254
+      - value: 1.894
+      - value: 1.958
+      - value: 2.177
+
+---
+name: 'Table 4'
+label: 'Data from Figure 5a'
+description: |
+    Measured cross-section as a function of angular separation between the muon and the closest jet for $500~\text{GeV} < p_T^{\text{leading jet}} < 600~\text{GeV}$. Multiplicative correction factors for using prompt muons and prompt dressing photons in the particle-level selection, derived from ALPGEN 2.14 interfaced with PYTHIA 6.426, are also shown.
+keywords:
+  - {name: reactions, values: ['P P --> W JET(S) X']}
+  - {name: observables, values: ['DSIG/DDR']}
+  - {name: phrases, values: ['Inclusive', 'Differential Cross Section', 'Proton-Proton Scattering', 'Jet Production']}
+  - {name: cmenergies, values: [8000.0]}
+additional_resources:
+independent_variables:
+  - header: {name: '$ \Delta R (\mu, \text{closest jet}) $'}
+    values:
+      - {low: 0.2, high: 0.4}
+      - {low: 0.4, high: 0.6}
+      - {low: 0.6, high: 0.8}
+      - {low: 0.8, high: 1.0}
+      - {low: 1.0, high: 1.2}
+      - {low: 1.2, high: 1.4}
+      - {low: 1.4, high: 1.6}
+      - {low: 1.6, high: 1.8}
+      - {low: 1.8, high: 2.0}
+      - {low: 2.0, high: 2.2}
+      - {low: 2.2, high: 2.4}
+      - {low: 2.4, high: 2.6}
+      - {low: 2.6, high: 2.8}
+      - {low: 2.8, high: 3.0}
+      - {low: 3.0, high: 3.2}
+      - {low: 3.2, high: 3.4}
+      - {low: 3.4, high: 3.6}
+      - {low: 3.6, high: 3.8}
+      - {low: 3.8, high: 4.0}
+dependent_variables:
+  - header: {name: '$d\sigma_{W \rightarrow \mu\nu}/d(\Delta R)$', units: 'fb'}
+    qualifiers:
+      - {name: 'ABS(ETARAP(JET))', value: '< 2.1'}
+      - {name: 'ABS(ETARAP(MUON))', value: '< 2.4'}
+      - {name: 'PT(JET)', value: '> 100', units: 'GEV'}
+      - {name: 'PT(LEADING JET)', value: '500.0-600.0', units: 'GeV'}
+      - {name: 'PT(MUON)', value: '> 25', units: 'GEV'}
+      - {name: 'RE', value: 'P P --> W JET(S) X'}
+      - {name: 'SQRT(S)', value: '8000.0', units: 'GeV'}
+      - {name: '', value: 'Measured cross-section'}
+    values:
+      - value: 22.18
+        errors:
+          - {symerror: 4.07, label: 'stat'}
+          - {symerror: 3.26, label: 'sys,syst'}
+          - {symerror: 0.44, label: 'sys,lumi'}
+      - value: 30.88
+        errors:
+          - {symerror: 4.16, label: 'stat'}
+          - {symerror: 3.33, label: 'sys,syst'}
+          - {symerror: 0.6, label: 'sys,lumi'}
+      - value: 37.75
+        errors:
+          - {symerror: 4.5, label: 'stat'}
+          - {symerror: 3.51, label: 'sys,syst'}
+          - {symerror: 0.74, label: 'sys,lumi'}
+      - value: 41.99
+        errors:
+          - {symerror: 4.07, label: 'stat'}
+          - {symerror: 3.06, label: 'sys,syst'}
+          - {symerror: 0.82, label: 'sys,lumi'}
+      - value: 43.04
+        errors:
+          - {symerror: 4.4, label: 'stat'}
+          - {symerror: 3.45, label: 'sys,syst'}
+          - {symerror: 0.83, label: 'sys,lumi'}
+      - value: 39.41
+        errors:
+          - {symerror: 4.1, label: 'stat'}
+          - {symerror: 3.21, label: 'sys,syst'}
+          - {symerror: 0.76, label: 'sys,lumi'}
+      - value: 46.45
+        errors:
+          - {symerror: 4.39, label: 'stat'}
+          - {symerror: 3.21, label: 'sys,syst'}
+          - {symerror: 0.91, label: 'sys,lumi'}
+      - value: 29.53
+        errors:
+          - {symerror: 3.36, label: 'stat'}
+          - {symerror: 2.58, label: 'sys,syst'}
+          - {symerror: 0.58, label: 'sys,lumi'}
+      - value: 25.23
+        errors:
+          - {symerror: 3.44, label: 'stat'}
+          - {symerror: 2.35, label: 'sys,syst'}
+          - {symerror: 0.49, label: 'sys,lumi'}
+      - value: 20.88
+        errors:
+          - {symerror: 2.61, label: 'stat'}
+          - {symerror: 1.41, label: 'sys,syst'}
+          - {symerror: 0.4, label: 'sys,lumi'}
+      - value: 13.89
+        errors:
+          - {symerror: 2.25, label: 'stat'}
+          - {symerror: 1.35, label: 'sys,syst'}
+          - {symerror: 0.27, label: 'sys,lumi'}
+      - value: 13.52
+        errors:
+          - {symerror: 1.97, label: 'stat'}
+          - {symerror: 1.12, label: 'sys,syst'}
+          - {symerror: 0.26, label: 'sys,lumi'}
+      - value: 20.95
+        errors:
+          - {symerror: 2.45, label: 'stat'}
+          - {symerror: 1.8, label: 'sys,syst'}
+          - {symerror: 0.41, label: 'sys,lumi'}
+      - value: 30.71
+        errors:
+          - {symerror: 3.16, label: 'stat'}
+          - {symerror: 3.12, label: 'sys,syst'}
+          - {symerror: 0.6, label: 'sys,lumi'}
+      - value: 71.44
+        errors:
+          - {symerror: 5.07, label: 'stat'}
+          - {symerror: 4.25, label: 'sys,syst'}
+          - {symerror: 1.41, label: 'sys,lumi'}
+      - value: 26.29
+        errors:
+          - {symerror: 3.13, label: 'stat'}
+          - {symerror: 1.5, label: 'sys,syst'}
+          - {symerror: 0.52, label: 'sys,lumi'}
+      - value: 11.46
+        errors:
+          - {symerror: 1.9, label: 'stat'}
+          - {symerror: 1.14, label: 'sys,syst'}
+          - {symerror: 0.23, label: 'sys,lumi'}
+      - value: 6.35
+        errors:
+          - {symerror: 1.54, label: 'stat'}
+          - {symerror: 1.56, label: 'sys,syst'}
+          - {symerror: 0.12, label: 'sys,lumi'}
+      - value: 1.19
+        errors:
+          - {symerror: 0.53, label: 'stat'}
+          - {symerror: 0.24, label: 'sys,syst'}
+          - {symerror: 0.02, label: 'sys,lumi'}
+  - header: {name: '$d\sigma_{\rm prompt}/d(\Delta R)~/~d\sigma/d(\Delta R)$'}
+    qualifiers:
+      - {name: 'ABS(ETARAP(JET))', value: '< 2.1'}
+      - {name: 'ABS(ETARAP(MUON))', value: '< 2.4'}
+      - {name: 'PT(JET)', value: '> 100', units: 'GEV'}
+      - {name: 'PT(LEADING JET)', value: '500.0-600.0', units: 'GeV'}
+      - {name: 'PT(MUON)', value: '> 25', units: 'GEV'}
+      - {name: 'RE', value: 'P P --> W JET(S) X'}
+      - {name: 'SQRT(S)', value: '8000.0', units: 'GeV'}
+      - {name: '', value: 'Multiplicative correction factor for using prompt muons and photons at particle-level'}
+    values:
+      - value: 1.026
+      - value: 1.027
+      - value: 1.019
+      - value: 1.026
+      - value: 1.024
+      - value: 1.027
+      - value: 1.027
+      - value: 1.02
+      - value: 1.03
+      - value: 1.024
+      - value: 1.029
+      - value: 1.021
+      - value: 1.002
+      - value: 1.008
+      - value: 1.008
+      - value: 1.006
+      - value: 1.012
+      - value: 1.005
+      - value: 1.036
+
+---
+name: 'Table 5'
+label: 'Data from Figure 5b'
+description: |
+    Measured cross-section as a function of angular separation between the muon and the closest jet for $p_T^{\text{leading jet}} > 650~\text{GeV}$. Multiplicative correction factors for using prompt muons and prompt dressing photons in the particle-level selection, derived from ALPGEN 2.14 interfaced with PYTHIA 6.426, are also shown.
+keywords:
+  - {name: reactions, values: ['P P --> W JET(S) X']}
+  - {name: observables, values: ['DSIG/DDR']}
+  - {name: phrases, values: ['Inclusive', 'Differential Cross Section', 'Proton-Proton Scattering', 'Jet Production']}
+  - {name: cmenergies, values: [8000.0]}
+additional_resources:
+independent_variables:
+  - header: {name: '$ \Delta R (\mu, \text{closest jet}) $'}
+    values:
+      - {low: 0.2, high: 0.4}
+      - {low: 0.4, high: 0.6}
+      - {low: 0.6, high: 0.8}
+      - {low: 0.8, high: 1.0}
+      - {low: 1.0, high: 1.2}
+      - {low: 1.2, high: 1.4}
+      - {low: 1.4, high: 1.6}
+      - {low: 1.6, high: 1.8}
+      - {low: 1.8, high: 2.0}
+      - {low: 2.0, high: 2.2}
+      - {low: 2.2, high: 2.4}
+      - {low: 2.4, high: 2.6}
+      - {low: 2.6, high: 2.8}
+      - {low: 2.8, high: 3.0}
+      - {low: 3.0, high: 3.2}
+      - {low: 3.2, high: 3.4}
+      - {low: 3.4, high: 3.6}
+      - {low: 3.6, high: 3.8}
+      - {low: 3.8, high: 4.0}
+dependent_variables:
+  - header: {name: '$d\sigma_{W \rightarrow \mu\nu}/d(\Delta R)$', units: 'fb'}
+    qualifiers:
+      - {name: 'ABS(ETARAP(JET))', value: '< 2.1'}
+      - {name: 'ABS(ETARAP(MUON))', value: '< 2.4'}
+      - {name: 'PT(JET)', value: '> 100', units: 'GEV'}
+      - {name: 'PT(LEADING JET)', value: '> 650', units: 'GEV'}
+      - {name: 'PT(MUON)', value: '> 25', units: 'GEV'}
+      - {name: 'RE', value: 'P P --> W JET(S) X'}
+      - {name: 'SQRT(S)', value: '8000.0', units: 'GeV'}
+      - {name: '', value: 'Measured cross-section'}
+    values:
+      - value: 7.04
+        errors:
+          - {symerror: 2.18, label: 'stat'}
+          - {symerror: 1.92, label: 'sys,syst'}
+          - {symerror: 0.14, label: 'sys,lumi'}
+      - value: 17.12
+        errors:
+          - {symerror: 2.81, label: 'stat'}
+          - {symerror: 2.25, label: 'sys,syst'}
+          - {symerror: 0.34, label: 'sys,lumi'}
+      - value: 22.0
+        errors:
+          - {symerror: 3.21, label: 'stat'}
+          - {symerror: 2.1, label: 'sys,syst'}
+          - {symerror: 0.42, label: 'sys,lumi'}
+      - value: 18.3
+        errors:
+          - {symerror: 2.63, label: 'stat'}
+          - {symerror: 1.8, label: 'sys,syst'}
+          - {symerror: 0.35, label: 'sys,lumi'}
+      - value: 17.13
+        errors:
+          - {symerror: 2.73, label: 'stat'}
+          - {symerror: 1.75, label: 'sys,syst'}
+          - {symerror: 0.33, label: 'sys,lumi'}
+      - value: 19.68
+        errors:
+          - {symerror: 2.79, label: 'stat'}
+          - {symerror: 1.86, label: 'sys,syst'}
+          - {symerror: 0.38, label: 'sys,lumi'}
+      - value: 13.87
+        errors:
+          - {symerror: 2.25, label: 'stat'}
+          - {symerror: 1.33, label: 'sys,syst'}
+          - {symerror: 0.27, label: 'sys,lumi'}
+      - value: 16.68
+        errors:
+          - {symerror: 2.63, label: 'stat'}
+          - {symerror: 1.66, label: 'sys,syst'}
+          - {symerror: 0.33, label: 'sys,lumi'}
+      - value: 7.49
+        errors:
+          - {symerror: 1.72, label: 'stat'}
+          - {symerror: 0.66, label: 'sys,syst'}
+          - {symerror: 0.15, label: 'sys,lumi'}
+      - value: 6.13
+        errors:
+          - {symerror: 1.7, label: 'stat'}
+          - {symerror: 0.7, label: 'sys,syst'}
+          - {symerror: 0.12, label: 'sys,lumi'}
+      - value: 2.41
+        errors:
+          - {symerror: 0.99, label: 'stat'}
+          - {symerror: 0.37, label: 'sys,syst'}
+          - {symerror: 0.05, label: 'sys,lumi'}
+      - value: 3.28
+        errors:
+          - {symerror: 1.07, label: 'stat'}
+          - {symerror: 0.51, label: 'sys,syst'}
+          - {symerror: 0.06, label: 'sys,lumi'}
+      - value: 4.06
+        errors:
+          - {symerror: 1.21, label: 'stat'}
+          - {symerror: 0.54, label: 'sys,syst'}
+          - {symerror: 0.08, label: 'sys,lumi'}
+      - value: 9.0
+        errors:
+          - {symerror: 1.69, label: 'stat'}
+          - {symerror: 0.97, label: 'sys,syst'}
+          - {symerror: 0.18, label: 'sys,lumi'}
+      - value: 20.45
+        errors:
+          - {symerror: 3.39, label: 'stat'}
+          - {symerror: 1.65, label: 'sys,syst'}
+          - {symerror: 0.42, label: 'sys,lumi'}
+      - value: 5.72
+        errors:
+          - {symerror: 1.7, label: 'stat'}
+          - {symerror: 0.8, label: 'sys,syst'}
+          - {symerror: 0.11, label: 'sys,lumi'}
+      - value: 1.43
+        errors:
+          - {symerror: 0.76, label: 'stat'}
+          - {symerror: 0.22, label: 'sys,syst'}
+          - {symerror: 0.03, label: 'sys,lumi'}
+      - value: 0.8
+        errors:
+          - {symerror: 0.52, label: 'stat'}
+          - {symerror: 0.18, label: 'sys,syst'}
+          - {symerror: 0.02, label: 'sys,lumi'}
+      - value: 0.71
+        errors:
+          - {symerror: 0.39, label: 'stat'}
+          - {symerror: 0.25, label: 'sys,syst'}
+          - {symerror: 0.01, label: 'sys,lumi'}
+  - header: {name: '$d\sigma_{\rm prompt}/d(\Delta R)~/~d\sigma/d(\Delta R)$'}
+    qualifiers:
+      - {name: 'ABS(ETARAP(JET))', value: '< 2.1'}
+      - {name: 'ABS(ETARAP(MUON))', value: '< 2.4'}
+      - {name: 'PT(JET)', value: '> 100', units: 'GEV'}
+      - {name: 'PT(LEADING JET)', value: '> 650', units: 'GEV'}
+      - {name: 'PT(MUON)', value: '> 25', units: 'GEV'}
+      - {name: 'RE', value: 'P P --> W JET(S) X'}
+      - {name: 'SQRT(S)', value: '8000.0', units: 'GeV'}
+      - {name: '', value: 'Multiplicative correction factor for using prompt muons and photons at particle-level'}
+    values:
+      - value: 1.024
+      - value: 1.027
+      - value: 1.026
+      - value: 1.024
+      - value: 1.017
+      - value: 1.027
+      - value: 1.024
+      - value: 1.016
+      - value: 1.025
+      - value: 1.038
+      - value: 1.025
+      - value: 1.017
+      - value: 1.005
+      - value: 1.008
+      - value: 1.006
+      - value: 1.007
+      - value: 1.009
+      - value: 0.985
+      - value: 1.0

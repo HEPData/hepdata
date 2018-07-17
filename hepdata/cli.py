@@ -37,7 +37,7 @@ from hepdata.modules.submission.models import HEPSubmission
 from hepdata.modules.submission.api import get_latest_hepsubmission
 from .factory import create_app
 from hepdata.config import CFG_PUB_TYPE
-from hepdata.ext.elasticsearch.api import reindex_all, get_records_matching_field, index_record_ids
+from hepdata.ext.elasticsearch.api import reindex_all, get_records_matching_field
 from hepdata.modules.records.utils.submission import unload_submission
 from hepdata.modules.records.migrator.api import load_files, update_submissions, get_all_ids_in_current_system, \
     add_or_update_records_since_date, update_analyses
