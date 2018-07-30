@@ -29,6 +29,26 @@ using `virtualenvwrapper <https://virtualenvwrapper.readthedocs.io/en/latest/ins
    (hepdata)$ pip install --upgrade pip
    (hepdata)$ pip install -e . --pre --upgrade -r requirements.txt
 
+Use of config_local.py
+----------------------
+
+The ``hepdata/config.py`` contains default configuration options, which often need to be overridden in a local instance.
+For example, DOI minting should be switched off in a non-production instance, otherwise finalising a new record will
+give an error message due to a lack of DataCite authorisation credentials.
+Rather than edit ``hepdata/config.py``, it is more convenient to define custom options in a separate file
+``hepdata/config_local.py`` that will be ignored by Git.  For example, to switch off email, DOI minting, Twitter,
+use a local converter URL, and specify custom temporary and data directories:
+
+.. code-block:: python
+
+   SITE_URL = "http://localhost:5000"
+   TESTING = True
+   NO_DOI_MINTING = True
+   USE_TWITTER = False
+   CFG_CONVERTER_URL = 'http://localhost:5500'
+   CFG_TMPDIR = '/mt/home/watt/tmp/hepdata/tmp'
+   CFG_DATADIR = '/mt/home/watt/tmp/hepdata/data'
+
 JavaScript
 ----------
 
@@ -107,6 +127,17 @@ Now, start HEPData:
    (hepdata)$ hepdata run --debugger --reload
    (hepdata)$ firefox http://localhost:5000/
 
+Running the tests
+-----------------
+
+Run the tests using:
+
+.. code-block:: console
+
+   (hepdata)$ cd ~/src/hepdata
+   (hepdata)$ ./run-tests.sh
+   (hepdata)$ hepdata utils reindex
+
 Docker for hepdata-converter-ws
 -------------------------------
 
@@ -119,36 +150,7 @@ need to run a local Docker container.  After `installing Docker <https://docs.do
    docker pull hepdata/hepdata-converter-ws
    docker run --restart=always -d --name=hepdata_converter -p 0.0.0.0:5500:5000 hepdata/hepdata-converter-ws hepdata-converter-ws
 
-then specify ``CFG_CONVERTER_URL = 'http://localhost:5500'`` (see below).
-
-Use of config_local.py
-----------------------
-
-The ``hepdata/config.py`` contains default configuration options, which often need to be overridden in a local instance.
-Rather than edit ``hepdata/config.py``, it is more convenient to define custom options in a separate file
-``hepdata/config_local.py`` that will be ignored by Git.  For example, to switch off email, DOI minting, Twitter,
-use a local converter URL, and specify custom temporary and data directories:
-
-.. code-block:: python
-
-   SITE_URL = "http://localhost:5000"
-   TESTING = True
-   NO_DOI_MINTING = True
-   USE_TWITTER = False
-   CFG_CONVERTER_URL = 'http://localhost:5500'
-   CFG_TMPDIR = '/mt/home/watt/tmp/hepdata/tmp'
-   CFG_DATADIR = '/mt/home/watt/tmp/hepdata/data'
-
-Running the tests
------------------
-
-Run the tests using:
-
-.. code-block:: console
-
-   (hepdata)$ cd ~/src/hepdata
-   (hepdata)$ ./run-tests.sh
-   (hepdata)$ hepdata utils reindex
+then specify ``CFG_CONVERTER_URL = 'http://localhost:5500'`` (see above).
 
 
 Run using honcho
