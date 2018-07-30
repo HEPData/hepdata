@@ -62,7 +62,7 @@ def app(request):
         MAIL_SUPPRESS_SEND=True,
         CELERY_EAGER_PROPAGATES_EXCEPTIONS=True,
         SQLALCHEMY_DATABASE_URI=os.environ.get(
-            'SQLALCHEMY_DATABASE_URI', 'postgresql+psycopg2://localhost/hepdata_test')
+            'SQLALCHEMY_DATABASE_URI', 'postgresql+psycopg2://hepdata:hepdata@localhost/hepdata_test')
     ))
 
     with app.app_context():

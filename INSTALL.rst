@@ -60,9 +60,12 @@ See `YUM Installation <https://wiki.postgresql.org/wiki/YUM_Installation>`_ and
 .. code-block:: console
 
    $ sudo su - postgres
-   $ createdb hepdata
-   $ createdb hepdata_test
-   $ exit
+   -$ createuser hepdata --createdb --pwprompt
+   Enter password for new role: hepdata
+   Enter it again: hepdata
+   -$ createdb hepdata -O hepdata
+   -$ createdb hepdata_test -O hepdata
+   -$ exit
 
 Next, create the database and database tables.
 Also create a user and populate the database with some records.
@@ -72,9 +75,27 @@ Pass your email address and a password as an argument to the script:
 
    (hepdata)$ ./scripts/initialise_db.sh your@email.com password
 
+Inspect the ``hepdata`` database from the command line as the ``hepdata`` user:
+
+.. code-block:: console
+
+   $ psql hepdata -U hepdata -h localhost
+   Password for user hepdata: hepdata
+   hepdata=> select publication_recid, inspire_id, last_updated from hepsubmission;
+
+    publication_recid | inspire_id |    last_updated
+   -------------------+------------+---------------------
+                    1 | 1283842    | 2016-07-13 15:12:45
+                    2 | 1245023    | 2013-12-17 10:35:06
+                   57 | 1311487    | 2016-02-12 18:45:16
+   (3 rows)
+
+   hepdata=> \q
+
 If you're having problems with access permissions to the database, a simple solution is to edit the
 PostgreSQL Client Authentication Configuration File (e.g. ``/var/lib/pgsql/9.6/data/pg_hba.conf``) to
-``trust`` local connections (instead of ``ident``).
+``trust`` local and IPv4/IPv6 connections (instead of ``peer`` or ``ident``), then restart the PostgreSQL
+server (e.g. ``sudo systemctl restart postgresql-9.6``).
 
 Run a local development server
 ------------------------------
@@ -149,4 +170,5 @@ Run using Docker
 ================
 
 A Dockerfile is provided in the HEPData/hepdata repository, inherited from the original Zenodo fork in 2015, but I don't think it ever worked.
+There is also a separate HEPData/hepdata-docker repository from 2015, which has not been kept up-to-date (for example, it uses MySQL instead of PostgreSQL).
 It would be good to come back to this in the future and get a working Docker installation.

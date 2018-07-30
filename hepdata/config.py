@@ -39,7 +39,7 @@ def _(x):
 # Database
 SQLALCHEMY_DATABASE_URI = os.environ.get(
     "SQLALCHEMY_DATABASE_URI",
-    "postgresql+psycopg2://localhost/hepdata")
+    "postgresql+psycopg2://hepdata:hepdata@localhost/hepdata")
 SQLALCHEMY_ECHO = False
 
 # Default language and timezone
