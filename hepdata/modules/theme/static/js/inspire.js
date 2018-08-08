@@ -44,8 +44,8 @@ var inspire_ds = (function () {
                 html = '<div class="alert alert-info">A preview of the publication (not everything is displayed).</div>';
                 html = inspire_ds.create_html_summary(data, html);
                 html += '<p style="font-weight: bolder;">If you\'re happy that ' +
-                    'this is the correct Inspire ID, you just need to click ' +
-                    'on \'confirm\'. If not, you can retrieve another record.</p>';
+                    'this is the correct INSPIRE ID, you just need to click ' +
+                    'on \'Confirm\'. If not, you can retrieve another record.</p>';
 
                 $("#success").removeClass("hidden");
                 $("#inspire-add-button").removeClass("hidden");
@@ -62,7 +62,7 @@ var inspire_ds = (function () {
                 $("#inspire-add-button").addClass("hidden");
             }
             else {
-                html = '<div class="alert alert-danger">An error occurred while trying to find the Inspire record.</div>';
+                html = '<div class="alert alert-danger">An error occurred while trying to find the INSPIRE record.</div>';
                 $("#inspire-add-button").addClass("hidden");
             }
 

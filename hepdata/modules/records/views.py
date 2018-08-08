@@ -258,7 +258,8 @@ def get_table_details(recid, data_recid, version):
             if key not in tmp_assoc_files:
                 tmp_assoc_files[key] = {}
 
-            if "thumb_" in alt_location:
+
+            if "thumb_" in alt_location and associated_data_file.file_type.lower() in IMAGE_TYPES:
                 tmp_assoc_files[key]['preview_location'] = '/record/resource/{0}?view=true'.format(
                     associated_data_file.id)
             else:
@@ -563,7 +564,7 @@ def get_resource(resource_id):
                 return html
         else:
             contents = ''
-            if resource_obj.file_type not in IMAGE_TYPES:
+            if resource_obj.file_type.lower() not in IMAGE_TYPES:
                 print("Resource is at: " + resource_obj.file_location)
                 with open(resource_obj.file_location, 'r') as resource_file:
                     contents = resource_file.read()

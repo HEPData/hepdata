@@ -377,40 +377,6 @@ def parse_modifications(hepsubmission, recid, submission_info_document):
             db.session.add(participant)
 
 
-def _fix_eos_metadata(submission_file_path):
-    """Just make sure that the submission file has proper mtime.
-
-    This might be caused by non-closed file descriptors combined with eos
-    leading to strange mtime. Probably finding out the leaked file
-    descriptors and closing them is enough. It happens in the validation
-    step, with the submission.yaml file.
-    """
-    if not os.path.exists(submission_file_path):
-        return
-
-    with open(submission_file_path, 'a') as submission_file_descriptor:
-        submission_file_descriptor.write('')
-
-
-def _fix_force_eos_metadata_reload(refresh_path):
-    """Force eos to refresh the file metadata cache.
-
-    :param refresh_path: path to refresh the metadata for, it can be a file or
-    directory.
-
-    We do that by running a subprocess that requests it, this fixes issues
-    where the uploaded file show empty content.
-    """
-    if os.path.isfile(refresh_path):
-        subprocess.check_output(['stat', refresh_path])
-    else:
-        for root, dirs, files in os.walk(refresh_path):
-            for file in files:
-                subprocess.check_output(['stat', os.path.join(root, file)])
-                # The next line now seems to give an "Input/output error", so try without it.
-                #_fix_eos_metadata(os.path.join(root, file))
-
-
 def _eos_fix_read_data(data_file_path):
     """This gets rid of the issues where reading the file returns empty
     string because eos has not yet flushed the file contents.
@@ -448,8 +414,6 @@ def process_submission_directory(basepath, submission_file_path, recid, update=F
     errors = {}
 
     if submission_file_path is not None:
-
-        _fix_force_eos_metadata_reload(basepath)
 
         submission_file_validator = SubmissionFileValidator()
         is_valid_submission_file = submission_file_validator.validate(file_path=submission_file_path)

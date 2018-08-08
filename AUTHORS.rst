@@ -25,14 +25,14 @@
 Authors
 =======
 
-* **Project Manager:**
+* **Project Manager (2013-):**
 
   * Graeme Watt
 
-* **Lead Developer:**
+* **Lead Developer (2015-2016):**
 
   * Eamonn Maguire
 
-* **Developer:**
+* **Developer (2015-2016):**
 
   * Jan Stypka

@@ -310,7 +310,7 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
   (master_doc, 'HEPData', u'HEPData Documentation',
-   author, 'HEPData', 'HEPData - High Energy Physics Data Repository.',
+   author, 'HEPData', 'HEPData - Repository for publication-related High-Energy Physics data.',
    'Miscellaneous'),
 ]
 

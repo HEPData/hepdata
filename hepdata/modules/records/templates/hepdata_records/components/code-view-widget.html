@@ -7,7 +7,7 @@
                 <button type="button" class="close" data-dismiss="modal"
                         aria-label="Close"><span
                         aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title code-viewer-title" id="codeDialogLabel">Root File</h4>
+                <h4 class="modal-title code-viewer-title" id="codeDialogLabel">Resource File</h4>
             </div>
 
             <div class="modal-body" id="codeDialogContents">
@@ -44,13 +44,12 @@
 
                 if (image_file_types.indexOf(data.type.toLowerCase()) != -1) {
                     $("#code").html('<img src="' + data.location + '" width="100%"></img>');
-                } else if (data.type != 'root') {
+                } else if (data.type == 'root') {
+                    $("#codeDialogLabel").html('ROOT');
+                    $("#code").html('We can\'t display ROOT files at present. But you can download it!');
+                } else {
                     $("#code").html('<textarea id="code-contents"></textarea>');
                     $("#code-contents").val(data.file_contents);
-                }
-                else {
-                    $("#codeDialogLabel").html('Root');
-                    $("#code").html('We can\'t display ROOT files at present');
                 }
 
                 $("#file_download_btn").attr('href', data.location);

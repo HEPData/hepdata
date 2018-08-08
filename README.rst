@@ -28,7 +28,7 @@ HEPData
 
 |
 
-The Durham High Energy Physics Database (HEPData) has been built up over the past four decades as a unique open-access
+The Durham High-Energy Physics Database (HEPData) has been built up over the past four decades as a unique open-access
 repository for scattering data from experimental particle physics. It currently comprises the data points from plots and
 tables related to several thousand publications including those from the Large Hadron Collider (LHC). HEPData is funded
 by a grant from the UK STFC and is based at the IPPP at Durham University.

@@ -35,6 +35,9 @@ from hepdata.modules.permissions.views import check_is_sandbox_record
 from hepdata.modules.records.utils.submission import unload_submission, do_finalise
 from hepdata.modules.submission.api import get_latest_hepsubmission
 from hepdata.modules.records.utils.users import has_role
+from hepdata.modules.records.utils.common import get_record_by_id
+from hepdata.modules.records.utils.workflow import update_record
+from hepdata.modules.inspire_api.views import get_inspire_record_information
 import json
 
 from invenio_userprofiles import current_userprofile
@@ -155,7 +158,14 @@ def reindex():
 def finalise(recid, publication_record=None, force_finalise=False):
     commit_message = request.form.get('message')
 
-    return do_finalise(recid, publication_record, force_finalise,
+    # Update publication information from INSPIRE record before finalising.
+    if not publication_record:
+        record = get_record_by_id(recid)
+        content, status = get_inspire_record_information(record['inspire_id'])
+        if status == 'success':
+            publication_record = update_record(recid, content)
+
+    return do_finalise(recid, publication_record=publication_record, force_finalise=force_finalise,
                        commit_message=commit_message, send_tweet=True)
 
 
