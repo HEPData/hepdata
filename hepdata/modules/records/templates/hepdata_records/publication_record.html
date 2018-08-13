@@ -178,7 +178,8 @@
                                           <span class="link-value">Journal<span class="hidden" itemprop="identifier">https://doi.org/{{ ctx.record.doi }}</span></span></a>
                                     </li>
                                 {% endif %}
-                                <li>
+                                {% if ctx.record.inspire_id %}
+                                  <li>
                                     <span itemprop="identifier" class="hidden">
                                         http://inspirehep.net/record/{{ ctx.record.inspire_id }}
                                     </span>
@@ -188,9 +189,11 @@
                                             class="link"><span
                                             class="link-type">INSPIRE</span></span><span
                                             class="hidden">http://inspirehep.net/record/{{ ctx.record.inspire_id }}</span>
-                                    </a></li>
+                                    </a>
+                                  </li>
+                                {% endif %}
 
-                                {%  if ctx.coordinator == 1  %}
+                                {% if ctx.coordinator == 1 and ctx.record.inspire_id %}
                                   <li>
                                       <span itemprop="identifier" class="hidden">
                                         http://hepdata.cedar.ac.uk/view/ins{{ ctx.record.inspire_id }}
@@ -199,7 +202,7 @@
                                     <a href="http://hepdata.cedar.ac.uk/view/ins{{ ctx.record.inspire_id }}" target="_blank"><span
                                             class="link"><span class="link-type">HepData</span></span>
                                     </a></li>
-                                {%  endif %}
+                                {% endif %}
 
                                 {% if ctx.additional_resources or (ctx.show_review_widget or ctx.show_upload_widget or ctx.is_submission_coordinator_or_admin) %}
                                     <li>

@@ -129,7 +129,8 @@
                                 </span></a>
                                 </li>
                             {% endif %}
-                            <li>
+                            {% if ctx.record.inspire_id %}
+                              <li>
                                 <a href="http://inspirehep.net/record/{{ ctx.record.inspire_id }}"
                                    itemprop="citation" itemscope
                                    itemtype="http://schema.org/CreativeWork"
@@ -137,8 +138,10 @@
                                         class="link"><span class="link-type">INSPIRE</span></span><span
                                         class="hidden"
                                         itemprop="url">http://inspirehep.net/record/{{ ctx.record.inspire_id }}</span>
-                                </a></li>
-                            {%  if ctx.coordinator == 1  %}
+                                </a>
+                              </li>
+                            {% endif %}
+                            {% if ctx.coordinator == 1 and ctx.record.inspire_id %}
                               <li>
                                 <a href="http://hepdata.cedar.ac.uk/view/ins{{ ctx.record.inspire_id }}"
                                    itemprop="citation" itemscope
