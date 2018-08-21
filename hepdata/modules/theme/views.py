@@ -26,7 +26,7 @@
 
 from __future__ import absolute_import, print_function
 
-from flask import Blueprint, render_template, current_app
+from flask import Blueprint, render_template, current_app, redirect
 
 from hepdata.version import __version__
 
@@ -47,6 +47,11 @@ def index():
 @blueprint.route('/submission')
 def submission_help():
     return render_template('hepdata_theme/pages/help.html')
+
+
+@blueprint.route('/submission/schemas/<jsonschema>')
+def submission_schema(jsonschema):
+    return redirect('https://raw.githubusercontent.com/HEPData/hepdata-validator/master/hepdata_validator/schemas/' + jsonschema)
 
 
 @blueprint.route('/cookies')

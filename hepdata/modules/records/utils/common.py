@@ -50,7 +50,8 @@ FILE_TYPES = {
     "rtf": "Text",
     "xls": "Excel",
     "xlsx": "Excel",
-    "slha": "SUSY Les Houches Accord"
+    "slha": "SUSY Les Houches Accord",
+    "f": "Fortran"
 }
 
 IMAGE_TYPES = [

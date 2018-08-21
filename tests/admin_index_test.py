@@ -16,9 +16,7 @@
 # along with HEPData; if not, write to the Free Software Foundation, Inc.,
 # 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
 import logging
-from time import sleep
 
-import pytest
 from elasticsearch_dsl import Index
 
 from hepdata.ext.elasticsearch.admin_view.api import AdminIndexer

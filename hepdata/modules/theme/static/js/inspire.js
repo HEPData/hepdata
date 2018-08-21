@@ -16,7 +16,7 @@ var inspire_ds = (function () {
         },
 
         is_null: function(data) {
-            return data.query.authors == null && data.query.abstract == null && data.query.journal == null && data.query.title == null;
+            return data.query.authors == null && data.query.abstract == null && data.query.title == null;
         },
 
         create_html_summary: function (data, html) {
@@ -37,8 +37,9 @@ var inspire_ds = (function () {
         },
 
         render_inspire_data: function (data) {
+
             var html = "";
-            if (data.status == 'success') {
+            if (!inspire_ds.is_null(data) && data.status == 'success') {
                 $("#inspire-retrieve-progress").addClass("hidden");
 
                 html = '<div class="alert alert-info">A preview of the publication (not everything is displayed).</div>';
@@ -62,6 +63,8 @@ var inspire_ds = (function () {
                 $("#inspire-add-button").addClass("hidden");
             }
             else {
+                $("#inspire-retrieve-progress").addClass("hidden");
+
                 html = '<div class="alert alert-danger">An error occurred while trying to find the INSPIRE record.</div>';
                 $("#inspire-add-button").addClass("hidden");
             }

@@ -124,7 +124,7 @@ jsonpatch==1.14
 jsonpointer==1.10
 jsonref==0.1
 jsonresolver==0.2.1
-jsonschema==2.5.1
+jsonschema==2.6.0
 kombu==4.0.2
 limits==1.1
 lxml==3.6.4
