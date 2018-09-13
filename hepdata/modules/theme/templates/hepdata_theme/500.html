@@ -6,8 +6,7 @@
     <div class="container-fluid">
         <div align="center" class="error-text-container">
             <h4>Sorry, we have some issues processing your request.</h4>
-            <p>Maybe you don't have permissions or your uploaded file is invalid?<br/>
-            If you have any questions, please email info@hepdata.net.</p>
+            <p>If you have any questions, please email info@hepdata.net.</p>
             {% if ctx %}
               <p>{{ ctx.name }}: {{ ctx.error }}</p>
             {% endif %}

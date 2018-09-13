@@ -19,7 +19,6 @@ import logging
 
 from elasticsearch_dsl import Index
 
-from hepdata.ext.elasticsearch.admin_view.api import AdminIndexer
 
 logging.basicConfig()
 log = logging.getLogger(__name__)

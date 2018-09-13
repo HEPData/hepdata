@@ -136,17 +136,20 @@
                             <p>
 
                                 {% if ctx.version >= ctx.version_count and ctx.status != 'finished' %}
+
                                     <span id="{{ table.id }}-status" class="review-status {{ table.review_flag }}">
                                 <span id="icon"
                                       class="fa fa-{% if table.review_flag == 'attention' %}exclamation-triangle {% elif table.review_flag == 'passed' %}check-circle{% else %}exclamation-triangle{% endif %}"></span>
                                     <span class="text">{{ table.review_status }}</span>
                                 </span>
-                                {% endif %}
 
                                 <span id="table-{{ table.id }}-messages"
                                       class="messages {% if not table.messages %} hidden{% endif %}">
                                     <span class="fa fa-comment"></span>
                                 </span>
+
+                                {% endif %}
+
                             </p>
                         {% endif %}
                     {% endif %}

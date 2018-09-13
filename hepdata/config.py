@@ -41,6 +41,7 @@ SQLALCHEMY_DATABASE_URI = os.environ.get(
     "SQLALCHEMY_DATABASE_URI",
     "postgresql+psycopg2://hepdata:hepdata@localhost/hepdata")
 SQLALCHEMY_ECHO = False
+SQLALCHEMY_POOL_RECYCLE = 7200
 
 # Default language and timezone
 BABEL_DEFAULT_LANGUAGE = 'en'
@@ -205,6 +206,7 @@ TWITTER_HANDLE_MAPPINGS = {
 }
 
 INVALID_DOI_TEMPLATE = "hepdata_theme/invalid_doi.html"
+THEME_403_TEMPLATE = "hepdata_theme/403.html"
 THEME_404_TEMPLATE = "hepdata_theme/404.html"
 THEME_500_TEMPLATE = "hepdata_theme/500.html"
 

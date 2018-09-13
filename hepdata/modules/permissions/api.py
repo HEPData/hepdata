@@ -125,7 +125,7 @@ def user_allowed_to_perform_action(recid):
         return True
 
     is_participant = SubmissionParticipant.query.filter_by(
-        user_account=int(current_user.get_id()), publication_recid=recid).count() > 0
+        user_account=int(current_user.get_id()), publication_recid=recid, status='primary').count() > 0
 
     if is_participant:
         return True

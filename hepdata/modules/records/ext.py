@@ -29,6 +29,7 @@ from __future__ import absolute_import, print_function
 import pkg_resources
 
 from hepdata.modules.permissions.models import SubmissionParticipant
+from hepdata.modules.theme.views import page_forbidden
 from hepdata.modules.theme.views import internal_error
 from hepdata.modules.theme.views import page_not_found
 from flask.ext.login import current_user
@@ -53,6 +54,7 @@ class HEPDataRecords(object):
         app.register_blueprint(blueprint)
         app.extensions['hepdata-records'] = self
 
+        app.register_error_handler(403, page_forbidden)
         app.register_error_handler(404, page_not_found)
         app.register_error_handler(500, internal_error)
 

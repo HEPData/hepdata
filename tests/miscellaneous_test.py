@@ -55,7 +55,7 @@ def test_file_extractor(app):
 
         for file in files:
             extract_dir = os.path.join(app.config['CFG_TMPDIR'], file['extract_as'])
-            extract(file['file'], os.path.join(test_data_directory, file['file']), extract_dir)
+            extract(os.path.join(test_data_directory, file['file']), extract_dir)
 
             assert(os.path.exists(extract_dir))
 

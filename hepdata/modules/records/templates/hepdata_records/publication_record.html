@@ -62,7 +62,7 @@
                                     <i class="fa fa-quote-right"></i> Cite
                                 </button>
 
-                                {% if current_user.is_authenticated %}
+                                {% if current_user.is_authenticated and ctx.status == 'finished' %}
                                     <button id="watch_btn" type="button" data-toggle="modal"
                                             class="btn btn-sm btn-default"
                                             aria-haspopup="true" aria-expanded="false">
@@ -344,7 +344,9 @@
 
     {% include 'hepdata_records/components/code-view-widget.html' %}
     {% include 'hepdata_records/components/resources-widget.html' %}
-    {% include 'hepdata_records/components/cite-widget.html' %}
+    {% if ctx.record.title %}
+      {% include 'hepdata_records/components/cite-widget.html' %}
+    {% endif %}
     {% if ctx.status == 'finished' and current_user.is_authenticated %}
         {% include 'hepdata_records/components/question-widget.html' %}
     {% endif %}

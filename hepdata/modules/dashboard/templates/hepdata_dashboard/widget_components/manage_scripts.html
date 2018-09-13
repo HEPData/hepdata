@@ -34,7 +34,11 @@
         window.userid = $(this).attr('data-userid');
         window.data_person_type = $(this).attr('data-person-type');
 
-        show_confirmation('<p>Are you sure you want to ' + window.action + ' this ' + window.data_person_type + "er.</p><p>This action will send an email immediately to invite the user to join the " + window.action + " process.</p>");
+        var confirmation_html = '<p>Are you sure you want to ' + window.action + ' this ' + window.data_person_type + 'er?</p>';
+        if (window.action == 'promote') {
+          confirmation_html += '<p>This action will send an email immediately to invite the user to join the ' + window.data_person_type + ' process.</p>';
+        }
+        show_confirmation(confirmation_html);
     });
 
     $(document).on('click', '.confirm-move-action', function () {
@@ -168,8 +172,6 @@
     $(document).on('click', '.conversation-trigger', function (event) {
         HEPDATA.load_all_review_messages("#conversation-only", $(this).attr('data-recid'));
     });
-
-
 
     $(document).on('click', '.delete-submission-trigger', function (event) {
         window.recid = $(this).attr('data-recid');

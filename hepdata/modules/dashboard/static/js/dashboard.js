@@ -63,12 +63,12 @@ var dashboard = (function () {
 
       var controls = watch_item.append("div").attr("class", "col-md-1 controls");
       controls.append("button").attr("class", "btn btn-sm btn-danger")
-        .append("i").attr("class", "fa fa-eye-slash")
-        .attr("title", "Unwatch Record")
-        .attr("alt", "Unwatch Record")
         .attr("onclick", function (d) {
           return "dashboard.unwatch('" + d.recid + "')";
-        });
+        })
+        .append("i").attr("class", "fa fa-eye-slash")
+        .attr("title", "Unwatch Record")
+        .attr("alt", "Unwatch Record");
 
     })
   };

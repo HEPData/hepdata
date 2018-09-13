@@ -69,7 +69,7 @@ URL_PATTERNS = [
     "sourceforge",
 ]
 
-ALLOWED_EXTENSIONS = ['zip', "tar", "gz", "oldhepdata", "yaml"]
+ALLOWED_EXTENSIONS = ('.zip', '.tar', '.tar.gz', '.tgz', '.oldhepdata', '.yaml')
 
 
 def contains_accepted_url(file):
@@ -80,14 +80,15 @@ def contains_accepted_url(file):
 
 
 def allowed_file(filename):
-    return '.' in filename and \
-           filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
+    return filename.endswith(ALLOWED_EXTENSIONS)
+
 
 def is_image(filename):
     if '.' in filename:
         extension = filename.rsplit(".", 1)[1]
         return extension.lower() in IMAGE_TYPES
     return False
+
 
 def infer_file_type(file):
     if "." in file:

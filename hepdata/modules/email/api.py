@@ -135,9 +135,11 @@ def send_finalised_email(hepsubmission):
 def notify_participants(hepsubmission, record):
 
     destinations = []
+    reply_to_address = None
     coordinator = User.query.get(hepsubmission.coordinator)
     if coordinator.id > 1:
         destinations.append(coordinator.email)
+        reply_to_address = coordinator.email
     submission_participants = get_submission_participants_for_record(hepsubmission.publication_recid)
     for participant in submission_participants:
         destinations.append(participant.email)
@@ -152,16 +154,18 @@ def notify_participants(hepsubmission, record):
         version=hepsubmission.version,
         title=record['title'],
         site_url=site_url,
-        link=site_url + "/record/{0}"
-        .format(hepsubmission.publication_recid))
+        link=site_url + "/record/ins{0}?version={1}"
+        .format(hepsubmission.inspire_id, hepsubmission.version))
 
-    create_send_email_task(','.join(destinations),
+    create_send_email_task(','.join(set(destinations)),
                            '[HEPData] Submission {0} has been finalised and is publicly available' \
                            .format(hepsubmission.publication_recid),
-                           message_body)
+                           message_body, reply_to_address)
 
 
 def notify_subscribers(hepsubmission, record):
+    coordinator = User.query.get(hepsubmission.coordinator)
+    reply_to_address = coordinator.email if coordinator.id > 1 else None
     site_url = current_app.config.get('SITE_URL', 'https://www.hepdata.net')
     subscribers = get_users_subscribed_to_record(hepsubmission.publication_recid)
     for subscriber in subscribers:
@@ -171,13 +175,13 @@ def notify_subscribers(hepsubmission, record):
             version=hepsubmission.version,
             title=record['title'],
             site_url=site_url,
-            link=site_url + "/record/{0}"
-                .format(hepsubmission.publication_recid))
+            link=site_url + "/record/ins{0}?version={1}"
+                .format(hepsubmission.inspire_id, hepsubmission.version))
 
         create_send_email_task(subscriber.get('email'),
-                               '[HEPData] Record update available' \
+                               '[HEPData] Record update available for submission {0}' \
                                .format(hepsubmission.publication_recid),
-                               message_body)
+                               message_body, reply_to_address)
 
 
 def send_cookie_email(submission_participant,

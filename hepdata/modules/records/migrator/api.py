@@ -91,6 +91,8 @@ def update_analyses():
                     submission = get_latest_hepsubmission(inspire_id=record, overall_status='finished')
 
                     if submission:
+                        num_new_resources = 0
+
                         for analysis in analyses[record]:
                             _resource_url = endpoints[analysis_endpoint]["url_template"].format(analysis)
                             if not is_resource_added_to_submission(submission.publication_recid, submission.version,
@@ -102,14 +104,18 @@ def update_analyses():
                                     file_type=analysis_endpoint)
 
                                 submission.resources.append(new_resource)
+                                num_new_resources += 1
 
-                        try:
-                            db.session.add(submission)
-                            db.session.commit()
-                            index_record_ids([submission.publication_recid])
-                        except Exception as e:
-                            db.session.rollback()
-                            log.error(e)
+                        if num_new_resources:
+
+                            try:
+                                db.session.add(submission)
+                                db.session.commit()
+                                index_record_ids([submission.publication_recid])
+                            except Exception as e:
+                                db.session.rollback()
+                                log.error(e)
+
                     else:
                         log.debug("An analysis is available in {0} but with no equivalent in HEPData (ins{1}).".format(
                             analysis_endpoint, record))

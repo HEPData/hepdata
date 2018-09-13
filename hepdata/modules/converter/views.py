@@ -384,12 +384,13 @@ def download_datatable(datasubmission, file_format, *args, **kwargs):
         extract=False,
     )
 
-    # Error occurred, the output is a HTML file
     if successful:
         new_path = output_path + "." + file_format
-        new_path = extract(filename + ".tar.gz", output_path + '-dir', new_path)
+        new_path = extract(output_path + '-dir', new_path)
+        os.remove(output_path + '-dir')
         file_to_send = get_file_in_directory(new_path, file_format)
     else:
+        # Error occurred, the output is a HTML file
         file_to_send = output_path + '-dir'
         file_format = 'html'
 

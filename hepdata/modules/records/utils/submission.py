@@ -477,6 +477,7 @@ def process_submission_directory(basepath, submission_file_path, recid, update=F
                     no_general_submission_info = False
                     process_general_submission_info(basepath, yaml_document, recid)
                 else:
+
                     existing_datasubmission_query = DataSubmission.query \
                         .filter_by(name=encode_string(yaml_document["name"]),
                                    publication_recid=recid,
@@ -484,18 +485,21 @@ def process_submission_directory(basepath, submission_file_path, recid, update=F
 
                     added_file_names.append(yaml_document["name"])
 
-                    if existing_datasubmission_query.count() == 0:
-                        datasubmission = DataSubmission(
-                            publication_recid=recid,
-                            name=encode_string(yaml_document["name"]),
-                            description=encode_string(yaml_document["description"]),
-                            version=hepsubmission.version)
-
-                    else:
-                        datasubmission = existing_datasubmission_query.one()
-                        datasubmission.description = encode_string(yaml_document["description"])
-
-                    db.session.add(datasubmission)
+                    try:
+                        if existing_datasubmission_query.count() == 0:
+                            datasubmission = DataSubmission(
+                                publication_recid=recid,
+                                name=encode_string(yaml_document["name"]),
+                                description=encode_string(yaml_document["description"]),
+                                version=hepsubmission.version)
+                        else:
+                            datasubmission = existing_datasubmission_query.one()
+                            datasubmission.description = encode_string(yaml_document["description"])
+                        db.session.add(datasubmission)
+                    except SQLAlchemyError as sqlex:
+                        errors[yaml_document["data_file"]] = [{"level": "error", "message": str(sqlex)}]
+                        db.session.rollback()
+                        continue
 
                     main_file_path = os.path.join(basepath, yaml_document["data_file"])
 
@@ -648,7 +652,7 @@ def get_or_create_hepsubmission(recid, coordinator=1, status="todo"):
 
 def create_data_review(data_recid, publication_recid, version=1):
     """
-    Creates a new data review given a data record id and a pubication record id
+    Creates a new data review given a data record id and a publication record id
     :param data_recid:
     :param publication_recid:
     :return:
@@ -706,7 +710,10 @@ def do_finalise(recid, publication_record=None, force_finalise=False,
     """
     print('Finalising record {}'.format(recid))
 
-    hep_submission = HEPSubmission.query.filter_by(
+    if not update:
+        hep_submission = get_latest_hepsubmission(publication_recid=recid)
+    else:
+        hep_submission = HEPSubmission.query.filter_by(
         publication_recid=recid, overall_status="todo").first()
 
     generated_record_ids = []

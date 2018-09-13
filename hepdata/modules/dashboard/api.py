@@ -222,6 +222,7 @@ def get_pending_invitations_for_user(user):
         func.lower(SubmissionParticipant.email) == func.lower(user.email),
         or_(SubmissionParticipant.role == 'reviewer',
             SubmissionParticipant.role == 'uploader'),
+        SubmissionParticipant.status == 'primary',
         SubmissionParticipant.user_account == None
     ).all()
 

@@ -230,15 +230,28 @@ def extract_journal_info(record):
 
 
 def render_record(recid, record, version, output_format, light_mode=False):
-    if user_allowed_to_perform_action(recid):
-        version_count = HEPSubmission.query.filter_by(
-            publication_recid=recid).count()
-    else:
-        version_count = HEPSubmission.query.filter_by(
-            publication_recid=recid, overall_status='finished').count()
 
+    # Count number of all versions and number of finished versions of a publication record.
+    version_count_all = HEPSubmission.query.filter_by(publication_recid=recid).count()
+    version_count_finished = HEPSubmission.query.filter_by(publication_recid=recid, overall_status='finished').count()
+
+    # Number of versions that a user is allowed to access based on their permissions.
+    version_count = version_count_all if user_allowed_to_perform_action(recid) else version_count_finished
+
+    # If version not given explicitly, take to be latest allowed version (or 1 if there are no allowed versions).
     if version == -1:
-        version = version_count
+        version = version_count if version_count else 1
+
+    # Check for a user trying to access a version of a publication record where they don't have permissions.
+    if version_count < version_count_all and version == version_count_all:
+        # Prompt the user to login if they are not authenticated then redirect, otherwise return a 403 error.
+        if not current_user.is_authenticated:
+            redirect_url_after_login = '%2Frecord%2F{0}%3Fversion%3D{1}%26format%3D{2}'.format(recid, version, output_format)
+            if 'table' in request.args:
+                redirect_url_after_login += '%26table%3D{0}'.format(request.args['table'])
+            return redirect('/login/?next={0}'.format(redirect_url_after_login))
+        else:
+            abort(403)
 
     hepdata_submission = get_latest_hepsubmission(publication_recid=recid, version=version)
 
@@ -311,7 +324,7 @@ def process_payload(recid, file, redirect_url):
         return render_template('hepdata_records/error_page.html', redirect_url=redirect_url.format(recid),
                                message="Incorrect file type uploaded.",
                                errors={"Submission": [{"level": "error",
-                                                       "message": "You must upload a .zip, .tar, or .tar.gz file"
+                                                       "message": "You must upload a .zip, .tar, .tar.gz or .tgz file"
                                                                   + " (or a .oldhepdata or single .yaml file)."}]})
 
 
@@ -345,7 +358,12 @@ def process_zip_archive(file, id):
 
         else:
             # we are dealing with a zip, tar, etc. so we extract the contents
-            extract(filename, file_path, submission_temp_path)
+            if not extract(file_path, submission_temp_path):
+                return {
+                    "Archive file extractor": [{
+                        "level": "error", "message": "{} is not a valid zip or tar archive file.".format(file_path)
+                    }]
+                }
 
         if not os.path.exists(submission_path):
             os.makedirs(submission_path)
@@ -437,6 +455,7 @@ def check_and_convert_from_oldhepdata(input_directory, id, timestamp):
 def query_messages_for_data_review(data_review_record, messages):
     if data_review_record.messages:
         data_messages = data_review_record.messages
+        # TO DO: sort into order.
         for data_message in data_messages:
             current_user_obj = get_user_from_id(data_message.user)
             messages.append(
@@ -499,10 +518,10 @@ def determine_user_privileges(recid, ctx):
 
         for participant_record in participant_records:
             if participant_record is not None:
-                if participant_record.role == 'reviewer':
+                if participant_record.role == 'reviewer' and participant_record.status == 'primary':
                     ctx['show_review_widget'] = True
 
-                if participant_record.role == 'uploader':
+                if participant_record.role == 'uploader' and participant_record.status == 'primary':
                     ctx['show_upload_widget'] = True
 
         user = User.query.get(current_user.get_id())

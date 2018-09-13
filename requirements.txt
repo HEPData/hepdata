@@ -17,6 +17,7 @@
 # * paramiko==1.16.0 --> paramiko==1.17.6
 # * Pillow==3.1.0 --> Pillow==5.2.0
 # * remove pycrypto==2.6.1
+# * datacite==0.2.2 --> datacite==1.0.1
 alembic==0.9.6
 amqp==2.1.4
 aniso8601==1.1.0
@@ -39,7 +40,7 @@ contextlib2==0.5.5
 cookiecutter==1.4.0
 coverage==4.1b1
 cryptography>=2.1.4
-datacite==0.2.2
+datacite==1.0.1
 decorator==4.0.10
 dojson==1.0.0
 ecdsa==0.13

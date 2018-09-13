@@ -1,0 +1,29 @@
+{% extends "hepdata_theme/page.html" %}
+{%- set body_css_classes=['error-page'] %}
+
+{%- block page_body -%}
+
+    <div class="container-fluid">
+        <div align="center" class="error-text-container">
+            <h4>Sorry, you don't have permissions to access this record.</h4>
+            <p>
+              Please <a href="/login" target="_blank">Sign in</a> and check that you have claimed Uploader or Reviewer
+              permissions from your <a href="/dashboard" target="_blank">Dashboard</a> or from the email sent by your
+              <a href="/permissions/coordinators" target="_blank">Coordinator</a>.
+            </p>
+            <p>
+              Note that the email address of your Uploader or Reviewer invitation needs to match the email address of
+              your HEPData account.<br/>If logged in with CERN authentication, the email address of your HEPData
+              account will be the one associated with your
+              <a href="https://phonebook.cern.ch/phonebook" target="_blank">CERN account</a>.<br/>If necessary, you can
+              change your HEPData email address from your <a href="/account/settings/profile" target="_blank">profile.
+            </p>
+            {% if ctx %}
+              <p>{{ ctx.name }}: {{ ctx.error }}</p>
+            {% endif %}
+            <br/>
+            <br/>
+        </div>
+    </div>
+
+{%- endblock -%}

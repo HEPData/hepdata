@@ -74,6 +74,12 @@ def invalid_doi():
     return render_template(current_app.config['INVALID_DOI_TEMPLATE']), 410
 
 
+def page_forbidden(e):
+    """Error handler to show a 403.html page in case of a 403 error."""
+    return render_template(current_app.config['THEME_403_TEMPLATE'],
+                           ctx={"name": type(e).__name__, "error": str(e)}), 403
+
+
 def page_not_found(e):
     """Error handler to show a 404.html page in case of a 404 error."""
     return render_template(current_app.config['THEME_404_TEMPLATE'],
