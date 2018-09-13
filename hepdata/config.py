@@ -128,11 +128,11 @@ CFG_SUPPORTED_FORMATS = ['yaml', 'root', 'csv', 'yoda']
 CFG_TMPDIR = tempfile.gettempdir()
 CFG_DATADIR = tempfile.gettempdir()
 
-MAIL_SERVER = 'mail.smtp2go.com'
-MAIL_PORT = 2525
+MAIL_SERVER = 'cernmx.cern.ch'
+MAIL_PORT = ''
 MAIL_DEFAULT_SENDER = 'submissions@hepdata.net'
-SMTP_NO_PASSWORD = False
-SMTP_ENCRYPTION = True
+SMTP_NO_PASSWORD = True
+SMTP_ENCRYPTION = False
 MAIL_USERNAME = 'info@hepdata.net'
 MAIL_PASSWORD = ''
 

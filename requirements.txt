@@ -18,6 +18,8 @@
 # * Pillow==3.1.0 --> Pillow==5.2.0
 # * remove pycrypto==2.6.1
 # * datacite==0.2.2 --> datacite==1.0.1
+# * Flask==0.12.2 --> Flask==0.12.4
+# * Werkzeug==0.12.2 --> Werkzeug==0.14.1
 alembic==0.9.6
 amqp==2.1.4
 aniso8601==1.1.0
@@ -50,7 +52,7 @@ enum34==1.1.6
 execnet==1.4.1
 Fabric==1.10.2
 fixture==1.5.2
-Flask==0.12.2
+Flask==0.12.4
 Flask-Admin==1.5.0
 Flask-Alembic==2.0.1
 Flask-Assets==0.12
@@ -183,7 +185,7 @@ validators==0.11.0
 vine==1.1.3
 webargs==1.3.4
 webassets==0.12.1
-Werkzeug==0.12.2
+Werkzeug==0.14.1
 whichcraft==0.4.0
 WTForms==2.1
 WTForms-Alchemy==0.16.1
