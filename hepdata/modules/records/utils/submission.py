@@ -671,6 +671,11 @@ def create_data_review(data_recid, publication_recid, version=1):
 def unload_submission(record_id, version=1):
 
     submission = get_latest_hepsubmission(publication_recid=record_id)
+
+    if not submission:
+        print('Record {0} not found'.format(record_id))
+        return
+
     if version == submission.version:
         print('Unloading record {0} version {1}...'.format(record_id, version))
         remove_submission(record_id, version)

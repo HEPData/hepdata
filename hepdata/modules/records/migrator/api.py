@@ -282,7 +282,7 @@ class Migrator(object):
             print('Old site last updated {}'.format(str(oldsite_last_updated)))
             print('New site last updated {}'.format(str(hep_submission.last_updated)))
             print('Coordinator ID is {}, version count is {}'.format(hep_submission.coordinator, version_count))
-            allow_update = hep_submission.last_updated < oldsite_last_updated and \
+            allow_update = (hep_submission.last_updated < oldsite_last_updated or force) and \
                            hep_submission.coordinator == 1 and version_count == 1
 
             if not only_record_information and (allow_update or force):
