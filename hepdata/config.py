@@ -133,7 +133,7 @@ MAIL_PORT = ''
 MAIL_DEFAULT_SENDER = 'submissions@hepdata.net'
 SMTP_NO_PASSWORD = True
 SMTP_ENCRYPTION = False
-MAIL_USERNAME = 'info@hepdata.net'
+MAIL_USERNAME = ''
 MAIL_PASSWORD = ''
 
 if MAIL_PASSWORD is '':
