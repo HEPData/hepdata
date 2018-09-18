@@ -10,10 +10,13 @@
                 </button>
             {% endif %}
 
-            <button type="button" class="btn btn-success btn-md" data-toggle="modal" style="width: 100%"
-                    data-target="#uploadDialog"><span
-                    class="fa fa-upload"></span> Upload New Files
-            </button>
+            {% if ctx.is_submission_coordinator_or_admin or ctx.mode != 'sandbox' %}
+                <button type="button" class="btn btn-success btn-md" data-toggle="modal" style="width: 100%"
+                        data-target="#uploadDialog"><span
+                        class="fa fa-upload"></span> Upload New Files
+                </button>
+            {% endif %}
+
         {% endif %}
 
 

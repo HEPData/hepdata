@@ -38,8 +38,8 @@ HEPDATA.visualization.heatmap = {
     HEPDATA.visualization.heatmap.data = data;
 
     if (HEPDATA.visualization.heatmap.x_index == '') {
-      HEPDATA.visualization.heatmap.x_index = data.headers[1].name;
-      HEPDATA.visualization.heatmap.y_index = data.headers[0].name;
+      HEPDATA.visualization.heatmap.x_index = data.headers[0].name;
+      HEPDATA.visualization.heatmap.y_index = data.headers[1].name;
     }
 
     HEPDATA.visualization.heatmap.placement = placement;
