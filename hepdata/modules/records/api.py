@@ -455,7 +455,7 @@ def check_and_convert_from_oldhepdata(input_directory, id, timestamp):
 def query_messages_for_data_review(data_review_record, messages):
     if data_review_record.messages:
         data_messages = data_review_record.messages
-        # TO DO: sort into order.
+        data_messages.sort(key=lambda data_message: data_message.id, reverse=True)
         for data_message in data_messages:
             current_user_obj = get_user_from_id(data_message.user)
             messages.append(

@@ -59,10 +59,11 @@ def send_new_review_message_email(review, message, user):
     record = get_record_by_id(review.publication_recid)
 
     destinations = [participant.email for participant in submission_participants]
+    full_names = [participant.full_name for participant in submission_participants]
 
     message_body = render_template(
         'hepdata_theme/email/review-message.html',
-        name=participant.full_name,
+        name=', '.join(set(full_names)),
         actor=user.email,
         table_name=table_information.name,
         table_message=message.message,

@@ -129,15 +129,17 @@
                       class="hidden">{{ ctx.site_url }}/record/{{ ctx.record.recid }}</span>
 
                     <br/>
-                        <div class="collaborations">
-                             <span class="collaboration-group"> The
-                                 {% for collaboration in ctx.record.collaborations %}
-                                     <span class="info_group"> <a
-                                             href="/search/?collaboration={{ collaboration }}"> {{ collaboration }} </a></span>
-                                 {% endfor %} collaboration{% if ctx.record.collaborations|length > 1 %}s{% endif %}
-                             </span>
-
-                        </div>
+                        {% if ctx.record.collaborations %}
+                          <div class="collaborations">
+                            <span class="collaboration-group">
+                              The
+                              {% for collaboration in ctx.record.collaborations %}
+                                <span class="info_group"> <a
+                                  href="/search/?collaboration={{ collaboration }}"> {{ collaboration }} </a></span>
+                              {% endfor %} collaboration{% if ctx.record.collaborations|length > 1 %}s{% endif %}
+                            </span>
+                          </div>
+                        {% endif %}
 
                         <div class="record-authors">
                             {% for author in ctx.record.summary_authors %}
