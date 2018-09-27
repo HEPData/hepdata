@@ -22,12 +22,13 @@ import os
 
 from celery import shared_task
 from flask import Blueprint, send_file, render_template, \
-    request, current_app, redirect
+    request, current_app, redirect, abort
 import time
 from werkzeug.utils import secure_filename
 from hepdata.config import CFG_CONVERTER_URL, CFG_SUPPORTED_FORMATS
 
 from hepdata_converter_ws_client import convert
+from hepdata.modules.permissions.api import user_allowed_to_perform_action
 from hepdata.modules.converter import convert_zip_archive
 from hepdata.modules.submission.api import get_latest_hepsubmission
 from hepdata.modules.submission.models import HEPSubmission, DataResource, DataSubmission
@@ -114,15 +115,33 @@ def download_submission_with_inspire_id(*args, **kwargs):
     if 'ins' in inspire_id:
         inspire_id = inspire_id.replace('ins', '')
 
-    if 'version' in kwargs:
-        submission = HEPSubmission.query.filter_by(inspire_id=inspire_id, version=kwargs.pop('version')).first()
-    else:
-        submission = get_latest_hepsubmission(inspire_id=inspire_id)
+    submission = get_latest_hepsubmission(inspire_id=inspire_id)
 
     if not submission:
         return display_error(
             title="No submission found",
             description="A submission with Inspire ID {0} does not exist".format(inspire_id)
+        )
+
+    recid = submission.publication_recid
+    version_count, version_count_all = get_version_count(recid)
+
+    if 'version' in kwargs:
+        version = kwargs.pop('version')
+    else:
+        # If version not given explicitly, take to be latest allowed version (or 1 if there are no allowed versions).
+        version = version_count if version_count else 1
+
+    if version_count < version_count_all and version == version_count_all:
+        # Check for a user trying to access a version of a publication record where they don't have permissions.
+        abort(403)
+    elif version < version_count_all:
+        submission = HEPSubmission.query.filter_by(inspire_id=inspire_id, version=version).first()
+
+    if not submission:
+        return display_error(
+            title="No submission found",
+            description="A submission with Inspire ID {0} and version {1} does not exist".format(inspire_id, version)
         )
 
     return download_submission(submission, kwargs.pop('file_format'), rivet_analysis_name=kwargs.pop('rivet', ''))
@@ -143,16 +162,24 @@ def download_submission_with_recid(*args, **kwargs):
         :return:
     """
     recid = kwargs.pop('recid')
+
+    version_count, version_count_all = get_version_count(recid)
     if 'version' in kwargs:
-        submission = HEPSubmission.query.filter_by(publication_recid=recid, version=kwargs.pop('version')) \
-            .first()
+        version = kwargs.pop('version')
     else:
-        submission = get_latest_hepsubmission(publication_recid=recid)
+        # If version not given explicitly, take to be latest allowed version (or 1 if there are no allowed versions).
+        version = version_count if version_count else 1
+
+    # Check for a user trying to access a version of a publication record where they don't have permissions.
+    if version_count < version_count_all and version == version_count_all:
+        abort(403)
+
+    submission = HEPSubmission.query.filter_by(publication_recid=recid, version=version).first()
 
     if not submission:
         return display_error(
             title="No submission found",
-            description="A submission with record ID {0} does not exist".format(recid)
+            description="A submission with record ID {0} and version {1} does not exist".format(recid, version)
         )
 
     return download_submission(submission, kwargs.pop('file_format'), rivet_analysis_name=kwargs.pop('rivet', ''))
@@ -259,20 +286,46 @@ def download_data_table_by_inspire_id(*args, **kwargs):
     if 'ins' in inspire_id:
         inspire_id = inspire_id.replace('ins', '')
 
-    if 'version' not in kwargs:
-        version = get_latest_hepsubmission(inspire_id=inspire_id).version
-    else:
-        version = kwargs.pop('version')
+    submission = get_latest_hepsubmission(inspire_id=inspire_id)
 
+    if not submission:
+        return display_error(
+            title="No submission found",
+            description="A submission with Inspire ID {0} does not exist".format(inspire_id)
+        )
+
+    recid = submission.publication_recid
+    version_count, version_count_all = get_version_count(recid)
+
+    if 'version' in kwargs:
+        version = kwargs.pop('version')
+    else:
+        # If version not given explicitly, take to be latest allowed version (or 1 if there are no allowed versions).
+        version = version_count if version_count else 1
+
+    if version_count < version_count_all and version == version_count_all:
+        # Check for a user trying to access a version of a publication record where they don't have permissions.
+        abort(403)
+
+    datasubmission = None
+    original_table_name = table_name
     try:
-        datasubmission = DataSubmission.query.filter_by(publication_inspire_id=inspire_id,
-                                                        version=version, name=table_name).one()
+        datasubmission = DataSubmission.query.filter_by(publication_inspire_id=inspire_id, version=version, name=table_name).one()
     except NoResultFound:
-        # Allow space in table_name to be omitted from URL.
         if ' ' not in table_name:
+            # Allow space in table_name to be omitted from URL.
             table_name = table_name.replace('Table', 'Table ')
-            datasubmission = DataSubmission.query.filter_by(publication_inspire_id=inspire_id,
-                                                            version=version, name=table_name).one()
+            try:
+                datasubmission = DataSubmission.query.filter_by(publication_inspire_id=inspire_id, version=version, name=table_name).one()
+            except NoResultFound:
+                pass
+
+    if not datasubmission:
+        return display_error(
+            title="No data submission found",
+            description="A data submission with Inspire ID {0}, version {1} and table name '{2}' does not exist"
+                .format(inspire_id, version, original_table_name)
+        )
 
     return download_datatable(datasubmission, kwargs.pop('file_format'),
                               submission_id='ins{0}'.format(inspire_id), table_name=table_name,
@@ -296,19 +349,36 @@ def download_data_table_by_recid(*args, **kwargs):
     table_name = kwargs.pop('table_name')
     rivet = kwargs.pop('rivet', '')
 
-    if 'version' not in kwargs:
-        version = get_latest_hepsubmission(publication_recid=recid).version
-    else:
+    version_count, version_count_all = get_version_count(recid)
+    if 'version' in kwargs:
         version = kwargs.pop('version')
+    else:
+        # If version not given explicitly, take to be latest allowed version (or 1 if there are no allowed versions).
+        version = version_count if version_count else 1
 
+    # Check for a user trying to access a version of a publication record where they don't have permissions.
+    if version_count < version_count_all and version == version_count_all:
+        abort(403)
+
+    datasubmission = None
+    original_table_name = table_name
     try:
         datasubmission = DataSubmission.query.filter_by(publication_recid=recid, version=version, name=table_name).one()
     except NoResultFound:
-        # Allow space in table_name to be omitted from URL.
         if ' ' not in table_name:
+            # Allow space in table_name to be omitted from URL.
             table_name = table_name.replace('Table', 'Table ')
-            datasubmission = DataSubmission.query.filter_by(publication_recid=recid, version=version,
-                                                            name=table_name).one()
+            try:
+                datasubmission = DataSubmission.query.filter_by(publication_recid=recid, version=version,name=table_name).one()
+            except NoResultFound:
+                pass
+
+    if not datasubmission:
+        return display_error(
+            title="No data submission found",
+            description="A data submission with record ID {0}, version {1} and table name '{2}' does not exist"
+                .format(recid, version, original_table_name)
+        )
 
     return download_datatable(datasubmission, kwargs.pop('file_format'),
                               submission_id='{0}'.format(recid), table_name=table_name,
@@ -409,3 +479,16 @@ def display_error(title='Unknown Error', description=''):
             }]
         }
     )
+
+
+def get_version_count(recid):
+    """ Returns both the number of *allowed* versions and the number of *all* versions. """
+
+    # Count number of all versions and number of finished versions of a publication record.
+    version_count_all = HEPSubmission.query.filter_by(publication_recid=recid).count()
+    version_count_finished = HEPSubmission.query.filter_by(publication_recid=recid, overall_status='finished').count()
+
+    # Number of versions that a user is allowed to access based on their permissions.
+    version_count = version_count_all if user_allowed_to_perform_action(recid) else version_count_finished
+
+    return version_count, version_count_all

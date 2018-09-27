@@ -128,10 +128,10 @@
                     {% endif %}
                     <span class="hidden" itemscope itemprop="distribution"
                           itemtype="http://schema.org/DataDownload"><span
-                            itemprop="contentUrl">https://hepdata.net/record/data/{{ table.id }}</span><span
+                            itemprop="contentUrl">{{ ctx.site_url }}/record/data/{{ table.id }}</span><span
                             itemprop="encodingFormat">yaml</span></span>
                 <span class="hidden" itemscope itemprop="distribution" itemtype="http://schema.org/DataDownload"><span
-                        itemprop="contentUrl">https://hepdata.net/record/data/{{ table.id }}/csv</span><span
+                        itemprop="contentUrl">{{ ctx.site_url }}/record/data/{{ table.id }}/csv</span><span
                         itemprop="encodingFormat">csv</span></span>
 
                     {% if ctx.mode != 'sandbox' %}
