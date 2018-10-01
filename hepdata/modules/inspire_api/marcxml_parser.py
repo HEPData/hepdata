@@ -171,10 +171,13 @@ def get_date(soup):
     """ Parse the date from the xml """
     try:
         (tag, code) = marc_tags['date']
-        datafield = soup.find_all(tag=tag)[0]
-        value = datafield.find_all(code=code)[0].string
-        date = expand_date(value)
-        return date, timestring.Date(date).year
+        datafields = soup.find_all(tag=tag)
+        for datafield in datafields:
+            if datafield.find_all(code=code):
+                value = datafield.find_all(code=code)[0].string
+                date = expand_date(value)
+                return date, timestring.Date(date).year
+        return None, None
     except IndexError:
         return None, None
 
