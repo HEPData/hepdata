@@ -358,22 +358,36 @@ def doi_utils():
 @click.option('--inspire_ids', '-i', type=str, default='', help='Specify inspire ids of submissions to generate the DOIs for.')
 def register_dois(inspire_ids):
     """
+    Register DOIs for a comma-separated list of INSPIRE IDs.
 
     :param inspire_ids:
     :return:
     """
-
     if inspire_ids:
         inspire_ids = inspire_ids.split(',')
-    else:
-        generate_dois_for_submission.delay()
+        # find publication ids for these inspire_ids
+        # register and mint the dois for the records
+        for inspire_id in inspire_ids:
+            print('Generating for {0}'.format(inspire_id))
+            _cleaned_id = inspire_id.replace("ins", "")
+            generate_dois_for_submission.delay(inspire_id=_cleaned_id)
 
-    # find publication ids for these inspire_ids
-    # register and mint the dois for the records
-    for inspire_id in inspire_ids:
-        print('Generating for {0}'.format(inspire_id))
+
+@doi_utils.command()
+@click.option('--inspire_id', '-i', type=str, default='', help='Specify inspire id of submission to generate the DOI for.')
+@click.option('--version', '-v', type=int, default=0, help='Specify version of submission to generate the DOI for.')
+def register_doi(inspire_id, version):
+    """
+    Register DOI for a single submission defined by the INSPIRE ID and version.
+
+    :param inspire_id:
+    :param version:
+    :return:
+    """
+    if inspire_id and version:
+        print('Generating for {0} version {1}'.format(inspire_id, version))
         _cleaned_id = inspire_id.replace("ins", "")
-        generate_dois_for_submission.delay(inspire_id=_cleaned_id)
+        generate_dois_for_submission.delay(inspire_id=_cleaned_id, version=version)
 
 
 @cli.group()

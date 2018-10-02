@@ -26,7 +26,7 @@
 
 from __future__ import absolute_import, print_function
 
-from flask import Blueprint, render_template, current_app, redirect
+from flask import Blueprint, render_template, current_app, redirect, request
 
 from hepdata.version import __version__
 
@@ -90,6 +90,11 @@ def internal_error(e):
     """Error handler to show a 500.html page in case of a 500 error."""
     return render_template(current_app.config['THEME_500_TEMPLATE'],
                            ctx={"name": type(e).__name__, "error": str(e)}), 500
+
+
+def redirect_nonwww():
+    if current_app.config.get('PRODUCTION_MODE', False) and 'www' not in request.url:
+        return redirect(request.url.replace('://', '://www.'), code=301)
 
 
 @blueprint.route('/ping')

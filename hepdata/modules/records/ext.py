@@ -32,6 +32,7 @@ from hepdata.modules.permissions.models import SubmissionParticipant
 from hepdata.modules.theme.views import page_forbidden
 from hepdata.modules.theme.views import internal_error
 from hepdata.modules.theme.views import page_not_found
+from hepdata.modules.theme.views import redirect_nonwww
 from flask.ext.login import current_user
 from invenio_db import db
 
@@ -57,6 +58,8 @@ class HEPDataRecords(object):
         app.register_error_handler(403, page_forbidden)
         app.register_error_handler(404, page_not_found)
         app.register_error_handler(500, internal_error)
+
+        app.before_request(redirect_nonwww)
 
     def init_config(self, app):
         """Initialize configuration."""

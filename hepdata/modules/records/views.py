@@ -74,9 +74,6 @@ blueprint = Blueprint(
 @blueprint.route('/sandbox/<int:id>', methods=['GET'])
 def sandbox_display(id):
 
-    if current_app.config.get('PRODUCTION_MODE', False) and 'www' not in request.url:
-        return redirect(request.url.replace('://', '://www.'))
-
     hepdata_submission = HEPSubmission.query.filter_by(
         publication_recid=id, overall_status='sandbox').first()
 
@@ -94,9 +91,6 @@ def sandbox_display(id):
 
 @blueprint.route('/<string:recid>', methods=['GET'], strict_slashes=True)
 def get_metadata_by_alternative_id(recid):
-
-    if current_app.config.get('PRODUCTION_MODE', False) and 'www' not in request.url:
-        return redirect(request.url.replace('://', '://www.'))
 
     try:
         if "ins" in recid:
@@ -165,9 +159,6 @@ def metadata(recid):
     :return: renders the record template
     """
 
-    if current_app.config.get('PRODUCTION_MODE', False) and 'www' not in request.url:
-        return redirect(request.url.replace('://', '://www.'))
-
     version = int(request.args.get('version', -1))
     serialization_format = request.args.get('format', 'html')
     light_mode = bool(request.args.get('light', False))
@@ -227,9 +218,6 @@ def get_table_details(recid, data_recid, version):
     :param version:
     :return:
     """
-
-    if current_app.config.get('PRODUCTION_MODE', False) and 'www' not in request.url:
-        return redirect(request.url.replace('://', '://www.'))
 
     datasub_query = DataSubmission.query.filter_by(id=data_recid,
                                                    version=version)

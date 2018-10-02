@@ -41,6 +41,7 @@ log = logging.getLogger(__name__)
 def generate_dois_for_submission(*args, **kwargs):
     """
     Generate DOIs for all the submission components
+
     :param inspire_id:
     :param version:
     :param kwargs:
@@ -62,9 +63,11 @@ def generate_dois_for_submission(*args, **kwargs):
 
         publication_info = get_record_by_id(hep_submission.publication_recid)
 
+        print('Minting doi {}'.format(hep_submission.doi))
         create_container_doi(hep_submission, data_submissions, publication_info, site_url)
 
         for data_submission in data_submissions:
+            print('Minting doi {}'.format(data_submission.doi))
             create_data_doi(hep_submission, data_submission, publication_info, site_url)
 
 
@@ -224,10 +227,10 @@ def register_doi(doi, url, xml, uuid):
         provider.register(url, xml)
     except DataCiteUnauthorizedError:
         log.error('Unable to mint DOI. No authorisation credentials provided.')
-    except PIDInvalidAction:
-        provider.update(url, xml)
-    except IntegrityError:
-        provider.update(url, xml)
+    except (PIDInvalidAction, IntegrityError):
+        try:
+            provider.update(url, xml)
+        except DataCiteError as dce:
+            log.error('Error updating {0} for URL {1}\n\n{2}'.format(doi, url, dce))
     except DataCiteError as dce:
-        log.error('Error registering {0} for URL {1}\n\n{2}'
-                  .format(doi, url, dce))
+        log.error('Error registering {0} for URL {1}\n\n{2}'.format(doi, url, dce))
