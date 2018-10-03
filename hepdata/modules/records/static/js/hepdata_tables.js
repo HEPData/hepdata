@@ -278,8 +278,8 @@ HEPDATA.table_renderer = {
 
               var plus_error = errors[error_idx]['asymerror']['plus'];
               var min_error = errors[error_idx]['asymerror']['minus'];
-              /*
-              // Remove rounding as it can give misleading results, e.g. if least significant digit of value is zero.
+
+              // Round errors to same number of decimal places as central value.
               if (plus_error.toString().toLowerCase().indexOf('e') == -1 && value.toString().toLowerCase().indexOf('e') == -1) {
                 var plus_error_rounded = HEPDATA.visualization.utils.round(plus_error, decimal_places);
                 if (plus_error_rounded != 0)
@@ -290,7 +290,7 @@ HEPDATA.table_renderer = {
                 if (min_error_rounded != 0)
                   min_error = min_error_rounded;
               }
-              */
+
 
               var plus_error_num = HEPDATA.dataprocessing.process_error_value(errors[error_idx]['asymerror']['plus'], value);
               var min_error_num = HEPDATA.dataprocessing.process_error_value(errors[error_idx]['asymerror']['minus'], value);
@@ -307,14 +307,14 @@ HEPDATA.table_renderer = {
             } else if ("symerror" in errors[error_idx]) {
               if (errors[error_idx]['symerror'] != 0) {
                 var sym_error = errors[error_idx]['symerror'];
-                /*
-                // Remove rounding as it can give misleading results, e.g. if least significant digit of value is zero.
+
+                // Round errors to same number of decimal places as central value.
                 if (sym_error.toString().toLowerCase().indexOf('e') == -1 && value.toString().toLowerCase().indexOf('e') == -1) {
                   var sym_error_rounded = HEPDATA.visualization.utils.round(sym_error, decimal_places);
                   if (sym_error_rounded != 0)
                     sym_error = sym_error_rounded;
                 }
-                */
+
                 var error = div.append('div').attr('class', err_class + ' sym');
                 error.append('div').attr('class', 'value').html('&#177;' + sym_error);
 

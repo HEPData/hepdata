@@ -33,9 +33,9 @@ from flask.ext.login import login_required
 from flask import Blueprint, send_file, abort, current_app, redirect
 import yaml
 try:
-    from yaml import CSafeLoader as Loader
+    from yaml import CBaseLoader as Loader
 except ImportError: #pragma: no cover
-    from yaml import SafeLoader as Loader #pragma: no cover
+    from yaml import BaseLoader as Loader #pragma: no cover
 from invenio_db import db
 
 from hepdata.config import CFG_DATA_TYPE, CFG_PUB_TYPE

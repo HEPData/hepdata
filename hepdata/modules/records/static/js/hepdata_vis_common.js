@@ -4,7 +4,7 @@ HEPDATA.visualization.utils = {
 
   round: function (value, round) {
     try {
-      value = value.toFixed(round)
+      value = parseFloat(value).toFixed(round)
     } catch (e) {
       console.warn('Unable to convert ' + value + ' to number.');
     }
