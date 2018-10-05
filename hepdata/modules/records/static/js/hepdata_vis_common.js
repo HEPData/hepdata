@@ -46,7 +46,7 @@ HEPDATA.visualization.utils = {
 HEPDATA.dataprocessing = {
   /**
    * The data values come in a format relevant for tables, but not so good for use with D3.
-   * We need to flatten things out in to objects representing each X,Y pair for display
+   * We need to flatten things out into objects representing each X,Y pair for display.
    * @param data_values
    */
   process_data_values: function (data) {
@@ -122,7 +122,7 @@ HEPDATA.dataprocessing = {
 
                 "x": record.x[x1_idx],
                 "y": record.x[x2_idx],
-                "value": record.y[y_idx].value,
+                "value": parseFloat(record.y[y_idx].value),
                 "name": data_header_value,
                 "row": data_record
               };
@@ -135,12 +135,13 @@ HEPDATA.dataprocessing = {
             } else {
               processed_value = {
                 "x": record.x[0],
-                "y": record.y[y_idx].value,
+                "y": parseFloat(record.y[y_idx].value),
                 "name": data_header_value,
                 "row": data_record
               };
 
-              if (processed_value.y == '-') continue;
+              if (isNaN(processed_value.y)) continue;
+
             }
 
             processed_value = HEPDATA.dataprocessing.processed_key(processed_value, 'x');
@@ -156,7 +157,7 @@ HEPDATA.dataprocessing = {
 
                 var errors_obj = $.extend(record.y[y_idx].errors[error_idx], {});
                 errors_obj.x = processed_value.x;
-                errors_obj.y = record.y[y_idx].value;
+                errors_obj.y = parseFloat(record.y[y_idx].value);
                 errors_obj.group = record.y[y_idx].group;
                 errors_obj.name = data_header_value;
 
@@ -186,7 +187,7 @@ HEPDATA.dataprocessing = {
 
               processed_value["quad_error"] = {
                 x: processed_value.x,
-                y: record.y[y_idx].value,
+                y: parseFloat(record.y[y_idx].value),
                 'err_plus': Math.sqrt(summed_uncertainties["up"]),
                 'err_minus': -Math.sqrt(summed_uncertainties["down"]),
                 'label': 'Summed',
@@ -269,14 +270,12 @@ HEPDATA.dataprocessing = {
 
         if (processed_value_obj[key + '_max'] > HEPDATA.stats['max_' + key])  HEPDATA.stats['max_' + key] = processed_value_obj[key + '_max'];
         if (processed_value_obj[key + '_min'] < HEPDATA.stats['min_' + key])  HEPDATA.stats['min_' + key] = processed_value_obj[key + '_min'];
-      } else if (typeof(val["value"]) == 'string' && val["value"].split('-').length > 1) {
+      } else if (typeof(val["value"]) == 'string' && val["value"].split('-').length > 1 && !isNaN(val["value"].split('-')[1]) && !isNaN(val["value"].split('-')[0])) {
         var low_high = val["value"].split('-');
 
-        if (!isNaN(low_high[1]) && !isNaN(low_high[0])) {
-          processed_value_obj[key + '_max'] = +low_high[1];
-          processed_value_obj[key + '_min'] = +low_high[0];
-          processed_value_obj[key] = +processed_value_obj[key + '_min'] + ((processed_value_obj[key + '_max'] - processed_value_obj[key + '_min']) / 2);
-        }
+        processed_value_obj[key + '_max'] = +low_high[1];
+        processed_value_obj[key + '_min'] = +low_high[0];
+        processed_value_obj[key] = +processed_value_obj[key + '_min'] + ((processed_value_obj[key + '_max'] - processed_value_obj[key + '_min']) / 2);
 
         if (processed_value_obj[key + '_max'] > HEPDATA.stats['max_' + key])  HEPDATA.stats['max_' + key] = processed_value_obj[key + '_max'];
         if (processed_value_obj[key + '_min'] < HEPDATA.stats['min_' + key])  HEPDATA.stats['min_' + key] = processed_value_obj[key + '_min'];
