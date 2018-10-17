@@ -75,8 +75,8 @@ HEPDATA.visualization.heatmap = {
           var x_val = d.x;
           var y_val = d.y;
           if (typeof d.x == "string") {
-            x_val = d.x.replace(/\$/g, '');
-            y_val = d.y.replace(/\$/g, '');
+            x_val = d.x; x_val = x_val.replace(/\$/g, '');
+            y_val = d.y; y_val = y_val.replace(/\$/g, '');
           }
           return "<strong>" + x_val + " </strong><br/>" + y_val + "<br/>" + d.value + "</span>";
         }
@@ -124,19 +124,29 @@ HEPDATA.visualization.heatmap = {
       return 'row-' + d.row;
     }).attr("transform", "translate(-2.5,-2.5)").append("rect")
       .attr("x", function (d) {
-        return HEPDATA.visualization.heatmap.x_scale(d.x_min != undefined ? d.x_min : (d.x));
+        if (d.x_min != undefined && HEPDATA.visualization.heatmap.x_scale(d.x_min) != undefined) {
+          return HEPDATA.visualization.heatmap.x_scale(d.x_min);
+        } else {
+          return HEPDATA.visualization.heatmap.x_scale(d.x);
+        }
       })
       .attr("y", function (d) {
-        return HEPDATA.visualization.heatmap.y_scale(d.y_max != undefined ? d.y_max : d.y);
+        if (d.y_max != undefined && HEPDATA.visualization.heatmap.y_scale(d.y_max) != undefined) {
+          return HEPDATA.visualization.heatmap.y_scale(d.y_max);
+        } else {
+          return HEPDATA.visualization.heatmap.y_scale(d.y);
+        }
       })
       .attr("width", function (d) {
-        if (d.x_min != undefined && d.x_max != undefined) {
+        if (d.x_min != undefined && HEPDATA.visualization.heatmap.x_scale(d.x_min) != undefined
+          && d.x_max != undefined && HEPDATA.visualization.heatmap.x_scale(d.x_max) != undefined) {
           return HEPDATA.visualization.heatmap.x_scale(d.x_max) - HEPDATA.visualization.heatmap.x_scale(d.x_min);
         }
         return 5;
       })
       .attr("height", function (d) {
-        if (d.y_min != undefined && d.y_max != undefined) {
+        if (d.y_min != undefined && HEPDATA.visualization.heatmap.y_scale(d.y_min) != undefined
+          && d.y_max != undefined && HEPDATA.visualization.heatmap.y_scale(d.y_max) != undefined) {
           return HEPDATA.visualization.heatmap.y_scale(d.y_min) - HEPDATA.visualization.heatmap.y_scale(d.y_max);
         }
         return 5;
