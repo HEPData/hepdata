@@ -279,11 +279,19 @@ HEPDATA.visualization.histogram = {
         dot_groups.append("line")
           .attr("x1", 0)
           .attr("y1", function (d) {
-            return HEPDATA.visualization[type].y_scale(d.y + d.quad_error.err_minus) - HEPDATA.visualization[type].y_scale(d.y);
+            if (!isNaN(d.quad_error.err_minus)) {
+              return HEPDATA.visualization[type].y_scale(d.y + d.quad_error.err_minus) - HEPDATA.visualization[type].y_scale(d.y);
+            } else {
+              return 0;
+            }
           })
           .attr("x2", 0)
           .attr("y2", function (d) {
-            return HEPDATA.visualization[type].y_scale(d.y + d.quad_error.err_plus) - HEPDATA.visualization[type].y_scale(d.y);
+            if (!isNaN(d.quad_error.err_plus)) {
+              return HEPDATA.visualization[type].y_scale(d.y + d.quad_error.err_plus) - HEPDATA.visualization[type].y_scale(d.y);
+            } else {
+              return 0;
+            }
           })
           .attr("stroke-width", 2)
           .style("stroke", "#2C3E50")
@@ -302,11 +310,19 @@ HEPDATA.visualization.histogram = {
           .append("line")
           .attr("x1", 0)
           .attr("y1", function (d) {
-            return HEPDATA.visualization[type].y_scale(d.y + d.err_minus) - HEPDATA.visualization[type].y_scale(d.y);
+            if (!isNaN(d.err_minus)) {
+              return HEPDATA.visualization[type].y_scale(d.y + d.err_minus) - HEPDATA.visualization[type].y_scale(d.y);
+            } else {
+              return 0;
+            }
           })
           .attr("x2", 0)
           .attr("y2", function (d) {
-            return HEPDATA.visualization[type].y_scale(d.y + d.err_plus) - HEPDATA.visualization[type].y_scale(d.y);
+            if (!isNaN(d.err_plus)) {
+              return HEPDATA.visualization[type].y_scale(d.y + d.err_plus) - HEPDATA.visualization[type].y_scale(d.y);
+            } else {
+              return 0;
+            }
           })
 
           .attr("stroke-width", 2)

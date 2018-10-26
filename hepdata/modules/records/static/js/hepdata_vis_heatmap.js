@@ -38,8 +38,8 @@ HEPDATA.visualization.heatmap = {
     HEPDATA.visualization.heatmap.data = data;
 
     if (HEPDATA.visualization.heatmap.x_index == '') {
-      HEPDATA.visualization.heatmap.x_index = data.headers[0].name;
-      HEPDATA.visualization.heatmap.y_index = data.headers[1].name;
+      HEPDATA.visualization.heatmap.x_index = data.headers[0].name.replace(/\\$/g, '');
+      HEPDATA.visualization.heatmap.y_index = data.headers[1].name.replace(/\\$/g, '');
     }
 
     HEPDATA.visualization.heatmap.placement = placement;
@@ -75,8 +75,8 @@ HEPDATA.visualization.heatmap = {
           var x_val = d.x;
           var y_val = d.y;
           if (typeof d.x == "string") {
-            x_val = d.x; x_val = x_val.replace(/\$/g, '');
-            y_val = d.y; y_val = y_val.replace(/\$/g, '');
+            x_val = d.x; x_val = x_val.replace(/\\$/g, '');
+            y_val = d.y; y_val = y_val.replace(/\\$/g, '');
           }
           return "<strong>" + x_val + " </strong><br/>" + y_val + "<br/>" + d.value + "</span>";
         }
@@ -116,9 +116,18 @@ HEPDATA.visualization.heatmap = {
 
     var node_data = svg.selectAll("g.node").data(processed_dict["processed"]).enter();
 
+    // If only one value, rescale so value is in middle of colour scale.
+    if (HEPDATA.stats.min_value > HEPDATA.stats.max_value) {
+      var value_extent = [0, 1];
+    } else if (HEPDATA.stats.min_value != HEPDATA.stats.max_value) {
+      var value_extent = [HEPDATA.stats.min_value, HEPDATA.stats.max_value];
+    } else {
+      var value_extent = [0, 2*HEPDATA.stats.max_value];
+    }
+
     // we need to scale the data to between 0 and 1 so that the color scale works across different ranges.
 
-    var scale = d3.scale.pow().exponent(.5).domain([HEPDATA.stats.min_value, HEPDATA.stats.max_value]).range([0, 1]);
+    var scale = d3.scale.pow().exponent(.5).domain(value_extent).range([0, 1]);
 
     var node = node_data.append("g").attr("class", "node").attr('id', function (d) {
       return 'row-' + d.row;
@@ -176,7 +185,7 @@ HEPDATA.visualization.heatmap = {
         .attr("class", "brush")
         .call(HEPDATA.visualization.heatmap.brush);
     }
-    HEPDATA.visualization.heatmap.decimal_places = Math.min(HEPDATA.visualization.heatmap.decimal_places, HEPDATA.count_decimals(scale.domain()[0]))
+    HEPDATA.visualization.heatmap.decimal_places = Math.min(HEPDATA.visualization.heatmap.decimal_places, Math.max(HEPDATA.count_decimals(scale.domain()[0]), HEPDATA.count_decimals(scale.domain()[1])));
     HEPDATA.visualization.heatmap.render_legend(placement, scale, HEPDATA.visualization.heatmap.options.colors);
 
     MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
@@ -210,16 +219,16 @@ HEPDATA.visualization.heatmap = {
 
     options.append("br");
     for (var i = 0; i < 2; i++) {
-      var option = selector.append("option").text(data.headers[i].name);
-      if (data.headers[i].name == HEPDATA.visualization.heatmap.x_index) option.attr("selected", "selected")
+      var option = selector.append("option").text(data.headers[i].name.replace(/\\$/g, ''));
+      if (data.headers[i].name.replace(/\\$/g, '') == HEPDATA.visualization.heatmap.x_index) option.attr("selected", "selected")
     }
 
     options.append("label").text("Y Axis").attr("style", "padding-right:10px");
     var selector2 = options.append("select").attr("class", "hm_axis").attr("id", "hm_yaxis").attr("onchange", "HEPDATA.visualization.heatmap.switch_axis()");
 
     for (var i = 0; i < 2; i++) {
-      var option = selector2.append("option").text(data.headers[i].name);
-      if (data.headers[i].name == HEPDATA.visualization.heatmap.y_index) option.attr("selected", "selected")
+      var option = selector2.append("option").text(data.headers[i].name.replace(/\\$/g, ''));
+      if (data.headers[i].name.replace(/\\$/g, '') == HEPDATA.visualization.heatmap.y_index) option.attr("selected", "selected")
     }
   },
 
@@ -307,33 +316,38 @@ HEPDATA.visualization.heatmap = {
   },
 
   calculate_x_scale: function (data) {
-
-    var x_extent = d3.extent(data, function (d) {
-      return d.x;
-    });
-
+    var max_range = HEPDATA.visualization.heatmap.options.width - HEPDATA.visualization.heatmap.options.margins.left - HEPDATA.visualization.heatmap.options.margins.right;
     if ('min_x' in HEPDATA.stats && 'max_x' in HEPDATA.stats && HEPDATA.stats.min_x != null) {
-      x_extent = [HEPDATA.stats.min_x, HEPDATA.stats.max_x];
-      return d3.scale.linear().domain(x_extent).range([0, HEPDATA.visualization.heatmap.options.width - HEPDATA.visualization.heatmap.options.margins.left - HEPDATA.visualization.heatmap.options.margins.right]);
+      if (HEPDATA.stats.min_x != HEPDATA.stats.max_x) {
+        var x_extent = [HEPDATA.stats.min_x, HEPDATA.stats.max_x];
+      } else {
+        var x_extent = [0, 2*HEPDATA.stats.max_x];
+      }
+      return d3.scale.linear().domain(x_extent).range([0, max_range]);
+    } else if (data.length == 0) {
+      return d3.scale.linear().domain([0, 1]).range([0, max_range]);
     } else {
       return d3.scale.ordinal().domain(data.map(function (d) {
         return d.x;
-      })).rangePoints([0, HEPDATA.visualization.heatmap.options.width - HEPDATA.visualization.heatmap.options.margins.left - HEPDATA.visualization.heatmap.options.margins.right]);
+      })).rangePoints([0, max_range]);
     }
   },
 
   calculate_y_scale: function (data) {
-    var y_extent = d3.extent(data, function (d) {
-      return d.y;
-    });
-
+    var max_range = HEPDATA.visualization.heatmap.options.height - HEPDATA.visualization.heatmap.options.margins.top - HEPDATA.visualization.heatmap.options.margins.bottom;
     if ('min_y' in HEPDATA.stats && 'max_y' in HEPDATA.stats && HEPDATA.stats.min_y != null) {
-      y_extent = [HEPDATA.stats.min_y, HEPDATA.stats.max_y];
-      return d3.scale.linear().domain(y_extent).range([HEPDATA.visualization.heatmap.options.height - HEPDATA.visualization.heatmap.options.margins.top - HEPDATA.visualization.heatmap.options.margins.bottom, 10]);
+      if (HEPDATA.stats.min_y != HEPDATA.stats.max_y) {
+        var y_extent = [HEPDATA.stats.min_y, HEPDATA.stats.max_y];
+      } else {
+        var y_extent = [0, 2 * HEPDATA.stats.max_y];
+      }
+      return d3.scale.linear().domain(y_extent).range([max_range, 10]);
+    } else if (data.length == 0) {
+      return d3.scale.linear().domain([0, 1]).range([max_range, 10]);
     } else {
       return d3.scale.ordinal().domain(data.map(function (d) {
         return d.y;
-      })).rangePoints([HEPDATA.visualization.heatmap.options.height - HEPDATA.visualization.heatmap.options.margins.top - HEPDATA.visualization.heatmap.options.margins.bottom, 10]);
+      })).rangePoints([max_range, 10]);
     }
 
 
