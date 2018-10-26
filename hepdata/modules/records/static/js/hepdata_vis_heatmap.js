@@ -38,8 +38,8 @@ HEPDATA.visualization.heatmap = {
     HEPDATA.visualization.heatmap.data = data;
 
     if (HEPDATA.visualization.heatmap.x_index == '') {
-      HEPDATA.visualization.heatmap.x_index = data.headers[0].name.replace(/\\$/g, '');
-      HEPDATA.visualization.heatmap.y_index = data.headers[1].name.replace(/\\$/g, '');
+      HEPDATA.visualization.heatmap.x_index = data.headers[0].name.replace(/\$/g, '');
+      HEPDATA.visualization.heatmap.y_index = data.headers[1].name.replace(/\$/g, '');
     }
 
     HEPDATA.visualization.heatmap.placement = placement;
@@ -75,8 +75,8 @@ HEPDATA.visualization.heatmap = {
           var x_val = d.x;
           var y_val = d.y;
           if (typeof d.x == "string") {
-            x_val = d.x; x_val = x_val.replace(/\\$/g, '');
-            y_val = d.y; y_val = y_val.replace(/\\$/g, '');
+            x_val = d.x; x_val = x_val.replace(/\$/g, '');
+            y_val = d.y; y_val = y_val.replace(/\$/g, '');
           }
           return "<strong>" + x_val + " </strong><br/>" + y_val + "<br/>" + d.value + "</span>";
         }
@@ -219,16 +219,16 @@ HEPDATA.visualization.heatmap = {
 
     options.append("br");
     for (var i = 0; i < 2; i++) {
-      var option = selector.append("option").text(data.headers[i].name.replace(/\\$/g, ''));
-      if (data.headers[i].name.replace(/\\$/g, '') == HEPDATA.visualization.heatmap.x_index) option.attr("selected", "selected")
+      var option = selector.append("option").text(data.headers[i].name.replace(/\$/g, ''));
+      if (data.headers[i].name.replace(/\$/g, '') == HEPDATA.visualization.heatmap.x_index) option.attr("selected", "selected")
     }
 
     options.append("label").text("Y Axis").attr("style", "padding-right:10px");
     var selector2 = options.append("select").attr("class", "hm_axis").attr("id", "hm_yaxis").attr("onchange", "HEPDATA.visualization.heatmap.switch_axis()");
 
     for (var i = 0; i < 2; i++) {
-      var option = selector2.append("option").text(data.headers[i].name.replace(/\\$/g, ''));
-      if (data.headers[i].name.replace(/\\$/g, '') == HEPDATA.visualization.heatmap.y_index) option.attr("selected", "selected")
+      var option = selector2.append("option").text(data.headers[i].name.replace(/\$/g, ''));
+      if (data.headers[i].name.replace(/\$/g, '') == HEPDATA.visualization.heatmap.y_index) option.attr("selected", "selected")
     }
   },
 
