@@ -63,11 +63,9 @@ def generate_dois_for_submission(*args, **kwargs):
 
         publication_info = get_record_by_id(hep_submission.publication_recid)
 
-        print('Minting doi {}'.format(hep_submission.doi))
         create_container_doi(hep_submission, data_submissions, publication_info, site_url)
 
         for data_submission in data_submissions:
-            print('Minting doi {}'.format(data_submission.doi))
             create_data_doi(hep_submission, data_submission, publication_info, site_url)
 
 
@@ -194,6 +192,9 @@ def create_doi(doi):
     :param doi: Creates a DOI using the data provider. If it already exists, we return back the existing provider.
     :return: DataCiteProvider
     """
+    if current_app.config.get('NO_DOI_MINTING', False):
+        return None
+
     try:
         return DataCiteProvider.create(doi)
     except DataCiteUnauthorizedError:
@@ -210,9 +211,12 @@ def register_doi(doi, url, xml, uuid):
     :param recid:
     :return:
     """
+    if current_app.config.get('NO_DOI_MINTING', False):
+        return None
 
     log.info('{0} - {1}'.format(doi, url))
 
+    print('Minting doi {}'.format(doi))
     try:
         provider = DataCiteProvider.get(doi, 'doi')
     except PIDDoesNotExistError:

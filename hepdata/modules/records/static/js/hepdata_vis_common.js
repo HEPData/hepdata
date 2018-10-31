@@ -214,6 +214,14 @@ HEPDATA.dataprocessing = {
                 processed_value["quad_error"]["label"] = "hidden";
               }
 
+              if (processed_value["quad_error"].y + processed_value["quad_error"]["err_plus"] > HEPDATA.stats.max_y) {
+                HEPDATA.stats.max_y = processed_value["quad_error"].y + processed_value["quad_error"]["err_plus"];
+              }
+
+              if (processed_value["quad_error"].y + processed_value["quad_error"]["err_minus"] < HEPDATA.stats.min_y) {
+                HEPDATA.stats.min_y = processed_value["quad_error"].y + processed_value["quad_error"]["err_minus"];
+              }
+
               all_quad_errors.push(processed_value["quad_error"]);
 
               processed_value["errors"] = errors;
@@ -289,13 +297,7 @@ HEPDATA.dataprocessing = {
         if (processed_value_obj[key + '_max'] > HEPDATA.stats['max_' + key]) HEPDATA.stats['max_' + key] = processed_value_obj[key + '_max'];
         if (processed_value_obj[key + '_min'] < HEPDATA.stats['min_' + key]) HEPDATA.stats['min_' + key] = processed_value_obj[key + '_min'];
 
-      } else if (!isNaN(parseFloat(val["value"]))) {
-        processed_value_obj[key] = +val["value"];
-
-        if (processed_value_obj[key] > HEPDATA.stats['max_' + key]) HEPDATA.stats['max_' + key] = processed_value_obj[key];
-        if (processed_value_obj[key] < HEPDATA.stats['min_' + key]) HEPDATA.stats['min_' + key] = processed_value_obj[key];
-
-      } else if (typeof(val["value"]) == 'string' && val["value"].split('-').length > 1 && !isNaN(val["value"].split('-')[1]) && !isNaN(val["value"].split('-')[0])) {
+      } else if (typeof(val["value"]) == 'string' && val["value"].split('-').length > 1 && val["value"].split('-')[0] && !isNaN(val["value"].split('-')[1]) && !isNaN(val["value"].split('-')[0])) {
         var low_high = val["value"].split('-');
 
         processed_value_obj[key + '_max'] = +low_high[1];
@@ -304,6 +306,12 @@ HEPDATA.dataprocessing = {
 
         if (processed_value_obj[key + '_max'] > HEPDATA.stats['max_' + key]) HEPDATA.stats['max_' + key] = processed_value_obj[key + '_max'];
         if (processed_value_obj[key + '_min'] < HEPDATA.stats['min_' + key]) HEPDATA.stats['min_' + key] = processed_value_obj[key + '_min'];
+
+      } else if (!isNaN(parseFloat(val["value"]))) {
+        processed_value_obj[key] = +val["value"];
+
+        if (processed_value_obj[key] > HEPDATA.stats['max_' + key]) HEPDATA.stats['max_' + key] = processed_value_obj[key];
+        if (processed_value_obj[key] < HEPDATA.stats['min_' + key]) HEPDATA.stats['min_' + key] = processed_value_obj[key];
 
       } else if (typeof val == 'object' && (isNaN(val["value"]) || val["value"] == '')) {
         processed_value_obj[key] = val["value"];

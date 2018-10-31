@@ -787,7 +787,7 @@ def do_finalise(recid, publication_record=None, force_finalise=False,
             create_celery_app(current_app)
 
             # only mint DOIs if not testing.
-            if not current_app.config.get('TESTING', False) and not current_app.config.get('NO_DOI_MINTING', False):
+            if not current_app.config.get('TESTING', False):
                 generate_dois_for_submission.delay(inspire_id=hep_submission.inspire_id, version=version)
                 log.info("Generated DOIs for ins{0}".format(hep_submission.inspire_id))
 

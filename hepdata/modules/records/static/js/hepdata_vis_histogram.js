@@ -259,11 +259,19 @@ HEPDATA.visualization.histogram = {
       }).enter()
         .append("rect")
         .attr("x", function (d) {
-          return HEPDATA.visualization[type].x_scale(d.x_min) - HEPDATA.visualization[type].x_scale(d.x);
+          if (d.x_min != undefined && HEPDATA.visualization[type].x_scale(d.x_min) != undefined) {
+            return HEPDATA.visualization[type].x_scale(d.x_min) - HEPDATA.visualization[type].x_scale(d.x);
+          } else {
+            return 0;
+          }
         })
         .attr("y", 0)
         .attr("width", function (d) {
-          return HEPDATA.visualization[type].x_scale((d.x_max)) - HEPDATA.visualization[type].x_scale((d.x_min));
+          if (d.x_min != undefined && HEPDATA.visualization[type].x_scale(d.x_min) != undefined) {
+            return HEPDATA.visualization[type].x_scale(d.x_max) - HEPDATA.visualization[type].x_scale(d.x_min);
+          } else {
+            return 0;
+          }
         })
         .attr("height", 1)
         .style("stroke", "#2C3E50")
