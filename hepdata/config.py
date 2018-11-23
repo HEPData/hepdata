@@ -265,6 +265,7 @@ SUBMISSION_FILE_NAME_PATTERN = 'HEPData-{}-v{}-yaml.zip'
 PYTHONWARNINGS="ignore:Unverified HTTPS request"
 
 PRODUCTION_MODE = False
+EOS_DATADIR = 'root://eospublic.cern.ch//eos/hepdata/prod/var/data' # TO DO: move to Puppet configuration
 
 # Import local config file if it is present.
 try:
