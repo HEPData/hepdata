@@ -229,7 +229,7 @@ def assign_role(cookie):
         return redirect('/record/{0}'.format(participant_record.publication_recid))
 
     except:
-        abort(404)
+        abort(403)
 
 
 def check_is_sandbox_record(recid):
