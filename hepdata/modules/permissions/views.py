@@ -124,11 +124,10 @@ def change_coordinator_for_submission():
 
     recid = request.form['recid']
     coordinator_id = request.form['coordinator']
-    submission_record = HEPSubmission.query.filter_by(
-        publication_recid=recid).one()
-
-    submission_record.coordinator = coordinator_id
-    db.session.add(submission_record)
+    submission_records = HEPSubmission.query.filter_by(publication_recid=recid).all()
+    for submission_record in submission_records:
+        submission_record.coordinator = coordinator_id
+        db.session.add(submission_record)
     db.session.commit()
 
     return jsonify({'success': True})
