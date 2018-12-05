@@ -40,7 +40,7 @@
 
                 $("#file-description").html(data.description);
                 $(".code-viewer-title").text(data.type.toUpperCase() + " File");
-                var image_file_types = ["png", "jpeg", "jpg", "tiff"];
+                var image_file_types = ["png", "jpeg", "jpg", "tiff", "gif"];
 
                 if (image_file_types.indexOf(data.type.toLowerCase()) != -1) {
                     $("#code").html('<img src="' + data.location + '" width="100%"></img>');

@@ -188,7 +188,7 @@ HEPDATA.count_decimals = function (number) {
 }
 
 HEPDATA.is_image = function (file_type) {
-  var image_file_types = ["png", "jpeg", "jpg", "tiff"];
+  var image_file_types = ["png", "jpeg", "jpg", "tiff", "gif"];
   return image_file_types.indexOf(file_type.toLowerCase()) != -1
 };
 

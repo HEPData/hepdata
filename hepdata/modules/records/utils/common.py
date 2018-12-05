@@ -58,7 +58,8 @@ IMAGE_TYPES = [
     "png",
     "jpeg",
     "jpg",
-    "tiff"
+    "tiff",
+    "gif"
 ]
 
 URL_PATTERNS = [
