@@ -323,8 +323,11 @@ HEPDATA.table_renderer = {
                 }
                 */
 
+
+                var sym_error_num = HEPDATA.dataprocessing.process_error_value(sym_error, value);
+
                 var error = div.append('div').attr('class', err_class + ' sym');
-                error.append('div').attr('class', 'value').html('&#177;' + sym_error);
+                error.append('div').attr('class', 'value').html(sym_error_num >= 0 ? '&#177;' + sym_error : '&#8723;' + sym_error.replace('-', ''));
 
                 if (errors[error_idx]["label"] !== undefined)
                   error.append('div').attr('class', 'label').text(errors[error_idx]["label"] == undefined ? HEPDATA.default_error_label : errors[error_idx]["label"]);

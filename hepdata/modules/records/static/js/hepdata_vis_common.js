@@ -186,8 +186,10 @@ HEPDATA.dataprocessing = {
                 } else if ("symerror" in errors_obj) {
                   //we have a symerror
                   var value = HEPDATA.dataprocessing.process_error_value(errors_obj['symerror'], errors_obj.y);
-                  errors_obj.err_plus = value;
-                  errors_obj.err_minus = value == 0 ? 0 : -value;
+                  var up_err = value;
+                  var down_err = value == 0 ? 0 : -value;
+                  errors_obj.err_plus = Math.max(down_err, up_err, 0);
+                  errors_obj.err_minus = Math.min(down_err, up_err, 0);
                 }
 
                 if (errors_obj.y + errors_obj.err_plus > HEPDATA.stats.max_y) HEPDATA.stats.max_y = errors_obj.err_plus + errors_obj.y;

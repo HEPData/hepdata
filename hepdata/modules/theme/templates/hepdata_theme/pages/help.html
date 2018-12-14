@@ -15,7 +15,8 @@
             </div>
         </div>
         <div class="col-md-6">
-            <p>Submissions are handled by <a href="/permissions/coordinators">Coordinators</a> for a paper or
+            <p>Submissions are handled by <a href="/permissions/coordinators" target="_blank"
+                                             style="text-decoration: underline">Coordinators</a> for a paper or
                 project.  These Coordinators assign an Uploader and a Reviewer to each submission after clicking the
                 "Submit" button when they are logged in.</p>
 
@@ -25,11 +26,16 @@
 
             <p>An email is then sent to the designated Reviewer with a link which
                 assigns the appropriate privileges.  The Reviewer needs to mark each table as having "Passed" review
-                before the Coordinator can "Finalise" the submission from their <a href="/dashboard">Dashboard</a>.
+                before the Coordinator can "Finalise" the submission from
+                their <a href="/dashboard" target="_blank" style="text-decoration: underline">Dashboard</a>.
                 The entire submission will then be published and made searchable in HEPData.</p>
 
             <p>All current submissions are available for a Coordinator, Reviewer, or Uploader to see in their
-                <a href="/dashboard">Dashboard</a>.</p>
+                <a href="/dashboard" target="_blank" style="text-decoration: underline">Dashboard</a>.</p>
+
+            <p>See also Section 6 of <a href="https://arxiv.org/abs/1704.05473"
+                                        target="_blank" style="text-decoration: underline">arXiv:1704.05473</a>
+                for an overview of the submission process.</p>
 
             <br/>
 
@@ -50,14 +56,23 @@
                 </div>
             </div>
             <div class="col-md-6">
-                <p>There are a few examples showing submissions in the
-                    HEPData YAML format. While the format is simple, we understand that there
-                    is always a learning curve to climb.</p>
 
-                <p>Our submission repository has details on the format and tools to go
-                    from the old HEPData format to the new version.</p>
-                <br/>
+                <p>The main documentation for the HEPData YAML submission format is linked below,
+                  together with a third-party library that might be useful in preparing your submission.
+                  You can also easily obtain the YAML format of any existing HEPData record by clicking
+                  “Download All” then “YAML”.</p><br/>
 
+                <a href="https://hepdata-submission.readthedocs.io" class="btn btn-primary" target="_blank">
+                    Submission Documentation</a>
+                <a href="https://github.com/clelange/hepdata_lib/" class="btn btn-primary" target="_blank">
+                    hepdata_lib</a>
+
+                <br/><br/><br/><br/>
+
+                <p>The GitHub repositories linked below provide more details on the submission format and some examples,
+                    together with tools to convert from the old HepData input format to the new HEPData YAML format and
+                    to validate the HEPData YAML format.  These conversion and validation tools are automatically
+                    invoked from the web interface when an Uploader uploads their submission files.</p><br/>
 
                 <a href="https://github.com/HEPData/hepdata-submission" class="btn btn-primary" target="_blank">
                     Submission Format</a>
@@ -105,6 +120,11 @@
                 <p>The data tables have interactive plots automatically
                     generated given particular data types, so you can also visually query the data to find mistakes in
                     the table.</p>
+
+                <br/>
+
+                <p>After all data tables have passed review, the Reviewer should contact the Coordinator to
+                  finalise the record.</p>
 
             </div>
         </div>
