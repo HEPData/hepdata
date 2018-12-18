@@ -487,8 +487,13 @@ def get_version_count(recid):
     # Count number of all versions and number of finished versions of a publication record.
     version_count_all = HEPSubmission.query.filter_by(publication_recid=recid).count()
     version_count_finished = HEPSubmission.query.filter_by(publication_recid=recid, overall_status='finished').count()
+    version_count_sandbox = HEPSubmission.query.filter_by(publication_recid=recid, overall_status='sandbox').count()
 
-    # Number of versions that a user is allowed to access based on their permissions.
-    version_count = version_count_all if user_allowed_to_perform_action(recid) else version_count_finished
+    if version_count_sandbox:
+        # For a Sandbox record, there is only one version, which is accessible by everyone.
+        version_count = version_count_all
+    else:
+        # Number of versions that a user is allowed to access based on their permissions.
+        version_count = version_count_all if user_allowed_to_perform_action(recid) else version_count_finished
 
     return version_count, version_count_all

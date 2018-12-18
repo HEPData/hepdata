@@ -472,6 +472,9 @@ def process_submission_directory(basepath, submission_file_path, recid, update=F
                             if not os.path.isfile(location):
                                 errors[resource['location']] = [{"level": "error", "message":
                                     "Missing 'additional_resources' file from uploaded archive."}]
+                            elif '/' in resource['location']:
+                                errors[resource['location']] = [{"level": "error", "message":
+                                    "Location of 'additional_resources' file should not contain '/'."}]
 
                 if 'name' not in yaml_document:
                     no_general_submission_info = False
@@ -509,6 +512,11 @@ def process_submission_directory(basepath, submission_file_path, recid, update=F
 
                         errors[yaml_document["data_file"]] = \
                             [{"level": "error", "message": "There was a problem parsing the file.\n" + str(ex)}]
+
+                    elif '/' in yaml_document["data_file"]:
+
+                        errors[yaml_document["data_file"]] = \
+                            [{"level": "error", "message": "Name of data_file should not contain '/'.\n"}]
 
                     else:
 
