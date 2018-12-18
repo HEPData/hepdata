@@ -65,11 +65,10 @@ def process_independent_variables(table_contents, x_axes,
     if table_contents["independent_variables"]:
         count = 0
         for x_axis in table_contents["independent_variables"]:
-            units = x_axis['header']['units'] if 'units' in x_axis[
-                'header'] else ''
+            units = x_axis['header']['units'] if 'units' in x_axis['header'] else ''
             x_header = x_axis['header']['name']
-            if units is not '':
-                x_header += ' [' + units + "]"
+            if units:
+                x_header += ' [' + units + ']'
 
             if x_header in x_axes:
                 # sometimes, the x headers can be the same.
@@ -138,10 +137,9 @@ def process_dependent_variables(group_count, record, table_contents,
 
                 record["qualifiers"][qualifier] = merged_values
 
-        units = y_axis['header']['units'] if 'units' in y_axis[
-            'header'] else ''
+        units = y_axis['header']['units'] if 'units' in y_axis['header'] else ''
         y_header = y_axis['header']['name']
-        if units is not '':
+        if units:
             y_header += ' [' + units + ']'
         dependent_variable_headers.append({"name": y_header, "colspan": 1})
 
