@@ -429,7 +429,7 @@ def download_datatable(datasubmission, file_format, *args, **kwargs):
 
     filename = 'HEPData-{0}-v{1}'.format(kwargs.pop('submission_id'), datasubmission.version)
     if 'table_name' in kwargs:
-        filename += '-' + kwargs.pop('table_name').replace(' ', '_').replace('/', '_')
+        filename += '-' + kwargs.pop('table_name').replace(' ', '_').replace('/', '_').replace('$', '').replace('\\','')
 
     output_path = os.path.join(current_app.config['CFG_TMPDIR'], filename)
 
