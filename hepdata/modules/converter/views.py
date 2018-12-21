@@ -36,6 +36,7 @@ from hepdata.utils.file_extractor import extract, get_file_in_directory
 from hepdata.modules.records.utils.common import get_record_contents
 
 from sqlalchemy.orm.exc import NoResultFound
+from sqlalchemy import func
 
 logging.basicConfig()
 log = logging.getLogger(__name__)
@@ -312,13 +313,21 @@ def download_data_table_by_inspire_id(*args, **kwargs):
     try:
         datasubmission = DataSubmission.query.filter_by(publication_inspire_id=inspire_id, version=version, name=table_name).one()
     except NoResultFound:
-        if ' ' not in table_name:
-            # Allow space in table_name to be omitted from URL.
-            table_name = table_name.replace('Table', 'Table ')
-            try:
-                datasubmission = DataSubmission.query.filter_by(publication_inspire_id=inspire_id, version=version, name=table_name).one()
-            except NoResultFound:
-                pass
+        try:
+            # Try again with $ signs removed from table name.
+            datasubmission = DataSubmission.query.filter(
+                DataSubmission.publication_inspire_id == inspire_id,
+                DataSubmission.version == version,
+                func.replace(DataSubmission.name, '$', '') == table_name
+            ).one()
+        except NoResultFound:
+            if ' ' not in table_name:
+                # Allow space in table_name to be omitted from URL.
+                table_name = table_name.replace('Table', 'Table ')
+                try:
+                    datasubmission = DataSubmission.query.filter_by(publication_inspire_id=inspire_id, version=version, name=table_name).one()
+                except NoResultFound:
+                    pass
 
     if not datasubmission:
         return display_error(
@@ -328,7 +337,7 @@ def download_data_table_by_inspire_id(*args, **kwargs):
         )
 
     return download_datatable(datasubmission, kwargs.pop('file_format'),
-                              submission_id='ins{0}'.format(inspire_id), table_name=table_name,
+                              submission_id='ins{0}'.format(inspire_id), table_name=datasubmission.name,
                               rivet_analysis_name=rivet)
 
 
@@ -365,13 +374,21 @@ def download_data_table_by_recid(*args, **kwargs):
     try:
         datasubmission = DataSubmission.query.filter_by(publication_recid=recid, version=version, name=table_name).one()
     except NoResultFound:
-        if ' ' not in table_name:
-            # Allow space in table_name to be omitted from URL.
-            table_name = table_name.replace('Table', 'Table ')
-            try:
-                datasubmission = DataSubmission.query.filter_by(publication_recid=recid, version=version,name=table_name).one()
-            except NoResultFound:
-                pass
+        try:
+            # Try again with '$' signs removed from table name.
+            datasubmission = DataSubmission.query.filter(
+                DataSubmission.publication_recid == recid,
+                DataSubmission.version == version,
+                func.replace(DataSubmission.name, '$', '') == table_name
+            ).one()
+        except NoResultFound:
+            if ' ' not in table_name:
+                # Allow space in table_name to be omitted from URL.
+                table_name = table_name.replace('Table', 'Table ')
+                try:
+                    datasubmission = DataSubmission.query.filter_by(publication_recid=recid, version=version,name=table_name).one()
+                except NoResultFound:
+                    pass
 
     if not datasubmission:
         return display_error(
@@ -381,7 +398,7 @@ def download_data_table_by_recid(*args, **kwargs):
         )
 
     return download_datatable(datasubmission, kwargs.pop('file_format'),
-                              submission_id='{0}'.format(recid), table_name=table_name,
+                              submission_id='{0}'.format(recid), table_name=datasubmission.name,
                               rivet_analysis_name=rivet)
 
 

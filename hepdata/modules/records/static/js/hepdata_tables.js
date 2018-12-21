@@ -3,7 +3,7 @@
  */
 
 
-HEPDATA.switch_table = function (listId, table_requested, status) {
+HEPDATA.switch_table = function (listId, table_requested, table_name, status) {
   // clear the active class
   $(listId + '>li').each(function () {
     $(this).removeClass("active")
@@ -22,9 +22,11 @@ HEPDATA.switch_table = function (listId, table_requested, status) {
     {"width": 200, "height": 200}
   );
 
-  var _name = $('#' + table_requested + " h4").text();
+  // Pass the table name from record-javascript.html or table_list.html before it gets mangled by MathJax.
+  var _name = table_name;
   if (!_name) {
-    _name = $('[value="' + table_requested + '"]').text();
+    // Only use jQuery when called from table_details.html where '$' symbols are stripped from table names.
+    _name = $('[value="' + table_requested + '"]').text();  //
   }
   if (_name.match(/^Table \d+$/)) {
     _name = _name.replace("Table ", "Table");
@@ -70,11 +72,11 @@ HEPDATA.switch_table = function (listId, table_requested, status) {
 
   $(".data_download_link").each(function () {
     var data_format = $(this).text().toLowerCase();
-    var data_url = '/download/table/' + _recid + '/' + _name.replace(/%/g, '%25') + '/' + HEPDATA.current_table_version + '/' + data_format;
+    var data_url = '/download/table/' + _recid + '/' + _name.replace(/%/g, '%25').replace(/\\/g, '%5C') + '/' + HEPDATA.current_table_version + '/' + data_format;
     $(this).attr('href', data_url);
   });
 
-  $("#json_link").attr('href', '/download/table/' + _recid + '/' + _name.replace(/%/g, '%25') + '/' + HEPDATA.current_table_version + '/json')
+  $("#json_link").attr('href', '/download/table/' + _recid + '/' + _name.replace(/%/g, '%25').replace(/\\/g, '%5C') + '/' + HEPDATA.current_table_version + '/json')
 };
 
 HEPDATA.table_renderer = {

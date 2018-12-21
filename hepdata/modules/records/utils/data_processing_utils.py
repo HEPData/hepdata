@@ -144,9 +144,17 @@ def process_dependent_variables(group_count, record, table_contents,
         dependent_variable_headers.append({"name": y_header, "colspan": 1})
 
         count = 0
+        too_many_y_values = False
         for value in y_axis["values"]:
 
             if count not in tmp_values.keys():
+
+                # Check that number of y values does not exceed number of x values.
+                for x_header in independent_variables:
+                    if count > len(independent_variables[x_header]) - 1:
+                        too_many_y_values = True
+                if too_many_y_values: break
+
                 x = []
                 for x_header in independent_variables:
                     x.append(independent_variables[x_header][count])
@@ -272,7 +280,7 @@ def process_ctx(ctx, light_mode=False):
                 else:
                     _recid = ctx['recid']
 
-                _cleaned_table_name = data_table['name'].replace('%', '%25')
+                _cleaned_table_name = data_table['name'].replace('%', '%25').replace('\\', '%5C')
                 if re.match('^Table \d+$', _cleaned_table_name):
                     _cleaned_table_name = _cleaned_table_name.replace('Table ', 'Table')
 
