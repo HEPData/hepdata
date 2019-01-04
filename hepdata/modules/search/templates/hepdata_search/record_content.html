@@ -7,6 +7,7 @@
         {% if record.collaborations %}
             <span class="collaboration-group"> The
                 {% for col in record.collaborations %}
+                    {% if loop.index > 1 %}&{% endif %}
                     {% set link = ctx.modify_query('.search', collaboration=col) %}
                     <span class="info_group"> <a href={{ link }}> {{ col }} </a></span>
                 {% endfor %} collaboration{% if record.collaborations|length > 1 %}s{% endif %}</span>

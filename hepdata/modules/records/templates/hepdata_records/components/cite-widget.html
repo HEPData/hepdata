@@ -15,7 +15,7 @@
                             <li role="presentation" class="active"><a href="#html" aria-controls="home" role="tab"
                                                                       data-toggle="tab">HTML</a></li>
                             <li role="presentation"><a href="#bibtex" aria-controls="profile" role="tab"
-                                                       data-toggle="tab">BibTex</a>
+                                                       data-toggle="tab">BibTeX</a>
                             </li>
                         </ul>
 
@@ -37,8 +37,10 @@
                                         {% if ctx.record.collaborations %}
                                             <p><i>The
                                                 {% for collaboration in ctx.record.collaborations %}
+                                                  {% if loop.index > 1 %}&{% endif %}
                                                     {{ collaboration }}{% endfor %}
-                                                collaboration ({{ ctx.record.year }})</i>.</p>
+                                                collaboration{% if ctx.record.collaborations|length > 1 %}s{% endif %}
+                                              ({{ ctx.record.year }})</i>.</p>
                                         {% else %}
                                             {% for author in ctx.record.summary_authors %}
                                                 {{ author.full_name }}
@@ -65,8 +67,10 @@
                                                 {% if ctx.record.collaborations %}
                                                     <p><i>The
                                                         {% for collaboration in ctx.record.collaborations %}
+                                                            {% if loop.index > 1 %}&{% endif %}
                                                             {{ collaboration }}{% endfor %}
-                                                        collaboration ({{ ctx.record.year }})</i>.</p>
+                                                        collaboration{% if ctx.record.collaborations|length > 1 %}s{% endif %}
+                                                      ({{ ctx.record.year }})</i>.</p>
                                                 {% else %}
                                                     {% for author in ctx.record.authors %}
                                                         {{ author.full_name }}
@@ -75,7 +79,7 @@
                                                         {% endif %}
                                                     {% endfor %}
                                                 {% endif %}
-                                                <p>{{ table.name }} of {{ ctx.record.title }}. HEPData.</p>
+                                                <p>{{ table.name }} of "{{ ctx.record.title }}". HEPData.</p>
                                                 <p><strong>https://doi.org/{{ table.doi }}</strong></p>
                                             </div>
                                         {% endfor %}
@@ -106,13 +110,9 @@
     doi = "{{ ctx.record.hepdata_doi }}",
     year = "{{ ctx.record.year }}",
     type = "Data Collection",
-                                        {% if ctx.record.collaborations %}collaboration = "
-                                            {% for collaboration in ctx.record.collaborations %}
-                                                {{ collaboration }}{% endfor %}",{% endif %}
-                                        {% if ctx.record.summary_authors %}authors = "
-                                            {{ ctx.record.summary_authors[0].full_name }} and others"{% endif %}
-                                        }
- </textarea>
+    {% if ctx.record.collaborations %}collaboration = "{% for collaboration in ctx.record.collaborations %}{% if loop.index > 1 %}, {% endif %}{{ collaboration }}{% endfor %}",{% endif %}
+    {% if ctx.record.summary_authors %}authors = "{{ ctx.record.summary_authors[0].full_name }} and others"{% endif %}
+}</textarea>
                                     </div>
                                 </div>
                                 <div class="clearfix"></div>
@@ -133,13 +133,9 @@
     doi = "{{ table.doi }}",
     year = "{{ ctx.record.year }}",
     type = "Data Set",
-                                        {% if ctx.record.collaborations %}collaboration = "
-                                            {% for collaboration in ctx.record.collaborations %}
-                                                {{ collaboration }}{% endfor %}",{% endif %}
-                                        {% if ctx.record.summary_authors %}authors = "
-                                            {{ ctx.record.summary_authors[0].full_name }} and others"{% endif %}
-                                        }
- </textarea>
+    {% if ctx.record.collaborations %}collaboration = "{% for collaboration in ctx.record.collaborations %}{% if loop.index > 1 %}, {% endif %}{{ collaboration }}{% endfor %}",{% endif %}
+    {% if ctx.record.summary_authors %}authors = "{{ ctx.record.summary_authors[0].full_name }} and others"{% endif %}
+}</textarea>
                                             </div>
                                         {% endfor %}
                                     </div>

@@ -98,13 +98,20 @@ def get_metadata_by_alternative_id(recid):
             record = get_records_matching_field('inspire_id', recid,
                                                 doc_type=CFG_PUB_TYPE)
             record = record['hits']['hits'][0].get("_source")
-            version = int(request.args.get('version', -1))
+            try:
+                version = int(request.args.get('version', -1))
+            except ValueError:
+                version = -1
 
             output_format = request.args.get('format', 'html')
             light_mode = bool(request.args.get('light', False))
 
             return render_record(recid=record['recid'], record=record, version=version, output_format=output_format,
                                  light_mode=light_mode)
+        else:
+            log.error("Unable to find %s.", recid)
+            return abort(404)
+
     except Exception as e:
         log.error("Unable to find %s.", recid)
         log.error(e)
@@ -159,7 +166,10 @@ def metadata(recid):
     :return: renders the record template
     """
 
-    version = int(request.args.get('version', -1))
+    try:
+        version = int(request.args.get('version', -1))
+    except ValueError:
+        version = -1
     serialization_format = request.args.get('format', 'html')
     light_mode = bool(request.args.get('light', False))
 

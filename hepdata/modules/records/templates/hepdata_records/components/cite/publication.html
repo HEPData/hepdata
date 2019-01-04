@@ -1,8 +1,10 @@
 {% if ctx.record.collaborations %}
     <p><i>The
         {% for collaboration in ctx.record.collaborations %}
+          {% if loop.index > 1 %}&{% endif %}
             {{ collaboration }}{% endfor %}
-        collaboration ({{ ctx.record.year }})</i>.</p>
+        collaboration{% if ctx.record.collaborations|length > 1 %}s{% endif %}
+      ({{ ctx.record.year }})</i>.</p>
 {% else %}
     {% for author in ctx.record.authors %}
         {{ author.full_name }}{% if loop.index < ctx.record.authors|length %},
@@ -16,4 +18,4 @@
 <a href="http://inspirehep.net/record/{{ ctx.record.inspire_id }}" class="btn btn-default btn-sm" target="_new">View
     Inspire Record</a>
 <a href="http://inspirehep.net/record/{{ ctx.record.inspire_id }}/export/hx" class="btn btn-default btn-sm"
-   target="_new">View BibTex from Inspire</a>
+   target="_new">View BibTeX from Inspire</a>

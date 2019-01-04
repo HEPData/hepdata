@@ -176,7 +176,10 @@
                         if (data[record]['collaborations'].length > 0) {
                             record_html_block += 'The ';
                             for (var collaboration in data[record]['collaborations']) {
-                                record_html_block += ' <a href="/search?q=&collaboration=' + data[record]['collaborations'][collaboration] + '" class="collaboration">' + data[record]['collaborations'] + '</a> ';
+                                if (collaboration > 0) {
+                                  record_html_block += '&';
+                                }
+                                record_html_block += ' <a href="/search?q=&collaboration=' + data[record]['collaborations'][collaboration] + '" class="collaboration">' + data[record]['collaborations'][collaboration] + '</a> ';
                             }
                             record_html_block += 'collaboration' + (data[record]['collaborations'].length > 1 ? 's' : '');
                         } else if (data[record]['first_author']) {

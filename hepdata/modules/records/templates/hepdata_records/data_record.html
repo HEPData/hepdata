@@ -110,12 +110,19 @@
                         {{ ctx.record.journal_info }}
                     </div>
 
-                    <div class="collaborations">
-                        {% for collaboration in ctx.record.collaborations %}
-                            <a href="/search/?collaboration={{ collaboration }}"
-                               class="collaboration">{{ collaboration }}</a>
-                        {% endfor %}
-                    </div>
+                    {% if ctx.record.collaborations %}
+                      <div class="collaborations">
+                        <span class="collaboration-group">
+                          The
+                          {% for collaboration in ctx.record.collaborations %}
+                            {% if loop.index > 1 %}&{% endif %}
+                            <span class="info_group"> <a
+                              href="/search/?collaboration={{ collaboration }}"> {{ collaboration }} </a></span>
+                          {% endfor %} collaboration{% if ctx.record.collaborations|length > 1 %}s{% endif %}
+                        </span>
+                      </div>
+                    {% endif %}
+
                     <div class="clearfix"></div>
                     <br/>
 
