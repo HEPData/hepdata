@@ -26,6 +26,7 @@
 # * urllib3==1.18 --> urllib3==1.24
 # * Flask-Admin==1.5.0 --> Flask-Admin==1.5.3
 # * requests==2.20.0 --> requests==2.21.0
+# * PyYAML==3.12 --> PyYAML==4.2b4
 alembic==0.9.6
 amqp==2.1.4
 aniso8601==1.1.0
@@ -166,7 +167,7 @@ pytest-pep8==1.0.6
 python-dateutil==2.6.1
 python-editor==1.0.3
 pytz==2013b0
-PyYAML==3.12
+PyYAML==4.2b4
 raven==6.7.0
 redis==2.10.5
 reportlab==3.1.44

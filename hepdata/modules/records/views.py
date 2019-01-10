@@ -48,7 +48,7 @@ from hepdata.modules.records.api import *
 from hepdata.modules.submission.models import HEPSubmission, DataSubmission, \
     DataResource, DataReview, Message, Question
 from hepdata.modules.records.utils.common import get_record_by_id, \
-    default_time, IMAGE_TYPES
+    default_time, IMAGE_TYPES, encode_string, decode_string
 from hepdata.modules.records.utils.data_processing_utils import \
     generate_table_structure
 from hepdata.modules.records.utils.submission import create_data_review, \
@@ -406,7 +406,7 @@ def add_data_review_messsage(publication_recid, data_recid):
     """
 
     trace = []
-    message = str(request.form.get('message', ''))
+    message = encode_string(request.form.get('message', ''))
     version = request.form['version']
     userid = current_user.get_id()
 
@@ -438,7 +438,7 @@ def add_data_review_messsage(publication_recid, data_recid):
             {"publication_recid": data_review_record.publication_recid,
              "data_recid": data_review_record.data_recid,
              "status": data_review_record.status,
-             "message": str(data_review_message.message),
+             "message": decode_string(data_review_message.message),
              "post_time": data_review_message.creation_date,
              'user': current_user_obj.email}, default=default_time)
     except Exception as e:

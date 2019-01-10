@@ -113,7 +113,7 @@ def process_dependent_variables(group_count, record, table_contents,
 
                 record["qualifiers"][qualifier_name].append(
                     {"type": qualifier["name"],
-                     "value": str(qualifier["value"]) + (
+                     "value": unicode(qualifier["value"]) + (
                          ' ' + qualifier['units'] if 'units' in qualifier else ''),
                      "colspan": 1, "group": group_count})
 

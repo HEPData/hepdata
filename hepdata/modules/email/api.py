@@ -29,7 +29,7 @@ from flask.ext.login import current_user
 from hepdata.modules.email.utils import create_send_email_task
 from hepdata.modules.permissions.models import SubmissionParticipant
 from hepdata.modules.records.subscribers.api import get_users_subscribed_to_record
-from hepdata.modules.records.utils.common import get_record_by_id, encode_string
+from hepdata.modules.records.utils.common import get_record_by_id, encode_string, decode_string
 from flask import render_template
 
 from hepdata.modules.submission.api import get_latest_hepsubmission, get_submission_participants_for_record
@@ -66,7 +66,7 @@ def send_new_review_message_email(review, message, user):
         name=', '.join(set(full_names)),
         actor=user.email,
         table_name=table_information.name,
-        table_message=message.message,
+        table_message=decode_string(message.message),
         article=review.publication_recid,
         title=record['title'],
         site_url=site_url,
