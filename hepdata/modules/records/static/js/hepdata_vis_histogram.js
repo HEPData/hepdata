@@ -169,7 +169,11 @@ HEPDATA.visualization.histogram = {
       .attr("y", HEPDATA.visualization.histogram.options.height - 10)
       .text(HEPDATA.visualization.histogram.x_index);
 
-    svg.append("g").attr("class", "y axis").call(HEPDATA.visualization.histogram.y_axis).attr("transform", "translate(-4,0)");
+    if (HEPDATA.visualization.histogram.options.y_scale == "linear" && HEPDATA.stats.max_y > 1e5) {
+      svg.append("g").attr("class", "y axis").call(HEPDATA.visualization.histogram.y_axis.tickFormat(d3.format(".1e"))).attr("transform", "translate(-4,0)");
+    } else {
+      svg.append("g").attr("class", "y axis").call(HEPDATA.visualization.histogram.y_axis).attr("transform", "translate(-4,0)");
+    }
 
     HEPDATA.legends.draw_error_legend("#legend", HEPDATA.visualization.histogram.options.draw_summed_error ? processed_dict["quad_error"] : processed_dict["errors"], HEPDATA.visualization.histogram.options);
 
