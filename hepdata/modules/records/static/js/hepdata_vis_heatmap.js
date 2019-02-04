@@ -75,8 +75,8 @@ HEPDATA.visualization.heatmap = {
           var x_val = d.x;
           var y_val = d.y;
           if (typeof d.x == "string") {
-            x_val = d.x; x_val = x_val.replace(/\$/g, '');
-            y_val = d.y; y_val = y_val.replace(/\$/g, '');
+            x_val = d.x; x_val = x_val.replace(/\$/g, '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            y_val = d.y; y_val = y_val.replace(/\$/g, '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
           }
           return "<strong>" + x_val + " </strong><br/>" + y_val + "<br/>" + d.value + "</span>";
         }
