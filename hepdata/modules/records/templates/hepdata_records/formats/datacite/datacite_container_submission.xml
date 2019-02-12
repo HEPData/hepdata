@@ -22,8 +22,8 @@
     <titles>
         <title>{{ publication_info.title }}</title>
     </titles>
-    <publisher>{{ publication_info.journal_info }}</publisher>
-    <publicationYear>{{ publication_info.year }}</publicationYear>
+    <publisher>HEPData</publisher>
+    <publicationYear>{{ overall_submission.last_updated.year }}</publicationYear>
 
     <language>eng</language>
     <resourceType resourceTypeGeneral="Collection">Collection</resourceType>

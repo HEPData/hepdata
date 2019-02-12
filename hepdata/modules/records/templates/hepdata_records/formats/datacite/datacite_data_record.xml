@@ -23,8 +23,8 @@
         <title>{{ table_name }}</title>
         <title xml:lang="en-us" titleType="Subtitle">{{ publication_info.title }}</title>
     </titles>
-    <publisher>{{ publication_info.journal_info }}</publisher>
-    <publicationYear>{{ publication_info.year }}</publicationYear>
+    <publisher>HEPData</publisher>
+    <publicationYear>{{ overall_submission.last_updated.year }}</publicationYear>
     <subjects>
         {% for keyword in data_submission.keywords %}
             <subject subjectScheme="{{ keyword.name }}">{{ keyword.value }}</subject>
@@ -93,7 +93,13 @@
             </relatedIdentifier>
         {% endif %}
 
-        <relatedIdentifier relatedIdentifierType="URL" relationType="IsPartOf">
+        {% if publication_info.doi %}
+            <relatedIdentifier relatedIdentifierType="DOI" relationType="IsSupplementTo">
+                {{ publication_info.doi }}
+            </relatedIdentifier>
+        {% endif %}
+
+        <relatedIdentifier relatedIdentifierType="DOI" relationType="IsPartOf">
             {{ overall_submission.doi }}
         </relatedIdentifier>
 

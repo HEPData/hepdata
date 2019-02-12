@@ -363,7 +363,10 @@ def register_dois(inspire_ids):
     :param inspire_ids:
     :return:
     """
-    if inspire_ids:
+    if inspire_ids == 'all':
+        print('Generating for *all* records')
+        generate_dois_for_submission.delay()
+    elif inspire_ids:
         inspire_ids = inspire_ids.split(',')
         # find publication ids for these inspire_ids
         # register and mint the dois for the records
@@ -371,6 +374,7 @@ def register_dois(inspire_ids):
             print('Generating for {0}'.format(inspire_id))
             _cleaned_id = inspire_id.replace("ins", "")
             generate_dois_for_submission.delay(inspire_id=_cleaned_id)
+
 
 
 @doi_utils.command()
