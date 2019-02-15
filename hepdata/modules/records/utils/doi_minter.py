@@ -28,6 +28,7 @@ from invenio_pidstore.models import PersistentIdentifier
 
 from invenio_pidstore.providers.datacite import DataCiteProvider
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm.exc import NoResultFound
 
 from hepdata.modules.submission.models import DataSubmission, HEPSubmission, DataResource, License
 from hepdata.modules.records.utils.common import get_record_by_id
@@ -38,21 +39,56 @@ log = logging.getLogger(__name__)
 
 
 @shared_task
+def generate_doi_for_table(doi):
+    """
+    Generate DOI for a specific table given by its doi
+
+    :param doi:
+
+    :return:
+    """
+
+    site_url = current_app.config.get('SITE_URL', 'https://www.hepdata.net')
+
+    try:
+        data_submission = DataSubmission.query.filter_by(doi=doi).one()
+    except NoResultFound:
+        print('Table DOI {} not found in database'.format(doi))
+        return
+
+    hep_submission = HEPSubmission.query.filter_by(
+        inspire_id=data_submission.publication_inspire_id, version=data_submission.version, overall_status='finished'
+    ).one()
+
+    if hep_submission:
+        publication_info = get_record_by_id(hep_submission.publication_recid)
+        create_data_doi(hep_submission, data_submission, publication_info, site_url)
+    else:
+        print('Finished submission with INSPIRE ID {} and version {} not found in database'.format(
+            data_submission.publication_inspire_id, data_submission.version)
+        )
+
+
+@shared_task
 def generate_dois_for_submission(*args, **kwargs):
     """
     Generate DOIs for all the submission components
 
-    :param inspire_id:
-    :param version:
+    :param args:
     :param kwargs:
 
     :return:
     """
 
     site_url = current_app.config.get('SITE_URL', 'https://www.hepdata.net')
-    hep_submissions = HEPSubmission.query.filter_by(**kwargs).all()
+    hep_submissions = HEPSubmission.query.filter_by(**kwargs).order_by(HEPSubmission.publication_recid.asc()).all()
 
     for hep_submission in hep_submissions:
+
+        if args:
+            start_recid, end_recid = args
+            if hep_submission.publication_recid < start_recid or hep_submission.publication_recid > end_recid:
+                continue
 
         if hep_submission.overall_status != 'finished':
             continue
@@ -67,8 +103,6 @@ def generate_dois_for_submission(*args, **kwargs):
 
         for data_submission in data_submissions:
             create_data_doi(hep_submission, data_submission, publication_info, site_url)
-
-
 
 
 def create_container_doi(hep_submission, data_submissions, publication_info, site_url):
@@ -211,7 +245,7 @@ def register_doi(doi, url, xml, uuid):
     :param recid:
     :return:
     """
-    if current_app.config.get('NO_DOI_MINTING', False):
+    if current_app.config.get('NO_DOI_MINTING', False) or not doi:
         return None
 
     log.info('{0} - {1}'.format(doi, url))
@@ -233,8 +267,14 @@ def register_doi(doi, url, xml, uuid):
         log.error('Unable to mint DOI. No authorisation credentials provided.')
     except (PIDInvalidAction, IntegrityError):
         try:
-            provider.update(url, xml)
+            provider.update(url, xml)  # try again in case of temporary problem
         except DataCiteError as dce:
-            log.error('Error updating {0} for URL {1}\n\n{2}'.format(doi, url, dce))
+            try:
+                provider.update(url, xml)
+            except DataCiteError as dce:
+                log.error('Error updating {0} for URL {1}\n\n{2}'.format(doi, url, dce))
     except DataCiteError as dce:
-        log.error('Error registering {0} for URL {1}\n\n{2}'.format(doi, url, dce))
+        try:
+            provider.register(url, xml)  # try again in case of temporary problem
+        except DataCiteError as dce:
+            log.error('Error registering {0} for URL {1}\n\n{2}'.format(doi, url, dce))

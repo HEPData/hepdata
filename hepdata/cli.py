@@ -43,7 +43,7 @@ from hepdata.modules.records.migrator.api import load_files, update_submissions,
     add_or_update_records_since_date, update_analyses
 from hepdata.utils.twitter import tweet
 from hepdata.modules.email.api import send_finalised_email
-from hepdata.modules.records.utils.doi_minter import generate_dois_for_submission
+from hepdata.modules.records.utils.doi_minter import generate_dois_for_submission, generate_doi_for_table
 
 from invenio_db import db
 
@@ -356,16 +356,18 @@ def doi_utils():
 
 @doi_utils.command()
 @click.option('--inspire_ids', '-i', type=str, default='', help='Specify inspire ids of submissions to generate the DOIs for.')
-def register_dois(inspire_ids):
+@click.option('--start_recid', '-s', type=int, default=0, help='Starting recid if looping over submissions.')
+@click.option('--end_recid', '-e', type=int, default=0, help='End recid if looping over submissions.')
+def register_dois(inspire_ids, start_recid, end_recid):
     """
     Register DOIs for a comma-separated list of INSPIRE IDs.
 
     :param inspire_ids:
     :return:
     """
-    if inspire_ids == 'all':
-        print('Generating for *all* records')
-        generate_dois_for_submission.delay()
+    if inspire_ids == 'all' and start_recid and end_recid:
+        print('Generating for *all* record IDs between {} and {}'.format(start_recid, end_recid))
+        generate_dois_for_submission.delay(start_recid, end_recid, overall_status='finished')
     elif inspire_ids:
         inspire_ids = inspire_ids.split(',')
         # find publication ids for these inspire_ids
@@ -392,6 +394,24 @@ def register_doi(inspire_id, version):
         print('Generating for {0} version {1}'.format(inspire_id, version))
         _cleaned_id = inspire_id.replace("ins", "")
         generate_dois_for_submission.delay(inspire_id=_cleaned_id, version=version)
+
+
+
+@doi_utils.command()
+@click.option('--table_dois', '-t', type=str, default='', help='Specify DOIs of individual tables.')
+def register_table_dois(table_dois):
+    """
+    Register DOIs for a comma-separated list of table DOIs.
+
+    :param table_dois:
+    :return:
+    """
+    if table_dois:
+        table_dois = table_dois.split(',')
+        # register and mint the dois for these tables
+        for table_doi in table_dois:
+            print('Generating for {0}'.format(table_doi))
+            generate_doi_for_table.delay(table_doi)
 
 
 @cli.group()
