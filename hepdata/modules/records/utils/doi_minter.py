@@ -268,13 +268,18 @@ def register_doi(doi, url, xml, uuid):
     except (PIDInvalidAction, IntegrityError):
         try:
             provider.update(url, xml)  # try again in case of temporary problem
-        except DataCiteError as dce:
+        except DataCiteError:
             try:
                 provider.update(url, xml)
             except DataCiteError as dce:
                 log.error('Error updating {0} for URL {1}\n\n{2}'.format(doi, url, dce))
-    except DataCiteError as dce:
+    except DataCiteError:
         try:
             provider.register(url, xml)  # try again in case of temporary problem
+        except (PIDInvalidAction, IntegrityError):
+            try:
+                provider.update(url, xml)
+            except DataCiteError as dce:
+                log.error('Error updating {0} for URL {1}\n\n{2}'.format(doi, url, dce))
         except DataCiteError as dce:
             log.error('Error registering {0} for URL {1}\n\n{2}'.format(doi, url, dce))
