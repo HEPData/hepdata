@@ -27,6 +27,7 @@
 # * Flask-Admin==1.5.0 --> Flask-Admin==1.5.3
 # * requests==2.20.0 --> requests==2.21.0
 # * PyYAML==3.12 --> PyYAML==4.2b4
+# * webargs=1.3.4 --> webargs==5.1.3
 alembic==0.9.6
 amqp==2.1.4
 aniso8601==1.1.0
@@ -190,7 +191,7 @@ uritools==2.0.0
 urllib3==1.24
 validators==0.11.0
 vine==1.1.3
-webargs==1.3.4
+webargs==5.1.3
 webassets==0.12.1
 Werkzeug==0.14.1
 whichcraft==0.4.0

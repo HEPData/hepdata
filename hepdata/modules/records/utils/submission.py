@@ -460,7 +460,7 @@ def process_submission_directory(basepath, submission_file_path, recid, update=F
             # Side effect that reviews will be deleted between uploads.
             cleanup_submission(recid, hepsubmission.version, added_file_names)
 
-            for yaml_document in submission_processed:
+            for yaml_document_index, yaml_document in enumerate(submission_processed):
                 if not yaml_document:
                     continue
 
@@ -476,9 +476,16 @@ def process_submission_directory(basepath, submission_file_path, recid, update=F
                                 errors[resource['location']] = [{"level": "error", "message":
                                     "Location of 'additional_resources' file should not contain '/'."}]
 
-                if 'name' not in yaml_document:
+                if not yaml_document_index and 'name' not in yaml_document:
+
                     no_general_submission_info = False
                     process_general_submission_info(basepath, yaml_document, recid)
+
+                elif not all(k in yaml_document for k in ('name', 'description', 'keywords', 'data_file')):
+
+                    errors["submission.yaml"] = [{"level": "error", "message": "YAML document with index {} ".format(
+                        yaml_document_index) + "missing one or more required keys (name, description, keywords, data_file)."}]
+
                 else:
 
                     existing_datasubmission_query = DataSubmission.query \
