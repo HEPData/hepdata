@@ -256,32 +256,33 @@ def render_record(recid, record, version, output_format, light_mode=False):
 
     hepdata_submission = get_latest_hepsubmission(publication_recid=recid, version=version)
 
-    if hepdata_submission.overall_status == 'sandbox':
-        abort(404)
-    elif hepdata_submission is not None:
-        ctx = format_submission(recid, record, version, version_count, hepdata_submission)
-        increment(recid)
+    if hepdata_submission is not None:
+        if hepdata_submission.overall_status != 'sandbox':
+            ctx = format_submission(recid, record, version, version_count, hepdata_submission)
+            increment(recid)
 
-        if output_format == 'html':
-            return render_template('hepdata_records/publication_record.html', ctx=ctx)
-        elif 'table' not in request.args:
-            if output_format == 'json':
-                ctx = process_ctx(ctx, light_mode)
-                return jsonify(ctx)
-            elif output_format == 'yoda' and 'rivet' in request.args:
-                return redirect('/download/submission/{0}/{1}/{2}/{3}'.format(recid, version, output_format,
+            if output_format == 'html':
+                return render_template('hepdata_records/publication_record.html', ctx=ctx)
+            elif 'table' not in request.args:
+                if output_format == 'json':
+                    ctx = process_ctx(ctx, light_mode)
+                    return jsonify(ctx)
+                elif output_format == 'yoda' and 'rivet' in request.args:
+                    return redirect('/download/submission/{0}/{1}/{2}/{3}'.format(recid, version, output_format,
                                                                               request.args['rivet']))
+                else:
+                    return redirect('/download/submission/{0}/{1}/{2}'.format(recid, version, output_format))
             else:
-                return redirect('/download/submission/{0}/{1}/{2}'.format(recid, version, output_format))
+                file_identifier = 'ins{}'.format(hepdata_submission.inspire_id) if hepdata_submission.inspire_id else recid
+                if output_format == 'yoda' and 'rivet' in request.args:
+                    return redirect('/download/table/{0}/{1}/{2}/{3}/{4}'.format(
+                        file_identifier, request.args['table'].replace('%', '%25').replace('\\', '%5C'), version, output_format,
+                        request.args['rivet']))
+                else:
+                    return redirect('/download/table/{0}/{1}/{2}/{3}'.format(
+                        file_identifier, request.args['table'].replace('%', '%25').replace('\\', '%5C'), version, output_format))
         else:
-            file_identifier = 'ins{}'.format(hepdata_submission.inspire_id) if hepdata_submission.inspire_id else recid
-            if output_format == 'yoda' and 'rivet' in request.args:
-                return redirect('/download/table/{0}/{1}/{2}/{3}/{4}'.format(
-                    file_identifier, request.args['table'].replace('%', '%25').replace('\\', '%5C'), version, output_format,
-                    request.args['rivet']))
-            else:
-                return redirect('/download/table/{0}/{1}/{2}/{3}'.format(
-                    file_identifier, request.args['table'].replace('%', '%25').replace('\\', '%5C'), version, output_format))
+            abort(404)
 
     elif record is not None:  # this happens when we access an id of a data record
         # in which case, we find the related publication, and
