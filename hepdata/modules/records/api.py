@@ -232,7 +232,8 @@ def extract_journal_info(record):
 def render_record(recid, record, version, output_format, light_mode=False):
 
     # Count number of all versions and number of finished versions of a publication record.
-    version_count_all = HEPSubmission.query.filter_by(publication_recid=recid).count()
+    version_count_all = HEPSubmission.query.filter(HEPSubmission.publication_recid == recid,
+                                                   HEPSubmission.overall_status != 'sandbox').count()
     version_count_finished = HEPSubmission.query.filter_by(publication_recid=recid, overall_status='finished').count()
 
     # Number of versions that a user is allowed to access based on their permissions.
@@ -255,7 +256,9 @@ def render_record(recid, record, version, output_format, light_mode=False):
 
     hepdata_submission = get_latest_hepsubmission(publication_recid=recid, version=version)
 
-    if hepdata_submission is not None:
+    if hepdata_submission.overall_status == 'sandbox':
+        abort(404)
+    elif hepdata_submission is not None:
         ctx = format_submission(recid, record, version, version_count, hepdata_submission)
         increment(recid)
 
