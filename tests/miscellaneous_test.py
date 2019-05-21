@@ -25,7 +25,7 @@
 import os
 
 from hepdata.utils.file_extractor import extract, get_file_in_directory
-from hepdata.utils.miscellanous import splitter
+from hepdata.utils.miscellaneous import splitter
 
 
 def test_utils():

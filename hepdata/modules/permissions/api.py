@@ -66,7 +66,8 @@ def get_records_participated_in_by_user():
 
 def get_pending_request():
     """
-    Returns True is current user has an existing request.
+    Returns True if current user has an existing request.
+
     :return:
     """
     _current_user_id = int(current_user.get_id())
@@ -92,7 +93,8 @@ def process_coordinators(coordinators):
 
 def get_pending_coordinator_requests():
     """
-    Returns pending coordinator requests
+    Returns pending coordinator requests.
+
     :return:
     """
     coordinators = CoordinatorRequest.query.filter_by(
@@ -105,7 +107,8 @@ def get_pending_coordinator_requests():
 
 def get_approved_coordinators():
     """
-    Returns pending coordinator requests
+    Returns pending coordinator requests.
+
     :return:
     """
     coordinators = CoordinatorRequest.query.filter_by(
@@ -117,7 +120,7 @@ def get_approved_coordinators():
 
 
 def user_allowed_to_perform_action(recid):
-    """Determines if a user is allowed to perform an action on a record"""
+    """Determines if a user is allowed to perform an action on a record."""
     if not current_user.is_authenticated:
         return False
 

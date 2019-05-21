@@ -143,10 +143,11 @@ def update_submissions(inspire_ids_to_update, force=False, only_record_informati
 def add_or_update_records_since_date(date=None, send_tweet=False, convert=False):
     """
     Given a date, gets all the records updated or added since that
-    date and updates or adds the corresponding records
+    date and updates or adds the corresponding records.
+
     :param date: in the format YYYYddMM (e.g. 20160705 for the 5th July 2016)
-    :param send_tweet
-    :param convert
+    :param send_tweet:
+    :param convert:
     :return:
     """
     if not date:
@@ -161,7 +162,8 @@ def add_or_update_records_since_date(date=None, send_tweet=False, convert=False)
 
 def get_all_ids_in_current_system(date=None, prepend_id_with="ins"):
     """
-    Finds all the IDs that have been added or updated since some date
+    Finds all the IDs that have been added or updated since some date.
+
     :param date:
     :param prepend_id_with:
     :return:
@@ -240,6 +242,7 @@ class Migrator(object):
         """
         Either returns a file if it already exists, or downloads it and
         splits it.
+
         :param inspire_id:
         :return: output location if succesful, None if not
         """
@@ -377,8 +380,7 @@ class Migrator(object):
 
     def retrieve_publication_information(self, inspire_id):
         """
-        :param inspire_id: id for record to get. If this contains
-        "ins", the "ins" is removed.
+        :param inspire_id: id for record to get. If this contains "ins", the "ins" is removed.
         :return: dict containing keys for:
             title
             doi

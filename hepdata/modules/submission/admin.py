@@ -27,7 +27,7 @@ def _(x):
 
 
 class HEPSubmissionAdminView(ModelView):
-    """HEPSubmissionAdminView view"""
+    """HEPSubmissionAdminView view."""
 
     can_view_details = True
     can_delete = False

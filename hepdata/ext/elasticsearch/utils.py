@@ -83,7 +83,7 @@ def push_keywords(docs):
     """
         Add keywords from datatables to the corresponding publication record
     """
-    from hepdata.utils.miscellanous import splitter
+    from hepdata.utils.miscellaneous import splitter
     datatables, publications = splitter(docs,
                                         lambda d: 'related_publication' in d)
     if len(publications) == 0 and len(datatables) == 0:

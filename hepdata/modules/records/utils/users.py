@@ -27,6 +27,7 @@ from invenio_accounts.models import User
 def get_coordinators_in_system():
     """
     Utility function to get all coordinator users in the database.
+
     :return: list of coordinator ids, nicknames, and emails.
     """
 
@@ -40,10 +41,11 @@ def get_coordinators_in_system():
 
 def has_role(user, required_role):
     """
-    Determines if a user has a particular role
+    Determines if a user has a particular role.
+
     :param user: a current_user object
     :param required_role: e.g. 'admin'
-    :return: True if the user has the role. False otherwise
+    :return: True if the user has the role, False otherwise
     """
     for role in user.roles:
         if role.name == required_role:

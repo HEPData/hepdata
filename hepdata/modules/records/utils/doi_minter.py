@@ -41,10 +41,9 @@ log = logging.getLogger(__name__)
 @shared_task
 def generate_doi_for_table(doi):
     """
-    Generate DOI for a specific table given by its doi
+    Generate DOI for a specific table given by its doi.
 
     :param doi:
-
     :return:
     """
 
@@ -72,11 +71,10 @@ def generate_doi_for_table(doi):
 @shared_task
 def generate_dois_for_submission(*args, **kwargs):
     """
-    Generate DOIs for all the submission components
+    Generate DOIs for all the submission components.
 
     :param args:
     :param kwargs:
-
     :return:
     """
 
@@ -107,7 +105,8 @@ def generate_dois_for_submission(*args, **kwargs):
 
 def create_container_doi(hep_submission, data_submissions, publication_info, site_url):
     """
-    Creates the payload to wrap the whole submission
+    Creates the payload to wrap the whole submission.
+
     :param hep_submission:
     :param data_submissions:
     :param publication_info:
@@ -144,7 +143,8 @@ def create_container_doi(hep_submission, data_submissions, publication_info, sit
 
 def create_data_doi(hep_submission, data_submission, publication_info, site_url):
     """
-    Generate DOI record for a data record
+    Generate DOI record for a data record.
+
     :param data_submission_id:
     :param version:
     :return:
@@ -193,6 +193,7 @@ def reserve_doi_for_hepsubmission(hepsubmission, update=False):
 def reserve_dois_for_data_submissions(*args, **kwargs):
     """
     Reserves a DOI for a data submission and saves to the datasubmission object.
+
     :param data_submission: DataSubmission object representing a data table.
     :return:
     """
@@ -239,8 +240,9 @@ def create_doi(doi):
 
 def register_doi(doi, url, xml, uuid):
     """
-    Given a data submission id, this method takes it's assigned DOI, creates the DataCite XML,
+    Given a data submission id, this method takes its assigned DOI, creates the DataCite XML,
     and registers the DOI.
+
     :param data_submissions:
     :param recid:
     :return:

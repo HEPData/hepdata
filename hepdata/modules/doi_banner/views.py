@@ -1,3 +1,5 @@
+"""HEPData DOI Banner Views."""
+
 from flask import Blueprint, redirect, abort, send_file, url_for
 from hepdata.ext.elasticsearch.api import get_records_matching_field
 import logging
@@ -16,8 +18,11 @@ base_dir = os.path.dirname(os.path.realpath(__file__))
 @blueprint.route('/doidata/<path:doi>')
 def resolve_doi_data(doi):
     """
-    :param doi:
-    :return:
+    Resolve a journal DOI to the corresponding HEPData record.\n
+    Route: ``/doidata/<path:doi>``
+
+    :param doi: DOI of journal article
+    :return: redirect to HEPData record (or 404 if it doesn't exist)
     """
     matching = get_records_matching_field('doi', doi, source={"includes": ['inspire_id']})
     if matching.get('hits').get('total') > 0:
@@ -29,9 +34,12 @@ def resolve_doi_data(doi):
 @blueprint.route('/doibanner/<path:doi>')
 def get_doi_banner(doi):
     """
+    Return either a HEPData image or a 1-pixel image depending on whether a HEPData record
+    with a given journal DOI exists.\n
+    Route: ``/doibanner/<path:doi>``
 
-    :param doi:
-    :return:
+    :param doi: DOI of journal article
+    :return: send_file
     """
 
     matching = get_records_matching_field('doi', doi, source={"includes": ['inspire_id']})

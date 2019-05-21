@@ -22,9 +22,27 @@
     as an Intergovernmental Organization or submit itself to any jurisdiction.
 
 
-API Docs
-========
+CLI Commands
+============
 
-HEPData
--------
+A command line interface (CLI) allows certain management commands to be run on the command line.
 
+.. click:: hepdata.cli:migrator
+   :prog: hepdata migrator
+   :show-nested:
+
+.. click:: hepdata.cli:utils
+   :prog: hepdata utils
+   :show-nested:
+
+.. click:: hepdata.cli:doi_utils
+   :prog: hepdata doi_utils
+   :show-nested:
+
+.. click:: hepdata.cli:converter
+   :prog: hepdata converter
+   :show-nested:
+
+.. click:: hepdata.cli:submissions
+   :prog: hepdata submissions
+   :show-nested:

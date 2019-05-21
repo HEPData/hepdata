@@ -51,7 +51,7 @@ tests_require = [
 ]
 
 extras_require = {'docs': [
-    'Sphinx>=1.4.2',
+    'Sphinx>=1.8.5', 'sphinx-click>=2.1.0',
 ], 'postgresql': [
     'invenio-db[postgresql]>=1.0.0a6',
 ], 'mysql': [
@@ -120,7 +120,7 @@ setup(
     license='GPLv2',
     author='CERN',
     author_email='info@hepdata.net',
-    url='https://github.com/hepdata/hepdata',
+    url='https://github.com/HEPData/hepdata',
     packages=packages,
     zip_safe=False,
     include_package_data=True,

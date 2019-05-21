@@ -16,6 +16,7 @@
 # along with HEPData; if not, write to the Free Software Foundation, Inc.,
 # 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
 #
+"""HEPData Search Views."""
 from __future__ import division
 
 import json
@@ -38,8 +39,10 @@ blueprint = Blueprint('es_search',
 
 
 def calculate_total_pages(query_result, max_results):
-    """ Calculate the overall number of pages of results
-    given the number of hits and max number of records displayed per page """
+    """
+    Calculate the overall number of pages of results
+    given the number of hits and max number of records displayed per page.
+    """
     total_pages = query_result['total'] // max_results
     if not query_result['total'] % max_results == 0:
         total_pages += 1
@@ -47,8 +50,10 @@ def calculate_total_pages(query_result, max_results):
 
 
 def check_page(args):
-    """ Get the page query parameter from the URL and if it doesn't exist
-    assign a default value. """
+    """
+    Get the page query parameter from the URL and if it doesn't exist
+    assign a default value.
+    """
     page = args.get('page', '1')
     try:
         page = int(page)
@@ -61,8 +66,10 @@ def check_page(args):
 
 
 def check_max_results(args):
-    """ Get the size query parameter from the URL and if it doesn't exist
-    assign a default value. """
+    """
+    Get the size query parameter from the URL and if it doesn't exist
+    assign a default value.
+    """
     max_results = args.get('size', HEPDATA_CFG_MAX_RESULTS_PER_PAGE)
     try:
         max_results = int(max_results)
@@ -75,8 +82,10 @@ def check_max_results(args):
 
 
 def check_date(args):
-    """ Get the date parameter from the URL and if it doesn't exist
-    assign a default value. """
+    """
+    Get the date parameter from the URL and if it doesn't exist
+    assign a default value.
+    """
     min_date = sys.maxsize
     max_date = sys.maxsize * -1
 
@@ -105,7 +114,7 @@ def check_date(args):
 
 
 def sort_facets(facets):
-    """ Sort the facets in an arbitrary way that we think is appropriate. """
+    """Sort the facets in an arbitrary way that we think is appropriate."""
     order = {
         'date': 1,
         'collaboration': 2,
@@ -121,8 +130,10 @@ def sort_facets(facets):
 
 
 def filter_facets(facets, total_hits):
-    """ For the data keywords, show only the ones with >10 count,
-    if there is more than 100 hits altogether. Filter out the empty ones. """
+    """
+    For the data keywords, show only the ones with >10 count,
+    if there is more than 100 hits altogether. Filter out the empty ones.
+    """
     HITS = 50
     THRESHOLD = 10
 
@@ -138,10 +149,12 @@ def filter_facets(facets, total_hits):
 
 
 def parse_query_parameters(request_args):
-    """ Get query parameters from the request and preprocess them.
+    """
+    Get query parameters from the request and preprocess them.
 
-    :param [dict-like structure] Any structure supporting get calls
-    :result [dict] Parsed parameters"""
+    :param request_args: [dict-like structure] Any structure supporting get calls
+    :result: [dict] Parsed parameters
+    """
 
     args = {key: value[0] for (key, value) in dict(request_args).iteritems()}
     min_date, max_date = check_date(args)
@@ -199,8 +212,10 @@ def process_year_facet(request, facets):
 
 @blueprint.route('/', methods=['GET', 'POST'])
 def search():
-    """ Main search endpoint.
-    Parse the request, perform search and show the results """
+    """
+    Main search endpoint.
+    Parse the request, perform search and show the results.
+    """
     query_params = parse_query_parameters(request.args)
 
     query_result = es_search(query_params['q'],

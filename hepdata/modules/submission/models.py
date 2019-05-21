@@ -22,7 +22,7 @@
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
-"""Models for the HEPData Submission Workflow"""
+"""Models for the HEPData Submission Workflow."""
 
 from __future__ import absolute_import, print_function
 
@@ -51,8 +51,8 @@ data_reference_link = db.Table(
 class HEPSubmission(db.Model):
     """
     This is the main submission object. It maintains the
-    submissions to HEPdata and who the coordinator and who the
-    reviewers/uploaders are (via participants)
+    submissions to HEPData and who the coordinator and who the
+    reviewers/uploaders are (via participants).
     """
     __tablename__ = "hepsubmission"
 
@@ -186,8 +186,10 @@ datareview_messages = db.Table('review_messages',
 
 
 class DataReview(db.Model):
-    """Represent a data review including links to the messages
-    made about a data record upload and it's current status."""
+    """
+    Represent a data review including links to the messages
+    made about a data record upload and its current status.
+    """
     __tablename__ = "datareview"
 
     id = db.Column(
@@ -215,9 +217,7 @@ class DataReview(db.Model):
 
 
 class Message(db.Model):
-    """
-    General message structure.
-    """
+    """General message structure."""
     __tablename__ = "message"
 
     id = db.Column(db.Integer, primary_key=True, nullable=False,
@@ -231,9 +231,7 @@ class Message(db.Model):
 
 
 class Question(db.Model):
-    """
-    Questions for a record are stored.
-    """
+    """Questions for a record are stored."""
 
     __tablename__ = "question"
 
@@ -249,9 +247,7 @@ class Question(db.Model):
 
 
 class RecordVersionCommitMessage(db.Model):
-    """
-    Stores messages that can be attached to each submission once
-    """
+    """Stores messages that can be attached to each submission once."""
     id = db.Column(
         db.Integer, primary_key=True,
         nullable=False, autoincrement=True)

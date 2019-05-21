@@ -75,10 +75,12 @@ def returns_json(f):
 def format_submission(recid, record, version, version_count, hepdata_submission,
                       data_table=None):
     """
-    Performs all the processing of the record to be display
+    Performs all the processing of the record to be displayed.
+
     :param recid:
     :param record:
     :param version:
+    :param version_count:
     :param hepdata_submission:
     :param data_table:
     :return:
@@ -161,8 +163,9 @@ def format_submission(recid, record, version, version_count, hepdata_submission,
 
 def format_tables(ctx, data_record_query, data_table, recid):
     """
-    Finds all the tables related to a submission and generates formats
+    Finds all the tables related to a submission and formats
     them for display in the UI or as JSON.
+
     :return:
     """
     first_data_id = -1
@@ -179,7 +182,8 @@ def format_tables(ctx, data_record_query, data_table, recid):
 
 def get_commit_message(ctx, recid):
     """
-    Returns a commit message for the current version if present
+    Returns a commit message for the current version if present.
+
     :param ctx:
     :param recid:
     """
@@ -198,9 +202,7 @@ def get_commit_message(ctx, recid):
 
 
 def create_breadcrumb_text(authors, ctx, record):
-    """
-    Creates the breadcrumb text for a submission
-    """
+    """Creates the breadcrumb text for a submission."""
     if "first_author" in record and 'full_name' in record["first_author"] \
         and record["first_author"]["full_name"] is not None:
         ctx['breadcrumb_text'] = record["first_author"]["full_name"]
@@ -210,7 +212,8 @@ def create_breadcrumb_text(authors, ctx, record):
 
 def submission_has_resources(hepsubmission):
     """
-    Returns if the submission has resources attached
+    Returns whether the submission has resources attached.
+
     :param hepsubmission: HEPSubmission object
     :return: bool
     """
@@ -410,8 +413,10 @@ def process_zip_archive(file, id):
 
 
 def check_and_convert_from_oldhepdata(input_directory, id, timestamp):
-    """ Check if the input directory contains a .oldhepdata file
-    and convert it to YAML if it happens. """
+    """
+    Check if the input directory contains a .oldhepdata file
+    and convert it to YAML if it happens.
+    """
     converted_path = os.path.join(current_app.config['CFG_DATADIR'], str(id), timestamp, 'yaml')
 
     if not os.path.exists(converted_path):
@@ -482,8 +487,10 @@ def assign_or_create_review_status(data_table_metadata, publication_recid,
     """
     If a review already exists, it will be attached to the current data record.
     If a review does not exist for a data table, it will be created.
+
     :param data_table_metadata: the metadata describing the main table.
     :param publication_recid: publication record id
+    :param version:
     """
     data_review_query = DataReview.query.filter_by(
         publication_recid=publication_recid, version=version)

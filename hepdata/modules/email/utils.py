@@ -21,7 +21,7 @@
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
 
-"""Provides high level common email utilities"""
+"""Provides high-level common email utilities."""
 
 from __future__ import absolute_import, print_function
 from email.mime.multipart import MIMEMultipart
@@ -37,11 +37,13 @@ from hepdata.modules.records.utils.common import encode_string
 
 def create_send_email_task(destination, subject, message, reply_to_address=None):
     """
-    Schedules a task to send an email
+    Schedules a task to send an email.
+
     :param destination:
     :param subject:
     :param message:
-    :return:
+    :param reply_to_address:
+    :return: send_email
     """
 
     # this is required for some unknown reason due to an initialisation problem with celery.
@@ -77,7 +79,8 @@ def send_email(destination, subject, message, reply_to_address=None):
 
 def send_error_mail(exception):
     """
-    Sends an error email to the default system email (which should always be valid!)
+    Sends an error email to the default system email (which should always be valid!).
+
     :param exception: SMTPRecipientsRefused exception
     """
     # get default

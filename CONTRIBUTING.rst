@@ -10,13 +10,7 @@ Types of Contributions
 Report Bugs
 ~~~~~~~~~~~
 
-Report bugs at https://github.com/HEPData/hepdata/issues.
-
-If you are reporting a bug, please include:
-
-* Your operating system name and version.
-* Any details about your local setup that might be helpful in troubleshooting.
-* Detailed steps to reproduce the bug.
+Report bugs by sending an email to ``info@hepdata.net``.
 
 Fix Bugs
 ~~~~~~~~
@@ -40,8 +34,8 @@ articles, and such.
 Submit Feedback
 ~~~~~~~~~~~~~~~
 
-The best way to send feedback is to file an issue at
-https://github.com/HEPData/hepdata/issues.
+The best way to send feedback is to send an email to ``info@hepdata.net``.
+Alternatively, open an issue at https://github.com/HEPData/hepdata/issues.
 
 If you are proposing a feature:
 
@@ -53,24 +47,16 @@ If you are proposing a feature:
 Get Started!
 ------------
 
-Ready to contribute? Here's how to set up `hepdata` for local development.
+Ready to contribute? Here's how to set up ``hepdata`` for local development.
 
-1. Fork the `hepdata` repo on GitHub.
+1. Fork the ``hepdata`` repo on GitHub.
 2. Clone your fork locally:
 
    .. code-block:: console
 
       $ git clone git@github.com:your_name_here/hepdata.git
 
-3. Install your local copy into a virtualenv. Assuming you have
-   virtualenvwrapper installed, this is how you set up your fork for local
-   development:
-
-   .. code-block:: console
-
-      $ mkvirtualenv hepdata
-      $ cd hepdata/
-      $ pip install -e .[all]
+3. Install your local copy into a virtualenv as described in :ref:`installation`.
 
 4. Create a branch for local development:
 
@@ -85,10 +71,6 @@ Ready to contribute? Here's how to set up `hepdata` for local development.
    .. code-block:: console
 
       $ ./run-tests.sh
-
-   The tests will provide you with test coverage and also check PEP8
-   (code style), PEP257 (documentation), flake8 as well as build the Sphinx
-   documentation and run doctests.
 
 6. Commit your changes and push your branch to GitHub:
 
@@ -108,6 +90,6 @@ Before you submit a pull request, check that it meets these guidelines:
 1. The pull request should include tests and must not decrease test coverage.
 2. If the pull request adds functionality, the docs should be updated. Put
    your new functionality into a function with a docstring.
-3. The pull request should work for Python 2.7, 3.3, 3.4 and 3.5. Check
+3. The pull request should work for Python 2.7. Check
    https://travis-ci.org/HEPData/hepdata/pull_requests
-   and make sure that the tests pass for all supported Python versions.
+   and make sure that the tests pass.

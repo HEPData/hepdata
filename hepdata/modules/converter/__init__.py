@@ -20,6 +20,7 @@
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
+"""HEPData Converter."""
 
 import tempfile
 import zipfile
@@ -34,7 +35,14 @@ from hepdata.modules.records.utils.common import find_file_in_directory
 
 
 def convert_zip_archive(input_archive, output_archive, options):
-    """ Convert a zip archive into a targz path with given options. """
+    """
+    Convert a zip archive into a targz path with given options.
+
+    :param input_archive:
+    :param output_archive:
+    :param options:
+    :return: output_file
+    """
     input_root_dir = tempfile.mkdtemp()
     with zipfile.ZipFile(input_archive, 'r') as zip_archive:
         zip_archive.extractall(path=input_root_dir)
@@ -70,7 +78,13 @@ def convert_zip_archive(input_archive, output_archive, options):
 
 
 def convert_oldhepdata_to_yaml(input_path, output_path):
-    """ Converts the data on the server from oldhepdata format to the new one. """
+    """
+    Converts the data on the server from oldhepdata format to the new YAML format.
+
+    :param input_path:
+    :param output_path:
+    :return: whether conversion was successful
+    """
     options = {
         'input_format': 'oldhepdata',
         'output_format': 'yaml',

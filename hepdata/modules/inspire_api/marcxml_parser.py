@@ -40,7 +40,7 @@ DEFAULT_JOURNAL = 'No Journal Information'
 
 
 def get_journal_info(soup):
-    """ Parse the journal information from the xml """
+    """Parse the journal information from the xml."""
     try:
         tag, codes = marc_tags['journal']
         datafield = soup.find_all(tag=tag)[0]
@@ -70,7 +70,7 @@ def get_year(soup):
 
 
 def get_doi(soup):
-    """ Parse the DOI from the xml """
+    """Parse the DOI from the xml."""
     try:
         (tag, ind1, code1, code2) = marc_tags['doi']
         datafields = soup.find_all(tag=tag, ind1=ind1)
@@ -84,7 +84,7 @@ def get_doi(soup):
 
 
 def get_title(soup):
-    """ Parse the title from the xml.  Use translated title if present. """
+    """Parse the title from the xml.  Use translated title if present."""
     for title in ['title_translation', 'title']:
         try:
             (tag, code) = marc_tags[title]
@@ -96,7 +96,7 @@ def get_title(soup):
 
 
 def get_authors(soup):
-    """ Parse the authors from the xml """
+    """Parse the authors from the xml."""
     try:
         (tag, code_name, code_aff) = marc_tags['first_author']
         datafield = soup.find_all(tag=tag)[0]
@@ -114,7 +114,7 @@ def get_authors(soup):
 
 
 def get_abstract(soup):
-    """ Parse the abstract from the xml """
+    """Parse the abstract from the xml."""
     try:
         (tag, code) = marc_tags['abstract']
         datafield = soup.find_all(tag=tag)[0]
@@ -124,7 +124,7 @@ def get_abstract(soup):
 
 
 def get_arxiv(soup):
-    """ Parse the arxiv ID from the xml """
+    """Parse the arxiv ID from the xml."""
     (tag, code1, code2) = marc_tags['arxiv']
     for df in soup.find_all(tag=tag):
         subfield = df.find_all(code=code1)
@@ -138,7 +138,7 @@ def get_arxiv(soup):
 
 
 def get_collaborations(soup):
-    """ Parse the collaboration names from the xml """
+    """Parse the collaboration names from the xml."""
     (tag, code) = marc_tags['collaboration']
     datafields = soup.find_all(tag=tag)
     return [df.find_all(code=code)[0].string for df in datafields
@@ -152,6 +152,7 @@ def expand_date(value):
     so 2012-08 will be 2012-08-01
     and 2012 will be 2012-01-01.
     If nothing, we do nothing.
+
     :param value:
     :return:
     """
@@ -168,7 +169,7 @@ def expand_date(value):
 
 
 def get_date(soup):
-    """ Parse the date from the xml """
+    """Parse the date from the xml."""
     try:
         (tag, code) = marc_tags['date']
         datafields = soup.find_all(tag=tag)
@@ -183,7 +184,7 @@ def get_date(soup):
 
 
 def get_author_from_subfield(datafield, code_name, code_aff):
-    """ Dig out the author from xml subfield """
+    """Dig out the author from xml subfield."""
     author = datafield.find_all(code=code_name)[0].string
     university = datafield.find_all(code=code_aff)
     university = university[0].string if university else ''
@@ -191,7 +192,7 @@ def get_author_from_subfield(datafield, code_name, code_aff):
 
 
 def get_keywords(soup):
-    """ Parse the keywords from the xml"""
+    """Parse the keywords from the xml."""
     (tag, code) = marc_tags['keywords']
     datafields = soup.find_all(tag=tag)
     keywords = [df.find_all(code=code)[0].string for df in datafields
@@ -200,9 +201,7 @@ def get_keywords(soup):
 
 
 def get_collection(soup, marc_tag='collection'):
-    """
-    Finds the 980 code relating to thesis type.
-    """
+    """Finds the 980 code relating to thesis type."""
     (tag, code) = marc_tags[marc_tag]
     datafields = soup.find_all(tag=tag)
     collections = [df.find_all(code=code)[0].string for df in datafields if df.find_all(code=code)]
@@ -237,8 +236,7 @@ def get_dissertation(soup):
 
 
 def make_keyword_dicts(keywords):
-    """ Map the list of keyword strings into dictionaries containing
-    name, value and synonyms fields """
+    """Map the list of keyword strings into dictionaries containing name, value and synonyms fields."""
     kw_dicts = []
     for kw in keywords:
         if ':' in kw:

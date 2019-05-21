@@ -86,6 +86,7 @@ class HEPDataRecords(object):
             """
                 Determines if the user is an admin or coordinator given their
                 assigned accRoles.
+
                 :return: true if the user is a coordinator or administrator,
                 false otherwise
             """
@@ -98,6 +99,7 @@ class HEPDataRecords(object):
             """
                 Determines if the user is an admin given their
                 assigned accRoles.
+
                 :return: true if the user is an administrator,
                 false otherwise
             """
@@ -108,6 +110,7 @@ class HEPDataRecords(object):
         def show_dashboard():
             """
             Determines if a user should be able to see the submission overview page.
+
             :return:
             """
             if current_user and current_user.is_authenticated:

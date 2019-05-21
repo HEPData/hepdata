@@ -16,6 +16,7 @@
 # along with HEPData; if not, write to the Free Software Foundation, Inc.,
 # 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
 #
+"""HEPData Stats Views."""
 
 import logging
 from datetime import datetime
@@ -30,7 +31,8 @@ log = logging.getLogger(__name__)
 
 def get_date():
     """
-    Gets todays' date
+    Gets today's date.
+
     :return: datetime object
     """
     return datetime.today()
@@ -39,7 +41,8 @@ def get_date():
 def increment(recid):
     """
     Increases the number of accesses to the record
-    by 1
+    by 1.
+
     :param recid: id of the record accessed
     :return:
     """
@@ -62,7 +65,8 @@ def increment(recid):
 
 def get_count(recid):
     """
-    Returns the number of times the record has been accessed
+    Returns the number of times the record has been accessed.
+
     :param recid: record id to get the count for
     :return: dict with sum as a key {"sum": 2}
     """

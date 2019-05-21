@@ -20,6 +20,7 @@
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
+"""HEPData Dashboard Views."""
 
 from __future__ import absolute_import, print_function
 
@@ -51,9 +52,9 @@ blueprint = Blueprint('hep_dashboard', __name__, url_prefix="/dashboard",
 @login_required
 def dashboard():
     """
-        Depending on the user that is logged in, they will get a
-        dashboard that reflects the
-        current status of all submissions of which they are part.
+    Depending on the user that is logged in, they will get a
+    dashboard that reflects the
+    current status of all submissions of which they are a participant.
     """
 
     submissions = prepare_submissions(current_user)

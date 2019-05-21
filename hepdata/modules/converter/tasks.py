@@ -20,6 +20,7 @@
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
+"""HEPData Converter Tasks."""
 
 from celery import shared_task
 
@@ -30,7 +31,8 @@ from hepdata.modules.submission.api import get_latest_hepsubmission
 def convert_and_store(inspire_id, file_format, force):
     """
     Converts a submission to a given file format, and stores
-    on the file system to be retrieved later by users
+    on the file system to be retrieved later by users.
+
     :param inspire_id:
     :param file_format:
     :param force:

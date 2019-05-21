@@ -21,7 +21,7 @@
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
 def splitter(data, predicate):
-    """ Split a list according to a given predicate (lambda). """
+    """Split a list according to a given predicate (lambda)."""
     yes, no = [], []
     for d in data:
         (yes if predicate(d) else no).append(d)

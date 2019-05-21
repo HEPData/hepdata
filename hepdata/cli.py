@@ -55,7 +55,7 @@ default_recids = 'ins1283842,ins1245023,ins1311487'
 
 @cli.group()
 def migrator():
-    """Migrator from existing HEPData System to new Version"""
+    """Migrator from old HepData system to new HEPData system."""
 
 
 @migrator.command()
@@ -69,13 +69,10 @@ def migrator():
 @click.option('--convert', '-c', default=False, type=bool,
               help='Whether or not to create conversions for all loaded files to ROOT, YODA, and CSV.')
 def populate(inspireids, recreate_index, tweet, convert):
-    """Populate the DB with records.
-        Usage: hepdata populate -i 'ins1262703' -rc False -t False
-        :param convert:
-        :param inspireids:
-        :param tweet:
-        :param recreate_index:
+    """
+    Populate the DB with records.
 
+    Usage: ``hepdata migrator populate -i 'ins1262703' -rc False -t False -c False``
     """
     from hepdata.ext.elasticsearch.api import recreate_index as reindex
 
@@ -98,9 +95,7 @@ def populate(inspireids, recreate_index, tweet, convert):
 @click.option('--date', '-d', type=str, default=None,
               help='Filter all records modified since some point in time, e.g. 20160705 for the 5th July 2016.')
 def migrate(missing, start, end, date=None):
-    """
-    Migrates all content from HEPData
-    """
+    """Migrates all content from HEPData."""
     print(missing)
     if missing:
         inspire_ids = get_missing_records()
@@ -120,18 +115,15 @@ def migrate(missing, start, end, date=None):
 
 @migrator.command()
 @with_appcontext
-@click.option('--date', '-d', type=str, default=None, help='Date in the format YYYYddMM, e.g 20160627')
+@click.option('--date', '-d', type=str, default=None, help='Date in the format YYYYddMM, e.g. 20160627.')
 @click.option('--tweet', '-t', default=False, type=bool,
               help='Whether or not to send a tweet announcing the arrival of these records.')
 @click.option('--convert', '-c', default=False, type=bool,
               help='Whether or not to create conversions for all loaded files to ROOT, YODA, and CSV.')
 def add_or_update(date, tweet, convert):
     """
-    Provided a date, will find all records after that date and either load them if they don't exist in the system.
+    Provided a date, will find all records after that date and either load them if they don't exist in the system,
     or update if they already exist.
-    :param date:
-    :param tweet:
-    :param convert:
     """
     add_or_update_records_since_date.delay(date, send_tweet=tweet, convert=convert)
 
@@ -139,21 +131,18 @@ def add_or_update(date, tweet, convert):
 @migrator.command()
 @with_appcontext
 @click.option('--inspireids', '-i',
-              help='A comma separated list of recids to load.')
+              help='A comma-separated list of INSPIRE IDs to load.')
 @click.option('--force', '-f', default=False, type=bool,
               help='Whether or not to force an update regardless of last_updated date.')
 @click.option('--update_record_info_only', '-ro', default=False, type=bool,
               help='True if you just want to update the publication information.')
 def update(inspireids, force, update_record_info_only):
     """
-    Given a list of record ids, can update the contents of the whole submission, or just the record information
-    via the update_record_info_only option.  By default, a record will only be updated if the last_updated date
-    is not more recent than the equivalent on the old site, but this behaviour can be overridden with --force.
-    Usage: hepdata migrator update -i 'insXXX' -f True|False -ro True|False
+    Given a list of INSPIRE IDs, can update the contents of the whole submission, or just the record information
+    via the ``update_record_info_only`` option.  By default, a record will only be updated if the last_updated date
+    is not more recent than the equivalent on the old site, but this behaviour can be overridden with ``--force``.
 
-    :param inspireids: comma separated list of inspire ids, e.g. ins222121
-    :param force: force an update for any last_updated value
-    :param update_record_info_only: if True, will only up the record information, and won't update the data files.
+    Usage: ``hepdata migrator update -i 'insXXX' -f True|False -ro True|False``
     """
     records_to_update = parse_inspireids_from_string(inspireids)
     update_submissions.delay(records_to_update, force, update_record_info_only)
@@ -165,6 +154,7 @@ def find_missing_records():
     """
     Finds all records that are missing in the new system (compared to the legacy environment)
     and returns the IDs as a list
+
     :return: an array of missing IDs
     """
     return get_missing_records()
@@ -184,7 +174,7 @@ def get_missing_records():
 
 @cli.group()
 def utils():
-    """Utils"""
+    """Utils."""
 
 
 @utils.command()
@@ -205,9 +195,7 @@ def reindex(recreate, start, end, batch):
 @utils.command()
 @with_appcontext
 def find_duplicates_and_remove():
-    """
-    Will go through the application to find any duplicates then remove them.
-    """
+    """Will go through the application to find any duplicates then remove them."""
     inspire_ids = get_all_ids_in_current_system(prepend_id_with="")
 
     duplicates = []
@@ -227,7 +215,7 @@ def find_duplicates_and_remove():
 @utils.command()
 @with_appcontext
 @click.option('--inspireids', '-i', type=str,
-              help='Load specific recids in to the system.')
+              help='Load specific INSPIRE IDs into the system.')
 @click.option('--tweet', '-t', default=False, type=bool,
               help='Whether or not to send a tweet announcing the arrival of these records.')
 @click.option('--convert', '-c', default=False, type=bool,
@@ -235,13 +223,7 @@ def find_duplicates_and_remove():
 @click.option('--base_url', '-url', default='http://hepdata.cedar.ac.uk/view/{0}/yaml', type=str,
               help='Override default base URL of YAML format from old HepData site.')
 def load(inspireids, tweet, convert, base_url):
-    """
-    Load records given their Inspire IDs into the database.
-    :param base_url: override default base URL
-    :param convert:
-    :param tweet:
-    :param inspireids: list of record IDs to load
-    """
+    """Load records given their INSPIRE IDs into the database."""
     processed_record_ids = parse_inspireids_from_string(inspireids)
 
     load_files(processed_record_ids, send_tweet=tweet, convert=convert, base_url=base_url)
@@ -258,13 +240,11 @@ def parse_inspireids_from_string(records_to_unload):
 @utils.command()
 @with_appcontext
 @click.option('--recids', '-r', type=str,
-              help='Unload specific recids in to the system.')
+              help='Unload specific recids from the system.')
 def unload(recids):
     """
     Remove records given their HEPData IDs from the database.
     Removes all database entries, leaves the files on the server.
-    :param record_ids: list of record IDs to remove
-    :return:
     """
     records_to_unload = recids.split(',')
 
@@ -283,21 +263,15 @@ def do_unload(records_to_unload):
 @utils.command()
 @with_appcontext
 def find_and_add_record_analyses():
-    """
-    Finds analyses such as RIVET and add them to records
-    """
+    """Finds analyses such as Rivet and adds them to records."""
     update_analyses.delay()
 
 
 @utils.command()
 @with_appcontext
-@click.option('--inspireids', '-i', type=str, help='Specific Inspire IDs of records to be tweeted.')
+@click.option('--inspireids', '-i', type=str, help='Specific INSPIRE IDs of records to be tweeted.')
 def send_tweet(inspireids):
-    """
-    Send tweet announcing that records have been added or revised (in case it wasn't done automatically).
-
-    :param inspireids: list of record IDs to tweet
-    """
+    """Send tweet announcing that records have been added or revised (in case it wasn't done automatically)."""
     processed_inspireids = parse_inspireids_from_string(inspireids)
     for inspireid in processed_inspireids:
         _cleaned_id = inspireid.replace("ins", "")
@@ -315,11 +289,7 @@ def send_tweet(inspireids):
 @with_appcontext
 @click.option('--inspireids', '-i', type=str, help='Specific Inspire IDs of records to send finalised email for.')
 def send_email(inspireids):
-    """
-    Send finalised email announcing that records have been added or revised (in case it wasn't done automatically).
-
-    :param inspireids: list of record IDs to send finalised email for
-    """
+    """Send finalised email announcing that records have been added or revised (in case it wasn't done automatically)."""
     processed_inspireids = parse_inspireids_from_string(inspireids)
     for inspireid in processed_inspireids:
         _cleaned_id = inspireid.replace("ins", "")
@@ -334,12 +304,7 @@ def send_email(inspireids):
 @with_appcontext
 @click.option('--query', '-q', type=str, help='SQL query to execute via SQLAlchemy Engine.')
 def execute(query):
-    """
-    Execute a SQL query via SQLAlchemy Engine.
-
-    :param query: SQL query as a string
-    :return:
-    """
+    """Execute a SQL query via SQLAlchemy Engine."""
     print("Executing query: {}".format(query))
     if query:
         result = db.session.execute(query)
@@ -351,7 +316,7 @@ def execute(query):
 
 @cli.group()
 def doi_utils():
-    """DOI utils"""
+    """DOI utils."""
 
 
 @doi_utils.command()
@@ -359,12 +324,7 @@ def doi_utils():
 @click.option('--start_recid', '-s', type=int, default=0, help='Starting recid if looping over submissions.')
 @click.option('--end_recid', '-e', type=int, default=0, help='End recid if looping over submissions.')
 def register_dois(inspire_ids, start_recid, end_recid):
-    """
-    Register DOIs for a comma-separated list of INSPIRE IDs.
-
-    :param inspire_ids:
-    :return:
-    """
+    """Register DOIs for a comma-separated list of INSPIRE IDs."""
     if inspire_ids == 'all' and start_recid and end_recid:
         print('Generating for *all* record IDs between {} and {}'.format(start_recid, end_recid))
         generate_dois_for_submission.delay(start_recid, end_recid, overall_status='finished')
@@ -383,13 +343,7 @@ def register_dois(inspire_ids, start_recid, end_recid):
 @click.option('--inspire_id', '-i', type=str, default='', help='Specify inspire id of submission to generate the DOI for.')
 @click.option('--version', '-v', type=int, default=0, help='Specify version of submission to generate the DOI for.')
 def register_doi(inspire_id, version):
-    """
-    Register DOI for a single submission defined by the INSPIRE ID and version.
-
-    :param inspire_id:
-    :param version:
-    :return:
-    """
+    """Register DOI for a single submission defined by the INSPIRE ID and version."""
     if inspire_id and version:
         print('Generating for {0} version {1}'.format(inspire_id, version))
         _cleaned_id = inspire_id.replace("ins", "")
@@ -400,12 +354,7 @@ def register_doi(inspire_id, version):
 @doi_utils.command()
 @click.option('--table_dois', '-t', type=str, default='', help='Specify DOIs of individual tables.')
 def register_table_dois(table_dois):
-    """
-    Register DOIs for a comma-separated list of table DOIs.
-
-    :param table_dois:
-    :return:
-    """
+    """Register DOIs for a comma-separated list of table DOIs."""
     if table_dois:
         table_dois = table_dois.split(',')
         # register and mint the dois for these tables
@@ -416,22 +365,22 @@ def register_table_dois(table_dois):
 
 @cli.group()
 def converter():
-    """Converter utils"""
+    """Converter utils."""
 
 
 @converter.command()
 @click.option('--inspire_ids', '-i', type=str,
-              help='Specify inspire ids of submissions to generate the cached files for.')
+              help='Specify INSPIRE IDs of submissions to generate the cached files for.')
 @click.option('--force', '-f', type=bool, default=False,
               help='Force re-creation of converted files.')
 @click.option('--targets', '-t', type=str, default='root,csv,yoda',
-              help='Force re-creation of converted files.')
+              help='Specify file type of conversions as comma-separated string.')
 def prefetch_converted_files(inspire_ids, force, targets):
     """
     Goes through all HEPData submissions and creates their YAML, ROOT, CSV, and YODA representations.
     This avoids any wait time for users when trying to retrieve converted files.
     NOTE: Does not pre-fetch all individual files, since this would be too much and probably not
-    necessary
+    necessary.
     """
     if inspire_ids:
         submission_ids = inspire_ids.split(',')
@@ -450,12 +399,12 @@ def prefetch_converted_files(inspire_ids, force, targets):
 
 @cli.group()
 def submissions():
-    """Submissions"""
+    """Submissions."""
 
 
 @submissions.command(name="reindex")
 @with_appcontext
 def reindex():
-    """Reindexes HEPSubmissions and adds to the submission index"""
+    """Reindexes HEPSubmissions and adds to the submission index."""
     admin_idx = AdminIndexer()
     admin_idx.reindex(recreate=True)

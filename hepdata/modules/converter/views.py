@@ -16,6 +16,9 @@
 # along with HEPData; if not, write to the Free Software Foundation, Inc.,
 # 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
 #
+
+"""HEPData Converter Views."""
+
 from __future__ import absolute_import, print_function
 import logging
 import os
@@ -49,9 +52,12 @@ blueprint = Blueprint('converter', __name__,
 
 @blueprint.route('/convert', methods=['GET', 'POST'])
 def convert_endpoint():
-    """ Endpoint for general conversion, the file is passed as a GET parameter
-     and options ('from=' & 'to=') are query string arguments. """
+    """
+    Endpoint for general conversion, the file is passed as a GET parameter
+    and options ('from=' & 'to=') are query string arguments.
 
+    :return: display_error or send_file depending on success of conversion
+    """
     input_format, output_format = request.args.get('from', 'oldhepdata'), request.args.get('to', 'yaml')
 
     if input_format not in ['yaml', 'oldhepdata'] or \
@@ -101,14 +107,17 @@ def convert_endpoint():
 @blueprint.route('/submission/<inspire_id>/<int:version>/<file_format>/<rivet>')
 def download_submission_with_inspire_id(*args, **kwargs):
     """
-       Gets the submission file and either serves it back directly from YAML, or converts it
-       for other formats.
+    Gets the submission file and either serves it back directly from YAML, or converts it
+    for other formats.  Routes:\n
+    ``/submission/<inspire_id>/<file_format>``\n
+    ``/submission/<inspire_id>/<int:version>/<file_format>``\n
+    ``/submission/<inspire_id>/<int:version>/<file_format>/<rivet>``
 
-       :param inspire_id: inspire id
-       :param version: version of submission to export. If absent, returns the latest.
-       :param file_format: yaml, csv, root, or yoda
-       :param rivet: Rivet analysis name to override default written in YODA export
-       :return:
+    :param inspire_id: inspire id
+    :param version: version of submission to export. If absent, returns the latest.
+    :param file_format: yaml, csv, root, or yoda
+    :param rivet: Rivet analysis name to override default written in YODA export
+    :return: download_submission
     """
 
     inspire_id = kwargs.pop('inspire_id')
@@ -153,14 +162,17 @@ def download_submission_with_inspire_id(*args, **kwargs):
 @blueprint.route('/submission/<int:recid>/<int:version>/<file_format>/<rivet>')
 def download_submission_with_recid(*args, **kwargs):
     """
-        Gets the submission file and either serves it back directly from YAML, or converts it
-        for other formats.
+    Gets the submission file and either serves it back directly from YAML, or converts it
+    for other formats.  Routes:\n
+    ``/submission/<int:recid>/<file_format>``\n
+    ``/submission/<int:recid>/<int:version>/<file_format>``\n
+    ``/submission/<int:recid>/<int:version>/<file_format>/<rivet>``\n
 
-        :param recid: submissions recid
-        :param version: version of submission to export. If absent, returns the latest.
-        :param file_format: yaml, csv, root, or yoda
-        :param rivet: Rivet analysis name to override default written in YODA export
-        :return:
+    :param recid: submissions recid
+    :param version: version of submission to export. If absent, returns the latest.
+    :param file_format: yaml, csv, root, or yoda
+    :param rivet: Rivet analysis name to override default written in YODA export
+    :return: download_submission
     """
     recid = kwargs.pop('recid')
 
@@ -197,7 +209,7 @@ def download_submission(submission, file_format, offline=False, force=False, riv
     :param offline: offline creation of the conversion when a record is finalised
     :param force: force recreation of the conversion
     :param rivet_analysis_name: Rivet analysis name to override default written in YODA export
-    :return:
+    :return: display_error or send_file depending on success of conversion
     """
 
     version = submission.version
@@ -273,12 +285,15 @@ def download_submission(submission, file_format, offline=False, force=False, riv
 @blueprint.route('/table/<inspire_id>/<path:table_name>/<int:version>/<file_format>/<rivet>')
 def download_data_table_by_inspire_id(*args, **kwargs):
     """
-    Downloads the latest data file given the url /download/submission/ins1283842/Table 1/yaml or
-    by a particular version given /download/submission/ins1283842/Table 1/1/yaml
+    Downloads the latest data file given the url ``/download/submission/ins1283842/Table 1/yaml`` or
+    by a particular version given ``/download/submission/ins1283842/Table 1/1/yaml``.  Routes:\n
+    ``/table/<inspire_id>/<path:table_name>/<file_format>``\n
+    ``/table/<inspire_id>/<path:table_name>/<int:version>/<file_format>``\n
+    ``/table/<inspire_id>/<path:table_name>/<int:version>/<file_format>/<rivet>``\n
 
     :param args:
     :param kwargs: inspire_id, table_name, version (optional), and file_format
-    :return:
+    :return: display_error or download_datatable depending on success of conversion
     """
     inspire_id = kwargs.pop('inspire_id')
     table_name = kwargs.pop('table_name')
@@ -346,13 +361,16 @@ def download_data_table_by_inspire_id(*args, **kwargs):
 @blueprint.route('/table/<int:recid>/<path:table_name>/<int:version>/<file_format>/<rivet>')
 def download_data_table_by_recid(*args, **kwargs):
     """
-    Record ID download
-    Downloads the latest data file given the url /download/submission/1231/Table 1/yaml or
-    by a particular version given /download/submission/1231/Table 1/1/yaml
+    Record ID download.
+    Downloads the latest data file given the url ``/download/submission/1231/Table 1/yaml`` or
+    by a particular version given ``/download/submission/1231/Table 1/1/yaml``.  Routes:
+    ``/table/<int:recid>/<path:table_name>/<file_format>``\n
+    ``/table/<int:recid>/<path:table_name>/<int:version>/<file_format>``\n
+    ``/table/<int:recid>/<path:table_name>/<int:version>/<file_format>/<rivet>``\n
 
     :param args:
     :param kwargs: inspire_id, table_name, version (optional), and file_format
-    :return:
+    :return: display_error or download_datatable depending on success of conversion
     """
     recid = kwargs.pop('recid')
     table_name = kwargs.pop('table_name')
@@ -404,14 +422,28 @@ def download_data_table_by_recid(*args, **kwargs):
 
 @blueprint.route('/table/<int:data_id>/<file_format>')
 def download_datatable_by_dataid(data_id, file_format):
-    """ Download a particular data table in a given format. """
+    """
+    Download a particular data table in a given format.
 
+    :param data_id:
+    :param file_format:
+    :return: download_datatable
+    """
     datasubmission = DataSubmission.query.filter_by(id=data_id).one()
 
     return download_datatable(datasubmission, file_format, submission_id=data_id)
 
 
 def download_datatable(datasubmission, file_format, *args, **kwargs):
+    """
+    Download a particular data table given a ``datasubmission``.
+
+    :param datasubmission:
+    :param file_format:
+    :param args:
+    :param kwargs:
+    :return: display_error or send_file depending on success of conversion
+    """
 
     if file_format == 'json':
         return redirect('/record/data/{0}/{1}/{2}'.format(datasubmission.publication_recid,
@@ -486,6 +518,13 @@ def download_datatable(datasubmission, file_format, *args, **kwargs):
 
 
 def display_error(title='Unknown Error', description=''):
+    """
+    Return an HTML page containing a description of the conversion error.
+
+    :param title:
+    :param description:
+    :return: render_template
+    """
     return render_template(
         'hepdata_records/error_page.html',
         message=title,
@@ -499,8 +538,12 @@ def display_error(title='Unknown Error', description=''):
 
 
 def get_version_count(recid):
-    """ Returns both the number of *allowed* versions and the number of *all* versions. """
+    """
+    Returns both the number of *allowed* versions and the number of *all* versions.
 
+    :param recid:
+    :return: version_count, version_count_all
+    """
     # Count number of all versions and number of finished versions of a publication record.
     version_count_all = HEPSubmission.query.filter_by(publication_recid=recid).count()
     version_count_finished = HEPSubmission.query.filter_by(publication_recid=recid, overall_status='finished').count()

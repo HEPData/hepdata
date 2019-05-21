@@ -10,6 +10,8 @@ relevant package manager for your system, for example, using ``yum`` or ``apt-ge
 ``brew`` for macOS.
 
 
+.. _installation:
+
 Installation
 ============
 
@@ -154,7 +156,7 @@ then specify ``CFG_CONVERTER_URL = 'http://localhost:5500'`` (see above).
 
 
 Run using honcho
-================
+----------------
 
 Note added: I haven't tested if this method works.
 
@@ -169,7 +171,7 @@ Procfile. Then install flower if you haven't done so already, and then start hon
 
 
 Run using Docker
-================
+----------------
 
 A Dockerfile is provided in the HEPData/hepdata repository, inherited from the original Zenodo fork in 2015, but I don't think it ever worked.
 There is also a separate HEPData/hepdata-docker repository from 2015, which has not been kept up-to-date (for example, it uses MySQL instead of PostgreSQL).

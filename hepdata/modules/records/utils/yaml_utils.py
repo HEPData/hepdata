@@ -22,7 +22,7 @@
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
-"""YAML Processing utils"""
+"""YAML Processing Utils."""
 
 import os
 
@@ -57,7 +57,7 @@ def split_files(file_location, output_location,
     :param file_location: input yaml file location
     :param output_location: output directory path
     :param archive_location: if present will create a zipped
-    representation of the split files
+           representation of the split files
     """
     last_updated = datetime.now()
     try:
@@ -129,7 +129,8 @@ def split_files(file_location, output_location,
 
 def cleanup_data_yaml(yaml):
     """
-    Casts strings to numbers where possible, e.g
+    Casts strings to numbers where possible.
+
     :param yaml:
     :return:
     """

@@ -22,7 +22,7 @@
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
-"""Models for the HEPData Permissions"""
+"""Models for the HEPData Permissions."""
 import uuid
 
 from invenio_accounts.models import User
@@ -31,7 +31,7 @@ from sqlalchemy_utils import UUIDType
 
 
 class CoordinatorRequest(db.Model):
-    """Stores coordinators, any text sent originally, and their collaboration"""
+    """Stores coordinators, any text sent originally, and their collaboration."""
     id = db.Column(
         db.Integer, primary_key=True,
         nullable=False, autoincrement=True)
@@ -48,7 +48,7 @@ class SubmissionParticipant(db.Model):
 
     """
     This table stores information about the reviewers and
-    uploaders of a HEPdata submission
+    uploaders of a HEPData submission.
     """
     __tablename__ = "submissionparticipant"
 

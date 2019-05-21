@@ -42,10 +42,13 @@ suppress_warnings = ['image.nonlocal_uri']
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
+    'sphinx.ext.autosummary',
     'sphinx.ext.coverage',
     'sphinx.ext.doctest',
     'sphinx.ext.intersphinx',
     'sphinx.ext.viewcode',
+    'sphinx_click.ext',
+    'celery.contrib.sphinx',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -329,3 +332,15 @@ texinfo_documents = [
 
 # Example configuration for intersphinx: refer to the Python standard library.
 intersphinx_mapping = {'https://docs.python.org/2/': None}
+
+# If you’d like to change the prefix for tasks in reference documentation
+# then you can change the celery_task_prefix configuration value.
+# http://docs.celeryproject.org/en/latest/userguide/sphinx.html
+celery_task_prefix = '(task)'  # < default
+
+# The default options for autodoc directives.
+autodoc_default_options = {
+    'members': None,
+    'undoc-members': None,
+}
+autodoc_member_order = 'bysource'

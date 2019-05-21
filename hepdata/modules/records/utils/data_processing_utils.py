@@ -31,6 +31,7 @@ import re
 def pad_independent_variables(table_contents):
     """
     Pads out the independent variable column in the event that nothing exists.
+
     :param table_contents:
     :return:
     """
@@ -46,7 +47,8 @@ def pad_independent_variables(table_contents):
 
 def fix_nan_inf(value):
     """
-    Converts NaN, +inf, and -inf values to strings
+    Converts NaN, +inf, and -inf values to strings.
+
     :param value:
     :return:
     """
@@ -199,6 +201,7 @@ def process_dependent_variables(group_count, record, table_contents,
 def generate_table_structure(table_contents):
     """
     Creates a renderable structure from the table structure we've defined.
+
     :param table_contents:
     :return: a dictionary encompassing the qualifiers, headers and values
     """

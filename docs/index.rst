@@ -24,30 +24,35 @@
 
 .. include:: info.rst
 
-User's Guide
+Installation
 ------------
 
-This part of the documentation will show you how to get started in using
-HEPData.
+This documentation explains how to install the web application locally for prospective HEPData developers.
+It should not be required for normal HEPData users or data submitters.
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
    installation
-   usage
-
+   cli
 
 API Reference
 -------------
 
 If you are looking for information on a specific function, class or method,
-this part of the documentation is for you.
+this part of the documentation is for you.  This documentation is mostly
+generated automatically using the `Sphinx <http://www.sphinx-doc.org>`_
+``automodule`` directive to extract docstrings from the Python modules.
 
 .. toctree::
    :maxdepth: 2
 
-   api
    modules
+
+.. toctree::
+   :maxdepth: 1
+
+   utils
 
 Additional Notes
 ----------------
@@ -63,4 +68,3 @@ interested.
    license
    authors
    branding
-

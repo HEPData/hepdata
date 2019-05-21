@@ -52,8 +52,9 @@ blueprint = Blueprint('hep_permissions', __name__, url_prefix="/permissions",
 def promote_or_demote_participant(recid, action, demote_or_promote,
                                   participant_id):
     """
-    Can promote or demote a participant to/from primary reviewer/uploader
-    :param recid: record id that the user will be promoted or demoted
+    Can promote or demote a participant to/from primary reviewer/uploader.
+
+    :param recid: record id that the user will be promoted or demoted for
     :param action: upload or review
     :param demote_or_promote: demote or promote
     :param participant_id: id of user from the SubmissionParticipant table.
@@ -87,7 +88,8 @@ def promote_or_demote_participant(recid, action, demote_or_promote,
 @login_required
 def add_participant(recid):
     """
-    Adds a participant to a record
+    Adds a participant to a record.
+
     :param recid:
     :return:
     """
@@ -116,9 +118,10 @@ def add_participant(recid):
 @login_required
 def change_coordinator_for_submission():
     """
-    Changes the coordinator for a record to that defined by a coordinate.
+    Changes the coordinator for a record to that defined by a user id.
     Accepts a data object containing {'recid': record id to be acted upon,
-    'coordinator': id of user who will now be the coordinator}
+    'coordinator': id of user who will now be the coordinator}.
+
     :return: dict
     """
 
@@ -138,6 +141,7 @@ def change_coordinator_for_submission():
 def request_coordinator_privileges():
     """
     Submits a request for coordinator privileges.
+
     :return:
     """
     _user_id = int(current_user.get_id())
@@ -168,6 +172,7 @@ def request_coordinator_privileges():
 def respond_coordinator_privileges(request_id, decision):
     """
     Handles a request for coordinator privileges.
+
     :return:
     """
 
@@ -244,6 +249,7 @@ def check_is_sandbox_record(recid):
 def get_permissions_list():
     """
     Gets all permissions given for a user.
+
     :return:
     """
     return jsonify(get_records_participated_in_by_user())
@@ -252,7 +258,8 @@ def get_permissions_list():
 @blueprint.route('/coordinators')
 def get_coordinators():
     """
-    Returns a list of coordinators and their experiments in the system
+    Returns a list of coordinators and their experiments in the system.
+
     :return:
     """
     coordinators = get_approved_coordinators()

@@ -21,7 +21,7 @@
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
-"""HEPData Subscriber model."""
+"""HEPData Subscribers Model."""
 
 from invenio_db import db
 

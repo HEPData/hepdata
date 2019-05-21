@@ -21,7 +21,7 @@ from hepdata.modules.submission.models import DataResource
 from hepdata.modules.permissions.models import SubmissionParticipant
 from hepdata.modules.submission.models import HEPSubmission
 
-"""Common utilites used across the code base"""
+"""Common utilities used across the code base."""
 
 
 def is_resource_added_to_submission(recid, version, resource_url):
@@ -40,10 +40,11 @@ def is_resource_added_to_submission(recid, version, resource_url):
 
 def get_latest_hepsubmission(*args, **kwargs):
     """
-    Gets or creates a new HEPSubmission record
+    Gets or creates a new HEPSubmission record.
+
     :param recid: the publication record id
     :param coordinator: the user id of the user who owns this record
-    :param status: e.g. todo, finished.
+    :param status: e.g. todo, finished
     :return: the newly created HEPSubmission object
     """
 

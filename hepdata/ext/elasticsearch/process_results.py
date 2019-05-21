@@ -24,7 +24,7 @@
 
 from aggregations import parse_aggregations
 from hepdata.config import CFG_DATA_TYPE, CFG_PUB_TYPE
-from hepdata.utils.miscellanous import splitter
+from hepdata.utils.miscellaneous import splitter
 
 
 def merge_results(pub_result, data_result):

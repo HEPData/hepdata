@@ -135,7 +135,8 @@ def process_user_record_results(type, query_results, submissions):
 
 def prepare_submissions(current_user):
     """
-    Finds all the relevant submissions for a user, or all submissions if the logged in user is a 'super admin'
+    Finds all the relevant submissions for a user, or all submissions if the logged in user is a 'super admin'.
+
     :param current_user: User obj
     :return: OrderedDict of submissions
     """
@@ -215,6 +216,7 @@ def prepare_submissions(current_user):
 def get_pending_invitations_for_user(user):
     """
     Returns pending invites for upload or review of records.
+
     :param user: User object
     :return: array of pending invites
     """

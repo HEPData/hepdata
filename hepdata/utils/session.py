@@ -24,13 +24,14 @@
 
 from flask import session
 
-"""Provides setter and getter for storing things in the REDIS Cache"""
+"""Provides setter and getter for storing things in the REDIS Cache."""
 
 
 def set_session_item(key, value):
     """
     Stores a key and value in the session.
-    By default we use REDIS
+    By default we use REDIS.
+
     :param key: e.g. my_key
     :param value: anything, dict, array, string, int, etc.
     :return: 'ok'

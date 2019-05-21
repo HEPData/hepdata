@@ -161,7 +161,8 @@ def notify_reviewers(recid, version):
 @blueprint.route('/<int:recid>', methods=['GET', 'POST'])
 def metadata(recid):
     """
-    Queries and returns a data record
+    Queries and returns a data record.
+
     :param recid: the record id being queried
     :return: renders the record template
     """
@@ -194,7 +195,8 @@ def get_count_stats():
 @blueprint.route('/latest')
 def get_latest():
     """
-    Returns the N latest records from the database
+    Returns the N latest records from the database.
+
     :param n:
     :return:
     """
@@ -222,6 +224,7 @@ def get_latest():
 @blueprint.route('/data/<int:recid>/<int:data_recid>/<int:version>', methods=['GET', ])
 def get_table_details(recid, data_recid, version):
     """
+    Get the table details.
 
     :param recid:
     :param data_recid:
@@ -302,7 +305,8 @@ def get_table_details(recid, data_recid, version):
 @login_required
 def get_coordinator_view(recid):
     """
-    Returns the coordinator view for a record
+    Returns the coordinator view for a record.
+
     :param recid:
     """
     hepsubmission_record = get_latest_hepsubmission(publication_recid=recid)
@@ -359,7 +363,8 @@ def set_data_review_status():
 @blueprint.route('/data/review/', methods=['GET', ])
 def get_data_reviews_for_record():
     """
-    Get the data reviews for a record
+    Get the data reviews for a record.
+
     :return: json response with reviews (or a json with an error key if not)
     """
     recid = int(request.args.get('publication_recid'))
@@ -400,7 +405,8 @@ def get_data_review_status():
 @login_required
 def add_data_review_messsage(publication_recid, data_recid):
     """
-    Adds a new review message for a data submission
+    Adds a new review message for a data submission.
+
     :param publication_recid:
     :param data_recid:
     """
@@ -471,7 +477,8 @@ def get_review_messages_for_data_table(data_recid, version):
 @login_required
 def get_all_review_messages(publication_recid):
     """
-    Gets the review messages for a publication id
+    Gets the review messages for a publication id.
+
     :param publication_recid:
     :return:
     """
@@ -506,7 +513,8 @@ def get_all_review_messages(publication_recid):
 @returns_json
 def get_resources(recid, version):
     """
-    Gets a list of resources for a publication, relevant to all data records
+    Gets a list of resources for a publication, relevant to all data records.
+
     :param recid:
     :return: json
     """
@@ -537,6 +545,7 @@ def get_resources(recid, version):
 def process_resource(reference):
     """
     For a submission resource, create the link to the location, or the image file if an image.
+
     :param reference:
     :return: dict
     """
@@ -560,6 +569,7 @@ def get_resource(resource_id):
     """
     Attempts to find any HTML resources to be displayed for a record in the event that it
     does not have proper data records included.
+
     :param recid: publication record id
     :return: json dictionary containing any HTML files to show.
     """
@@ -593,9 +603,10 @@ def get_resource(resource_id):
 @blueprint.route('/<int:recid>/consume', methods=['GET', 'POST'])
 def consume_data_payload(recid):
     """
-        This method persists, then presents the loaded data back to the user.
-        :param recid: record Id to attach the data to
-        :return: page rendering
+    This method persists, then presents the loaded data back to the user.
+
+    :param recid: record id to attach the data to
+    :return: page rendering
     """
 
     if request.method == 'POST':
@@ -624,6 +635,7 @@ def attach_information_to_record(recid):
     """
     Given an INSPIRE data representation, this will process the data, and update information
     for a given record id with the contents.
+
     :return:
     """
 
@@ -654,7 +666,8 @@ def attach_information_to_record(recid):
 @blueprint.route('/sandbox/consume', methods=['POST'])
 def consume_sandbox_payload():
     """
-    Creates a new sandbox submission with a new file upload
+    Creates a new sandbox submission with a new file upload.
+
     :param recid:
     """
     import time
@@ -669,7 +682,8 @@ def consume_sandbox_payload():
 @blueprint.route('/sandbox/<int:recid>/consume', methods=['POST'])
 def update_sandbox_payload(recid):
     """
-    Updates the Sandbox submission with a new file upload
+    Updates the Sandbox submission with a new file upload.
+
     :param recid:
     """
 
@@ -682,6 +696,7 @@ def update_sandbox_payload(recid):
 def add_resource(type, identifier, version):
     """
     Adds a data resource to either the submission or individual data files.
+
     :param type:
     :param identifier:
     :param version:

@@ -20,6 +20,7 @@
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
+"""Twitter API."""
 
 from __future__ import absolute_import, print_function
 
@@ -33,6 +34,8 @@ import json
 
 def tweet(title, collaborations, url, version=1):
     """
+    Announce addition or revision of a HEPData record on Twitter.
+
     :param title:
     :param collaborations:
     :param url:

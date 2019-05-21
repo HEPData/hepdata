@@ -20,7 +20,7 @@
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
-"""Email API provides all email functions for HEPData"""
+"""Email API provides all email functions for HEPData."""
 import logging
 
 from flask import current_app
@@ -44,9 +44,10 @@ log = logging.getLogger(__name__)
 def send_new_review_message_email(review, message, user):
     """
     Sends a message to all uploaders and reviewers to tell them that a
-    comment has been made on a record
-    :param hepsubmission:
+    comment has been made on a record.
+
     :param review:
+    :param message:
     :param user:
     :return:
     """
@@ -89,9 +90,9 @@ class NoReviewersException(Exception):
 
 def send_new_upload_email(recid, user, message=None):
     """
-    :param action: e.g. upload or review_message
-    :param hepsubmission: submission information
+    :param recid:
     :param user: user object
+    :param message:
     :return:
     """
 

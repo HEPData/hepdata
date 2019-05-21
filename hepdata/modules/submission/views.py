@@ -69,7 +69,8 @@ def submit_post():
 
 def process_submission_payload(*args, **kwargs):
     """
-    Processes the submission payload
+    Processes the submission payload.
+
     :param inspire_id:
     :param title:
     :param reviewer:
@@ -136,7 +137,8 @@ def create_participant_record(name, email, role, status, recid):
 
 def parse_person_string(person_string, separator="::"):
     """
-    Parses a string in the format name::email in to separate parts
+    Parses a string in the format name::email into separate parts.
+
     :param person_string: e.g. John::j.p.a@cern.ch
     :param separator: by default '::'
     :return: name, email

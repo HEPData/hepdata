@@ -73,6 +73,7 @@ log = logging.getLogger(__name__)
 def remove_submission(record_id, version=1):
     """
     Removes the database entries related to a record.
+
     :param record_id:
     :param version:
     :return: True if Successful, False if the record does not exist.
@@ -148,10 +149,12 @@ def remove_submission(record_id, version=1):
 
 def cleanup_submission(recid, version, to_keep):
     """
-    Removes old, unreferenced files from the submission.
+    Removes old, unreferenced tables from the database.
     This ensures that when users replace a submission,
-    old files are not left behind.
+    previous tables are not left behind in the database.
+
     :param recid: publication recid of parent
+    :param version: version number of record
     :param to_keep: an array of names to keep in the submission
     :return:
     """
@@ -178,9 +181,10 @@ def cleanup_submission(recid, version, to_keep):
 
 def cleanup_data_resources(data_submission):
     """
-    Removes additional resources from the submission to avoid duplications.
+    Removes additional resources from the database to avoid duplications.
     This ensures that when users replace a submission,
-    old files are not left behind.
+    old resources are not left behind in the database.
+
     :param data_submission: DataSubmission object to be cleaned
     :return:
     """
@@ -191,9 +195,10 @@ def cleanup_data_resources(data_submission):
 
 def cleanup_data_keywords(data_submission):
     """
-    Removes keywords from the submission to avoid duplications.
+    Removes keywords from the database to avoid duplications.
     This ensures that when users replace a submission,
-    old keywords are not left behind.
+    old keywords are not left behind in the database.
+
     :param data_submission: DataSubmission object to be cleaned
     :return:
     """
@@ -249,7 +254,7 @@ def process_data_file(recid, version, basepath, data_obj, datasubmission, main_f
     cleanup_data_resources(datasubmission)
 
     if "additional_resources" in data_obj:
-        resources = parse_additional_resources(basepath, recid, version, data_obj)
+        resources = parse_additional_resources(basepath, recid, data_obj)
         for resource in resources:
             datasubmission.resources.append(resource)
 
@@ -262,6 +267,8 @@ def process_general_submission_info(basepath, submission_info_document, recid):
     extracting the information about the data abstract,
     additional resources for the submission (files, links,
     and html inserts) and historical modification information.
+
+    :param basepath: the path the submission has been loaded to
     :param submission_info_document: the data document
     :param recid:
     :return:
@@ -288,8 +295,7 @@ def process_general_submission_info(basepath, submission_info_document, recid):
         for reference in hepsubmission.resources:
             db.session.delete(reference)
 
-        resources = parse_additional_resources(basepath,
-                                                   recid, hepsubmission.version, submission_info_document)
+        resources = parse_additional_resources(basepath, recid, submission_info_document)
         for resource in resources:
             hepsubmission.resources.append(resource)
 
@@ -297,12 +303,13 @@ def process_general_submission_info(basepath, submission_info_document, recid):
     db.session.commit()
 
 
-def parse_additional_resources(basepath, recid, version, yaml_document):
+def parse_additional_resources(basepath, recid, yaml_document):
     """
-    Parses out the additional resource section for a full submission
-    :param hepsubmission:
+    Parses out the additional resource section for a full submission.
+
+    :param basepath: the path the submission has been loaded to
     :param recid:
-    :param submission_info_document:
+    :param yaml_document:
     :return:
     """
     resources = []
@@ -378,7 +385,8 @@ def parse_modifications(hepsubmission, recid, submission_info_document):
 
 
 def _eos_fix_read_data(data_file_path):
-    """This gets rid of the issues where reading the file returns empty
+    """
+    This gets rid of the issues where reading the file returns empty
     string because eos has not yet flushed the file contents.
     """
     attempts = 0
@@ -405,9 +413,11 @@ def process_submission_directory(basepath, submission_file_path, recid, update=F
     Goes through an entire submission directory and processes the
     files within to create DataSubmissions
     with the files and related material attached as DataResources.
+
     :param basepath:
     :param submission_file_path:
     :param recid:
+    :param update:
     :return:
     """
     added_file_names = []
@@ -596,7 +606,8 @@ def process_submission_directory(basepath, submission_file_path, recid, update=F
 def package_submission(basepath, recid, hep_submission_obj):
     """
     Zips up a submission directory. This is in advance of its download
-    for example by users
+    for example by users.
+
     :param basepath: path of directory containing all submission files
     :param recid: the publication record ID
     :param hep_submission_obj: the HEPSubmission object representing
@@ -646,7 +657,8 @@ def process_validation_errors_for_display(errors):
 
 def get_or_create_hepsubmission(recid, coordinator=1, status="todo"):
     """
-    Gets of creates a new HEPSubmission record
+    Gets or creates a new HEPSubmission record.
+
     :param recid: the publication record id
     :param coordinator: the user id of the user who owns this record
     :param status: e.g. todo, finished.
@@ -667,9 +679,11 @@ def get_or_create_hepsubmission(recid, coordinator=1, status="todo"):
 
 def create_data_review(data_recid, publication_recid, version=1):
     """
-    Creates a new data review given a data record id and a publication record id
+    Creates a new data review given a data record id and a publication record id.
+
     :param data_recid:
     :param publication_recid:
+    :param version:
     :return:
     """
     submission_count = DataSubmission.query.filter_by(id=data_recid).count()
@@ -721,12 +735,13 @@ def do_finalise(recid, publication_record=None, force_finalise=False,
                 commit_message=None, send_tweet=False, update=False, convert=True):
     """
         Creates record SIP for each data record with a link to the associated
-        publication
+        publication.
+
         :param synchronous: if true then workflow execution and creation is
-        waited on, then everything is indexed in one go.
-        If False, object creation is asynchronous, however reindexing is not
-        performed. This is only really useful for the full migration of
-        content.
+               waited on, then everything is indexed in one go.
+               If False, object creation is asynchronous, however reindexing is not
+               performed. This is only really useful for the full migration of
+               content.
     """
     print('Finalising record {}'.format(recid))
 

@@ -31,6 +31,7 @@ from sqlalchemy import or_
 def get_user_from_id(user_id):
     """
     Returns a user object from their id.
+
     :param user_id: <int>
     :return: User object if found, else None
     """
@@ -43,7 +44,8 @@ def get_user_from_id(user_id):
 
 def user_is_admin(user):
     """
-    Checks if user is an admin or coordinator
+    Checks if user is an admin or coordinator.
+
     :param user: <User> object
     """
     if user and user.is_authenticated:
@@ -57,8 +59,9 @@ def user_is_admin(user):
 
 def user_is_admin_or_coordinator(user):
     """
-    Checks if user is an admin or coordinator
-    :param <User> object
+    Checks if user is an admin or coordinator.
+
+    :param user: <User> object
     """
     if user and user.is_authenticated:
         id = int(user.get_id())

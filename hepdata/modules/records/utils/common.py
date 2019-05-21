@@ -142,8 +142,9 @@ def decode_string(string, type="utf-8"):
 
 def zipdir(path, ziph):
     """
-    From http://stackoverflow.com/questions/1855095/how-to-create-a-zip-
-    archive-of-a-directory?answertab=active#tab-top
+    From `Stack Overflow
+    <http://stackoverflow.com/questions/1855095/how-to-create-a-zip-archive-of-a-directory?answertab=active#tab-top>`_.
+
     :param path:
     :param ziph:
     :return:
@@ -157,7 +158,8 @@ def zipdir(path, ziph):
 def get_prefilled_dictionary(fields, obj):
     """
     Given a list of fields, will return a dictionary that either contains the
-    field value, or an empty string
+    field value, or an empty string.
+
     :param fields:
     :param obj:
     :return:
@@ -178,6 +180,7 @@ def find_file_in_directory(directory, file_predicate):
     Finds a file in a directory. Useful for say when the submission.yaml file
     is not at the top level of the unzipped archive but one or more levels
     below.
+
     :param directory:
     :param a lambda that checks if it's the file you're looking for:
     :return:
@@ -210,11 +213,10 @@ def truncate_string(string, words):
 
 def get_record_contents(recid):
     """
-    Tries to get record from elastic search first. Failing that,
-    it tries from the database.
+    Tries to get record from Elasticsearch first. Failing that, it tries from the database.
+
     :param recid: Record ID to get.
-    :return: a dictionary containing the record contents if the recid exists,
-    None otherwise.
+    :return: a dictionary containing the record contents if the recid exists, None otherwise.
     """
     record = get_record(recid, doc_type=CFG_PUB_TYPE)
     if record is None:

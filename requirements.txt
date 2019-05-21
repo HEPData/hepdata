@@ -30,8 +30,16 @@
 # * webargs==1.3.4 --> webargs==5.1.3
 # * Jinja2==2.10 --> Jinja2==2.10.1
 # * SQLAlchemy==1.1.15 --> SQLAlchemy==1.3.3
+# * amqp==2.1.4 --> amqp==2.4.2
+# * billiard==3.5.0.2 --> billiard==3.6.0.0
+# * celery==4.0.2 --> celery==4.3.0
+# * kombu==4.0.2 --> kombu==4.5.0
+# * pbr==1.8.1 --> pbr==5.2.0
+# * redis==2.10.5 --> redis==3.2.1
+# * urllib3==1.24 --> urllib3==1.24.2
+# * vine==1.1.3 --> vine==1.3.0
 alembic==0.9.6
-amqp==2.1.4
+amqp==2.4.2
 aniso8601==1.1.0
 anyjson==0.3.3
 apipkg==1.4
@@ -40,10 +48,10 @@ asciitree==0.3.1
 Babel==2.3.4
 backports.lzma==0.0.3
 beautifulsoup4==4.5.1
-billiard==3.5.0.2
+billiard==3.6.0.0
 binaryornot==0.4.0
 blinker==1.4
-celery==4.0.2
+celery==4.3.0
 Cerberus==0.7
 cffi
 chardet==3.0.4
@@ -138,7 +146,7 @@ jsonpointer==1.10
 jsonref==0.1
 jsonresolver==0.2.1
 jsonschema==2.6.0
-kombu==4.0.2
+kombu==4.5.0
 limits==1.1
 lxml==3.6.4
 Mako==1.0.7
@@ -151,7 +159,7 @@ oauthlib==1.1.2
 ordereddict==1.1
 paramiko==2.4.2
 passlib==1.6.5
-pbr==1.8.1
+pbr==5.2.0
 pep8==1.7.0
 Pillow==5.2.0
 pipdeptree==0.6.0
@@ -172,7 +180,7 @@ python-editor==1.0.3
 pytz==2013b0
 PyYAML==4.2b4
 raven==6.7.0
-redis==2.10.5
+redis==3.2.1
 reportlab==3.1.44
 requests==2.21.0
 requests-oauthlib==0.7.0
@@ -190,9 +198,9 @@ timestring==1.6.2
 twitter==1.15.0
 Unidecode==0.4.19
 uritools==2.0.0
-urllib3==1.24
+urllib3==1.24.2
 validators==0.11.0
-vine==1.1.3
+vine==1.3.0
 webargs==5.1.3
 webassets==0.12.1
 Werkzeug==0.14.1

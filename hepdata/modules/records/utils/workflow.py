@@ -37,6 +37,7 @@ def create_data_structure(ctx):
     """
     The data structures need to be normalised before being stored in
     the database. This is performed here.
+
     :param ctx: record information as a dictionary
     :return: a cleaned up representation.
     """
@@ -75,6 +76,7 @@ def create_data_structure(ctx):
 def update_record(recid, ctx):
     """
     Updates a record given a new dictionary.
+
     :param recid:
     :param ctx:
     :return:
@@ -94,6 +96,7 @@ def update_record(recid, ctx):
 def create_record(ctx):
     """
     Creates the record in the database.
+
     :param ctx: The record metadata as a dictionary.
     :return: the recid and the uuid
     """
