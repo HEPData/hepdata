@@ -745,11 +745,7 @@ def do_finalise(recid, publication_record=None, force_finalise=False,
     """
     print('Finalising record {}'.format(recid))
 
-    if not update:
-        hep_submission = get_latest_hepsubmission(publication_recid=recid)
-    else:
-        hep_submission = HEPSubmission.query.filter_by(
-        publication_recid=recid, overall_status="todo").first()
+    hep_submission = get_latest_hepsubmission(publication_recid=recid)
 
     generated_record_ids = []
     if hep_submission \
