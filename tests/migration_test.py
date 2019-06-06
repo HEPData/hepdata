@@ -62,11 +62,12 @@ def test_inspire_record_retrieval(app, migrator, identifiers):
     """___test_inspire_record_retrieval___"""
     with app.app_context():
         for test_id in identifiers:
-            publication_information = \
+            publication_information, status = \
                 migrator.retrieve_publication_information(
                     test_id["hepdata_id"])
 
             assert publication_information["title"] == test_id["title"]
+            assert status == "success"
 
 
 def test_migration(app, migrator, load_default_data, identifiers):

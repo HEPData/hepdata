@@ -160,7 +160,7 @@ def notify_participants(hepsubmission, record):
         .format(hepsubmission.inspire_id, hepsubmission.version))
 
     create_send_email_task(','.join(set(destinations)),
-                           '[HEPData] Submission {0} has been finalised and is publicly available' \
+                           '[HEPData] Submission {0} has been finalised and is publicly available'
                            .format(hepsubmission.publication_recid),
                            message_body)
 
@@ -179,7 +179,7 @@ def notify_subscribers(hepsubmission, record):
                 .format(hepsubmission.inspire_id, hepsubmission.version))
 
         create_send_email_task(subscriber.get('email'),
-                               '[HEPData] Record update available for submission {0}' \
+                               '[HEPData] Record update available for submission {0}'
                                .format(hepsubmission.publication_recid),
                                message_body)
 
@@ -234,7 +234,7 @@ def send_question_email(question):
                 site_url=current_app.config.get('SITE_URL', 'https://www.hepdata.net'),
                 message=question.question)
 
-            create_send_email_task(destination=','.join(destinations),
+            create_send_email_task(destination=','.join(set(destinations)),
                                    subject="[HEPData] Question for record ins{0}".format(submission.inspire_id),
                                    message=message_body, reply_to_address=reply_to)
 
@@ -270,3 +270,31 @@ def send_coordinator_approved_email(coordinator_request):
         create_send_email_task(user.email,
                                subject="[HEPData] Coordinator Request Approved",
                                message=message_body)
+
+
+def notify_publication_update(hepsubmission, record):
+
+    destinations = []
+    coordinator = User.query.get(hepsubmission.coordinator)
+    if coordinator.id > 1:
+        destinations.append(coordinator.email)
+    submission_participants = get_submission_participants_for_record(hepsubmission.publication_recid)
+    for participant in submission_participants:
+        destinations.append(participant.email)
+    if not destinations:
+        destinations.append(current_app.config['ADMIN_EMAIL'])
+
+    site_url = current_app.config.get('SITE_URL', 'https://www.hepdata.net')
+
+    message_body = render_template(
+        'hepdata_theme/email/publication_update.html',
+        inspire_id=hepsubmission.inspire_id,
+        title=record['title'],
+        site_url=site_url,
+        link=site_url + "/record/ins{0}"
+        .format(hepsubmission.inspire_id))
+
+    create_send_email_task(','.join(set(destinations)),
+                           '[HEPData] Record ins{0} has updated publication information from INSPIRE'
+                           .format(hepsubmission.inspire_id),
+                           message_body)

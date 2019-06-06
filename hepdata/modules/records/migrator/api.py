@@ -50,6 +50,9 @@ from hepdata.modules.submission.api import get_latest_hepsubmission, is_resource
 from hepdata.modules.submission.models import DataResource, HEPSubmission
 from hepdata.utils.file_extractor import get_file_in_directory
 
+from hepdata.modules.records.utils.doi_minter import generate_dois_for_submission
+from hepdata.modules.email.api import notify_publication_update
+
 
 logging.basicConfig()
 log = logging.getLogger(__name__)
@@ -124,7 +127,7 @@ def update_analyses():
 
 
 @shared_task
-def update_submissions(inspire_ids_to_update, force=False, only_record_information=False):
+def update_submissions(inspire_ids_to_update, force=False, only_record_information=False, send_email=False):
     migrator = Migrator()
     for index, inspire_id in enumerate(inspire_ids_to_update):
         _cleaned_id = inspire_id.replace("ins", "")
@@ -134,7 +137,7 @@ def update_submissions(inspire_ids_to_update, force=False, only_record_informati
             if "related_publication" in _matching_records["hits"]["hits"][0]["_source"]:
                 recid = _matching_records["hits"]["hits"][0]["_source"]["related_publication"]
             print("The record with inspire_id {} and recid {} will be updated now".format(inspire_id, recid))
-            migrator.update_file.delay(inspire_id, recid, force, only_record_information)
+            migrator.update_file.delay(inspire_id, recid, force, only_record_information, send_email)
         else:
             log.error("No record exists with id {0}. You should load this file first.".format(inspire_id))
 
@@ -244,7 +247,7 @@ class Migrator(object):
         splits it.
 
         :param inspire_id:
-        :return: output location if succesful, None if not
+        :return: output location if successful, None if not
         """
         output_location = os.path.join(current_app.config["CFG_DATADIR"], inspire_id)
         last_updated = datetime.now()
@@ -272,13 +275,18 @@ class Migrator(object):
         return output_location, last_updated
 
     @shared_task
-    def update_file(inspire_id, recid, force=False, only_record_information=False, send_tweet=False, convert=False):
+    def update_file(inspire_id, recid, force=False, only_record_information=False, send_email=False,
+                    send_tweet=False, convert=False):
         self = Migrator()
 
         output_location, oldsite_last_updated = self.prepare_files_for_submission(inspire_id, force_retrieval=True)
         if output_location:
-            updated_record_information = self.retrieve_publication_information(inspire_id)
-            record_information = update_record(recid, updated_record_information)
+            updated_record_information, status = self.retrieve_publication_information(inspire_id)
+            if status == 'success':
+                record_information = update_record(recid, updated_record_information)
+            else:
+                log.error("Failed to retrieve publication information for {0}".format(inspire_id))
+                return
 
             hep_submission = HEPSubmission.query.filter_by(publication_recid=recid).first()
             version_count = HEPSubmission.query.filter_by(publication_recid=recid).count()
@@ -288,7 +296,7 @@ class Migrator(object):
             allow_update = (hep_submission.last_updated < oldsite_last_updated or force) and \
                            hep_submission.coordinator == 1 and version_count == 1
 
-            if not only_record_information and (allow_update or force):
+            if not only_record_information and allow_update:
                 try:
                     recid = self.load_submission(
                         record_information, output_location, os.path.join(output_location, "submission.yaml"),
@@ -307,6 +315,10 @@ class Migrator(object):
                 print('Not updating record {}'.format(recid))
             else:
                 index_record_ids([record_information["recid"]])
+                _cleaned_id = inspire_id.replace("ins", "")
+                generate_dois_for_submission.delay(inspire_id=_cleaned_id)  # update metadata stored in DataCite
+                if send_email:
+                    notify_publication_update(hep_submission, record_information)  # send email to all participants
 
         else:
             log.error("Failed to load {0}".format(inspire_id))
@@ -317,7 +329,7 @@ class Migrator(object):
         output_location, oldsite_last_updated = self.prepare_files_for_submission(inspire_id)
         if output_location:
 
-            record_information = create_record(self.retrieve_publication_information(inspire_id))
+            record_information, status = create_record(self.retrieve_publication_information(inspire_id))
 
             try:
                 recid = self.load_submission(
@@ -395,7 +407,7 @@ class Migrator(object):
         content, status = get_inspire_record_information(inspire_id)
 
         content["inspire_id"] = inspire_id
-        return content
+        return content, status
 
     def load_submission(self, record_information, file_base_path,
                         submission_yaml_file_location, update=False):

@@ -1,0 +1,17 @@
+{% extends 'hepdata_theme/email/email_container.html' %}
+{% block email_type %}
+Record ins{{ inspire_id }} has been updated with publication information from INSPIRE
+{% endblock %}
+
+
+{% block email_content %}
+
+    Dear all,
+
+    <p>The HEPData record for <a href="{{ link }}" style="color: #9b59b6">{{ title }}</a> has been updated with publication
+      information from <a href="http://inspirehep.net/record/{{ inspire_id }}" style="color: #9b59b6">INSPIRE</a>.</p>
+
+    <p>
+    The <a href="{{ site_url }}" style="color: #9b59b6">HEPData</a> team
+    </p>
+{% endblock %}
