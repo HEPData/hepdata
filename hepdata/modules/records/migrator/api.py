@@ -329,7 +329,12 @@ class Migrator(object):
         output_location, oldsite_last_updated = self.prepare_files_for_submission(inspire_id)
         if output_location:
 
-            record_information, status = create_record(self.retrieve_publication_information(inspire_id))
+            publication_information, status = self.retrieve_publication_information(inspire_id)
+            if status == "success":
+                record_information = create_record(publication_information)
+            else:
+                log.error("Failed to retrieve publication information for " + inspire_id)
+                return False
 
             try:
                 recid = self.load_submission(
