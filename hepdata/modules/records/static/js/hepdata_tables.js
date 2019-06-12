@@ -278,8 +278,8 @@ HEPDATA.table_renderer = {
 
             if ("asymerror" in errors[error_idx]) {
 
-              var plus_error = errors[error_idx]['asymerror']['plus'];
-              var min_error = errors[error_idx]['asymerror']['minus'];
+              var plus_error = ('plus' in errors[error_idx]['asymerror']) ? errors[error_idx]['asymerror']['plus'] : '';
+              var min_error = ('minus' in errors[error_idx]['asymerror']) ? errors[error_idx]['asymerror']['minus'] : '';
 
               // Round errors to same number of decimal places as central value.
               // Comment out for now: misleading if central value lacks significant trailing zeros.

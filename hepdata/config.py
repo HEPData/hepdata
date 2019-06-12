@@ -53,11 +53,11 @@ I18N_LANGUAGES = [
 ]
 
 # Distributed task queue
-BROKER_URL = "redis://localhost:6379/0"
+CELERY_BROKER_URL = "redis://localhost:6379/0"
 CELERY_RESULT_BACKEND = "redis://localhost:6379/1"
 CELERY_ACCEPT_CONTENT = ['json', 'msgpack', 'yaml']
 
-CELERYBEAT_SCHEDULE = {
+CELERY_BEAT_SCHEDULE = {
     'update_analyses': {
         'task': 'hepdata.modules.records.migrator.api.update_analyses',
         'schedule': timedelta(hours=12)

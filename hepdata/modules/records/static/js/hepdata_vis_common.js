@@ -178,8 +178,10 @@ HEPDATA.dataprocessing = {
                 errors_obj.name = data_header_value;
 
                 if ("asymerror" in errors_obj) {
-                  var up_err = HEPDATA.dataprocessing.process_error_value(errors_obj['asymerror']['plus'], errors_obj.y);
-                  var down_err = HEPDATA.dataprocessing.process_error_value(errors_obj['asymerror']['minus'], errors_obj.y);
+                  var plus = ('plus' in errors_obj['asymerror']) ? errors_obj['asymerror']['plus'] : '';
+                  var minus = ('minus' in errors_obj['asymerror']) ? errors_obj['asymerror']['minus'] : '';
+                  var up_err = HEPDATA.dataprocessing.process_error_value(plus, errors_obj.y);
+                  var down_err = HEPDATA.dataprocessing.process_error_value(minus, errors_obj.y);
                   errors_obj.err_plus = Math.max(down_err, up_err, 0);
                   errors_obj.err_minus = Math.min(down_err, up_err, 0);
 
