@@ -22,6 +22,8 @@
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
+dist: xenial
+
 addons:
   postgresql: "9.6"
 
@@ -39,6 +41,7 @@ services:
   - postgresql
   - elasticsearch
   - redis-server
+  - xvfb
 
 python:
   - "2.7"
@@ -64,11 +67,6 @@ install:
   - "hepdata collect -v"
   - "hepdata assets build"
   - "cd /home/travis/build/HEPData/hepdata"
-
-before_script:
-  - "export DISPLAY=:99.0"
-  - "sh -e /etc/init.d/xvfb start"
-  - "sleep 3" # give xvfb some time to start
 
 script:
   - "py.test tests -k 'not tests/e2e'"
