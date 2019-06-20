@@ -57,3 +57,6 @@ target/
 
 # Local config file
 hepdata/config_local.py
+
+.idea
+.pytest_cache
