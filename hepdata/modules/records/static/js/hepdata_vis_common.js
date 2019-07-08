@@ -4,7 +4,13 @@ HEPDATA.visualization.utils = {
 
   round: function (value, round) {
     try {
-      value = parseFloat(value).toFixed(round)
+      if (value.toString().toLowerCase().indexOf('e') == -1) {
+        value = parseFloat(value).toFixed(round);
+      } else {  // value given in scientific notation
+        mantissa = value.toString().toLowerCase().split('e')[0];
+        exponent = value.toString().toLowerCase().split('e')[1];
+        value = parseFloat(mantissa).toFixed(round).toString() + 'e' + exponent;
+      }
     } catch (e) {
       console.warn('Unable to convert ' + value + ' to number.');
     }
