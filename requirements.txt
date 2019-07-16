@@ -135,7 +135,7 @@ invenio-oauth2server==1.0.0a15
 invenio-oauthclient==1.0.0a12
 invenio-pidstore==1.0.0b1
 invenio-query-parser==0.6.0
-invenio-records==1.0.0b1
+invenio-records==1.2.2
 invenio-search==1.0.0a9
 invenio-theme==1.0.0b2
 invenio-userprofiles==1.0.0a9
@@ -146,7 +146,7 @@ itsdangerous==0.24
 Jinja2==2.10.1
 jinja2-time==0.2.0
 jsmin==2.2.1
-jsonpatch==1.14
+jsonpatch==1.23
 jsonpointer==1.10
 jsonref==0.1
 jsonresolver==0.2.1
