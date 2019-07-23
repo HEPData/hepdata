@@ -168,7 +168,7 @@ pbr==5.2.0
 pep8==1.7.0
 Pillow==5.2.0
 pipdeptree==0.6.0
-pluggy
+pluggy==0.12.0
 poyo==0.4.0
 psycopg2-binary
 py==1.5.3

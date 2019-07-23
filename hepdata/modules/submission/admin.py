@@ -19,7 +19,6 @@
 
 from flask_admin.contrib.sqla import ModelView
 from .models import HEPSubmission, DataResource
-from invenio_db import db
 
 
 def _(x):
@@ -79,20 +78,14 @@ class DataResourceAdminView(ModelView):
 
 
 hep_submission_admin_view = {
-    'view_class': HEPSubmissionAdminView,
-    'args': [HEPSubmission, db.session],
-    'kwargs': {'category': _('HEPData Submissions')},
+    'model': HEPSubmission,
+    'modelview': HEPSubmissionAdminView,
+    'category': _('HEPData Submissions'),
 }
 
 
 hep_dataresource_admin_view = {
-    'view_class': DataResourceAdminView,
-    'args': [DataResource, db.session],
-    'kwargs': {'category': _('HEPData Submissions')},
+    'model': DataResource,
+    'modelview': DataResourceAdminView,
+    'category': _('HEPData Submissions'),
 }
-
-
-__all__ = (
-    'hep_submission_admin_view',
-    'hep_dataresource_admin_view',
-)
