@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify
-from flask.ext.login import login_required, current_user
+from flask_login import login_required, current_user
 from invenio_db import db
 
 from hepdata.modules.records.subscribers.api import get_users_subscribed_to_record, \

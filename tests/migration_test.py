@@ -70,7 +70,7 @@ def test_inspire_record_retrieval(app, migrator, identifiers):
             assert status == "success"
 
 
-def test_migration(app, migrator, load_default_data, identifiers):
+def test_migration(app, load_default_data, identifiers):
     print('___test_migration___')
     with app.app_context():
         records = RecordMetadata.query.all()

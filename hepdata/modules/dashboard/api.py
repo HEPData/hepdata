@@ -24,7 +24,7 @@
 
 from collections import OrderedDict
 
-from flask.ext.login import current_user
+from flask_login import current_user
 from invenio_accounts.models import User
 from sqlalchemy import and_, or_, func
 

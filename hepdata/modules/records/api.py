@@ -30,7 +30,7 @@ import subprocess
 
 import time
 from flask import redirect, request, render_template, jsonify, current_app, Response, abort
-from flask.ext.login import current_user
+from flask_login import current_user
 from invenio_accounts.models import User
 from sqlalchemy.orm.exc import NoResultFound
 from werkzeug.utils import secure_filename

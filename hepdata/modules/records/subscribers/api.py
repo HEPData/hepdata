@@ -25,7 +25,7 @@
 from functools import partial
 from operator import is_not
 
-from flask.ext.login import current_user
+from flask_login import current_user
 
 from hepdata.modules.records.utils.common import get_record_contents
 from .models import Subscribers

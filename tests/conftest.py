@@ -48,11 +48,11 @@ def app(request):
     app.config.update(dict(
         TESTING=True,
         TEST_RUNNER="celery.contrib.test_runner.CeleryTestSuiteRunner",
-        CELERY_ALWAYS_EAGER=True,
+        CELERY_TASK_ALWAYS_EAGER=True,
         CELERY_RESULT_BACKEND="cache",
         CELERY_CACHE_BACKEND="memory",
         MAIL_SUPPRESS_SEND=True,
-        CELERY_EAGER_PROPAGATES_EXCEPTIONS=True,
+        CELERY_TASK_EAGER_PROPAGATES=True,
         SQLALCHEMY_DATABASE_URI=os.environ.get(
             'SQLALCHEMY_DATABASE_URI', 'postgresql+psycopg2://hepdata:hepdata@localhost/hepdata_test')
     ))
@@ -91,9 +91,9 @@ def admin_idx(app):
 
 
 @pytest.fixture()
-def load_default_data(app):
+def load_default_data(app, identifiers):
     with app.app_context():
-        to_load = [x["hepdata_id"] for x in identifiers()]
+        to_load = [x["hepdata_id"] for x in identifiers]
         load_files(to_load, synchronous=True)
 
 

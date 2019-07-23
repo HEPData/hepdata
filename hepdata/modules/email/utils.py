@@ -30,7 +30,7 @@ from smtplib import SMTP, SMTPRecipientsRefused
 
 from celery import shared_task
 from flask import current_app
-from flask.ext.celeryext import create_celery_app
+from flask_celeryext import create_celery_app
 
 from hepdata.modules.records.utils.common import encode_string
 

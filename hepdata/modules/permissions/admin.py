@@ -25,6 +25,7 @@
 
 from hepdata.modules.permissions.models import SubmissionParticipant, CoordinatorRequest
 from flask_admin.contrib.sqla import ModelView
+from invenio_db import db
 
 def _(x):
     """Identity."""
@@ -79,15 +80,20 @@ class CoordinatorRequestView(ModelView):
 
 
 hep_participant_admin_view = {
-    'model': SubmissionParticipant,
-    'modelview': SubmissionParticipantAdminView,
-    'category': _('HEPData Submissions'),
+    'view_class': SubmissionParticipantAdminView,
+    'args': [SubmissionParticipant, db.session],
+    'kwargs': {'category': _('HEPData Submissions')},
 }
 
 
 coordinator_request_admin_view = {
-    'model': CoordinatorRequest,
-    'modelview': CoordinatorRequestView,
-    'category': _('Coordinator Requests'),
+    'view_class': CoordinatorRequestView,
+    'args': [CoordinatorRequest, db.session],
+    'kwargs': {'category': _('Coordinator Requests')},
 }
 
+
+__all__ = (
+    'hep_participant_admin_view',
+    'coordinator_request_admin_view',
+)

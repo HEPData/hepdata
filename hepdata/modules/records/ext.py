@@ -33,7 +33,7 @@ from hepdata.modules.theme.views import page_forbidden
 from hepdata.modules.theme.views import internal_error
 from hepdata.modules.theme.views import page_not_found
 from hepdata.modules.theme.views import redirect_nonwww
-from flask.ext.login import current_user
+from flask_login import current_user
 from invenio_db import db
 
 from hepdata.utils.users import user_is_admin_or_coordinator, user_is_admin

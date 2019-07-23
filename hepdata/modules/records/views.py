@@ -29,7 +29,7 @@ from __future__ import absolute_import, print_function
 import logging
 import json
 from dateutil import parser
-from flask.ext.login import login_required
+from flask_login import login_required
 from flask import Blueprint, send_file, abort, current_app, redirect
 import yaml
 try:

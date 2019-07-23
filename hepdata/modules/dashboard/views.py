@@ -25,7 +25,7 @@
 from __future__ import absolute_import, print_function
 
 from flask import Blueprint, jsonify, request, render_template
-from flask.ext.login import login_required, current_user
+from flask_login import login_required, current_user
 
 from hepdata.ext.elasticsearch.admin_view.api import AdminIndexer
 from hepdata.ext.elasticsearch.api import reindex_all

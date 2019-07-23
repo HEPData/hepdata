@@ -25,7 +25,6 @@
 import os
 from time import sleep
 
-from hepdata.ext.elasticsearch.admin_view.api import AdminIndexer
 from hepdata.ext.elasticsearch.api import get_records_matching_field
 from hepdata.modules.records.api import format_submission
 from hepdata.modules.records.utils.common import infer_file_type, contains_accepted_url, allowed_file, record_exists, \

@@ -24,7 +24,7 @@
 import logging
 
 from flask import current_app
-from flask.ext.login import current_user
+from flask_login import current_user
 
 from hepdata.modules.email.utils import create_send_email_task
 from hepdata.modules.permissions.models import SubmissionParticipant

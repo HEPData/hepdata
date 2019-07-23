@@ -18,7 +18,7 @@
 #
 
 from flask import Blueprint, render_template, request, jsonify
-from flask.ext.login import login_required, current_user
+from flask_login import login_required, current_user
 from invenio_db import db
 
 from hepdata.ext.elasticsearch.admin_view.api import AdminIndexer

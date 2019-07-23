@@ -25,7 +25,7 @@
 
 import json
 
-from flask.ext.login import login_required, current_user
+from flask_login import login_required, current_user
 from invenio_accounts.models import Role
 from invenio_db import db
 from sqlalchemy import func

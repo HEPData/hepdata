@@ -56,11 +56,11 @@ def app(request):
     app.config.update(dict(
         TESTING=True,
         TEST_RUNNER="celery.contrib.test_runner.CeleryTestSuiteRunner",
-        CELERY_ALWAYS_EAGER=True,
+        CELERY_TASK_ALWAYS_EAGER=True,
         CELERY_RESULT_BACKEND="cache",
         CELERY_CACHE_BACKEND="memory",
         MAIL_SUPPRESS_SEND=True,
-        CELERY_EAGER_PROPAGATES_EXCEPTIONS=True,
+        CELERY_TASK_EAGER_PROPAGATES=True,
         SQLALCHEMY_DATABASE_URI=os.environ.get(
             'SQLALCHEMY_DATABASE_URI', 'postgresql+psycopg2://hepdata:hepdata@localhost/hepdata_test')
     ))

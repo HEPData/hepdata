@@ -32,8 +32,8 @@ from dateutil.parser import parse
 
 from elasticsearch import NotFoundError, ConnectionTimeout
 from flask import current_app
-from flask.ext.celeryext import create_celery_app
-from flask.ext.login import current_user
+from flask_celeryext import create_celery_app
+from flask_login import current_user
 from hepdata.config import CFG_DATA_TYPE, CFG_PUB_TYPE
 from hepdata.ext.elasticsearch.admin_view.api import AdminIndexer
 from hepdata.ext.elasticsearch.api import get_records_matching_field, \
