@@ -122,12 +122,12 @@ intervals==0.8.0
 invenio==3.0.0a4
 invenio-access==1.0.0a11
 invenio-accounts==1.0.0b3
-invenio-admin==1.1.1
+invenio-admin==1.0.0b4
 invenio-assets==1.0.0b6
 invenio-base==1.0.0a14
 invenio-celery==1.0.0b2
 invenio-config==1.0.0b3
-invenio-db==1.0.3
+invenio-db==1.0.0b8
 invenio-i18n==1.0.0b3
 invenio-logging==1.0.0b1
 invenio-mail==1.0.0b1
