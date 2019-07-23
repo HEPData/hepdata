@@ -176,7 +176,6 @@ setup(
         'invenio_admin.views': [
             'hepdata_participant_view = hepdata.modules.permissions.admin:hep_participant_admin_view',
             'hepdata_coordinator_request_view = hepdata.modules.permissions.admin:coordinator_request_admin_view',
-            'hepdata_submission_view = hepdata.modules.submission.admin:hep_submission_admin_view',
             'hepdata_dataresource_view = hepdata.modules.submission.admin:hep_dataresource_admin_view',
         ]
     },
