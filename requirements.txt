@@ -63,7 +63,7 @@ chardet==3.0.4
 click==6.7
 contextlib2==0.5.5
 cookiecutter==1.4.0
-coverage==5.0a6
+coverage==4.5.3
 cryptography>=2.1.4
 datacite==1.0.1
 decorator==4.0.10
