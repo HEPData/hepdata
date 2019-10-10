@@ -68,7 +68,7 @@ cryptography>=2.1.4
 datacite==1.0.1
 decorator==4.0.10
 dojson==1.0.0
-ecdsa==0.13
+ecdsa==0.13.3
 elasticsearch==2.4.0
 elasticsearch-dsl==2.1.0
 enum34==1.1.6
