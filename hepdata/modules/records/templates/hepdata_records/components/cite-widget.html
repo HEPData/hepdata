@@ -79,7 +79,7 @@
                                                         {% endif %}
                                                     {% endfor %}
                                                 {% endif %}
-                                                <p>{{ table.name }} of "{{ ctx.record.title }}". HEPData.</p>
+                                                <p>"{{ table.name }}" of "{{ ctx.record.title }}". HEPData.</p>
                                                 <p><strong>https://doi.org/{{ table.doi }}</strong></p>
                                             </div>
                                         {% endfor %}
@@ -108,6 +108,7 @@
     title = {{ title }},
     abstract = "{{ ctx.record.data_abstract }}",
     doi = "{{ ctx.record.hepdata_doi }}",
+    url = "https://doi.org/{{ ctx.record.hepdata_doi }}",
     year = "{{ ctx.record.year }}",
     type = "Data Collection",
     {% if ctx.record.collaborations %}collaboration = "{% for collaboration in ctx.record.collaborations %}{% if loop.index > 1 %}, {% endif %}{{ collaboration }}{% endfor %}",{% endif %}
@@ -124,13 +125,14 @@
                                         {% for table in ctx.data_tables %}
                                             <div class="well well-small" style="background: white">
                                                 <h4>{{ table.name }}</h4>
-                                                {% set title = '"{' +  table.name + ' of ' + ctx.record.title + '}"' %}
+                                                {% set title = '"{\'' +  table.name + '\' of \'' + ctx.record.title + '\'}"' %}
                                     <textarea readonly style="width: 100%; height: 100px; white-space: pre-wrap; resize: none;
                                         border: none; background-color: transparent; padding: 10px;">@misc {
     {{ ctx.record.inspire_id }}/t{{ loop.index }},
     title = {{ title }},
     abstract = "{{ table.description }}",
     doi = "{{ table.doi }}",
+    url = "https://doi.org/{{ table.doi }}",
     year = "{{ ctx.record.year }}",
     type = "Data Set",
     {% if ctx.record.collaborations %}collaboration = "{% for collaboration in ctx.record.collaborations %}{% if loop.index > 1 %}, {% endif %}{{ collaboration }}{% endfor %}",{% endif %}
