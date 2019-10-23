@@ -166,7 +166,7 @@ paramiko==2.4.2
 passlib==1.6.5
 pbr==5.2.0
 pep8==1.7.0
-Pillow==5.2.0
+Pillow==6.2.0
 pipdeptree==0.6.0
 pluggy==0.12.0
 poyo==0.4.0
