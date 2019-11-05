@@ -305,8 +305,13 @@ HEPDATA.table_renderer = {
 
               var value_block = error.append('div').attr('class', 'value');
               var asym_block = value_block.append('div').attr('class', 'asym');
-              asym_block.append('span').attr('class', 'sup').text((plus_error != '' && plus_error[0] != '+' && plus_error_num >= 0 ? '+' : '') + plus_error);
-              asym_block.append('span').attr('class', 'sub').text((min_error_num > 0 && min_error[0] != '+' ? '+' : '') + (min_error != '' && min_error_num == 0 ? '-' : '') + min_error);
+              asym_block.append('span').attr('class', 'sup').text(
+                (plus_error != '' && plus_error[0] != '+' && plus_error[0] != '-' && plus_error_num >= 0 ? '+' : '') +
+                plus_error);
+              asym_block.append('span').attr('class', 'sub').text(
+                (min_error_num >= 0 && min_error[0] != '+' && min_error[0] != '-' ? '+' : '') +
+                (min_error != '' && min_error_num == 0 && (plus_error_num == 0 && plus_error[0] != '-') ? '-' : '') +
+                min_error);
               if (errors[error_idx]["label"] !== undefined)
                 value_block.append('div').attr('class', 'label').text(errors[error_idx]["label"] == undefined ? HEPDATA.default_error_label : errors[error_idx]["label"]);
 
