@@ -56,6 +56,8 @@ HEPDATA.switch_table = function (listId, table_requested, table_name, status) {
   }
 
 
+  $("#hepdata_table_loading").removeClass("hidden");
+  $("#hepdata_table_loading_failed").addClass("hidden");
   $("#hepdata_table_loader").removeClass("hidden");
   $("#hepdata_table_content").addClass("hidden");
 
@@ -139,8 +141,10 @@ HEPDATA.table_renderer = {
         $("#hepdata_table_content").removeClass("hidden");
       },
       error: function (data, error) {
-        console.error('Failed to load table defined by ' + url);
         console.error(error);
+        d3.select("#hepdata_table_loading_failed_text").html('Failed to load table defined by ' + url);
+        $("#hepdata_table_loading").addClass("hidden");
+        $("#hepdata_table_loading_failed").removeClass("hidden");
       }
     });
   },

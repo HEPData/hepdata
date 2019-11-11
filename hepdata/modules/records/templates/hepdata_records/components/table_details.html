@@ -14,8 +14,14 @@
     </div>
 
     <div id="hepdata_table_loader" style="width: 200px; height: 200px; margin: 0 auto">
-        <div id="table_loader"></div>
-        <p align="center" style="font-weight: bolder; color: #2C3E50; padding-top: 0px">Loading Data...</p>
+        <div id="hepdata_table_loading">
+            <div id="table_loader"></div>
+            <p align="center" style="font-weight: bolder; color: #2C3E50; padding-top: 0px">Loading Data...</p>
+        </div>
+        <div id="hepdata_table_loading_failed" class="hidden">
+            <p id="hepdata_table_loading_failed_text" align="center" style="font-weight: bolder; color: #2C3E50; padding-top: 0px"></p>
+            <p align="center">Please try again later, or email info@hepdata.net if this error persists.</p>
+        </div>
     </div>
 
     <div id="hepdata_table_content" class="hidden">
