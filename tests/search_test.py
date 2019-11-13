@@ -18,9 +18,154 @@
 from hepdata.ext.elasticsearch.config.es_config import default_sort_order_for_field
 from hepdata.ext.elasticsearch.process_results import merge_results, match_tables_to_papers, \
     get_basic_record_information, is_datatable
-from hepdata.ext.elasticsearch.query_builder import HEPDataQueryParser
+from hepdata.ext.elasticsearch.query_builder import QueryBuilder, HEPDataQueryParser
 from hepdata.ext.elasticsearch.utils import flip_sort_order, parse_and_format_date, prepare_author_for_indexing, \
     calculate_sort_order, push_keywords
+
+
+def test_query_builder_generate_query():
+    query_string1 = QueryBuilder.generate_query_string('')
+    assert (query_string1 == {"match_all": {}})
+
+    _test_query = "observables:ASYM"
+    query_string2 = QueryBuilder.generate_query_string(_test_query)
+    assert (query_string2 == {'query_string': {'query': 'observables:ASYM', 'fuzziness': 'AUTO'}})
+
+
+def test_query_builder_generate_nested_query():
+    _test_query = "observables:ASYM"
+    nested_query = QueryBuilder.generate_nested_query('test_path', _test_query, ['field1', 'field2'])
+    expected = {
+        "nested": {
+            "path": 'test_path',
+            "query": {'query_string': {'query': 'observables:ASYM', 'fuzziness': 'AUTO'}}
+        }
+    }
+    assert (nested_query == expected)
+
+
+def test_query_builder_constructor():
+    qb = QueryBuilder()
+    assert(qb is not None)
+    assert(qb.query == {'query': {'filtered': {'query': {'match_all': {}}}}})
+
+
+def test_query_builder_sorting():
+    qb = QueryBuilder()
+    qb.add_sorting('title')
+    assert(qb.query == {'sort': [{'title.raw': {'order': 'asc'}}],
+                        'query': {'filtered': {'query': {'match_all': {}}}}})
+
+    qb.add_sorting('date', 'rev')
+    assert(qb.query == {'sort': [{'creation_date': {'order': 'asc'}}],
+                        'query': {'filtered': {'query': {'match_all': {}}}}})
+
+
+def test_query_builder_source_filter():
+    qb = QueryBuilder()
+    qb.add_source_filter('test_includes', 'test_excludes')
+    assert(qb.query == {
+        '_source': {'includes': 'test_includes', 'excludes': 'test_excludes'},
+        'query': {'filtered': {'query': {'match_all': {}}}}
+    })
+
+
+def test_query_builder_pagination():
+    qb = QueryBuilder()
+    qb.add_pagination(5)
+    assert(qb.query == {
+        'size': 5,
+        'from': 0,
+        'query': {'filtered': {'query': {'match_all': {}}}}
+    })
+
+    qb.add_pagination(7, 3)
+    assert(qb.query == {
+        'size': 7,
+        'from': 3,
+        'query': {'filtered': {'query': {'match_all': {}}}}
+    })
+
+
+def test_query_builder_child_parent_relation():
+    qb = QueryBuilder()
+    qb.add_child_parent_relation("test_type")
+    assert(qb.query == {
+        'query': {
+            'filtered': {
+                'query': {
+                    'bool': {'should': [{'has_child': {'query': {}, 'type': 'test_type'}}]}
+                }
+            }
+        }
+    })
+
+
+def test_query_builder_add_query_string():
+    qb = QueryBuilder()
+    qb.add_query_string("observables:ASYM")
+    assert(qb.query == {
+        'query': {
+            'filtered': {
+                'query': {'query_string': {'fuzziness': 'AUTO', 'query': 'observables:ASYM'}}
+            }
+        }
+    })
+
+
+def test_query_builder_add_aggregations():
+    qb = QueryBuilder()
+    qb.add_aggregations()
+    assert(qb.query == {
+        'aggs': {
+            'cmenergies': {'terms': {'field': 'data_keywords.cmenergies.raw', 'size': 0}},
+            'collaboration': {'terms': {'field': 'collaborations.raw', 'size': 0}},
+            'dates': {'date_histogram': {'field': 'publication_date',  'interval': 'year'}},
+            'nested_authors': {'aggs': {
+                'author_full_names': {'terms': {'field': 'authors.full_name'}}},
+                'nested': {'path': 'authors'}
+            },
+            'observables': {'terms': {'field': 'data_keywords.observables.raw', 'size': 0}},
+            'phrases': {'terms': {'field': 'data_keywords.phrases.raw', 'size': 0}},
+            'reactions': {'terms': {'field': 'data_keywords.reactions.raw', 'size': 0}},
+            'subject_areas': {'terms': {'field': 'subject_area.raw', 'size': 0}}
+        },
+        'query': {'filtered': {'query': {'match_all': {}}}}
+    })
+
+
+def test_query_builder_add_filters():
+    qb = QueryBuilder()
+    qb.add_filters([('author', 'test_author')])
+    assert(qb.query == {
+        'query': {
+            'filtered': {
+                'filter': {
+                    'and': [{
+                        'nested': {
+                            'filter': {
+                                'bool': {'must': {'term': {'authors.full_name': 'test_author'}}}
+                            },
+                            'path': 'authors'
+                        }
+                    }]
+                },
+                'query': {'match_all': {}}
+            }
+        }
+    })
+
+
+def test_query_builder_add_post_filter():
+    qb = QueryBuilder()
+    qb.add_post_filter(None)
+    assert(qb.query == {'query': {'filtered': {'query': {'match_all': {}}}}})
+
+    qb.add_post_filter('test_postfilter')
+    assert(qb.query == {
+        'query': {'filtered': {'query': {'match_all': {}}}},
+        'post_filter': 'test_postfilter'
+    })
 
 
 def test_query_parser():
