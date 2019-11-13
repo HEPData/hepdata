@@ -28,7 +28,7 @@ from sqlalchemy import func
 from hepdata.ext.elasticsearch.document_enhancers import enhance_data_document, enhance_publication_document
 from .utils import prepare_author_for_indexing
 from hepdata.config import CFG_PUB_TYPE, CFG_DATA_TYPE
-from query_builder import QueryBuilder, get_query_by_type, get_authors_query, HEPDataQueryParser
+from query_builder import QueryBuilder, HEPDataQueryParser
 from process_results import map_result, merge_results
 from invenio_db import db
 import logging
@@ -90,9 +90,9 @@ def search(query,
     query = HEPDataQueryParser.parse_query(query)
 
     # Build core query
-    data_query = get_query_by_type(CFG_DATA_TYPE, query)
-    pub_query = get_query_by_type(CFG_PUB_TYPE, query)
-    authors_query = get_authors_query(query)
+    data_query = QueryBuilder.generate_query_string(query)
+    pub_query = QueryBuilder.generate_query_string(query)
+    authors_query = QueryBuilder.generate_nested_query('authors', query)
 
     query_builder = QueryBuilder()
     query_builder.add_child_parent_relation(CFG_DATA_TYPE,

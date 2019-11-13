@@ -34,7 +34,7 @@ def test_query_builder_generate_query():
 
 def test_query_builder_generate_nested_query():
     _test_query = "observables:ASYM"
-    nested_query = QueryBuilder.generate_nested_query('test_path', _test_query, ['field1', 'field2'])
+    nested_query = QueryBuilder.generate_nested_query('test_path', _test_query)
     expected = {
         "nested": {
             "path": 'test_path',
