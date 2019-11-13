@@ -3,7 +3,7 @@ Prerequisites
 
 HEPData uses several services such as the `PostgreSQL <http://www.postgresql.org/>`_
 (version 9.6) database server, `Redis <http://redis.io/>`_ for caching, and `Elasticsearch
-<https://www.elastic.co/products/elasticsearch>`_ (version 2.x) for indexing and information
+<https://www.elastic.co/products/elasticsearch>`_ (version 2.x, not later versions) for indexing and information
 retrieval.  It also requires the `Node.js <https://nodejs.org>`_ JavaScript run-time environment
 and its package manager `npm <https://www.npmjs.com/>`_.  These services can be installed using the
 relevant package manager for your system, for example, using ``yum`` or ``apt-get`` for Linux or
@@ -138,7 +138,6 @@ Run the tests using:
 
    (hepdata)$ cd ~/src/hepdata
    (hepdata)$ ./run-tests.sh
-   (hepdata)$ hepdata utils reindex
 
 Docker for hepdata-converter-ws
 -------------------------------
