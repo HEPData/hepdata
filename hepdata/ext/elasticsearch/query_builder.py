@@ -24,19 +24,16 @@ import re
 
 
 class QueryBuilder(object):
-    def __init__(self, query=None):
-        if query:
-            self.query = query
-        else:
-            self.query = {
-                "query": {
-                    "filtered": {
-                        "query": {
-                            "match_all": {}
-                        }
+    def __init__(self):
+        self.query = {
+            "query": {
+                "filtered": {
+                    "query": {
+                        "match_all": {}
                     }
                 }
             }
+        }
 
     @staticmethod
     def generate_query_string(query_string='', fields=None):
