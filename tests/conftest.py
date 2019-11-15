@@ -123,3 +123,7 @@ def identifiers():
              "data_tables": 40,
              "arxiv": "arXiv:1307.7457"}
             ]
+
+@pytest.fixture()
+def load_submission(app, load_default_data, migrator):
+    migrator.load_file('ins1487726')
