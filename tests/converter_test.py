@@ -19,7 +19,9 @@
 # In applying this license, CERN does not
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
+from hepdata.config import CFG_CONVERTER_URL
 from hepdata.modules.converter.tasks import convert_and_store
+import responses
 
 
 def test_convert_and_store_invalid(app, capsys):
@@ -29,8 +31,12 @@ def test_convert_and_store_invalid(app, capsys):
         assert(captured.out == "Unable to find a matching submission for 12345678\n")
 
 
+@responses.activate
 def test_convert_and_store_valid(app, capsys, load_submission):
     with app.app_context():
+        responses.add(responses.GET, CFG_CONVERTER_URL + '/convert',
+                      status=200, headers={'mimetype': 'application/x-gzip'})
+
         capsys.readouterr()
         convert_and_store('1487726', 'yaml', True)
         captured_lines = capsys.readouterr().out.splitlines()

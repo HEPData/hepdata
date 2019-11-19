@@ -189,6 +189,7 @@ redis==3.2.1
 reportlab==3.1.44
 requests==2.21.0
 requests-oauthlib==0.7.0
+responses
 ruamel.base==1.0.0
 ruamel.ordereddict==0.4.9
 ruamel.yaml==0.10.20
