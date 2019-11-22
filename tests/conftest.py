@@ -41,9 +41,7 @@ TEST_EMAIL = 'test@hepdata.net'
 TEST_PWD = 'hello1'
 
 
-@pytest.fixture()
-def app(request):
-    """Flask app fixture."""
+def create_basic_app():
     app = create_app()
     app.config.update(dict(
         TESTING=True,
@@ -57,7 +55,10 @@ def app(request):
         SQLALCHEMY_DATABASE_URI=os.environ.get(
             'SQLALCHEMY_DATABASE_URI', 'postgresql+psycopg2://hepdata:hepdata@localhost/hepdata_test')
     ))
+    return app
 
+
+def setup_app(app):
     with app.app_context():
         db.drop_all()
         db.create_all()
@@ -82,6 +83,15 @@ def app(request):
 
         yield app
         ctx.pop()
+
+
+@pytest.fixture()
+def app(request):
+    """Flask app fixture."""
+    app = create_basic_app()
+    app_generator = setup_app(app)
+    for app in app_generator:
+        yield app
 
 
 @pytest.fixture()
