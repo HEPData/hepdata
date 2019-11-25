@@ -100,3 +100,50 @@ def test_create_record_for_dashboard(app):
                 "metadata": {"role": [['coordinator']]}
             }
         })
+
+
+def test_prepare_submissions_empty(app):
+    with app.app_context():
+        user = User(email='test@test.com', password='hello1', active=True, id=101)
+        submissions = prepare_submissions(user)
+        assert(submissions == {})
+
+
+def test_prepare_submissions_admin(app, load_submission):
+    with app.app_context():
+        record_information = create_record({
+            'journal_info': 'Phys. Letts',
+            'title': 'My Journal Paper',
+            'inspire_id': '1487726'
+        })
+        get_or_create_hepsubmission(record_information['recid'])
+        record = get_record_by_id(record_information['recid'])
+
+        role = Role(name='admin')
+        user = User(email='test@test.com', password='hello1', active=True,
+                    id=101, roles=[role])
+        submissions = prepare_submissions(user)
+        assert(len(submissions) == 1)
+        assert(submissions[str(record_information['recid'])] == {
+            'metadata': {
+                'coordinator': {'email': u'test@hepdata.net',
+                                'name': u'test@hepdata.net',
+                                'id': 1},
+                'recid': str(record_information['recid']),
+                'role': ['coordinator'],
+                'show_coord_view': False,
+                'start_date': record.created,
+                'title': u'My Journal Paper',
+                'versions': 1
+            },
+            'stats': {'attention': 0L, 'passed': 0L, 'todo': 0L},
+            'status': u'todo'
+        })
+
+
+def test_get_pending_invitations_for_user_empty(app):
+    with app.app_context():
+        user = dashboardTestMockObjects['user']
+        pending = get_pending_invitations_for_user(user)
+        assert(pending == [])
+
