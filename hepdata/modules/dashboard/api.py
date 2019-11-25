@@ -24,7 +24,6 @@
 
 from collections import OrderedDict
 
-from flask_login import current_user
 from invenio_accounts.models import User
 from sqlalchemy import and_, or_, func
 
@@ -46,7 +45,7 @@ def add_user_to_metadata(type, user_info, record_id, submissions):
             'name': 'No primary ' + type}
 
 
-def create_record_for_dashboard(record_id, submissions, coordinator=None, user_role=None,
+def create_record_for_dashboard(record_id, submissions, current_user, coordinator=None, user_role=None,
                                 status="todo"):
     if user_role is None:
         user_role = ["coordinator"]
@@ -149,12 +148,14 @@ def prepare_submissions(current_user):
 
                 create_record_for_dashboard(
                     str(hepdata_submission.publication_recid), submissions,
+                    current_user,
                     coordinator=coordinator,
                     user_role=current_user_roles,
                     status=hepdata_submission.overall_status)
             else:
                 create_record_for_dashboard(
                     str(hepdata_submission.publication_recid), submissions,
+                    current_user,
                     coordinator=coordinator,
                     status=hepdata_submission.overall_status)
 

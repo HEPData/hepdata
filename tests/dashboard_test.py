@@ -68,9 +68,11 @@ def test_create_record_for_dashboard(app):
         record_information = create_record({'journal_info': 'Phys. Letts', 'title': 'My Journal Paper', 'inspire_id': '1487726'})
         get_or_create_hepsubmission(record_information['recid'])
         record = get_record_by_id(record_information['recid'])
+        user = User(email='test@test.com', password='hello1', active=True,
+                    id=101)
 
         test_submissions = {}
-        create_record_for_dashboard(record['recid'], test_submissions)
+        create_record_for_dashboard(record['recid'], test_submissions, user)
         assert(test_submissions == {
             record_information['recid']: {
                 'metadata': {
@@ -92,7 +94,7 @@ def test_create_record_for_dashboard(app):
             }
         }
 
-        create_record_for_dashboard(record['recid'], test_submissions)
+        create_record_for_dashboard(record['recid'], test_submissions, user)
         assert(test_submissions == {
             record_information['recid']: {
                 "metadata": {"role": [['coordinator']]}
