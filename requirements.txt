@@ -179,6 +179,7 @@ pytest==4.6.4
 pytest-cache
 pytest-cov
 pytest-flask
+pytest-mock
 pytest-pep8
 python-dateutil==2.6.1
 python-editor==1.0.3
