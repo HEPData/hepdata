@@ -592,12 +592,17 @@ def get_resource(resource_id):
                 print("Resource is at: " + resource_obj.file_location)
                 with open(resource_obj.file_location, 'r') as resource_file:
                     contents = resource_file.read()
-
-                print("File contents are " + contents)
+                    # Don't return file contents if they contain a null byte.
+                    if '\0' in contents:
+                        contents = 'Binary'
 
             return jsonify(
                 {"location": '/record/resource/{0}?view=true'.format(resource_obj.id), 'type': resource_obj.file_type,
-                 'description': resource_obj.file_description, 'file_contents': contents})
+                 'description': resource_obj.file_description, 'file_contents': decode_string(contents)})
+
+    else:
+        log.error("Unable to find resource %d.", resource_id)
+        return abort(404)
 
 
 @blueprint.route('/<int:recid>/consume', methods=['GET', 'POST'])
