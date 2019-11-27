@@ -25,7 +25,7 @@
 import flask
 
 
-def test_home(live_server, env_browser, test_identifiers):
+def test_home(live_server, env_browser, identifiers):
     """E2E home test to check record counts and latest submissions."""
     browser = env_browser
     # 1. go to the home page
@@ -35,9 +35,8 @@ def test_home(live_server, env_browser, test_identifiers):
 
     # 2. check number of records and the number of datatables is correct
     record_stats = browser.find_element_by_css_selector("#record_stats")
-    print record_stats
-    exp_data_table_count = reduce(lambda x, y: x['data_tables'] + y['data_tables'], test_identifiers)
-    exp_publication_count = len(test_identifiers)
+    exp_data_table_count = reduce(lambda x, y: x['data_tables'] + y['data_tables'], identifiers)
+    exp_publication_count = len(identifiers)
     assert (record_stats.text == "Search on {0} publications and {1} data tables."
             .format(exp_publication_count, exp_data_table_count))
 
@@ -57,10 +56,10 @@ def test_home(live_server, env_browser, test_identifiers):
 
     assert (browser.find_element_by_css_selector('.record-title').text is not None)
     assert (browser.find_element_by_css_selector('.record-journal').text is not None)
-    assert (browser.find_element_by_css_selector('#hep-tables li') is not None)
+    assert (browser.find_element_by_css_selector('#table-list-section li') is not None)
 
     table_placeholder = browser.find_element_by_css_selector('#table-filter').get_attribute('placeholder')
-    expected_record = filter(lambda x: x['hepdata_id'] == hepdata_id, test_identifiers)
+    expected_record = filter(lambda x: x['hepdata_id'] == hepdata_id, identifiers)
     assert (table_placeholder == "Filter {0} data tables".format(expected_record[0]['data_tables']))
 
 
