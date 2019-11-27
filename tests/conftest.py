@@ -121,6 +121,9 @@ def migrator():
 
 @pytest.fixture()
 def identifiers():
+    return get_identifiers()
+
+def get_identifiers():
     return [{"hepdata_id": "ins1283842", "inspire_id": 1283842,
              "title": "Measurement of the forward-backward asymmetry "
                       "in the distribution of leptons in $t\\bar{t}$ "

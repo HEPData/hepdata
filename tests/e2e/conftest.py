@@ -43,7 +43,7 @@ from hepdata.config import CFG_TMPDIR
 from hepdata.ext.elasticsearch.api import reindex_all
 from hepdata.factory import create_app
 from hepdata.modules.records.migrator.api import load_files
-from tests.conftest import identifiers
+from tests.conftest import get_identifiers
 
 
 @pytest.fixture()
@@ -107,7 +107,7 @@ def app(request):
 
 @pytest.fixture()
 def test_identifiers(app):
-    return identifiers()
+    return get_identifiers()
 
 
 @pytest.fixture()
@@ -116,10 +116,9 @@ def search_tests(app):
             {"search_term": "leptons", "exp_collab_facet": "D0", "exp_hepdata_id": "ins1283842"}]
 
 
-@pytest.fixture()
 def load_default_data(app):
     with app.app_context():
-        to_load = [x["hepdata_id"] for x in identifiers()]
+        to_load = [x["hepdata_id"] for x in get_identifiers()]
         load_files(to_load, synchronous=True)
 
 
@@ -129,7 +128,7 @@ def pytest_generate_tests(metafunc):
     test is called once for each value found in the `E2E_WEBDRIVER_BROWSERS`
     environment variable.
     """
-    browsers = ['Firefox']
+    browsers = ['Chrome']
 
     if 'env_browser' in metafunc.fixturenames:
         # In Python 2.7 the fallback kwarg of os.environ.get is `failobj`,
