@@ -32,6 +32,7 @@ import shutil
 import tempfile
 import time
 
+import flask
 import pytest
 from invenio_accounts.models import User, Role
 from invenio_db import db
@@ -171,3 +172,25 @@ def make_screenshot(driver, name):
     if not os.path.exists(dir):
         os.makedirs(dir)
     driver.save_screenshot(os.path.join(dir, name))
+
+
+def e2e_assert(driver, assertion, message = None):
+    """Wrapper for assert which will print the current page text if the assertion is false.
+    This will allow us to see any errors which only occur on Travis.
+    """
+    if not assertion:
+        print('========== Failed assertion in selenium test. ===================================')
+
+        if message:
+            print('Assertion message: ' + message + '\n')
+
+        print('Browser body text was:\n')
+        print(driver.find_element_by_tag_name('body').text)
+        print('\n================================================================================')
+
+    assert assertion, message
+
+def e2e_assert_url(driver, expected_route):
+    e2e_assert(driver,
+               flask.url_for(expected_route, _external=True) in driver.current_url,
+               "Should be at page for route " + expected_route + " but url was: " + driver.current_url)
