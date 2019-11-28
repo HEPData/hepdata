@@ -53,7 +53,7 @@ def test_user_registration_and_login(live_server, env_browser):
     e2e_assert_url(browser, 'hepdata_theme.index')
 
     # 3.5: After registering we should be logged in.
-    e2e_assert(browser, not testutils.webdriver_authenticated(browser),
+    e2e_assert(browser, testutils.webdriver_authenticated(browser),
                'Should be authenticated')
     browser.get(flask.url_for('security.change_password', _external=True))
     e2e_assert_url(browser, 'security.change_password')
