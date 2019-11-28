@@ -71,7 +71,7 @@ install:
   - "cd /home/travis/build/HEPData/hepdata"
 
 script:
-  - "py.test tests -k 'not tests/e2e'"
+  - "py.test tests"
 
 after_success:
   - coveralls
