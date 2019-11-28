@@ -191,6 +191,7 @@ def e2e_assert(driver, assertion, message = None):
     assert assertion, message
 
 def e2e_assert_url(driver, expected_route):
+    expected_url = flask.url_for(expected_route, _external=True)
     e2e_assert(driver,
-               flask.url_for(expected_route, _external=True) in driver.current_url,
-               "Should be at page for route " + expected_route + " but url was: " + driver.current_url)
+               expected_url in driver.current_url,
+               "Should be at page " + expected_url + " but url was: " + driver.current_url)
