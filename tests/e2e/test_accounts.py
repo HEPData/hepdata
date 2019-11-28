@@ -26,7 +26,7 @@ from urllib2 import urlopen
 
 import flask
 from invenio_accounts import testutils
-
+from conftest import e2e_assert, e2e_assert_url
 
 
 def test_user_registration_and_login(live_server, env_browser):
@@ -34,8 +34,8 @@ def test_user_registration_and_login(live_server, env_browser):
     browser = env_browser
     # 1. Go to user registration page
     browser.get(flask.url_for('security.register', _external=True))
-    assert (flask.url_for('security.register', _external=True) in
-            browser.current_url)
+    e2e_assert_url(browser, 'security.register')
+
     # 2. Input user data
     signup_form = browser.find_element_by_name('register_user_form')
     input_email = signup_form.find_element_by_name('email')
@@ -49,25 +49,24 @@ def test_user_registration_and_login(live_server, env_browser):
 
     # 3. submit form
     signup_form.submit()
-    print(browser.page_source)
-
     # ...and get redirected to the "home page" ('/')
-    assert (flask.url_for('hepdata_theme.index', _external=True) in
-            browser.current_url)
+    e2e_assert_url(browser, 'hepdata_theme.index')
 
     # 3.5: After registering we should be logged in.
+    e2e_assert(browser, not testutils.webdriver_authenticated(browser),
+               'Should be authenticated')
     browser.get(flask.url_for('security.change_password', _external=True))
-    assert (flask.url_for('security.change_password', _external=True) in
-            browser.current_url)
+    e2e_assert_url(browser, 'security.change_password')
 
     # 3.5: logout.
     browser.get(flask.url_for('security.logout', _external=True))
-    assert not testutils.webdriver_authenticated(browser)
+    e2e_assert(browser, not testutils.webdriver_authenticated(browser),
+               'Should not be authenticated')
 
     # 4. go to login-form
     browser.get(flask.url_for('security.login', _external=True))
-    assert (flask.url_for('security.login', _external=True) in
-            browser.current_url)
+    e2e_assert_url(browser, 'security.login')
+
     login_form = browser.find_element_by_name('login_user_form')
     # 5. input registered info
     login_form.find_element_by_name('email').send_keys(user_email)
@@ -76,4 +75,4 @@ def test_user_registration_and_login(live_server, env_browser):
     # check if authenticated at `flask.url_for('security.change_password')`
     login_form.submit()
 
-    assert testutils.webdriver_authenticated(browser)
+    e2e_assert(browser, testutils.webdriver_authenticated(browser))
