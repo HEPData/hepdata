@@ -48,7 +48,13 @@ def test_user_registration_and_login(live_server, env_browser):
     input_password.send_keys(user_password)
 
     # 3. submit form
+    print('Text before submitting form:')
+    print(browser.find_element_by_tag_name('body').text)
     signup_form.submit()
+    errors = browser.find_elements_by_class_name('alert-danger')
+    for error in errors:
+        print("Found error: " + error.text)
+
     # ...and get redirected to the "home page" ('/')
     e2e_assert_url(browser, 'hepdata_theme.index')
 
