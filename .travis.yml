@@ -26,6 +26,7 @@ dist: xenial
 
 addons:
   postgresql: "9.6"
+  chrome: stable
 
 notifications:
   email: false
@@ -53,6 +54,7 @@ before_install:
   - "travis_retry pip install twine wheel coveralls requirements-builder"
   - "travis_retry psql -c \"CREATE USER hepdata WITH CREATEDB PASSWORD 'hepdata';\" -U postgres"
   - "travis_retry psql -c 'CREATE DATABASE hepdata_test OWNER hepdata;' -U postgres"
+  - google-chrome-stable --headless --disable-gpu --remote-debugging-port=9222 http://localhost &
 
 install:
   - "travis_retry pip install -r requirements.txt"
