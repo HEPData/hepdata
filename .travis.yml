@@ -28,10 +28,6 @@ addons:
   postgresql: "9.6"
   chrome: stable
 
-apt:
-  packages:
-    - chromium-chromedriver
-
 notifications:
   email: false
 
@@ -58,6 +54,8 @@ before_install:
   - "travis_retry pip install twine wheel coveralls requirements-builder"
   - "travis_retry psql -c \"CREATE USER hepdata WITH CREATEDB PASSWORD 'hepdata';\" -U postgres"
   - "travis_retry psql -c 'CREATE DATABASE hepdata_test OWNER hepdata;' -U postgres"
+  - sudo apt-get update
+  - sudo apt-get -y install chromium-chromedriver
   # include ChromeDriver in PATH
   - ln --symbolic /usr/lib/chromium-browser/chromedriver "${HOME}/bin/chromedriver"
   # start Chrome and listen on localhost
