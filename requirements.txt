@@ -194,7 +194,7 @@ responses
 ruamel.base==1.0.0
 ruamel.ordereddict==0.4.9
 ruamel.yaml==0.10.20
-selenium==2.52.0
+selenium==3.141.0
 simplekv==0.10.0
 six==1.11.0
 speaklater==1.3
