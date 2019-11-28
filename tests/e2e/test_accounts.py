@@ -49,7 +49,11 @@ def test_user_registration_and_login(live_server, env_browser):
 
     # 3. submit form
     signup_form.submit()
+    print(browser.page_source)
+
     # ...and get redirected to the "home page" ('/')
+    assert (flask.url_for('hepdata_theme.index', _external=True) in
+            browser.current_url)
 
     # 3.5: After registering we should be logged in.
     browser.get(flask.url_for('security.change_password', _external=True))
