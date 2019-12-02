@@ -22,12 +22,12 @@
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
 """HEPData end to end testing of accounts."""
-from urllib2 import urlopen
-
 import flask
 from invenio_accounts import testutils
 from conftest import e2e_assert, e2e_assert_url
-
+from selenium import webdriver
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
 def test_user_registration_and_login(live_server, env_browser):
     """E2E user registration and login test."""
@@ -51,12 +51,12 @@ def test_user_registration_and_login(live_server, env_browser):
     print('Text before submitting form:')
     print(browser.find_element_by_tag_name('body').text)
     signup_form.submit()
-    errors = browser.find_elements_by_class_name('alert-danger')
-    for error in errors:
-        print("Found error: " + error.text)
+    print(browser.find_element_by_tag_name('body').text)
 
     # ...and get redirected to the "home page" ('/')
-    e2e_assert_url(browser, 'hepdata_theme.index')
+    wait = WebDriverWait(browser, 10)
+    wait.until(EC.url_matches(flask.url_for('hepdata_theme.index', _external=True)))
+    print(browser.find_element_by_tag_name('body').text)
 
     # 3.5: After registering we should be logged in.
     e2e_assert(browser, testutils.webdriver_authenticated(browser),
