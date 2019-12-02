@@ -62,7 +62,7 @@ before_install:
   - google-chrome-stable --headless --disable-gpu --remote-debugging-port=9222 http://localhost &
 
 install:
-  - "travis_retry pip install -r requirements.txt"
+  - "travis_retry pip install --upgrade -r requirements.txt"
   - "travis_retry pip install -e .[all,postgresql] --pre"
   - "travis_retry hepdata db init"
   - "travis_retry hepdata db create"
