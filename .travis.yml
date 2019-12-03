@@ -24,13 +24,14 @@
 
 dist: xenial
 
+env:
+  - SAUCE_USERNAME=alisonrclarke
+  - SAUCE_ACCESS_KEY=e9fc55d9-e048-46ca-b45e-036703a2ceda
+
 addons:
   postgresql: "9.6"
   chrome: stable
-  sauce_connect:
-    username: "alisonrclarke"
-    access_key:
-        secure: "PzLow8oq2rQREzwlle1vGNeEIdArITJgxB8I4YP8b4D68iLdwlYY2MMEpzCYHMSmJYe1p/SE+V2yjelrCOg2HsyFkHUJ6BynNMTPUFuaAuqXvlJIb3bvNwPTjQpCo5/xYwfSv0S4MAi5FCNlPM1IxotmowJSeEor5LTvw/M697jDa9avOg5zCoAe/Sn106GY8qN2/3txYZFB2OzakJQ7oQSjaY11WE7f0vYNfPdtIFrz5HKTSaWACNRZx03GxtVTh2wMPTe2DbTYbgiNo136n8VHU8yrzDM0VvulM1PZrC0LpFhjZPIl4jtJgcBVmJ1UzDev2zM0hLm3GQ+PzGHJo3vmpTiWvjUPdKtkCgSNc6NaQ8DOpRWcParsqKEIgRoTNTEnlJMWnkfATM3De8FeI8hOOZT+RkoBeKcBWypFrMeZM7A5xCNgsKFpsz3kyJn3n3T6a6UmcNv9Ft9s7Z5DfGCVdbOcJup1SOcRUyH/9BOnoMZPL1Cj3YJE3MqcPz+6BD2204XTClCkKH48yZvD+7Bf8wb0SvIMzrc6ZFk3ZRr4Evs8Qkx5EoLJwKIQckqQdKJeyZY7ZTFY3451dUcHfEq4OSMkIVOBN2lVuLV527nP30C0sXLnzE7bS5jVIf7wDaN5/YyB/P6I0t53hO8glASlGxrdGoTg4/vwCPycV3s="
+  sauce_connect: true
 
 notifications:
   email: false
