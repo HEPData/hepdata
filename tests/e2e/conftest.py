@@ -160,6 +160,8 @@ def env_browser(request):
     print(request.param)
 
     browser = getattr(webdriver, request.param)()
+    browser.set_window_size(1004,632)
+
     # Add finalizer to quit the webdriver instance
     request.addfinalizer(finalizer)
 
