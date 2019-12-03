@@ -23,15 +23,28 @@
 
 """HEPData end to end testing of general pages."""
 import flask
+from selenium.webdriver.common.action_chains import ActionChains
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from time import sleep
 
 
 def test_home(live_server, env_browser, identifiers):
     """E2E home test to check record counts and latest submissions."""
     browser = env_browser
-    # 1. go to the home page
+    # 1a. go to the home page
     browser.get(flask.url_for('hepdata_theme.index', _external=True))
     assert (flask.url_for('hepdata_theme.index', _external=True) in
             browser.current_url)
+
+    # 1b. Click cookie accept button so cookie bar is out of the way
+    wait = WebDriverWait(browser, 5)
+    wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, ".cc_btn_accept_all")))
+    sleep(1)
+    cookie_accept_btn = browser.find_element_by_css_selector(".cc_btn_accept_all")
+    cookie_accept_btn.click()
+
 
     # 2. check number of records and the number of datatables is correct
     record_stats = browser.find_element_by_css_selector("#record_stats")
@@ -43,8 +56,10 @@ def test_home(live_server, env_browser, identifiers):
     # 3. check that there are two submissions in the latest submissions section
     assert (browser.find_element_by_css_selector('.latest-record'))
     # 4. click on the first submission.
-
     latest_item = browser.find_element_by_css_selector('.latest-record .title')
+    actions = ActionChains(browser)
+    actions.move_to_element(latest_item).perform()
+    browser.save_screenshot('/tmp/screenshot.png')
     href = latest_item.get_attribute("href")
     hepdata_id = href[href.rfind("/")+1:]
     latest_item.click()
