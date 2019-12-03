@@ -156,10 +156,28 @@ def env_browser(request):
 
     timeout_process = multiprocessing.Process(target=wait_kill)
 
-    # Create instance of webdriver.`request.param`()
-    print(request.param)
+    sauce_username = os.environ["SAUCE_USERNAME"]
+    sauce_access_key = os.environ["SAUCE_ACCESS_KEY"]
 
-    browser = getattr(webdriver, request.param)()
+    remote_url = "https://ondemand.eu-central-1.saucelabs.com/wd/hub"
+
+    # the desired_capabilities parameter tells us which browsers and OS to spin up.
+    desired_cap = {
+        'platform': 'Windows',
+        'browserName': 'chrome',
+        'build': 'HEPData',
+        'name': 'HEPData end-to-end tests',
+        'username': sauce_username,
+        'accessKey': sauce_access_key,
+        'tunnelIdentifier': 'hepdata_arclarke',
+    }
+
+    # This creates a webdriver object to send to Sauce Labs including the desired capabilities
+    browser = webdriver.Remote(remote_url, desired_capabilities=desired_cap)
+    # If you want to run tests locally instead of on Sauce Labs, comment out
+    # the line above and uncomment this one:
+    # browser = getattr(webdriver, request.param)()
+
     browser.set_window_size(1004,632)
 
     # Add finalizer to quit the webdriver instance

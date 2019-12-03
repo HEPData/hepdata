@@ -48,15 +48,11 @@ def test_user_registration_and_login(live_server, env_browser):
     input_password.send_keys(user_password)
 
     # 3. submit form
-    print('Text before submitting form:')
-    print(browser.find_element_by_tag_name('body').text)
     signup_form.submit()
-    print(browser.find_element_by_tag_name('body').text)
 
     # ...and get redirected to the "home page" ('/')
     wait = WebDriverWait(browser, 10)
     wait.until(EC.url_matches(flask.url_for('hepdata_theme.index', _external=True)))
-    print(browser.find_element_by_tag_name('body').text)
 
     # 3.5: After registering we should be logged in.
     e2e_assert(browser, testutils.webdriver_authenticated(browser),
