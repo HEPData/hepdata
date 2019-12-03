@@ -24,10 +24,6 @@
 
 dist: xenial
 
-env:
-  - SAUCE_USERNAME=alisonrclarke
-  - SAUCE_ACCESS_KEY=e9fc55d9-e048-46ca-b45e-036703a2ceda
-
 addons:
   postgresql: "9.6"
   chrome: stable
