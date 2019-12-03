@@ -24,22 +24,19 @@ import re
 
 
 class QueryBuilder(object):
-    def __init__(self, query=None):
-        if query:
-            self.query = query
-        else:
-            self.query = {
-                "query": {
-                    "filtered": {
-                        "query": {
-                            "match_all": {}
-                        }
+    def __init__(self):
+        self.query = {
+            "query": {
+                "filtered": {
+                    "query": {
+                        "match_all": {}
                     }
                 }
             }
+        }
 
     @staticmethod
-    def generate_query_string(query_string='', fields=None):
+    def generate_query_string(query_string=''):
         if query_string:
             return {
                 "query_string": {
@@ -51,13 +48,11 @@ class QueryBuilder(object):
             return {"match_all": {}}
 
     @staticmethod
-    def generate_nested_query(path, query, fields):
-        fields = [path + '.' + field for field in fields]
+    def generate_nested_query(path, query):
         return {
             "nested": {
                 "path": path,
-                "query": QueryBuilder.generate_query_string(query_string=query,
-                                                            fields=fields)
+                "query": QueryBuilder.generate_query_string(query_string=query)
             }
         }
 
@@ -178,18 +173,3 @@ class HEPDataQueryParser(object):
                     continue
 
         return new_query_string
-
-
-def get_query_by_type(es_type, query_string=''):
-    """ Get the query adjusted to the ES type
-    (i.e. appropriate fields and boosting) """
-    from config.es_config import default_queryable_fields
-    fields = default_queryable_fields(es_type)
-    return QueryBuilder.generate_query_string(query_string, fields)
-
-
-def get_authors_query(query_string=''):
-    """ Generate the nested query for authors (special case). """
-    return QueryBuilder.generate_nested_query('authors',
-                                              query_string,
-                                              ['first_name', 'last_name'])
