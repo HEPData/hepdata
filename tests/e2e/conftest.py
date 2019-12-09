@@ -158,8 +158,9 @@ def env_browser(request):
 
     sauce_username = os.environ["SAUCE_USERNAME"]
     sauce_access_key = os.environ["SAUCE_ACCESS_KEY"]
-    remote_url = "https://ondemand.eu-central-1.saucelabs.com/wd/hub"
-    hub_url = "%s:%s@localhost:4445" % (sauce_username, sauce_access_key)
+    remote_url = \
+        "https://%s:%s@ondemand.eu-central-1.saucelabs.com:443/wd/hub" \
+        % (sauce_username, sauce_access_key)
 
     # the desired_capabilities parameter tells us which browsers and OS to spin up.
     desired_cap = {
@@ -173,7 +174,7 @@ def env_browser(request):
     }
 
     # This creates a webdriver object to send to Sauce Labs including the desired capabilities
-    browser = webdriver.Remote(remote_url, desired_capabilities=desired_cap, command_executor="http://%s/wd/hub" % hub_url)
+    browser = webdriver.Remote(remote_url, desired_capabilities=desired_cap)
     # If you want to run tests locally instead of on Sauce Labs, comment out
     # the line above and uncomment this one:
     # browser = getattr(webdriver, request.param)()
