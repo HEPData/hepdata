@@ -24,11 +24,6 @@
 """HEPData end to end testing of general pages."""
 import flask
 from selenium.webdriver.common.action_chains import ActionChains
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from time import sleep
-
 
 def test_home(live_server, env_browser, identifiers):
     """E2E home test to check record counts and latest submissions."""
@@ -37,14 +32,6 @@ def test_home(live_server, env_browser, identifiers):
     browser.get(flask.url_for('hepdata_theme.index', _external=True))
     assert (flask.url_for('hepdata_theme.index', _external=True) in
             browser.current_url)
-
-    # 1b. Click cookie accept button so cookie bar is out of the way
-    wait = WebDriverWait(browser, 5)
-    wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, ".cc_btn_accept_all")))
-    sleep(1)
-    cookie_accept_btn = browser.find_element_by_css_selector(".cc_btn_accept_all")
-    cookie_accept_btn.click()
-
 
     # 2. check number of records and the number of datatables is correct
     record_stats = browser.find_element_by_css_selector("#record_stats")

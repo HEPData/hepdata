@@ -37,8 +37,12 @@ import pytest
 from invenio_accounts.models import User, Role
 from invenio_db import db
 from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 from sqlalchemy_utils.functions import create_database, database_exists, \
     drop_database
+from time import sleep
 
 from hepdata.config import CFG_TMPDIR
 from hepdata.ext.elasticsearch.api import reindex_all
@@ -180,6 +184,14 @@ def env_browser(request):
     # browser = getattr(webdriver, request.param)()
 
     browser.set_window_size(1004,632)
+
+    # Go to homepage and click cookie accept button so cookie bar is out of the way
+    browser.get(flask.url_for('hepdata_theme.index', _external=True))
+    wait = WebDriverWait(browser, 5)
+    wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, ".cc_btn_accept_all")))
+    sleep(1)
+    cookie_accept_btn = browser.find_element_by_css_selector(".cc_btn_accept_all")
+    cookie_accept_btn.click()
 
     # Add finalizer to quit the webdriver instance
     request.addfinalizer(finalizer)
