@@ -27,7 +27,6 @@ dist: xenial
 addons:
   postgresql: "9.6"
   chrome: stable
-  sauce_connect: true
 
 notifications:
   email: false
@@ -76,8 +75,14 @@ install:
   - "hepdata assets build"
   - "cd /home/travis/build/HEPData/hepdata"
 
+before_script:
+  - "/home/travis/build/HEPData/hepdata/scripts/sc_tunnel_start.sh"
+
 script:
   - "py.test tests"
 
 after_success:
   - coveralls
+
+after_script:
+  - "/home/travis/build/HEPData/hepdata/scripts/sc_tunnel_stop.sh"
