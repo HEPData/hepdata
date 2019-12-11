@@ -102,6 +102,7 @@ def app(request):
 
     def teardown():
         with app.app_context():
+            db.engine.dispose()
             db.drop_all()
             ctx.pop()
 
