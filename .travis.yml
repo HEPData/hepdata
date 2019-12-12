@@ -60,7 +60,7 @@ install:
   - "travis_retry hepdata db init"
   - "travis_retry hepdata db create"
   - "travis_retry hepdata utils reindex -rc True"
-  - "travis_retry npm update && npm install --silent -g node-sass@3.8.0 clean-css@3.4.24 uglify-js requirejs"
+  - "travis_retry npm update && npm install --silent -g node-sass clean-css@3.4.28 uglify-js requirejs"
   - "hepdata npm"
   - "cd /home/travis/virtualenv/python2.7.15/var/hepdata-instance/static/"
   - "travis_retry npm install"

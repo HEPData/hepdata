@@ -60,7 +60,7 @@ installing in local mode causes problems and it is necessary to run the install 
 .. code-block:: console
 
    (hepdata)$ cd /
-   (hepdata)$ sudo npm install -g node-sass@3.8.0 clean-css@3.4.24 uglify-js requirejs
+   (hepdata)$ sudo npm install -g node-sass clean-css@3.4.28 uglify-js requirejs
    (hepdata)$ cd ~/src/hepdata
    (hepdata)$ ./scripts/clean_assets.sh
 

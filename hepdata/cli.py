@@ -44,6 +44,7 @@ from hepdata.modules.records.migrator.api import load_files, update_submissions,
 from hepdata.utils.twitter import tweet
 from hepdata.modules.email.api import send_finalised_email
 from hepdata.modules.records.utils.doi_minter import generate_dois_for_submission, generate_doi_for_table
+from hepdata.modules.permissions.api import write_submissions_to_files
 
 from invenio_db import db
 
@@ -410,3 +411,10 @@ def reindex():
     """Reindexes HEPSubmissions and adds to the submission index."""
     admin_idx = AdminIndexer()
     admin_idx.reindex(recreate=True)
+
+
+@submissions.command()
+@with_appcontext
+def write_stats_to_files():
+    """Writes some statistics on number of submissions per Coordinator to files."""
+    write_submissions_to_files()
