@@ -162,8 +162,8 @@ def env_browser(request):
 
     timeout_process = multiprocessing.Process(target=wait_kill)
 
-    sauce_username = os.environ["SAUCE_USERNAME"]
-    sauce_access_key = os.environ["SAUCE_ACCESS_KEY"]
+    sauce_username = os.environ.get('SAUCE_USERNAME', '')
+    sauce_access_key = os.environ.get('SAUCE_ACCESS_KEY', '')
     remote_url = \
         "https://%s:%s@ondemand.eu-central-1.saucelabs.com:443/wd/hub" \
         % (sauce_username, sauce_access_key)
@@ -172,11 +172,11 @@ def env_browser(request):
     desired_cap = {
         'platform': 'Windows',
         'browserName': 'chrome',
-        'build': os.environ["TRAVIS_BUILD_NUMBER"],
+        'build': os.environ.get('TRAVIS_BUILD_NUMBER', 'HEPData local build'),
         'name': request.node.name,
         'username': sauce_username,
         'accessKey': sauce_access_key,
-        'tunnelIdentifier': os.environ["TRAVIS_JOB_NUMBER"],
+        'tunnelIdentifier': os.environ.get('TRAVIS_JOB_NUMBER', '')
     }
 
     # This creates a webdriver object to send to Sauce Labs including the desired capabilities
