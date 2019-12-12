@@ -25,6 +25,7 @@
 {%- extends config.ACCOUNTS_COVER_TEMPLATE %}
 
 {% from "invenio_accounts/_macros.html" import render_field %}
+{%- set messages = get_flashed_messages(with_categories=true) -%}
 
 {% macro form_errors(form) %}
     {%- if form.errors %}
@@ -52,6 +53,11 @@
             <div class="col-sm-6 col-sm-push-6 sign-up">
                 <form action="{%- block signup_form_endpoint %}{{ url_for_security('register') }}{% endblock %}"
                       method="POST" name="register_user_form">
+                    {%- if messages %}
+                    {%- for category, message in messages %}
+                        <div class="alert alert-{{category}}">{{ message }}</div>
+                    {%- endfor %}
+                    {%- endif %}
                     {{ form_errors(form) }}
                     {{ form.hidden_tag() }}
                     {%- block signup_form_header %}
@@ -102,4 +108,3 @@
     </div>
 
 {% endblock panel %}
-
