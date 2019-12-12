@@ -31,6 +31,7 @@ import os
 import shutil
 import tempfile
 import time
+from datetime import datetime
 
 import flask
 import pytest
@@ -172,7 +173,8 @@ def env_browser(request):
     desired_cap = {
         'platform': 'Windows',
         'browserName': 'chrome',
-        'build': os.environ.get('TRAVIS_BUILD_NUMBER', 'HEPData local build'),
+        'build': os.environ.get('TRAVIS_BUILD_NUMBER',
+                                datetime.now().strftime("%Y-%m-%d %H:%M:%S")),
         'name': request.node.name,
         'username': sauce_username,
         'accessKey': sauce_access_key,
