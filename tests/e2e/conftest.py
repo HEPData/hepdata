@@ -61,7 +61,7 @@ def app(request):
     app.config.update(dict(
         TESTING=True,
         TEST_RUNNER="celery.contrib.test_runner.CeleryTestSuiteRunner",
-        ACCOUNTS_USE_CELERY=False,
+        SEND_REGISTER_EMAIL=False,
         CELERY_TASK_ALWAYS_EAGER=True,
         CELERY_RESULT_BACKEND="cache",
         CELERY_CACHE_BACKEND="memory",
