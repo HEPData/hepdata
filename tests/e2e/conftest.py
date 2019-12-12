@@ -173,7 +173,7 @@ def env_browser(request):
         'platform': 'Windows',
         'browserName': 'chrome',
         'build': os.environ["TRAVIS_BUILD_NUMBER"],
-        'name': 'HEPData end-to-end tests',
+        'name': request.node.name,
         'username': sauce_username,
         'accessKey': sauce_access_key,
         'tunnelIdentifier': os.environ["TRAVIS_JOB_NUMBER"],
