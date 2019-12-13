@@ -5,7 +5,7 @@ HEPData uses several services such as the `PostgreSQL <http://www.postgresql.org
 (version 9.6) database server, `Redis <http://redis.io/>`_ for caching, and `Elasticsearch
 <https://www.elastic.co/products/elasticsearch>`_ (version 2.x, not later versions) for indexing and information
 retrieval.  It also requires the `Node.js <https://nodejs.org>`_ JavaScript run-time environment
-and its package manager `npm <https://www.npmjs.com/>`_.  These services can be installed using the
+and its package manager `npm <https://www.npmjs.com/>`_. These services can be installed using the
 relevant package manager for your system, for example, using ``yum`` or ``apt-get`` for Linux or
 ``brew`` for macOS.
 
@@ -132,7 +132,33 @@ Now, start HEPData:
 Running the tests
 -----------------
 
-Run the tests using:
+Some of the tests run using `selenium <https://selenium.dev>`_ on `SauceLabs <https://saucelabs.com>`_. To run the tests
+locally you have several options:
+
+1. Run a Sauce Connect tunnel (recommended).
+    1. Create a SauceLabs account, or ask for the HEPData account details.
+    2. Log into SauceLabs, and go to the "Tunnels" page.
+    3. Follow the instructions there to install Sauce Connect and start a tunnel.
+    4. Create the variables ``SAUCE_USERNAME`` and ``SAUCE_ACCESS_KEY`` in your local environment (and add them to your
+       bash profile).
+2. Run selenium locally using `chromedriver <https://chromedriver.chromium.org>`_.
+    1. Install chromedriver.
+    2. Edit ``tests/e2e/conftest.py`` to replace the line:
+
+       .. code-block:: console
+
+           browser = webdriver.Remote(remote_url, desired_capabilities=desired_cap)
+
+       with:
+
+       .. code-block:: console
+
+           browser = getattr(webdriver, request.param)()
+
+3. Omit the end-to-end tests when running locally, by running ``py.test tests -k 'not tests/e2e'`` instead of ``run-tests.sh``.
+
+
+Once you have set up selenium or SauceLabs, you can run the tests using:
 
 .. code-block:: console
 

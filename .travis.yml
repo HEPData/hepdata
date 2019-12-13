@@ -68,8 +68,14 @@ install:
   - "hepdata assets build"
   - "cd /home/travis/build/HEPData/hepdata"
 
+before_script:
+  - "/home/travis/build/HEPData/hepdata/scripts/sc_tunnel_start.sh"
+
 script:
-  - "py.test tests -k 'not tests/e2e'"
+  - "py.test tests"
 
 after_success:
   - coveralls
+
+after_script:
+  - "/home/travis/build/HEPData/hepdata/scripts/sc_tunnel_stop.sh"
