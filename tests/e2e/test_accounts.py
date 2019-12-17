@@ -105,7 +105,12 @@ def test_user_registration_and_login(live_server, env_browser):
     # 9b Go to the confirmation URL with our token
     browser.get(flask.url_for('security.confirm_email', token=token, _external=True))
 
-    # 9c We should now be logged in
+    # 9c Check that we've got a success message
+    success_element = browser.find_element_by_css_selector('.alert-success')
+    assert(success_element is not None)
+    assert('Thank you. Your email has been confirmed.' in success_element.text)
+
+    # 9d We should now be logged in
     e2e_assert(browser,
                testutils.webdriver_authenticated(browser),
                'Should be authenticated')
