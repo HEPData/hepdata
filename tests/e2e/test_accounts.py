@@ -23,13 +23,11 @@
 
 """HEPData end to end testing of accounts."""
 import flask
-from datetime import datetime
 
 from conftest import e2e_assert, e2e_assert_url
 from invenio_accounts import testutils
-from invenio_accounts.models import User
-from invenio_db import db
-from flask_security.confirmable import requires_confirmation
+from itsdangerous import URLSafeTimedSerializer
+from flask_security import utils
 
 
 def test_user_registration_and_login(live_server, env_browser):
@@ -82,34 +80,46 @@ def test_user_registration_and_login(live_server, env_browser):
                not testutils.webdriver_authenticated(browser),
                'Should not be authenticated')
 
-    # Modify the user to set them to be confirmed, so we can log in
-    user_query = db.session.query(User).filter(User.email == user_email)
-    assert(user_query.count() > 0)
-    user = user_query.one()
-    assert(requires_confirmation(user))
-    user.confirmed_at = datetime.now()
-    db.session.add(user)
-    db.session.commit()
+    # 8a Generate a confirmation token (this is how it's done in flask_security)
+    data = ['2', utils.md5(user_email)]
+    serializer = URLSafeTimedSerializer(
+        secret_key="CHANGE_ME",
+        salt="CHANGE_ME"
+    )
+    token = serializer.dumps(data)
 
-    # 8. go back to login-form
+    # 8b Go to the confirmation URL with our token
+    browser.get(flask.url_for('security.confirm_email', token=token, _external=True))
+
+    # 8c We should now be logged in
+    e2e_assert(browser,
+               testutils.webdriver_authenticated(browser),
+               'Should be authenticated')
+
+    # 9. logout.
+    browser.get(flask.url_for('security.logout', _external=True))
+    e2e_assert(browser, not testutils.webdriver_authenticated(browser),
+               'Should not be authenticated')
+
+    # 10. go back to login-form
     browser.get(flask.url_for('security.login', _external=True))
     e2e_assert_url(browser, 'security.login')
 
     login_form = browser.find_element_by_name('login_user_form')
-    # 9. input registered info
+    # 11. input registered info
     login_form.find_element_by_name('email').send_keys(user_email)
     login_form.find_element_by_name('password').send_keys(user_password)
-    # 10. Submit!
+    # 12. Submit!
     # check if authenticated at `flask.url_for('security.change_password')`
     login_form.submit()
 
     e2e_assert(browser, testutils.webdriver_authenticated(browser))
 
-    # 11. check we can access the change password screen
+    # 13. check we can access the change password screen
     browser.get(flask.url_for('security.change_password', _external=True))
     e2e_assert_url(browser, 'security.change_password')
 
-    # 12. logout.
+    # 14. logout.
     browser.get(flask.url_for('security.logout', _external=True))
     e2e_assert(browser, not testutils.webdriver_authenticated(browser),
                'Should not be authenticated')
