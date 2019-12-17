@@ -86,9 +86,13 @@ SECURITY_LOGIN_USER_TEMPLATE = \
 
 SECURITY_FORGOT_PASSWORD_TEMPLATE = "hepdata_theme/security/forgot_password.html"
 SECURITY_RESET_PASSWORD_TEMPLATE = "hepdata_theme/security/reset_password.html"
+SECURITY_SEND_CONFIRMATION_TEMPLATE = "hepdata_theme/security/send_confirmation.html"
 
 SECURITY_LOGIN_WITHOUT_CONFIRMATION = False
 SECURITY_CONFIRMABLE = True
+SECURITY_MSG_CONFIRMATION_REQUIRED = (
+    "Email requires confirmation. If you no longer have the confirmation email, use the 'Resend confirmation email' link below.",
+    "error")
 SECURITY_POST_REGISTER_VIEW = "/signup/"
 
 SECURITY_CONFIRM_SALT = "CHANGE_ME"
