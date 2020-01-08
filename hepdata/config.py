@@ -96,6 +96,7 @@ SECURITY_MSG_LOGIN = (
 SECURITY_MSG_CONFIRMATION_REQUIRED = (
     "Email requires confirmation. If you no longer have the confirmation email, use the 'Resend confirmation email' link below.",
     "error")
+SECURITY_POST_CONFIRM_VIEW = "/dashboard/"
 SECURITY_POST_REGISTER_VIEW = "/signup/"
 
 SECURITY_CONFIRM_SALT = "CHANGE_ME"
