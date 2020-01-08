@@ -90,6 +90,9 @@ SECURITY_SEND_CONFIRMATION_TEMPLATE = "hepdata_theme/security/send_confirmation.
 
 SECURITY_LOGIN_WITHOUT_CONFIRMATION = False
 SECURITY_CONFIRMABLE = True
+SECURITY_MSG_LOGIN = (
+    "Please log in to access this page. If you signed up via ORCID or CERN you may need to confirm your email address: see the 'Resend confirmation email' link below.",
+    "info")
 SECURITY_MSG_CONFIRMATION_REQUIRED = (
     "Email requires confirmation. If you no longer have the confirmation email, use the 'Resend confirmation email' link below.",
     "error")

@@ -25,6 +25,7 @@
 {%- extends config.ACCOUNTS_COVER_TEMPLATE %}
 
 {% from "invenio_accounts/_macros.html" import render_field, form_errors %}
+{%- set messages = get_flashed_messages(with_categories=true) -%}
 
 {% block panel %}
 
