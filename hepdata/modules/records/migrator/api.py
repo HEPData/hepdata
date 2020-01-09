@@ -25,7 +25,7 @@
 from __future__ import absolute_import, print_function
 import socket
 from datetime import datetime, timedelta
-from urllib2 import HTTPError
+from urllib.error import HTTPError
 
 import requests
 from celery import shared_task

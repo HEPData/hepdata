@@ -64,7 +64,7 @@ try:
     from yaml import CSafeLoader as Loader
 except ImportError: #pragma: no cover
     from yaml import SafeLoader as Loader #pragma: no cover
-from urllib2 import URLError
+from urllib.error import URLError
 
 logging.basicConfig()
 log = logging.getLogger(__name__)
