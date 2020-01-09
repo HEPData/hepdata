@@ -227,4 +227,8 @@ def test_parse_aggregations():
             'type': 'collaboration'
         }
     ]
-    assert(parse_aggregations(aggregations) == expected)
+
+    actual = parse_aggregations(aggregations)
+
+    for facet in expected:
+        assert(facet in actual)
