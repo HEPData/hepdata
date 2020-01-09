@@ -140,20 +140,6 @@ def get_filter_clause(name, value):
     return clause
 
 
-def default_queryable_fields(es_type):
-    """ Defines what JSON fields should be queried in a full text search for
-    a given type. """
-    if es_type == 'datatable':
-        return ["title^3", "abstract^10", "doi", "inspire_id", "keywords.values"]
-    elif es_type == 'publication':
-        return ["title^10", "abstract^6", "keywords.name^4", "hepdata_doi", "year",
-                "keywords.value^6", "doi", "inspire_id", "authors.full_name", "authors.affiliation",
-                "data_keywords.observables^4", "data_keywords.cmenergies^4",
-                "data_keywords.reactions^4", "subject_areas^3"]
-    else:
-        raise ValueError(es_type + ' is not a valid ElasticSearch type')
-
-
 def sort_fields_mapping(sort_by):
     """ JSON mappings to ElasticSearch fields used for sorting. """
     if sort_by == 'title':

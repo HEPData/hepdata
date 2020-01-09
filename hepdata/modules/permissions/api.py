@@ -107,7 +107,7 @@ def get_pending_coordinator_requests():
 
 def get_approved_coordinators():
     """
-    Returns pending coordinator requests.
+    Returns approved coordinator requests.
 
     :return:
     """
@@ -137,3 +137,55 @@ def user_allowed_to_perform_action(recid):
                                                    coordinator=int(current_user.get_id())).count() > 0
 
     return is_coordinator
+
+
+def write_submissions_to_files():
+    """Writes some statistics on number of submissions per Coordinator to files."""
+
+    import csv
+    from datetime import date
+
+    # Open a CSV file to write the number of unfinished and finished submissions for each Coordinator.
+    csvfile = open('submissions_per_coordinator_{}.csv'.format(date.today()), 'w')
+    writer = csv.writer(csvfile)
+    writer.writerow(['user_id', 'user_email', 'collaboration', 'version',
+                 'number_todo', 'number_finished'])
+
+    # Open another CSV file to write the collaboration and date of each finished version 1 submission.
+    csvfile1 = open('submissions_with_date_{}.csv'.format(date.today()), 'w')
+    writer1 = csv.writer(csvfile1)
+    writer1.writerow(['collaboration', 'publication_recid', 'inspire_id',
+                  'created', 'last_updated'])
+
+    # Loop over approved Coordinators.
+    coordinators = get_approved_coordinators()
+    for coordinator in coordinators:
+        user_id = coordinator['user']['id']
+        user_email = coordinator['user']['email']
+        collaboration = coordinator['collaboration']
+
+        # For version 1 or version 2, write number of unfinished and finished submissions.
+        for version in (1, 2):
+            number_todo = HEPSubmission.query.filter_by(
+                coordinator=user_id,
+                overall_status='todo',
+                version=version).count()
+            number_finished = HEPSubmission.query.filter_by(
+                coordinator=user_id,
+                overall_status='finished',
+                version=version).count()
+            writer.writerow([user_id, user_email, collaboration,
+                             version, number_todo, number_finished])
+
+        # For each finished version 1 submission, write collaboration and date.
+        submissions = HEPSubmission.query.filter_by(
+                coordinator=user_id,
+                overall_status='finished',
+                version=1).order_by(HEPSubmission.last_updated).all()
+        for submission in submissions:
+            writer1.writerow([collaboration, submission.publication_recid,
+                              submission.inspire_id, submission.created,
+                              submission.last_updated])
+
+    csvfile.close()
+    csvfile1.close()

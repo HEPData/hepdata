@@ -24,7 +24,6 @@
 
 from collections import OrderedDict
 
-from flask_login import current_user
 from invenio_accounts.models import User
 from sqlalchemy import and_, or_, func
 
@@ -46,7 +45,7 @@ def add_user_to_metadata(type, user_info, record_id, submissions):
             'name': 'No primary ' + type}
 
 
-def create_record_for_dashboard(record_id, submissions, coordinator=None, user_role=None,
+def create_record_for_dashboard(record_id, submissions, current_user, coordinator=None, user_role=None,
                                 status="todo"):
     if user_role is None:
         user_role = ["coordinator"]
@@ -91,46 +90,6 @@ def create_record_for_dashboard(record_id, submissions, coordinator=None, user_r
             # submission. So we should show them!
             if user_role not in submissions[record_id]["metadata"]["role"]:
                 submissions[record_id]["metadata"]["role"].append(user_role)
-
-
-def process_user_record_results(type, query_results, submissions):
-    """
-    :param type: e.g. reviewer, uploader, or coordinator
-    :param query_results: the records to be processed
-    :param submissions: the submissions to be added to
-    :return:
-    """
-    for submission in query_results:
-
-        record_query_results = DataReview.query.filter_by(
-            publication_recid=submission.publication_recid,
-            version=submission.version).order_by(
-            DataReview.id.asc()).all()
-
-        if record_query_results:
-            count = 0
-            allow_record_count_updates = True
-
-            for record in record_query_results:
-                # this is a way to stop the counts for records being
-                # updated two or three times for users with
-                # multiple roles...
-                if count == 0:
-                    allow_record_count_updates = str(
-                        record.publication_recid) not in submissions
-
-                create_record_for_dashboard(str(record.publication_recid),
-                                            submissions,
-                                            user_role=[type])
-
-                if allow_record_count_updates:
-                    submissions[str(record.publication_recid)]["stats"][
-                        record.status] += 1
-
-                count += 1
-        else:
-            create_record_for_dashboard(str(submission.publication_recid),
-                                        submissions, user_role=[type])
 
 
 def prepare_submissions(current_user):
@@ -189,12 +148,14 @@ def prepare_submissions(current_user):
 
                 create_record_for_dashboard(
                     str(hepdata_submission.publication_recid), submissions,
+                    current_user,
                     coordinator=coordinator,
                     user_role=current_user_roles,
                     status=hepdata_submission.overall_status)
             else:
                 create_record_for_dashboard(
                     str(hepdata_submission.publication_recid), submissions,
+                    current_user,
                     coordinator=coordinator,
                     status=hepdata_submission.overall_status)
 

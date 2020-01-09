@@ -41,9 +41,7 @@ TEST_EMAIL = 'test@hepdata.net'
 TEST_PWD = 'hello1'
 
 
-@pytest.fixture()
-def app(request):
-    """Flask app fixture."""
+def create_basic_app():
     app = create_app()
     app.config.update(dict(
         TESTING=True,
@@ -53,10 +51,14 @@ def app(request):
         CELERY_CACHE_BACKEND="memory",
         MAIL_SUPPRESS_SEND=True,
         CELERY_TASK_EAGER_PROPAGATES=True,
+        ELASTICSEARCH_INDEX="hepdata_test",
         SQLALCHEMY_DATABASE_URI=os.environ.get(
             'SQLALCHEMY_DATABASE_URI', 'postgresql+psycopg2://hepdata:hepdata@localhost/hepdata_test')
     ))
+    return app
 
+
+def setup_app(app):
     with app.app_context():
         db.drop_all()
         db.create_all()
@@ -81,6 +83,15 @@ def app(request):
 
         yield app
         ctx.pop()
+
+
+@pytest.fixture()
+def app(request):
+    """Flask app fixture."""
+    app = create_basic_app()
+    app_generator = setup_app(app)
+    for app in app_generator:
+        yield app
 
 
 @pytest.fixture()
@@ -110,6 +121,9 @@ def migrator():
 
 @pytest.fixture()
 def identifiers():
+    return get_identifiers()
+
+def get_identifiers():
     return [{"hepdata_id": "ins1283842", "inspire_id": 1283842,
              "title": "Measurement of the forward-backward asymmetry "
                       "in the distribution of leptons in $t\\bar{t}$ "
@@ -122,3 +136,7 @@ def identifiers():
              "data_tables": 40,
              "arxiv": "arXiv:1307.7457"}
             ]
+
+@pytest.fixture()
+def load_submission(app, load_default_data, migrator):
+    migrator.load_file('ins1487726')

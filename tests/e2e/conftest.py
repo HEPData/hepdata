@@ -31,19 +31,25 @@ import os
 import shutil
 import tempfile
 import time
+from datetime import datetime
 
+import flask
 import pytest
 from invenio_accounts.models import User, Role
 from invenio_db import db
 from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 from sqlalchemy_utils.functions import create_database, database_exists, \
     drop_database
+from time import sleep
 
 from hepdata.config import CFG_TMPDIR
 from hepdata.ext.elasticsearch.api import reindex_all
 from hepdata.factory import create_app
 from hepdata.modules.records.migrator.api import load_files
-from tests.conftest import identifiers
+from tests.conftest import get_identifiers
 
 
 @pytest.fixture()
@@ -56,11 +62,13 @@ def app(request):
     app.config.update(dict(
         TESTING=True,
         TEST_RUNNER="celery.contrib.test_runner.CeleryTestSuiteRunner",
+        SECURITY_SEND_REGISTER_EMAIL=False,
         CELERY_TASK_ALWAYS_EAGER=True,
         CELERY_RESULT_BACKEND="cache",
         CELERY_CACHE_BACKEND="memory",
         MAIL_SUPPRESS_SEND=True,
         CELERY_TASK_EAGER_PROPAGATES=True,
+        ELASTICSEARCH_INDEX="hepdata_test",
         SQLALCHEMY_DATABASE_URI=os.environ.get(
             'SQLALCHEMY_DATABASE_URI', 'postgresql+psycopg2://hepdata:hepdata@localhost/hepdata_test')
     ))
@@ -96,6 +104,7 @@ def app(request):
 
     def teardown():
         with app.app_context():
+            db.engine.dispose()
             db.drop_all()
             ctx.pop()
 
@@ -106,7 +115,7 @@ def app(request):
 
 @pytest.fixture()
 def test_identifiers(app):
-    return identifiers()
+    return get_identifiers()
 
 
 @pytest.fixture()
@@ -115,10 +124,9 @@ def search_tests(app):
             {"search_term": "leptons", "exp_collab_facet": "D0", "exp_hepdata_id": "ins1283842"}]
 
 
-@pytest.fixture()
 def load_default_data(app):
     with app.app_context():
-        to_load = [x["hepdata_id"] for x in identifiers()]
+        to_load = [x["hepdata_id"] for x in get_identifiers()]
         load_files(to_load, synchronous=True)
 
 
@@ -128,7 +136,7 @@ def pytest_generate_tests(metafunc):
     test is called once for each value found in the `E2E_WEBDRIVER_BROWSERS`
     environment variable.
     """
-    browsers = ['Firefox']
+    browsers = ['Chrome']
 
     if 'env_browser' in metafunc.fixturenames:
         # In Python 2.7 the fallback kwarg of os.environ.get is `failobj`,
@@ -155,10 +163,40 @@ def env_browser(request):
 
     timeout_process = multiprocessing.Process(target=wait_kill)
 
-    # Create instance of webdriver.`request.param`()
-    print(request.param)
+    sauce_username = os.environ.get('SAUCE_USERNAME', '')
+    sauce_access_key = os.environ.get('SAUCE_ACCESS_KEY', '')
+    remote_url = \
+        "https://%s:%s@ondemand.eu-central-1.saucelabs.com:443/wd/hub" \
+        % (sauce_username, sauce_access_key)
 
-    browser = getattr(webdriver, request.param)()
+    # the desired_capabilities parameter tells us which browsers and OS to spin up.
+    desired_cap = {
+        'platform': 'Windows',
+        'browserName': 'chrome',
+        'build': os.environ.get('TRAVIS_BUILD_NUMBER',
+                                datetime.now().strftime("%Y-%m-%d %H:00ish")),
+        'name': request.node.name,
+        'username': sauce_username,
+        'accessKey': sauce_access_key,
+        'tunnelIdentifier': os.environ.get('TRAVIS_JOB_NUMBER', '')
+    }
+
+    # This creates a webdriver object to send to Sauce Labs including the desired capabilities
+    browser = webdriver.Remote(remote_url, desired_capabilities=desired_cap)
+    # If you want to run tests locally instead of on Sauce Labs, comment out
+    # the line above and uncomment this one:
+    # browser = getattr(webdriver, request.param)()
+
+    browser.set_window_size(1004,632)
+
+    # Go to homepage and click cookie accept button so cookie bar is out of the way
+    browser.get(flask.url_for('hepdata_theme.index', _external=True))
+    wait = WebDriverWait(browser, 5)
+    wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, ".cc_btn_accept_all")))
+    sleep(1)
+    cookie_accept_btn = browser.find_element_by_css_selector(".cc_btn_accept_all")
+    cookie_accept_btn.click()
+
     # Add finalizer to quit the webdriver instance
     request.addfinalizer(finalizer)
 
@@ -171,3 +209,26 @@ def make_screenshot(driver, name):
     if not os.path.exists(dir):
         os.makedirs(dir)
     driver.save_screenshot(os.path.join(dir, name))
+
+
+def e2e_assert(driver, assertion, message = None):
+    """Wrapper for assert which will print the current page text if the assertion is false.
+    This will allow us to see any errors which only occur on Travis.
+    """
+    if not assertion:
+        print('========== Failed assertion in selenium test. ===================================')
+
+        if message:
+            print('Assertion message: ' + message + '\n')
+
+        print('Browser body text was:\n')
+        print(driver.find_element_by_tag_name('body').text)
+        print('\n================================================================================')
+
+    assert assertion, message
+
+def e2e_assert_url(driver, expected_route):
+    expected_url = flask.url_for(expected_route, _external=True)
+    e2e_assert(driver,
+               expected_url in driver.current_url,
+               "Should be at page " + expected_url + " but url was: " + driver.current_url)
