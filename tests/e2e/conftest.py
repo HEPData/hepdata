@@ -59,14 +59,14 @@ def app(request):
     folder and subfolders will see this variant of the `app` fixture.
     """
     app = create_app()
+    # Note that in Travis we add "TESTING=True" to config_local.py as well
+    # to ensure that it's set before flask mail is initialised
     app.config.update(dict(
         TESTING=True,
         TEST_RUNNER="celery.contrib.test_runner.CeleryTestSuiteRunner",
-        SECURITY_SEND_REGISTER_EMAIL=False,
         CELERY_TASK_ALWAYS_EAGER=True,
         CELERY_RESULT_BACKEND="cache",
         CELERY_CACHE_BACKEND="memory",
-        MAIL_SUPPRESS_SEND=True,
         CELERY_TASK_EAGER_PROPAGATES=True,
         ELASTICSEARCH_INDEX="hepdata_test",
         SQLALCHEMY_DATABASE_URI=os.environ.get(

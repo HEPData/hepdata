@@ -1,6 +1,7 @@
 {%- extends "hepdata_theme/page.html" %}
 
 {% set body_css_classes = ["dashboard"] %}
+{%- set messages = get_flashed_messages(with_categories=true) -%}
 
 {%- block additional_assets %}
     {%- assets "hepdata_theme_css" %}
@@ -22,6 +23,12 @@
     <div class="hep-content" style="padding-top: 65px; height: 100%">
 
         <div class="dashboard-header">
+
+            {%- if messages %}
+                {%- for category, message in messages %}
+                  <div align="center" class="alert alert-{{category}}">{{ message }}</div>
+                {%- endfor %}
+            {%- endif %}
 
             <div align="center" class="profile-container container-fluid">
 

@@ -25,6 +25,7 @@
 {%- extends config.ACCOUNTS_COVER_TEMPLATE %}
 
 {% from "invenio_accounts/_macros.html" import render_field, form_errors %}
+{%- set messages = get_flashed_messages(with_categories=true) -%}
 
 {% block panel %}
 
@@ -44,6 +45,11 @@
                         <form action="{{ url_for_security('login') }}"
                               method="POST" name="login_user_form">
                             {{ form.hidden_tag() }}
+                            {%- if messages %}
+                                {%- for category, message in messages %}
+                                    <div class="alert alert-{{category}}">{{ message }}</div>
+                                {%- endfor %}
+                            {%- endif %}
                             {{ form_errors(form) }}
                             {{ render_field(form.email, icon="fa fa-user", autofocus=True, errormsg=False) }}
                             {{ render_field(form.password, icon="fa fa-lock", errormsg=False) }}
@@ -69,7 +75,12 @@
         </div>
         {%- block recoverable %}
             {%- if security.recoverable %}
-                <a style="color:white" href="{{ url_for('security.forgot_password') }}">{{ _('Forgot password?') }}</a>
+                <p><a style="color:white" href="{{ url_for('security.forgot_password') }}">{{ _('Forgot password?') }}</a></p>
+            {%- endif %}
+        {%- endblock %}
+        {%- block confirmable %}
+            {%- if security.confirmable %}
+                <p><a style="color:white" href="{{ url_for('security.send_confirmation') }}">{{ _('Resend confirmation email') }}</a></p>
             {%- endif %}
         {%- endblock %}
     </div>

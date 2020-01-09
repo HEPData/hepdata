@@ -2,6 +2,7 @@
 
 {%- set html_css_classes=['home-page'] %}
 {%- set body_css_classes=['home-page'] %}
+{%- set messages = get_flashed_messages(with_categories=true) -%}
 
 {%- block body %}
 
@@ -64,6 +65,12 @@
                         </div>
                     </div>
                 </div>
+
+                {%- if messages %}
+                    {%- for category, message in messages %}
+                      <div class="alert alert-{{category}}">{{ message }}</div>
+                    {%- endfor %}
+                {%- endif %}
 
                 <div class="hep_logo_home"></div>
                 <h4>Repository for publication-related High-Energy Physics data</h4>
