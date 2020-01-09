@@ -10,10 +10,10 @@ asciitree==0.3.1
 Babel==2.3.4
 backports.lzma==0.0.3
 beautifulsoup4==4.5.1
-billiard==3.5.0.2
+billiard==3.6.1.0
 binaryornot==0.4.0
 blinker==1.4
-celery==4.1.1
+celery==4.4.0
 Cerberus==0.7
 cffi
 chardet==3.0.4
