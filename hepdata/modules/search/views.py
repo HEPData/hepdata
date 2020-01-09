@@ -29,7 +29,7 @@ from hepdata.ext.elasticsearch.api import search as es_search, \
 from hepdata.modules.records.utils.common import decode_string
 from hepdata.utils.session import get_session_item, set_session_item
 from hepdata.utils.url import modify_query
-from config import HEPDATA_CFG_MAX_RESULTS_PER_PAGE, HEPDATA_CFG_FACETS
+from .config import HEPDATA_CFG_MAX_RESULTS_PER_PAGE, HEPDATA_CFG_FACETS
 
 blueprint = Blueprint('es_search',
                       __name__,

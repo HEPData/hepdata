@@ -28,8 +28,8 @@ from sqlalchemy import func
 from hepdata.ext.elasticsearch.document_enhancers import enhance_data_document, enhance_publication_document
 from .utils import prepare_author_for_indexing
 from hepdata.config import CFG_PUB_TYPE, CFG_DATA_TYPE
-from query_builder import QueryBuilder, HEPDataQueryParser
-from process_results import map_result, merge_results
+from .query_builder import QueryBuilder, HEPDataQueryParser
+from .process_results import map_result, merge_results
 from invenio_db import db
 import logging
 
@@ -419,7 +419,7 @@ def recreate_index(index=None):
 
     :param index: [string] name of the index. If None a default is used
     """
-    from config.record_mapping import mapping
+    from .config.record_mapping import mapping
 
     body = {
         "mappings": {
