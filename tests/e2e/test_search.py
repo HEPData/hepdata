@@ -22,6 +22,7 @@
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
 """HEPData end to end testing of search."""
+from __future__ import print_function
 import flask
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait

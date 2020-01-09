@@ -58,5 +58,8 @@ target/
 # Local config file
 hepdata/config_local.py
 
+# Futurize
+*.bak
+
 .idea
 .pytest_cache

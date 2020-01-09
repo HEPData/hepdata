@@ -24,6 +24,7 @@
 """HEPData end to end testing of general pages."""
 import flask
 from selenium.webdriver.common.action_chains import ActionChains
+from functools import reduce
 
 def test_home(live_server, env_browser, identifiers):
     """E2E home test to check record counts and latest submissions."""

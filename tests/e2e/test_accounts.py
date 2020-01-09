@@ -22,9 +22,10 @@
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
 """HEPData end to end testing of accounts."""
+from __future__ import absolute_import
 import flask
 from invenio_accounts import testutils
-from conftest import e2e_assert, e2e_assert_url
+from .conftest import e2e_assert, e2e_assert_url
 from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
