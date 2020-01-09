@@ -26,7 +26,7 @@ from __future__ import absolute_import, print_function
 import copy
 import os
 import tempfile
-from datetime import timedelta, datetime
+from datetime import timedelta
 
 from invenio_oauthclient.contrib.orcid import REMOTE_APP as ORCID_REMOTE_APP
 from invenio_oauthclient.contrib import cern
@@ -278,6 +278,8 @@ PYTHONWARNINGS="ignore:Unverified HTTPS request"
 
 PRODUCTION_MODE = False
 EOS_DATADIR = 'root://eospublic.cern.ch//eos/hepdata/prod/var/data' # TO DO: move to Puppet configuration
+
+RUN_SELENIUM_LOCALLY = False
 
 # Import local config file if it is present.
 try:
