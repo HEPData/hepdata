@@ -345,7 +345,7 @@ def parse_additional_resources(basepath, recid, yaml_document):
         if resource_location:
             new_reference = DataResource(
                 file_location=resource_location, file_type=file_type,
-                file_description=reference['description'])
+                file_description=encode_string(reference['description']))
 
             if "license" in reference:
                 dict = get_prefilled_dictionary(
@@ -499,7 +499,7 @@ def process_submission_directory(basepath, submission_file_path, recid, update=F
                 else:
 
                     existing_datasubmission_query = DataSubmission.query \
-                        .filter_by(name=encode_string(yaml_document["name"]),
+                        .filter_by(name=yaml_document["name"],
                                    publication_recid=recid,
                                    version=hepsubmission.version)
 
@@ -509,7 +509,7 @@ def process_submission_directory(basepath, submission_file_path, recid, update=F
                         if existing_datasubmission_query.count() == 0:
                             datasubmission = DataSubmission(
                                 publication_recid=recid,
-                                name=encode_string(yaml_document["name"]),
+                                name=yaml_document["name"],
                                 description=encode_string(yaml_document["description"]),
                                 version=hepsubmission.version)
                         else:

@@ -206,7 +206,7 @@ def get_collection(soup, marc_tag='collection'):
     datafields = soup.find_all(tag=tag)
     collections = [df.find_all(code=code)[0].string for df in datafields if df.find_all(code=code)]
     collections = filter(lambda x: x is not None, collections)
-    collections = map(lambda x: x.lower(), collections)
+    collections = list(map(lambda x: x.lower(), collections))
     return collections
 
 
