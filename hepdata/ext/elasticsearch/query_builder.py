@@ -57,8 +57,8 @@ class QueryBuilder(object):
         }
 
     def add_sorting(self, sort_field='', sort_order=''):
-        from utils import calculate_sort_order
-        from config.es_config import sort_fields_mapping
+        from .utils import calculate_sort_order
+        from .config.es_config import sort_fields_mapping
 
         mapped_sort_field = sort_fields_mapping(sort_field)
         self.query.update(dict(sort=[{
@@ -116,7 +116,7 @@ class QueryBuilder(object):
             self.query.update({"query": query_dict})
 
     def add_aggregations(self, aggs=None):
-        from config.es_config import default_aggregations
+        from .config.es_config import default_aggregations
         if not aggs:
             aggs = default_aggregations()
 
@@ -132,7 +132,7 @@ class QueryBuilder(object):
         })
 
     def add_filters(self, filters):
-        from config.es_config import get_filter_clause
+        from .config.es_config import get_filter_clause
         filter_clauses = []
         for name, value in filters:
             clause = get_filter_clause(name, value)

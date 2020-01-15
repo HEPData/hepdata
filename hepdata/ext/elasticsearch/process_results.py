@@ -84,17 +84,17 @@ def match_tables_to_papers(tables, papers):
 
 
 def get_basic_record_information(record):
-    from utils import parse_and_format_date
+    from .utils import parse_and_format_date
     source = record['_source']
 
     # Collaborations
     collaborations = source.get('collaborations', [])
-    if isinstance(collaborations, basestring):
+    if isinstance(collaborations, str):
         collaborations = [collaborations]
 
     authors = source.get('summary_authors', None)
     if authors:
-        authors = map(lambda x: x['full_name'], authors)
+        authors = list(map(lambda x: x['full_name'], authors))
 
     datestring = source.get('creation_date')
 

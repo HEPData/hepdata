@@ -13,8 +13,9 @@ def test_endpoint(client, identifiers):
 
     for test_identifier in identifiers:
         content = client.get(
-            url_for('inspire_datasource.get_record_from_inspire', **{'id': test_identifier['inspire_id']}))
-
+            url_for('inspire_datasource.get_record_from_inspire',
+                    **{'id': test_identifier['inspire_id']}),
+            follow_redirects=True)
         assert (content.data is not None)
         record_info = json.loads(content.data)
         assert (record_info is not None)
@@ -47,7 +48,7 @@ def test_parser():
                   "title": "Measurements of the pseudorapidity dependence "
                            "of the total transverse energy "
                            "in proton-proton "
-                           "collisions at $\sqrt{s}=7$ TeV with ATLAS",
+                           "collisions at $\\sqrt{s}=7$ TeV with ATLAS",
                   "creation_date": "2012-08-01",
                   "year": 2012,
                   "subject_area": ["HEP Experiment"]},

@@ -22,6 +22,7 @@
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
 """HEPData records test cases."""
+from io import open
 import os
 
 import yaml
@@ -83,7 +84,7 @@ def test_has_role(app):
 def test_data_processing(app):
     base_dir = os.path.dirname(os.path.realpath(__file__))
 
-    data = yaml.safe_load(file(os.path.join(base_dir, 'test_data/data_table.yaml')))
+    data = yaml.safe_load(open(os.path.join(base_dir, 'test_data/data_table.yaml'), 'rt'))
 
     assert ('independent_variables' in data)
     assert ('dependent_variables' in data)
