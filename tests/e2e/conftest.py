@@ -45,7 +45,7 @@ from sqlalchemy_utils.functions import create_database, database_exists, \
     drop_database
 from time import sleep
 
-from hepdata.config import CFG_TMPDIR
+from hepdata.config import CFG_TMPDIR, RUN_SELENIUM_LOCALLY
 from hepdata.ext.elasticsearch.api import reindex_all
 from hepdata.factory import create_app
 from hepdata.modules.records.migrator.api import load_files
@@ -59,14 +59,14 @@ def app(request):
     folder and subfolders will see this variant of the `app` fixture.
     """
     app = create_app()
+    # Note that in Travis we add "TESTING=True" to config_local.py as well
+    # to ensure that it's set before flask mail is initialised
     app.config.update(dict(
         TESTING=True,
         TEST_RUNNER="celery.contrib.test_runner.CeleryTestSuiteRunner",
-        SECURITY_SEND_REGISTER_EMAIL=False,
         CELERY_TASK_ALWAYS_EAGER=True,
         CELERY_RESULT_BACKEND="cache",
         CELERY_CACHE_BACKEND="memory",
-        MAIL_SUPPRESS_SEND=True,
         CELERY_TASK_EAGER_PROPAGATES=True,
         ELASTICSEARCH_INDEX="hepdata_test",
         SQLALCHEMY_DATABASE_URI=os.environ.get(
@@ -181,11 +181,12 @@ def env_browser(request):
         'tunnelIdentifier': os.environ.get('TRAVIS_JOB_NUMBER', '')
     }
 
-    # This creates a webdriver object to send to Sauce Labs including the desired capabilities
-    browser = webdriver.Remote(remote_url, desired_capabilities=desired_cap)
-    # If you want to run tests locally instead of on Sauce Labs, comment out
-    # the line above and uncomment this one:
-    # browser = getattr(webdriver, request.param)()
+    if not RUN_SELENIUM_LOCALLY:
+        # This creates a webdriver object to send to Sauce Labs including the desired capabilities
+        browser = webdriver.Remote(remote_url, desired_capabilities=desired_cap)
+    else:
+        # Run tests locally instead of on Sauce Labs (requires local chromedriver installation).
+        browser = getattr(webdriver, request.param)()
 
     browser.set_window_size(1004,632)
 

@@ -70,6 +70,7 @@ install:
 
 before_script:
   - "/home/travis/build/HEPData/hepdata/scripts/sc_tunnel_start.sh"
+  - "echo 'TESTING = True' > /home/travis/build/HEPData/hepdata/hepdata/config_local.py"
 
 script:
   - "py.test tests"

@@ -1,0 +1,33 @@
+{%- extends config.ACCOUNTS_COVER_TEMPLATE %}
+
+{% from "invenio_accounts/_macros.html" import render_field, form_errors %}
+{%- set messages = get_flashed_messages(with_categories=true) -%}
+
+{% block page_body %}
+
+<div class="col-md-6 col-md-offset-3">
+    <div class="panel panel-default">
+        <div class="panel-body">
+            {%- block form_header %}
+                <h3 class="text-center panel-free-title">{{_('Resend Confirmation Email')}}</h3>
+            {%- endblock form_header %}
+            {%- block form_outer %}
+                {%- with form = send_confirmation_form %}
+                    <form action="{{ url_for_security('send_confirmation') }}" method="POST" name="send_confirmation_form">
+                        {{form.hidden_tag()}}
+                        {%- if messages %}
+                            {%- for category, message in messages %}
+                              <div class="alert alert-{{category}}">{{ message }}</div>
+                            {%- endfor %}
+                        {%- endif %}
+                        {{form_errors(form)}}
+                        <p class="text-left">{{_('Enter your email address below and we will send you an email confirmation link.')}}</p>
+                        {{ render_field(form.email, icon="fa fa-user", autofocus=True, errormsg=False) }}
+                        <button type="submit" class="btn btn-primary btn-lg btn-block"><i class="fa fa-sign-in"></i> {{_('Send Confirmation')}}</button>
+                    </form>
+                {%- endwith %}
+            {%- endblock form_outer %}
+        </div>
+    </div>
+</div>
+{% endblock page_body %}
