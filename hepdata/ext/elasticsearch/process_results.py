@@ -48,7 +48,7 @@ def map_result(es_result):
     results = []
     for paper, datatables in aggregated:
         mapped_hit = get_basic_record_information(paper)
-        data = map(get_basic_record_information, datatables)
+        data = list(map(get_basic_record_information, datatables))
         mapped_hit.update({
             'data': data,
             'total_tables': len(data),
@@ -108,7 +108,7 @@ def get_basic_record_information(record):
 
 def fetch_remaining_papers(tables, papers):
     from hepdata.ext.elasticsearch.api import fetch_record
-    hit_papers = map(lambda x: int(x['_id']), papers)
+    hit_papers = list(map(lambda x: int(x['_id']), papers))
     for table in tables:
         paper_id = table['_source'].get('related_publication')
         if paper_id and paper_id not in hit_papers:

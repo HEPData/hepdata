@@ -155,8 +155,7 @@ def parse_query_parameters(request_args):
     :param request_args: [dict-like structure] Any structure supporting get calls
     :result: [dict] Parsed parameters
     """
-
-    args = {key: value[0] for (key, value) in dict(request_args).iteritems()}
+    args = dict(request_args)
     min_date, max_date = check_date(args)
     check_page(args)
     check_max_results(args)
