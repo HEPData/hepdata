@@ -251,8 +251,8 @@ def test_push_keywords():
             assert ("reaction" in results["data_keywords"])
             print(results["data_keywords"])
             assert (len(results["data_keywords"]["reaction"]) == 2)
-            assert (results["data_keywords"]["reaction"][0] == "PP --> PP")
-            assert (results["data_keywords"]["reaction"][1] == "PP --> PX")
+            assert ("PP --> PP" in results["data_keywords"]["reaction"])
+            assert ("PP --> PX" in results["data_keywords"]["reaction"])
 
     try:
         push_keywords([])
