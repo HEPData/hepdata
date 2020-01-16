@@ -177,7 +177,7 @@ def format_tables(ctx, data_record_query, data_table, recid):
     if 'table' in request.args:
         if request.args['table']:
             ctx['table_to_show'] = request.args['table']
-    ctx['data_tables'] = data_table_metadata.values()
+    ctx['data_tables'] = list(data_table_metadata.values())
 
 
 def get_commit_message(ctx, recid):

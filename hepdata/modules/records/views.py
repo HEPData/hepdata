@@ -260,7 +260,7 @@ def get_table_details(recid, data_recid, version):
                     break
 
             table_contents["name"] = datasub_record.name
-            table_contents["title"] = datasub_record.description
+            table_contents["title"] = decode_string(datasub_record.description)
             table_contents["keywords"] = datasub_record.keywords
             table_contents["doi"] = datasub_record.doi
             table_contents["location"] = datasub_record.location_in_publication
@@ -286,7 +286,7 @@ def get_table_details(recid, data_recid, version):
                                              'alt_location': alt_location})
 
         # add associated files to the table contents
-        table_contents['associated_files'] = tmp_assoc_files.values()
+        table_contents['associated_files'] = list(tmp_assoc_files.values())
 
     table_contents["review"] = {}
 
