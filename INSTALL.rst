@@ -132,28 +132,20 @@ Now, start HEPData:
 Running the tests
 -----------------
 
-Some of the tests run using `selenium <https://selenium.dev>`_ on `SauceLabs <https://saucelabs.com>`_. To run the tests
+Some of the tests run using `Selenium <https://selenium.dev>`_ on `Sauce Labs <https://saucelabs.com>`_. To run the tests
 locally you have several options:
 
 1. Run a Sauce Connect tunnel (recommended).
-    1. Create a SauceLabs account, or ask for the HEPData account details.
-    2. Log into SauceLabs, and go to the "Tunnels" page.
+    1. Create a Sauce Labs account, or ask for the HEPData account details.
+    2. Log into Sauce Labs, and go to the "Tunnels" page.
     3. Follow the instructions there to install Sauce Connect and start a tunnel.
     4. Create the variables ``SAUCE_USERNAME`` and ``SAUCE_ACCESS_KEY`` in your local environment (and add them to your
        bash profile).
-2. Run selenium locally using `chromedriver <https://chromedriver.chromium.org>`_.
-    1. Install chromedriver.
-    2. Edit ``tests/e2e/conftest.py`` to replace the line:
 
-       .. code-block:: console
-
-           browser = webdriver.Remote(remote_url, desired_capabilities=desired_cap)
-
-       with:
-
-       .. code-block:: console
-
-           browser = getattr(webdriver, request.param)()
+2. Run Selenium locally using ChromeDriver.
+    1. Install `ChromeDriver <https://chromedriver.chromium.org>`_
+       (matched to your version of `Chrome <https://www.google.com/chrome/>`_).
+    2. Include ``RUN_SELENIUM_LOCALLY = True`` in your ``hepdata/config_local.py`` file.
 
 3. Omit the end-to-end tests when running locally, by running ``py.test tests -k 'not tests/e2e'`` instead of ``run-tests.sh``.
 
