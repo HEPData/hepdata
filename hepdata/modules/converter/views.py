@@ -41,6 +41,8 @@ from hepdata.modules.records.utils.common import get_record_contents
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy import func
 
+import timestring
+
 logging.basicConfig()
 log = logging.getLogger(__name__)
 
@@ -268,8 +270,17 @@ def download_submission(submission, file_format, offline=False, force=False, riv
         elif submission.inspire_id:
             record = get_record_contents(submission.publication_recid)
             if record:
-                converter_options['rivet_analysis_name'] = '{0}_{1}_I{2}'.format(
-                    ''.join(record['collaborations']).upper(), record['year'], submission.inspire_id)
+                # Check if this record has a Rivet analysis, then extract the Rivet analysis name from the URL.
+                if 'analyses' in record:
+                    for analysis in record['analyses']:
+                        if analysis['type'] == 'rivet':
+                            converter_options['rivet_analysis_name'] = 'xxx' + analysis['analysis'].split('/')[-1]
+                # Otherwise guess the Rivet analysis name using the collaboration name,
+                # the creation year of the INSPIRE record, and the INSPIRE ID.
+                if 'rivet_analysis_name' not in converter_options:
+                    year = timestring.Date(record['creation_date']).year
+                    converter_options['rivet_analysis_name'] = '{0}_{1}_I{2}'.format(
+                        ''.join(record['collaborations']).upper(), year, submission.inspire_id)
 
     data_filepath = os.path.join(path, data_filename)
 
@@ -492,8 +503,17 @@ def download_datatable(datasubmission, file_format, *args, **kwargs):
         elif datasubmission.publication_inspire_id:
             record = get_record_contents(datasubmission.publication_recid)
             if record:
-                options['rivet_analysis_name'] = '{0}_{1}_I{2}'.format(
-                    ''.join(record['collaborations']).upper(), record['year'], datasubmission.publication_inspire_id)
+                # Check if this record has a Rivet analysis, then extract the Rivet analysis name from the URL.
+                if 'analyses' in record:
+                    for analysis in record['analyses']:
+                        if analysis['type'] == 'rivet':
+                            options['rivet_analysis_name'] = analysis['analysis'].split('/')[-1]
+                # Otherwise guess the Rivet analysis name using the collaboration name,
+                # the creation year of the INSPIRE record, and the INSPIRE ID.
+                if 'rivet_analysis_name' not in options:
+                    year = timestring.Date(record['creation_date']).year
+                    options['rivet_analysis_name'] = '{0}_{1}_I{2}'.format(
+                        ''.join(record['collaborations']).upper(), year, datasubmission.publication_inspire_id)
 
     successful = convert(
         CFG_CONVERTER_URL,
