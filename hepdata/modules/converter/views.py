@@ -274,7 +274,7 @@ def download_submission(submission, file_format, offline=False, force=False, riv
                 if 'analyses' in record:
                     for analysis in record['analyses']:
                         if analysis['type'] == 'rivet':
-                            converter_options['rivet_analysis_name'] = 'xxx' + analysis['analysis'].split('/')[-1]
+                            converter_options['rivet_analysis_name'] = analysis['analysis'].split('/')[-1]
                 # Otherwise guess the Rivet analysis name using the collaboration name,
                 # the creation year of the INSPIRE record, and the INSPIRE ID.
                 if 'rivet_analysis_name' not in converter_options:
