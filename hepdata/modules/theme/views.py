@@ -25,8 +25,10 @@
 """Theme blueprint in order for template and static files to be loaded."""
 
 from __future__ import absolute_import, print_function
+import re
 
 from flask import Blueprint, render_template, current_app, redirect, request
+from hepdata_validator import LATEST_SCHEMA_VERSION, RAW_SCHEMAS_URL
 
 from hepdata.version import __version__
 
@@ -49,9 +51,12 @@ def submission_help():
     return render_template('hepdata_theme/pages/help.html')
 
 
-@blueprint.route('/submission/schemas/<jsonschema>')
+@blueprint.route('/submission/schemas/<path:jsonschema>')
 def submission_schema(jsonschema):
-    return redirect('https://raw.githubusercontent.com/HEPData/hepdata-validator/master/hepdata_validator/schemas/' + jsonschema)
+    if not re.match(r"[\d+\.]+/.*", jsonschema):
+        jsonschema = LATEST_SCHEMA_VERSION + '/' + jsonschema
+
+    return redirect(RAW_SCHEMAS_URL + '/' + jsonschema)
 
 
 @blueprint.route('/cookies')
