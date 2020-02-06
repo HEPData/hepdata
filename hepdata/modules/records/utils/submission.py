@@ -68,7 +68,7 @@ from urllib2 import URLError
 
 logging.basicConfig()
 log = logging.getLogger(__name__)
-VALIDATOR_SCHEMA_VERSION = '0.1.0'
+
 
 def remove_submission(record_id, version=1):
     """
@@ -425,7 +425,7 @@ def process_submission_directory(basepath, submission_file_path, recid, update=F
 
     if submission_file_path is not None:
 
-        submission_file_validator = SubmissionFileValidator(schema_version=VALIDATOR_SCHEMA_VERSION)
+        submission_file_validator = SubmissionFileValidator()
         is_valid_submission_file = submission_file_validator.validate(file_path=submission_file_path)
 
         if is_valid_submission_file:
@@ -462,7 +462,7 @@ def process_submission_directory(basepath, submission_file_path, recid, update=F
 
             no_general_submission_info = True
 
-            data_file_validator = DataFileValidator(schema_version=VALIDATOR_SCHEMA_VERSION)
+            data_file_validator = DataFileValidator()
 
             # Delete all data records associated with this submission.
             # Fixes problems with ordering where the table names are changed between uploads.
