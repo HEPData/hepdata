@@ -1,174 +1,172 @@
-# This file started from the output of "pip freeze" run within the "hepdata" virtualenv on hepdata-builder1.
-# It was originally generated on 29th March 2018, with the hepdata package itself removed.
-alembic==0.9.6
-amqp==2.5.2
-aniso8601==1.1.0
-anyjson==0.3.3
-apipkg==1.4
-arrow==0.8.0
-asciitree==0.3.1
-Babel==2.3.4
-backports.lzma==0.0.3
-beautifulsoup4==4.5.1
-billiard==3.6.1.0
-binaryornot==0.4.0
-blinker==1.4
-celery==4.4.0
-Cerberus==0.7
-cffi
-chardet==3.0.4
-click==6.7
-contextlib2==0.5.5
-cookiecutter==1.4.0
-coverage==4.5.3
-cryptography>=2.1.4
-datacite==1.0.1
-decorator==4.0.10
-dojson==1.0.0
-ecdsa==0.13.3
-elasticsearch==7.1.0
-elasticsearch-dsl==7.1.0
-enum34==1.1.6
-execnet==1.4.1
-Fabric==1.10.2
-fixture==1.5.2
-Flask==1.1.1
-Flask-Admin==1.5.3
-Flask-Alembic==2.0.1
-Flask-Assets==0.12
-Flask-Babel==0.9
-Flask-BabelEx==0.9.3
-Flask-Breadcrumbs==0.4.0
-Flask-Cache==0.13.1
-Flask-CeleryExt==0.3.0
-Flask-CLI==0.4.0
-Flask-Collect==1.2.2
-Flask-Cors==3.0.2
-Flask-DebugToolbar==0.10.0
-Flask-Email==1.4.4
-Flask-Gravatar==0.4.2
-Flask-IIIF==0.2.0
-Flask-KVSession==0.6.2
-Flask-Limiter==0.9.1
-Flask-Login==0.3.2
-Flask-Mail==0.9.1
-Flask-Menu==0.6.0
-Flask-OAuthlib==0.9.3
-Flask-Principal==0.4.0
-Flask-Registry==0.2.0
-Flask-RESTful==0.3.5
-Flask-Script==2.0.5
-Flask-Security==1.7.5
-Flask-Security-Fork==2.0.1
-Flask-SQLAlchemy==2.4.0
-Flask-Testing==0.4.2
-Flask-WTF==0.13.1
-funcsigs==1.0.2
-functools32==3.2.3.post2
-future==0.18.2
-gevent==1.2.2
-greenlet==0.4.12
-gunicorn==19.5.0
-hepdata-converter-ws-client==0.1.4
-hepdata-validator==0.2.1
-idna==2.7
-IDUtils==0.2.3
-infinity==1.4
-intbitset==2.2.1
-intervals==0.8.0
-invenio==3.0.0a4
-invenio-access==1.0.0a11
-invenio-accounts==1.0.0b3
-invenio-admin==1.0.0b4
-invenio-assets==1.1.3
-invenio-base==1.0.0a14
-invenio-celery==1.0.0b2
-invenio-config==1.0.0b3
-invenio-db==1.0.0b8
-invenio-i18n==1.0.0b3
-invenio-logging==1.0.0b1
-invenio-mail==1.0.0b1
-invenio-oauth2server==1.0.0a15
-invenio-oauthclient==1.0.0a12
-invenio-pidstore==1.0.0b1
-invenio-query-parser==0.6.0
-invenio-records==1.2.2
-invenio-search==1.2.0
-invenio-theme==1.0.0b2
-invenio-userprofiles==1.0.0a9
-ipaddr==2.1.11
-ipaddress
-isbnid
-itsdangerous==0.24
-Jinja2==2.10.1
-jinja2-time==0.2.0
-jsmin==2.2.1
-jsonpatch==1.23
-jsonpointer==1.10
-jsonref==0.1
-jsonresolver==0.2.1
-jsonschema==2.6.0
-kombu==4.6.7
-limits==1.1
-lxml==3.6.4
-Mako==1.0.7
-MarkupSafe==1.0
-marshmallow==2.16.0
-mock==1.3.0
-msgpack==0.6.2
-node-semver==0.1.1
-oauthlib==1.1.2
-ordereddict==1.1
-paramiko==2.4.2
-passlib==1.6.5
-pbr==5.2.0
-pep8==1.7.0
-Pillow==6.2.2
-pipdeptree==0.6.0
-pluggy==0.12.0
-poyo==0.4.0
-psycopg2-binary
-py==1.5.3
-pyasn1==0.1.9
-pycparser
-pyPEG2==2.15.2
-pytest==4.6.4
-pytest-cache
-pytest-cov
-pytest-flask
-pytest-mock
-pytest-pep8
-python-dateutil==2.8.1
-python-editor==1.0.3
-pytz==2013b0
-pywebpack==1.0.1
-PyYAML==4.2b4
-raven==6.7.0
-redis==3.2.1
-reportlab==3.1.44
-requests==2.23.0
-requests-oauthlib==0.7.0
-responses
-ruamel.base==1.0.0
-ruamel.ordereddict==0.4.9
-ruamel.yaml==0.10.20
-selenium==3.141.0
-simplekv==0.10.0
-six==1.11.0
-speaklater==1.3
-SQLAlchemy==1.3.3
-sqlalchemy-mptt==0.2.1
-SQLAlchemy-Utils==0.32.19
-twitter==1.15.0
-Unidecode==0.4.19
-uritools==2.0.0
-urllib3==1.24.2
-validators==0.11.0
-vine==1.3.0
-webargs==5.1.3
-webassets==0.12.1
-Werkzeug==0.15.5
-whichcraft==0.4.0
-WTForms==2.1
-WTForms-Alchemy==0.16.1
-WTForms-Components==0.10.0
+alembic==0.9.6                      # Used by Flask-alembic
+amqp==2.5.2                         # Used by kombu and celery
+aniso8601==1.1.0                    # Used by Flask-restful
+anyjson==0.3.3                      # Used by SQLAlchemy
+apipkg==1.4                         # Used by execnet
+arrow==0.8.0                        # Used by SQLAlchemy-utils
+asciitree==0.3.1                    # Not used
+Babel==2.3.4                        # setup.py
+backports.lzma==0.0.3               # Used by Celery
+beautifulsoup4==4.5.1               # Used !!
+billiard==3.6.1.0                   # Used by Celery
+binaryornot==0.4.0                  # Used by CookieCutter
+blinker==1.4                        # Used by Flask-testing and Raven (not used)
+celery==4.4.0                       # Used !!
+Cerberus==0.7                       # Used by Invenio-3.0.0 ?
+cffi                                # Not used
+chardet==3.0.4                      # Used by binaryornot
+click==6.7                          # Used !!
+contextlib2==0.5.5                  # Used by Raven (not used)
+cookiecutter==1.4.0                 # Used by Invenio-base
+coverage==4.5.3                     # Used !!
+cryptography>=2.1.4                 # Used by paramiko
+datacite==1.0.1                     # Used !!
+decorator==4.0.10                   # Used by validators
+dojson==1.0.0                       # Not used
+ecdsa==0.13.3                       # Used by cryptographic and paramiko
+elasticsearch==7.1.0                # Used !!
+elasticsearch-dsl==7.1.0            # Used !!
+enum34==1.1.6                       # Used by SQLAlchemy.utils
+execnet==1.4.1                      # Used by Pytest cache
+Fabric==1.10.2                      # Used by fabfile
+fixture==1.5.2                      # Not used
+Flask==1.1.1                        # Used !!
+Flask-Admin==1.5.3                  # Used by Invenio-admin
+Flask-Alembic==2.0.1                # Used by Invenio-db
+Flask-Assets==0.12                  # Used by Invenio-assets
+Flask-Babel==0.9                    # Used by multiple Invenio packages
+Flask-BabelEx==0.9.3                # Used by multiple Invenio packages
+Flask-Breadcrumbs==0.4.0            # Used by multiple Invenio packages
+Flask-Cache==0.13.1                 # Not used
+Flask-CeleryExt==0.3.0              # Used !!
+Flask-CLI==0.4.0                    # Used byFlask-Alembic and Flask-Security
+Flask-Collect==1.2.2                # Used by Invenio-assets
+Flask-Cors==3.0.2                   # Used !!
+Flask-DebugToolbar==0.10.0          # Not used
+Flask-Email==1.4.4                  # Not used
+Flask-Gravatar==0.4.2               # Not used
+Flask-IIIF==0.2.0                   # Not used
+Flask-KVSession==0.6.2              # Used by Invenio-accounts
+Flask-Limiter==0.9.1                # Not used
+Flask-Login==0.3.2                  # Used !!
+Flask-Mail==0.9.1                   # Used by multiple Invenio packages
+Flask-Menu==0.6.0                   # Used by multiple Invenio packages
+Flask-OAuthlib==0.9.3               # Used by multiple Invenio packages
+Flask-Principal==0.4.0              # Used by multiple Invenio packages
+Flask-Registry==0.2.0               # Not used
+Flask-RESTful==0.3.5                # Used by Flask-IIIF (which is not used)
+Flask-Script==2.0.5                 # Used byFlask-Alembic and Flask-Security
+Flask-Security==1.7.5               # Used by multiple Invenio packages
+Flask-Security-Fork==2.0.1          # Not used
+Flask-SQLAlchemy==2.4.0             # Used by multiple Invenio packages
+Flask-Testing==0.4.2                # Not used
+Flask-WTF==0.13.1                   # Used by multiple Invenio packages
+funcsigs==1.0.2                     # Used by mock
+functools32==3.2.3.post2            # Used by jsonschema
+future==0.15.2                      # Used by backports and libfuture
+gevent==1.2.2                       # Used !! (not obvious, but it is!)
+greenlet==0.4.12                    # Used by gevent
+gunicorn==19.5.0                    # Used !!
+hepdata-converter-ws-client==0.1.3  # Used !!
+hepdata-validator==0.2.1            # Used !!
+idna==2.7                           # Used by requests
+IDUtils==0.2.3                      # Not used
+infinity==1.4                       # Used by intervals
+intbitset==2.2.1                    # Not used
+intervals==0.8.0                    # Used by multiple Flask packages
+invenio==3.0.0a4                    # Not used
+invenio-access==1.0.0a11            # Used by Invenio-admin
+invenio-accounts==1.0.0b3           # Used !!
+invenio-admin==1.0.0b4              # Used !!
+invenio-assets==1.1.3               # Used !!
+invenio-base==1.0.0a14              # Used !!
+invenio-celery==1.0.0b2             # Used !!
+invenio-config==1.0.0b3             # Used !!
+invenio-db==1.0.0b8                 # Used !!
+invenio-i18n==1.0.0b3               # Used !!
+invenio-logging==1.0.0b1            # Not used
+invenio-mail==1.0.0b1               # Not used
+invenio-oauth2server==1.0.0a15      # Not used
+invenio-oauthclient==1.0.0a12       # Used !!
+invenio-pidstore==1.0.0b1           # Used !!
+invenio-query-parser==0.6.0         # Used by Invenio-search
+invenio-records==1.2.2              # Used !!
+invenio-search==1.2.0               # Used !!
+invenio-theme==1.0.0b2              # Used by Invenio-base cookiecutter...
+invenio-userprofiles==1.0.0a9       # Used !!
+ipaddr==2.1.11                      # Used by cryptography and SQLAlchemy
+ipaddress                           # Used by cryptography and SQLAlchemy
+isbnid                              # Not used
+itsdangerous==0.24                  # Used by Flask friends
+Jinja2==2.10.1                      # Used !!
+jinja2-time==0.2.0                  # Used by Cookie-cutter
+jsmin==2.2.1                        # Used !!
+jsonpatch==1.23                     # Used by Invenio-records
+jsonpointer==1.10                   # Used by jsonpatch
+jsonref==0.1                        # Used by Invenio-records
+jsonresolver==0.2.1                 # Used by Invenio-records
+jsonschema==2.6.0                   # Used by datacite and hepdata-validator
+kombu==4.6.7                        # Used by celery
+limits==1.1                         # Not used
+lxml==3.6.4                         # Used !!
+Mako==1.0.7                         # Used by alembic
+MarkupSafe==1.0                     # Used by Flask friends
+marshmallow==2.16.0                 # Used by webargs (not used)
+mock==1.3.0                         # Used !!
+msgpack==0.6.2                      # Used !!
+node-semver==0.1.1                  # Not used... ?
+oauthlib==1.1.2                     # Used by Flask-CORS and requests_oauthlib
+ordereddict==1.1                    # Used !! (INCONSISTENCY between "hepdata/modules/records/utils" and the rest)
+paramiko==2.4.2                     # Used by fabric (broken backtracking path)
+passlib==1.6.5                      # Not used
+pbr==5.2.0                          # Not used
+pep8==1.7.0                         # Used by pytest-pep8
+Pillow==6.2.0                       # Used by flask-IIIF (not used) and reportlab
+pipdeptree==0.6.0                   # Not used
+pluggy==0.12.0                      # Used by pytest and jsonresolver
+poyo==0.4.0                         # Used by cookiecutter
+psycopg2-binary                     # Used !!
+py==1.5.3                           # Used by pytest
+pyasn1==0.1.9                       # Used by paramiko
+pycparser                           # Used by cffi (not used)
+pyPEG2==2.15.2                      # Used by Invenio-query-parser
+pytest==4.6.4                       # Used !! (for testing)
+pytest-cache                        # Used !! (for testing)
+pytest-cov                          # Used !! (for testing)
+pytest-flask                        # Used !! (for testing)
+pytest-mock                         # Not used (previous in 'tests/dashboard_tests.py')
+pytest-pep8                         # Used !! (for testing)
+python-dateutil==2.6.1              # Used !!
+python-editor==1.0.3                # Not used
+pytz==2013b0                        # Used by Babel, celery and Flask friends
+PyYAML==4.2b4                       # Used by kombu, ruamel and webassets
+raven==6.7.0                        # Not used
+redis==3.2.1                        # Used by Celery and Flask friends
+reportlab==3.1.44                   # Not used
+requests==2.21.0                    # Used !!
+requests-oauthlib==0.7.0            # Used by Flask-oauthlib
+responses                           # Used !!
+ruamel.base==1.0.0                  # Used by ruamel (not listed)
+ruamel.ordereddict==0.4.9           # Used by ruamel (not listed)
+ruamel.yaml==0.10.20                # Used by ruamel (not listed)
+selenium==3.141.0                   # Used !! (for testing)
+simplekv==0.10.0                    # Used by Flask-KVSession and Invenio-accounts
+six==1.11.0                         # Used !! (for testing)
+speaklater==1.3                     # Used !!
+SQLAlchemy==1.3.3                   # Used !!
+sqlalchemy-mptt==0.2.1              # Not used
+SQLAlchemy-Utils==0.32.19           # Used !!
+timestring==1.6.2                   # Used !!
+twitter==1.15.0                     # Used !!
+Unidecode==0.4.19                   # Not used
+uritools==2.0.0                     # Used by Invenio-oauthclient
+urllib3==1.24.2                     # Used by elasticsearch and requests
+validators==0.11.0                  # Used by WTForms
+vine==1.3.0                         # Used by Celery, ampq and kombu
+webargs==5.1.3                      # Not used
+webassets==0.12.1                   # Used by Flask-assets and Invenio-assets
+Werkzeug==0.15.5                    # Used !!
+whichcraft==0.4.0                   # Used by Cookie-cutter
+WTForms==2.1                        # Used by Flask friends
+WTForms-Alchemy==0.16.1             # Used by Invenio-oauth2server
+WTForms-Components==0.10.0          # Used by WTForms-Alchemy
