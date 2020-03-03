@@ -24,7 +24,7 @@
 from __future__ import absolute_import, print_function
 
 from flask import current_app
-from ordereddict import OrderedDict
+from collections import OrderedDict
 
 import re
 
