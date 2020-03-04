@@ -2,7 +2,6 @@ Babel==2.3.4
 beautifulsoup4==4.5.1
 celery==4.4.0
 click==6.7
-coverage==4.5.3                     # Used for testing
 datacite==1.0.1
 elasticsearch==2.4.0
 elasticsearch-dsl==2.1.0
@@ -30,19 +29,11 @@ invenio-userprofiles==1.0.0a9
 Jinja2==2.10.1
 jsmin==2.2.1
 lxml==3.6.4
-mock==1.3.0                         # Used for testing
 msgpack==0.6.2
 psycopg2-binary
-pytest==4.6.4                       # Used for testing
-pytest-cache                        # Used for testing
-pytest-cov                          # Used for testing
-pytest-flask                        # Used for testing
-pytest-pep8                         # Used for testing
 python-dateutil==2.6.1
 requests==2.21.0
 responses
-selenium==3.141.0                   # Used for testing
-six==1.11.0                         # Used for testing
 speaklater==1.3
 SQLAlchemy==1.3.3
 SQLAlchemy-Utils==0.32.19
