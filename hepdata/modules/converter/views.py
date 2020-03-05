@@ -41,7 +41,7 @@ from hepdata.modules.records.utils.common import get_record_contents
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy import func
 
-import timestring
+from dateutil.parser import parse
 
 logging.basicConfig()
 log = logging.getLogger(__name__)
@@ -278,7 +278,10 @@ def download_submission(submission, file_format, offline=False, force=False, riv
                 # Otherwise guess the Rivet analysis name using the collaboration name,
                 # the creation year of the INSPIRE record, and the INSPIRE ID.
                 if 'rivet_analysis_name' not in converter_options:
-                    year = timestring.Date(record['creation_date']).year
+                    try:
+                        year = parse(record['creation_date']).year
+                    except:
+                        year = record['year']  # publication year
                     converter_options['rivet_analysis_name'] = '{0}_{1}_I{2}'.format(
                         ''.join(record['collaborations']).upper(), year, submission.inspire_id)
 
@@ -511,7 +514,10 @@ def download_datatable(datasubmission, file_format, *args, **kwargs):
                 # Otherwise guess the Rivet analysis name using the collaboration name,
                 # the creation year of the INSPIRE record, and the INSPIRE ID.
                 if 'rivet_analysis_name' not in options:
-                    year = timestring.Date(record['creation_date']).year
+                    try:
+                        year = parse(record['creation_date']).year
+                    except:
+                        year = record['year']  # publication year
                     options['rivet_analysis_name'] = '{0}_{1}_I{2}'.format(
                         ''.join(record['collaborations']).upper(), year, datasubmission.publication_inspire_id)
 
