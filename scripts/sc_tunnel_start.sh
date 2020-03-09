@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 if [[ -z ${SAUCE_USERNAME} || -z ${SAUCE_ACCESS_KEY} ]]; then
     echo "SAUCE_USERNAME or SAUCE_ACCESS_KEY environment variables not available."
