@@ -25,13 +25,14 @@ invenio-oauthclient==1.0.0a12
 invenio-pidstore==1.0.0b1
 invenio-records==1.2.2
 invenio-search==1.0.0a9
+invenio-theme==1.0.0b2      # Indirect ('invenio-base' problem)
 invenio-userprofiles==1.0.0a9
 Jinja2==2.10.1
 jsmin==2.2.1
 lxml==3.6.4
 msgpack==0.6.2
 psycopg2-binary
-python-dateutil==2.6.1
+python-dateutil==2.8.1
 requests==2.23.0
 requests-oauthlib==1.1.0    # Indirect ('invenio-oauthclient' problem)
 responses
