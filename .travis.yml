@@ -54,14 +54,14 @@ before_install:
   - echo -e '-XX:+DisableExplicitGC\n-Djdk.io.permissionsUseCanonicalPath=true\n-Dlog4j.skipJansi=true\n-server\n' | sudo tee -a /etc/elasticsearch/jvm.options
   - sudo chown -R elasticsearch:elasticsearch /etc/default/elasticsearch
   - sudo systemctl start elasticsearch
-  - "travis_retry pip install --upgrade pip setuptools py"
+  - "travis_retry pip install --upgrade pip setuptools"
   - "travis_retry pip install twine wheel coveralls"
   - "travis_retry psql -c \"CREATE USER hepdata WITH CREATEDB PASSWORD 'hepdata';\" -U postgres"
   - "travis_retry psql -c 'CREATE DATABASE hepdata_test OWNER hepdata;' -U postgres"
 
 install:
-  - "travis_retry pip install -r requirements.txt"
-  - "travis_retry pip install -e .[all,postgresql] --pre"
+  - "travis_retry pip install --ignore-installed -r requirements.txt"
+  - "travis_retry pip install -e .[all,postgresql]"
   - "travis_retry hepdata db init"
   - "travis_retry hepdata db create"
   - "travis_retry hepdata utils reindex -rc True"
