@@ -1,4 +1,11 @@
-#!/bin/sh
+#!/bin/bash
+
+if [[ -z ${SAUCE_USERNAME} || -z ${SAUCE_ACCESS_KEY} ]]; then
+    echo "SAUCE_USERNAME or SAUCE_ACCESS_KEY environment variables not available."
+    echo "Omitting Selenium end-to-end tests running on Sauce Labs."
+    exit 0
+fi
+
 echo "Setting up Sauce Connect."
 tmp_dir=$(mktemp -d -t sc-XXXXXX)
 sc_version=4.5.4
