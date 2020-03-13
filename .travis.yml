@@ -49,13 +49,13 @@ python:
 before_install:
   # See: https://docs.travis-ci.com/user/database-setup/#Installing-specific-versions-of-ElasticSearch
   - "curl -O https://download.elastic.co/elasticsearch/release/org/elasticsearch/distribution/deb/elasticsearch/2.1.1/elasticsearch-2.1.1.deb && sudo dpkg -i --force-confnew elasticsearch-2.1.1.deb && sudo service elasticsearch restart"
-  - "travis_retry pip install --upgrade pip setuptools py wheel"
+  - "travis_retry pip install --upgrade pip setuptools wheel"
   - "travis_retry psql -c \"CREATE USER hepdata WITH CREATEDB PASSWORD 'hepdata';\" -U postgres"
   - "travis_retry psql -c 'CREATE DATABASE hepdata_test OWNER hepdata;' -U postgres"
 
 install:
-  - "travis_retry pip install -r requirements.txt"
-  - "travis_retry pip install -e .[all,postgresql] --pre"
+  - "travis_retry pip install --ignore-installed -r requirements.txt"
+  - "travis_retry pip install -e .[all,postgresql]"
   - "travis_retry hepdata db init"
   - "travis_retry hepdata db create"
   - "travis_retry hepdata utils reindex -rc True"
