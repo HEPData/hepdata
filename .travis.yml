@@ -82,7 +82,8 @@ script:
   - "if [[ -z ${SAUCE_USERNAME} || -z ${SAUCE_ACCESS_KEY} ]]; then py.test tests -k 'not tests/e2e'; else py.test tests; fi"
 
 after_success:
-  - coveralls
+  - "pip install coveralls"
+  - "coveralls"
 
 after_script:
   - "/home/travis/build/HEPData/hepdata/scripts/sc_tunnel_stop.sh"
