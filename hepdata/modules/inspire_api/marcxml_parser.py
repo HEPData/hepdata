@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with HEPData; if not, write to the Free Software Foundation, Inc.,
 # 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
-import timestring
+from dateutil.parser import parse
 
 marc_tags = {
     'title': ('245', 'a'),
@@ -64,7 +64,7 @@ def get_year(soup):
     try:
         tag, code = marc_tags['year']
         datafield = soup.find_all(tag=tag)[0]
-        return timestring.Date(datafield.find_all(code=code)[0].string).year
+        return parse(datafield.find_all(code=code)[0].string).year
     except:
         return None
 
@@ -177,7 +177,7 @@ def get_date(soup):
             if datafield.find_all(code=code):
                 value = datafield.find_all(code=code)[0].string
                 date = expand_date(value)
-                return date, timestring.Date(date).year
+                return date, parse(date).year
         return None, None
     except IndexError:
         return None, None
