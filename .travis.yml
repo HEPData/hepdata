@@ -45,6 +45,7 @@ services:
 
 python:
   - "2.7"
+  - "3.6"
 
 before_install:
   # See: https://docs.travis-ci.com/user/database-setup/#Installing-specific-versions-of-ElasticSearch
