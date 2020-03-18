@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # This file is part of HEPData.
-# Copyright (C) 2015 CERN.
+# Copyright (C) 2020 CERN.
 #
 # HEPData is free software; you can redistribute it
 # and/or modify it under the terms of the GNU General Public License as
@@ -40,7 +40,7 @@ cache:
 services:
   - postgresql
   - elasticsearch
-  - redis-server
+  - redis
   - xvfb
 
 python:
@@ -50,14 +50,13 @@ python:
 before_install:
   # See: https://docs.travis-ci.com/user/database-setup/#Installing-specific-versions-of-ElasticSearch
   - "curl -O https://download.elastic.co/elasticsearch/release/org/elasticsearch/distribution/deb/elasticsearch/2.1.1/elasticsearch-2.1.1.deb && sudo dpkg -i --force-confnew elasticsearch-2.1.1.deb && sudo service elasticsearch restart"
-  - "travis_retry pip install --upgrade pip setuptools py"
-  - "travis_retry pip install twine wheel coveralls requirements-builder"
+  - "travis_retry pip install --upgrade pip setuptools wheel"
   - "travis_retry psql -c \"CREATE USER hepdata WITH CREATEDB PASSWORD 'hepdata';\" -U postgres"
   - "travis_retry psql -c 'CREATE DATABASE hepdata_test OWNER hepdata;' -U postgres"
 
 install:
-  - "travis_retry pip install -r requirements.txt"
-  - "travis_retry pip install -e .[all,postgresql] --pre"
+  - "travis_retry pip install --ignore-installed -r requirements.txt"
+  - "travis_retry pip install -e .[all,postgresql]"
   - "travis_retry hepdata db init"
   - "travis_retry hepdata db create"
   - "travis_retry hepdata utils reindex -rc True"
@@ -78,7 +77,8 @@ script:
   - "if [[ -z ${SAUCE_USERNAME} || -z ${SAUCE_ACCESS_KEY} ]]; then py.test tests -k 'not tests/e2e'; else py.test tests; fi"
 
 after_success:
-  - coveralls
+  - "pip install coveralls"
+  - "coveralls"
 
 after_script:
   - "/home/travis/build/HEPData/hepdata/scripts/sc_tunnel_stop.sh"
