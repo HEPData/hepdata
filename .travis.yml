@@ -44,7 +44,6 @@ services:
   - xvfb
 
 python:
-  - "2.7"
   - "3.6"
 
 before_install:
@@ -62,7 +61,7 @@ install:
   - "travis_retry hepdata utils reindex -rc True"
   - "travis_retry npm update && npm install --silent -g node-sass clean-css@3.4.28 uglify-js requirejs"
   - "hepdata npm"
-  - "cd /home/travis/virtualenv/python2.7.15/var/hepdata-instance/static/"
+  - "cd /home/travis/virtualenv/python3.6.7/var/hepdata-instance/static/"
   - "travis_retry npm install"
   - "hepdata collect -v"
   - "hepdata assets build"
