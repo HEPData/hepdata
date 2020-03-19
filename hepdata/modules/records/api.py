@@ -400,6 +400,7 @@ def process_zip_archive(file, id):
 
     if submission_found:
         basepath, submission_file_path = submission_found
+        from_oldhepdata = False
     else:
         result = check_and_convert_from_oldhepdata(file_path, id, time_stamp)
 
@@ -408,8 +409,9 @@ def process_zip_archive(file, id):
             return result
         else:
             basepath, submission_file_path = result
+            from_oldhepdata = True
 
-    return process_submission_directory(basepath, submission_file_path, id)
+    return process_submission_directory(basepath, submission_file_path, id, from_oldhepdata=from_oldhepdata)
 
 
 def check_and_convert_from_oldhepdata(input_directory, id, timestamp):

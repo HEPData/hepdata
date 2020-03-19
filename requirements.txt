@@ -65,11 +65,11 @@ Flask-Testing==0.4.2
 Flask-WTF==0.13.1
 funcsigs==1.0.2
 functools32==3.2.3.post2
-future==0.15.2
+future==0.18.2
 gevent==1.2.2
 greenlet==0.4.12
 gunicorn==19.5.0
-hepdata-converter-ws-client==0.1.3
+hepdata-converter-ws-client==0.1.4
 hepdata-validator==0.2.1
 idna
 IDUtils==0.2.3
@@ -145,7 +145,7 @@ PyYAML==4.2b4
 raven==6.7.0
 redis==3.2.1
 reportlab==3.1.44
-requests==2.21.0
+requests==2.23.0
 requests-oauthlib==0.7.0
 responses
 ruamel.base==1.0.0
