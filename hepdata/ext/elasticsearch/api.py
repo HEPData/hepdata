@@ -18,6 +18,7 @@
 from __future__ import print_function
 
 from collections import defaultdict
+import time
 
 from dateutil.parser import parse
 from flask import current_app
@@ -236,16 +237,31 @@ def get_records_matching_field(field, id, index=None, doc_type=None, source=None
     query = {
         "size": 9999,
         'query': {
-            'match': {
-                field: id
+            "bool": {
+                "must": [
+                    {
+                        "match": {
+                            field: id
+                        }
+                    }
+                ]
             }
         }
     }
 
+    if doc_type:
+        query["query"]["bool"]["must"].append({
+            "match": {
+                "doc_type": doc_type
+            }
+        })
+
     if source:
         query["_source"] = source
 
-    return es.search(index=index, doc_type=doc_type, body=query)
+    print(query)
+
+    return es.search(index=index, body=query)
 
 
 @default_index
@@ -255,19 +271,19 @@ def delete_item_from_index(id, index, doc_type, parent=None):
     :param id:
     :param index:
     :param doc_type:
+    :param parent: the parent record id
     :return:
     """
     if parent:
-        es.delete(index=index, doc_type=doc_type, id=id, parent=parent)
+        es.delete(index=index, id=id, routing=parent)
     else:
-        es.delete(index=index, doc_type=doc_type, id=id)
+        es.delete(index=index, id=id, routing=id)
 
 
 @default_index
 def push_data_keywords(pub_ids=None, index=None):
     """ Go through all the publications and their datatables and move data
      keywords from tables to their parent publications. """
-
     if not pub_ids:
         body = {'query': {'match_all': {}}}
         results = es.search(index=index,
@@ -279,17 +295,18 @@ def push_data_keywords(pub_ids=None, index=None):
     for pub_id in pub_ids:
         query_builder = QueryBuilder()
         query_builder.add_child_parent_relation(
-            'publication',
+            'parent_publication',
             relation='parent',
             must=True,
             related_query={'match': {'recid': pub_id}}
         )
+
         tables = es.search(
             index=index,
-            doc_type=CFG_DATA_TYPE,
             body=query_builder.query,
-            _source_include='keywords'
+            _source_includes='keywords'
         )
+
         keywords = [d['_source'].get('keywords', None)
                     for d in tables['hits']['hits']]
 
@@ -312,7 +329,7 @@ def push_data_keywords(pub_ids=None, index=None):
         }
 
         try:
-            es.update(index=index, doc_type=CFG_PUB_TYPE, id=pub_id, body=body)
+            es.update(index=index, id=pub_id, body=body)
         except Exception as e:
             log.error(e.message)
 
@@ -347,9 +364,8 @@ def index_record_ids(record_ids, index=None):
             op_dict = {
                 "index": {
                     "_index": index,
-                    "_type": CFG_DATA_TYPE,
                     "_id": doc['recid'],
-                    "_parent": str(doc['related_publication'])
+                    "routing": doc['related_publication']
                 }
             }
 
@@ -370,8 +386,8 @@ def index_record_ids(record_ids, index=None):
             op_dict = {
                 "index": {
                     "_index": index,
-                    "_type": CFG_PUB_TYPE,
-                    "_id": doc['recid']
+                    "_id": doc['recid'],
+                    "routing": doc['recid']
                 }
             }
 
@@ -383,7 +399,9 @@ def index_record_ids(record_ids, index=None):
         to_index.append(doc)
 
     if to_index:
-        es.bulk(index=index, body=to_index, refresh=True)
+        result = es.bulk(index=index, body=to_index, refresh=True)
+        if result['errors']:
+            log.error('Bulk insert failed: %s' % result)
 
     return indexed_result
 
@@ -423,15 +441,7 @@ def recreate_index(index=None):
 
     body = {
         "mappings": {
-            CFG_PUB_TYPE: {
-                "properties": mapping
-            },
-            CFG_DATA_TYPE: {
-                "_parent": {
-                    "type": CFG_PUB_TYPE
-                },
-                "properties": mapping
-            }
+            "properties": mapping
         }
     }
 

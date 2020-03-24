@@ -119,4 +119,4 @@ def fetch_remaining_papers(tables, papers):
 
 
 def is_datatable(es_hit):
-    return es_hit['_type'] == CFG_DATA_TYPE
+    return es_hit['doc_type'] == CFG_DATA_TYPE

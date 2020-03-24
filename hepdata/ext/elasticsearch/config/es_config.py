@@ -37,14 +37,12 @@ def default_aggregations():
         },
         "collaboration": {
             "terms": {
-                "field": "collaborations.raw",
-                "size": 0,
+                "field": "collaborations.raw"
             }
         },
         "subject_areas": {
             "terms": {
-                "field": "subject_area.raw",
-                "size": 0,
+                "field": "subject_area.raw"
             }
         },
         "dates": {
@@ -55,85 +53,81 @@ def default_aggregations():
         },
         "reactions": {
             "terms": {
-                "field": "data_keywords.reactions.raw",
-                # "min_doc_count": 2,
-                "size": 0,
+                "field": "data_keywords.reactions.raw"
             }
         },
         "observables": {
             "terms": {
-                "field": "data_keywords.observables.raw",
-                # "min_doc_count": 2,
-                "size": 0,
+                "field": "data_keywords.observables.raw"
             }
         },
         "phrases": {
             "terms": {
-                "field": "data_keywords.phrases.raw",
-                # "min_doc_count": 2,
-                "size": 0,
+                "field": "data_keywords.phrases.raw"
             }
         },
         "cmenergies": {
             "terms": {
-                "field": "data_keywords.cmenergies.raw",
-                # "min_doc_count": 2,
-                "size": 0,
+                "field": "data_keywords.cmenergies.raw"
             }
         }
     }
 
 
-def get_filter_clause(name, value):
-    """ Returns an appropriate ES clause for a given filter """
+def get_nested_clause(name, value):
     if name == 'author':
         clause = {
-            "nested": {
-                "path": "authors",
-                "filter": {
-                    "bool": {
-                        "must": {
-                            "term": {"authors.full_name": value}
+            "path": "authors",
+            "query": {
+                "bool": {
+                    "must": {
+                        "match": {
+                            "authors.full_name": value
                         }
                     }
                 }
             }
         }
-    elif name == 'collaboration':
+    else:
+        raise ValueError("Unknown filter: " + name)
+
+    return clause
+
+
+def get_filter_clause(name, value):
+    """ Returns an appropriate ES clause for a given filter """
+    if name == 'collaboration':
         clause = {
-            "bool": {
-                "must": {
-                    "term": {"collaborations.raw": value}
-                }
+            "term": {
+                "collaborations.raw": value
             }
         }
 
     elif name == 'subject_areas':
         clause = {
-            "bool": {
-                "must": {
-                    "term": {"subject_area.raw": value}
-                }
+            "term": {
+                "subject_area.raw": value
             }
         }
 
     elif name == 'date':
-        or_clause = []
+        year_list = []
         for year in value:
-            or_clause.append({'term': {'year': str(year)}})
+            year_list.append(str(year))
 
         clause = {
-            "or": or_clause
+            "terms": {
+                "year": year_list
+            }
         }
 
     elif name in CFG_DATA_KEYWORDS:
         clause = {
-            "bool": {
-                "must": {
-                    "term": {"data_keywords." + name + ".raw": value}
-                }
+            "term": {
+                "data_keywords." + name + ".raw": value
             }
         }
+
     else:
         raise ValueError("Unknown filter: " + name)
 

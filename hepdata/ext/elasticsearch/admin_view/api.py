@@ -25,7 +25,7 @@
 import logging
 
 from elasticsearch import Elasticsearch
-from elasticsearch_dsl import DocType, String, Date, Integer, Nested, InnerObjectWrapper, Q, Index, Search
+from elasticsearch_dsl import Document, Text, Keyword, Date, Integer, Nested, InnerDoc, Q, Index, Search
 from elasticsearch_dsl.connections import connections
 from flask import current_app
 
@@ -36,25 +36,20 @@ logging.basicConfig()
 log = logging.getLogger(__name__)
 
 
-class ESSubmissionParticipant(InnerObjectWrapper):
-    pass
-
-
-class ESSubmission(DocType):
+class ESSubmission(Document):
     recid = Integer()
-    inspire_id = String()
+    inspire_id = Text()
     version = Integer()
-    title = String()
-    collaboration = String()
-    status = String()
+    title = Text()
+    collaboration = Text()
+    status = Text()
     creation_date = Date()
     last_updated = Date()
     data_count = Integer()
     participants = Nested(
-        doc_class=ESSubmissionParticipant,
         properties={
-            'role': String(fields={'raw': String(index='not_analyzed')}),
-            'full_name': String()
+            'role': Text(fields={'raw': Keyword(index='true')}),
+            'full_name': Text()
         }
     )
 
@@ -189,7 +184,7 @@ class AdminIndexer:
         submission = Index(self.index)
         submission.delete(ignore=404)
 
-        ESSubmission.init()
+        ESSubmission.init(self.index)
 
     def add_to_index(self, *args, **kwargs):
         """
@@ -197,8 +192,8 @@ class AdminIndexer:
         :param kwargs:
         :return:
         """
-        new_sub = ESSubmission(**kwargs)
-        return new_sub.save()
+        new_sub = ESSubmission(index=self.index, **kwargs)
+        return new_sub.save(index=self.index)
 
     def delete_from_index(self, *args, **kwargs):
         """

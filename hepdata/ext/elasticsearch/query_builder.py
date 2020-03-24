@@ -27,8 +27,8 @@ class QueryBuilder(object):
     def __init__(self):
         self.query = {
             "query": {
-                "filtered": {
-                    "query": {
+                "bool": {
+                    "must": {
                         "match_all": {}
                     }
                 }
@@ -88,9 +88,10 @@ class QueryBuilder(object):
         related_query = {} if not related_query else related_query
 
         relation = "has_child" if relation == "child" else "has_parent"
+        type_key = "type" if relation == "child" else "parent_type"
         relation_dict = {
             relation: {
-                "type": related_type,
+                type_key: related_type,
                 "query": related_query
             }
         }
@@ -102,18 +103,8 @@ class QueryBuilder(object):
             }
         }
 
-        if "filtered" in self.query.get("query", {}):
-            self.query["query"]["filtered"]["query"] = query_dict
-        else:
-            self.query.update({"query": query_dict})
+        self.query.update({"query": query_dict})
 
-    def add_query_string(self, query_string=''):
-        query_dict = self.generate_query_string(query_string=query_string)
-
-        if "filtered" in self.query.get("query", {}):
-            self.query["query"]["filtered"]["query"] = query_dict
-        else:
-            self.query.update({"query": query_dict})
 
     def add_aggregations(self, aggs=None):
         from config.es_config import default_aggregations
@@ -132,14 +123,23 @@ class QueryBuilder(object):
         })
 
     def add_filters(self, filters):
-        from config.es_config import get_filter_clause
+        from config.es_config import get_filter_clause, get_nested_clause
         filter_clauses = []
-        for name, value in filters:
-            clause = get_filter_clause(name, value)
-            filter_clauses.append(clause)
+        nested_clause = None
 
-        if filter_clauses and "filtered" in self.query.get("query", {}):
-            self.query["query"]["filtered"]["filter"] = {"and": filter_clauses}
+        for name, value in filters:
+            if name == "author":
+                nested_clause = get_nested_clause(name, value)
+            else:
+                clause = get_filter_clause(name, value)
+                filter_clauses.append(clause)
+
+        if filter_clauses:
+            self.query["query"]["bool"]["filter"] = filter_clauses
+
+        if nested_clause:
+            self.query["query"].pop("bool")
+            self.query["query"]["nested"] = nested_clause
 
     def add_post_filter(self, postfilter):
         if postfilter is not None:
