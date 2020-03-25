@@ -87,10 +87,9 @@ class QueryBuilder(object):
         other_queries = [] if not other_queries else other_queries
         related_query = {} if not related_query else related_query
 
-        relation = "has_child" if relation == "child" else "has_parent"
         type_key = "type" if relation == "child" else "parent_type"
         relation_dict = {
-            relation: {
+            "has_" + relation: {
                 type_key: related_type,
                 "query": related_query
             }

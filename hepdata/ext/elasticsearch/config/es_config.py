@@ -128,6 +128,13 @@ def get_filter_clause(name, value):
             }
         }
 
+    elif name == 'doc_type':
+        clause = {
+            "term": {
+                "doc_type": value
+            }
+        }
+
     else:
         raise ValueError("Unknown filter: " + name)
 

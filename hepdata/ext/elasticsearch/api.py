@@ -18,7 +18,6 @@
 from __future__ import print_function
 
 from collections import defaultdict
-import time
 
 from dateutil.parser import parse
 from flask import current_app
@@ -96,7 +95,7 @@ def search(query,
     authors_query = QueryBuilder.generate_nested_query('authors', query)
 
     query_builder = QueryBuilder()
-    query_builder.add_child_parent_relation(CFG_DATA_TYPE,
+    query_builder.add_child_parent_relation('child_' + CFG_DATA_TYPE,
                                             relation="child",
                                             related_query=data_query,
                                             other_queries=[pub_query,
@@ -105,7 +104,7 @@ def search(query,
     # Add additional options
     query_builder.add_pagination(size=size, offset=offset)
     query_builder.add_sorting(sort_field=sort_field, sort_order=sort_order)
-    query_builder.add_filters(filters)
+    query_builder.add_filters(filters + [('doc_type', CFG_PUB_TYPE)])
     query_builder.add_post_filter(post_filter)
     query_builder.add_aggregations()
     query_builder.add_source_filter(include, exclude)
@@ -113,27 +112,21 @@ def search(query,
     if query:
         # Randomize search among the available shard copies.
         pub_result = es.search(index=index,
-                               body=query_builder.query,
-                               doc_type=CFG_PUB_TYPE)
+                               body=query_builder.query)
     else:
-        # Execute search only on the primary shards (to ensure no missing or duplicate results).
+        # Always execute on the same shard for consistency of results
         pub_result = es.search(index=index,
                                body=query_builder.query,
-                               doc_type=CFG_PUB_TYPE,
-                               preference="_primary")
+                               preference="primary")
 
     parent_filter = {
-        "filtered": {
-            "filter": {
-                "terms": {
+        "terms": {
                     "_id": [hit["_id"] for hit in pub_result['hits']['hits']]
-                }
-            }
         }
     }
 
     query_builder = QueryBuilder()
-    query_builder.add_child_parent_relation(CFG_PUB_TYPE,
+    query_builder.add_child_parent_relation('parent_' + CFG_PUB_TYPE,
                                             relation="parent",
                                             related_query=parent_filter,
                                             must=True,
@@ -141,8 +134,7 @@ def search(query,
     query_builder.add_pagination(size=size * 50)
 
     data_result = es.search(index=index,
-                            body=query_builder.query,
-                            doc_type=CFG_DATA_TYPE)
+                            body=query_builder.query)
 
     merged_results = merge_results(pub_result, data_result)
 
@@ -220,10 +212,10 @@ def get_record(record_id, doc_type, index=None, parent=None):
     """
     try:
         if doc_type == CFG_DATA_TYPE and parent:
-            result = es.get(index=index, doc_type=doc_type,
+            result = es.get(index=index,
                             id=record_id, parent=parent)
         else:
-            result = es.get(index=index, doc_type=doc_type, id=record_id)
+            result = es.get(index=index, id=record_id)
 
         return result.get('_source', result)
     except (NotFoundError, RequestError):
@@ -258,8 +250,6 @@ def get_records_matching_field(field, id, index=None, doc_type=None, source=None
 
     if source:
         query["_source"] = source
-
-    print(query)
 
     return es.search(index=index, body=query)
 
@@ -459,7 +449,7 @@ def fetch_record(record_id, doc_type, index=None):
 
     :return: [dict] Record if found, otherwise an error message
     """
-    res = es.get(index=index, doc_type=doc_type, id=record_id)
+    res = es.get(index=index, id=record_id)
     return res.get('_source', res)
 
 
@@ -469,7 +459,7 @@ def get_n_latest_records(n_latest, field="last_updated", index=None):
 
     query = {
         "size": n_latest,
-        "query": QueryBuilder.generate_query_string(),
+        "query": QueryBuilder.generate_query_string('doc_type:'+CFG_PUB_TYPE),
         "sort": [{
             field: {
                 "order": "desc"
@@ -478,7 +468,7 @@ def get_n_latest_records(n_latest, field="last_updated", index=None):
         "_source": {"exclude": ["authors", "keywords"]}
     }
 
-    query_result = es.search(index=index, doc_type=CFG_PUB_TYPE, body=query)
+    query_result = es.search(index=index, body=query)
     return query_result['hits']['hits']
 
 
@@ -490,4 +480,4 @@ def get_count_for_collection(doc_type, index=None):
     :param index: name of index to use.
     :return: the number of records in that collection
     """
-    return es.count(index=index, doc_type=doc_type)
+    return es.count(index=index, q='doc_type:'+doc_type)

@@ -96,7 +96,7 @@ def test_query_builder_child_parent_relation():
                 'should': [
                     {
                         'has_child': {
-                            'parent_type': 'test_type',
+                            'type': 'test_type',
                             'query': {}
                         }
                     }
@@ -184,13 +184,23 @@ def test_search():
 
 
 def test_merge_results():
-    source_a = {"hits": {"hits": [{"key": "testa"}], "total": 1}}
-    source_b = {"hits": {"hits": [{"key": "testb"}], "total": 1}}
+    pub_result = {
+        "hits": {
+            "hits": [{"key": "testa"}],
+            "total": { "value": 2, "relation": "eq" }
+        }
+    }
+    data_result = {
+        "hits": {
+            "hits": [{"key": "testb"}],
+            "total": { "value": 1, "relation": "eq" }
+        }
+    }
 
-    merged = merge_results(source_a, source_b)
+    merged = merge_results(pub_result, data_result)
     assert ("hits" in merged)
     assert (len(merged["hits"]) == 2)
-    assert (merged["total"] == 1)
+    assert (merged["total"] == 2)
 
 
 def test_flip_sort_order():
@@ -310,5 +320,5 @@ def test_get_basic_record_information():
 
 
 def test_is_datatable():
-    assert (is_datatable({"doc_type": "datatable"}))
-    assert (not is_datatable({"doc_type": "publication"}))
+    assert (is_datatable({"_source": {"doc_type": "datatable"}}))
+    assert (not is_datatable({"_source": {"doc_type": "publication"}}))

@@ -31,7 +31,7 @@ def merge_results(pub_result, data_result):
     merge_dict = dict()
     merge_dict['hits'] = pub_result['hits']['hits'] + \
         data_result['hits']['hits']
-    merge_dict['total'] = pub_result['hits']['total']
+    merge_dict['total'] = pub_result['hits']['total']['value']
     merge_dict['aggregations'] = pub_result.get('aggregations', {})
     return merge_dict
 
@@ -119,4 +119,4 @@ def fetch_remaining_papers(tables, papers):
 
 
 def is_datatable(es_hit):
-    return es_hit['doc_type'] == CFG_DATA_TYPE
+    return es_hit['_source']['doc_type'] == CFG_DATA_TYPE

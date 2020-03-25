@@ -43,8 +43,9 @@ def calculate_total_pages(query_result, max_results):
     Calculate the overall number of pages of results
     given the number of hits and max number of records displayed per page.
     """
-    total_pages = query_result['total'] // max_results
-    if not query_result['total'] % max_results == 0:
+    total_hits = query_result['total']
+    total_pages = total_hits // max_results
+    if not total_hits % max_results == 0:
         total_pages += 1
     return total_pages
 
