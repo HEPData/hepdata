@@ -21,6 +21,7 @@
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
 import re
+from elasticsearch_dsl import Q
 
 
 class QueryBuilder(object):
@@ -112,6 +113,16 @@ class QueryBuilder(object):
 
         self.query.update({"aggs": aggs})
 
+    @staticmethod
+    def add_aggregations_dsl(search, aggs=None):
+        from config.es_config import default_aggregations_dsl
+        if not aggs:
+            default_aggregations_dsl(search)
+        else:
+            search.aggs = aggs
+
+        return search
+
     def add_highlighting(self, fields):
         self.query.update({
             "highlight": {
@@ -139,6 +150,21 @@ class QueryBuilder(object):
         if nested_clause:
             self.query["query"].pop("bool")
             self.query["query"]["nested"] = nested_clause
+
+    @staticmethod
+    def add_filters_dsl(search, filters):
+        from config.es_config import get_filter_field
+
+        for name, value in filters:
+            if name == "author":
+                search = search.query('nested', path='authors', query=Q('match', authors__full_name = value))
+            else:
+                (filter_type, field, value) = get_filter_field(name, value)
+                search = search.filter(filter_type, **{field: value})
+
+        return search
+
+
 
     def add_post_filter(self, postfilter):
         if postfilter is not None:

@@ -74,6 +74,19 @@ def default_aggregations():
     }
 
 
+def default_aggregations_dsl(search):
+    """ Default aggregations used for computing facets """
+    search.aggs.bucket('nested_authors', 'nested', path='authors')\
+        .bucket('author_full_names', 'terms', field='authors.full_name')
+    search.aggs.bucket('collaboration', 'terms', field='collaborations.raw')
+    search.aggs.bucket('subject_areas', 'terms', field='subject_area.raw')
+    search.aggs.bucket('dates', 'date_histogram', field='publication_date', interval='year')
+    search.aggs.bucket('reactions', 'terms', field='data_keywords.reactions.raw')
+    search.aggs.bucket('observables', 'terms', field='data_keywords.observables.raw')
+    search.aggs.bucket('phrases', 'terms', field='data_keywords.phrases.raw')
+    search.aggs.bucket('cmenergies', 'terms', field='data_keywords.cmenergies.raw')
+
+
 def get_nested_clause(name, value):
     if name == 'author':
         clause = {
@@ -139,6 +152,36 @@ def get_filter_clause(name, value):
         raise ValueError("Unknown filter: " + name)
 
     return clause
+
+def get_filter_field(name, value):
+    """ Returns an appropriate ES clause for a given filter """
+    filter_type = "term"
+
+    if name == 'collaboration':
+        field = "collaborations.raw"
+
+    elif name == 'subject_areas':
+        field = "subject_area.raw"
+
+    elif name == 'date':
+        year_list = []
+        for year in value:
+            year_list.append(str(year))
+
+        filter_type = "terms"
+        value = year_list
+        field = "year"
+
+    elif name in CFG_DATA_KEYWORDS:
+        field = "data_keywords." + name + ".raw"
+
+    elif name == 'doc_type':
+        field = "doc_type"
+
+    else:
+        raise ValueError("Unknown filter: " + name)
+
+    return (filter_type, field, value)
 
 
 def sort_fields_mapping(sort_by):

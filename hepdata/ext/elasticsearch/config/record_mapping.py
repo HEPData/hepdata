@@ -196,7 +196,7 @@ mapping = {
         "type": "text",
         "fields": {
             "raw": {
-                "type": "text",
+                "type": "keyword",
                 "index": "true"
             }
         }

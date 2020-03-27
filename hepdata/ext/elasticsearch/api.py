@@ -22,11 +22,14 @@ from collections import defaultdict
 from dateutil.parser import parse
 from flask import current_app
 from elasticsearch.exceptions import NotFoundError, RequestError
+from elasticsearch_dsl import Search
+from elasticsearch_dsl.query import QueryString, Q
 from invenio_pidstore.models import RecordIdentifier
 from sqlalchemy import func
 
 from hepdata.ext.elasticsearch.document_enhancers import enhance_data_document, enhance_publication_document
-from .utils import prepare_author_for_indexing
+from .config.es_config import sort_fields_mapping
+from .utils import calculate_sort_order, prepare_author_for_indexing
 from hepdata.config import CFG_PUB_TYPE, CFG_DATA_TYPE
 from query_builder import QueryBuilder, HEPDataQueryParser
 from process_results import map_result, merge_results
@@ -34,6 +37,7 @@ from invenio_db import db
 import logging
 
 from invenio_search import current_search_client as es
+
 
 __all__ = ['search', 'index_record_ids', 'index_record_dict', 'fetch_record',
            'recreate_index', 'get_record', 'reindex_all',
@@ -89,35 +93,26 @@ def search(query,
 
     query = HEPDataQueryParser.parse_query(query)
 
-    # Build core query
-    data_query = QueryBuilder.generate_query_string(query)
-    pub_query = QueryBuilder.generate_query_string(query)
-    authors_query = QueryBuilder.generate_nested_query('authors', query)
-
-    query_builder = QueryBuilder()
-    query_builder.add_child_parent_relation('child_' + CFG_DATA_TYPE,
-                                            relation="child",
-                                            related_query=data_query,
-                                            other_queries=[pub_query,
-                                                           authors_query])
-
-    # Add additional options
-    query_builder.add_pagination(size=size, offset=offset)
-    query_builder.add_sorting(sort_field=sort_field, sort_order=sort_order)
-    query_builder.add_filters(filters + [('doc_type', CFG_PUB_TYPE)])
-    query_builder.add_post_filter(post_filter)
-    query_builder.add_aggregations()
-    query_builder.add_source_filter(include, exclude)
+    search = Search(using=es, index=index)
 
     if query:
-        # Randomize search among the available shard copies.
-        pub_result = es.search(index=index,
-                               body=query_builder.query)
-    else:
-        # Always execute on the same shard for consistency of results
-        pub_result = es.search(index=index,
-                               body=query_builder.query,
-                               preference="primary")
+        search.query = QueryString(query=query) | \
+                       Q('nested', query=QueryString(query=query), path='authors') | \
+                       Q('has_child', type="child_datatable", query=QueryString(query=query))
+
+    search = search.filter("term", doc_type=CFG_PUB_TYPE)
+    search = QueryBuilder.add_filters_dsl(search, filters)
+
+    mapped_sort_field = sort_fields_mapping(sort_field)
+    search = search.sort({mapped_sort_field : {"order" : calculate_sort_order(sort_order, sort_field)}})
+    search = QueryBuilder.add_aggregations_dsl(search)
+
+    if post_filter:
+        search = search.post_filter(post_filter)
+
+    search = search.source(includes=include, excludes=exclude)
+    search = search[offset:size]
+    pub_result = search.execute().to_dict()
 
     parent_filter = {
         "terms": {
@@ -125,19 +120,17 @@ def search(query,
         }
     }
 
-    query_builder = QueryBuilder()
-    query_builder.add_child_parent_relation('parent_' + CFG_PUB_TYPE,
-                                            relation="parent",
-                                            related_query=parent_filter,
-                                            must=True,
-                                            other_queries=[data_query])
-    query_builder.add_pagination(size=size * 50)
+    data_search = Search(using=es, index=index)
+    data_search = data_search.query('has_parent',
+                                    parent_type="parent_publication",
+                                    query=parent_filter)
+    if query:
+        data_search = data_search.query(QueryString(query=query))
 
-    data_result = es.search(index=index,
-                            body=query_builder.query)
+    data_search = data_search[0:size*50]
+    data_result = data_search.execute().to_dict()
 
     merged_results = merge_results(pub_result, data_result)
-
     return map_result(merged_results)
 
 
