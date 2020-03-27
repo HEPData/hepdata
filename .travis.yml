@@ -81,3 +81,15 @@ after_success:
 
 after_script:
   - "/home/travis/build/HEPData/hepdata/scripts/sc_tunnel_stop.sh"
+
+deploy:
+  - provider: script
+    skip_cleanup: true
+    script: cd $TRAVIS_BUILD_DIR; ./build-and-deploy.sh
+    on:
+      branch: master
+  - provider: script
+    skip_cleanup: true
+    script: cd $TRAVIS_BUILD_DIR; ./build-and-deploy.sh
+    on:
+      tags: true
