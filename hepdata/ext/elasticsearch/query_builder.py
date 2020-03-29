@@ -24,97 +24,10 @@ import re
 from elasticsearch_dsl import Q
 
 
-class QueryBuilder(object):
-    def __init__(self):
-        self.query = {
-            "query": {
-                "bool": {
-                    "must": {
-                        "match_all": {}
-                    }
-                }
-            }
-        }
+class QueryBuilder:
 
     @staticmethod
-    def generate_query_string(query_string=''):
-        if query_string:
-            return {
-                "query_string": {
-                    "query": query_string,
-                    "fuzziness": "AUTO"
-                }
-            }
-        else:
-            return {"match_all": {}}
-
-    @staticmethod
-    def generate_nested_query(path, query):
-        return {
-            "nested": {
-                "path": path,
-                "query": QueryBuilder.generate_query_string(query_string=query)
-            }
-        }
-
-    def add_sorting(self, sort_field='', sort_order=''):
-        from utils import calculate_sort_order
-        from config.es_config import sort_fields_mapping
-
-        mapped_sort_field = sort_fields_mapping(sort_field)
-        self.query.update(dict(sort=[{
-            mapped_sort_field: {
-                "order": calculate_sort_order(sort_order, sort_field)
-            }
-        }]))
-
-    def add_source_filter(self, includes, excludes):
-        self.query.update({
-            "_source": {"includes": includes, "excludes": excludes}
-        })
-
-    def add_pagination(self, size, offset=0):
-        self.query.update({
-            "size": size,
-            "from": offset
-        })
-
-    def add_child_parent_relation(self,
-                                  related_type,
-                                  relation="child",
-                                  related_query=None,
-                                  must=False,
-                                  other_queries=None):
-        other_queries = [] if not other_queries else other_queries
-        related_query = {} if not related_query else related_query
-
-        type_key = "type" if relation == "child" else "parent_type"
-        relation_dict = {
-            "has_" + relation: {
-                type_key: related_type,
-                "query": related_query
-            }
-        }
-
-        bool_operator = "must" if must else "should"
-        query_dict = {
-            "bool": {
-                bool_operator: [relation_dict] + other_queries
-            }
-        }
-
-        self.query.update({"query": query_dict})
-
-
-    def add_aggregations(self, aggs=None):
-        from config.es_config import default_aggregations
-        if not aggs:
-            aggs = default_aggregations()
-
-        self.query.update({"aggs": aggs})
-
-    @staticmethod
-    def add_aggregations_dsl(search, aggs=None):
+    def add_aggregations(search, aggs=None):
         from config.es_config import default_aggregations_dsl
         if not aggs:
             default_aggregations_dsl(search)
@@ -123,36 +36,8 @@ class QueryBuilder(object):
 
         return search
 
-    def add_highlighting(self, fields):
-        self.query.update({
-            "highlight": {
-                "fields": {
-                    field: {} for field in fields
-                    }
-            }
-        })
-
-    def add_filters(self, filters):
-        from config.es_config import get_filter_clause, get_nested_clause
-        filter_clauses = []
-        nested_clause = None
-
-        for name, value in filters:
-            if name == "author":
-                nested_clause = get_nested_clause(name, value)
-            else:
-                clause = get_filter_clause(name, value)
-                filter_clauses.append(clause)
-
-        if filter_clauses:
-            self.query["query"]["bool"]["filter"] = filter_clauses
-
-        if nested_clause:
-            self.query["query"].pop("bool")
-            self.query["query"]["nested"] = nested_clause
-
     @staticmethod
-    def add_filters_dsl(search, filters):
+    def add_filters(search, filters):
         from config.es_config import get_filter_field
 
         for name, value in filters:
@@ -163,12 +48,6 @@ class QueryBuilder(object):
                 search = search.filter(filter_type, **{field: value})
 
         return search
-
-
-
-    def add_post_filter(self, postfilter):
-        if postfilter is not None:
-            self.query["post_filter"] = postfilter
 
 
 class HEPDataQueryParser(object):

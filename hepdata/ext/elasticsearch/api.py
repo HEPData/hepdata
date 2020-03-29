@@ -102,11 +102,11 @@ def search(query,
                        Q('has_child', type="child_datatable", query=fuzzy_query)
 
     search = search.filter("term", doc_type=CFG_PUB_TYPE)
-    search = QueryBuilder.add_filters_dsl(search, filters)
+    search = QueryBuilder.add_filters(search, filters)
 
     mapped_sort_field = sort_fields_mapping(sort_field)
     search = search.sort({mapped_sort_field : {"order" : calculate_sort_order(sort_order, sort_field)}})
-    search = QueryBuilder.add_aggregations_dsl(search)
+    search = QueryBuilder.add_aggregations(search)
 
     if post_filter:
         search = search.post_filter(post_filter)
@@ -259,30 +259,22 @@ def push_data_keywords(pub_ids=None, index=None):
     """ Go through all the publications and their datatables and move data
      keywords from tables to their parent publications. """
     if not pub_ids:
-        body = {'query': {'match_all': {}}}
-        results = es.search(index=index,
-                            doc_type=CFG_PUB_TYPE,
-                            body=body,
-                            _source=False)
-        pub_ids = [i['_id'] for i in results['hits']['hits']]
+        search = Search(using=es, index=index) \
+            .filter("term", doc_type=CFG_PUB_TYPE) \
+            .source(False)
+        results = search.execute()
+        pub_ids = [h.meta.id for h in results.hits]
 
     for pub_id in pub_ids:
-        query_builder = QueryBuilder()
-        query_builder.add_child_parent_relation(
-            'parent_publication',
-            relation='parent',
-            must=True,
-            related_query={'match': {'recid': pub_id}}
-        )
+        search = Search(using=es, index=index) \
+            .query('has_parent',
+                   parent_type="parent_publication",
+                   query={'match': {'recid': pub_id}}) \
+            .filter("term", doc_type=CFG_DATA_TYPE) \
+            .source(includes=['keywords'])
+        tables = search.execute()
 
-        tables = es.search(
-            index=index,
-            body=query_builder.query,
-            _source_includes='keywords'
-        )
-
-        keywords = [d['_source'].get('keywords', None)
-                    for d in tables['hits']['hits']]
+        keywords = [d.keywords for d in tables.hits]
 
         # Flatten the list
         keywords = [i for inner in keywords for i in inner]
@@ -441,18 +433,13 @@ def fetch_record(record_id, doc_type, index=None):
 def get_n_latest_records(n_latest, field="last_updated", index=None):
     """ Gets latest N records from the index """
 
-    query = {
-        "size": n_latest,
-        "query": QueryBuilder.generate_query_string('doc_type:'+CFG_PUB_TYPE),
-        "sort": [{
-            field: {
-                "order": "desc"
-            }
-        }],
-        "_source": {"exclude": ["authors", "keywords"]}
-    }
+    search = Search(using=es, index=index) \
+        .filter("term", doc_type=CFG_PUB_TYPE) \
+        .sort({field: {"order": "desc"}}) \
+        .source(excludes=["authors", "keywords"])
+    search = search[0:n_latest]
 
-    query_result = es.search(index=index, body=query)
+    query_result = search.execute().to_dict()
     return query_result['hits']['hits']
 
 
