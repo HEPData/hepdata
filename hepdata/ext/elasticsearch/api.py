@@ -136,22 +136,12 @@ def search(query,
 
 def search_authors(name, size=20):
     """ Search for authors in the author index. """
-    from hepdata.config import CFG_ES_AUTHORS
-    index, doc_type = CFG_ES_AUTHORS
+    from hepdata.config import AUTHOR_INDEX
 
-    query = {
-        "size": size,
-        "query": {
-            "match": {
-                "full_name": {
-                    "query": name,
-                    "fuzziness": "AUTO"
-                }
-            }
-        }
-    }
-
-    results = es.search(index=index, doc_type=doc_type, body=query)
+    search = Search(using=es, index=AUTHOR_INDEX) \
+        .query("match", full_name={"query": name, "fuzziness":"AUTO"})
+    search = search[0:size]
+    results = search.execute().to_dict()
     return [x['_source'] for x in results['hits']['hits']]
 
 

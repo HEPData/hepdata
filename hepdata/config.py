@@ -122,6 +122,7 @@ SETTINGS_TEMPLATE = "invenio_theme/page_settings.html"
 
 ELASTICSEARCH_INDEX = 'hepdata-main'
 SUBMISSION_INDEX = 'hepdata-submission'
+AUTHOR_INDEX = 'hepdata-authors'
 SEARCH_ELASTIC_HOSTS = [
     'localhost:9200'
 ]
@@ -131,7 +132,6 @@ SEARCH_AUTOINDEX = []
 CFG_PUB_TYPE = 'publication'
 CFG_DATA_TYPE = 'datatable'
 CFG_SUBMISSIONS_TYPE = 'submission'
-CFG_ES_AUTHORS = ('hepdata-authors', 'author')
 CFG_DATA_KEYWORDS = ['observables', 'reactions', 'cmenergies', 'phrases']
 
 CFG_CONVERTER_URL = 'http://188.184.65.191'

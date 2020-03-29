@@ -46,7 +46,7 @@ def prepare_author_for_indexing(document):
     """ Extract the author list from the document and index it in a separate
      index. """
 
-    index, doc_type = current_app.config['CFG_ES_AUTHORS']
+    index = current_app.config['AUTHOR_INDEX']
 
     author_data = []
     authors = document.get('authors', None)
@@ -58,7 +58,6 @@ def prepare_author_for_indexing(document):
             op_dict = {
                 "index": {
                     "_index": index,
-                    "_type": doc_type,
                     "_id": author['full_name']
                 }
             }
