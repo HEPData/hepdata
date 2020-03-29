@@ -96,9 +96,10 @@ def search(query,
     search = Search(using=es, index=index)
 
     if query:
-        search.query = QueryString(query=query) | \
-                       Q('nested', query=QueryString(query=query), path='authors') | \
-                       Q('has_child', type="child_datatable", query=QueryString(query=query))
+        fuzzy_query = QueryString(query=query, fuzziness='AUTO')
+        search.query = fuzzy_query | \
+                       Q('nested', query=fuzzy_query, path='authors') | \
+                       Q('has_child', type="child_datatable", query=fuzzy_query)
 
     search = search.filter("term", doc_type=CFG_PUB_TYPE)
     search = QueryBuilder.add_filters_dsl(search, filters)
