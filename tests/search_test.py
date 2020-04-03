@@ -20,6 +20,7 @@ import pytest
 
 from hepdata.ext.elasticsearch.config.es_config import default_sort_order_for_field, \
     add_default_aggregations, sort_fields_mapping
+from hepdata.ext.elasticsearch import api as es_api
 from hepdata.ext.elasticsearch.process_results import merge_results, match_tables_to_papers, \
     get_basic_record_information, is_datatable
 from hepdata.ext.elasticsearch.query_builder import QueryBuilder, HEPDataQueryParser
@@ -116,12 +117,42 @@ def test_query_parser():
                                     "AND unknown_field:hello")
 
 
-def test_search():
+def test_search(app, load_default_data, identifiers):
     """
     Test the search functions work correctly, also with the new query syntax.
+    Testing both standard and authors search here to save loading the data multiple times
     :return:
     """
-    pass
+    index = app.config.get('ELASTICSEARCH_INDEX')
+
+    # Test searching with an empty query
+    results = es_api.search('', index=index)
+    assert(results['total'] == len(identifiers))
+    assert(len(results['facets']) == 8)
+    assert(len(results['results']) == len(identifiers))
+
+    for i in range(len(results['results'])):
+        assert(results['results'][i]['title'] == identifiers[i]['title'])
+        assert(results['results'][i]['inspire_id'] == identifiers[i]['inspire_id'])
+        assert(len(results['results'][i]['data']) == identifiers[i]['data_tables'])
+
+    # Test a simple search query from the second test submission
+    # The search matches the publication but not the data tables
+    results = es_api.search('charmonium', index=index)
+    assert(results['total'] == 1)
+    assert(results['results'][0]['inspire_id'] == identifiers[1]['inspire_id'])
+    assert(len(results['results'][0]['data']) == 0)
+
+    # Test the authors search (fuzzy)
+    results = es_api.search_authors('Bal')
+    assert(results == [
+        {'affiliation': 'Beijing, Inst. High Energy Phys.', 'full_name': 'Bai, Yu'},
+        {'affiliation': 'Indiana U.', 'full_name': 'Evans, Hal'},
+        {'affiliation': 'IRFU, Saclay', 'full_name': 'Mal, Prolay'},
+        {'affiliation': 'Glasgow U.', 'full_name': u"O'Shea, Val"},
+        {'affiliation': 'Texas U., Arlington', 'full_name': 'Pal, Arnab'},
+        {'affiliation': 'Panjab U.', 'full_name': 'Bala, A.'}
+    ])
 
 
 def test_merge_results():
