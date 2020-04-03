@@ -20,64 +20,13 @@
 from hepdata.config import CFG_DATA_KEYWORDS
 
 
-def default_aggregations():
+def add_default_aggregations(search):
     """ Default aggregations used for computing facets """
-    return {
-        "nested_authors": {
-            "nested": {
-                "path": "authors",
-            },
-            "aggs": {
-                "author_full_names": {
-                    "terms": {
-                        "field": "authors.full_name",
-                    }
-                }
-            }
-        },
-        "collaboration": {
-            "terms": {
-                "field": "collaborations.raw"
-            }
-        },
-        "subject_areas": {
-            "terms": {
-                "field": "subject_area.raw"
-            }
-        },
-        "dates": {
-            "date_histogram": {
-                "field": "publication_date",
-                "interval": "year",
-            }
-        },
-        "reactions": {
-            "terms": {
-                "field": "data_keywords.reactions.raw"
-            }
-        },
-        "observables": {
-            "terms": {
-                "field": "data_keywords.observables.raw"
-            }
-        },
-        "phrases": {
-            "terms": {
-                "field": "data_keywords.phrases.raw"
-            }
-        },
-        "cmenergies": {
-            "terms": {
-                "field": "data_keywords.cmenergies.raw"
-            }
-        }
-    }
-
-
-def default_aggregations_dsl(search):
-    """ Default aggregations used for computing facets """
+    # Add authors field first, chaining to ensure it's nested
     search.aggs.bucket('nested_authors', 'nested', path='authors')\
         .bucket('author_full_names', 'terms', field='authors.full_name')
+
+    # Add remaining fields separately so they're added to the list
     search.aggs.bucket('collaboration', 'terms', field='collaborations.raw')
     search.aggs.bucket('subject_areas', 'terms', field='subject_area.raw')
     search.aggs.bucket('dates', 'date_histogram', field='publication_date', interval='year')
@@ -86,72 +35,8 @@ def default_aggregations_dsl(search):
     search.aggs.bucket('phrases', 'terms', field='data_keywords.phrases.raw')
     search.aggs.bucket('cmenergies', 'terms', field='data_keywords.cmenergies.raw')
 
+    return search
 
-def get_nested_clause(name, value):
-    if name == 'author':
-        clause = {
-            "path": "authors",
-            "query": {
-                "bool": {
-                    "must": {
-                        "match": {
-                            "authors.full_name": value
-                        }
-                    }
-                }
-            }
-        }
-    else:
-        raise ValueError("Unknown filter: " + name)
-
-    return clause
-
-
-def get_filter_clause(name, value):
-    """ Returns an appropriate ES clause for a given filter """
-    if name == 'collaboration':
-        clause = {
-            "term": {
-                "collaborations.raw": value
-            }
-        }
-
-    elif name == 'subject_areas':
-        clause = {
-            "term": {
-                "subject_area.raw": value
-            }
-        }
-
-    elif name == 'date':
-        year_list = []
-        for year in value:
-            year_list.append(str(year))
-
-        clause = {
-            "terms": {
-                "year": year_list
-            }
-        }
-
-    elif name in CFG_DATA_KEYWORDS:
-        clause = {
-            "term": {
-                "data_keywords." + name + ".raw": value
-            }
-        }
-
-    elif name == 'doc_type':
-        clause = {
-            "term": {
-                "doc_type": value
-            }
-        }
-
-    else:
-        raise ValueError("Unknown filter: " + name)
-
-    return clause
 
 def get_filter_field(name, value):
     """ Returns an appropriate ES clause for a given filter """
@@ -174,9 +59,6 @@ def get_filter_field(name, value):
 
     elif name in CFG_DATA_KEYWORDS:
         field = "data_keywords." + name + ".raw"
-
-    elif name == 'doc_type':
-        field = "doc_type"
 
     else:
         raise ValueError("Unknown filter: " + name)

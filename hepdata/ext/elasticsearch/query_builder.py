@@ -27,16 +27,6 @@ from elasticsearch_dsl import Q
 class QueryBuilder:
 
     @staticmethod
-    def add_aggregations(search, aggs=None):
-        from config.es_config import default_aggregations_dsl
-        if not aggs:
-            default_aggregations_dsl(search)
-        else:
-            search.aggs = aggs
-
-        return search
-
-    @staticmethod
     def add_filters(search, filters):
         from config.es_config import get_filter_field
 

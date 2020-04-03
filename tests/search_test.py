@@ -16,8 +16,10 @@
 # along with HEPData; if not, write to the Free Software Foundation, Inc.,
 # 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
 from elasticsearch_dsl import Search
+import pytest
 
-from hepdata.ext.elasticsearch.config.es_config import default_sort_order_for_field
+from hepdata.ext.elasticsearch.config.es_config import default_sort_order_for_field, \
+    add_default_aggregations, sort_fields_mapping
 from hepdata.ext.elasticsearch.process_results import merge_results, match_tables_to_papers, \
     get_basic_record_information, is_datatable
 from hepdata.ext.elasticsearch.query_builder import QueryBuilder, HEPDataQueryParser
@@ -27,39 +29,72 @@ from hepdata.ext.elasticsearch.utils import flip_sort_order, parse_and_format_da
 
 def test_query_builder_add_aggregations():
     s = Search()
-    s = QueryBuilder.add_aggregations(s)
+    s = add_default_aggregations(s)
     assert(s.to_dict() == {
-        'aggs': {
-            'cmenergies': {'terms': {'field': 'data_keywords.cmenergies.raw'}},
-            'collaboration': {'terms': {'field': 'collaborations.raw'}},
-            'dates': {'date_histogram': {'field': 'publication_date',  'interval': 'year'}},
-            'nested_authors': {'aggs': {
-                'author_full_names': {'terms': {'field': 'authors.full_name'}}},
-                'nested': {'path': 'authors'}
+        "aggs": {
+            "cmenergies": {"terms": {"field": "data_keywords.cmenergies.raw"}},
+            "collaboration": {"terms": {"field": "collaborations.raw"}},
+            "dates": {"date_histogram": {"field": "publication_date",  "interval": "year"}},
+            "nested_authors": {"aggs": {
+                "author_full_names": {"terms": {"field": "authors.full_name"}}},
+                "nested": {"path": "authors"}
             },
-            'observables': {'terms': {'field': 'data_keywords.observables.raw'}},
-            'phrases': {'terms': {'field': 'data_keywords.phrases.raw'}},
-            'reactions': {'terms': {'field': 'data_keywords.reactions.raw'}},
-            'subject_areas': {'terms': {'field': 'subject_area.raw'}}
+            "observables": {"terms": {"field": "data_keywords.observables.raw"}},
+            "phrases": {"terms": {"field": "data_keywords.phrases.raw"}},
+            "reactions": {"terms": {"field": "data_keywords.reactions.raw"}},
+            "subject_areas": {"terms": {"field": "subject_area.raw"}}
         }
     })
 
 
 def test_query_builder_add_filters():
     s = Search()
-    s = QueryBuilder.add_filters(s, [('author', 'test_author')])
+    s = QueryBuilder.add_filters(s, [
+        ("author", "test_author"),
+        ("collaboration", "test_collaboration"),
+        ("subject_areas", "test_subject_area"),
+        ("date", [2000, 2001, 2002]),
+        ("reactions", "test_reaction")
+    ])
+
     assert(s.to_dict() == {
         "query": {
-            "nested": {
-                "path": "authors",
-                "query": {
-                    "match": {
-                        "authors.full_name": "test_author"
+            "bool": {
+                "filter": [
+                    {"term": {"collaborations.raw": "test_collaboration"}},
+                    {"term": {"subject_area.raw": "test_subject_area"}},
+                    {"terms": {"year": ["2000", "2001", "2002"]}},
+                    {"term": {"data_keywords.reactions.raw": "test_reaction"}}
+                ],
+                'must': [{
+                    "nested": {
+                        "path": "authors",
+                        "query": {
+                            "match": {
+                                "authors.full_name": "test_author"
+                            }
+                        }
                     }
-                }
+                }]
             }
         }
     })
+
+    with pytest.raises(ValueError, match=r"Unknown filter: not_a_filter"):
+        s = QueryBuilder.add_filters(s, [
+            ("not_a_filter", "test_invalid_filter")
+        ])
+
+
+def test_sort_fields_mapping():
+    assert(sort_fields_mapping('title') == 'title.raw')
+    assert(sort_fields_mapping('collaborations') == 'collaborations')
+    assert(sort_fields_mapping('date') == 'creation_date')
+    assert(sort_fields_mapping('latest') == 'last_updated')
+    assert(sort_fields_mapping(None) == '_score')
+
+    with pytest.raises(ValueError, match=r'Sorting on field invalid_field is not supported'):
+        sort_fields_mapping('invalid_field')
 
 
 def test_query_parser():
@@ -70,11 +105,15 @@ def test_query_parser():
     _test_query2 = "observables:ASYM AND phrases:Elastic Scattering OR cmenergies:1.34"
     parsed_query_string2 = HEPDataQueryParser.parse_query(_test_query2)
 
-    print(parsed_query_string2)
-
     assert (parsed_query_string2 == "data_keywords.observables:ASYM "
                                     "AND data_keywords.phrases:Elastic Scattering "
                                     "OR data_keywords.cmenergies:1.34")
+
+    _test_query3 = "observables:ASYM AND unknown_field:hello"
+    parsed_query_string3 = HEPDataQueryParser.parse_query(_test_query3)
+
+    assert (parsed_query_string3 == "data_keywords.observables:ASYM "
+                                    "AND unknown_field:hello")
 
 
 def test_search():

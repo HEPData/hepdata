@@ -28,7 +28,7 @@ from invenio_pidstore.models import RecordIdentifier
 from sqlalchemy import func
 
 from hepdata.ext.elasticsearch.document_enhancers import enhance_data_document, enhance_publication_document
-from .config.es_config import sort_fields_mapping
+from .config.es_config import sort_fields_mapping, add_default_aggregations
 from .utils import calculate_sort_order, prepare_author_for_indexing
 from hepdata.config import CFG_PUB_TYPE, CFG_DATA_TYPE
 from query_builder import QueryBuilder, HEPDataQueryParser
@@ -106,7 +106,7 @@ def search(query,
 
     mapped_sort_field = sort_fields_mapping(sort_field)
     search = search.sort({mapped_sort_field : {"order" : calculate_sort_order(sort_order, sort_field)}})
-    search = QueryBuilder.add_aggregations(search)
+    search = add_default_aggregations(search)
 
     if post_filter:
         search = search.post_filter(post_filter)
