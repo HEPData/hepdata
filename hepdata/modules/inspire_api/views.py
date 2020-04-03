@@ -36,7 +36,7 @@ blueprint = Blueprint('inspire_datasource',
 
 
 def get_inspire_record_information(inspire_rec_id):
-    url = 'http://inspirehep.net/record/{0}/export/xm'.format(inspire_rec_id)
+    url = 'http://old.inspirehep.net/record/{0}/export/xm'.format(inspire_rec_id)
     req = requests.get(url)
     content = req.content
     status = req.status_code
