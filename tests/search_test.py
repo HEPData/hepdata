@@ -269,7 +269,6 @@ def test_match_tables_to_papers():
 
     assert (aggregated is not [])
     assert (len(aggregated) == 2)
-    print(aggregated)
 
 
 def test_get_basic_record_information():
