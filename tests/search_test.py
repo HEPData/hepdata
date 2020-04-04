@@ -145,13 +145,17 @@ def test_search(app, load_default_data, identifiers):
 
     # Test the authors search (fuzzy)
     results = es_api.search_authors('Bal')
-    assert(results == [
+    expected = [
         {'affiliation': 'Beijing, Inst. High Energy Phys.', 'full_name': 'Bai, Yu'},
         {'affiliation': 'Indiana U.', 'full_name': 'Evans, Hal'},
         {'affiliation': 'Glasgow U.', 'full_name': u"O'Shea, Val"},
         {'affiliation': 'Texas U., Arlington', 'full_name': 'Pal, Arnab'},
         {'affiliation': 'Panjab U.', 'full_name': 'Bala, A.'}
-    ])
+    ]
+
+    assert(len(results) == len(expected))
+    for author in expected:
+        assert(author in results)
 
 
 def test_merge_results():
