@@ -148,7 +148,6 @@ def test_search(app, load_default_data, identifiers):
     assert(results == [
         {'affiliation': 'Beijing, Inst. High Energy Phys.', 'full_name': 'Bai, Yu'},
         {'affiliation': 'Indiana U.', 'full_name': 'Evans, Hal'},
-        {'affiliation': 'IRFU, Saclay', 'full_name': 'Mal, Prolay'},
         {'affiliation': 'Glasgow U.', 'full_name': u"O'Shea, Val"},
         {'affiliation': 'Texas U., Arlington', 'full_name': 'Pal, Arnab'},
         {'affiliation': 'Panjab U.', 'full_name': 'Bala, A.'}

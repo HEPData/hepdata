@@ -59,6 +59,18 @@ def default_index(f):
     return decorator
 
 
+def author_index(f):
+    """ Loads the default author index if none is given """
+
+    def decorator(*args, **kwargs):
+        if 'index' not in kwargs:
+            kwargs['index'] = current_app.config['AUTHOR_INDEX']
+        return f(*args, **kwargs)
+
+    decorator.__name__ = f.__name__
+    return decorator
+
+
 @default_index
 def search(query,
            index=None,
@@ -135,11 +147,10 @@ def search(query,
     return map_result(merged_results)
 
 
-def search_authors(name, size=20):
+@author_index
+def search_authors(name, size=20, index=None):
     """ Search for authors in the author index. """
-    from hepdata.config import AUTHOR_INDEX
-
-    search = Search(using=es, index=AUTHOR_INDEX) \
+    search = Search(using=es, index=index) \
         .query("match", full_name={"query": name, "fuzziness":"AUTO"})
     search = search[0:size]
     results = search.execute().to_dict()
