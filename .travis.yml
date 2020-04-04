@@ -48,7 +48,7 @@ python:
 
 before_install:
   # See: https://docs.travis-ci.com/user/database-setup/#Installing-specific-versions-of-ElasticSearch
-  - "curl -O https://download.elastic.co/elasticsearch/release/org/elasticsearch/distribution/deb/elasticsearch/2.1.1/elasticsearch-2.1.1.deb && sudo dpkg -i --force-confnew elasticsearch-2.1.1.deb && sudo service elasticsearch restart"
+  - "curl -O https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-7.6.2-amd64.deb && sudo dpkg -i --force-confnew elasticsearch-7.6.2-amd64.deb && sudo service elasticsearch restart"
   - "travis_retry pip install --upgrade pip setuptools py"
   - "travis_retry pip install twine wheel coveralls requirements-builder"
   - "travis_retry psql -c \"CREATE USER hepdata WITH CREATEDB PASSWORD 'hepdata';\" -U postgres"
