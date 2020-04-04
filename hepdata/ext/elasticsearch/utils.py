@@ -109,3 +109,11 @@ def push_keywords(docs):
         pub['data_keywords'] = agg_keywords
 
     return publications + datatables
+
+
+def tidy_bytestring(bytestring):
+    # Converts a python3-style bytestring literal e.g. "b'hello world'" into a normal string
+    # We should be able to remove this method when we migrate to python3.
+    if bytestring and bytestring.startswith("b'"):
+        bytestring = bytestring.strip("b'\\n").strip()
+    return bytestring

@@ -84,7 +84,7 @@ def match_tables_to_papers(tables, papers):
 
 
 def get_basic_record_information(record):
-    from utils import parse_and_format_date
+    from utils import parse_and_format_date, tidy_bytestring
     source = record['_source']
 
     # Collaborations
@@ -102,6 +102,7 @@ def get_basic_record_information(record):
     res['collaborations'] = collaborations
     res['authors'] = authors
     res['date'] = parse_and_format_date(datestring)
+    res['abstract'] = tidy_bytestring(source.get('abstract'))
 
     return res
 
