@@ -57,6 +57,7 @@ def convert_endpoint():
     """
     Endpoint for general conversion, the file is passed as a GET parameter
     and options ('from=' & 'to=') are query string arguments.
+    TO DO: is this function used anywhere?  If not, it can probably be removed.
 
     :return: display_error or send_file depending on success of conversion
     """
@@ -259,6 +260,7 @@ def download_submission(submission, file_format, offline=False, force=False, riv
         'input_format': 'yaml',
         'output_format': file_format,
         'filename': 'HEPData-{0}-v{1}-{2}'.format(file_identifier, submission.version, file_format),
+        'validator_schema_version': '0.1.0',
     }
 
     if submission.doi and submission.overall_status != 'sandbox':
@@ -491,6 +493,7 @@ def download_datatable(datasubmission, file_format, *args, **kwargs):
         'output_format': file_format,
         'table': table_name,
         'filename': table_name.split('.')[0],
+        'validator_schema_version': '0.1.0',
     }
 
     hepsubmission = HEPSubmission.query.filter_by(publication_recid=datasubmission.publication_recid,

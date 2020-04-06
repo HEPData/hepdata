@@ -408,7 +408,7 @@ def _eos_fix_read_data(data_file_path):
     return data, ex
 
 
-def process_submission_directory(basepath, submission_file_path, recid, update=False, *args, **kwargs):
+def process_submission_directory(basepath, submission_file_path, recid, update=False, from_oldhepdata=False):
     """
     Goes through an entire submission directory and processes the
     files within to create DataSubmissions
@@ -418,6 +418,7 @@ def process_submission_directory(basepath, submission_file_path, recid, update=F
     :param submission_file_path:
     :param recid:
     :param update:
+    :param from_oldhepdata:
     :return:
     """
     added_file_names = []
@@ -425,7 +426,16 @@ def process_submission_directory(basepath, submission_file_path, recid, update=F
 
     if submission_file_path is not None:
 
-        submission_file_validator = SubmissionFileValidator()
+        if from_oldhepdata:
+            # The schema_version='0.1.0' argument is a temporary fix for hepdata-converter v0.1.35.
+            # Needed for "data_license: {description: null, name: null, url: null}" lines in submission.yaml.
+            # TO DO: remove the default "data_license" written to submission.yaml by the hepdata-converter.
+            # Then if using a hepdata-converter-ws Docker container, can remove this temporary fix.
+            # Note added: also use schema_version='0.1.0' for YAML files migrated from old HepData site.
+            submission_file_validator = SubmissionFileValidator(schema_version='0.1.0')
+        else:
+            submission_file_validator = SubmissionFileValidator()
+
         is_valid_submission_file = submission_file_validator.validate(file_path=submission_file_path)
 
         if is_valid_submission_file:
@@ -462,7 +472,10 @@ def process_submission_directory(basepath, submission_file_path, recid, update=F
 
             no_general_submission_info = True
 
-            data_file_validator = DataFileValidator()
+            if from_oldhepdata:  # use for YAML files migrated from old HepData site
+                data_file_validator = DataFileValidator(schema_version='0.1.0')
+            else:
+                data_file_validator = DataFileValidator()
 
             # Delete all data records associated with this submission.
             # Fixes problems with ordering where the table names are changed between uploads.
