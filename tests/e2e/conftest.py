@@ -120,7 +120,7 @@ def test_identifiers(app):
 
 @pytest.fixture()
 def search_tests(app):
-    return [{"search_term": "collisions", "exp_collab_facet": "Belle", "exp_hepdata_id": "ins1245023"},
+    return [{"search_term": "collisions", "exp_collab_facet": "BELLE", "exp_hepdata_id": "ins1245023"},
             {"search_term": "leptons", "exp_collab_facet": "D0", "exp_hepdata_id": "ins1283842"}]
 
 
