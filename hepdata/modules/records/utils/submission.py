@@ -431,6 +431,7 @@ def process_submission_directory(basepath, submission_file_path, recid, update=F
             # Needed for "data_license: {description: null, name: null, url: null}" lines in submission.yaml.
             # TO DO: remove the default "data_license" written to submission.yaml by the hepdata-converter.
             # Then if using a hepdata-converter-ws Docker container, can remove this temporary fix.
+            # Note added: also use schema_version='0.1.0' for YAML files migrated from old HepData site.
             submission_file_validator = SubmissionFileValidator(schema_version='0.1.0')
         else:
             submission_file_validator = SubmissionFileValidator()
@@ -471,7 +472,10 @@ def process_submission_directory(basepath, submission_file_path, recid, update=F
 
             no_general_submission_info = True
 
-            data_file_validator = DataFileValidator()
+            if from_oldhepdata:  # use for YAML files migrated from old HepData site
+                data_file_validator = DataFileValidator(schema_version='0.1.0')
+            else:
+                data_file_validator = DataFileValidator()
 
             # Delete all data records associated with this submission.
             # Fixes problems with ordering where the table names are changed between uploads.
