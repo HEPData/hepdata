@@ -24,7 +24,7 @@ def add_default_aggregations(search):
     """ Default aggregations used for computing facets """
     # Add authors field first, chaining to ensure it's nested
     search.aggs.bucket('nested_authors', 'nested', path='authors')\
-        .bucket('author_full_names', 'terms', field='authors.full_name')
+        .bucket('author_full_names', 'terms', field='authors.full_name.raw')
 
     # Add remaining fields separately so they're added to the list
     search.aggs.bucket('collaboration', 'terms', field='collaborations.raw')

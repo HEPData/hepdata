@@ -43,6 +43,9 @@ def test_search_from_home(live_server, env_browser, search_tests):
     # Click 'View all'
     search_all_link = browser.find_element_by_css_selector('#latest_records_section').find_element_by_tag_name('a')
     search_all_link.click()
+    element = WebDriverWait(browser, 10).until(
+        EC.url_contains('search')
+    )
     assert (flask.url_for('es_search.search', _external=True) in
             browser.current_url)
 
@@ -146,11 +149,11 @@ def test_author_search(live_server, env_browser):
     # Check author results are as we expect
     search_results = browser.find_elements_by_class_name('tt-suggestion')
     expected_authors = [
-        'Aad, Georges',
-        'Ashkenazi, Adi',
-        'Beddall, Ayda',
-        'Davison, Adam',
-        'Firan, Ana'
+        'Solano, Ada',
+        'Seidl, A.A.',
+        'Vorobov, A.A.',
+        'Hirata, A.A.',
+        'Cowley, A.A.'
     ]
 
     assert(len(search_results) == len(expected_authors))

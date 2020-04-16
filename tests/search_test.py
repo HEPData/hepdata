@@ -37,7 +37,7 @@ def test_query_builder_add_aggregations():
             "collaboration": {"terms": {"field": "collaborations.raw"}},
             "dates": {"date_histogram": {"field": "publication_date",  "interval": "year"}},
             "nested_authors": {"aggs": {
-                "author_full_names": {"terms": {"field": "authors.full_name"}}},
+                "author_full_names": {"terms": {"field": "authors.full_name.raw"}}},
                 "nested": {"path": "authors"}
             },
             "observables": {"terms": {"field": "data_keywords.observables.raw"}},
@@ -226,7 +226,6 @@ def test_push_keywords():
         if results["recid"] == 1:
             assert (results["data_keywords"] is not None)
             assert ("reaction" in results["data_keywords"])
-            print(results["data_keywords"])
             assert (len(results["data_keywords"]["reaction"]) == 2)
             assert (results["data_keywords"]["reaction"][0] == "PP --> PP")
             assert (results["data_keywords"]["reaction"][1] == "PP --> PX")

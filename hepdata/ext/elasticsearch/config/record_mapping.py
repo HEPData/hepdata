@@ -32,15 +32,14 @@ mapping = {
             "affiliation": {
                 "type": "text"
             },
-            "first_name": {
-                "type": "text"
-            },
             "full_name": {
-                "type": "keyword",
-                "index": "true"
-            },
-            "last_name": {
-                "type": "text"
+                "type": "text",
+                "fields": {
+                    "raw": {
+                        "type": "keyword",
+                        "index": "true"
+                    }
+                }
             }
         }
     },
@@ -51,15 +50,14 @@ mapping = {
             "affiliation": {
                 "type": "text"
             },
-            "first_name": {
-                "type": "text"
-            },
             "full_name": {
-                "type": "keyword",
-                "index": "true"
-            },
-            "last_name": {
-                "type": "text"
+                "type": "text",
+                "fields": {
+                    "raw": {
+                        "type": "keyword",
+                        "index": "true"
+                    }
+                }
             }
         }
     },
