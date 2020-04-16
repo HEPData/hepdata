@@ -89,7 +89,7 @@ def test_query_builder_add_filters():
 
 def test_sort_fields_mapping():
     assert(sort_fields_mapping('title') == 'title.raw')
-    assert(sort_fields_mapping('collaborations') == 'collaborations')
+    assert(sort_fields_mapping('collaborations') == 'collaborations.raw')
     assert(sort_fields_mapping('date') == 'creation_date')
     assert(sort_fields_mapping('latest') == 'last_updated')
     assert(sort_fields_mapping(None) == '_score')
