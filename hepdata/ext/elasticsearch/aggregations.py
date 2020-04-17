@@ -43,6 +43,9 @@ def parse_aggregations(aggregations):
         elif agg_name == 'dates':
             buckets = agg_res['buckets']
             facets.append(parse_date_aggregations(buckets))
+        elif agg_name == 'cmenergies':
+            buckets = agg_res['buckets']
+            facets.append(parse_cmenergies_aggregations(buckets))
         else:
             buckets = agg_res.get('buckets')
             facets.append(parse_other_facets(buckets, agg_name))
@@ -75,6 +78,29 @@ def parse_collaboration_aggregations(buckets):
     }
 
 
+def parse_cmenergies_aggregations(buckets):
+    for i in range(len(buckets)):
+        cmenergy_hit = buckets[i]
+        if i+1 < len(buckets):
+            next_bucket = buckets[i+1]
+            cmenergy_hit['url_params'] = {
+                'cmenergies': "%.1f,%.1f" % (cmenergy_hit['key'], next_bucket['key'])
+            }
+            cmenergy_hit['key'] = u"%.1f <= \u221As < %.1f" % (cmenergy_hit['key'], next_bucket['key'])
+        else:
+            cmenergy_hit['url_params'] = {
+                'cmenergies': "%.1f,100000" % cmenergy_hit['key']
+            }
+            cmenergy_hit['key'] = u"\u221As >= %.1f" % cmenergy_hit['key']
+
+    return {
+        'type': 'cmenergies',
+        'printable_name': 'CM Energies (GeV)',
+        'vals': buckets,
+        'max_values': MAX_COLLABORATION_FACETS
+    }
+
+
 def parse_date_aggregations(buckets):
     for date_hit in buckets:
         timestamp = date.fromtimestamp(date_hit['key'] // 1000)
@@ -96,9 +122,14 @@ def parse_other_facets(buckets, name):
     for hit in buckets:
         hit['url_params'] = {name: hit['key']}
 
+    if name == 'cmenergies':
+        printable_name = 'CM Energies'
+    else:
+        printable_name = name.capitalize()
+
     return {
         'type': name,
-        'printable_name': name.capitalize(),
+        'printable_name': printable_name,
         'vals': buckets,
         'max_values': MAX_OTHER_FACETS
     }

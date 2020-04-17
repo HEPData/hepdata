@@ -114,6 +114,20 @@ def check_date(args):
     return min_date, max_date
 
 
+def check_cmenergies(args):
+    """
+    Get the cmenergues query parameter from the URL and convert to floats
+    """
+    cmenergies = args.get('cmenergies', None)
+    if cmenergies:
+        try:
+            cmenergies = [float(x) for x in cmenergies.split(',', 1)]
+            args['cmenergies'] = cmenergies
+
+        except ValueError:
+            del args['cmenergies']
+
+
 def sort_facets(facets):
     """Sort the facets in an arbitrary way that we think is appropriate."""
     order = {
@@ -159,6 +173,7 @@ def parse_query_parameters(request_args):
 
     args = {key: value[0] for (key, value) in dict(request_args).iteritems()}
     min_date, max_date = check_date(args)
+    check_cmenergies(args)
     check_page(args)
     check_max_results(args)
 

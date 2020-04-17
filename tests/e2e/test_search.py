@@ -60,7 +60,7 @@ def test_search_from_home(live_server, env_browser, search_tests):
         {'class_prefix': 'phrases', 'exp_filter_count': 10, 'exp_first_result_count': 1},
         {'class_prefix': 'reactions', 'exp_filter_count': 9, 'exp_first_result_count': 1},
         {'class_prefix': 'observables', 'exp_filter_count': 3, 'exp_first_result_count': 1},
-        {'class_prefix': 'cmenergies', 'exp_filter_count': 1, 'exp_first_result_count': 1}
+        {'class_prefix': 'cmenergies', 'exp_filter_count': 0, 'exp_first_result_count': 0}
     ]
 
     for facet in facets:
@@ -68,22 +68,23 @@ def test_search_from_home(live_server, env_browser, search_tests):
         facet_filters = browser.find_elements_by_css_selector('#' + facet['class_prefix'] + '-facet li.list-group-item a')
         assert(len(facet_filters) == facet['exp_filter_count'])
 
-        # Check the number of results for first filter in the facet
-        result_count = int(facet_filters[0].find_element_by_class_name('facet-count').text.strip())
-        assert(result_count == facet['exp_first_result_count'])
+        if len(facet_filters) > 0:
+            # Check the number of results for first filter in the facet
+            result_count = int(facet_filters[0].find_element_by_class_name('facet-count').text.strip())
+            assert(result_count == facet['exp_first_result_count'])
 
-        # Move to the first filter and click
-        ActionChains(browser).move_to_element(facet_filters[0])
-        facet_filters[0].click()
-        assert (flask.url_for('es_search.search', _external=True) in
-                browser.current_url)
+            # Move to the first filter and click
+            ActionChains(browser).move_to_element(facet_filters[0])
+            facet_filters[0].click()
+            assert (flask.url_for('es_search.search', _external=True) in
+                    browser.current_url)
 
-        # Check the number of search results matches the number given in the filter
-        results = browser.find_elements_by_class_name('search-result-item')
-        assert(len(results) == facet['exp_first_result_count'])
+            # Check the number of search results matches the number given in the filter
+            results = browser.find_elements_by_class_name('search-result-item')
+            assert(len(results) == facet['exp_first_result_count'])
 
-        # Go back to the previous search results
-        browser.back()
+            # Go back to the previous search results
+            browser.back()
 
     for search_config in search_tests:
         try:
@@ -149,11 +150,8 @@ def test_author_search(live_server, env_browser):
     # Check author results are as we expect
     search_results = browser.find_elements_by_class_name('tt-suggestion')
     expected_authors = [
-        'Solano, Ada',
-        'Seidl, A.A.',
-        'Vorobov, A.A.',
-        'Hirata, A.A.',
-        'Cowley, A.A.'
+        'Falkowski, Adam',
+        'Lyon, Adam Leonard'
     ]
 
     assert(len(search_results) == len(expected_authors))

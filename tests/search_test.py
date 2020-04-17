@@ -33,7 +33,7 @@ def test_query_builder_add_aggregations():
     s = add_default_aggregations(s)
     assert(s.to_dict() == {
         "aggs": {
-            "cmenergies": {"terms": {"field": "data_keywords.cmenergies.raw"}},
+            "cmenergies": {"histogram": {"field": "data_keywords.cmenergies", "interval": 10, "min_doc_count": 10}},
             "collaboration": {"terms": {"field": "collaborations.raw"}},
             "dates": {"date_histogram": {"field": "publication_date",  "interval": "year"}},
             "nested_authors": {"aggs": {
@@ -45,6 +45,16 @@ def test_query_builder_add_aggregations():
             "reactions": {"terms": {"field": "data_keywords.reactions.raw"}},
             "subject_areas": {"terms": {"field": "subject_area.raw"}}
         }
+    })
+
+    # Test out different CM Energies filters
+    s = add_default_aggregations(s, [('cmenergies', [5.0, 25.0])])
+    assert(s.to_dict()["aggs"]["cmenergies"] == {
+        "histogram": {"field": "data_keywords.cmenergies", "interval": 4, "min_doc_count": 10}
+    })
+    s = add_default_aggregations(s, [('cmenergies', [4.0, 8.0])])
+    assert(s.to_dict()["aggs"]["cmenergies"] == {
+        "histogram": {"field": "data_keywords.cmenergies", "interval": 1, "min_doc_count": 10}
     })
 
 
@@ -128,7 +138,7 @@ def test_search(app, load_default_data, identifiers):
     # Test searching with an empty query
     results = es_api.search('', index=index)
     assert(results['total'] == len(identifiers))
-    assert(len(results['facets']) == 8)
+    assert(len(results['facets']) == 7)
     assert(len(results['results']) == len(identifiers))
 
     for i in range(len(results['results'])):
@@ -146,9 +156,6 @@ def test_search(app, load_default_data, identifiers):
     # Test the authors search (fuzzy)
     results = es_api.search_authors('Bal')
     expected = [
-        {'affiliation': 'Beijing, Inst. High Energy Phys.', 'full_name': 'Bai, Yu'},
-        {'affiliation': 'Indiana U.', 'full_name': 'Evans, Hal'},
-        {'affiliation': 'Glasgow U.', 'full_name': u"O'Shea, Val"},
         {'affiliation': 'Texas U., Arlington', 'full_name': 'Pal, Arnab'},
         {'affiliation': 'Panjab U.', 'full_name': 'Bala, A.'}
     ]
