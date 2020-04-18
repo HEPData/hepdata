@@ -313,25 +313,25 @@ def push_data_keywords(pub_ids=None, index=None):
         try:
             es.update(index=index, id=pub_id, body=body)
         except Exception as e:
-            log.error(e.message)
+            log.error(e)
 
 
 def process_cmenergies(keywords):
     cmenergies = []
     if keywords['cmenergies']:
         for cmenergy in keywords['cmenergies']:
+            cmenergy = cmenergy.strip(" gevGEV")
             try:
-                cmenergy_max = float(cmenergy)
-                cmenergy_min = cmenergy_max
+                cmenergy_val = float(cmenergy)
+                cmenergies.append({"gte": cmenergy_val, "lte": cmenergy_val})
             except ValueError:
-                m = re.match(r'^(-?\d+(?:\.\d+)?)-(-?\d+(?:\.\d+)?)$', cmenergy)
+                m = re.match(r'^(-?\d+(?:\.\d+)?)[ \-+andAND]+(-?\d+(?:\.\d+)?)$', cmenergy)
                 if m:
-                    cmenergy_min = float(m.group(1))
-                    cmenergy_max = float(m.group(2))
+                    cmenergy_range = [float(m.group(1)), float(m.group(2))]
+                    cmenergy_range.sort()
+                    cmenergies.append({"gte": cmenergy_range[0], "lte": cmenergy_range[1]})
                 else:
-                    raise ValueError("Invalid value for cmenergies: %s" % cmenergy)
-
-            cmenergies.append({"gte": cmenergy_min, "lte": cmenergy_max})
+                    log.warn("Invalid value for cmenergies: %s" % cmenergy)
 
         keywords['cmenergies'] = cmenergies
 

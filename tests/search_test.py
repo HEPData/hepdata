@@ -243,6 +243,44 @@ def test_push_keywords():
         assert (ve)
 
 
+def test_process_cmenergies():
+    test_keywords = {
+        "cmenergies": [
+            "0.5",
+            "13000",
+            "2.441 - 2.683",
+            "3.683-3.441",
+            "1.2 - 2.6 GeV",
+            "91.2 GeV",
+            "2.0gev",
+            "5020 and 2760",
+            "5020 AND 7000",
+            "2076.0+5020.0",
+            "invalid cmenergy"
+        ]
+    }
+    expected = {
+        'cmenergies': [
+            {'gte': 0.5, 'lte': 0.5},
+            {'gte': 13000.0, 'lte': 13000.0},
+            {'gte': 2.441, 'lte': 2.683},
+            {'gte': 3.441, 'lte': 3.683},
+            {'gte': 1.2, 'lte': 2.6},
+            {'gte': 91.2, 'lte': 91.2},
+            {'gte': 2.0, 'lte': 2.0},
+            {'gte': 2760.0, 'lte': 5020.0},
+            {'gte': 5020.0, 'lte': 7000.0},
+            {'gte': 2076.0, 'lte': 5020.0}
+        ]
+    }
+
+    results = es_api.process_cmenergies(test_keywords)
+    assert(len(results['cmenergies']) == len(expected['cmenergies']))
+
+    for cmenergy in expected['cmenergies']:
+        assert(cmenergy in results['cmenergies'])
+
+
 def test_prepare_authors_for_indexing(app):
     with app.app_context():
         test_document = {
