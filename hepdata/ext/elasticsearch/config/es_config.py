@@ -68,7 +68,9 @@ def get_filter_field(name, value):
 
         val_dict = { "gte": value[0] }
         if len(value) > 1:
-            val_dict["lt"] = value[1]
+            key = "lt" if value[1] > value[0] else "lte"
+            val_dict[key] = value[1]
+
         value = val_dict
 
     elif name == 'date':

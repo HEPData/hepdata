@@ -31,7 +31,7 @@ MAX_DATE_FACETS = 5
 MAX_OTHER_FACETS = 5
 
 
-def parse_aggregations(aggregations):
+def parse_aggregations(aggregations, query_filters=None):
     facets = []
     for agg_name, agg_res in aggregations.items():
         if agg_name == 'nested_authors' and 'author_full_names' in agg_res:
@@ -45,7 +45,7 @@ def parse_aggregations(aggregations):
             facets.append(parse_date_aggregations(buckets))
         elif agg_name == 'cmenergies':
             buckets = agg_res['buckets']
-            facets.append(parse_cmenergies_aggregations(buckets))
+            facets.append(parse_cmenergies_aggregations(buckets, query_filters))
         else:
             buckets = agg_res.get('buckets')
             facets.append(parse_other_facets(buckets, agg_name))
@@ -78,20 +78,33 @@ def parse_collaboration_aggregations(buckets):
     }
 
 
-def parse_cmenergies_aggregations(buckets):
+def parse_cmenergies_aggregations(buckets, query_filters=None):
+    max_limit = 100000
+    min_limit = 0
+
+    if query_filters:
+        cmenergy_filter_vals = [v for (k,v) in query_filters if k == 'cmenergies' and len(v) > 1]
+        if cmenergy_filter_vals:
+            min_limit = min([v[0] for v in cmenergy_filter_vals])
+            max_limit = max([v[1] for v in cmenergy_filter_vals])
+
     for i in range(len(buckets)):
         cmenergy_hit = buckets[i]
-        if i+1 < len(buckets):
-            next_bucket = buckets[i+1]
-            cmenergy_hit['url_params'] = {
-                'cmenergies': "%.1f,%.1f" % (cmenergy_hit['key'], next_bucket['key'])
-            }
-            cmenergy_hit['key'] = u"%.1f <= \u221As < %.1f" % (cmenergy_hit['key'], next_bucket['key'])
+
+        if i == 0:
+            lower_limit = min_limit
         else:
-            cmenergy_hit['url_params'] = {
-                'cmenergies': "%.1f,100000" % cmenergy_hit['key']
-            }
-            cmenergy_hit['key'] = u"\u221As >= %.1f" % cmenergy_hit['key']
+            lower_limit = cmenergy_hit['key']
+
+        if i+1 < len(buckets):
+            upper_limit = buckets[i+1]['key']
+        else:
+            upper_limit = max_limit
+
+        cmenergy_hit['url_params'] = {
+            'cmenergies': "%.1f,%.1f" % (lower_limit, upper_limit)
+        }
+        cmenergy_hit['key'] = u"%.1f <= \u221As < %.1f" % (lower_limit, upper_limit)
 
     return {
         'type': 'cmenergies',

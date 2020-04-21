@@ -145,7 +145,7 @@ def search(query,
     data_result = data_search.execute().to_dict()
 
     merged_results = merge_results(pub_result, data_result)
-    return map_result(merged_results)
+    return map_result(merged_results, filters)
 
 
 @author_index
