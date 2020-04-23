@@ -33,7 +33,7 @@ def test_query_builder_add_aggregations():
     s = add_default_aggregations(s)
     assert(s.to_dict() == {
         "aggs": {
-            "cmenergies": {"histogram": {"field": "data_keywords.cmenergies", "interval": 10, "min_doc_count": 10}},
+            "cmenergies": {"histogram": {"field": "data_keywords.cmenergies", "interval": 10, "offset": 0, "min_doc_count": 10}},
             "collaboration": {"terms": {"field": "collaborations.raw"}},
             "dates": {"date_histogram": {"field": "publication_date",  "interval": "year"}},
             "nested_authors": {"aggs": {
@@ -50,11 +50,11 @@ def test_query_builder_add_aggregations():
     # Test out different CM Energies filters
     s = add_default_aggregations(s, [('cmenergies', [5.0, 25.0])])
     assert(s.to_dict()["aggs"]["cmenergies"] == {
-        "histogram": {"field": "data_keywords.cmenergies", "interval": 4, "min_doc_count": 10}
+        "histogram": {"field": "data_keywords.cmenergies", "interval": 4, "offset": 5, "min_doc_count": 10}
     })
     s = add_default_aggregations(s, [('cmenergies', [4.0, 8.0])])
     assert(s.to_dict()["aggs"]["cmenergies"] == {
-        "histogram": {"field": "data_keywords.cmenergies", "interval": 1, "min_doc_count": 10}
+        "histogram": {"field": "data_keywords.cmenergies", "interval": 1, "offset": 4, "min_doc_count": 10}
     })
 
 

@@ -37,9 +37,11 @@ def add_default_aggregations(search, filters=[]):
 
     # Determine the interval for cmenergies buckets depending on the current filter
     interval = 10
+    offset = 0
     cmenergy_filters = [(k,v) for (k,v) in filters if k == 'cmenergies']
     if cmenergy_filters:
         current_range = cmenergy_filters[0][1]
+        offset = current_range[0]
         if len(current_range) == 2:
             span = current_range[1] - current_range[0]
             if span > 0 and span < 25:
@@ -47,7 +49,8 @@ def add_default_aggregations(search, filters=[]):
             else:
                 interval = 5
 
-    search.aggs.bucket('cmenergies', 'histogram', field='data_keywords.cmenergies', interval=interval, min_doc_count=10)
+    search.aggs.bucket('cmenergies', 'histogram', field='data_keywords.cmenergies',
+                       interval=interval, offset=offset, min_doc_count=10)
 
     return search
 
