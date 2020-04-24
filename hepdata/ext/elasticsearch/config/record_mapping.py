@@ -134,13 +134,7 @@ mapping = {
     "data_keywords": {
         "properties": {
             "cmenergies": {
-                "type": "text",
-                "fields": {
-                    "raw": {
-                        "type": "keyword",
-                        "index": "true"
-                    }
-                }
+                "type": "float_range",
             },
             "observables": {
                 "type": "text",

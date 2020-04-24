@@ -36,7 +36,7 @@ def merge_results(pub_result, data_result):
     return merge_dict
 
 
-def map_result(es_result):
+def map_result(es_result, query_filters=None):
     hits = es_result['hits']
     total_hits = es_result['total']
     aggregations = es_result['aggregations']
@@ -55,7 +55,7 @@ def map_result(es_result):
         })
         results.append(mapped_hit)
 
-    facets = parse_aggregations(aggregations)
+    facets = parse_aggregations(aggregations, query_filters)
 
     return {'results': results,
             'facets': facets,

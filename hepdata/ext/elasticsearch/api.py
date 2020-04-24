@@ -18,6 +18,7 @@
 from __future__ import print_function
 
 from collections import defaultdict
+import re
 
 from dateutil.parser import parse
 from flask import current_app
@@ -63,8 +64,8 @@ def author_index(f):
     """ Loads the default author index if none is given """
 
     def decorator(*args, **kwargs):
-        if 'index' not in kwargs:
-            kwargs['index'] = current_app.config['AUTHOR_INDEX']
+        if 'author_index' not in kwargs:
+            kwargs['author_index'] = current_app.config['AUTHOR_INDEX']
         return f(*args, **kwargs)
 
     decorator.__name__ = f.__name__
@@ -118,7 +119,7 @@ def search(query,
 
     mapped_sort_field = sort_fields_mapping(sort_field)
     search = search.sort({mapped_sort_field : {"order" : calculate_sort_order(sort_order, sort_field)}})
-    search = add_default_aggregations(search)
+    search = add_default_aggregations(search, filters)
 
     if post_filter:
         search = search.post_filter(post_filter)
@@ -144,13 +145,13 @@ def search(query,
     data_result = data_search.execute().to_dict()
 
     merged_results = merge_results(pub_result, data_result)
-    return map_result(merged_results)
+    return map_result(merged_results, filters)
 
 
 @author_index
-def search_authors(name, size=20, index=None):
+def search_authors(name, size=20, author_index=None):
     """ Search for authors in the author index. """
-    search = Search(using=es, index=index) \
+    search = Search(using=es, index=author_index) \
         .query("match", full_name={"query": name, "fuzziness":"AUTO"})
     search = search[0:size]
     results = search.execute().to_dict()
@@ -158,11 +159,13 @@ def search_authors(name, size=20, index=None):
 
 
 @default_index
-def reindex_all(index=None, recreate=False, batch=50, start=-1, end=-1):
+@author_index
+def reindex_all(index=None, author_index=None, recreate=False, batch=50, start=-1, end=-1):
     """ Recreate the index and add all the records from the db to ES. """
 
     if recreate:
         recreate_index(index=index)
+        recreate_index(index=author_index)
 
     qry = db.session.query(func.max(RecordIdentifier.recid).label("max_recid"),
                            func.min(RecordIdentifier.recid).label("min_recid"),
@@ -299,6 +302,8 @@ def push_data_keywords(pub_ids=None, index=None):
         for k, v in agg_keywords.items():
             agg_keywords[k] = list(set(v))
 
+        agg_keywords = process_cmenergies(agg_keywords)
+
         body = {
             "doc": {
                 'data_keywords': dict(agg_keywords)
@@ -308,7 +313,29 @@ def push_data_keywords(pub_ids=None, index=None):
         try:
             es.update(index=index, id=pub_id, body=body)
         except Exception as e:
-            log.error(e.message)
+            log.error(e)
+
+
+def process_cmenergies(keywords):
+    cmenergies = []
+    if keywords['cmenergies']:
+        for cmenergy in keywords['cmenergies']:
+            cmenergy = cmenergy.strip(" gevGEV")
+            try:
+                cmenergy_val = float(cmenergy)
+                cmenergies.append({"gte": cmenergy_val, "lte": cmenergy_val})
+            except ValueError:
+                m = re.match(r'^(-?\d+(?:\.\d+)?)[ \-+andAND]+(-?\d+(?:\.\d+)?)$', cmenergy)
+                if m:
+                    cmenergy_range = [float(m.group(1)), float(m.group(2))]
+                    cmenergy_range.sort()
+                    cmenergies.append({"gte": cmenergy_range[0], "lte": cmenergy_range[1]})
+                else:
+                    log.warn("Invalid value for cmenergies: %s" % cmenergy)
+
+        keywords['cmenergies'] = cmenergies
+
+    return keywords
 
 
 @default_index

@@ -17,7 +17,8 @@
 # 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
 from hepdata.ext.elasticsearch.aggregations import parse_author_aggregations, \
     parse_date_aggregations, parse_collaboration_aggregations, \
-    parse_other_facets, parse_aggregations
+    parse_other_facets, parse_aggregations, parse_cmenergies_aggregations
+
 
 def test_parse_author_aggregations():
     buckets = [
@@ -43,6 +44,92 @@ def test_parse_author_aggregations():
         'type': 'author'
     }
     assert(parse_author_aggregations(buckets) == expected)
+
+
+def test_parse_cmenergies_aggregations_simple():
+    buckets = [
+        {'key': 0.0, 'doc_count': 13},
+        {'key': 10.0, 'doc_count': 50},
+        {'key': 20.0, 'doc_count': 27}
+    ]
+
+    expected = {
+        'vals': [
+            {
+                'url_params': {'cmenergies': '0.0,10.0'},
+                'key': u"0.0 \u2264 \u221As < 10.0",
+                'doc_count': 13
+            },
+            {
+                'url_params': {'cmenergies': '10.0,20.0'},
+                'key': u"10.0 \u2264 \u221As < 20.0",
+                'doc_count': 50
+            },
+            {
+                'url_params': {'cmenergies': '20.0,100000.0'},
+                'key': u"\u221As \u2265 20.0",
+                'doc_count': 27
+            }
+        ],
+        'max_values': 5,
+        'printable_name': 'CM Energies (GeV)',
+        'type': 'cmenergies'
+    }
+    assert(parse_cmenergies_aggregations(buckets) == expected)
+
+
+def test_parse_cmenergies_aggregations_filtered():
+    buckets = [
+        {'key': 10.0, 'doc_count': 13},
+        {'key': 11.0, 'doc_count': 50},
+        {'key': 12.0, 'doc_count': 27}
+    ]
+    query_filters1 = [('cmenergies', [10.0, 15.0])]
+    expected1 = {
+        'vals': [
+            {
+                'url_params': {'cmenergies': '10.0,11.0'},
+                'key': u"10.0 \u2264 \u221As < 11.0",
+                'doc_count': 13
+            },
+            {
+                'url_params': {'cmenergies': '11.0,12.0'},
+                'key': u"11.0 \u2264 \u221As < 12.0",
+                'doc_count': 50
+            },
+            {
+                'url_params': {'cmenergies': '12.0,15.0'},
+                'key': u"12.0 \u2264 \u221As < 15.0",
+                'doc_count': 27
+            }
+        ],
+        'max_values': 5,
+        'printable_name': 'CM Energies (GeV)',
+        'type': 'cmenergies'
+    }
+    assert(parse_cmenergies_aggregations(buckets, query_filters1) == expected1)
+
+    buckets = [
+        {'key': 10.0, 'doc_count': 13},
+        {'key': 11.0, 'doc_count': 50},
+        {'key': 12.0, 'doc_count': 27}
+    ]
+    query_filters2 = [('cmenergies', [11.0, 12.0])]
+    expected2 = {
+        'vals': [
+            {
+                'url_params': {'cmenergies': '11.0,12.0'},
+                'key': u"11.0 \u2264 \u221As < 12.0",
+                'doc_count': 50
+            }
+        ],
+        'max_values': 5,
+        'printable_name': 'CM Energies (GeV)',
+        'type': 'cmenergies'
+    }
+    assert(parse_cmenergies_aggregations(buckets, query_filters2) == expected2)
+
+
 
 def test_parse_collaboration_aggregations():
     buckets = [
@@ -155,6 +242,11 @@ def test_parse_aggregations():
                 ]
             }
         },
+        'cmenergies': {
+            'buckets': [
+                {'key': 10.0, 'doc_count': 13}
+            ]
+        },
         'collaboration': {
             'buckets': [
                 {'key': 'collab1', 'doc_count': 3}
@@ -225,6 +317,18 @@ def test_parse_aggregations():
             'max_values': 5,
             'printable_name': 'Collaboration',
             'type': 'collaboration'
+        },
+        {
+            'vals': [
+                {
+                    'url_params': {'cmenergies': '10.0,100000.0'},
+                    'key': u"\u221As \u2265 10.0",
+                    'doc_count': 13
+                }
+            ],
+            'max_values': 5,
+            'printable_name': 'CM Energies (GeV)',
+            'type': 'cmenergies'
         }
     ]
     assert(parse_aggregations(aggregations) == expected)

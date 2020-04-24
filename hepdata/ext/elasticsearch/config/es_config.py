@@ -16,11 +16,12 @@
 # along with HEPData; if not, write to the Free Software Foundation, Inc.,
 # 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
 #
+import math
 
 from hepdata.config import CFG_DATA_KEYWORDS
 
 
-def add_default_aggregations(search):
+def add_default_aggregations(search, filters=[]):
     """ Default aggregations used for computing facets """
     # Add authors field first, chaining to ensure it's nested
     search.aggs.bucket('nested_authors', 'nested', path='authors')\
@@ -33,7 +34,23 @@ def add_default_aggregations(search):
     search.aggs.bucket('reactions', 'terms', field='data_keywords.reactions.raw')
     search.aggs.bucket('observables', 'terms', field='data_keywords.observables.raw')
     search.aggs.bucket('phrases', 'terms', field='data_keywords.phrases.raw')
-    search.aggs.bucket('cmenergies', 'terms', field='data_keywords.cmenergies.raw')
+
+    # Determine the interval for cmenergies buckets depending on the current filter
+    interval = 10
+    offset = 0
+    cmenergy_filters = [(k,v) for (k,v) in filters if k == 'cmenergies']
+    if cmenergy_filters:
+        current_range = cmenergy_filters[0][1]
+        offset = current_range[0]
+        if len(current_range) == 2:
+            span = current_range[1] - current_range[0]
+            if span > 0 and span < 25:
+                interval = math.ceil(span / 5)
+            else:
+                interval = 5
+
+    search.aggs.bucket('cmenergies', 'histogram', field='data_keywords.cmenergies',
+                       interval=interval, offset=offset, min_doc_count=10)
 
     return search
 
@@ -47,6 +64,17 @@ def get_filter_field(name, value):
 
     elif name == 'subject_areas':
         field = "subject_area.raw"
+
+    elif name == 'cmenergies':
+        filter_type = "range"
+        field = "data_keywords.cmenergies"
+
+        val_dict = { "gte": value[0] }
+        if len(value) > 1:
+            key = "lt" if value[1] > value[0] else "lte"
+            val_dict[key] = value[1]
+
+        value = val_dict
 
     elif name == 'date':
         year_list = []

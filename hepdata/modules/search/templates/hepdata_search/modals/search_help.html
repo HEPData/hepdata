@@ -69,9 +69,29 @@
                             </ul>
                         </li>
                         <br/>
-                        <li>Find all data with a <strong>CM energy</strong> of <em>1.34 GeV</em>
+                        <li>Find data by <strong>CM Energy</strong> (in GeV):
                             <ul>
-                                <li><a href='/search?q=cmenergies:1.34' target="_new">cmenergies:1.34</a></li>
+                                <li>
+                                    <a href='/search?q=cmenergies:1.34' target="_new">cmenergies:1.34</a>
+                                </li>
+                                <li>
+                                    <a href='/search?q=cmenergies:[1.3 TO 1.4]' target="_new">cmenergies:[1.3 TO 1.4]</a>
+                                    <span class="text-muted">
+                                        (inclusive range, i.e. 1.3 &#8804; &#8730; s &#8804; 1.4)
+                                    </span>
+                                </li>
+                                <li>
+                                    <a href='/search?q=cmenergies:{1.3 TO 1.4}' target="_new">cmenergies:{1.3 TO 1.4}</a>
+                                    <span class="text-muted">
+                                        (exclusive range, i.e. 1.3 &lt; &#8730; s &lt; 1.4)
+                                    </span>
+                                </li>
+                                <li>
+                                    <a href='/search?q=cmenergies:[1.3 TO 1.4}' target="_new">cmenergies:[1.3 TO 1.4}</a>
+                                    <span class="text-muted">
+                                        (half-open range, i.e. 1.3 &#8804; &#8730; s &lt; 1.4)
+                                    </span>
+                                </li>
                             </ul>
                         </li>
                         <br/>
