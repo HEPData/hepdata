@@ -37,7 +37,7 @@ from process_results import map_result, merge_results
 from invenio_db import db
 import logging
 
-from invenio_search import current_search_client as es
+from invenio_search import current_search_client as es, RecordsSearch
 
 
 __all__ = ['search', 'index_record_ids', 'index_record_dict', 'fetch_record',
@@ -105,8 +105,8 @@ def search(query,
         sort_field = 'date'
 
     query = HEPDataQueryParser.parse_query(query)
-
-    search = Search(using=es, index=index)
+    # Create search with preference param to ensure consistency of results across shards
+    search = RecordsSearch(using=es, index=index).with_preference_param()
 
     if query:
         fuzzy_query = QueryString(query=query, fuzziness='AUTO')
@@ -134,7 +134,7 @@ def search(query,
         }
     }
 
-    data_search = Search(using=es, index=index)
+    data_search = RecordsSearch(using=es, index=index)
     data_search = data_search.query('has_parent',
                                     parent_type="parent_publication",
                                     query=parent_filter)
