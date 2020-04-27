@@ -125,7 +125,7 @@ def search(query,
         search = search.post_filter(post_filter)
 
     search = search.source(includes=include, excludes=exclude)
-    search = search[offset:size]
+    search = search[offset:offset+size]
     pub_result = search.execute().to_dict()
 
     parent_filter = {

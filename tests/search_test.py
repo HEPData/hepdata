@@ -146,6 +146,12 @@ def test_search(app, load_default_data, identifiers):
         assert(results['results'][i]['inspire_id'] == identifiers[i]['inspire_id'])
         assert(len(results['results'][i]['data']) == identifiers[i]['data_tables'])
 
+    # Test pagination (1 item per page as we only have 2; get 2nd page)
+    results = es_api.search('', index=index, size=1, offset=1)
+    assert(results['total'] == len(identifiers))
+    assert(len(results['results']) == 1)
+    assert(results['results'][0]['title'] == identifiers[1]['title'])
+
     # Test a simple search query from the second test submission
     # The search matches the publication but not the data tables
     results = es_api.search('charmonium', index=index)
