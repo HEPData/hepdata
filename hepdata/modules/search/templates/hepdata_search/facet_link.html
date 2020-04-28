@@ -3,8 +3,10 @@
                             **fval.url_params) }}>
 
         {{ fval.key }}
+        {% if fval.doc_count != None %}
         <span class="facet-count">
             {{ fval.doc_count }}
         </span>
+        {% endif %}
 
 </a>

@@ -24,6 +24,7 @@
 
 from __future__ import division
 from datetime import date
+import math
 
 MAX_AUTHOR_FACETS = 10
 MAX_COLLABORATION_FACETS = 5
@@ -43,12 +44,18 @@ def parse_aggregations(aggregations, query_filters=None):
         elif agg_name == 'dates':
             buckets = agg_res['buckets']
             facets.append(parse_date_aggregations(buckets))
-        elif agg_name == 'cmenergies':
-            buckets = agg_res['buckets']
-            facets.append(parse_cmenergies_aggregations(buckets, query_filters))
+        # Uncomment these lines when we reinstate the cmenergies aggregations
+        # with ES>=7.4
+        # elif agg_name == 'cmenergies':
+        #     buckets = agg_res['buckets']
+        #     facets.append(parse_cmenergies_aggregations(buckets, query_filters))
         else:
             buckets = agg_res.get('buckets')
             facets.append(parse_other_facets(buckets, agg_name))
+
+    # Add dummy facets for cmenergies. Remove this call when we reinstate
+    # the cmenergies aggregations with ES>=7.4
+    facets.append(create_dummy_cmenergies_facets(query_filters))
 
     return [f for f in facets if f.get('vals')]
 
@@ -78,6 +85,8 @@ def parse_collaboration_aggregations(buckets):
     }
 
 
+# This method won't get called until we can reinstate the cmenergies
+# aggregations when we move to ES>=7.4
 def parse_cmenergies_aggregations(buckets, query_filters=None):
     max_limit = 100000
     min_limit = None
@@ -124,6 +133,70 @@ def parse_cmenergies_aggregations(buckets, query_filters=None):
         'type': 'cmenergies',
         'printable_name': 'CM Energies (GeV)',
         'vals': filtered_buckets,
+        'max_values': MAX_COLLABORATION_FACETS
+    }
+
+
+# This method creates dummy 'aggregations' which will be used to create facet
+# filters. It can be removed once we can reinstate the real cmenergies
+# aggregations when we move to ES>=7.4
+def create_dummy_cmenergies_facets(query_filters=None):
+    MAX_CMENERGY = 100000
+    filter_limits = [0, 1, 2, 5, 10, 100, 1000, 7000, 8000, 13000, MAX_CMENERGY]
+    buckets = []
+
+    if query_filters:
+        cmenergy_filter_vals = [v for (k,v) in query_filters if k == 'cmenergies' and len(v) > 1]
+        if cmenergy_filter_vals:
+            # Create filters based on current selection
+            min_limit = int(math.floor(min([v[0] for v in cmenergy_filter_vals])))
+            max_limit = int(math.ceil(max([v[1] for v in cmenergy_filter_vals])))
+            if max_limit == MAX_CMENERGY:
+                filter_limits = [min_limit, MAX_CMENERGY]
+            else:
+                span = max_limit - min_limit
+                interval = math.ceil(span / 5)
+                base = 5
+
+                if span > 1000:
+                    base = 500
+                elif span > 200:
+                    base = 50
+                elif span > 50:
+                    base = 10
+                elif span > 10:
+                    base = 5
+                else:
+                    base = 1
+
+                interval = int(base * math.floor(interval / base))
+                filter_limits = range(min_limit, max_limit, interval)
+                filter_limits.append(max_limit)
+
+    for i in range(len(filter_limits)-1):
+        lower_limit = filter_limits[i]
+        upper_limit = filter_limits[i+1]
+
+        cmenergy_hit = {'doc_count': None}
+        cmenergy_hit['url_params'] = {
+            'cmenergies': "%.1f,%.1f" % (lower_limit, upper_limit)
+        }
+
+        # Unicode character reference:
+        # \u221A is square root
+        # \u2264 is <=
+        # \u2265 is >=
+        if upper_limit == 100000:
+            cmenergy_hit['key'] = u"\u221As \u2265 %.1f" % lower_limit
+        else:
+            cmenergy_hit['key'] = u"%.1f \u2264 \u221As < %.1f" % (lower_limit, upper_limit)
+
+        buckets.append(cmenergy_hit)
+
+    return {
+        'type': 'cmenergies',
+        'printable_name': 'CM Energies (GeV)',
+        'vals': buckets,
         'max_values': MAX_COLLABORATION_FACETS
     }
 

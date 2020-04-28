@@ -60,7 +60,7 @@ def test_search_from_home(live_server, env_browser, search_tests):
         {'class_prefix': 'phrases', 'exp_filter_count': 10, 'exp_first_result_count': 1},
         {'class_prefix': 'reactions', 'exp_filter_count': 9, 'exp_first_result_count': 1},
         {'class_prefix': 'observables', 'exp_filter_count': 3, 'exp_first_result_count': 1},
-        {'class_prefix': 'cmenergies', 'exp_filter_count': 0, 'exp_first_result_count': 0}
+        {'class_prefix': 'cmenergies', 'exp_filter_count': 10, 'exp_first_result_count': None}
     ]
 
     for facet in facets:
@@ -68,7 +68,7 @@ def test_search_from_home(live_server, env_browser, search_tests):
         facet_filters = browser.find_elements_by_css_selector('#' + facet['class_prefix'] + '-facet li.list-group-item a')
         assert(len(facet_filters) == facet['exp_filter_count'])
 
-        if len(facet_filters) > 0:
+        if len(facet_filters) > 0 and facet['exp_first_result_count'] is not None:
             # Check the number of results for first filter in the facet
             result_count = int(facet_filters[0].find_element_by_class_name('facet-count').text.strip())
             assert(result_count == facet['exp_first_result_count'])

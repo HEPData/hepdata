@@ -33,7 +33,7 @@ def test_query_builder_add_aggregations():
     s = add_default_aggregations(s)
     assert(s.to_dict() == {
         "aggs": {
-            "cmenergies": {"histogram": {"field": "data_keywords.cmenergies", "interval": 10, "offset": 0, "min_doc_count": 10}},
+            # "cmenergies": {"histogram": {"field": "data_keywords.cmenergies", "interval": 10, "offset": 0, "min_doc_count": 10}},
             "collaboration": {"terms": {"field": "collaborations.raw"}},
             "dates": {"date_histogram": {"field": "publication_date",  "interval": "year"}},
             "nested_authors": {"aggs": {
@@ -48,14 +48,15 @@ def test_query_builder_add_aggregations():
     })
 
     # Test out different CM Energies filters
-    s = add_default_aggregations(s, [('cmenergies', [5.0, 25.0])])
-    assert(s.to_dict()["aggs"]["cmenergies"] == {
-        "histogram": {"field": "data_keywords.cmenergies", "interval": 4, "offset": 5, "min_doc_count": 10}
-    })
-    s = add_default_aggregations(s, [('cmenergies', [4.0, 8.0])])
-    assert(s.to_dict()["aggs"]["cmenergies"] == {
-        "histogram": {"field": "data_keywords.cmenergies", "interval": 1, "offset": 4, "min_doc_count": 10}
-    })
+    # Uncomment these tests once we reinstate the cmenergies aggregations with ES>=7.4
+    # s = add_default_aggregations(s, [('cmenergies', [5.0, 25.0])])
+    # assert(s.to_dict()["aggs"]["cmenergies"] == {
+    #     "histogram": {"field": "data_keywords.cmenergies", "interval": 4, "offset": 5, "min_doc_count": 10}
+    # })
+    # s = add_default_aggregations(s, [('cmenergies', [4.0, 8.0])])
+    # assert(s.to_dict()["aggs"]["cmenergies"] == {
+    #     "histogram": {"field": "data_keywords.cmenergies", "interval": 1, "offset": 4, "min_doc_count": 10}
+    # })
 
 
 def test_query_builder_add_filters():
@@ -138,7 +139,7 @@ def test_search(app, load_default_data, identifiers):
     # Test searching with an empty query
     results = es_api.search('', index=index)
     assert(results['total'] == len(identifiers))
-    assert(len(results['facets']) == 7)
+    assert(len(results['facets']) == 8)
     assert(len(results['results']) == len(identifiers))
 
     for i in range(len(results['results'])):

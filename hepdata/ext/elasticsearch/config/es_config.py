@@ -35,22 +35,24 @@ def add_default_aggregations(search, filters=[]):
     search.aggs.bucket('observables', 'terms', field='data_keywords.observables.raw')
     search.aggs.bucket('phrases', 'terms', field='data_keywords.phrases.raw')
 
+    # Don't add cmenergies aggregations for now as they're unsupported in ES 7.1
+    # (added in ES 7.4)
     # Determine the interval for cmenergies buckets depending on the current filter
-    interval = 10
-    offset = 0
-    cmenergy_filters = [(k,v) for (k,v) in filters if k == 'cmenergies']
-    if cmenergy_filters:
-        current_range = cmenergy_filters[0][1]
-        offset = current_range[0]
-        if len(current_range) == 2:
-            span = current_range[1] - current_range[0]
-            if span > 0 and span < 25:
-                interval = math.ceil(span / 5)
-            else:
-                interval = 5
-
-    search.aggs.bucket('cmenergies', 'histogram', field='data_keywords.cmenergies',
-                       interval=interval, offset=offset, min_doc_count=10)
+    # interval = 10
+    # offset = 0
+    # cmenergy_filters = [(k,v) for (k,v) in filters if k == 'cmenergies']
+    # if cmenergy_filters:
+    #     current_range = cmenergy_filters[0][1]
+    #     offset = current_range[0]
+    #     if len(current_range) == 2:
+    #         span = current_range[1] - current_range[0]
+    #         if span > 0 and span < 25:
+    #             interval = math.ceil(span / 5)
+    #         else:
+    #             interval = 5
+    #
+    # search.aggs.bucket('cmenergies', 'histogram', field='data_keywords.cmenergies',
+    #                    interval=interval, offset=offset, min_doc_count=10)
 
     return search
 

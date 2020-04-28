@@ -155,7 +155,7 @@ def filter_facets(facets, total_hits):
     if total_hits > HITS:
         keyword_facets = [f for f in facets if f['type'] in CFG_DATA_KEYWORDS]
         for facet in keyword_facets:
-            vals = [v for v in facet['vals'] if v['doc_count'] >= THRESHOLD]
+            vals = [v for v in facet['vals'] if v['doc_count'] is None or v['doc_count'] >= THRESHOLD]
             facet['vals'] = vals
 
     nonempty_facets = [kf for kf in facets if len(kf['vals']) > 0]
