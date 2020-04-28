@@ -40,7 +40,7 @@ cache:
 services:
   - postgresql
   - elasticsearch
-  - redis-server
+  - redis
   - xvfb
 
 python:
