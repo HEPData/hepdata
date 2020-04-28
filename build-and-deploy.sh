@@ -67,7 +67,7 @@ deployQA() {
 
 main() {
   login
-  buildPush "hepdata" "hepdata/hepdata"
+  buildPush "." "hepdata/hepdata"
   logout
   # FIXME: Enable when cluster is ready
   # deployQA "hepdata"
