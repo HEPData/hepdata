@@ -34,8 +34,8 @@ sudo: false
 
 language: python
 
-cache:
-  - pip
+# cache:
+#   - pip
 
 services:
   - postgresql
