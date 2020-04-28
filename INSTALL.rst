@@ -1,13 +1,25 @@
 Prerequisites
 =============
 
-HEPData uses several services such as the `PostgreSQL <http://www.postgresql.org/>`_
-(version 9.6) database server, `Redis <http://redis.io/>`_ for caching, and `Elasticsearch
-<https://www.elastic.co/products/elasticsearch>`_ (version 2.x, not later versions) for indexing and information
-retrieval.  It also requires the `Node.js <https://nodejs.org>`_ JavaScript run-time environment
-and its package manager `npm <https://www.npmjs.com/>`_. These services can be installed using the
-relevant package manager for your system, for example, using ``yum`` or ``apt-get`` for Linux or
-``brew`` for macOS.
+HEPData uses several services, which you will need to install before running HEPData:
+ * `PostgreSQL <http://www.postgresql.org/>`_ (version 9.6) database server
+ * `Redis <http://redis.io/>`_ for caching
+ * `Elasticsearch <https://www.elastic.co/products/elasticsearch>`_ (version 7.1, not later versions) for indexing and information retrieval. See below for further instructions.
+ * `Node.js <https://nodejs.org>`_ JavaScript run-time environment and its package manager `npm <https://www.npmjs.com/>`_.
+
+These services can be installed using the relevant package manager for your system,
+for example, using ``yum`` or ``apt-get`` for Linux or ``brew`` for macOS.
+
+See the `installation instructions <https://www.elastic.co/guide/en/elasticsearch/reference/7.1/install-elasticsearch.html>`_
+for installing ElasticSearch 7.1, but be aware that the instructions for homebrew will install version 7.6 by default. To
+install v7.1 via homebrew, run:
+
+.. code-block:: console
+
+    $ brew tap elastic/tap
+    $ cd $(brew --repo elastic/tap)
+    $ git checkout f90d9a385d44917aee879695c7168a0ca4dc6079
+    $ HOMEBREW_NO_AUTO_UPDATE=1 brew install elasticsearch-oss
 
 
 .. _installation:
