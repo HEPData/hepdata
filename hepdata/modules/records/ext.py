@@ -40,6 +40,17 @@ from hepdata.utils.users import user_is_admin_or_coordinator, user_is_admin
 from . import config
 from .views import blueprint
 
+
+try:
+    # Import XRootDPyFS if available so that its
+    # opener gets registered on PyFilesystem.
+    pkg_resources.get_distribution('xrootdpyfs')
+    import xrootdpyfs
+    XROOTD_ENABLED = True
+except pkg_resources.DistributionNotFound:
+    XROOTD_ENABLED = False
+
+
 class HEPDataRecords(object):
     """HEPData records extension."""
 
@@ -63,6 +74,7 @@ class HEPDataRecords(object):
 
     def init_config(self, app):
         """Initialize configuration."""
+        app.config['XROOTD_ENABLED'] = XROOTD_ENABLED
         for k in dir(config):
             if k.startswith('HEPDATA_'):
                 app.config.setdefault(k, getattr(config, k))

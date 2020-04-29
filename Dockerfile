@@ -7,7 +7,7 @@ COPY . .
 RUN pip install --no-cache-dir --upgrade pip && \
  pip install --no-cache-dir --upgrade setuptools && \
  pip install --no-cache-dir --upgrade wheel && \
- pip install -e . -r requirements.txt --pre
+ pip install -e . -r requirements.txt -r requirements-xrootd.txt --pre
 
 WORKDIR  /usr/var/hepdata-instance/static
 

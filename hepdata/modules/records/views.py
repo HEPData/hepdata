@@ -37,7 +37,7 @@ try:
 except ImportError: #pragma: no cover
     from yaml import BaseLoader as Loader #pragma: no cover
 from invenio_db import db
-from fs import open_fs
+
 
 from hepdata.config import CFG_DATA_TYPE, CFG_PUB_TYPE
 from hepdata.ext.elasticsearch.api import get_records_matching_field, get_count_for_collection, get_n_latest_records, \
@@ -58,6 +58,7 @@ from hepdata.modules.submission.api import get_latest_hepsubmission
 from hepdata.modules.records.utils.workflow import \
     update_action_for_submission_participant
 from hepdata.modules.stats.views import increment
+from hepdata.utils.file_opener import file_opener
 
 logging.basicConfig()
 log = logging.getLogger(__name__)
@@ -250,7 +251,7 @@ def get_table_details(recid, data_recid, version):
             attempts = 0
             while True:
                 try:
-                    with open(file_location, 'r') as table_file:
+                    with file_opener(file_location, 'r') as table_file:
                         table_contents = yaml.load(table_file, Loader=Loader)
                 except:
                     # force eos to refresh local cache
@@ -584,14 +585,14 @@ def get_resource(resource_id):
         if view_mode:
             return send_file(resource_obj.file_location, as_attachment=True)
         elif 'html' in resource_obj.file_location and 'http' not in resource_obj.file_location:
-            with open(resource_obj.file_location, 'r') as resource_file:
+            with file_opener(resource_obj.file_location, 'r') as resource_file:
                 html = resource_file.read()
                 return html
         else:
             contents = ''
             if resource_obj.file_type.lower() not in IMAGE_TYPES:
                 print("Resource is at: " + resource_obj.file_location)
-                with open(resource_obj.file_location, 'r') as resource_file:
+                with file_opener(resource_obj.file_location, 'r') as resource_file:
                     contents = resource_file.read()
                     # Don't return file contents if they contain a null byte.
                     if '\0' in contents:

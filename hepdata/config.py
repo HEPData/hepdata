@@ -276,8 +276,10 @@ SUBMISSION_FILE_NAME_PATTERN = 'HEPData-{}-v{}-yaml.zip'
 # but the certificate is generated on our side.
 PYTHONWARNINGS="ignore:Unverified HTTPS request"
 
-EOS_ENABLE_XROOT = False
-EOS_REPLACE = '/opt/hepdata/var/data'
+PRODUCTION_MODE = False
+
+EOS_ENABLED = False
+EOS_REPLACE_PREFIX = '/opt/hepdata/var/data'
 EOS_DATADIR = 'root://eospublic.cern.ch//eos/hepdata/prod/var/data' # TO DO: move to Puppet configuration
 
 RUN_SELENIUM_LOCALLY = False

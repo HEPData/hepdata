@@ -31,18 +31,22 @@ def ensure_xrootd_path(path):
 
     You must enable ``EOS_ENABLE_XROOT = True`` otherwise will do nothing.
     """
-    if not current_app.config.get('EOS_ENABLE_XROOT', False):
+    if not current_app.config.get('EOS_ENABLED', False):
         return path
 
     if not path.startswith('root://'):
         path = path.replace(
-            current_app.config['EOS_REPLACE'],
+            current_app.config['EOS_REPLACE_PREFIX'],
             current_app.config['EOS_DATADIR']
         )
     return path
 
 
 def file_opener(path, mode='r'):
-    """File opener."""
+    """File opener.
+
+    param path (str): the fullpath of the file
+    param mode (str): mode to open file file
+    """
     path = ensure_xrootd_path(path)
     return fsopen(path, mode=mode)
