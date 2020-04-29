@@ -37,6 +37,7 @@ try:
 except ImportError: #pragma: no cover
     from yaml import BaseLoader as Loader #pragma: no cover
 from invenio_db import db
+from fs import open_fs
 
 from hepdata.config import CFG_DATA_TYPE, CFG_PUB_TYPE
 from hepdata.ext.elasticsearch.api import get_records_matching_field, get_count_for_collection, get_n_latest_records, \

@@ -172,3 +172,7 @@ whichcraft==0.4.0
 WTForms==2.1
 WTForms-Alchemy==0.16.1
 WTForms-Components==0.10.0
+# Move to a separate
+xrootd==4.11.3
+xrootdpyfs==0.1.6
+fs==0.5.4
