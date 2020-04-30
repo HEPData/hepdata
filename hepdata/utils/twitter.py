@@ -24,12 +24,13 @@
 
 from __future__ import absolute_import, print_function
 
-from hepdata.modules.records.utils.common import encode_string, truncate_string
+from hepdata.modules.records.utils.common import encode_string, decode_string, truncate_string
 from twitter import Twitter
 from twitter import OAuth
 from hepdata.config import USE_TWITTER, TWITTER_HANDLE_MAPPINGS
 from flask import current_app
 import json
+from .unicodeit import replace
 
 
 def tweet(title, collaborations, url, version=1):
@@ -55,7 +56,10 @@ def tweet(title, collaborations, url, version=1):
         else:
             twitter = Twitter(auth=OAuth(OAUTH_TOKEN, OAUTH_SECRET, CONSUMER_KEY, CONSUMER_SECRET))
 
-            cleaned_title = encode_string(cleanup_latex(title))
+            cleaned_title = decode_string(encode_string(title))  # in case of binary characters in title
+            cleaned_title = replace([cleaned_title])[0]  # use UnicodeIt to replace LaTeX expressions
+            cleaned_title = cleanup_latex(cleaned_title)  # remove spurious LaTeX encoding characters
+
             words = len(cleaned_title.split())
 
             # Try to tweet with complete paper title.
