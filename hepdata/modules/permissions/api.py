@@ -30,7 +30,7 @@ from hepdata.modules.permissions.models import SubmissionParticipant, Coordinato
 from hepdata.modules.records.utils.common import get_record_contents
 from hepdata.modules.submission.models import HEPSubmission
 from hepdata.utils.users import get_user_from_id, user_is_admin
-
+from hepdata.utils.files import file_opener
 
 def get_records_participated_in_by_user():
     _current_user_id = int(current_user.get_id())
@@ -146,16 +146,27 @@ def write_submissions_to_files():
     from datetime import date
 
     # Open a CSV file to write the number of unfinished and finished submissions for each Coordinator.
-    csvfile = open('submissions_per_coordinator_{}.csv'.format(date.today()), 'w')
+    csvfile = file_opener('submissions_per_coordinator_{}.csv'.format(date.today()), 'w')
     writer = csv.writer(csvfile)
-    writer.writerow(['user_id', 'user_email', 'collaboration', 'version',
-                 'number_todo', 'number_finished'])
+    writer.writerow([
+        'user_id',
+        'user_email',
+        'collaboration',
+        'version',
+        'number_todo',
+        'number_finished'
+    ])
 
     # Open another CSV file to write the collaboration and date of each finished version 1 submission.
-    csvfile1 = open('submissions_with_date_{}.csv'.format(date.today()), 'w')
+    csvfile1 = file_opener('submissions_with_date_{}.csv'.format(date.today()), 'w')
     writer1 = csv.writer(csvfile1)
-    writer1.writerow(['collaboration', 'publication_recid', 'inspire_id',
-                  'created', 'last_updated'])
+    writer1.writerow([
+        'collaboration',
+        'publication_recid',
+        'inspire_id',
+        'created',
+        'last_updated'
+    ])
 
     # Loop over approved Coordinators.
     coordinators = get_approved_coordinators()

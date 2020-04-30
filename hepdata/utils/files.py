@@ -22,8 +22,34 @@
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
+import fs
+import io
+import subprocess
+
 from flask import current_app
 from fs.opener import fsopen
+from shutil import rmtree
+
+
+def copy_file(src_file, dst_file, buffer_size=io.DEFAULT_BUFFER_SIZE):
+    next_chunk = src_file.read(buffer_size)
+    while next_chunk:
+        dst_file.write(next_chunk)
+        next_chunk = src_file.read(buffer_size)
+
+
+def copy_files_or_directory(source_path, destination_path, delete_source=False):
+    if current_app.config.get('PRODUCTION_MODE', False):
+        copy_command = ['xrdcp', '-N', '-f']
+    else:
+        copy_command = ['cp']
+
+    print('Copying with: {} -r {} {}'.format(' '.join(copy_command), source_path, destination_path))
+    subprocess.check_output(
+        copy_command + ['-r',  source_path, destination_path])
+
+    if delete_source:
+        rmtree(source_path, ignore_errors=True)
 
 
 def ensure_xrootd_path(path):
@@ -32,6 +58,9 @@ def ensure_xrootd_path(path):
     You must enable ``EOS_ENABLE_XROOT = True`` otherwise will do nothing.
     """
     if not current_app.config.get('EOS_ENABLED', False):
+        return path
+
+    if path.startswith(current_app.config.get('CFG_TMPDIR', '')):
         return path
 
     if not path.startswith('root://'):

@@ -26,10 +26,12 @@ from __future__ import absolute_import, print_function
 import json
 import logging
 import subprocess
+import fs
+import tempfile
 import zipfile
 from datetime import datetime
 from dateutil.parser import parse
-
+from shutil import rmtree
 from elasticsearch import NotFoundError, ConnectionTimeout
 from flask import current_app
 from flask_celeryext import create_celery_app
@@ -52,6 +54,7 @@ from hepdata.modules.records.utils.doi_minter import reserve_dois_for_data_submi
     generate_dois_for_submission
 from hepdata.modules.records.utils.resources import download_resource_file
 from hepdata.utils.twitter import tweet
+from hepdata.utils.files import file_opener, copy_files_or_directory
 from hepdata_validator.data_file_validator import DataFileValidator
 from hepdata_validator.submission_file_validator import SubmissionFileValidator
 from invenio_db import db
@@ -394,7 +397,7 @@ def _eos_fix_read_data(data_file_path):
         data = {}
         ex = None
         try:
-            with open(data_file_path, 'r') as data_file:
+            with file_opener(data_file_path, 'r') as data_file:
                 data = yaml.load(data_file, Loader=Loader)
         except Exception as ex:
             try: # force eos to refresh local cache
@@ -423,7 +426,6 @@ def process_submission_directory(basepath, submission_file_path, recid, update=F
     """
     added_file_names = []
     errors = {}
-
     if submission_file_path is not None:
 
         if from_oldhepdata:
@@ -435,13 +437,20 @@ def process_submission_directory(basepath, submission_file_path, recid, update=F
             submission_file_validator = SubmissionFileValidator(schema_version='0.1.0')
         else:
             submission_file_validator = SubmissionFileValidator()
+        try:
+            with file_opener(submission_file_path) as submission_file:
+                submission_processed = list(yaml.load_all(submission_file, Loader=Loader))
+        except Exception as ex:
+            errors = {"submission.yaml": [
+                {"level": "error", "message": "There was a problem parsing the file.\n" + str(ex)}
+            ]}
+            return errors
 
-        is_valid_submission_file = submission_file_validator.validate(file_path=submission_file_path)
+        is_valid_submission_file = submission_file_validator.validate(
+            file_path=submission_file_path, data=submission_processed
+        )
 
         if is_valid_submission_file:
-
-            submission_file = open(submission_file_path, 'r')
-            submission_processed = yaml.load_all(submission_file, Loader=Loader)
 
             # process file, extracting contents, and linking
             # the data record with the parent publication
@@ -482,6 +491,7 @@ def process_submission_directory(basepath, submission_file_path, recid, update=F
             # See https://github.com/HEPData/hepdata/issues/112
             # Side effect that reviews will be deleted between uploads.
             cleanup_submission(recid, hepsubmission.version, added_file_names)
+            fs_submission_path = fs.opener.fsopendir(basepath)
 
             for yaml_document_index, yaml_document in enumerate(submission_processed):
                 if not yaml_document:
@@ -492,7 +502,7 @@ def process_submission_directory(basepath, submission_file_path, recid, update=F
                     for resource in yaml_document['additional_resources']:
                         location = os.path.join(basepath, resource['location'])
                         if not resource['location'].startswith(('http', '/resource/')):
-                            if not os.path.isfile(location):
+                            if not fs_submission_path.isfile(resource['location']):
                                 errors[resource['location']] = [{"level": "error", "message":
                                     "Missing 'additional_resources' file from uploaded archive."}]
                             elif '/' in resource['location']:
@@ -575,7 +585,7 @@ def process_submission_directory(basepath, submission_file_path, recid, update=F
                                 )
 
             submission_file.close()
-
+            fs_submission_path.close()
             if no_general_submission_info:
                 hepsubmission.last_updated = datetime.now()
                 db.session.add(hepsubmission)
@@ -620,35 +630,47 @@ def package_submission(basepath, recid, hep_submission_obj):
     """
     Zips up a submission directory. This is in advance of its download
     for example by users.
-
     :param basepath: path of directory containing all submission files
     :param recid: the publication record ID
     :param hep_submission_obj: the HEPSubmission object representing
            the overall position
     """
-    if not os.path.exists(os.path.join(current_app.config['CFG_DATADIR'], str(recid))):
-        os.makedirs(os.path.join(current_app.config['CFG_DATADIR'], str(recid)))
+    final_path = os.path.join(current_app.config['CFG_DATADIR'], str(recid))
+    fs.opener.fsopendir(final_path, create_dir=True)
+
+    submission_temp_path = tempfile.mkdtemp(dir=current_app.config["CFG_TMPDIR"])
+    base_path_contents = '{}/.'.format(basepath)
+
+    copy_files_or_directory(base_path_contents , submission_temp_path)
+
+    if not os.path.exists(os.path.join(current_app.config['CFG_TMPDIR'], str(recid))):
+        os.makedirs(os.path.join(current_app.config['CFG_TMPDIR'], str(recid)))
 
     version = hep_submission_obj.version
     if version == 0:
         version = 1
 
     zip_location = os.path.join(
-        current_app.config['CFG_DATADIR'], str(recid),
-        current_app.config['SUBMISSION_FILE_NAME_PATTERN']
-            .format(recid, version))
+        current_app.config['CFG_TMPDIR'], str(recid),
+        current_app.config['SUBMISSION_FILE_NAME_PATTERN'].format(recid, version)
+    )
     if os.path.exists(zip_location):
         os.remove(zip_location)
 
     zipf = zipfile.ZipFile(zip_location, 'w')
-    os.chdir(basepath)
+    os.chdir(submission_temp_path)
+
     try:
         zipdir(".", zipf)
+        copy_files_or_directory(zip_location, final_path, delete_source=True)
+        rmtree(submission_temp_path, ignore_errors=True)
         return {}
     except Exception as e:
         return {zip_location: [{"level": "error", "message": str(e)}]}
     finally:
         zipf.close()
+
+
 
 
 def process_validation_errors_for_display(errors):

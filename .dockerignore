@@ -13,3 +13,5 @@ docker-compose.yml
 docker-compose-dev.yml
 
 Procfile*
+*.pyc
+**/*.pyc

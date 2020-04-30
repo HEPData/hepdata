@@ -26,6 +26,7 @@
 
 from __future__ import absolute_import, print_function
 
+import os
 import logging
 import json
 from dateutil import parser
@@ -58,7 +59,7 @@ from hepdata.modules.submission.api import get_latest_hepsubmission
 from hepdata.modules.records.utils.workflow import \
     update_action_for_submission_participant
 from hepdata.modules.stats.views import increment
-from hepdata.utils.file_opener import file_opener
+from hepdata.utils.files import file_opener
 
 logging.basicConfig()
 log = logging.getLogger(__name__)
@@ -253,7 +254,7 @@ def get_table_details(recid, data_recid, version):
                 try:
                     with file_opener(file_location, 'r') as table_file:
                         table_contents = yaml.load(table_file, Loader=Loader)
-                except:
+                except Exception:
                     # force eos to refresh local cache
                     subprocess.check_output(['stat', file_location])
                     attempts += 1
@@ -583,7 +584,9 @@ def get_resource(resource_id):
         resource_obj = resource.first()
 
         if view_mode:
-            return send_file(resource_obj.file_location, as_attachment=True)
+            filename = os.path.basename(resource_obj.file_location)
+            with file_opener(resource_obj.file_location, 'r') as resource_file:
+                return send_file(resource_file, filename=filename,  as_attachment=True)
         elif 'html' in resource_obj.file_location and 'http' not in resource_obj.file_location:
             with file_opener(resource_obj.file_location, 'r') as resource_file:
                 html = resource_file.read()

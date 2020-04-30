@@ -25,6 +25,7 @@ import logging
 import os
 
 from flask import current_app
+from hepdata.utils.files import file_opener
 
 logging.basicConfig()
 log = logging.getLogger(__name__)
@@ -60,7 +61,7 @@ def download_resource_file(recid, resource_path):
     if file_name == "":
         file_name = "index.html"
 
-    with open(os.path.join(output_location, file_name), 'wb+') as resource_file:
+    with file_opener(os.path.join(output_location, file_name), 'wb+') as resource_file:
         try:
             resource_file.write(contents)
         except IOError as ioe:

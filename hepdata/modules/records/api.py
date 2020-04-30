@@ -24,6 +24,8 @@
 
 """API for HEPData-Records."""
 import os
+import fs
+import io
 from collections import OrderedDict
 from functools import wraps
 import subprocess
@@ -50,6 +52,7 @@ from hepdata.modules.records.utils.yaml_utils import split_files
 from hepdata.modules.stats.views import increment, get_count
 from hepdata.modules.submission.models import RecordVersionCommitMessage, DataSubmission, HEPSubmission, DataReview
 from hepdata.utils.file_extractor import extract
+from hepdata.utils.files import file_opener, copy_files_or_directory, copy_file
 from hepdata.utils.users import get_user_from_id
 from bs4 import BeautifulSoup
 
@@ -339,17 +342,23 @@ def process_zip_archive(file, id):
     filename = secure_filename(file.filename)
     time_stamp = str(int(round(time.time())))
     file_save_directory = os.path.join(current_app.config['CFG_DATADIR'], str(id), time_stamp)
-
-    if not os.path.exists(file_save_directory):
-        os.makedirs(file_save_directory)
+    fs_submission = fs.opener.fsopendir(file_save_directory, create_dir=True)
 
     if not filename.endswith('.oldhepdata'):
-        file_path = os.path.join(file_save_directory, filename)
+
+        submission_path_extracted_files = os.path.join(
+            file_save_directory, remove_file_extension(filename)
+        )
+        fs.opener.fsopendir(submission_path_extracted_files, create_dir=True)
+
+        submission_temp_path = tempfile.mkdtemp(dir=current_app.config["CFG_TMPDIR"])
+        file_path = os.path.join(submission_temp_path, filename)
+
         print('Saving file to {}'.format(file_path))
         file.save(file_path)
 
-        submission_path = os.path.join(file_save_directory, remove_file_extension(filename))
-        submission_temp_path = tempfile.mkdtemp(dir=current_app.config["CFG_TMPDIR"])
+        with fs_submission.open(filename, mode='wb') as uploaded_file:
+            copy_file(file.stream, uploaded_file)
 
         if filename.endswith('.yaml'):
             # we split the singular yaml file and create a submission directory
@@ -371,30 +380,23 @@ def process_zip_archive(file, id):
                         "level": "error", "message": "{} is not a valid zip or tar archive file.".format(file_path)
                     }]
                 }
+        copy_submission_temp_path = '{}/{}/.'.format(submission_temp_path, remove_file_extension(filename))
+        copy_files_or_directory(copy_submission_temp_path, submission_path_extracted_files, delete_source=True)
 
-        if not os.path.exists(submission_path):
-            os.makedirs(submission_path)
-
-        # Move files from submission_temp_path to submission_path (try to avoid problems with EOS disk).
-        if current_app.config.get('PRODUCTION_MODE', False): # production instance at CERN
-            copy_command = ['xrdcp', '-N', '-f']
-            copy_submission_path = submission_path.replace(current_app.config['CFG_DATADIR'], current_app.config['EOS_DATADIR'])
-        else: # local instance
-            copy_command =  ['cp']
-            copy_submission_path = submission_path
-        print('Copying with: {} -r {} {}'.format(' '.join(copy_command), submission_temp_path + '/.', copy_submission_path))
-        subprocess.check_output(copy_command + ['-r',  submission_temp_path + '/.', copy_submission_path])
-        rmtree(submission_temp_path, ignore_errors=True) # can uncomment when this is definitely working
-
-        submission_found = find_file_in_directory(submission_path, lambda x: x == "submission.yaml")
+        submission_found = find_file_in_directory(submission_path_extracted_files, lambda x: x == "submission.yaml")
 
     else:
-        file_path = os.path.join(file_save_directory, 'oldhepdata')
+        submission_temp_path = tempfile.mkdtemp(dir=current_app.config["CFG_TMPDIR"])
+        file_path = os.path.join(submission_temp_path, 'oldhepdata')
+
         if not os.path.exists(file_path):
             os.makedirs(file_path)
 
         print('Saving file to {}'.format(os.path.join(file_path, filename)))
         file.save(os.path.join(file_path, filename))
+
+        with fs_submission.open(filename, mode='wb') as uploaded_file:
+            copy_file(file.stream, uploaded_file)
 
         submission_found = False
 
@@ -410,7 +412,7 @@ def process_zip_archive(file, id):
         else:
             basepath, submission_file_path = result
             from_oldhepdata = True
-
+    fs_submission.close()
     return process_submission_directory(basepath, submission_file_path, id, from_oldhepdata=from_oldhepdata)
 
 
@@ -420,9 +422,7 @@ def check_and_convert_from_oldhepdata(input_directory, id, timestamp):
     and convert it to YAML if it happens.
     """
     converted_path = os.path.join(current_app.config['CFG_DATADIR'], str(id), timestamp, 'yaml')
-
-    if not os.path.exists(converted_path):
-        os.makedirs(converted_path)
+    fs_submission = fs.opener.fsopendir(converted_path, create_dir=True)
 
     oldhepdata_found = find_file_in_directory(
         input_directory,
@@ -443,7 +443,7 @@ def check_and_convert_from_oldhepdata(input_directory, id, timestamp):
     successful = convert_oldhepdata_to_yaml(oldhepdata_found[1], converted_temp_path)
     if not successful:
         # Parse error message from title of HTML file, removing part of string after final "//".
-        soup = BeautifulSoup(open(converted_temp_path), "lxml")
+        soup = BeautifulSoup(file_opener(converted_temp_path), "lxml")
         errormsg = soup.title.string.rsplit("//", 1)[0]
         rmtree(converted_temp_dir, ignore_errors=True) # can uncomment when this is definitely working
 
@@ -456,16 +456,8 @@ def check_and_convert_from_oldhepdata(input_directory, id, timestamp):
             }]
         }
     else:
-        # Move files from converted_temp_path to converted_path (try to avoid problems on EOS disk).
-        if current_app.config.get('PRODUCTION_MODE', False): # production instance at CERN
-            copy_command = ['xrdcp', '-N', '-f']
-            copy_converted_path = converted_path.replace(current_app.config['CFG_DATADIR'], current_app.config['EOS_DATADIR'])
-        else: # local instance
-            copy_command = ['cp']
-            copy_converted_path = converted_path
-        print('Copying with: {} -r {} {}'.format(' '.join(copy_command), converted_temp_path + '/.', copy_converted_path))
-        subprocess.check_output(copy_command + ['-r', converted_temp_path + '/.', copy_converted_path])
-        rmtree(converted_temp_dir, ignore_errors=True) # can uncomment when this is definitely working
+        copy_converted_temp_path = converted_temp_path + '/.'
+        copy_files_or_directory(copy_converted_temp_path, converted_path, delete_source=True)
 
     return find_file_in_directory(converted_path, lambda x: x == "submission.yaml")
 

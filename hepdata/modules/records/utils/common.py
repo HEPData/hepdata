@@ -26,6 +26,7 @@ from invenio_pidstore.errors import PIDDoesNotExistError
 from invenio_pidstore.resolver import Resolver
 from invenio_records.api import Record
 import os
+import fs
 from sqlalchemy.orm.exc import NoResultFound
 
 from hepdata.config import CFG_PUB_TYPE
@@ -185,10 +186,11 @@ def find_file_in_directory(directory, file_predicate):
     :param a lambda that checks if it's the file you're looking for:
     :return:
     """
-    for root, dirs, files in os.walk(directory):
+    fs_dir = fs.opener.fsopendir(directory)
+    for root, files in fs_dir.walk():
         for filename in files:
             if file_predicate(filename):
-                return root, os.path.join(root, filename)
+                return directory, os.path.join(directory, filename)
     return None
 
 
