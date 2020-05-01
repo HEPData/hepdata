@@ -20,6 +20,7 @@ from __future__ import print_function
 from collections import defaultdict
 import re
 
+from celery import shared_task
 from dateutil.parser import parse
 from flask import current_app
 from elasticsearch.exceptions import NotFoundError, RequestError
@@ -160,7 +161,7 @@ def search_authors(name, size=20, author_index=None):
 
 @default_index
 @author_index
-def reindex_all(index=None, author_index=None, recreate=False, batch=50, start=-1, end=-1):
+def reindex_all(index=None, author_index=None, recreate=False, batch=50, start=-1, end=-1, synchronous=False):
     """ Recreate the index and add all the records from the db to ES. """
 
     if recreate:
@@ -185,15 +186,24 @@ def reindex_all(index=None, author_index=None, recreate=False, batch=50, start=-
 
         count = min_recid
         while count <= max_recid:
-            print('Indexing record IDs {0} to {1}'.format(count, min(count + batch - 1, max_recid)))
-            indexed_publications = []
             rec_ids = range(count, min(count + batch, max_recid + 1))
-            indexed_result = index_record_ids(rec_ids, index=index)
-            indexed_publications += indexed_result[CFG_PUB_TYPE]
+            if synchronous:
+                reindex_batch(rec_ids, index)
+            else:
+                print('Sending batch of IDs {0} to {1} to celery'.format(rec_ids[0], rec_ids[-1]))
+                reindex_batch.delay(rec_ids, index)
             count += batch
 
-            print('Finished indexing, now pushing data keywords\n######')
-            push_data_keywords(pub_ids=indexed_publications)
+
+@shared_task
+def reindex_batch(rec_ids, index):
+    log.info('Indexing record IDs {0} to {1}'.format(rec_ids[0], rec_ids[-1]))
+    indexed_publications = []
+    indexed_result = index_record_ids(rec_ids, index=index)
+    indexed_publications += indexed_result[CFG_PUB_TYPE]
+
+    log.info('Finished indexing, now pushing data keywords\n######')
+    push_data_keywords(pub_ids=indexed_publications)
 
 
 @default_index
@@ -351,7 +361,7 @@ def index_record_ids(record_ids, index=None):
     docs = filter(None, [get_record_by_id(recid) for recid in record_ids])
 
     existing_record_ids = [doc['recid'] for doc in docs]
-    print('Indexing existing record IDs:', existing_record_ids)
+    log.info('Indexing existing record IDs: {}'.format(existing_record_ids))
 
     to_index = []
     indexed_result = {CFG_DATA_TYPE: [], CFG_PUB_TYPE: []}
@@ -379,7 +389,7 @@ def index_record_ids(record_ids, index=None):
         else:
 
             if 'version' not in doc:
-                print('Skipping unfinished record ID {}'.format(doc['recid']))
+                log.warn('Skipping unfinished record ID {}'.format(doc['recid']))
                 continue
 
             author_docs = prepare_author_for_indexing(doc)

@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with HEPData; if not, write to the Free Software Foundation, Inc.,
 # 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
+from elasticsearch.exceptions import NotFoundError
 from elasticsearch_dsl import Search
 import pytest
 
@@ -26,7 +27,7 @@ from hepdata.ext.elasticsearch.process_results import merge_results, match_table
 from hepdata.ext.elasticsearch.query_builder import QueryBuilder, HEPDataQueryParser
 from hepdata.ext.elasticsearch.utils import flip_sort_order, parse_and_format_date, prepare_author_for_indexing, \
     calculate_sort_order, push_keywords
-
+from invenio_search import current_search_client as es
 
 def test_query_builder_add_aggregations():
     s = Search()
@@ -347,3 +348,20 @@ def test_get_basic_record_information():
 def test_is_datatable():
     assert (is_datatable({"_source": {"doc_type": "datatable"}}))
     assert (not is_datatable({"_source": {"doc_type": "publication"}}))
+
+
+def test_reindex_all(app, load_default_data, identifiers):
+    index = app.config.get('ELASTICSEARCH_INDEX')
+    # Delete the default index
+    es.indices.delete(index=index)
+
+    # Check we can't search
+    with pytest.raises(NotFoundError, match=r"no such index "):
+        es_api.search('', index=index)
+
+    # Reindex, recreating the index
+    es_api.reindex_all(index=index, recreate=True, synchronous=True)
+
+    # Search should work again
+    results = es_api.search('', index=index)
+    assert(results['total'] == len(identifiers))
