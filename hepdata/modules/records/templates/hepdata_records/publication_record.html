@@ -350,7 +350,7 @@
     {% if ctx.record.title %}
       {% include 'hepdata_records/components/cite-widget.html' %}
     {% endif %}
-    {% if ctx.status == 'finished' and current_user.is_authenticated %}
+    {% if ctx.status == 'finished' %}
         {% include 'hepdata_records/components/question-widget.html' %}
     {% endif %}
     {% include 'hepdata_records/components/notify-reviewer-widget.html' %}
