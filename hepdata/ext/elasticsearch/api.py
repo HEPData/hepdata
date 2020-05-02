@@ -321,7 +321,7 @@ def push_data_keywords(pub_ids=None, index=None):
         }
 
         try:
-            es.update(index=index, id=pub_id, body=body)
+            es.update(index=index, id=pub_id, body=body, retry_on_conflict=3)
         except Exception as e:
             log.error(e)
 
