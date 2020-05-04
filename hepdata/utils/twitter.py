@@ -31,6 +31,7 @@ from hepdata.config import USE_TWITTER, TWITTER_HANDLE_MAPPINGS
 from flask import current_app
 import json
 from .unicodeit import replace
+import re
 
 
 def tweet(title, collaborations, url, version=1):
@@ -58,7 +59,7 @@ def tweet(title, collaborations, url, version=1):
 
             cleaned_title = decode_string(encode_string(title))  # in case of binary characters in title
             cleaned_title = replace([cleaned_title])[0]  # use UnicodeIt to replace LaTeX expressions
-            cleaned_title = cleanup_latex(cleaned_title)  # remove spurious LaTeX encoding characters
+            cleaned_title = cleanup_latex(cleaned_title)  # remove some remaining LaTeX encodings
 
             words = len(cleaned_title.split())
 
@@ -86,8 +87,8 @@ def tweet(title, collaborations, url, version=1):
                     # It would be nice to get a stack trace here
                     if e.e.code == 403:
                         error = json.loads(e.response_data.decode('utf8'))
-                        if error["errors"][0]["code"] == 186: # Status is over 140 characters.
-                            words = words - 1 # Try again with one less word.
+                        if error["errors"][0]["code"] == 186:  # Status is over 140 characters.
+                            words = words - 1  # Try again with one less word.
                         else:
                             break
                     else:
@@ -99,9 +100,17 @@ def tweet(title, collaborations, url, version=1):
 
 
 def cleanup_latex(latex_string):
+    """Replace some spurious LaTeX encoding characters and expressions."""
+
     chars_to_replace = ["$", "{", "}"]
     for char_to_replace in chars_to_replace:
         latex_string = latex_string.replace(char_to_replace, "")
+
+    latex_string = latex_string.replace("~", " ")
+
+    exprs_to_replace = [r"\\mathrm\s*", r"\\text\s*", r"\\rm\s*"]
+    for expr_to_replace in exprs_to_replace:
+        latex_string = re.sub(expr_to_replace, "", latex_string)
 
     return latex_string
 
