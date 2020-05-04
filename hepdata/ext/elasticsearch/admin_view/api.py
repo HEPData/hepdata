@@ -22,6 +22,7 @@
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
+from datetime import datetime, timedelta
 import logging
 
 from elasticsearch import Elasticsearch
@@ -52,6 +53,7 @@ class ESSubmission(Document):
             'full_name': Text()
         }
     )
+    coordinator = Integer()
 
     def as_custom_dict(self, exclude=None):
         _dict_ = vars(self)
@@ -102,6 +104,10 @@ class AdminIndexer:
 
     def get_summary(self):
         s = Search(index=self.index)
+        # Filter by date to approximately 20 years ago, to ensure there aren't more
+        # than 10000 buckets
+        date_20_years_ago = (datetime.now() - timedelta(days=int(20*365.25))).date()
+        s = s.filter('range', **{'last_updated': {'gte': str(date_20_years_ago)}})
         s.aggs.bucket('daily_workflows', 'date_histogram',
                       field='last_updated',
                       format="yyyy-MM-dd", interval='day') \
@@ -163,7 +169,8 @@ class AdminIndexer:
                               creation_date=submission.created,
                               last_updated=submission.last_updated,
                               version=submission.version,
-                              participants=participants)
+                              participants=participants,
+                              coordinator=submission.coordinator)
 
     def reindex(self, *args, **kwargs):
 
@@ -171,7 +178,7 @@ class AdminIndexer:
         if recreate:
             self.recreate_index()
 
-        submissions = HEPSubmission.query.filter(HEPSubmission.overall_status != 'sandbox').all()
+        submissions = HEPSubmission.query.filter(HEPSubmission.overall_status != 'sandbox' and HEPSubmission.coordinator > 1).all()
 
         for submission in submissions:
             self.index_submission(submission)
