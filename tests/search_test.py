@@ -15,157 +15,99 @@
 # You should have received a copy of the GNU General Public License
 # along with HEPData; if not, write to the Free Software Foundation, Inc.,
 # 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
-from hepdata.ext.elasticsearch.config.es_config import default_sort_order_for_field
+from elasticsearch.exceptions import NotFoundError
+from elasticsearch_dsl import Search
+import pytest
+
+from hepdata.ext.elasticsearch.config.es_config import default_sort_order_for_field, \
+    add_default_aggregations, sort_fields_mapping
+from hepdata.ext.elasticsearch import api as es_api
 from hepdata.ext.elasticsearch.process_results import merge_results, match_tables_to_papers, \
     get_basic_record_information, is_datatable
 from hepdata.ext.elasticsearch.query_builder import QueryBuilder, HEPDataQueryParser
 from hepdata.ext.elasticsearch.utils import flip_sort_order, parse_and_format_date, prepare_author_for_indexing, \
     calculate_sort_order, push_keywords
-
-
-def test_query_builder_generate_query():
-    query_string1 = QueryBuilder.generate_query_string('')
-    assert (query_string1 == {"match_all": {}})
-
-    _test_query = "observables:ASYM"
-    query_string2 = QueryBuilder.generate_query_string(_test_query)
-    assert (query_string2 == {'query_string': {'query': 'observables:ASYM', 'fuzziness': 'AUTO'}})
-
-
-def test_query_builder_generate_nested_query():
-    _test_query = "observables:ASYM"
-    nested_query = QueryBuilder.generate_nested_query('test_path', _test_query)
-    expected = {
-        "nested": {
-            "path": 'test_path',
-            "query": {'query_string': {'query': 'observables:ASYM', 'fuzziness': 'AUTO'}}
-        }
-    }
-    assert (nested_query == expected)
-
-
-def test_query_builder_constructor():
-    qb = QueryBuilder()
-    assert(qb is not None)
-    assert(qb.query == {'query': {'filtered': {'query': {'match_all': {}}}}})
-
-
-def test_query_builder_sorting():
-    qb = QueryBuilder()
-    qb.add_sorting('title')
-    assert(qb.query == {'sort': [{'title.raw': {'order': 'asc'}}],
-                        'query': {'filtered': {'query': {'match_all': {}}}}})
-
-    qb.add_sorting('date', 'rev')
-    assert(qb.query == {'sort': [{'creation_date': {'order': 'asc'}}],
-                        'query': {'filtered': {'query': {'match_all': {}}}}})
-
-
-def test_query_builder_source_filter():
-    qb = QueryBuilder()
-    qb.add_source_filter('test_includes', 'test_excludes')
-    assert(qb.query == {
-        '_source': {'includes': 'test_includes', 'excludes': 'test_excludes'},
-        'query': {'filtered': {'query': {'match_all': {}}}}
-    })
-
-
-def test_query_builder_pagination():
-    qb = QueryBuilder()
-    qb.add_pagination(5)
-    assert(qb.query == {
-        'size': 5,
-        'from': 0,
-        'query': {'filtered': {'query': {'match_all': {}}}}
-    })
-
-    qb.add_pagination(7, 3)
-    assert(qb.query == {
-        'size': 7,
-        'from': 3,
-        'query': {'filtered': {'query': {'match_all': {}}}}
-    })
-
-
-def test_query_builder_child_parent_relation():
-    qb = QueryBuilder()
-    qb.add_child_parent_relation("test_type")
-    assert(qb.query == {
-        'query': {
-            'filtered': {
-                'query': {
-                    'bool': {'should': [{'has_child': {'query': {}, 'type': 'test_type'}}]}
-                }
-            }
-        }
-    })
-
-
-def test_query_builder_add_query_string():
-    qb = QueryBuilder()
-    qb.add_query_string("observables:ASYM")
-    assert(qb.query == {
-        'query': {
-            'filtered': {
-                'query': {'query_string': {'fuzziness': 'AUTO', 'query': 'observables:ASYM'}}
-            }
-        }
-    })
-
+from invenio_search import current_search_client as es
 
 def test_query_builder_add_aggregations():
-    qb = QueryBuilder()
-    qb.add_aggregations()
-    assert(qb.query == {
-        'aggs': {
-            'cmenergies': {'terms': {'field': 'data_keywords.cmenergies.raw', 'size': 0}},
-            'collaboration': {'terms': {'field': 'collaborations.raw', 'size': 0}},
-            'dates': {'date_histogram': {'field': 'publication_date',  'interval': 'year'}},
-            'nested_authors': {'aggs': {
-                'author_full_names': {'terms': {'field': 'authors.full_name'}}},
-                'nested': {'path': 'authors'}
+    s = Search()
+    s = add_default_aggregations(s)
+    assert(s.to_dict() == {
+        "aggs": {
+            # "cmenergies": {"histogram": {"field": "data_keywords.cmenergies", "interval": 10, "offset": 0, "min_doc_count": 10}},
+            "collaboration": {"terms": {"field": "collaborations.raw"}},
+            "dates": {"date_histogram": {"field": "publication_date",  "interval": "year"}},
+            "nested_authors": {"aggs": {
+                "author_full_names": {"terms": {"field": "authors.full_name.raw"}}},
+                "nested": {"path": "authors"}
             },
-            'observables': {'terms': {'field': 'data_keywords.observables.raw', 'size': 0}},
-            'phrases': {'terms': {'field': 'data_keywords.phrases.raw', 'size': 0}},
-            'reactions': {'terms': {'field': 'data_keywords.reactions.raw', 'size': 0}},
-            'subject_areas': {'terms': {'field': 'subject_area.raw', 'size': 0}}
-        },
-        'query': {'filtered': {'query': {'match_all': {}}}}
+            "observables": {"terms": {"field": "data_keywords.observables.raw"}},
+            "phrases": {"terms": {"field": "data_keywords.phrases.raw"}},
+            "reactions": {"terms": {"field": "data_keywords.reactions.raw"}},
+            "subject_areas": {"terms": {"field": "subject_area.raw"}}
+        }
     })
+
+    # Test out different CM Energies filters
+    # Uncomment these tests once we reinstate the cmenergies aggregations with ES>=7.4
+    # s = add_default_aggregations(s, [('cmenergies', [5.0, 25.0])])
+    # assert(s.to_dict()["aggs"]["cmenergies"] == {
+    #     "histogram": {"field": "data_keywords.cmenergies", "interval": 4, "offset": 5, "min_doc_count": 10}
+    # })
+    # s = add_default_aggregations(s, [('cmenergies', [4.0, 8.0])])
+    # assert(s.to_dict()["aggs"]["cmenergies"] == {
+    #     "histogram": {"field": "data_keywords.cmenergies", "interval": 1, "offset": 4, "min_doc_count": 10}
+    # })
 
 
 def test_query_builder_add_filters():
-    qb = QueryBuilder()
-    qb.add_filters([('author', 'test_author')])
-    assert(qb.query == {
-        'query': {
-            'filtered': {
-                'filter': {
-                    'and': [{
-                        'nested': {
-                            'filter': {
-                                'bool': {'must': {'term': {'authors.full_name': 'test_author'}}}
-                            },
-                            'path': 'authors'
+    s = Search()
+    s = QueryBuilder.add_filters(s, [
+        ("author", "test_author"),
+        ("collaboration", "test_collaboration"),
+        ("subject_areas", "test_subject_area"),
+        ("date", [2000, 2001, 2002]),
+        ("reactions", "test_reaction")
+    ])
+
+    assert(s.to_dict() == {
+        "query": {
+            "bool": {
+                "filter": [
+                    {"term": {"collaborations.raw": "test_collaboration"}},
+                    {"term": {"subject_area.raw": "test_subject_area"}},
+                    {"terms": {"year": ["2000", "2001", "2002"]}},
+                    {"term": {"data_keywords.reactions.raw": "test_reaction"}}
+                ],
+                'must': [{
+                    "nested": {
+                        "path": "authors",
+                        "query": {
+                            "match": {
+                                "authors.full_name": "test_author"
+                            }
                         }
-                    }]
-                },
-                'query': {'match_all': {}}
+                    }
+                }]
             }
         }
     })
 
+    with pytest.raises(ValueError, match=r"Unknown filter: not_a_filter"):
+        s = QueryBuilder.add_filters(s, [
+            ("not_a_filter", "test_invalid_filter")
+        ])
 
-def test_query_builder_add_post_filter():
-    qb = QueryBuilder()
-    qb.add_post_filter(None)
-    assert(qb.query == {'query': {'filtered': {'query': {'match_all': {}}}}})
 
-    qb.add_post_filter('test_postfilter')
-    assert(qb.query == {
-        'query': {'filtered': {'query': {'match_all': {}}}},
-        'post_filter': 'test_postfilter'
-    })
+def test_sort_fields_mapping():
+    assert(sort_fields_mapping('title') == 'title.raw')
+    assert(sort_fields_mapping('collaborations') == 'collaborations.raw')
+    assert(sort_fields_mapping('date') == 'creation_date')
+    assert(sort_fields_mapping('latest') == 'last_updated')
+    assert(sort_fields_mapping(None) == '_score')
+
+    with pytest.raises(ValueError, match=r'Sorting on field invalid_field is not supported'):
+        sort_fields_mapping('invalid_field')
 
 
 def test_query_parser():
@@ -176,29 +118,79 @@ def test_query_parser():
     _test_query2 = "observables:ASYM AND phrases:Elastic Scattering OR cmenergies:1.34"
     parsed_query_string2 = HEPDataQueryParser.parse_query(_test_query2)
 
-    print(parsed_query_string2)
-
     assert (parsed_query_string2 == "data_keywords.observables:ASYM "
                                     "AND data_keywords.phrases:Elastic Scattering "
                                     "OR data_keywords.cmenergies:1.34")
 
+    _test_query3 = "observables:ASYM AND unknown_field:hello"
+    parsed_query_string3 = HEPDataQueryParser.parse_query(_test_query3)
 
-def test_search():
+    assert (parsed_query_string3 == "data_keywords.observables:ASYM "
+                                    "AND unknown_field:hello")
+
+
+def test_search(app, load_default_data, identifiers):
     """
     Test the search functions work correctly, also with the new query syntax.
+    Testing both standard and authors search here to save loading the data multiple times
     :return:
     """
-    pass
+    index = app.config.get('ELASTICSEARCH_INDEX')
+
+    # Test searching with an empty query
+    results = es_api.search('', index=index)
+    assert(results['total'] == len(identifiers))
+    assert(len(results['facets']) == 8)
+    assert(len(results['results']) == len(identifiers))
+
+    for i in range(len(results['results'])):
+        assert(results['results'][i]['title'] == identifiers[i]['title'])
+        assert(results['results'][i]['inspire_id'] == identifiers[i]['inspire_id'])
+        assert(len(results['results'][i]['data']) == identifiers[i]['data_tables'])
+
+    # Test pagination (1 item per page as we only have 2; get 2nd page)
+    results = es_api.search('', index=index, size=1, offset=1)
+    assert(results['total'] == len(identifiers))
+    assert(len(results['results']) == 1)
+    assert(results['results'][0]['title'] == identifiers[1]['title'])
+
+    # Test a simple search query from the second test submission
+    # The search matches the publication but not the data tables
+    results = es_api.search('charmonium', index=index)
+    assert(results['total'] == 1)
+    assert(results['results'][0]['inspire_id'] == identifiers[1]['inspire_id'])
+    assert(len(results['results'][0]['data']) == 0)
+
+    # Test the authors search (fuzzy)
+    results = es_api.search_authors('Bal')
+    expected = [
+        {'affiliation': 'Texas U., Arlington', 'full_name': 'Pal, Arnab'},
+        {'affiliation': 'Panjab U.', 'full_name': 'Bala, A.'}
+    ]
+
+    assert(len(results) == len(expected))
+    for author in expected:
+        assert(author in results)
 
 
 def test_merge_results():
-    source_a = {"hits": {"hits": [{"key": "testa"}], "total": 1}}
-    source_b = {"hits": {"hits": [{"key": "testb"}], "total": 1}}
+    pub_result = {
+        "hits": {
+            "hits": [{"key": "testa"}],
+            "total": { "value": 2, "relation": "eq" }
+        }
+    }
+    data_result = {
+        "hits": {
+            "hits": [{"key": "testb"}],
+            "total": { "value": 1, "relation": "eq" }
+        }
+    }
 
-    merged = merge_results(source_a, source_b)
+    merged = merge_results(pub_result, data_result)
     assert ("hits" in merged)
     assert (len(merged["hits"]) == 2)
-    assert (merged["total"] == 1)
+    assert (merged["total"] == 2)
 
 
 def test_flip_sort_order():
@@ -249,7 +241,6 @@ def test_push_keywords():
         if results["recid"] == 1:
             assert (results["data_keywords"] is not None)
             assert ("reaction" in results["data_keywords"])
-            print(results["data_keywords"])
             assert (len(results["data_keywords"]["reaction"]) == 2)
             assert (results["data_keywords"]["reaction"][0] == "PP --> PP")
             assert (results["data_keywords"]["reaction"][1] == "PP --> PX")
@@ -258,6 +249,44 @@ def test_push_keywords():
         push_keywords([])
     except ValueError as ve:
         assert (ve)
+
+
+def test_process_cmenergies():
+    test_keywords = {
+        "cmenergies": [
+            "0.5",
+            "13000",
+            "2.441 - 2.683",
+            "3.683-3.441",
+            "1.2 - 2.6 GeV",
+            "91.2 GeV",
+            "2.0gev",
+            "5020 and 2760",
+            "5020 AND 7000",
+            "2076.0+5020.0",
+            "invalid cmenergy"
+        ]
+    }
+    expected = {
+        'cmenergies': [
+            {'gte': 0.5, 'lte': 0.5},
+            {'gte': 13000.0, 'lte': 13000.0},
+            {'gte': 2.441, 'lte': 2.683},
+            {'gte': 3.441, 'lte': 3.683},
+            {'gte': 1.2, 'lte': 2.6},
+            {'gte': 91.2, 'lte': 91.2},
+            {'gte': 2.0, 'lte': 2.0},
+            {'gte': 2760.0, 'lte': 5020.0},
+            {'gte': 5020.0, 'lte': 7000.0},
+            {'gte': 2076.0, 'lte': 5020.0}
+        ]
+    }
+
+    results = es_api.process_cmenergies(test_keywords)
+    assert(len(results['cmenergies']) == len(expected['cmenergies']))
+
+    for cmenergy in expected['cmenergies']:
+        assert(cmenergy in results['cmenergies'])
 
 
 def test_prepare_authors_for_indexing(app):
@@ -295,7 +324,6 @@ def test_match_tables_to_papers():
 
     assert (aggregated is not [])
     assert (len(aggregated) == 2)
-    print(aggregated)
 
 
 def test_get_basic_record_information():
@@ -318,5 +346,22 @@ def test_get_basic_record_information():
 
 
 def test_is_datatable():
-    assert (is_datatable({"_type": "datatable"}))
-    assert (not is_datatable({"_type": "publication"}))
+    assert (is_datatable({"_source": {"doc_type": "datatable"}}))
+    assert (not is_datatable({"_source": {"doc_type": "publication"}}))
+
+
+def test_reindex_all(app, load_default_data, identifiers):
+    index = app.config.get('ELASTICSEARCH_INDEX')
+    # Delete the default index
+    es.indices.delete(index=index)
+
+    # Check we can't search
+    with pytest.raises(NotFoundError, match=r"no such index "):
+        es_api.search('', index=index)
+
+    # Reindex, recreating the index
+    es_api.reindex_all(index=index, recreate=True, synchronous=True)
+
+    # Search should work again
+    results = es_api.search('', index=index)
+    assert(results['total'] == len(identifiers))

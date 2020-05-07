@@ -16,128 +16,84 @@
 # along with HEPData; if not, write to the Free Software Foundation, Inc.,
 # 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
 #
+import math
 
 from hepdata.config import CFG_DATA_KEYWORDS
 
 
-def default_aggregations():
+def add_default_aggregations(search, filters=[]):
     """ Default aggregations used for computing facets """
-    return {
-        "nested_authors": {
-            "nested": {
-                "path": "authors",
-            },
-            "aggs": {
-                "author_full_names": {
-                    "terms": {
-                        "field": "authors.full_name",
-                    }
-                }
-            }
-        },
-        "collaboration": {
-            "terms": {
-                "field": "collaborations.raw",
-                "size": 0,
-            }
-        },
-        "subject_areas": {
-            "terms": {
-                "field": "subject_area.raw",
-                "size": 0,
-            }
-        },
-        "dates": {
-            "date_histogram": {
-                "field": "publication_date",
-                "interval": "year",
-            }
-        },
-        "reactions": {
-            "terms": {
-                "field": "data_keywords.reactions.raw",
-                # "min_doc_count": 2,
-                "size": 0,
-            }
-        },
-        "observables": {
-            "terms": {
-                "field": "data_keywords.observables.raw",
-                # "min_doc_count": 2,
-                "size": 0,
-            }
-        },
-        "phrases": {
-            "terms": {
-                "field": "data_keywords.phrases.raw",
-                # "min_doc_count": 2,
-                "size": 0,
-            }
-        },
-        "cmenergies": {
-            "terms": {
-                "field": "data_keywords.cmenergies.raw",
-                # "min_doc_count": 2,
-                "size": 0,
-            }
-        }
-    }
+    # Add authors field first, chaining to ensure it's nested
+    search.aggs.bucket('nested_authors', 'nested', path='authors')\
+        .bucket('author_full_names', 'terms', field='authors.full_name.raw')
+
+    # Add remaining fields separately so they're added to the list
+    search.aggs.bucket('collaboration', 'terms', field='collaborations.raw')
+    search.aggs.bucket('subject_areas', 'terms', field='subject_area.raw')
+    search.aggs.bucket('dates', 'date_histogram', field='publication_date', interval='year')
+    search.aggs.bucket('reactions', 'terms', field='data_keywords.reactions.raw')
+    search.aggs.bucket('observables', 'terms', field='data_keywords.observables.raw')
+    search.aggs.bucket('phrases', 'terms', field='data_keywords.phrases.raw')
+
+    # Don't add cmenergies aggregations for now as they're unsupported in ES 7.1
+    # (added in ES 7.4)
+    # Determine the interval for cmenergies buckets depending on the current filter
+    # interval = 10
+    # offset = 0
+    # cmenergy_filters = [(k,v) for (k,v) in filters if k == 'cmenergies']
+    # if cmenergy_filters:
+    #     current_range = cmenergy_filters[0][1]
+    #     offset = current_range[0]
+    #     if len(current_range) == 2:
+    #         span = current_range[1] - current_range[0]
+    #         if span > 0 and span < 25:
+    #             interval = math.ceil(span / 5)
+    #         else:
+    #             interval = 5
+    #
+    # search.aggs.bucket('cmenergies', 'histogram', field='data_keywords.cmenergies',
+    #                    interval=interval, offset=offset, min_doc_count=10)
+
+    return search
 
 
-def get_filter_clause(name, value):
+def get_filter_field(name, value):
     """ Returns an appropriate ES clause for a given filter """
-    if name == 'author':
-        clause = {
-            "nested": {
-                "path": "authors",
-                "filter": {
-                    "bool": {
-                        "must": {
-                            "term": {"authors.full_name": value}
-                        }
-                    }
-                }
-            }
-        }
-    elif name == 'collaboration':
-        clause = {
-            "bool": {
-                "must": {
-                    "term": {"collaborations.raw": value}
-                }
-            }
-        }
+    filter_type = "term"
+
+    if name == 'collaboration':
+        field = "collaborations.raw"
 
     elif name == 'subject_areas':
-        clause = {
-            "bool": {
-                "must": {
-                    "term": {"subject_area.raw": value}
-                }
-            }
-        }
+        field = "subject_area.raw"
+
+    elif name == 'cmenergies':
+        filter_type = "range"
+        field = "data_keywords.cmenergies"
+
+        val_dict = { "gte": value[0] }
+        if len(value) > 1:
+            key = "lt" if value[1] > value[0] else "lte"
+            val_dict[key] = value[1]
+
+        value = val_dict
 
     elif name == 'date':
-        or_clause = []
+        year_list = []
         for year in value:
-            or_clause.append({'term': {'year': str(year)}})
+            year_list.append(str(year))
 
-        clause = {
-            "or": or_clause
-        }
+        filter_type = "terms"
+        value = year_list
+        field = "year"
 
     elif name in CFG_DATA_KEYWORDS:
-        clause = {
-            "bool": {
-                "must": {
-                    "term": {"data_keywords." + name + ".raw": value}
-                }
-            }
-        }
+        field = "data_keywords." + name + ".raw"
+
     else:
         raise ValueError("Unknown filter: " + name)
 
-    return clause
+    return (filter_type, field, value)
 
 
 def sort_fields_mapping(sort_by):
@@ -145,7 +101,7 @@ def sort_fields_mapping(sort_by):
     if sort_by == 'title':
         return 'title.raw'
     elif sort_by == 'collaborations':
-        return 'collaborations'
+        return 'collaborations.raw'
     elif sort_by == 'date':
         return 'creation_date'
     elif sort_by == 'latest':

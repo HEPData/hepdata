@@ -23,6 +23,7 @@
 
 """HEPData end to end testing of search."""
 import flask
+from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -31,15 +32,68 @@ from tests.e2e.conftest import make_screenshot
 
 
 def test_search_from_home(live_server, env_browser, search_tests):
-    """E2E user registration and login test."""
+    """Test search functionality"""
     browser = env_browser
+
+    # Go to index page
+    browser.get(flask.url_for('hepdata_theme.index', _external=True))
+    assert (flask.url_for('hepdata_theme.index', _external=True) in
+            browser.current_url)
+
+    # Click 'View all'
+    search_all_link = browser.find_element_by_css_selector('#latest_records_section').find_element_by_tag_name('a')
+    search_all_link.click()
+    element = WebDriverWait(browser, 10).until(
+        EC.url_contains('search')
+    )
+    assert (flask.url_for('es_search.search', _external=True) in
+            browser.current_url)
+
+    # Check result count
+    results = browser.find_elements_by_class_name('search-result-item')
+    assert(len(results) == 2)
+
+    # Check facet filtering for each facet
+    facets = [
+        {'class_prefix': 'collaboration', 'exp_filter_count': 2, 'exp_first_result_count': 1},
+        {'class_prefix': 'subject_areas', 'exp_filter_count': 1, 'exp_first_result_count': 2},
+        {'class_prefix': 'phrases', 'exp_filter_count': 10, 'exp_first_result_count': 1},
+        {'class_prefix': 'reactions', 'exp_filter_count': 9, 'exp_first_result_count': 1},
+        {'class_prefix': 'observables', 'exp_filter_count': 3, 'exp_first_result_count': 1},
+        {'class_prefix': 'cmenergies', 'exp_filter_count': 10, 'exp_first_result_count': None}
+    ]
+
+    for facet in facets:
+        # Check the number of filters for the facet
+        facet_filters = browser.find_elements_by_css_selector('#' + facet['class_prefix'] + '-facet li.list-group-item a')
+        assert(len(facet_filters) == facet['exp_filter_count'])
+
+        if len(facet_filters) > 0 and facet['exp_first_result_count'] is not None:
+            # Check the number of results for first filter in the facet
+            result_count = int(facet_filters[0].find_element_by_class_name('facet-count').text.strip())
+            assert(result_count == facet['exp_first_result_count'])
+
+            # Move to the first filter and click
+            ActionChains(browser).move_to_element(facet_filters[0])
+            facet_filters[0].click()
+            assert (flask.url_for('es_search.search', _external=True) in
+                    browser.current_url)
+
+            # Check the number of search results matches the number given in the filter
+            results = browser.find_elements_by_class_name('search-result-item')
+            assert(len(results) == facet['exp_first_result_count'])
+
+            # Go back to the previous search results
+            browser.back()
 
     for search_config in search_tests:
         try:
+            # Go to the homepage
             browser.get(flask.url_for('hepdata_theme.index', _external=True))
             assert (flask.url_for('hepdata_theme.index', _external=True) in
                     browser.current_url)
 
+            # Find the search form, input the query and submit
             search_form = browser.find_element_by_class_name('main-search-form')
             search_input = search_form.find_element_by_name('q')
 
@@ -51,9 +105,16 @@ def test_search_from_home(live_server, env_browser, search_tests):
             assert (flask.url_for('es_search.search', _external=True) in
                     browser.current_url)
 
+            # Check the expected publication appears in the search results
             publication = browser.find_element_by_class_name(search_config['exp_hepdata_id'])
             assert (publication)
 
+            # Check the expected collaboration facets appear in the filters
+            collab_facets = browser.find_element_by_css_selector('#collaboration-facet ul.list-group li.list-group-item a')
+            assert(collab_facets.text.startswith(search_config['exp_collab_facet']))
+            assert(collab_facets.text.endswith('1'))
+
+            # Click on the link to the publication details
             selector = ".{0} .record-header a".format(search_config['exp_hepdata_id'])
 
             element = WebDriverWait(browser, 10).until(
@@ -68,3 +129,32 @@ def test_search_from_home(live_server, env_browser, search_tests):
             make_screenshot(browser, screenshot_name)
             print('Error occurred on test. Screenshot capured and saved in tmpdir as {}')
             raise e
+
+
+def test_author_search(live_server, env_browser):
+    """Test the author search"""
+    browser = env_browser
+
+    # Go to the search page
+    browser.get(flask.url_for('es_search.search', _external=True))
+
+    # Find the author search box
+    search_input = browser.find_element_by_css_selector('#author-suggest')
+    search_input.send_keys('ada')
+
+    # Wait for search results to appear
+    WebDriverWait(browser, 10).until(
+        EC.presence_of_element_located((By.CLASS_NAME, 'tt-suggestion'))
+    )
+
+    # Check author results are as we expect
+    search_results = browser.find_elements_by_class_name('tt-suggestion')
+    expected_authors = [
+        'Falkowski, Adam',
+        'Lyon, Adam Leonard'
+    ]
+
+    assert(len(search_results) == len(expected_authors))
+
+    for i, result in enumerate(search_results):
+        assert(result.text == expected_authors[i])

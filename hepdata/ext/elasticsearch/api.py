@@ -18,22 +18,28 @@
 from __future__ import print_function
 
 from collections import defaultdict
+import re
 
+from celery import shared_task
 from dateutil.parser import parse
 from flask import current_app
 from elasticsearch.exceptions import NotFoundError, RequestError
+from elasticsearch_dsl import Search
+from elasticsearch_dsl.query import QueryString, Q
 from invenio_pidstore.models import RecordIdentifier
 from sqlalchemy import func
 
 from hepdata.ext.elasticsearch.document_enhancers import enhance_data_document, enhance_publication_document
-from .utils import prepare_author_for_indexing
+from .config.es_config import sort_fields_mapping, add_default_aggregations
+from .utils import calculate_sort_order, prepare_author_for_indexing
 from hepdata.config import CFG_PUB_TYPE, CFG_DATA_TYPE
 from query_builder import QueryBuilder, HEPDataQueryParser
 from process_results import map_result, merge_results
 from invenio_db import db
 import logging
 
-from invenio_search import current_search_client as es
+from invenio_search import current_search_client as es, RecordsSearch
+
 
 __all__ = ['search', 'index_record_ids', 'index_record_dict', 'fetch_record',
            'recreate_index', 'get_record', 'reindex_all',
@@ -49,6 +55,18 @@ def default_index(f):
     def decorator(*args, **kwargs):
         if 'index' not in kwargs:
             kwargs['index'] = current_app.config['ELASTICSEARCH_INDEX']
+        return f(*args, **kwargs)
+
+    decorator.__name__ = f.__name__
+    return decorator
+
+
+def author_index(f):
+    """ Loads the default author index if none is given """
+
+    def decorator(*args, **kwargs):
+        if 'author_index' not in kwargs:
+            kwargs['author_index'] = current_app.config['AUTHOR_INDEX']
         return f(*args, **kwargs)
 
     decorator.__name__ = f.__name__
@@ -88,93 +106,67 @@ def search(query,
         sort_field = 'date'
 
     query = HEPDataQueryParser.parse_query(query)
-
-    # Build core query
-    data_query = QueryBuilder.generate_query_string(query)
-    pub_query = QueryBuilder.generate_query_string(query)
-    authors_query = QueryBuilder.generate_nested_query('authors', query)
-
-    query_builder = QueryBuilder()
-    query_builder.add_child_parent_relation(CFG_DATA_TYPE,
-                                            relation="child",
-                                            related_query=data_query,
-                                            other_queries=[pub_query,
-                                                           authors_query])
-
-    # Add additional options
-    query_builder.add_pagination(size=size, offset=offset)
-    query_builder.add_sorting(sort_field=sort_field, sort_order=sort_order)
-    query_builder.add_filters(filters)
-    query_builder.add_post_filter(post_filter)
-    query_builder.add_aggregations()
-    query_builder.add_source_filter(include, exclude)
+    # Create search with preference param to ensure consistency of results across shards
+    search = RecordsSearch(using=es, index=index).with_preference_param()
 
     if query:
-        # Randomize search among the available shard copies.
-        pub_result = es.search(index=index,
-                               body=query_builder.query,
-                               doc_type=CFG_PUB_TYPE)
-    else:
-        # Execute search only on the primary shards (to ensure no missing or duplicate results).
-        pub_result = es.search(index=index,
-                               body=query_builder.query,
-                               doc_type=CFG_PUB_TYPE,
-                               preference="_primary")
+        fuzzy_query = QueryString(query=query, fuzziness='AUTO')
+        search.query = fuzzy_query | \
+                       Q('nested', query=fuzzy_query, path='authors') | \
+                       Q('has_child', type="child_datatable", query=fuzzy_query)
+
+    search = search.filter("term", doc_type=CFG_PUB_TYPE)
+    search = QueryBuilder.add_filters(search, filters)
+
+    mapped_sort_field = sort_fields_mapping(sort_field)
+    search = search.sort({mapped_sort_field : {"order" : calculate_sort_order(sort_order, sort_field)}})
+    search = add_default_aggregations(search, filters)
+
+    if post_filter:
+        search = search.post_filter(post_filter)
+
+    search = search.source(includes=include, excludes=exclude)
+    search = search[offset:offset+size]
+    pub_result = search.execute().to_dict()
 
     parent_filter = {
-        "filtered": {
-            "filter": {
-                "terms": {
+        "terms": {
                     "_id": [hit["_id"] for hit in pub_result['hits']['hits']]
-                }
-            }
         }
     }
 
-    query_builder = QueryBuilder()
-    query_builder.add_child_parent_relation(CFG_PUB_TYPE,
-                                            relation="parent",
-                                            related_query=parent_filter,
-                                            must=True,
-                                            other_queries=[data_query])
-    query_builder.add_pagination(size=size * 50)
+    data_search = RecordsSearch(using=es, index=index)
+    data_search = data_search.query('has_parent',
+                                    parent_type="parent_publication",
+                                    query=parent_filter)
+    if query:
+        data_search = data_search.query(QueryString(query=query))
 
-    data_result = es.search(index=index,
-                            body=query_builder.query,
-                            doc_type=CFG_DATA_TYPE)
+    data_search = data_search[0:size*50]
+    data_result = data_search.execute().to_dict()
 
     merged_results = merge_results(pub_result, data_result)
+    return map_result(merged_results, filters)
 
-    return map_result(merged_results)
 
-
-def search_authors(name, size=20):
+@author_index
+def search_authors(name, size=20, author_index=None):
     """ Search for authors in the author index. """
-    from hepdata.config import CFG_ES_AUTHORS
-    index, doc_type = CFG_ES_AUTHORS
-
-    query = {
-        "size": size,
-        "query": {
-            "match": {
-                "full_name": {
-                    "query": name,
-                    "fuzziness": "AUTO"
-                }
-            }
-        }
-    }
-
-    results = es.search(index=index, doc_type=doc_type, body=query)
+    search = Search(using=es, index=author_index) \
+        .query("match", full_name={"query": name, "fuzziness":"AUTO"})
+    search = search[0:size]
+    results = search.execute().to_dict()
     return [x['_source'] for x in results['hits']['hits']]
 
 
 @default_index
-def reindex_all(index=None, recreate=False, batch=50, start=-1, end=-1):
+@author_index
+def reindex_all(index=None, author_index=None, recreate=False, batch=50, start=-1, end=-1, synchronous=False):
     """ Recreate the index and add all the records from the db to ES. """
 
     if recreate:
         recreate_index(index=index)
+        recreate_index(index=author_index)
 
     qry = db.session.query(func.max(RecordIdentifier.recid).label("max_recid"),
                            func.min(RecordIdentifier.recid).label("min_recid"),
@@ -194,15 +186,24 @@ def reindex_all(index=None, recreate=False, batch=50, start=-1, end=-1):
 
         count = min_recid
         while count <= max_recid:
-            print('Indexing record IDs {0} to {1}'.format(count, min(count + batch - 1, max_recid)))
-            indexed_publications = []
             rec_ids = range(count, min(count + batch, max_recid + 1))
-            indexed_result = index_record_ids(rec_ids, index=index)
-            indexed_publications += indexed_result[CFG_PUB_TYPE]
+            if synchronous:
+                reindex_batch(rec_ids, index)
+            else:
+                print('Sending batch of IDs {0} to {1} to celery'.format(rec_ids[0], rec_ids[-1]))
+                reindex_batch.delay(rec_ids, index)
             count += batch
 
-            print('Finished indexing, now pushing data keywords\n######')
-            push_data_keywords(pub_ids=indexed_publications)
+
+@shared_task
+def reindex_batch(rec_ids, index):
+    log.info('Indexing record IDs {0} to {1}'.format(rec_ids[0], rec_ids[-1]))
+    indexed_publications = []
+    indexed_result = index_record_ids(rec_ids, index=index)
+    indexed_publications += indexed_result[CFG_PUB_TYPE]
+
+    log.info('Finished indexing, now pushing data keywords\n######')
+    push_data_keywords(pub_ids=indexed_publications)
 
 
 @default_index
@@ -219,10 +220,10 @@ def get_record(record_id, doc_type, index=None, parent=None):
     """
     try:
         if doc_type == CFG_DATA_TYPE and parent:
-            result = es.get(index=index, doc_type=doc_type,
+            result = es.get(index=index,
                             id=record_id, parent=parent)
         else:
-            result = es.get(index=index, doc_type=doc_type, id=record_id)
+            result = es.get(index=index, id=record_id)
 
         return result.get('_source', result)
     except (NotFoundError, RequestError):
@@ -236,16 +237,29 @@ def get_records_matching_field(field, id, index=None, doc_type=None, source=None
     query = {
         "size": 9999,
         'query': {
-            'match': {
-                field: id
+            "bool": {
+                "must": [
+                    {
+                        "match": {
+                            field: id
+                        }
+                    }
+                ]
             }
         }
     }
 
+    if doc_type:
+        query["query"]["bool"]["must"].append({
+            "match": {
+                "doc_type": doc_type
+            }
+        })
+
     if source:
         query["_source"] = source
 
-    return es.search(index=index, doc_type=doc_type, body=query)
+    return es.search(index=index, body=query)
 
 
 @default_index
@@ -255,43 +269,36 @@ def delete_item_from_index(id, index, doc_type, parent=None):
     :param id:
     :param index:
     :param doc_type:
+    :param parent: the parent record id
     :return:
     """
     if parent:
-        es.delete(index=index, doc_type=doc_type, id=id, parent=parent)
+        es.delete(index=index, id=id, routing=parent)
     else:
-        es.delete(index=index, doc_type=doc_type, id=id)
+        es.delete(index=index, id=id, routing=id)
 
 
 @default_index
 def push_data_keywords(pub_ids=None, index=None):
     """ Go through all the publications and their datatables and move data
      keywords from tables to their parent publications. """
-
     if not pub_ids:
-        body = {'query': {'match_all': {}}}
-        results = es.search(index=index,
-                            doc_type=CFG_PUB_TYPE,
-                            body=body,
-                            _source=False)
-        pub_ids = [i['_id'] for i in results['hits']['hits']]
+        search = Search(using=es, index=index) \
+            .filter("term", doc_type=CFG_PUB_TYPE) \
+            .source(False)
+        results = search.execute()
+        pub_ids = [h.meta.id for h in results.hits]
 
     for pub_id in pub_ids:
-        query_builder = QueryBuilder()
-        query_builder.add_child_parent_relation(
-            'publication',
-            relation='parent',
-            must=True,
-            related_query={'match': {'recid': pub_id}}
-        )
-        tables = es.search(
-            index=index,
-            doc_type=CFG_DATA_TYPE,
-            body=query_builder.query,
-            _source_include='keywords'
-        )
-        keywords = [d['_source'].get('keywords', None)
-                    for d in tables['hits']['hits']]
+        search = Search(using=es, index=index) \
+            .query('has_parent',
+                   parent_type="parent_publication",
+                   query={'match': {'recid': pub_id}}) \
+            .filter("term", doc_type=CFG_DATA_TYPE) \
+            .source(includes=['keywords'])
+        tables = search.execute()
+
+        keywords = [d.keywords for d in tables.hits]
 
         # Flatten the list
         keywords = [i for inner in keywords for i in inner]
@@ -305,6 +312,8 @@ def push_data_keywords(pub_ids=None, index=None):
         for k, v in agg_keywords.items():
             agg_keywords[k] = list(set(v))
 
+        agg_keywords = process_cmenergies(agg_keywords)
+
         body = {
             "doc": {
                 'data_keywords': dict(agg_keywords)
@@ -312,9 +321,31 @@ def push_data_keywords(pub_ids=None, index=None):
         }
 
         try:
-            es.update(index=index, doc_type=CFG_PUB_TYPE, id=pub_id, body=body)
+            es.update(index=index, id=pub_id, body=body, retry_on_conflict=3)
         except Exception as e:
-            log.error(e.message)
+            log.error(e)
+
+
+def process_cmenergies(keywords):
+    cmenergies = []
+    if keywords['cmenergies']:
+        for cmenergy in keywords['cmenergies']:
+            cmenergy = cmenergy.strip(" gevGEV")
+            try:
+                cmenergy_val = float(cmenergy)
+                cmenergies.append({"gte": cmenergy_val, "lte": cmenergy_val})
+            except ValueError:
+                m = re.match(r'^(-?\d+(?:\.\d+)?)[ \-+andAND]+(-?\d+(?:\.\d+)?)$', cmenergy)
+                if m:
+                    cmenergy_range = [float(m.group(1)), float(m.group(2))]
+                    cmenergy_range.sort()
+                    cmenergies.append({"gte": cmenergy_range[0], "lte": cmenergy_range[1]})
+                else:
+                    log.warn("Invalid value for cmenergies: %s" % cmenergy)
+
+        keywords['cmenergies'] = cmenergies
+
+    return keywords
 
 
 @default_index
@@ -330,7 +361,7 @@ def index_record_ids(record_ids, index=None):
     docs = filter(None, [get_record_by_id(recid) for recid in record_ids])
 
     existing_record_ids = [doc['recid'] for doc in docs]
-    print('Indexing existing record IDs:', existing_record_ids)
+    log.info('Indexing existing record IDs: {}'.format(existing_record_ids))
 
     to_index = []
     indexed_result = {CFG_DATA_TYPE: [], CFG_PUB_TYPE: []}
@@ -347,9 +378,8 @@ def index_record_ids(record_ids, index=None):
             op_dict = {
                 "index": {
                     "_index": index,
-                    "_type": CFG_DATA_TYPE,
                     "_id": doc['recid'],
-                    "_parent": str(doc['related_publication'])
+                    "routing": doc['related_publication']
                 }
             }
 
@@ -359,7 +389,7 @@ def index_record_ids(record_ids, index=None):
         else:
 
             if 'version' not in doc:
-                print('Skipping unfinished record ID {}'.format(doc['recid']))
+                log.warn('Skipping unfinished record ID {}'.format(doc['recid']))
                 continue
 
             author_docs = prepare_author_for_indexing(doc)
@@ -370,8 +400,8 @@ def index_record_ids(record_ids, index=None):
             op_dict = {
                 "index": {
                     "_index": index,
-                    "_type": CFG_PUB_TYPE,
-                    "_id": doc['recid']
+                    "_id": doc['recid'],
+                    "routing": doc['recid']
                 }
             }
 
@@ -383,7 +413,9 @@ def index_record_ids(record_ids, index=None):
         to_index.append(doc)
 
     if to_index:
-        es.bulk(index=index, body=to_index, refresh=True)
+        result = es.bulk(index=index, body=to_index, refresh=True)
+        if result['errors']:
+            log.error('Bulk insert failed: %s' % result)
 
     return indexed_result
 
@@ -423,15 +455,7 @@ def recreate_index(index=None):
 
     body = {
         "mappings": {
-            CFG_PUB_TYPE: {
-                "properties": mapping
-            },
-            CFG_DATA_TYPE: {
-                "_parent": {
-                    "type": CFG_PUB_TYPE
-                },
-                "properties": mapping
-            }
+            "properties": mapping
         }
     }
 
@@ -449,7 +473,7 @@ def fetch_record(record_id, doc_type, index=None):
 
     :return: [dict] Record if found, otherwise an error message
     """
-    res = es.get(index=index, doc_type=doc_type, id=record_id)
+    res = es.get(index=index, id=record_id)
     return res.get('_source', res)
 
 
@@ -457,18 +481,13 @@ def fetch_record(record_id, doc_type, index=None):
 def get_n_latest_records(n_latest, field="last_updated", index=None):
     """ Gets latest N records from the index """
 
-    query = {
-        "size": n_latest,
-        "query": QueryBuilder.generate_query_string(),
-        "sort": [{
-            field: {
-                "order": "desc"
-            }
-        }],
-        "_source": {"exclude": ["authors", "keywords"]}
-    }
+    search = Search(using=es, index=index) \
+        .filter("term", doc_type=CFG_PUB_TYPE) \
+        .sort({field: {"order": "desc"}}) \
+        .source(excludes=["authors", "keywords"])
+    search = search[0:n_latest]
 
-    query_result = es.search(index=index, doc_type=CFG_PUB_TYPE, body=query)
+    query_result = search.execute().to_dict()
     return query_result['hits']['hits']
 
 
@@ -480,4 +499,4 @@ def get_count_for_collection(doc_type, index=None):
     :param index: name of index to use.
     :return: the number of records in that collection
     """
-    return es.count(index=index, doc_type=doc_type)
+    return es.count(index=index, q='doc_type:'+doc_type)

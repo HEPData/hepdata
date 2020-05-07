@@ -51,7 +51,9 @@ def create_basic_app():
         CELERY_CACHE_BACKEND="memory",
         MAIL_SUPPRESS_SEND=True,
         CELERY_TASK_EAGER_PROPAGATES=True,
-        ELASTICSEARCH_INDEX="hepdata_test",
+        ELASTICSEARCH_INDEX="hepdata-main-test",
+        SUBMISSION_INDEX='hepdata-submission-test',
+        AUTHOR_INDEX='hepdata-authors-test',
         SQLALCHEMY_DATABASE_URI=os.environ.get(
             'SQLALCHEMY_DATABASE_URI', 'postgresql+psycopg2://hepdata:hepdata@localhost/hepdata_test')
     ))
@@ -62,7 +64,7 @@ def setup_app(app):
     with app.app_context():
         db.drop_all()
         db.create_all()
-        reindex_all(recreate=True)
+        reindex_all(recreate=True, synchronous=True)
 
         ctx = app.test_request_context()
         ctx.push()

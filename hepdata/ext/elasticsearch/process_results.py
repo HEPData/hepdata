@@ -31,12 +31,12 @@ def merge_results(pub_result, data_result):
     merge_dict = dict()
     merge_dict['hits'] = pub_result['hits']['hits'] + \
         data_result['hits']['hits']
-    merge_dict['total'] = pub_result['hits']['total']
+    merge_dict['total'] = pub_result['hits']['total']['value']
     merge_dict['aggregations'] = pub_result.get('aggregations', {})
     return merge_dict
 
 
-def map_result(es_result):
+def map_result(es_result, query_filters=None):
     hits = es_result['hits']
     total_hits = es_result['total']
     aggregations = es_result['aggregations']
@@ -55,7 +55,7 @@ def map_result(es_result):
         })
         results.append(mapped_hit)
 
-    facets = parse_aggregations(aggregations)
+    facets = parse_aggregations(aggregations, query_filters)
 
     return {'results': results,
             'facets': facets,
@@ -84,7 +84,7 @@ def match_tables_to_papers(tables, papers):
 
 
 def get_basic_record_information(record):
-    from utils import parse_and_format_date
+    from utils import parse_and_format_date, tidy_bytestring
     source = record['_source']
 
     # Collaborations
@@ -102,6 +102,7 @@ def get_basic_record_information(record):
     res['collaborations'] = collaborations
     res['authors'] = authors
     res['date'] = parse_and_format_date(datestring)
+    res['abstract'] = tidy_bytestring(source.get('abstract'))
 
     return res
 
@@ -119,4 +120,4 @@ def fetch_remaining_papers(tables, papers):
 
 
 def is_datatable(es_hit):
-    return es_hit['_type'] == CFG_DATA_TYPE
+    return es_hit['_source']['doc_type'] == CFG_DATA_TYPE
