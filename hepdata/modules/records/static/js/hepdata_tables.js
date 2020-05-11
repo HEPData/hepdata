@@ -34,7 +34,7 @@ HEPDATA.switch_table = function (listId, table_requested, table_name, status) {
 
   var _recid = HEPDATA.current_inspire_id && status == 'finished' ? 'ins' + HEPDATA.current_inspire_id : HEPDATA.current_record_id;
   var direct_link = HEPDATA.site_url + '/record/' + _recid
-    + '?version=' + HEPDATA.current_table_version + "&table=" + _name.replace(/\+/g, '%2B');
+    + '?version=' + HEPDATA.current_table_version + "&table=" + _name.replace(/\+/g, '%2B').replace(/ /g, '%20');
 
   $("#direct_data_link").val(direct_link);
   $(".copy-btn").attr('data-clipboard-text', direct_link);
@@ -313,8 +313,9 @@ HEPDATA.table_renderer = {
                 (plus_error != '' && plus_error[0] != '+' && plus_error[0] != '-' && plus_error_num >= 0 ? '+' : '') +
                 plus_error);
               asym_block.append('span').attr('class', 'sub').text(
-                (min_error_num >= 0 && min_error[0] != '+' && min_error[0] != '-' ? '+' : '') +
-                (min_error != '' && min_error_num == 0 && (plus_error_num == 0 && plus_error[0] != '-') ? '-' : '') +
+                (min_error_num > 0 && min_error[0] != '+' && min_error[0] != '-' ? '+' : '') +
+                (min_error != '' && min_error_num == 0 && min_error[0] != '+' && min_error[0] != '-' && (plus_error_num == 0 && plus_error[0] == '-') ? '+' : '') +
+                (min_error != '' && min_error_num == 0 && min_error[0] != '+' && min_error[0] != '-' && (plus_error_num == 0 && plus_error[0] != '-') ? '-' : '') +
                 min_error);
               if (errors[error_idx]["label"] !== undefined)
                 value_block.append('div').attr('class', 'label').text(errors[error_idx]["label"] == undefined ? HEPDATA.default_error_label : errors[error_idx]["label"]);

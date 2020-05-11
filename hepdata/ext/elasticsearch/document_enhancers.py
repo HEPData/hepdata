@@ -28,6 +28,7 @@ import logging
 from dateutil.parser import parse
 from flask import current_app
 
+from hepdata.config import CFG_PUB_TYPE, CFG_DATA_TYPE
 from hepdata.modules.permissions.models import SubmissionParticipant
 from hepdata.modules.submission.api import get_latest_hepsubmission
 
@@ -35,6 +36,14 @@ FORMATS = ['json', 'root', 'yaml', 'csv', 'yoda']
 
 logging.basicConfig()
 log = logging.getLogger(__name__)
+
+
+def add_id(doc):
+    doc['id'] = doc['recid']
+
+
+def add_doc_type(doc, doc_type):
+    doc['doc_type'] = doc_type
 
 
 def add_data_submission_urls(doc):
@@ -58,6 +67,19 @@ def add_data_table_urls(doc):
         doc['access_urls']['links'][format] = '{0}/download/table/ins{1}/{2}/{3}'.format(
             current_app.config.get('SITE_URL', 'https://www.hepdata.net'),
             doc['inspire_id'], _cleaned_table_name, format)
+
+
+def add_parent_publication(doc):
+    doc["parent_child_join"] = {
+        "name": "child_datatable",
+        "parent": str(doc['related_publication'])
+    }
+
+
+def add_parent_child_info(doc):
+    doc["parent_child_join"] = {
+        "name": "parent_publication"
+    }
 
 
 def add_shortened_authors(doc):
@@ -109,11 +131,17 @@ def process_last_updates(doc):
 
 
 def enhance_data_document(doc):
+    add_id(doc)
+    add_doc_type(doc, CFG_DATA_TYPE)
     add_data_table_urls(doc)
+    add_parent_publication(doc)
 
 
 def enhance_publication_document(doc):
+    add_id(doc)
+    add_doc_type(doc, CFG_PUB_TYPE)
     add_data_submission_urls(doc)
     add_shortened_authors(doc)
     process_last_updates(doc)
     add_analyses(doc)
+    add_parent_child_info(doc)

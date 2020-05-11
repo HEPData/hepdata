@@ -10,7 +10,10 @@
     </div>
 
     <div id="question-container">
-        <p>Your question will be emailed to those involved with the submission.</p>
+        <p>
+          Your question will be emailed to those involved with the submission.
+          Please mention the relevant table.
+        </p>
 
             <textarea class="input_box form-control" id="question"
                       style="height: 200px;"
@@ -18,11 +21,19 @@
 
         <br/>
 
-        <div id="send" align="center">
-            <div class="btn btn-primary">
-                <span class="fa fa-paper-plane"></span> Ask Question
+        {% if current_user.is_authenticated %}
+
+            <div id="send" align="center">
+                <div class="btn btn-primary">
+                  <span class="fa fa-paper-plane"></span> Ask Question
+                </div>
             </div>
-        </div>
+
+        {% else %}
+
+          <p>Please <b>log in</b> to HEPData to send a question.</p>
+
+        {% endif %}
 
     </div>
 

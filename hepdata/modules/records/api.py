@@ -375,15 +375,9 @@ def process_zip_archive(file, id):
         if not os.path.exists(submission_path):
             os.makedirs(submission_path)
 
-        # Move files from submission_temp_path to submission_path (try to avoid problems with EOS disk).
-        if current_app.config.get('PRODUCTION_MODE', False): # production instance at CERN
-            copy_command = ['xrdcp', '-N', '-f']
-            copy_submission_path = submission_path.replace(current_app.config['CFG_DATADIR'], current_app.config['EOS_DATADIR'])
-        else: # local instance
-            copy_command =  ['cp']
-            copy_submission_path = submission_path
-        print('Copying with: {} -r {} {}'.format(' '.join(copy_command), submission_temp_path + '/.', copy_submission_path))
-        subprocess.check_output(copy_command + ['-r',  submission_temp_path + '/.', copy_submission_path])
+        copy_command = ['cp']
+        print('Copying with: {} -r {} {}'.format(' '.join(copy_command), submission_temp_path + '/.', submission_path))
+        subprocess.check_output(copy_command + ['-r',  submission_temp_path + '/.', submission_path])
         rmtree(submission_temp_path, ignore_errors=True) # can uncomment when this is definitely working
 
         submission_found = find_file_in_directory(submission_path, lambda x: x == "submission.yaml")
@@ -456,15 +450,9 @@ def check_and_convert_from_oldhepdata(input_directory, id, timestamp):
             }]
         }
     else:
-        # Move files from converted_temp_path to converted_path (try to avoid problems on EOS disk).
-        if current_app.config.get('PRODUCTION_MODE', False): # production instance at CERN
-            copy_command = ['xrdcp', '-N', '-f']
-            copy_converted_path = converted_path.replace(current_app.config['CFG_DATADIR'], current_app.config['EOS_DATADIR'])
-        else: # local instance
-            copy_command = ['cp']
-            copy_converted_path = converted_path
-        print('Copying with: {} -r {} {}'.format(' '.join(copy_command), converted_temp_path + '/.', copy_converted_path))
-        subprocess.check_output(copy_command + ['-r', converted_temp_path + '/.', copy_converted_path])
+        copy_command = ['cp']
+        print('Copying with: {} -r {} {}'.format(' '.join(copy_command), converted_temp_path + '/.', converted_path))
+        subprocess.check_output(copy_command + ['-r', converted_temp_path + '/.', converted_path])
         rmtree(converted_temp_dir, ignore_errors=True) # can uncomment when this is definitely working
 
     return find_file_in_directory(converted_path, lambda x: x == "submission.yaml")

@@ -8,6 +8,7 @@ Utils
    hepdata.utils.miscellaneous
    hepdata.utils.session
    hepdata.utils.twitter
+   hepdata.utils.unicodeit
    hepdata.utils.url
    hepdata.utils.users
 
@@ -30,6 +31,11 @@ hepdata.utils.twitter
 ---------------------
 
 .. automodule:: hepdata.utils.twitter
+
+hepdata.utils.unicodeit
+-----------------------
+
+.. automodule:: hepdata.utils.unicodeit
 
 hepdata.utils.url
 -----------------

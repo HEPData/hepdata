@@ -1,12 +1,12 @@
 [run]
 source = hepdata
-omit = *hepdata/ext/elasticsearch/config/*
-       *hepdata/wsgi.py
+omit = *hepdata/wsgi.py
        *hepdata/cli.py
        *hepdata/celery.py
        *hepdata/utils/mail.py
        *hepdata/utils/url.py
        *hepdata/utils/twitter.py
+       *hepdata/utils/unicodeit.py
        *hepdata/config*
        *hepdata/modules/records/utils/doi_minter.py
        *hepdata/modules/records/utils/resources.py

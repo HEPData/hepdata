@@ -346,7 +346,7 @@ class Migrator(object):
                     return True
 
             except FailedSubmission as fe:
-                log.error(fe.message)
+                log.error(fe)
                 fe.print_errors()
                 remove_submission(fe.record_id)
                 return False
