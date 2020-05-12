@@ -50,9 +50,8 @@ from hepdata.modules.records.utils.common import get_or_create
 from hepdata.modules.records.utils.doi_minter import reserve_dois_for_data_submissions, reserve_doi_for_hepsubmission, \
     generate_dois_for_submission
 from hepdata.modules.records.utils.resources import download_resource_file
+from hepdata.modules.records.utils.validators import get_data_validator, get_submission_validator
 from hepdata.utils.twitter import tweet
-from hepdata_validator.data_file_validator import DataFileValidator
-from hepdata_validator.submission_file_validator import SubmissionFileValidator
 from invenio_db import db
 from invenio_pidstore.errors import PIDDoesNotExistError
 import os
@@ -421,16 +420,7 @@ def process_submission_directory(basepath, submission_file_path, recid, update=F
 
     if submission_file_path is not None:
 
-        if from_oldhepdata:
-            # The schema_version='0.1.0' argument is a temporary fix for hepdata-converter v0.1.35.
-            # Needed for "data_license: {description: null, name: null, url: null}" lines in submission.yaml.
-            # TO DO: remove the default "data_license" written to submission.yaml by the hepdata-converter.
-            # Then if using a hepdata-converter-ws Docker container, can remove this temporary fix.
-            # Note added: also use schema_version='0.1.0' for YAML files migrated from old HepData site.
-            submission_file_validator = SubmissionFileValidator(schema_version='0.1.0')
-        else:
-            submission_file_validator = SubmissionFileValidator()
-
+        submission_file_validator = get_submission_validator(from_oldhepdata)
         is_valid_submission_file = submission_file_validator.validate(file_path=submission_file_path)
 
         if is_valid_submission_file:
@@ -467,10 +457,7 @@ def process_submission_directory(basepath, submission_file_path, recid, update=F
 
             no_general_submission_info = True
 
-            if from_oldhepdata:  # use for YAML files migrated from old HepData site
-                data_file_validator = DataFileValidator(schema_version='0.1.0')
-            else:
-                data_file_validator = DataFileValidator()
+            data_file_validator = get_data_validator(from_oldhepdata)
 
             # Delete all data records associated with this submission.
             # Fixes problems with ordering where the table names are changed between uploads.
@@ -544,8 +531,8 @@ def process_submission_directory(basepath, submission_file_path, recid, update=F
                             [{"level": "error", "message": "Name of data_file should not contain '/'.\n"}]
 
                     else:
-
-                        if data_file_validator.validate(file_path=main_file_path, data=data):
+                        schema_type = yaml_document.get('data_schema')  # Optional
+                        if data_file_validator.validate(file_path=main_file_path, file_type=schema_type, data=data):
                             try:
                                 process_data_file(recid, hepsubmission.version, basepath, yaml_document,
                                               datasubmission, main_file_path)
