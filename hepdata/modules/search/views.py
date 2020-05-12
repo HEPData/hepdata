@@ -252,7 +252,7 @@ def search():
     year_facet = process_year_facet(request, facets)
 
     if ('format' in request.args and request.args['format'] == 'json') \
-        or 'json' in request.headers['accept']:
+        or 'json' in request.headers.get('accept', ''):
         query_result['hits'] = {'total': query_result['total']}
         return jsonify(query_result)
     else:
