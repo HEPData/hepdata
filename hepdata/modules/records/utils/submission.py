@@ -25,7 +25,6 @@ from __future__ import absolute_import, print_function
 
 import json
 import logging
-import subprocess
 import zipfile
 from datetime import datetime
 from dateutil.parser import parse
@@ -397,12 +396,8 @@ def _eos_fix_read_data(data_file_path):
             with open(data_file_path, 'r') as data_file:
                 data = yaml.load(data_file, Loader=Loader)
         except Exception as ex:
-            try: # force eos to refresh local cache
-                subprocess.check_output(['stat', data_file_path])
-            except: # data_file_path might not exist
-                pass
             attempts += 1
-        # allow multiple attempts to read file in case of temporary EOS problems
+        # allow multiple attempts to read file in case of temporary disk problems
         if (data and data is not None) or attempts > 5:
             break
     return data, ex

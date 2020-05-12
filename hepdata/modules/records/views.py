@@ -252,10 +252,8 @@ def get_table_details(recid, data_recid, version):
                     with open(file_location, 'r') as table_file:
                         table_contents = yaml.load(table_file, Loader=Loader)
                 except:
-                    # force eos to refresh local cache
-                    subprocess.check_output(['stat', file_location])
                     attempts += 1
-                # allow multiple attempts to read file in case of temporary EOS problems
+                # allow multiple attempts to read file in case of temporary disk problems
                 if (table_contents and table_contents is not None) or attempts > 5:
                     break
 
