@@ -58,5 +58,8 @@ target/
 # Local config file
 hepdata/config_local.py
 
+# Local tmp directory
+tmp/
+
 .idea
 .pytest_cache
