@@ -1,4 +1,0 @@
-cluster.name: hepdata
-discovery.zen.ping.multicast.enabled: false
-http.port: 9200
-http.publish_port: 9200

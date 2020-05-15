@@ -1,0 +1,9 @@
+SITE_URL = "http://localhost:5000"
+TESTING = True
+NO_DOI_MINTING = True
+USE_TWITTER = False
+CFG_CONVERTER_URL = 'http://localhost:5500'
+CFG_TMPDIR = '~/tmp'
+CFG_DATADIR = '~/tmp'
+MAIL_SERVER = 'localhost'
+# RUN_SELENIUM_LOCALLY = True

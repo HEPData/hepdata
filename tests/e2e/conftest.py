@@ -194,7 +194,7 @@ def env_browser(request):
 
     # Go to homepage and click cookie accept button so cookie bar is out of the way
     browser.get(flask.url_for('hepdata_theme.index', _external=True))
-    wait = WebDriverWait(browser, 5)
+    wait = WebDriverWait(browser, 10)
     wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, ".cc_btn_accept_all")))
     sleep(1)
     cookie_accept_btn = browser.find_element_by_css_selector(".cc_btn_accept_all")
