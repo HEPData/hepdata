@@ -21,9 +21,7 @@ var hepdata_record = (function () {
       },
 
       perform_upload_action: function (placement, form_name, colors, insertion_type) {
-        var message = '<p>Uploading and validating files...</p>'
-        message += '<p><b>Note added (14 May 2020)</b>: we have moved to a new cluster and submissions currently time out after 1 minute.'
-        message += '  We are working to fix this problem, but please postpone submitting any large uploads for now.</p>'
+        var message = '<p>Uploading files...</p>'
         var html = '<div id="upload-progress"></div>' +
           '<div>' + message + '</div>';
         if (insertion_type === 'large_area') {

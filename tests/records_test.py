@@ -23,14 +23,19 @@
 
 """HEPData records test cases."""
 import os
-
 import yaml
-from invenio_accounts.models import User
 
-from hepdata.modules.records.utils.common import get_record_by_id, record_exists
+from flask_login import login_user
+from invenio_accounts.models import User
+from werkzeug.datastructures import FileStorage
+
+from hepdata.modules.records.api import process_payload
+from hepdata.modules.records.utils.submission import get_or_create_hepsubmission
+from hepdata.modules.records.utils.common import get_record_by_id
 from hepdata.modules.records.utils.data_processing_utils import generate_table_structure
 from hepdata.modules.records.utils.users import get_coordinators_in_system, has_role
 from hepdata.modules.records.utils.workflow import update_record, create_record
+from hepdata.modules.submission.models import HEPSubmission
 from tests.conftest import TEST_EMAIL
 
 
@@ -107,3 +112,32 @@ def test_data_processing(app):
     assert(table_structure["x_count"] == 1)
     assert(len(table_structure["headers"]) == 2)
     assert(len(table_structure["qualifiers"]) == 2)
+
+
+def test_upload_valid_file(app):
+    # Test uploading and processing a file for a record
+    with app.app_context():
+        base_dir = os.path.dirname(os.path.realpath(__file__))
+        user = User.query.first()
+        login_user(user)
+
+        recid = '12345'
+        get_or_create_hepsubmission(recid, 1, status="sandbox")
+
+        hepdata_submission = HEPSubmission.query.filter_by(
+            publication_recid=recid, overall_status='sandbox').first()
+        assert(hepdata_submission.data_abstract == None)
+        assert(hepdata_submission.created == hepdata_submission.last_updated)
+
+        with open(os.path.join(base_dir, 'test_data/TestHEPSubmission.zip'), "rb") as stream:
+            test_file = FileStorage(
+                stream=stream,
+                filename="TestHEPSubmission.zip"
+            )
+            process_payload(recid, test_file, '/test_redirect_url', synchronous=True)
+
+        # Check the submission has been updated
+        hepdata_submission = HEPSubmission.query.filter_by(
+            publication_recid=recid, overall_status='sandbox').first()
+        assert(hepdata_submission.data_abstract.startswith('CERN-LHC.  Measurements of the cross section  for ZZ production'))
+        assert(hepdata_submission.created < hepdata_submission.last_updated)

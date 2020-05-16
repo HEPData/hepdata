@@ -614,7 +614,9 @@ def consume_data_payload(recid):
 
     if request.method == 'POST':
         file = request.files['hep_archive']
-        return process_payload(recid, file, '/record/{}')
+        record_redirect_url = request.url_root + "record/{}"
+        general_redirect_url = request.url_root + "dashboard"
+        return process_payload(recid, file, record_redirect_url, general_redirect_url)
 
     else:
         return redirect('/record/' + str(recid))
@@ -628,6 +630,7 @@ def sandbox():
         HEPSubmission.id.desc()).all()
     for submission in submissions:
         submission.data_abstract = decode_string(submission.data_abstract)
+
     return render_template('hepdata_records/sandbox.html',
                            ctx={"submissions": submissions})
 
@@ -679,7 +682,9 @@ def consume_sandbox_payload():
 
     get_or_create_hepsubmission(id, current_user.get_id(), status="sandbox")
     file = request.files['hep_archive']
-    return process_payload(id, file, '/record/sandbox/{}')
+    record_redirect_url = request.url_root + "record/sandbox/{}"
+    general_redirect_url = request.url_root + "record/sandbox"
+    return process_payload(id, file, record_redirect_url, general_redirect_url)
 
 
 @blueprint.route('/sandbox/<int:recid>/consume', methods=['POST'])
@@ -691,7 +696,9 @@ def update_sandbox_payload(recid):
     """
 
     file = request.files['hep_archive']
-    return process_payload(recid, file, '/record/sandbox/{}')
+    record_redirect_url = request.url_root + "record/sandbox/{}"
+    general_redirect_url = request.url_root + "record/sandbox"
+    return process_payload(recid, file, record_redirect_url, general_redirect_url)
 
 
 @blueprint.route('/add_resource/<string:type>/<int:identifier>/<int:version>', methods=['POST'])
