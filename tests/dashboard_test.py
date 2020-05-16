@@ -77,7 +77,7 @@ def test_add_user_to_metadata():
 def test_create_record_for_dashboard(app):
     with app.app_context():
         record_information = create_record({'journal_info': 'Phys. Letts', 'title': 'My Journal Paper', 'inspire_id': '1487726'})
-        get_or_create_hepsubmission(record_information['recid'])
+        hepsubmission = get_or_create_hepsubmission(record_information['recid'])
         record = get_record_by_id(record_information['recid'])
         user = User(email='test@test.com', password='hello1', active=True,
                     id=101)
@@ -91,7 +91,7 @@ def test_create_record_for_dashboard(app):
                     'recid': record_information['recid'],
                     'role': ['coordinator'],
                     'start_date': record.created,
-                    'last_updated': record.updated,
+                    'last_updated': hepsubmission.last_updated,
                     'title': u'My Journal Paper',
                     'versions': 1
                 },
@@ -128,7 +128,7 @@ def test_prepare_submissions_admin(app, load_submission):
             'title': 'My Journal Paper',
             'inspire_id': '1487726'
         })
-        get_or_create_hepsubmission(record_information['recid'])
+        hepsubmission = get_or_create_hepsubmission(record_information['recid'])
         record = get_record_by_id(record_information['recid'])
 
         role = Role(name='admin')
@@ -145,7 +145,7 @@ def test_prepare_submissions_admin(app, load_submission):
                 'role': ['coordinator'],
                 'show_coord_view': False,
                 'start_date': record.created,
-                'last_updated': record.updated,
+                'last_updated': hepsubmission.last_updated,
                 'title': u'My Journal Paper',
                 'versions': 1
             },

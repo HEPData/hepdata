@@ -323,19 +323,17 @@ def render_record(recid, record, version, output_format, light_mode=False):
 def process_payload(recid, file, record_redirect_url, general_redirect_url=None, synchronous=False):
     """Process an uploaded file
 
-    Parameters
-    ----------
-    recid : int
+    :param recid: int
         The id of the record to update
-    file : file
+    :param file: file
         The file to process
-    record_redirect_url : string
+    :param record_redirect_url: string
         Redirect URL to record, for use if the upload fails or in synchronous mode
-    general_redirect_url : string
+    :param general_redirect_url: string
         Redirect URL to e.g. main dashboard or sandbox, to use if the upload is successful in asynchronous mode.
         Must be provided if synchronous = False
-    synchronous : bool
-        Whether to process the asynchronously via celery (default) or immediately (only recommended for tests)
+    :param synchronous: bool
+        Whether to process asynchronously via celery (default) or immediately (only recommended for tests)
     """
     if file and (allowed_file(file.filename)):
         file_path = save_zip_file(file, recid)
@@ -362,7 +360,7 @@ def process_saved_file(file_path, recid, userid, redirect_url):
     site_url = current_app.config.get('SITE_URL', 'https://www.hepdata.net')
 
     submission_participant = SubmissionParticipant.query.filter_by(
-        publication_recid=recid, user_account=userid).first()
+        publication_recid=recid, user_account=userid, role='uploader').first()
     if submission_participant:
         full_name = submission_participant.full_name
     else:

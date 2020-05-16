@@ -116,7 +116,7 @@
                         <div id="past_submissions" class="col-md-offset-1 col-md-4">
                           {% if ctx.submissions|length > 0 %}
                             <div class="well">
-                                <h4>Your sandbox submissions</h4>
+                                <h4>Your Sandbox submissions</h4>
 
                                     <div class="scrollable height30 row-fluid">
                                         {% for submission in ctx.submissions %}
@@ -130,7 +130,7 @@
                                                   </a>
                                                 {% endif %}
                                                 <p style="font-weight: bolder; color: #a1aec7; font-size: .7em; text-align: left">
-                                                  Created {{ submission.created.strftime('%Y-%m-%d %H:%M%p') }}; last updated {{ submission.last_updated.strftime('%Y-%m-%d %H:%M%p') }}
+                                                  Created {{ submission.created.strftime('%Y-%m-%d %H:%M') }}; last updated {{ submission.last_updated.strftime('%Y-%m-%d %H:%M') }}
                                                 </p>
                                             </div>
                                             <div class="col-md-2 col-sm-2 col-xs-2">
