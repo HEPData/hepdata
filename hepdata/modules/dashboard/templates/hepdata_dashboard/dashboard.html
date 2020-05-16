@@ -235,11 +235,14 @@
                                                         <span class="fa fa-{% if role == 'coordinator' %}gavel {% elif role == 'reviewer' %}check{% else %}upload{% endif %}"
                                                               style="padding-right: 5px;"></span>{{ role }}</span>
                                                     {% endfor %}
+                                                    <span class="label label-default">Version {{ submission.versions }}</span>
+                                                </p>
 
-                                                    <span
-                                                            class="label label-default">Version {{ submission.versions }}</span>
-                                                    started
-                                                    {{ submission.start_date.strftime('%d %B %Y at %-I%p') }}
+                                                <p class="start-date">
+                                                    Started
+                                                    {{ submission.start_date.strftime('%d %B %Y at %-I%p') }};
+                                                    last updated
+                                                    {{ submission.last_updated.strftime('%d %B %Y at %-I%p') }}
 
 
                                                 </p>

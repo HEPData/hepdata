@@ -91,6 +91,7 @@ def test_create_record_for_dashboard(app):
                     'recid': record_information['recid'],
                     'role': ['coordinator'],
                     'start_date': record.created,
+                    'last_updated': record.updated,
                     'title': u'My Journal Paper',
                     'versions': 1
                 },
@@ -144,6 +145,7 @@ def test_prepare_submissions_admin(app, load_submission):
                 'role': ['coordinator'],
                 'show_coord_view': False,
                 'start_date': record.created,
+                'last_updated': record.updated,
                 'title': u'My Journal Paper',
                 'versions': 1
             },

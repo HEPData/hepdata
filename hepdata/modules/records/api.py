@@ -29,13 +29,15 @@ from functools import wraps
 import subprocess
 
 import time
-from flask import redirect, request, render_template, jsonify, current_app, Response, abort
+from celery import shared_task
+from flask import redirect, request, render_template, jsonify, current_app, Response, abort, flash, url_for
 from flask_login import current_user
 from invenio_accounts.models import User
 from sqlalchemy.orm.exc import NoResultFound
 from werkzeug.utils import secure_filename
 
 from hepdata.modules.converter import convert_oldhepdata_to_yaml
+from hepdata.modules.email.utils import create_send_email_task
 from hepdata.modules.permissions.api import user_allowed_to_perform_action
 from hepdata.modules.permissions.models import SubmissionParticipant
 from hepdata.modules.records.subscribers.api import is_current_user_subscribed_to_record
@@ -318,36 +320,100 @@ def render_record(recid, record, version, output_format, light_mode=False):
         abort(404)
 
 
-def process_payload(recid, file, redirect_url):
+def process_payload(recid, file, record_redirect_url, general_redirect_url=None, synchronous=False):
+    """Process an uploaded file
+
+    Parameters
+    ----------
+    recid : int
+        The id of the record to update
+    file : file
+        The file to process
+    record_redirect_url : string
+        Redirect URL to record, for use if the upload fails or in synchronous mode
+    general_redirect_url : string
+        Redirect URL to e.g. main dashboard or sandbox, to use if the upload is successful in asynchronous mode.
+        Must be provided if synchronous = False
+    synchronous : bool
+        Whether to process the asynchronously via celery (default) or immediately (only recommended for tests)
+    """
     if file and (allowed_file(file.filename)):
-        errors = process_zip_archive(file, recid)
-        if errors:
-            return render_template('hepdata_records/error_page.html',
-                                   redirect_url=redirect_url.format(recid), errors=errors)
+        file_path = save_zip_file(file, recid)
+
+        if synchronous:
+            process_saved_file(file_path, recid, current_user.get_id(), record_redirect_url)
+            redirect(record_redirect_url)
         else:
-            update_action_for_submission_participant(recid, current_user.get_id(), 'uploader')
-            return redirect(redirect_url.format(recid))
+            process_saved_file.delay(file_path, recid, current_user.get_id(), record_redirect_url)
+            flash('File saved. You will receive an email when the file has been processed.', 'info')
+            return redirect(general_redirect_url)
     else:
-        return render_template('hepdata_records/error_page.html', redirect_url=redirect_url.format(recid),
+        return render_template('hepdata_records/error_page.html', redirect_url=record_redirect_url.format(recid),
                                message="Incorrect file type uploaded.",
                                errors={"Submission": [{"level": "error",
                                                        "message": "You must upload a .zip, .tar, .tar.gz or .tgz file"
                                                                   + " (or a .oldhepdata or single .yaml file)."}]})
 
 
-def process_zip_archive(file, id):
+@shared_task
+def process_saved_file(file_path, recid, userid, redirect_url):
+    errors = process_zip_archive(file_path, recid)
+    uploader = User.query.get(userid)
+    site_url = current_app.config.get('SITE_URL', 'https://www.hepdata.net')
+
+    submission_participant = SubmissionParticipant.query.filter_by(
+        publication_recid=recid, user_account=userid).first()
+    if submission_participant:
+        full_name = submission_participant.full_name
+    else:
+        full_name = uploader.email
+
+    if errors:
+        message_body = render_template('hepdata_theme/email/upload_errors.html',
+                                       name=full_name,
+                                       article=recid,
+                                       redirect_url=redirect_url.format(recid),
+                                       errors=errors,
+                                       site_url=site_url)
+
+        create_send_email_task(uploader.email,
+                               '[HEPData] Submission {0} upload failed'.format(recid),
+                               message_body)
+    else:
+        update_action_for_submission_participant(recid, userid, 'uploader')
+        message_body = render_template('hepdata_theme/email/upload_complete.html',
+                                       name=full_name,
+                                       article=recid,
+                                       link=redirect_url.format(recid),
+                                       site_url=site_url)
+
+        create_send_email_task(uploader.email,
+                               '[HEPData] Submission {0} upload succeeded'.format(recid),
+                               message_body)
+
+
+def save_zip_file(file, id):
     filename = secure_filename(file.filename)
     time_stamp = str(int(round(time.time())))
     file_save_directory = os.path.join(current_app.config['CFG_DATADIR'], str(id), time_stamp)
 
+    if filename.endswith('.oldhepdata'):
+        file_save_directory = os.path.join(file_save_directory, 'oldhepdata')
+
     if not os.path.exists(file_save_directory):
         os.makedirs(file_save_directory)
+    file_path = os.path.join(file_save_directory, filename)
+
+    print('Saving file to {}'.format(file_path))
+    file.save(file_path)
+    return file_path
+
+
+def process_zip_archive(file_path, id):
+    (file_save_directory, filename) = os.path.split(file_path)
 
     if not filename.endswith('.oldhepdata'):
-        file_path = os.path.join(file_save_directory, filename)
-        print('Saving file to {}'.format(file_path))
-        file.save(file_path)
-
+        file_save_directory = os.path.dirname(file_path)
         submission_path = os.path.join(file_save_directory, remove_file_extension(filename))
         submission_temp_path = tempfile.mkdtemp(dir=current_app.config["CFG_TMPDIR"])
 
@@ -382,21 +448,13 @@ def process_zip_archive(file, id):
 
         submission_found = find_file_in_directory(submission_path, lambda x: x == "submission.yaml")
 
-    else:
-        file_path = os.path.join(file_save_directory, 'oldhepdata')
-        if not os.path.exists(file_path):
-            os.makedirs(file_path)
-
-        print('Saving file to {}'.format(os.path.join(file_path, filename)))
-        file.save(os.path.join(file_path, filename))
-
-        submission_found = False
-
-    if submission_found:
         basepath, submission_file_path = submission_found
         from_oldhepdata = False
+
     else:
-        result = check_and_convert_from_oldhepdata(file_path, id, time_stamp)
+        file_dir = os.path.dirname(file_save_directory)
+        time_stamp = os.path.split(file_dir)[1]
+        result = check_and_convert_from_oldhepdata(os.path.dirname(file_save_directory), id, time_stamp)
 
         # Check for errors
         if type(result) == dict:
