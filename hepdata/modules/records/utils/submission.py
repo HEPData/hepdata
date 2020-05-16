@@ -383,10 +383,9 @@ def parse_modifications(hepsubmission, recid, submission_info_document):
             db.session.add(participant)
 
 
-def _eos_fix_read_data(data_file_path):
+def _read_data_file(data_file_path):
     """
-    This gets rid of the issues where reading the file returns empty
-    string because eos has not yet flushed the file contents.
+    Read data file allowing for multiple attempts.
     """
     attempts = 0
     while True:
@@ -431,12 +430,19 @@ def process_submission_directory(basepath, submission_file_path, recid, update=F
         else:
             submission_file_validator = SubmissionFileValidator()
 
-        is_valid_submission_file = submission_file_validator.validate(file_path=submission_file_path)
+        try:
+            with open(submission_file_path, 'r') as submission_file:
+                submission_processed = list(yaml.load_all(submission_file, Loader=Loader))
+        except Exception as ex:
+            errors = {"submission.yaml": [
+                {"level": "error", "message": "There was a problem parsing the file.\n" + str(ex)}
+            ]}
+            return errors
+
+        is_valid_submission_file = submission_file_validator.validate(file_path=submission_file_path,
+                                                                      data=submission_processed)
 
         if is_valid_submission_file:
-
-            submission_file = open(submission_file_path, 'r')
-            submission_processed = yaml.load_all(submission_file, Loader=Loader)
 
             # process file, extracting contents, and linking
             # the data record with the parent publication
@@ -531,7 +537,7 @@ def process_submission_directory(basepath, submission_file_path, recid, update=F
 
                     main_file_path = os.path.join(basepath, yaml_document["data_file"])
 
-                    data, ex = _eos_fix_read_data(main_file_path)
+                    data, ex = _read_data_file(main_file_path)
 
                     if not data or data is None or ex is not None:
 
@@ -562,14 +568,12 @@ def process_submission_directory(basepath, submission_file_path, recid, update=F
                             # for each of the independent_variables and dependent_variables.
                             indep_count = [len(indep['values']) for indep in data['independent_variables']]
                             dep_count = [len(dep['values']) for dep in data['dependent_variables']]
-                            if len(set(indep_count + dep_count)) > 1: # if more than one unique count
+                            if len(set(indep_count + dep_count)) > 1:  # if more than one unique count
                                 errors.setdefault(yaml_document["data_file"], []).append(
                                     {"level": "error", "message": "Inconsistent length of 'values' list:\n" +
                                                                   "independent_variables{}, dependent_variables{}".format(
                                                                       str(indep_count), str(dep_count))}
                                 )
-
-            submission_file.close()
 
             if no_general_submission_info:
                 hepsubmission.last_updated = datetime.now()

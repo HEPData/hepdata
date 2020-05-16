@@ -61,7 +61,7 @@ def create_record_for_dashboard(record_id, submissions, current_user, coordinato
             submissions[record_id]["metadata"] = {"recid": record_id,
                                                   "role": user_role,
                                                   "start_date": publication_record.created,
-                                                  "last_updated": publication_record.updated}
+                                                  "last_updated": hepdata_submission_record.last_updated}
 
             submissions[record_id]["metadata"][
                 "versions"] = hepdata_submission_record.version
@@ -111,7 +111,7 @@ def prepare_submissions(current_user):
         # reviewer/uploader
         hepdata_submission_records = HEPSubmission.query.filter(
             and_(HEPSubmission.overall_status != 'finished', HEPSubmission.overall_status != 'sandbox')).order_by(
-            HEPSubmission.created.desc()).all()
+            HEPSubmission.last_updated.desc()).all()
     else:
         # we just want to pick out people with access to particular records,
         # i.e. submissions for which they are primary reviewers.
@@ -124,12 +124,12 @@ def prepare_submissions(current_user):
             hepdata_submission_records += HEPSubmission.query.filter(
                 HEPSubmission.publication_recid == participant_record.publication_recid,
                 and_(HEPSubmission.overall_status != 'finished',
-                     HEPSubmission.overall_status != 'sandbox')).order_by(HEPSubmission.created.desc()).all()
+                     HEPSubmission.overall_status != 'sandbox')).order_by(HEPSubmission.last_updated.desc()).all()
 
         coordinator_submissions = HEPSubmission.query.filter(
             HEPSubmission.coordinator == int(current_user.get_id()),
             and_(HEPSubmission.overall_status != 'finished',
-                 HEPSubmission.overall_status != 'sandbox')).order_by(HEPSubmission.created.desc()).all()
+                 HEPSubmission.overall_status != 'sandbox')).order_by(HEPSubmission.last_updated.desc()).all()
 
         hepdata_submission_records += coordinator_submissions
 
