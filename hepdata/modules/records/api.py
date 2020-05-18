@@ -33,6 +33,7 @@ from celery import shared_task
 from flask import redirect, request, render_template, jsonify, current_app, Response, abort, flash, url_for
 from flask_login import current_user
 from invenio_accounts.models import User
+from invenio_db import db
 from sqlalchemy.orm.exc import NoResultFound
 from werkzeug.utils import secure_filename
 
@@ -337,12 +338,17 @@ def process_payload(recid, file, record_redirect_url, general_redirect_url=None,
     """
     if file and (allowed_file(file.filename)):
         file_path = save_zip_file(file, recid)
+        hepsubmission = get_latest_hepsubmission(publication_recid=recid)
+        previous_status = hepsubmission.overall_status
+        hepsubmission.overall_status = 'processing'
+        db.session.add(hepsubmission)
+        db.session.commit()
 
         if synchronous:
-            process_saved_file(file_path, recid, current_user.get_id(), record_redirect_url)
+            process_saved_file(file_path, recid, current_user.get_id(), record_redirect_url, previous_status)
             redirect(record_redirect_url)
         else:
-            process_saved_file.delay(file_path, recid, current_user.get_id(), record_redirect_url)
+            process_saved_file.delay(file_path, recid, current_user.get_id(), record_redirect_url, previous_status)
             flash('File saved. You will receive an email when the file has been processed.', 'info')
             return redirect(general_redirect_url)
     else:
@@ -354,8 +360,14 @@ def process_payload(recid, file, record_redirect_url, general_redirect_url=None,
 
 
 @shared_task
-def process_saved_file(file_path, recid, userid, redirect_url):
-    errors = process_zip_archive(file_path, recid)
+def process_saved_file(file_path, recid, userid, redirect_url, previous_status):
+    errors = process_zip_archive(file_path, recid, previous_status)
+
+    hepsubmission = get_latest_hepsubmission(publication_recid=recid)
+    hepsubmission.overall_status = previous_status
+    db.session.add(hepsubmission)
+    db.session.commit()
+
     uploader = User.query.get(userid)
     site_url = current_app.config.get('SITE_URL', 'https://www.hepdata.net')
 
@@ -407,7 +419,7 @@ def save_zip_file(file, id):
     return file_path
 
 
-def process_zip_archive(file_path, id):
+def process_zip_archive(file_path, id, previous_status):
     (file_save_directory, filename) = os.path.split(file_path)
 
     if not filename.endswith('.oldhepdata'):
@@ -461,7 +473,9 @@ def process_zip_archive(file_path, id):
             basepath, submission_file_path = result
             from_oldhepdata = True
 
-    return process_submission_directory(basepath, submission_file_path, id, from_oldhepdata=from_oldhepdata)
+    return process_submission_directory(basepath, submission_file_path, id,
+                                        from_oldhepdata=from_oldhepdata,
+                                        prev_status=previous_status)
 
 
 def check_and_convert_from_oldhepdata(input_directory, id, timestamp):

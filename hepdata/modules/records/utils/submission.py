@@ -402,7 +402,7 @@ def _read_data_file(data_file_path):
     return data, ex
 
 
-def process_submission_directory(basepath, submission_file_path, recid, update=False, from_oldhepdata=False):
+def process_submission_directory(basepath, submission_file_path, recid, update=False, from_oldhepdata=False, prev_status=None):
     """
     Goes through an entire submission directory and processes the
     files within to create DataSubmissions
@@ -459,7 +459,8 @@ def process_submission_directory(basepath, submission_file_path, recid, update=F
 
             # if it is finished and we receive an update,
             # then we need to reopen the submission to allow for revisions.
-            if hepsubmission.overall_status == 'finished' and not update:
+            status_to_check = prev_status if prev_status is not None else hepsubmission.overall_status
+            if status_to_check == 'finished' and not update:
                 # we create a new HEPSubmission object
                 _rev_hepsubmission = HEPSubmission(publication_recid=recid,
                                                    overall_status='todo',

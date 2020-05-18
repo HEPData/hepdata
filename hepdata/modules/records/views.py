@@ -27,6 +27,7 @@
 from __future__ import absolute_import, print_function
 
 import logging
+import datetime
 import json
 from dateutil import parser
 from flask_login import login_required
@@ -173,6 +174,24 @@ def metadata(recid):
         version = -1
     serialization_format = request.args.get('format', 'html')
     light_mode = bool(request.args.get('light', False))
+
+    if version > 0:
+        hepdata_submission = get_latest_hepsubmission(publication_recid=recid, version=version)
+    else:
+        hepdata_submission = get_latest_hepsubmission(publication_recid=recid)
+
+    if hepdata_submission is not None and hepdata_submission.overall_status == 'processing':
+        ctx = {
+            'recid': recid
+        }
+
+        determine_user_privileges(recid, ctx)
+        if ctx['show_upload_widget']:
+            time_since_last_update = (datetime.datetime.now() - hepdata_submission.last_updated).total_seconds()
+            if time_since_last_update < 24 * 3600:
+                ctx['show_upload_widget'] = False
+
+        return render_template('hepdata_records/publication_processing.html', ctx=ctx)
 
     try:
         record = get_record_contents(recid)

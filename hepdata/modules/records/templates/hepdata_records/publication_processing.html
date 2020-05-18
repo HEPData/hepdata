@@ -1,0 +1,72 @@
+{% extends "hepdata_theme/page.html" %}
+
+{#
+{% set title = title %}
+#}
+{% block title %}
+    HEPData | {{ ctx.record.name }}
+{% endblock %}
+
+{%- block additional_assets %}
+
+    {%- assets "hepdata_record_css" %}
+        <link href="{{ ASSET_URL }}" rel="stylesheet">
+    {%- endassets %}
+
+{%- endblock additional_assets %}
+
+{% block page_description %}{{ ctx.record.title }}{% endblock %}
+
+{% block page_body %}
+
+    <div class="hep-content" style="padding: 80px 30px 15px 30px">
+
+      <div>
+
+          <h4>Record {{ ctx.recid}} is currently being processed</h4>
+          <p>Please revisit this page later to see the full details.</p>
+
+          {% if ctx.show_upload_widget == False %}
+            <p>This page will be refreshed every 10 seconds.</p>
+
+            {% if ctx.is_submission_coordinator_or_admin == True %}
+              <p>Processing submissions may occasionally take several hours. You will be able to try again after 24 hours. Please contact info@hepdata.net if you need to retry more urgently.</p>
+            {% endif %}
+
+            <script type="text/javascript">
+              setTimeout(function(){
+                 window.location.reload(1);
+              }, 10000);
+            </script>
+          {% endif %}
+
+          {% if ctx.show_upload_widget == True %}
+            {% include 'hepdata_records/components/uploader-modal.html' %}
+            <div class="upload-area" id="main-upload-area">
+                <div class="upload-form" align="center">
+                    <img src="{{ url_for('static', filename='img/icon-upload.svg') }}" width="70">
+                    <h4>Upload a new file</h4>
+                    {% include 'hepdata_records/components/uploader_info.html' %}
+
+                    <form name="upload-form" action="/record/{{ ctx.recid }}/consume"
+                          method="post" enctype=multipart/form-data>
+                        <input type="file" name="hep_archive"
+                               id="root_file_upload"
+                               data-iconName="fa fa-upload"
+                               class="filestyle">
+                        <br/>
+                        <input type="submit" value="Upload and Process"
+                               class="btn btn-primary"
+                               onclick="hepdata_record.perform_upload_action('#main-upload-area', 'upload-form', ['#955BA5', '#2C3E50'] , 'large_area'); return false;">
+                    </form>
+
+                </div>
+            </div>
+
+          {% endif %}
+      </div>
+
+    </div>
+
+
+{% endblock %}

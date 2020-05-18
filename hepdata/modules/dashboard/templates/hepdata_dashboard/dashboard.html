@@ -215,6 +215,8 @@
                                                     <p class="status">
                                                         {% if submission.submission_status=='todo' %}
                                                             <span class="in-progress">In Progress</span>
+                                                        {% elif submission.submission_status=='processing' %}
+                                                            <span class="in-progress">Processing</span>
                                                         {% else %}
                                                             <span class="complete">Complete</span>
                                                         {% endif %}
