@@ -90,7 +90,7 @@ def test_create_record_for_dashboard(app):
                     'coordinator': {'name': 'No coordinator'},
                     'recid': record_information['recid'],
                     'role': ['coordinator'],
-                    'start_date': record.created,
+                    'start_date': hepsubmission.created,
                     'last_updated': hepsubmission.last_updated,
                     'title': u'My Journal Paper',
                     'versions': 1
@@ -144,7 +144,7 @@ def test_prepare_submissions_admin(app, load_submission):
                 'recid': str(record_information['recid']),
                 'role': ['coordinator'],
                 'show_coord_view': False,
-                'start_date': record.created,
+                'start_date': hepsubmission.created,
                 'last_updated': hepsubmission.last_updated,
                 'title': u'My Journal Paper',
                 'versions': 1

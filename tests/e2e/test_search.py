@@ -29,6 +29,7 @@ from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
 from tests.e2e.conftest import make_screenshot
+from time import sleep
 
 
 def test_search_from_home(live_server, env_browser, search_tests):
@@ -101,6 +102,7 @@ def test_search_from_home(live_server, env_browser, search_tests):
             search_input.send_keys(search_term)
 
             search_form.submit()
+            sleep(1)
 
             assert (flask.url_for('es_search.search', _external=True) in
                     browser.current_url)
@@ -127,7 +129,7 @@ def test_search_from_home(live_server, env_browser, search_tests):
         except Exception as e:
             screenshot_name = "./search-{}.png".format(search_config['exp_hepdata_id'])
             make_screenshot(browser, screenshot_name)
-            print('Error occurred on test. Screenshot capured and saved in tmpdir as {}')
+            print('Error occurred on test. Screenshot captured and saved in tmpdir as {}'.format(screenshot_name))
             raise e
 
 

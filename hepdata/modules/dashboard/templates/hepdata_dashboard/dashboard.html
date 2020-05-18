@@ -210,7 +210,11 @@
                                                     <img src="{{ url_for('static', filename='img/nodata.svg') }}"
                                                          alt="No data uploaded yet"
                                                          width="50px"/><br/>
-                                                    <span>No data</span>
+                                                    {% if submission.submission_status=='processing' %}
+                                                        <span class="in-progress">Processing</span>
+                                                    {% else %}
+                                                        <span class="in-progress">No data</span>
+                                                    {% endif %}
                                                 {% else %}
                                                     <p class="status">
                                                         {% if submission.submission_status=='todo' %}
