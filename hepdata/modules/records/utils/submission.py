@@ -594,7 +594,7 @@ def process_submission_directory(basepath, submission_file_path, recid, update=F
                 admin_indexer = AdminIndexer()
                 admin_indexer.index_submission(hepsubmission)
 
-            else: # delete all tables if errors
+            else:  # delete all tables if errors
                 cleanup_submission(recid, hepsubmission.version, {})
 
         else:

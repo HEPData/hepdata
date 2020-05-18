@@ -60,7 +60,7 @@ def create_record_for_dashboard(record_id, submissions, current_user, coordinato
             submissions[record_id] = {}
             submissions[record_id]["metadata"] = {"recid": record_id,
                                                   "role": user_role,
-                                                  "start_date": publication_record.created,
+                                                  "start_date": hepdata_submission_record.created,
                                                   "last_updated": hepdata_submission_record.last_updated}
 
             submissions[record_id]["metadata"][
