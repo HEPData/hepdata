@@ -110,7 +110,8 @@ def prepare_submissions(current_user):
         # though considering the user him/herself is probably not a
         # reviewer/uploader
         hepdata_submission_records = HEPSubmission.query.filter(
-            and_(HEPSubmission.overall_status != 'finished', HEPSubmission.overall_status != 'sandbox')).order_by(
+            or_(HEPSubmission.overall_status == 'processing',
+                HEPSubmission.overall_status == 'todo')).order_by(
             HEPSubmission.last_updated.desc()).all()
     else:
         # we just want to pick out people with access to particular records,
@@ -123,13 +124,13 @@ def prepare_submissions(current_user):
         for participant_record in participant_records:
             hepdata_submission_records += HEPSubmission.query.filter(
                 HEPSubmission.publication_recid == participant_record.publication_recid,
-                and_(HEPSubmission.overall_status != 'finished',
-                     HEPSubmission.overall_status != 'sandbox')).order_by(HEPSubmission.last_updated.desc()).all()
+                or_(HEPSubmission.overall_status == 'processing',
+                    HEPSubmission.overall_status == 'todo')).order_by(HEPSubmission.last_updated.desc()).all()
 
         coordinator_submissions = HEPSubmission.query.filter(
             HEPSubmission.coordinator == int(current_user.get_id()),
-            and_(HEPSubmission.overall_status != 'finished',
-                 HEPSubmission.overall_status != 'sandbox')).order_by(HEPSubmission.last_updated.desc()).all()
+            or_(HEPSubmission.overall_status == 'processing',
+                HEPSubmission.overall_status == 'todo')).order_by(HEPSubmission.last_updated.desc()).all()
 
         hepdata_submission_records += coordinator_submissions
 

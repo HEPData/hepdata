@@ -34,6 +34,7 @@ from flask import redirect, request, render_template, jsonify, current_app, Resp
 from flask_login import current_user
 from invenio_accounts.models import User
 from invenio_db import db
+from sqlalchemy import and_
 from sqlalchemy.orm.exc import NoResultFound
 from werkzeug.utils import secure_filename
 
@@ -239,7 +240,8 @@ def render_record(recid, record, version, output_format, light_mode=False):
 
     # Count number of all versions and number of finished versions of a publication record.
     version_count_all = HEPSubmission.query.filter(HEPSubmission.publication_recid == recid,
-                                                   HEPSubmission.overall_status != 'sandbox').count()
+                                                   and_(HEPSubmission.overall_status != 'sandbox',
+                                                        HEPSubmission.overall_status != 'sandbox_processing')).count()
     version_count_finished = HEPSubmission.query.filter_by(publication_recid=recid, overall_status='finished').count()
 
     # Number of versions that a user is allowed to access based on their permissions.
@@ -263,7 +265,7 @@ def render_record(recid, record, version, output_format, light_mode=False):
     hepdata_submission = get_latest_hepsubmission(publication_recid=recid, version=version)
 
     if hepdata_submission is not None:
-        if hepdata_submission.overall_status != 'sandbox':
+        if not hepdata_submission.overall_status.startswith('sandbox'):
             ctx = format_submission(recid, record, version, version_count, hepdata_submission)
             increment(recid)
 
@@ -321,18 +323,15 @@ def render_record(recid, record, version, output_format, light_mode=False):
         abort(404)
 
 
-def process_payload(recid, file, record_redirect_url, general_redirect_url=None, synchronous=False):
+def process_payload(recid, file, redirect_url, synchronous=False):
     """Process an uploaded file
 
     :param recid: int
         The id of the record to update
     :param file: file
         The file to process
-    :param record_redirect_url: string
+    :param redirect_url: string
         Redirect URL to record, for use if the upload fails or in synchronous mode
-    :param general_redirect_url: string
-        Redirect URL to e.g. main dashboard or sandbox, to use if the upload is successful in asynchronous mode.
-        Must be provided if synchronous = False
     :param synchronous: bool
         Whether to process asynchronously via celery (default) or immediately (only recommended for tests)
     """
@@ -340,19 +339,19 @@ def process_payload(recid, file, record_redirect_url, general_redirect_url=None,
         file_path = save_zip_file(file, recid)
         hepsubmission = get_latest_hepsubmission(publication_recid=recid)
         previous_status = hepsubmission.overall_status
-        hepsubmission.overall_status = 'processing'
+        hepsubmission.overall_status = 'sandbox_processing' if previous_status == 'sandbox' else 'processing'
         db.session.add(hepsubmission)
         db.session.commit()
 
         if synchronous:
-            process_saved_file(file_path, recid, current_user.get_id(), record_redirect_url, previous_status)
-            redirect(record_redirect_url)
+            process_saved_file(file_path, recid, current_user.get_id(), redirect_url, previous_status)
         else:
-            process_saved_file.delay(file_path, recid, current_user.get_id(), record_redirect_url, previous_status)
+            process_saved_file.delay(file_path, recid, current_user.get_id(), redirect_url, previous_status)
             flash('File saved. You will receive an email when the file has been processed.', 'info')
-            return redirect(general_redirect_url)
+
+        return redirect(redirect_url.format(recid))
     else:
-        return render_template('hepdata_records/error_page.html', redirect_url=record_redirect_url.format(recid),
+        return render_template('hepdata_records/error_page.html', redirect_url=redirect_url.format(recid),
                                message="Incorrect file type uploaded.",
                                errors={"Submission": [{"level": "error",
                                                        "message": "You must upload a .zip, .tar, .tar.gz or .tgz file"

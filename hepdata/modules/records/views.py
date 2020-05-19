@@ -32,6 +32,7 @@ import json
 from dateutil import parser
 from flask_login import login_required
 from flask import Blueprint, send_file, abort, current_app, redirect
+from sqlalchemy import or_
 import yaml
 try:
     from yaml import CBaseLoader as Loader
@@ -75,15 +76,25 @@ blueprint = Blueprint(
 @blueprint.route('/sandbox/<int:id>', methods=['GET'])
 def sandbox_display(id):
 
-    hepdata_submission = HEPSubmission.query.filter_by(
-        publication_recid=id, overall_status='sandbox').first()
+    hepdata_submission = HEPSubmission.query.filter(
+        HEPSubmission.publication_recid == id,
+        or_(HEPSubmission.overall_status == 'sandbox',
+            HEPSubmission.overall_status == 'sandbox_processing')).first()
 
     if hepdata_submission is not None:
-        ctx = format_submission(id, None, 1, 1, hepdata_submission)
-        ctx['mode'] = 'sandbox'
-        ctx['show_review_widget'] = False
-        increment(id)
-        return render_template('hepdata_records/sandbox.html', ctx=ctx)
+        if hepdata_submission.overall_status == 'sandbox_processing':
+            ctx = {
+                'recid': id,
+                'show_upload_widget': True
+            }
+            return render_template('hepdata_records/publication_processing.html', ctx=ctx)
+        else:
+            ctx = format_submission(id, None, 1, 1, hepdata_submission)
+            ctx['mode'] = 'sandbox'
+            ctx['show_review_widget'] = False
+            increment(id)
+            return render_template('hepdata_records/sandbox.html', ctx=ctx)
+
     else:
         return render_template('hepdata_records/error_page.html', recid=None,
                                message="No submission exists with that ID.",
@@ -184,13 +195,7 @@ def metadata(recid):
         ctx = {
             'recid': recid
         }
-
         determine_user_privileges(recid, ctx)
-        if ctx['show_upload_widget']:
-            time_since_last_update = (datetime.datetime.now() - hepdata_submission.last_updated).total_seconds()
-            if time_since_last_update < 24 * 3600:
-                ctx['show_upload_widget'] = False
-
         return render_template('hepdata_records/publication_processing.html', ctx=ctx)
 
     try:
@@ -633,9 +638,8 @@ def consume_data_payload(recid):
 
     if request.method == 'POST':
         file = request.files['hep_archive']
-        record_redirect_url = request.url_root + "record/{}"
-        general_redirect_url = request.url_root + "dashboard"
-        return process_payload(recid, file, record_redirect_url, general_redirect_url)
+        redirect_url = request.url_root + "record/{}"
+        return process_payload(recid, file, redirect_url)
 
     else:
         return redirect('/record/' + str(recid))
@@ -645,8 +649,12 @@ def consume_data_payload(recid):
 @login_required
 def sandbox():
     current_id = current_user.get_id()
-    submissions = HEPSubmission.query.filter_by(coordinator=current_id, overall_status='sandbox').order_by(
-        HEPSubmission.id.desc()).all()
+    submissions = HEPSubmission.query.filter(
+        HEPSubmission.coordinator == current_id,
+        or_(HEPSubmission.overall_status == 'sandbox',
+            HEPSubmission.overall_status == 'sandbox_processing')
+        ).order_by(HEPSubmission.id.desc()).all()
+
     for submission in submissions:
         submission.data_abstract = decode_string(submission.data_abstract)
 
@@ -701,9 +709,8 @@ def consume_sandbox_payload():
 
     get_or_create_hepsubmission(id, current_user.get_id(), status="sandbox")
     file = request.files['hep_archive']
-    record_redirect_url = request.url_root + "record/sandbox/{}"
-    general_redirect_url = request.url_root + "record/sandbox"
-    return process_payload(id, file, record_redirect_url, general_redirect_url)
+    redirect_url = request.url_root + "record/sandbox/{}"
+    return process_payload(id, file, redirect_url)
 
 
 @blueprint.route('/sandbox/<int:recid>/consume', methods=['POST'])
@@ -715,9 +722,8 @@ def update_sandbox_payload(recid):
     """
 
     file = request.files['hep_archive']
-    record_redirect_url = request.url_root + "record/sandbox/{}"
-    general_redirect_url = request.url_root + "record/sandbox"
-    return process_payload(recid, file, record_redirect_url, general_redirect_url)
+    redirect_url = request.url_root + "record/sandbox/{}"
+    return process_payload(recid, file, redirect_url)
 
 
 @blueprint.route('/add_resource/<string:type>/<int:identifier>/<int:version>', methods=['POST'])

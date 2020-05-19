@@ -121,23 +121,21 @@
                                     <div class="scrollable height30 row-fluid">
                                         {% for submission in ctx.submissions %}
                                             <div class="col-md-10 col-sm-10 col-xs-10">
-                                                {% if submission.data_abstract is none %}
-                                                  <div class="truncated-record-abstract">New upload (in progress)</div>
-                                                {% else %}
-                                                  <a href="/record/sandbox/{{ submission.publication_recid }}"
-                                                     style="text-align: left">
-                                                      <div class="truncated-record-abstract">{{ submission.data_abstract }}</div>
-                                                  </a>
-                                                {% endif %}
+                                                <a href="/record/sandbox/{{ submission.publication_recid }}"
+                                                   style="text-align: left">
+                                                    <div class="truncated-record-abstract">{{ submission.data_abstract }}</div>
+                                                </a>
                                                 <p style="font-weight: bolder; color: #a1aec7; font-size: .7em; text-align: left">
                                                   Created {{ submission.created.strftime('%Y-%m-%d %H:%M') }}; last updated {{ submission.last_updated.strftime('%Y-%m-%d %H:%M') }}
                                                 </p>
                                             </div>
                                             <div class="col-md-2 col-sm-2 col-xs-2">
+                                              {% if submission.overall_status != 'sandbox_processing' %}
                                                 <button class="btn btn-sm btn-danger delete_button"
                                                         data-recid="{{ submission.publication_recid }}"><i
                                                         class="fa fa-trash"></i>
                                                 </button>
+                                              {% endif %}
                                             </div>
                                         {% endfor %}
                                     </div>
