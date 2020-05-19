@@ -27,11 +27,10 @@
 from __future__ import absolute_import, print_function
 
 import logging
-import datetime
 import json
 from dateutil import parser
 from flask_login import login_required
-from flask import Blueprint, send_file, abort, current_app, redirect
+from flask import Blueprint, send_file, abort, redirect
 from sqlalchemy import or_
 import yaml
 try:
