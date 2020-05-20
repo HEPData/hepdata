@@ -27,6 +27,7 @@ import yaml
 
 from flask_login import login_user
 from invenio_accounts.models import User
+from invenio_db import db
 from werkzeug.datastructures import FileStorage
 
 from hepdata.modules.records.api import process_payload
@@ -122,12 +123,15 @@ def test_upload_valid_file(app):
         login_user(user)
 
         recid = '12345'
-        get_or_create_hepsubmission(recid, 1, status="sandbox")
+        get_or_create_hepsubmission(recid, 1)
 
         hepdata_submission = HEPSubmission.query.filter_by(
-            publication_recid=recid, overall_status='sandbox').first()
+            publication_recid=recid).first()
+        assert(hepdata_submission is not None)
         assert(hepdata_submission.data_abstract == None)
         assert(hepdata_submission.created == hepdata_submission.last_updated)
+        assert(hepdata_submission.version == 1)
+        assert(hepdata_submission.overall_status == 'todo')
 
         with open(os.path.join(base_dir, 'test_data/TestHEPSubmission.zip'), "rb") as stream:
             test_file = FileStorage(
@@ -138,6 +142,29 @@ def test_upload_valid_file(app):
 
         # Check the submission has been updated
         hepdata_submission = HEPSubmission.query.filter_by(
-            publication_recid=recid, overall_status='sandbox').first()
+            publication_recid=recid).first()
         assert(hepdata_submission.data_abstract.startswith('CERN-LHC.  Measurements of the cross section  for ZZ production'))
         assert(hepdata_submission.created < hepdata_submission.last_updated)
+        assert(hepdata_submission.version == 1)
+        assert(hepdata_submission.overall_status == 'todo')
+
+        # Set the status to finished and try again, to check versioning
+        hepdata_submission.overall_status = 'finished'
+        db.session.add(hepdata_submission)
+
+        with open(os.path.join(base_dir, 'test_data/TestHEPSubmission.zip'), "rb") as stream:
+            test_file = FileStorage(
+                stream=stream,
+                filename="TestHEPSubmission.zip"
+            )
+            process_payload(recid, test_file, '/test_redirect_url', synchronous=True)
+
+        # Check the submission has been updated
+        hepdata_submissions = HEPSubmission.query.filter_by(
+            publication_recid=recid).order_by(HEPSubmission.last_updated).all()
+        assert(len(hepdata_submissions) == 2)
+        assert(hepdata_submissions[0].version == 1)
+        assert(hepdata_submissions[0].overall_status == 'finished')
+        assert(hepdata_submissions[1].data_abstract.startswith('CERN-LHC.  Measurements of the cross section  for ZZ production'))
+        assert(hepdata_submissions[1].version == 2)
+        assert(hepdata_submissions[1].overall_status == 'todo')
