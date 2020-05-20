@@ -239,7 +239,7 @@ def assign_role(cookie):
 def check_is_sandbox_record(recid):
     try:
         submission = HEPSubmission.query.filter_by(publication_recid=recid).first()
-        return submission.overall_status == 'sandbox'
+        return submission.overall_status.startswith('sandbox')
     except Exception as e:
         return False
 

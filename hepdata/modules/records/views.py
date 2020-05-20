@@ -37,7 +37,6 @@ try:
     from yaml import CBaseLoader as Loader
 except ImportError: #pragma: no cover
     from yaml import BaseLoader as Loader #pragma: no cover
-from invenio_db import db
 
 from hepdata.config import CFG_DATA_TYPE, CFG_PUB_TYPE
 from hepdata.ext.elasticsearch.api import get_records_matching_field, get_count_for_collection, get_n_latest_records, \
@@ -82,10 +81,8 @@ def sandbox_display(id):
 
     if hepdata_submission is not None:
         if hepdata_submission.overall_status == 'sandbox_processing':
-            ctx = {
-                'recid': id,
-                'show_upload_widget': True
-            }
+            ctx = {'recid': id}
+            determine_user_privileges(id, ctx)
             return render_template('hepdata_records/publication_processing.html', ctx=ctx)
         else:
             ctx = format_submission(id, None, 1, 1, hepdata_submission)
@@ -184,18 +181,6 @@ def metadata(recid):
         version = -1
     serialization_format = request.args.get('format', 'html')
     light_mode = bool(request.args.get('light', False))
-
-    if version > 0:
-        hepdata_submission = get_latest_hepsubmission(publication_recid=recid, version=version)
-    else:
-        hepdata_submission = get_latest_hepsubmission(publication_recid=recid)
-
-    if hepdata_submission is not None and hepdata_submission.overall_status == 'processing':
-        ctx = {
-            'recid': recid
-        }
-        determine_user_privileges(recid, ctx)
-        return render_template('hepdata_records/publication_processing.html', ctx=ctx)
 
     try:
         record = get_record_contents(recid)
@@ -627,6 +612,7 @@ def get_resource(resource_id):
 
 
 @blueprint.route('/<int:recid>/consume', methods=['GET', 'POST'])
+@login_required
 def consume_data_payload(recid):
     """
     This method persists, then presents the loaded data back to the user.
@@ -652,7 +638,7 @@ def sandbox():
         HEPSubmission.coordinator == current_id,
         or_(HEPSubmission.overall_status == 'sandbox',
             HEPSubmission.overall_status == 'sandbox_processing')
-        ).order_by(HEPSubmission.id.desc()).all()
+        ).order_by(HEPSubmission.last_updated.desc()).all()
 
     for submission in submissions:
         submission.data_abstract = decode_string(submission.data_abstract)
@@ -695,7 +681,8 @@ def attach_information_to_record(recid):
                         'message': 'No record with that recid was found.'})
 
 
-@blueprint.route('/sandbox/consume', methods=['POST'])
+@blueprint.route('/sandbox/consume', methods=['GET', 'POST'])
+@login_required
 def consume_sandbox_payload():
     """
     Creates a new sandbox submission with a new file upload.
@@ -703,6 +690,9 @@ def consume_sandbox_payload():
     :param recid:
     """
     import time
+
+    if request.method == 'GET':
+        return redirect('/record/sandbox')
 
     id = (int(current_user.get_id())) + int(round(time.time()))
 
@@ -712,13 +702,17 @@ def consume_sandbox_payload():
     return process_payload(id, file, redirect_url)
 
 
-@blueprint.route('/sandbox/<int:recid>/consume', methods=['POST'])
+@blueprint.route('/sandbox/<int:recid>/consume', methods=['GET', 'POST'])
+@login_required
 def update_sandbox_payload(recid):
     """
     Updates the Sandbox submission with a new file upload.
 
     :param recid:
     """
+
+    if request.method == 'GET':
+        return redirect('/record/sandbox/' + str(recid))
 
     file = request.files['hep_archive']
     redirect_url = request.url_root + "record/sandbox/{}"
