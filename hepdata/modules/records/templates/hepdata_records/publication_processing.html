@@ -31,12 +31,18 @@
 
       <div>
 
-          <h4>Record {{ ctx.recid}} is currently being processed</h4>
+          <h4>Record {{ ctx.recid }} is currently being processed.</h4>
           <p>Please revisit this page later to see the full details.</p>
-          <p>This page will be refreshed every 10 seconds.</p>
+          <p>This page will be automatically refreshed every 10 seconds.</p>
 
           {% if ctx.show_upload_widget == True %}
-            <p>Processing submissions may occasionally take several hours. Please contact info@hepdata.net if your upload has been pending for longer than that.</p>
+            <p>You will receive an email when the submission has been processed.</p>
+            <br/>
+            <p>A failed submission will delete all tables and return the upload page.<br/>
+               Details of the errors will be contained in the email sent to you.</p>
+            <br/>
+            <p>Processing a submission can take several minutes or longer depending on the size.<br/>
+               Please contact info@hepdata.net if you need any further information.</p>
           {% endif %}
 
           <script type="text/javascript">

@@ -107,7 +107,8 @@
                         {% endfor %}
                     </div>
                     <div class="record-journal">
-                        {{ ctx.record.journal_info }}
+                        {% set record = ctx.record %}
+                        {% include "hepdata_records/components/journal_info.html" %}
                     </div>
 
                     {% if ctx.record.collaborations %}

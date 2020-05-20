@@ -159,7 +159,8 @@
 
 
                         <div class="record-journal">
-                            {{ ctx.record.journal_info }}, {{ ctx.record.year }}
+                            {% set record = ctx.record %}
+                            {% include "hepdata_records/components/journal_info.html" %}
                         </div>
 
 

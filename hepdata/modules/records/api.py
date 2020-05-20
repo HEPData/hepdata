@@ -30,7 +30,7 @@ import subprocess
 
 import time
 from celery import shared_task
-from flask import redirect, request, render_template, jsonify, current_app, Response, abort, flash, url_for
+from flask import redirect, request, render_template, jsonify, current_app, Response, abort, flash
 from flask_login import current_user
 from invenio_accounts.models import User
 from invenio_db import db
@@ -46,7 +46,7 @@ from hepdata.modules.records.subscribers.api import is_current_user_subscribed_t
 from hepdata.modules.records.utils.common import decode_string, find_file_in_directory, allowed_file, \
     remove_file_extension, truncate_string, get_record_contents
 from hepdata.modules.records.utils.data_processing_utils import process_ctx
-from hepdata.modules.records.utils.submission import process_submission_directory, create_data_review
+from hepdata.modules.records.utils.submission import process_submission_directory, create_data_review, cleanup_submission
 from hepdata.modules.submission.api import get_latest_hepsubmission
 from hepdata.modules.records.utils.users import get_coordinators_in_system, has_role
 from hepdata.modules.records.utils.workflow import update_action_for_submission_participant
@@ -265,7 +265,12 @@ def render_record(recid, record, version, output_format, light_mode=False):
     hepdata_submission = get_latest_hepsubmission(publication_recid=recid, version=version)
 
     if hepdata_submission is not None:
-        if not hepdata_submission.overall_status.startswith('sandbox'):
+        if hepdata_submission.overall_status == 'processing':
+            ctx = {'recid': recid}
+            determine_user_privileges(recid, ctx)
+            return render_template('hepdata_records/publication_processing.html', ctx=ctx)
+
+        elif not hepdata_submission.overall_status.startswith('sandbox'):
             ctx = format_submission(recid, record, version, version_count, hepdata_submission)
             increment(recid)
 
@@ -338,6 +343,19 @@ def process_payload(recid, file, redirect_url, synchronous=False):
     if file and (allowed_file(file.filename)):
         file_path = save_zip_file(file, recid)
         hepsubmission = get_latest_hepsubmission(publication_recid=recid)
+
+        if hepsubmission.overall_status == 'finished':
+            # If it is finished and we receive an update,
+            # then we need to reopen the submission to allow for revisions,
+            # by creating a new HEPSubmission object.
+            _rev_hepsubmission = HEPSubmission(publication_recid=recid,
+                                               overall_status='todo',
+                                               inspire_id=hepsubmission.inspire_id,
+                                               coordinator=hepsubmission.coordinator,
+                                               version=hepsubmission.version + 1)
+            db.session.add(_rev_hepsubmission)
+            hepsubmission = _rev_hepsubmission
+
         previous_status = hepsubmission.overall_status
         hepsubmission.overall_status = 'sandbox_processing' if previous_status == 'sandbox' else 'processing'
         db.session.add(hepsubmission)
@@ -360,7 +378,7 @@ def process_payload(recid, file, redirect_url, synchronous=False):
 
 @shared_task
 def process_saved_file(file_path, recid, userid, redirect_url, previous_status):
-    errors = process_zip_archive(file_path, recid, previous_status)
+    errors = process_zip_archive(file_path, recid)
 
     hepsubmission = get_latest_hepsubmission(publication_recid=recid)
     hepsubmission.overall_status = previous_status
@@ -378,6 +396,7 @@ def process_saved_file(file_path, recid, userid, redirect_url, previous_status):
         full_name = uploader.email
 
     if errors:
+        cleanup_submission(recid, hepsubmission.version, [])  # delete all tables if errors
         message_body = render_template('hepdata_theme/email/upload_errors.html',
                                        name=full_name,
                                        article=recid,
@@ -418,7 +437,7 @@ def save_zip_file(file, id):
     return file_path
 
 
-def process_zip_archive(file_path, id, previous_status):
+def process_zip_archive(file_path, id):
     (file_save_directory, filename) = os.path.split(file_path)
 
     if not filename.endswith('.oldhepdata'):
@@ -473,8 +492,7 @@ def process_zip_archive(file_path, id, previous_status):
             from_oldhepdata = True
 
     return process_submission_directory(basepath, submission_file_path, id,
-                                        from_oldhepdata=from_oldhepdata,
-                                        prev_status=previous_status)
+                                        from_oldhepdata=from_oldhepdata)
 
 
 def check_and_convert_from_oldhepdata(input_directory, id, timestamp):

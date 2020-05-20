@@ -39,7 +39,7 @@ from hepdata.utils.file_extractor import extract, get_file_in_directory
 from hepdata.modules.records.utils.common import get_record_contents
 
 from sqlalchemy.orm.exc import NoResultFound
-from sqlalchemy import func
+from sqlalchemy import func, or_
 
 from dateutil.parser import parse
 
@@ -576,7 +576,10 @@ def get_version_count(recid):
     # Count number of all versions and number of finished versions of a publication record.
     version_count_all = HEPSubmission.query.filter_by(publication_recid=recid).count()
     version_count_finished = HEPSubmission.query.filter_by(publication_recid=recid, overall_status='finished').count()
-    version_count_sandbox = HEPSubmission.query.filter_by(publication_recid=recid, overall_status='sandbox').count()
+    version_count_sandbox = HEPSubmission.query.filter(
+        HEPSubmission.publication_recid == recid,
+        or_(HEPSubmission.overall_status == 'sandbox', HEPSubmission.overall_status == 'sandbox_processing')
+    ).count()
 
     if version_count_sandbox:
         # For a Sandbox record, there is only one version, which is accessible by everyone.

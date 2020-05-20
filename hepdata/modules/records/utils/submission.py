@@ -402,7 +402,7 @@ def _read_data_file(data_file_path):
     return data, ex
 
 
-def process_submission_directory(basepath, submission_file_path, recid, update=False, from_oldhepdata=False, prev_status=None):
+def process_submission_directory(basepath, submission_file_path, recid, update=False, from_oldhepdata=False):
     """
     Goes through an entire submission directory and processes the
     files within to create DataSubmissions
@@ -456,19 +456,6 @@ def process_submission_directory(basepath, submission_file_path, recid, update=F
 
             # On a new upload, we reset the flag to notify reviewers
             hepsubmission.reviewers_notified = False
-
-            # if it is finished and we receive an update,
-            # then we need to reopen the submission to allow for revisions.
-            status_to_check = prev_status if prev_status is not None else hepsubmission.overall_status
-            if status_to_check == 'finished' and not update:
-                # we create a new HEPSubmission object
-                _rev_hepsubmission = HEPSubmission(publication_recid=recid,
-                                                   overall_status='todo',
-                                                   inspire_id=hepsubmission.inspire_id,
-                                                   coordinator=hepsubmission.coordinator,
-                                                   version=hepsubmission.version + 1)
-                db.session.add(_rev_hepsubmission)
-                hepsubmission = _rev_hepsubmission
 
             reserve_doi_for_hepsubmission(hepsubmission, update)
 
@@ -593,9 +580,6 @@ def process_submission_directory(basepath, submission_file_path, recid, update=F
 
                 admin_indexer = AdminIndexer()
                 admin_indexer.index_submission(hepsubmission)
-
-            else:  # delete all tables if errors
-                cleanup_submission(recid, hepsubmission.version, {})
 
         else:
 
