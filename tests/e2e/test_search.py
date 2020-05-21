@@ -51,6 +51,7 @@ def test_search_from_home(live_server, env_browser, search_tests):
             browser.current_url)
 
     # Check result count
+    sleep(1)
     results = browser.find_elements_by_class_name('search-result-item')
     assert(len(results) == 2)
 

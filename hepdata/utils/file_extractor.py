@@ -44,6 +44,4 @@ def extract(file_path, unzipped_path):
 
 def get_file_in_directory(path, extension):
     file_info = find_file_in_directory(path, lambda x: x.endswith(extension))
-    if (file_info == None):
-        return None
-    return file_info[0]
+    return file_info[1] if file_info else None
