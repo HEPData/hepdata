@@ -59,6 +59,7 @@ def app(request):
     folder and subfolders will see this variant of the `app` fixture.
     """
     app = create_app()
+    test_db_host = app.config['TEST_DB_HOST'] or 'localhost'
     # Note that in Travis we add "TESTING=True" to config_local.py as well
     # to ensure that it's set before flask mail is initialised
     app.config.update(dict(
@@ -72,7 +73,7 @@ def app(request):
         SUBMISSION_INDEX='hepdata-submission-test',
         AUTHOR_INDEX='hepdata-authors-test',
         SQLALCHEMY_DATABASE_URI=os.environ.get(
-            'SQLALCHEMY_DATABASE_URI', 'postgresql+psycopg2://hepdata:hepdata@localhost/hepdata_test')
+            'SQLALCHEMY_DATABASE_URI', 'postgresql+psycopg2://hepdata:hepdata@' + test_db_host + '/hepdata_test')
     ))
 
     with app.app_context():
