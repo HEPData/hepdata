@@ -1,0 +1,59 @@
+{% extends "hepdata_theme/page.html" %}
+
+{#
+{% set title = title %}
+#}
+{% block title %}
+    HEPData | {{ ctx.record.name }}
+{% endblock %}
+
+{%- block additional_assets %}
+
+    {%- assets "hepdata_record_css" %}
+        <link href="{{ ASSET_URL }}" rel="stylesheet">
+    {%- endassets %}
+
+{%- endblock additional_assets %}
+
+{%- set messages = get_flashed_messages(with_categories=true) -%}
+
+{% block page_description %}{{ ctx.record.title }}{% endblock %}
+
+{% block page_body %}
+
+    <div class="hep-content" style="padding: 80px 30px 15px 30px">
+
+      {%- if messages %}
+          {%- for category, message in messages %}
+            <div align="center" class="alert alert-{{category}}">{{ message }}</div>
+          {%- endfor %}
+      {%- endif %}
+
+      <div>
+
+          <h4>Record {{ ctx.recid }} is currently being processed.</h4>
+          <p>Please revisit this page later to see the full details.</p>
+          <p>This page will be automatically refreshed every 10 seconds.</p>
+
+          {% if ctx.show_upload_widget == True %}
+            <p>You will receive an email when the submission has been processed.</p>
+            <br/>
+            <p>A failed submission will delete all tables and return the upload page.<br/>
+               Details of the errors will be contained in the email sent to you.</p>
+            <br/>
+            <p>Processing a submission can take several minutes or longer depending on the size.<br/>
+               Please contact info@hepdata.net if you need any further information.</p>
+          {% endif %}
+
+          <script type="text/javascript">
+            setTimeout(function(){
+               window.location.reload(1);
+            }, 10000);
+          </script>
+
+      </div>
+
+    </div>
+
+
+{% endblock %}

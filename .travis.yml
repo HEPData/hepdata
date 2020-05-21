@@ -80,6 +80,7 @@ before_script:
 script:
   # Secure environment variables are not available for forked repositories, so omit end-to-end tests run on Sauce Labs.
   - "if [[ -z ${SAUCE_USERNAME} || -z ${SAUCE_ACCESS_KEY} ]]; then py.test tests -k 'not tests/e2e'; else py.test tests; fi"
+  - "rm /home/travis/build/HEPData/hepdata/hepdata/config_local.{py,pyc}"
 
 after_success:
   - coveralls

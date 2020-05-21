@@ -25,7 +25,6 @@ from __future__ import absolute_import, print_function
 
 import json
 import logging
-import subprocess
 import zipfile
 from datetime import datetime
 from dateutil.parser import parse
@@ -384,10 +383,9 @@ def parse_modifications(hepsubmission, recid, submission_info_document):
             db.session.add(participant)
 
 
-def _eos_fix_read_data(data_file_path):
+def _read_data_file(data_file_path):
     """
-    This gets rid of the issues where reading the file returns empty
-    string because eos has not yet flushed the file contents.
+    Read data file allowing for multiple attempts.
     """
     attempts = 0
     while True:
@@ -397,12 +395,8 @@ def _eos_fix_read_data(data_file_path):
             with open(data_file_path, 'r') as data_file:
                 data = yaml.load(data_file, Loader=Loader)
         except Exception as ex:
-            try: # force eos to refresh local cache
-                subprocess.check_output(['stat', data_file_path])
-            except: # data_file_path might not exist
-                pass
             attempts += 1
-        # allow multiple attempts to read file in case of temporary EOS problems
+        # allow multiple attempts to read file in case of temporary disk problems
         if (data and data is not None) or attempts > 5:
             break
     return data, ex
@@ -436,12 +430,19 @@ def process_submission_directory(basepath, submission_file_path, recid, update=F
         else:
             submission_file_validator = SubmissionFileValidator()
 
-        is_valid_submission_file = submission_file_validator.validate(file_path=submission_file_path)
+        try:
+            with open(submission_file_path, 'r') as submission_file:
+                submission_processed = list(yaml.load_all(submission_file, Loader=Loader))
+        except Exception as ex:
+            errors = {"submission.yaml": [
+                {"level": "error", "message": "There was a problem parsing the file.\n" + str(ex)}
+            ]}
+            return errors
+
+        is_valid_submission_file = submission_file_validator.validate(file_path=submission_file_path,
+                                                                      data=submission_processed)
 
         if is_valid_submission_file:
-
-            submission_file = open(submission_file_path, 'r')
-            submission_processed = yaml.load_all(submission_file, Loader=Loader)
 
             # process file, extracting contents, and linking
             # the data record with the parent publication
@@ -455,18 +456,6 @@ def process_submission_directory(basepath, submission_file_path, recid, update=F
 
             # On a new upload, we reset the flag to notify reviewers
             hepsubmission.reviewers_notified = False
-
-            # if it is finished and we receive an update,
-            # then we need to reopen the submission to allow for revisions.
-            if hepsubmission.overall_status == 'finished' and not update:
-                # we create a new HEPSubmission object
-                _rev_hepsubmission = HEPSubmission(publication_recid=recid,
-                                                   overall_status='todo',
-                                                   inspire_id=hepsubmission.inspire_id,
-                                                   coordinator=hepsubmission.coordinator,
-                                                   version=hepsubmission.version + 1)
-                db.session.add(_rev_hepsubmission)
-                hepsubmission = _rev_hepsubmission
 
             reserve_doi_for_hepsubmission(hepsubmission, update)
 
@@ -536,7 +525,7 @@ def process_submission_directory(basepath, submission_file_path, recid, update=F
 
                     main_file_path = os.path.join(basepath, yaml_document["data_file"])
 
-                    data, ex = _eos_fix_read_data(main_file_path)
+                    data, ex = _read_data_file(main_file_path)
 
                     if not data or data is None or ex is not None:
 
@@ -567,14 +556,12 @@ def process_submission_directory(basepath, submission_file_path, recid, update=F
                             # for each of the independent_variables and dependent_variables.
                             indep_count = [len(indep['values']) for indep in data['independent_variables']]
                             dep_count = [len(dep['values']) for dep in data['dependent_variables']]
-                            if len(set(indep_count + dep_count)) > 1: # if more than one unique count
+                            if len(set(indep_count + dep_count)) > 1:  # if more than one unique count
                                 errors.setdefault(yaml_document["data_file"], []).append(
                                     {"level": "error", "message": "Inconsistent length of 'values' list:\n" +
                                                                   "independent_variables{}, dependent_variables{}".format(
                                                                       str(indep_count), str(dep_count))}
                                 )
-
-            submission_file.close()
 
             if no_general_submission_info:
                 hepsubmission.last_updated = datetime.now()
@@ -593,9 +580,6 @@ def process_submission_directory(basepath, submission_file_path, recid, update=F
 
                 admin_indexer = AdminIndexer()
                 admin_indexer.index_submission(hepsubmission)
-
-            else: # delete all tables if errors
-                cleanup_submission(recid, hepsubmission.version, {})
 
         else:
 
