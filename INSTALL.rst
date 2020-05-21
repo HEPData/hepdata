@@ -1,3 +1,31 @@
+##################
+Installation
+##################
+
+ * :ref:`options-for-installing`
+ * :ref:`running-services-locally`
+ * :ref:`running-docker-compose`
+
+.. _options-for-installing:
+
+**********************
+Options for installing
+**********************
+
+There are two ways to get HEPData running locally: either install and run all the services on your local machine, or
+run it via docker-compose.
+
+Using docker-compose is the quickest way to get up-and-running. However, it has some disadvantages:
+ * It requires more resources on your local machine as it runs several docker containers.
+ * It can be slightly trickier to run commands and debug.
+ * The tests take longer to run, particularly the end-to-end tests.
+
+.. _running-services-locally:
+
+************************
+Running services locally
+************************
+
 Prerequisites
 =============
 
@@ -150,6 +178,9 @@ Now, start HEPData:
    (hepdata)$ hepdata run --debugger --reload
    (hepdata)$ firefox http://localhost:5000/
 
+.. _running-the-tests:
+
+
 Running the tests
 -----------------
 
@@ -208,9 +239,63 @@ Procfile. Then install flower if you haven't done so already, and then start hon
    (hepdata)$ honcho start
 
 
-Run using Docker
-----------------
+.. _running-docker-compose:
+
+**************************
+Running via docker-compose
+**************************
 
 The Dockerfile is used by Travis CI to build a Docker image and push to DockerHub ready for deployment in production
-on the Kubernetes cluster at CERN.  We will soon provide a working ``docker-compose.yml`` file and instructions how to
-run the Docker container for the main HEPData web application locally.
+on the Kubernetes cluster at CERN.
+
+For local development you can use the ``docker-compose.yml`` file to run the HEPData docker image and its required services.
+
+First, ensure you have installed `Docker <https://docs.docker.com/install/>`_ and `Docker Compose <https://docs.docker.com/compose/install/>`_.
+
+Copy the file ``config.local.dockercompose.py`` to ``config.local.py``.
+
+In order to run the tests via SauceLabs, ensure you have the variables ``$SAUCE_USERNAME`` and ``$SAUCE_ACCESS_KEY``
+set in your environment (see :ref:`running-the-tests`) **before** starting the containers.
+
+Start the containers:
+
+.. code-block:: console
+
+   docker-compose up
+
+In another terminal, initialize the database:
+
+.. code-block:: console
+
+   $ docker-compose run web bash -c "./scripts/initialise_db.sh your@email.com password"
+
+Now open http://localhost:5000/ and HEPData should be up and running. (It may take a few minutes for celery to process
+the sample records.)
+
+To run the tests:
+
+.. code-block:: console
+
+   $ docker-compose run web bash -c "/usr/var/sc-4.5.4-linux/bin/sc -u $SAUCE_USERNAME -k $SAUCE_ACCESS_KEY -x https://eu-central-1.saucelabs.com/rest/v1 & ./run-tests"
+
+Tips
+====
+
+* If you see errors about ports already being allocated, ensure you're not running any of the services another way (e.g. hepdata-converter via docker).
+* To run a command on a container, run the following (replacing <container_name> with the name of the container as in ``docker-compose.yml``, e.g. ``web``):
+
+  .. code-block:: console
+
+    $ docker-compose run <container_name> bash -c "<command>"
+
+* If you need to run several commands, run the following to get a bash shell on the container:
+
+  .. code-block:: console
+
+     $ docker-compose run <container_name> bash
+
+* If you switch between using docker-compose and individual services, you may get an error when running the tests about an import file mismatch. To resolve this, run:
+
+   .. code-block:: console
+
+      $ find . -name '*.pyc' -delete
