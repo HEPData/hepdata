@@ -70,5 +70,5 @@ services:
   converter:
     image: hepdata/hepdata-converter-ws
     ports:
-    - "80:5500"
-    read_only: true
+    - "5500:5000"
+    read_only: false
