@@ -36,8 +36,8 @@ from hepdata.modules.submission.views import process_submission_payload
 
 def test_submission_endpoint(app, client):
     submission = process_submission_payload(title="Test Submission", submitter_id=1,
-                                            reviewer={'name': 'Eamonn', 'email': 'eamonnmag@gmail.com'},
-                                            uploader={'name': 'Eamonn', 'email': 'eamonnmag@gmail.com'},
+                                            reviewer={'name': 'Reviewer', 'email': 'reviewer@hepdata.net'},
+                                            uploader={'name': 'Uploader', 'email': 'uploader@hepdata.net'},
                                             send_upload_email=False)
 
     assert (submission is not None)

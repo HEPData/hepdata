@@ -22,10 +22,11 @@
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
+from datetime import datetime, timedelta
 import logging
 
 from elasticsearch import Elasticsearch
-from elasticsearch_dsl import DocType, String, Date, Integer, Nested, InnerObjectWrapper, Q, Index, Search
+from elasticsearch_dsl import Document, Text, Keyword, Date, Integer, Nested, InnerDoc, Q, Index, Search
 from elasticsearch_dsl.connections import connections
 from flask import current_app
 
@@ -36,27 +37,23 @@ logging.basicConfig()
 log = logging.getLogger(__name__)
 
 
-class ESSubmissionParticipant(InnerObjectWrapper):
-    pass
-
-
-class ESSubmission(DocType):
+class ESSubmission(Document):
     recid = Integer()
-    inspire_id = String()
+    inspire_id = Text()
     version = Integer()
-    title = String()
-    collaboration = String()
-    status = String()
+    title = Text()
+    collaboration = Text()
+    status = Text()
     creation_date = Date()
     last_updated = Date()
     data_count = Integer()
     participants = Nested(
-        doc_class=ESSubmissionParticipant,
         properties={
-            'role': String(fields={'raw': String(index='not_analyzed')}),
-            'full_name': String()
+            'role': Text(fields={'raw': Keyword(index='true')}),
+            'full_name': Text()
         }
     )
+    coordinator = Integer()
 
     def as_custom_dict(self, exclude=None):
         _dict_ = vars(self)
@@ -107,6 +104,10 @@ class AdminIndexer:
 
     def get_summary(self):
         s = Search(index=self.index)
+        # Filter by date to approximately 20 years ago, to ensure there aren't more
+        # than 10000 buckets
+        date_20_years_ago = (datetime.now() - timedelta(days=int(20*365.25))).date()
+        s = s.filter('range', **{'last_updated': {'gte': str(date_20_years_ago)}})
         s.aggs.bucket('daily_workflows', 'date_histogram',
                       field='last_updated',
                       format="yyyy-MM-dd", interval='day') \
@@ -168,7 +169,8 @@ class AdminIndexer:
                               creation_date=submission.created,
                               last_updated=submission.last_updated,
                               version=submission.version,
-                              participants=participants)
+                              participants=participants,
+                              coordinator=submission.coordinator)
 
     def reindex(self, *args, **kwargs):
 
@@ -176,7 +178,9 @@ class AdminIndexer:
         if recreate:
             self.recreate_index()
 
-        submissions = HEPSubmission.query.filter(HEPSubmission.overall_status != 'sandbox').all()
+        submissions = HEPSubmission.query.filter(HEPSubmission.overall_status != 'sandbox' and \
+                                                 HEPSubmission.overall_status != 'sandbox_processing' and \
+                                                 HEPSubmission.coordinator > 1).all()
 
         for submission in submissions:
             self.index_submission(submission)
@@ -189,7 +193,7 @@ class AdminIndexer:
         submission = Index(self.index)
         submission.delete(ignore=404)
 
-        ESSubmission.init()
+        ESSubmission.init(self.index)
 
     def add_to_index(self, *args, **kwargs):
         """
@@ -197,8 +201,8 @@ class AdminIndexer:
         :param kwargs:
         :return:
         """
-        new_sub = ESSubmission(**kwargs)
-        return new_sub.save()
+        new_sub = ESSubmission(index=self.index, **kwargs)
+        return new_sub.save(index=self.index)
 
     def delete_from_index(self, *args, **kwargs):
         """

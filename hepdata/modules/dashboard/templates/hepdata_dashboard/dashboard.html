@@ -210,11 +210,17 @@
                                                     <img src="{{ url_for('static', filename='img/nodata.svg') }}"
                                                          alt="No data uploaded yet"
                                                          width="50px"/><br/>
-                                                    <span>No data</span>
+                                                    {% if submission.submission_status=='processing' %}
+                                                        <span class="in-progress">Processing</span>
+                                                    {% else %}
+                                                        <span class="in-progress">No data</span>
+                                                    {% endif %}
                                                 {% else %}
                                                     <p class="status">
                                                         {% if submission.submission_status=='todo' %}
                                                             <span class="in-progress">In Progress</span>
+                                                        {% elif submission.submission_status=='processing' %}
+                                                            <span class="in-progress">Processing</span>
                                                         {% else %}
                                                             <span class="complete">Complete</span>
                                                         {% endif %}
@@ -235,18 +241,21 @@
                                                         <span class="fa fa-{% if role == 'coordinator' %}gavel {% elif role == 'reviewer' %}check{% else %}upload{% endif %}"
                                                               style="padding-right: 5px;"></span>{{ role }}</span>
                                                     {% endfor %}
+                                                    <span class="label label-default">Version {{ submission.versions }}</span>
+                                                </p>
 
-                                                    <span
-                                                            class="label label-default">Version {{ submission.versions }}</span>
-                                                    started
-                                                    {{ submission.start_date.strftime('%d %B %Y at %-I%p') }}
+                                                <p class="start-date">
+                                                    Started
+                                                    {{ submission.start_date.strftime('%d %B %Y at %H:%M') }};
+                                                    last updated
+                                                    {{ submission.last_updated.strftime('%d %B %Y at %H:%M') }}
 
 
                                                 </p>
                                                 <h4><a href="/record/{{ submission.recid }}"
                                                        target="_blank">{{ submission.title }}</a>
 
-                                                    {% if submission.requires_inspire_id %}
+                                                    {% if submission.requires_inspire_id and submission.submission_status=='todo' %}
                                                         <button class="btn btn-primary btn-xs inspire-btn"
                                                                 id="inspire-btn-{{ submission.recid }}"
                                                                 data-recid="{{ submission.recid }}">

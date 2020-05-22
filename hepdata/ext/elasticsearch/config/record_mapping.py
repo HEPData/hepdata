@@ -16,27 +16,30 @@
 # along with HEPData; if not, write to the Free Software Foundation, Inc.,
 # 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
 #
+from hepdata.config import CFG_PUB_TYPE, CFG_DATA_TYPE
 
 mapping = {
+    "doc_type": {
+        "type": "keyword"
+    },
     "abstract": {
-        "type": "string",
+        "type": "text",
         # "analyzer": "english"
     },
     "authors": {
         "type": "nested",
         "properties": {
             "affiliation": {
-                "type": "string"
-            },
-            "first_name": {
-                "type": "string"
+                "type": "text"
             },
             "full_name": {
-                "type": "string",
-                "index": "not_analyzed"
-            },
-            "last_name": {
-                "type": "string"
+                "type": "text",
+                "fields": {
+                    "raw": {
+                        "type": "keyword",
+                        "index": "true"
+                    }
+                }
             }
         }
     },
@@ -45,53 +48,52 @@ mapping = {
         "type": "nested",
         "properties": {
             "affiliation": {
-                "type": "string"
-            },
-            "first_name": {
-                "type": "string"
+                "type": "text"
             },
             "full_name": {
-                "type": "string",
-                "index": "not_analyzed"
-            },
-            "last_name": {
-                "type": "string"
+                "type": "text",
+                "fields": {
+                    "raw": {
+                        "type": "keyword",
+                        "index": "true"
+                    }
+                }
             }
         }
     },
 
     "collaborations": {
-        "type": "string",
+        "type": "text",
         "fields": {
             "raw": {
-                "type": "string",
-                "index": "not_analyzed"
+                "type": "keyword",
+                "index": "true"
             }
         }
     },
 
     "subject_area": {
-        "type": "string",
+        "type": "text",
         "fields": {
             "raw": {
-                "type": "string",
-                "index": "not_analyzed"
+                "type": "keyword",
+                "index": "true"
             }
         }
     },
 
     "type": {
-        "type": "string"
+        "type": "text"
     },
 
     "analyses": {
         "type": "nested",
         "properties": {
             "type": {
-                "type": "string"
+                "type": "text"
             },
             "analysis": {
-                "type": "string"
+                "type": "text"
             }
         }
     },
@@ -100,13 +102,13 @@ mapping = {
         "type": "nested",
         "properties": {
             "type": {
-                "type": "string"
+                "type": "text"
             },
             "institution": {
-                "type": "string"
+                "type": "text"
             },
             "defense_data": {
-                "type": "string"
+                "type": "text"
             }
         }
     },
@@ -123,65 +125,59 @@ mapping = {
         "format": "yyyy-MM-dd'T'HH:mm:ss"
     },
     "doi": {
-        "type": "string",
-        "index": "not_analyzed"
+        "type": "keyword",
+        "index": "true"
     },
     "hepdata_doi": {
-        "type": "string"
+        "type": "text"
     },
     "data_keywords": {
         "properties": {
             "cmenergies": {
-                "type": "string",
-                "fields": {
-                    "raw": {
-                        "type": "string",
-                        "index": "analyzed"
-                    }
-                }
+                "type": "float_range",
             },
             "observables": {
-                "type": "string",
+                "type": "text",
                 "fields": {
                     "raw": {
-                        "type": "string",
-                        "index": "not_analyzed"
+                        "type": "keyword",
+                        "index": "true"
                     }
                 }
             },
             "phrases": {
-                "type": "string",
+                "type": "text",
                 "fields": {
                     "raw": {
-                        "type": "string",
-                        "index": "not_analyzed"
+                        "type": "keyword",
+                        "index": "true"
                     }
                 }
             },
             "reactions": {
-                "type": "string",
+                "type": "text",
                 "fields": {
                     "raw": {
-                        "type": "string",
-                        "index": "not_analyzed"
+                        "type": "keyword",
+                        "index": "true"
                     }
                 }
             }
         }
     },
     "inspire_id": {
-        "type": "string"
+        "type": "text"
     },
     "keywords": {
         "properties": {
             "name": {
-                "type": "string"
+                "type": "text"
             },
             "value": {
-                "type": "string"
+                "type": "text"
             },
             "synonyms": {
-                "type": "string"
+                "type": "text"
             }
         }
     },
@@ -189,12 +185,18 @@ mapping = {
         "type": "integer"
     },
     "title": {
-        "type": "string",
+        "type": "text",
         "fields": {
             "raw": {
-                "type": "string",
-                "index": "analyzed"
+                "type": "keyword",
+                "index": "true"
             }
         }
-    }
+    },
+    "parent_child_join": {
+        "type": "join",
+        "relations": {
+          "parent_publication": "child_datatable"
+        }
+      }
 }

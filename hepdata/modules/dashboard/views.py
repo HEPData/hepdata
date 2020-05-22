@@ -173,13 +173,16 @@ def finalise(recid, publication_record=None, force_finalise=False):
 @blueprint.route('/submissions/', methods=['GET'])
 @login_required
 def submissions():
+    from flask import abort
 
-    user_profile = current_userprofile.query.filter_by(user_id=current_user.get_id()).first()
+    if has_role(current_user, 'admin'):
+        user_profile = current_userprofile.query.filter_by(user_id=current_user.get_id()).first()
 
-    ctx = {'user_is_admin': has_role(current_user, 'admin'),
-           'user_profile': user_profile}
-
-    return render_template('hepdata_dashboard/submissions.html', ctx=ctx)
+        ctx = {'user_is_admin': True,
+               'user_profile': user_profile}
+        return render_template('hepdata_dashboard/submissions.html', ctx=ctx)
+    else:
+        abort(403)
 
 
 @blueprint.route('/submissions/list', methods=['GET'])

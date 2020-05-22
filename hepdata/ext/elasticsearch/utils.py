@@ -47,7 +47,7 @@ def prepare_author_for_indexing(document):
     """ Extract the author list from the document and index it in a separate
      index. """
 
-    index, doc_type = current_app.config['CFG_ES_AUTHORS']
+    index = current_app.config['AUTHOR_INDEX']
 
     author_data = []
     authors = document.get('authors', None)
@@ -59,7 +59,6 @@ def prepare_author_for_indexing(document):
             op_dict = {
                 "index": {
                     "_index": index,
-                    "_type": doc_type,
                     "_id": author['full_name']
                 }
             }
@@ -111,3 +110,11 @@ def push_keywords(docs):
         pub['data_keywords'] = agg_keywords
 
     return publications + datatables
+
+
+def tidy_bytestring(bytestring):
+    # Converts a python3-style bytestring literal e.g. "b'hello world'" into a normal string
+    # We should be able to remove this method when we migrate to python3.
+    if bytestring and bytestring.startswith("b'"):
+        bytestring = bytestring.strip("b'\\n").strip()
+    return bytestring

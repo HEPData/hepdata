@@ -21,11 +21,12 @@ var hepdata_record = (function () {
       },
 
       perform_upload_action: function (placement, form_name, colors, insertion_type) {
+        var message = '<p>Uploading files...</p>'
         var html = '<div id="upload-progress"></div>' +
-          '<div><p>Uploading and validating files...</p></div>';
+          '<div>' + message + '</div>';
         if (insertion_type === 'large_area') {
           html = '<div id="upload-progress"></div>' +
-            '<div style="width: 200px; margin: 0 auto;"><p>Uploading and validating files...</p></div>';
+            '<div style="width: 200px; margin: 0 auto;"><p>' + message + '</p></div>';
         }
 
         $(".upload-form").css('display', 'none');

@@ -43,5 +43,5 @@ def extract(file_path, unzipped_path):
 
 
 def get_file_in_directory(path, extension):
-    directory, file = find_file_in_directory(path, lambda x: x.endswith(extension))
-    return file
+    file_info = find_file_in_directory(path, lambda x: x.endswith(extension))
+    return file_info[1] if file_info else None

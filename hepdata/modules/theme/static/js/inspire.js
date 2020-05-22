@@ -21,7 +21,7 @@ var inspire_ds = (function () {
 
         create_html_summary: function (data, html) {
 
-            html += '<p class="inspire-title"><a href="http://inspirehep.net/record/' + data.id + '" target="_blank">' + data.query.title + '</a><p>';
+            html += '<p class="inspire-title"><a href="http://inspirehep.net/literature/' + data.id + '" target="_blank">' + data.query.title + '</a><p>';
 
             if (data.query.authors && data.query.authors.length > 0) {
                 html += '<p class="inspire-authors">' + data.query.authors[0].full_name + (data.query.authors.length > 1 ? " et al." : " ") + '</p>';

@@ -1,14 +1,35 @@
 Prerequisites
 =============
 
-HEPData uses several services such as the `PostgreSQL <http://www.postgresql.org/>`_
-(version 9.6) database server, `Redis <http://redis.io/>`_ for caching, and `Elasticsearch
-<https://www.elastic.co/products/elasticsearch>`_ (version 2.x, not later versions) for indexing and information
-retrieval.  It also requires the `Node.js <https://nodejs.org>`_ JavaScript run-time environment
-and its package manager `npm <https://www.npmjs.com/>`_. These services can be installed using the
-relevant package manager for your system, for example, using ``yum`` or ``apt-get`` for Linux or
-``brew`` for macOS.
+HEPData uses several services, which you will need to install before running HEPData:
+ * `PostgreSQL <http://www.postgresql.org/>`_ (version 9.6) database server
+ * `Redis <http://redis.io/>`_ for caching
+ * `Elasticsearch <https://www.elastic.co/products/elasticsearch>`_ (version 7.1, not later versions) for indexing and information retrieval. See below for further instructions.
+ * `Node.js <https://nodejs.org>`_ JavaScript run-time environment and its package manager `npm <https://www.npmjs.com/>`_.
 
+These services can be installed using the relevant package manager for your system,
+for example, using ``yum`` or ``apt-get`` for Linux or ``brew`` for macOS.
+
+Elasticsearch
+-------------
+
+See the `installation instructions <https://www.elastic.co/guide/en/elasticsearch/reference/7.1/install-elasticsearch.html>`_
+for installing ElasticSearch 7.1, but be aware that the instructions for Homebrew (for macOS) will install version 7.6 by default. To
+install v7.1 via Homebrew, run:
+
+.. code-block:: console
+
+    $ brew tap elastic/tap
+    $ cd $(brew --repo elastic/tap)
+    $ git checkout f90d9a385d44917aee879695c7168a0ca4dc6079
+    $ HOMEBREW_NO_AUTO_UPDATE=1 brew install elasticsearch-oss
+
+Alternatively, run Elasticsearch after `installing Docker <https://docs.docker.com/install/>`_ with:
+
+.. code-block:: console
+
+    $ docker pull docker.elastic.co/elasticsearch/elasticsearch:7.1.1
+    $ docker run -d -p 9200:9200 -p 9300:9300 -e "discovery.type=single-node" docker.elastic.co/elasticsearch/elasticsearch:7.1.1
 
 .. _installation:
 
@@ -150,7 +171,7 @@ locally you have several options:
 3. Omit the end-to-end tests when running locally, by running ``py.test tests -k 'not tests/e2e'`` instead of ``run-tests.sh``.
 
 
-Once you have set up selenium or SauceLabs, you can run the tests using:
+Once you have set up Selenium or SauceLabs, you can run the tests using:
 
 .. code-block:: console
 
@@ -160,16 +181,16 @@ Once you have set up selenium or SauceLabs, you can run the tests using:
 Docker for hepdata-converter-ws
 -------------------------------
 
-If deploying inside CERN, you can use the default ``CFG_CONVERTER_URL = 'http://188.184.65.191'``.  Otherwise, to get the
-file conversion working from the web application (such as automatic conversion from ``.oldhepdata`` format), you will
-need to run a local Docker container.  After `installing Docker <https://docs.docker.com/install/>`_, run:
+To get the file conversion working from the web application (such as automatic conversion from ``.oldhepdata`` format),
+you can use the default ``CFG_CONVERTER_URL = https://converter.hepdata.net`` even outside the CERN network.
+Alternatively, after `installing Docker <https://docs.docker.com/install/>`_, you can run a local Docker container:
 
 .. code-block:: console
 
    docker pull hepdata/hepdata-converter-ws
    docker run --restart=always -d --name=hepdata_converter -p 0.0.0.0:5500:5000 hepdata/hepdata-converter-ws hepdata-converter-ws
 
-then specify ``CFG_CONVERTER_URL = 'http://localhost:5500'`` (see above).
+then specify ``CFG_CONVERTER_URL = 'http://localhost:5500'`` in ``hepdata/config_local.py`` (see above).
 
 
 Run using honcho
@@ -190,6 +211,6 @@ Procfile. Then install flower if you haven't done so already, and then start hon
 Run using Docker
 ----------------
 
-A Dockerfile is provided in the HEPData/hepdata repository, inherited from the original Zenodo fork in 2015, but I don't think it ever worked.
-There is also a separate HEPData/hepdata-docker repository from 2015, which has not been kept up-to-date (for example, it uses MySQL instead of PostgreSQL).
-It would be good to come back to this in the future and get a working Docker installation.
+The Dockerfile is used by Travis CI to build a Docker image and push to DockerHub ready for deployment in production
+on the Kubernetes cluster at CERN.  We will soon provide a working ``docker-compose.yml`` file and instructions how to
+run the Docker container for the main HEPData web application locally.

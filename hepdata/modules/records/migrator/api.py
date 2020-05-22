@@ -346,7 +346,7 @@ class Migrator(object):
                     return True
 
             except FailedSubmission as fe:
-                log.error(fe.message)
+                log.error(fe)
                 fe.print_errors()
                 remove_submission(fe.record_id)
                 return False
@@ -432,7 +432,8 @@ class Migrator(object):
         get_or_create_hepsubmission(record_information["recid"], admin_user_id)
         errors = process_submission_directory(file_base_path,
                                               submission_yaml_file_location,
-                                              record_information["recid"], update=update)
+                                              record_information["recid"], update=update,
+                                              from_oldhepdata=True)
 
         if len(errors) > 0:
             print("ERRORS ARE: ")

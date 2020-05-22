@@ -39,7 +39,7 @@ from hepdata.utils.file_extractor import extract, get_file_in_directory
 from hepdata.modules.records.utils.common import get_record_contents
 
 from sqlalchemy.orm.exc import NoResultFound
-from sqlalchemy import func
+from sqlalchemy import func, or_
 
 from dateutil.parser import parse
 
@@ -57,6 +57,7 @@ def convert_endpoint():
     """
     Endpoint for general conversion, the file is passed as a GET parameter
     and options ('from=' & 'to=') are query string arguments.
+    TO DO: is this function used anywhere?  If not, it can probably be removed.
 
     :return: display_error or send_file depending on success of conversion
     """
@@ -259,9 +260,10 @@ def download_submission(submission, file_format, offline=False, force=False, riv
         'input_format': 'yaml',
         'output_format': file_format,
         'filename': 'HEPData-{0}-v{1}-{2}'.format(file_identifier, submission.version, file_format),
+        'validator_schema_version': '0.1.0',
     }
 
-    if submission.doi and submission.overall_status != 'sandbox':
+    if submission.doi and not submission.overall_status.startswith('sandbox'):
         converter_options['hepdata_doi'] = '{0}.v{1}'.format(submission.doi, version)
 
     if file_format == 'yoda':
@@ -491,12 +493,13 @@ def download_datatable(datasubmission, file_format, *args, **kwargs):
         'output_format': file_format,
         'table': table_name,
         'filename': table_name.split('.')[0],
+        'validator_schema_version': '0.1.0',
     }
 
     hepsubmission = HEPSubmission.query.filter_by(publication_recid=datasubmission.publication_recid,
                                                   version=datasubmission.version).first()
 
-    if datasubmission.doi and hepsubmission.overall_status != 'sandbox':
+    if datasubmission.doi and not hepsubmission.overall_status.startswith('sandbox'):
         options['hepdata_doi'] = datasubmission.doi.rsplit('/', 1)[0].encode('ascii')
 
     if file_format == 'yoda':
@@ -573,7 +576,10 @@ def get_version_count(recid):
     # Count number of all versions and number of finished versions of a publication record.
     version_count_all = HEPSubmission.query.filter_by(publication_recid=recid).count()
     version_count_finished = HEPSubmission.query.filter_by(publication_recid=recid, overall_status='finished').count()
-    version_count_sandbox = HEPSubmission.query.filter_by(publication_recid=recid, overall_status='sandbox').count()
+    version_count_sandbox = HEPSubmission.query.filter(
+        HEPSubmission.publication_recid == recid,
+        or_(HEPSubmission.overall_status == 'sandbox', HEPSubmission.overall_status == 'sandbox_processing')
+    ).count()
 
     if version_count_sandbox:
         # For a Sandbox record, there is only one version, which is accessible by everyone.

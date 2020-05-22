@@ -120,8 +120,9 @@ BASE_TEMPLATE = "hepdata_theme/page.html"
 COVER_TEMPLATE = "hepdata_theme/page_cover.html"
 SETTINGS_TEMPLATE = "invenio_theme/page_settings.html"
 
-ELASTICSEARCH_INDEX = 'hepdata'
-SUBMISSION_INDEX = 'submission'
+ELASTICSEARCH_INDEX = 'hepdata-main'
+SUBMISSION_INDEX = 'hepdata-submission'
+AUTHOR_INDEX = 'hepdata-authors'
 SEARCH_ELASTIC_HOSTS = [
     'localhost:9200'
 ]
@@ -131,10 +132,9 @@ SEARCH_AUTOINDEX = []
 CFG_PUB_TYPE = 'publication'
 CFG_DATA_TYPE = 'datatable'
 CFG_SUBMISSIONS_TYPE = 'submission'
-CFG_ES_AUTHORS = ('authors', 'author')
 CFG_DATA_KEYWORDS = ['observables', 'reactions', 'cmenergies', 'phrases']
 
-CFG_CONVERTER_URL = 'http://188.184.65.191'
+CFG_CONVERTER_URL = 'https://converter.hepdata.net'
 CFG_SUPPORTED_FORMATS = ['yaml', 'root', 'csv', 'yoda']
 
 CFG_TMPDIR = tempfile.gettempdir()
@@ -190,7 +190,8 @@ PIDSTORE_DATACITE_PASSWORD = ""
 PIDSTORE_DATACITE_TESTMODE = False
 PIDSTORE_DATACITE_URL = "https://mds.datacite.org"
 
-NO_DOI_MINTING = False
+TESTING = False  # switch off email using TESTING = True
+NO_DOI_MINTING = False  # switch off DOI minting using NO_DOI_MINTING = True
 
 # To get twitter to work, go to https://apps.twitter.com/ and create an application owned by the user account to
 # which the tweets will be sent. Then, follow the instructions here to get hold of access tokens:
@@ -277,7 +278,6 @@ SUBMISSION_FILE_NAME_PATTERN = 'HEPData-{}-v{}-yaml.zip'
 PYTHONWARNINGS="ignore:Unverified HTTPS request"
 
 PRODUCTION_MODE = False
-EOS_DATADIR = 'root://eospublic.cern.ch//eos/hepdata/prod/var/data' # TO DO: move to Puppet configuration
 
 RUN_SELENIUM_LOCALLY = False
 

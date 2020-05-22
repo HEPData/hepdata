@@ -44,7 +44,7 @@ def test_user_registration_and_login(live_server, env_browser):
     input_password = signup_form.find_element_by_name('password')
     # input w/ name "email"
     # input w/ name "password"
-    user_email = 'eamonnmag@gmail.com'
+    user_email = 'user@hepdata.net'
     user_password = '12345_SIx'
     input_email.send_keys(user_email)
     input_password.send_keys(user_password)
@@ -55,7 +55,7 @@ def test_user_registration_and_login(live_server, env_browser):
     # ...and get a message saying to expect an email
     success_element = browser.find_element_by_css_selector('.alert-success')
     assert(success_element is not None)
-    assert(success_element.text == 'Thank you. Confirmation instructions have been sent to eamonnmag@gmail.com.')
+    assert(success_element.text == 'Thank you. Confirmation instructions have been sent to {}.'.format(user_email))
 
     # 3.5: After registering we should not yet be logged in.
     e2e_assert(browser, not testutils.webdriver_authenticated(browser),

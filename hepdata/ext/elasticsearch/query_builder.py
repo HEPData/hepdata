@@ -21,129 +21,23 @@
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
 import re
+from elasticsearch_dsl import Q
 
 
-class QueryBuilder(object):
-    def __init__(self):
-        self.query = {
-            "query": {
-                "filtered": {
-                    "query": {
-                        "match_all": {}
-                    }
-                }
-            }
-        }
+class QueryBuilder:
 
     @staticmethod
-    def generate_query_string(query_string=''):
-        if query_string:
-            return {
-                "query_string": {
-                    "query": query_string,
-                    "fuzziness": "AUTO"
-                }
-            }
-        else:
-            return {"match_all": {}}
+    def add_filters(search, filters):
+        from config.es_config import get_filter_field
 
-    @staticmethod
-    def generate_nested_query(path, query):
-        return {
-            "nested": {
-                "path": path,
-                "query": QueryBuilder.generate_query_string(query_string=query)
-            }
-        }
-
-    def add_sorting(self, sort_field='', sort_order=''):
-        from .utils import calculate_sort_order
-        from .config.es_config import sort_fields_mapping
-
-        mapped_sort_field = sort_fields_mapping(sort_field)
-        self.query.update(dict(sort=[{
-            mapped_sort_field: {
-                "order": calculate_sort_order(sort_order, sort_field)
-            }
-        }]))
-
-    def add_source_filter(self, includes, excludes):
-        self.query.update({
-            "_source": {"includes": includes, "excludes": excludes}
-        })
-
-    def add_pagination(self, size, offset=0):
-        self.query.update({
-            "size": size,
-            "from": offset
-        })
-
-    def add_child_parent_relation(self,
-                                  related_type,
-                                  relation="child",
-                                  related_query=None,
-                                  must=False,
-                                  other_queries=None):
-        other_queries = [] if not other_queries else other_queries
-        related_query = {} if not related_query else related_query
-
-        relation = "has_child" if relation == "child" else "has_parent"
-        relation_dict = {
-            relation: {
-                "type": related_type,
-                "query": related_query
-            }
-        }
-
-        bool_operator = "must" if must else "should"
-        query_dict = {
-            "bool": {
-                bool_operator: [relation_dict] + other_queries
-            }
-        }
-
-        if "filtered" in self.query.get("query", {}):
-            self.query["query"]["filtered"]["query"] = query_dict
-        else:
-            self.query.update({"query": query_dict})
-
-    def add_query_string(self, query_string=''):
-        query_dict = self.generate_query_string(query_string=query_string)
-
-        if "filtered" in self.query.get("query", {}):
-            self.query["query"]["filtered"]["query"] = query_dict
-        else:
-            self.query.update({"query": query_dict})
-
-    def add_aggregations(self, aggs=None):
-        from .config.es_config import default_aggregations
-        if not aggs:
-            aggs = default_aggregations()
-
-        self.query.update({"aggs": aggs})
-
-    def add_highlighting(self, fields):
-        self.query.update({
-            "highlight": {
-                "fields": {
-                    field: {} for field in fields
-                    }
-            }
-        })
-
-    def add_filters(self, filters):
-        from .config.es_config import get_filter_clause
-        filter_clauses = []
         for name, value in filters:
-            clause = get_filter_clause(name, value)
-            filter_clauses.append(clause)
+            if name == "author":
+                search = search.query('nested', path='authors', query=Q('match', authors__full_name = value))
+            else:
+                (filter_type, field, value) = get_filter_field(name, value)
+                search = search.filter(filter_type, **{field: value})
 
-        if filter_clauses and "filtered" in self.query.get("query", {}):
-            self.query["query"]["filtered"]["filter"] = {"and": filter_clauses}
-
-    def add_post_filter(self, postfilter):
-        if postfilter is not None:
-            self.query["post_filter"] = postfilter
+        return search
 
 
 class HEPDataQueryParser(object):

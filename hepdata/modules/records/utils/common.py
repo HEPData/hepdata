@@ -182,7 +182,7 @@ def find_file_in_directory(directory, file_predicate):
     below.
 
     :param directory:
-    :param a lambda that checks if it's the file you're looking for:
+    :param file_predicate: a lambda that checks if it's the file you're looking for
     :return:
     """
     for root, dirs, files in os.walk(directory):

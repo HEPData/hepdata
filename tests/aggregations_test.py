@@ -17,7 +17,9 @@
 # 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
 from hepdata.ext.elasticsearch.aggregations import parse_author_aggregations, \
     parse_date_aggregations, parse_collaboration_aggregations, \
-    parse_other_facets, parse_aggregations
+    parse_other_facets, parse_aggregations, parse_cmenergies_aggregations, \
+    create_dummy_cmenergies_facets
+
 
 def test_parse_author_aggregations():
     buckets = [
@@ -43,6 +45,92 @@ def test_parse_author_aggregations():
         'type': 'author'
     }
     assert(parse_author_aggregations(buckets) == expected)
+
+
+def test_parse_cmenergies_aggregations_simple():
+    buckets = [
+        {'key': 0.0, 'doc_count': 13},
+        {'key': 10.0, 'doc_count': 50},
+        {'key': 20.0, 'doc_count': 27}
+    ]
+
+    expected = {
+        'vals': [
+            {
+                'url_params': {'cmenergies': '0.0,10.0'},
+                'key': u"0.0 \u2264 \u221As < 10.0",
+                'doc_count': 13
+            },
+            {
+                'url_params': {'cmenergies': '10.0,20.0'},
+                'key': u"10.0 \u2264 \u221As < 20.0",
+                'doc_count': 50
+            },
+            {
+                'url_params': {'cmenergies': '20.0,100000.0'},
+                'key': u"\u221As \u2265 20.0",
+                'doc_count': 27
+            }
+        ],
+        'max_values': 5,
+        'printable_name': 'CM Energies (GeV)',
+        'type': 'cmenergies'
+    }
+    assert(parse_cmenergies_aggregations(buckets) == expected)
+
+
+def test_parse_cmenergies_aggregations_filtered():
+    buckets = [
+        {'key': 10.0, 'doc_count': 13},
+        {'key': 11.0, 'doc_count': 50},
+        {'key': 12.0, 'doc_count': 27}
+    ]
+    query_filters1 = [('cmenergies', [10.0, 15.0])]
+    expected1 = {
+        'vals': [
+            {
+                'url_params': {'cmenergies': '10.0,11.0'},
+                'key': u"10.0 \u2264 \u221As < 11.0",
+                'doc_count': 13
+            },
+            {
+                'url_params': {'cmenergies': '11.0,12.0'},
+                'key': u"11.0 \u2264 \u221As < 12.0",
+                'doc_count': 50
+            },
+            {
+                'url_params': {'cmenergies': '12.0,15.0'},
+                'key': u"12.0 \u2264 \u221As < 15.0",
+                'doc_count': 27
+            }
+        ],
+        'max_values': 5,
+        'printable_name': 'CM Energies (GeV)',
+        'type': 'cmenergies'
+    }
+    assert(parse_cmenergies_aggregations(buckets, query_filters1) == expected1)
+
+    buckets = [
+        {'key': 10.0, 'doc_count': 13},
+        {'key': 11.0, 'doc_count': 50},
+        {'key': 12.0, 'doc_count': 27}
+    ]
+    query_filters2 = [('cmenergies', [11.0, 12.0])]
+    expected2 = {
+        'vals': [
+            {
+                'url_params': {'cmenergies': '11.0,12.0'},
+                'key': u"11.0 \u2264 \u221As < 12.0",
+                'doc_count': 50
+            }
+        ],
+        'max_values': 5,
+        'printable_name': 'CM Energies (GeV)',
+        'type': 'cmenergies'
+    }
+    assert(parse_cmenergies_aggregations(buckets, query_filters2) == expected2)
+
+
 
 def test_parse_collaboration_aggregations():
     buckets = [
@@ -155,6 +243,11 @@ def test_parse_aggregations():
                 ]
             }
         },
+        # 'cmenergies': {
+        #     'buckets': [
+        #         {'key': 10.0, 'doc_count': 13}
+        #     ]
+        # },
         'collaboration': {
             'buckets': [
                 {'key': 'collab1', 'doc_count': 3}
@@ -225,10 +318,122 @@ def test_parse_aggregations():
             'max_values': 5,
             'printable_name': 'Collaboration',
             'type': 'collaboration'
+        },
+        {
+            'vals': [
+                {'doc_count': None,
+                 'key': u'0.0 \u2264 \u221as < 1.0',
+                 'url_params': {'cmenergies': '0.0,1.0'}},
+                {'doc_count': None,
+                 'key': u'1.0 \u2264 \u221as < 2.0',
+                 'url_params': {'cmenergies': '1.0,2.0'}},
+                {'doc_count': None,
+                 'key': u'2.0 \u2264 \u221as < 5.0',
+                 'url_params': {'cmenergies': '2.0,5.0'}},
+                {'doc_count': None,
+                 'key': u'5.0 \u2264 \u221as < 10.0',
+                 'url_params': {'cmenergies': '5.0,10.0'}},
+                {'doc_count': None,
+                 'key': u'10.0 \u2264 \u221as < 100.0',
+                 'url_params': {'cmenergies': '10.0,100.0'}},
+                {'doc_count': None,
+                 'key': u'100.0 \u2264 \u221as < 1000.0',
+                 'url_params': {'cmenergies': '100.0,1000.0'}},
+                {'doc_count': None,
+                 'key': u'1000.0 \u2264 \u221as < 7000.0',
+                 'url_params': {'cmenergies': '1000.0,7000.0'}},
+                {'doc_count': None,
+                 'key': u'7000.0 \u2264 \u221as < 8000.0',
+                 'url_params': {'cmenergies': '7000.0,8000.0'}},
+                {'doc_count': None,
+                 'key': u'8000.0 \u2264 \u221as < 13000.0',
+                 'url_params': {'cmenergies': '8000.0,13000.0'}},
+                {'doc_count': None,
+                 'key': u'\u221as \u2265 13000.0',
+                 'url_params': {'cmenergies': '13000.0,100000.0'}}],
+            'max_values': 5,
+            'printable_name': 'CM Energies (GeV)',
+            'type': 'cmenergies'
         }
     ]
+    assert(parse_aggregations(aggregations) == expected)
 
-    actual = parse_aggregations(aggregations)
 
-    for facet in expected:
-        assert(facet in actual)
+def test_create_dummy_cmenergies_facets():
+    expected = {
+        'vals': [
+            {'doc_count': None,
+             'key': u'0.0 \u2264 \u221as < 1.0',
+             'url_params': {'cmenergies': '0.0,1.0'}},
+            {'doc_count': None,
+             'key': u'1.0 \u2264 \u221as < 2.0',
+             'url_params': {'cmenergies': '1.0,2.0'}},
+            {'doc_count': None,
+             'key': u'2.0 \u2264 \u221as < 5.0',
+             'url_params': {'cmenergies': '2.0,5.0'}},
+            {'doc_count': None,
+             'key': u'5.0 \u2264 \u221as < 10.0',
+             'url_params': {'cmenergies': '5.0,10.0'}},
+            {'doc_count': None,
+             'key': u'10.0 \u2264 \u221as < 100.0',
+             'url_params': {'cmenergies': '10.0,100.0'}},
+            {'doc_count': None,
+             'key': u'100.0 \u2264 \u221as < 1000.0',
+             'url_params': {'cmenergies': '100.0,1000.0'}},
+            {'doc_count': None,
+             'key': u'1000.0 \u2264 \u221as < 7000.0',
+             'url_params': {'cmenergies': '1000.0,7000.0'}},
+            {'doc_count': None,
+             'key': u'7000.0 \u2264 \u221as < 8000.0',
+             'url_params': {'cmenergies': '7000.0,8000.0'}},
+            {'doc_count': None,
+             'key': u'8000.0 \u2264 \u221as < 13000.0',
+             'url_params': {'cmenergies': '8000.0,13000.0'}},
+            {'doc_count': None,
+             'key': u'\u221as \u2265 13000.0',
+             'url_params': {'cmenergies': '13000.0,100000.0'}}],
+        'max_values': 5,
+        'printable_name': 'CM Energies (GeV)',
+        'type': 'cmenergies'
+    }
+    assert(create_dummy_cmenergies_facets() == expected)
+
+    # Uncomment these tests once we reinstate the cmenergies aggregations with ES>=7.4
+    expected_filtered1 = {
+        'vals': [
+            {'doc_count': None,
+             'key': u'1.0 \u2264 \u221as < 2.0',
+             'url_params': {'cmenergies': '1.0,2.0'}}
+        ],
+        'max_values': 5,
+        'printable_name': 'CM Energies (GeV)',
+        'type': 'cmenergies'
+    }
+    assert(create_dummy_cmenergies_facets([('cmenergies', [1.0, 2.0])]) == expected_filtered1)
+
+    expected_filtered2 = {
+        'vals': [
+            {'doc_count': None,
+             'key': u'1000.0 \u2264 \u221as < 2000.0',
+             'url_params': {'cmenergies': '1000.0,2000.0'}},
+            {'doc_count': None,
+             'key': u'2000.0 \u2264 \u221as < 3000.0',
+             'url_params': {'cmenergies': '2000.0,3000.0'}},
+            {'doc_count': None,
+             'key': u'3000.0 \u2264 \u221as < 4000.0',
+             'url_params': {'cmenergies': '3000.0,4000.0'}},
+            {'doc_count': None,
+             'key': u'4000.0 \u2264 \u221as < 5000.0',
+             'url_params': {'cmenergies': '4000.0,5000.0'}},
+            {'doc_count': None,
+             'key': u'5000.0 \u2264 \u221as < 6000.0',
+             'url_params': {'cmenergies': '5000.0,6000.0'}},
+            {'doc_count': None,
+             'key': u'6000.0 \u2264 \u221as < 7000.0',
+             'url_params': {'cmenergies': '6000.0,7000.0'}},
+        ],
+        'max_values': 5,
+        'printable_name': 'CM Energies (GeV)',
+        'type': 'cmenergies'
+    }
+    assert(create_dummy_cmenergies_facets([('cmenergies', [1000.0, 7000.0])]) == expected_filtered2)

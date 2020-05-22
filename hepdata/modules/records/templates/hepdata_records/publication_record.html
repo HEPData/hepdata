@@ -159,7 +159,8 @@
 
 
                         <div class="record-journal">
-                            {{ ctx.record.journal_info }}, {{ ctx.record.year }}
+                            {% set record = ctx.record %}
+                            {% include "hepdata_records/components/journal_info.html" %}
                         </div>
 
 
@@ -184,14 +185,14 @@
                                 {% if ctx.record.inspire_id %}
                                   <li>
                                     <span itemprop="identifier" class="hidden">
-                                        http://inspirehep.net/record/{{ ctx.record.inspire_id }}
+                                        http://inspirehep.net/literature/{{ ctx.record.inspire_id }}
                                     </span>
 
-                                    <a href="http://inspirehep.net/record/{{ ctx.record.inspire_id }}"
+                                    <a href="http://inspirehep.net/literature/{{ ctx.record.inspire_id }}"
                                        target="_blank"><span
                                             class="link"><span
                                             class="link-type">INSPIRE</span></span><span
-                                            class="hidden">http://inspirehep.net/record/{{ ctx.record.inspire_id }}</span>
+                                            class="hidden">http://inspirehep.net/literature/{{ ctx.record.inspire_id }}</span>
                                     </a>
                                   </li>
                                 {% endif %}
@@ -350,7 +351,7 @@
     {% if ctx.record.title %}
       {% include 'hepdata_records/components/cite-widget.html' %}
     {% endif %}
-    {% if ctx.status == 'finished' and current_user.is_authenticated %}
+    {% if ctx.status == 'finished' %}
         {% include 'hepdata_records/components/question-widget.html' %}
     {% endif %}
     {% include 'hepdata_records/components/notify-reviewer-widget.html' %}

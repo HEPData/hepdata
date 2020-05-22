@@ -43,8 +43,9 @@ def calculate_total_pages(query_result, max_results):
     Calculate the overall number of pages of results
     given the number of hits and max number of records displayed per page.
     """
-    total_pages = query_result['total'] // max_results
-    if not query_result['total'] % max_results == 0:
+    total_hits = query_result['total']
+    total_pages = total_hits // max_results
+    if not total_hits % max_results == 0:
         total_pages += 1
     return total_pages
 
@@ -113,6 +114,20 @@ def check_date(args):
     return min_date, max_date
 
 
+def check_cmenergies(args):
+    """
+    Get the cmenergues query parameter from the URL and convert to floats
+    """
+    cmenergies = args.get('cmenergies', None)
+    if cmenergies:
+        try:
+            cmenergies = [float(x) for x in cmenergies.split(',', 1)]
+            args['cmenergies'] = cmenergies
+
+        except ValueError:
+            del args['cmenergies']
+
+
 def sort_facets(facets):
     """Sort the facets in an arbitrary way that we think is appropriate."""
     order = {
@@ -140,7 +155,7 @@ def filter_facets(facets, total_hits):
     if total_hits > HITS:
         keyword_facets = [f for f in facets if f['type'] in CFG_DATA_KEYWORDS]
         for facet in keyword_facets:
-            vals = [v for v in facet['vals'] if v['doc_count'] >= THRESHOLD]
+            vals = [v for v in facet['vals'] if v['doc_count'] is None or v['doc_count'] >= THRESHOLD]
             facet['vals'] = vals
 
     nonempty_facets = [kf for kf in facets if len(kf['vals']) > 0]
@@ -157,6 +172,7 @@ def parse_query_parameters(request_args):
     """
     args = dict(request_args)
     min_date, max_date = check_date(args)
+    check_cmenergies(args)
     check_page(args)
     check_max_results(args)
 
@@ -235,7 +251,7 @@ def search():
     year_facet = process_year_facet(request, facets)
 
     if ('format' in request.args and request.args['format'] == 'json') \
-        or 'json' in request.headers['accept']:
+        or 'json' in request.headers.get('accept', ''):
         query_result['hits'] = {'total': query_result['total']}
         return jsonify(query_result)
     else:

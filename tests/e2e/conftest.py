@@ -69,7 +69,9 @@ def app(request):
         CELERY_RESULT_BACKEND="cache",
         CELERY_CACHE_BACKEND="memory",
         CELERY_TASK_EAGER_PROPAGATES=True,
-        ELASTICSEARCH_INDEX="hepdata_test",
+        ELASTICSEARCH_INDEX="hepdata-main-test",
+        SUBMISSION_INDEX='hepdata-submission-test',
+        AUTHOR_INDEX='hepdata-authors-test',
         SQLALCHEMY_DATABASE_URI=os.environ.get(
             'SQLALCHEMY_DATABASE_URI', 'postgresql+psycopg2://hepdata:hepdata@localhost/hepdata_test'),
         APP_DEFAULT_SECURE_HEADERS = {
@@ -98,7 +100,7 @@ def app(request):
     with app.app_context():
         db.drop_all()
         db.create_all()
-        reindex_all(recreate=True)
+        reindex_all(recreate=True, synchronous=True)
 
         ctx = app.test_request_context()
         ctx.push()
@@ -137,7 +139,7 @@ def test_identifiers(app):
 
 @pytest.fixture()
 def search_tests(app):
-    return [{"search_term": "collisions", "exp_collab_facet": "Belle", "exp_hepdata_id": "ins1245023"},
+    return [{"search_term": "collisions", "exp_collab_facet": "BELLE", "exp_hepdata_id": "ins1245023"},
             {"search_term": "leptons", "exp_collab_facet": "D0", "exp_hepdata_id": "ins1283842"}]
 
 
