@@ -59,7 +59,7 @@ def app(request):
     folder and subfolders will see this variant of the `app` fixture.
     """
     app = create_app()
-    test_db_host = app.config['TEST_DB_HOST'] or 'localhost'
+    test_db_host = app.config.get('TEST_DB_HOST', 'localhost')
     # Note that in Travis we add "TESTING=True" to config_local.py as well
     # to ensure that it's set before flask mail is initialised
     app.config.update(dict(
