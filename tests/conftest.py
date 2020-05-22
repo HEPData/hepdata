@@ -43,7 +43,7 @@ TEST_PWD = 'hello1'
 
 def create_basic_app():
     app = create_app()
-    test_db_host = app.config['TEST_DB_HOST'] or 'localhost'
+    test_db_host = app.config.get('TEST_DB_HOST', 'localhost')
     app.config.update(dict(
         TESTING=True,
         TEST_RUNNER="celery.contrib.test_runner.CeleryTestSuiteRunner",
