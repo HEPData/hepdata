@@ -262,7 +262,9 @@ Start the containers:
 
 .. code-block:: console
 
-   docker-compose up
+   $ docker-compose up
+
+(This starts containers for all the 5 necessary services. See :ref:`docker-compose-tips` if you only want to run some containers.)
 
 In another terminal, initialise the database:
 
@@ -279,10 +281,37 @@ To run the tests:
 
    $ docker-compose run web bash -c "/usr/var/sc-4.5.4-linux/bin/sc -u $SAUCE_USERNAME -k $SAUCE_ACCESS_KEY -x https://eu-central-1.saucelabs.com/rest/v1 & ./run-tests.sh"
 
+
+.. _docker-compose-tips:
+
 Tips
 ====
 
 * If you see errors about ports already being allocated, ensure you're not running any of the services another way (e.g. hepdata-converter via Docker).
+* If you want to run just some of the containers, specify their names in the docker-compose command. For example, to just run the web server, database and elasticsearch, run:
+
+  .. code-block:: console
+
+    $ docker-compose up web db es
+
+  See ``docker-compose.yml`` for the names of each service. Running a subset of containers could be useful in the following cases:
+
+   * You want to use the live converter service, i.e.  ``CFG_CONVERTER_URL = 'https://converter.hepdata.net'`` instead of running the converter locally.
+   * You want to run the container for the web service by pulling an image from DockerHub instead of building an image locally.
+   * You want to run containers for all services apart from web (and maybe converter) then use a non-Docker web service.
+
+* To run the containers in the background, run:
+
+  .. code-block:: console
+
+     $ docker-compose up -d
+
+  To see the logs you can then run:
+
+  .. code-block:: console
+
+     $ docker-compose logs
+
 * To run a command on a container, run the following (replacing <container_name> with the name of the container as in ``docker-compose.yml``, e.g. ``web``):
 
   .. code-block:: console
