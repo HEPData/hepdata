@@ -29,6 +29,7 @@ from __future__ import absolute_import, print_function
 from invenio_accounts.models import User
 from sqlalchemy import func
 from invenio_db import db
+from datetime import datetime
 
 submission_participant_link = db.Table(
     'submission_participant_link',
@@ -78,9 +79,9 @@ class HEPSubmission(db.Model):
     # invenio record created for them.
     overall_status = db.Column(db.String(128), default='todo')
 
-    created = db.Column(db.DateTime, nullable=False, default=func.now(), index=True)
+    created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, index=True)
 
-    last_updated = db.Column(db.DateTime, nullable=True, default=func.now(), index=True)
+    last_updated = db.Column(db.DateTime, nullable=True, default=datetime.utcnow, index=True)
 
     # this links to the latest version of the data files to be shown
     # in the submission and allows one to go back in time via the
@@ -173,7 +174,7 @@ class DataResource(db.Model):
     file_license = db.Column(db.Integer, db.ForeignKey("hepdata_license.id"),
                              nullable=True)
 
-    created = db.Column(db.DateTime, nullable=False, default=func.now(),
+    created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow,
                         index=True)
 
 
@@ -200,11 +201,11 @@ class DataReview(db.Model):
     data_recid = db.Column(db.Integer, db.ForeignKey("datasubmission.id"))
 
     creation_date = db.Column(
-        db.DateTime, nullable=False, default=func.now(), index=True)
+        db.DateTime, nullable=False, default=datetime.utcnow, index=True)
 
     modification_date = db.Column(
-        db.DateTime, nullable=False, default=func.now(), index=True,
-        onupdate=func.now())
+        db.DateTime, nullable=False, default=datetime.utcnow, index=True,
+        onupdate=datetime.utcnow)
 
     # as in, passed, attention, to do
     status = db.Column(db.String(20), default="todo")
@@ -226,7 +227,7 @@ class Message(db.Model):
     user = db.Column(db.Integer, db.ForeignKey(User.id))
     message = db.Column(db.LargeBinary)
 
-    creation_date = db.Column(db.DateTime, nullable=False, default=func.now(),
+    creation_date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow,
                               index=False)
 
 
@@ -242,7 +243,7 @@ class Question(db.Model):
     publication_recid = db.Column(db.Integer)
 
     question = db.Column(db.LargeBinary)
-    creation_date = db.Column(db.DateTime, nullable=False, default=func.now(),
+    creation_date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow,
                               index=False)
 
 
@@ -255,6 +256,6 @@ class RecordVersionCommitMessage(db.Model):
     recid = db.Column(db.Integer)
 
     creation_date = db.Column(
-        db.DateTime, nullable=False, default=func.now(), index=True)
+        db.DateTime, nullable=False, default=datetime.utcnow, index=True)
     version = db.Column(db.Integer, default=1)
     message = db.Column(db.LargeBinary)

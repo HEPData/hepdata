@@ -35,7 +35,7 @@ def get_date():
 
     :return: datetime object
     """
-    return datetime.today()
+    return datetime.utcnow()
 
 
 def increment(recid):

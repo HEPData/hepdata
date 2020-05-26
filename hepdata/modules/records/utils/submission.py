@@ -282,9 +282,9 @@ def process_general_submission_info(basepath, submission_info_document, recid):
         try:
             hepsubmission.last_updated = parse(submission_info_document['dateupdated'], dayfirst=True)
         except ValueError:
-            hepsubmission.last_updated = datetime.now()
+            hepsubmission.last_updated = datetime.utcnow()
     else:
-        hepsubmission.last_updated = datetime.now()
+        hepsubmission.last_updated = datetime.utcnow()
 
     if "modifications" in submission_info_document:
         parse_modifications(hepsubmission, recid, submission_info_document)
@@ -366,7 +366,7 @@ def parse_modifications(hepsubmission, recid, submission_info_document):
         try:
             date = parse(modification['date'])
         except ValueError as ve:
-            date = datetime.now()
+            date = datetime.utcnow()
 
         # don't add another if it's not necessary to do so
         existing_participant = SubmissionParticipant.query.filter_by(
@@ -564,7 +564,7 @@ def process_submission_directory(basepath, submission_file_path, recid, update=F
                                 )
 
             if no_general_submission_info:
-                hepsubmission.last_updated = datetime.now()
+                hepsubmission.last_updated = datetime.utcnow()
                 db.session.add(hepsubmission)
                 db.session.commit()
 
@@ -768,7 +768,7 @@ def do_finalise(recid, publication_record=None, force_finalise=False,
                     delete_item_from_index(record["_id"],
                                            doc_type=CFG_DATA_TYPE, parent=record["_source"]["related_publication"])
 
-        current_time = "{:%Y-%m-%d %H:%M:%S}".format(datetime.now())
+        current_time = "{:%Y-%m-%d %H:%M:%S}".format(datetime.utcnow())
 
         for submission in submissions:
             finalise_datasubmission(current_time, existing_submissions,
@@ -785,7 +785,7 @@ def do_finalise(recid, publication_record=None, force_finalise=False,
 
             # The last updated date will be the current date (if record not migrated from the old site).
             if hep_submission.coordinator > 1:
-                hep_submission.last_updated = datetime.now()
+                hep_submission.last_updated = datetime.utcnow()
 
             if commit_message:
                 commit_record = RecordVersionCommitMessage(

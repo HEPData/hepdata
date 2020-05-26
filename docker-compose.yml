@@ -58,7 +58,7 @@ services:
     - "5432:5432"
     read_only: false
   es:
-    image: elasticsearch:7.1.0
+    image: elasticsearch:7.1.1
     read_only: false
     environment:
       - node.name=es01

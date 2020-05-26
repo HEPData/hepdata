@@ -155,7 +155,7 @@ def add_or_update_records_since_date(date=None, send_tweet=False, convert=False)
     """
     if not date:
         # then use yesterdays date
-        yesterday = datetime.now() - timedelta(days=1)
+        yesterday = datetime.utcnow() - timedelta(days=1)
         date = yesterday.strftime("%Y%m%d")
 
     inspire_ids = get_all_ids_in_current_system(date)
@@ -250,7 +250,7 @@ class Migrator(object):
         :return: output location if successful, None if not
         """
         output_location = os.path.join(current_app.config["CFG_DATADIR"], inspire_id)
-        last_updated = datetime.now()
+        last_updated = datetime.utcnow()
 
         download = not os.path.exists(output_location) or (get_file_in_directory(output_location, 'yaml') is None)
 

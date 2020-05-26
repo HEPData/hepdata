@@ -115,7 +115,7 @@ def create_record(ctx):
 def update_action_for_submission_participant(recid, user_id, action):
     SubmissionParticipant.query.filter_by(
         publication_recid=recid, role=action, user_account=user_id) \
-        .update(dict(action_date=datetime.now()))
+        .update(dict(action_date=datetime.utcnow()))
     try:
         db.session.commit()
     except Exception:
