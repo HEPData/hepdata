@@ -246,9 +246,10 @@
 
                                                 <p class="start-date">
                                                     Started
-                                                    {{ submission.start_date.strftime('%d %B %Y at %H:%M') }};
-                                                    last updated
-                                                    {{ submission.last_updated.strftime('%d %B %Y at %H:%M') }}
+                                                    {{ submission.start_date.strftime('%d %B %Y at %H:%M UTC') }}
+                                                    <br/>
+                                                    Last updated
+                                                    {{ submission.last_updated.strftime('%d %B %Y at %H:%M UTC') }}
 
 
                                                 </p>

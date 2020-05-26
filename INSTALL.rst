@@ -13,10 +13,10 @@ Options for installing
 **********************
 
 There are two ways to get HEPData running locally: either install and run all the services on your local machine, or
-run it via docker-compose.
+run it via `Docker Compose <https://docs.docker.com/compose/>`_.
 
-Using docker-compose is the quickest way to get up-and-running. However, it has some disadvantages:
- * It requires more resources on your local machine as it runs several docker containers.
+Using ``docker-compose`` is the quickest way to get up-and-running. However, it has some disadvantages:
+ * It requires more resources on your local machine as it runs several Docker containers.
  * It can be slightly trickier to run commands and debug.
  * The tests take longer to run, particularly the end-to-end tests.
 
@@ -227,7 +227,8 @@ then specify ``CFG_CONVERTER_URL = 'http://localhost:5500'`` in ``hepdata/config
 Run using honcho
 ----------------
 
-Note added: I haven't tested if this method works.
+Note added: I haven't tested if this method works.  The ``Procfile`` has not been updated since 2016.
+This section should be removed if it no longer works, unless any problems can be fixed.
 
 Honcho will run elasticsearch, redis, celery, and the web application for you automatically.
 Just workon your virtual environment, go to the root directory of hepdata source where you can see a file called
@@ -252,9 +253,9 @@ For local development you can use the ``docker-compose.yml`` file to run the HEP
 
 First, ensure you have installed `Docker <https://docs.docker.com/install/>`_ and `Docker Compose <https://docs.docker.com/compose/install/>`_.
 
-Copy the file ``config.local.dockercompose.py`` to ``config.local.py``.
+Copy the file ``config_local.docker_compose.py`` to ``config_local.py``.
 
-In order to run the tests via SauceLabs, ensure you have the variables ``$SAUCE_USERNAME`` and ``$SAUCE_ACCESS_KEY``
+In order to run the tests via Sauce Labs, ensure you have the variables ``$SAUCE_USERNAME`` and ``$SAUCE_ACCESS_KEY``
 set in your environment (see :ref:`running-the-tests`) **before** starting the containers.
 
 Start the containers:
@@ -263,25 +264,25 @@ Start the containers:
 
    docker-compose up
 
-In another terminal, initialize the database:
+In another terminal, initialise the database:
 
 .. code-block:: console
 
-   $ docker-compose run web bash -c "./scripts/initialise_db.sh your@email.com password"
+   $ docker-compose run web bash -c "mkdir -p /code/tmp; ./scripts/initialise_db.sh your@email.com password"
 
-Now open http://localhost:5000/ and HEPData should be up and running. (It may take a few minutes for celery to process
+Now open http://localhost:5000/ and HEPData should be up and running. (It may take a few minutes for Celery to process
 the sample records.)
 
 To run the tests:
 
 .. code-block:: console
 
-   $ docker-compose run web bash -c "/usr/var/sc-4.5.4-linux/bin/sc -u $SAUCE_USERNAME -k $SAUCE_ACCESS_KEY -x https://eu-central-1.saucelabs.com/rest/v1 & ./run-tests"
+   $ docker-compose run web bash -c "/usr/var/sc-4.5.4-linux/bin/sc -u $SAUCE_USERNAME -k $SAUCE_ACCESS_KEY -x https://eu-central-1.saucelabs.com/rest/v1 & ./run-tests.sh"
 
 Tips
 ====
 
-* If you see errors about ports already being allocated, ensure you're not running any of the services another way (e.g. hepdata-converter via docker).
+* If you see errors about ports already being allocated, ensure you're not running any of the services another way (e.g. hepdata-converter via Docker).
 * To run a command on a container, run the following (replacing <container_name> with the name of the container as in ``docker-compose.yml``, e.g. ``web``):
 
   .. code-block:: console
@@ -294,8 +295,8 @@ Tips
 
      $ docker-compose run <container_name> bash
 
-* If you switch between using docker-compose and individual services, you may get an error when running the tests about an import file mismatch. To resolve this, run:
+* If you switch between using ``docker-compose`` and individual services, you may get an error when running the tests about an import file mismatch. To resolve this, run:
 
-   .. code-block:: console
+  .. code-block:: console
 
-      $ find . -name '*.pyc' -delete
+     $ find . -name '*.pyc' -delete

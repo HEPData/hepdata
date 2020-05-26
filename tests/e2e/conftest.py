@@ -177,7 +177,7 @@ def env_browser(request):
         'platform': 'Windows',
         'browserName': 'chrome',
         'build': os.environ.get('TRAVIS_BUILD_NUMBER',
-                                datetime.now().strftime("%Y-%m-%d %H:00ish")),
+                                datetime.utcnow().strftime("%Y-%m-%d %H:00ish")),
         'name': request.node.name,
         'username': sauce_username,
         'accessKey': sauce_access_key,
