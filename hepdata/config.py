@@ -40,8 +40,10 @@ def _(x):
 SQLALCHEMY_DATABASE_URI = os.environ.get(
     "SQLALCHEMY_DATABASE_URI",
     "postgresql+psycopg2://hepdata:hepdata@localhost/hepdata")
-SQLALCHEMY_ECHO = False
-SQLALCHEMY_POOL_RECYCLE = 7200
+SQLALCHEMY_ENGINE_OPTIONS = {
+    'echo': False,
+    'pool_recycle': 7200
+}
 
 # Default language and timezone
 BABEL_DEFAULT_LANGUAGE = 'en'
