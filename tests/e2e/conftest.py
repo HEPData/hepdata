@@ -53,7 +53,7 @@ from hepdata.modules.records.migrator.api import load_files
 from tests.conftest import get_identifiers
 
 
-@pytest.fixture()
+@pytest.fixture(scope='session')
 def app(request):
     """Flask application fixture for E2E/integration/selenium tests.
     Overrides the `app` fixture found in `../conftest.py`. Tests/files in this

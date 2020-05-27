@@ -5,6 +5,7 @@ click==7.1.1
 datacite==1.0.1
 elasticsearch==7.1.0
 elasticsearch-dsl==7.1.0
+email-validator==1.1.0
 Flask==1.1.1
 Flask-CeleryExt==0.3.0
 Flask-Cors==3.0.2
@@ -14,6 +15,7 @@ gevent==1.4.0
 gunicorn==19.5.0
 hepdata-converter-ws-client==0.1.4
 hepdata-validator==0.2.1
+idna<2.8,>=2.5             # Indirect ('invenio-search', 'email-validator')
 invenio-accounts==1.0.0
 invenio-admin==1.0.0b4
 invenio-app==1.2.5
@@ -31,6 +33,7 @@ invenio-theme==1.0.0b2      # Indirect ('invenio-base' problem)
 invenio-userprofiles==1.0.0a9
 Jinja2==2.10.1
 jsmin==2.2.1
+jsonresolver==0.2.1         # Indirect via invenio-records ('Werkzeug' problem)
 lxml==4.4.2
 msgpack==0.6.2
 psycopg2-binary==2.8.4
@@ -44,3 +47,4 @@ SQLAlchemy-Utils==0.33.0
 timestring==1.6.4
 twitter==1.15.0
 urllib3<1.25,>=1.21.1      # Indirect ('invenio-search')
+Werkzeug==0.16.1           # Indirect ('flask-oauthlib' problem)
