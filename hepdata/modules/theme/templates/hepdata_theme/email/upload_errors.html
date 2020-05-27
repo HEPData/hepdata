@@ -34,7 +34,7 @@
         {% endif %}
 
         <br/>
-        {% for file, file_errors in errors.iteritems() %}
+        {% for file, file_errors in errors.items() %}
             <p style="color: #3B5169; font-weight: bolder; font-size: 1.2em;">{{ file }}</p>
             {% for error in file_errors %}
                 <div style="background-color:#ECF0F1;min-height:40px;margin:3px;border-radius:0 4px 4px 0;">

@@ -144,7 +144,7 @@ def test_upload_valid_file(app):
         # Check the submission has been updated
         hepdata_submission = HEPSubmission.query.filter_by(
             publication_recid=recid).first()
-        assert(hepdata_submission.data_abstract.startswith('CERN-LHC.  Measurements of the cross section  for ZZ production'))
+        assert(hepdata_submission.data_abstract.decode().startswith('CERN-LHC.  Measurements of the cross section  for ZZ production'))
         assert(hepdata_submission.created < hepdata_submission.last_updated)
         assert(hepdata_submission.version == 1)
         assert(hepdata_submission.overall_status == 'todo')
@@ -166,6 +166,6 @@ def test_upload_valid_file(app):
         assert(len(hepdata_submissions) == 2)
         assert(hepdata_submissions[0].version == 1)
         assert(hepdata_submissions[0].overall_status == 'finished')
-        assert(hepdata_submissions[1].data_abstract.startswith('CERN-LHC.  Measurements of the cross section  for ZZ production'))
+        assert(hepdata_submissions[1].data_abstract.decode().startswith('CERN-LHC.  Measurements of the cross section  for ZZ production'))
         assert(hepdata_submissions[1].version == 2)
         assert(hepdata_submissions[1].overall_status == 'todo')

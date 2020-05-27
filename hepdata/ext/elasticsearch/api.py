@@ -341,7 +341,7 @@ def process_cmenergies(keywords):
                     cmenergy_range.sort()
                     cmenergies.append({"gte": cmenergy_range[0], "lte": cmenergy_range[1]})
                 else:
-                    log.warn("Invalid value for cmenergies: %s" % cmenergy)
+                    log.warning("Invalid value for cmenergies: %s" % cmenergy)
 
         keywords['cmenergies'] = cmenergies
 
