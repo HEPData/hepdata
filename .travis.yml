@@ -60,7 +60,7 @@ before_install:
   - "travis_retry psql -c 'CREATE DATABASE hepdata_test OWNER hepdata;' -U postgres"
 
 install:
-  - "travis_retry pip install --ignore-installed -r requirements.txt"
+  - "travis_retry pip install --force-reinstall -r requirements.txt"
   - "travis_retry pip install -e .[all,postgresql]"
   - "travis_retry hepdata db init"
   - "travis_retry hepdata db create"
