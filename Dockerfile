@@ -16,4 +16,8 @@ RUN hepdata npm \
  && hepdata collect -v \
  && hepdata assets build
 
+ARG APP_ENVIRONMENT
+RUN bash -c "set -x; echo $APP_ENVIRONMENT; [[ ${APP_ENVIRONMENT:-prod} = local ]] && (cd /usr/var && wget https://saucelabs.com/downloads/sc-4.5.4-linux.tar.gz && \
+  tar -xvf sc-4.5.4-linux.tar.gz) || echo 'Not installing SC on prod build'"
+
 WORKDIR /code

@@ -43,6 +43,7 @@ TEST_PWD = 'hello1'
 
 def create_basic_app():
     app = create_app()
+    test_db_host = app.config.get('TEST_DB_HOST', 'localhost')
     app.config.update(dict(
         TESTING=True,
         TEST_RUNNER="celery.contrib.test_runner.CeleryTestSuiteRunner",
@@ -55,7 +56,7 @@ def create_basic_app():
         SUBMISSION_INDEX='hepdata-submission-test',
         AUTHOR_INDEX='hepdata-authors-test',
         SQLALCHEMY_DATABASE_URI=os.environ.get(
-            'SQLALCHEMY_DATABASE_URI', 'postgresql+psycopg2://hepdata:hepdata@localhost/hepdata_test')
+            'SQLALCHEMY_DATABASE_URI', 'postgresql+psycopg2://hepdata:hepdata@' + test_db_host + '/hepdata_test')
     ))
     return app
 

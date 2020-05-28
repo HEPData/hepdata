@@ -111,7 +111,7 @@ def get_last_submission_event(recid):
         last_action_date = submission_participant.action_date
         if last_action_date:
             try:
-                if last_action_date <= datetime.datetime.now():
+                if last_action_date <= datetime.datetime.utcnow():
                     last_updated = last_action_date.strftime("%Y-%m-%d")
             except ValueError as ve:
                 print(ve.args)

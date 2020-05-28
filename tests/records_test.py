@@ -130,7 +130,7 @@ def test_upload_valid_file(app):
             publication_recid=recid).first()
         assert(hepdata_submission is not None)
         assert(hepdata_submission.data_abstract == None)
-        assert(hepdata_submission.created == hepdata_submission.last_updated)
+        assert(hepdata_submission.created < hepdata_submission.last_updated)
         assert(hepdata_submission.version == 1)
         assert(hepdata_submission.overall_status == 'todo')
 

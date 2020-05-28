@@ -1,3 +1,31 @@
+##################
+Installation
+##################
+
+ * :ref:`options-for-installing`
+ * :ref:`running-services-locally`
+ * :ref:`running-docker-compose`
+
+.. _options-for-installing:
+
+**********************
+Options for installing
+**********************
+
+There are two ways to get HEPData running locally: either install and run all the services on your local machine, or
+run it via `Docker Compose <https://docs.docker.com/compose/>`_.
+
+Using ``docker-compose`` is the quickest way to get up-and-running. However, it has some disadvantages:
+ * It requires more resources on your local machine as it runs several Docker containers.
+ * It can be slightly trickier to run commands and debug.
+ * The tests take longer to run, particularly the end-to-end tests.
+
+.. _running-services-locally:
+
+************************
+Running services locally
+************************
+
 Prerequisites
 =============
 
@@ -150,6 +178,9 @@ Now, start HEPData:
    (hepdata)$ hepdata run --debugger --reload
    (hepdata)$ firefox http://localhost:5000/
 
+.. _running-the-tests:
+
+
 Running the tests
 -----------------
 
@@ -196,7 +227,8 @@ then specify ``CFG_CONVERTER_URL = 'http://localhost:5500'`` in ``hepdata/config
 Run using honcho
 ----------------
 
-Note added: I haven't tested if this method works.
+Note added: I haven't tested if this method works.  The ``Procfile`` has not been updated since 2016.
+This section should be removed if it no longer works, unless any problems can be fixed.
 
 Honcho will run elasticsearch, redis, celery, and the web application for you automatically.
 Just workon your virtual environment, go to the root directory of hepdata source where you can see a file called
@@ -208,9 +240,92 @@ Procfile. Then install flower if you haven't done so already, and then start hon
    (hepdata)$ honcho start
 
 
-Run using Docker
-----------------
+.. _running-docker-compose:
+
+**************************
+Running via docker-compose
+**************************
 
 The Dockerfile is used by Travis CI to build a Docker image and push to DockerHub ready for deployment in production
-on the Kubernetes cluster at CERN.  We will soon provide a working ``docker-compose.yml`` file and instructions how to
-run the Docker container for the main HEPData web application locally.
+on the Kubernetes cluster at CERN.
+
+For local development you can use the ``docker-compose.yml`` file to run the HEPData docker image and its required services.
+
+First, ensure you have installed `Docker <https://docs.docker.com/install/>`_ and `Docker Compose <https://docs.docker.com/compose/install/>`_.
+
+Copy the file ``config_local.docker_compose.py`` to ``config_local.py``.
+
+In order to run the tests via Sauce Labs, ensure you have the variables ``$SAUCE_USERNAME`` and ``$SAUCE_ACCESS_KEY``
+set in your environment (see :ref:`running-the-tests`) **before** starting the containers.
+
+Start the containers:
+
+.. code-block:: console
+
+   $ docker-compose up
+
+(This starts containers for all the 5 necessary services. See :ref:`docker-compose-tips` if you only want to run some containers.)
+
+In another terminal, initialise the database:
+
+.. code-block:: console
+
+   $ docker-compose run web bash -c "mkdir -p /code/tmp; ./scripts/initialise_db.sh your@email.com password"
+
+Now open http://localhost:5000/ and HEPData should be up and running. (It may take a few minutes for Celery to process
+the sample records.)
+
+To run the tests:
+
+.. code-block:: console
+
+   $ docker-compose run web bash -c "/usr/var/sc-4.5.4-linux/bin/sc -u $SAUCE_USERNAME -k $SAUCE_ACCESS_KEY -x https://eu-central-1.saucelabs.com/rest/v1 & ./run-tests.sh"
+
+
+.. _docker-compose-tips:
+
+Tips
+====
+
+* If you see errors about ports already being allocated, ensure you're not running any of the services another way (e.g. hepdata-converter via Docker).
+* If you want to run just some of the containers, specify their names in the docker-compose command. For example, to just run the web server, database and elasticsearch, run:
+
+  .. code-block:: console
+
+    $ docker-compose up web db es
+
+  See ``docker-compose.yml`` for the names of each service. Running a subset of containers could be useful in the following cases:
+
+   * You want to use the live converter service, i.e.  ``CFG_CONVERTER_URL = 'https://converter.hepdata.net'`` instead of running the converter locally.
+   * You want to run the container for the web service by pulling an image from DockerHub instead of building an image locally.
+   * You want to run containers for all services apart from web (and maybe converter) then use a non-Docker web service.
+
+* To run the containers in the background, run:
+
+  .. code-block:: console
+
+     $ docker-compose up -d
+
+  To see the logs you can then run:
+
+  .. code-block:: console
+
+     $ docker-compose logs
+
+* To run a command on a container, run the following (replacing <container_name> with the name of the container as in ``docker-compose.yml``, e.g. ``web``):
+
+  .. code-block:: console
+
+    $ docker-compose run <container_name> bash -c "<command>"
+
+* If you need to run several commands, run the following to get a bash shell on the container:
+
+  .. code-block:: console
+
+     $ docker-compose run <container_name> bash
+
+* If you switch between using ``docker-compose`` and individual services, you may get an error when running the tests about an import file mismatch. To resolve this, run:
+
+  .. code-block:: console
+
+     $ find . -name '*.pyc' -delete

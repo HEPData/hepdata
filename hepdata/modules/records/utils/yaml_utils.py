@@ -59,7 +59,7 @@ def split_files(file_location, output_location,
     :param archive_location: if present will create a zipped
            representation of the split files
     """
-    last_updated = datetime.now()
+    last_updated = datetime.utcnow()
     try:
         file_documents = yaml.load_all(open(file_location, 'r'), Loader=Loader)
 
@@ -80,9 +80,9 @@ def split_files(file_location, output_location,
                         try:
                             last_updated = parse(document['dateupdated'], dayfirst=True)
                         except ValueError as ve:
-                            last_updated = datetime.now()
+                            last_updated = datetime.utcnow()
                     else:
-                        last_updated = datetime.now()
+                        last_updated = datetime.utcnow()
                     write_submission_yaml_block(
                         document, submission_yaml)
                 else:

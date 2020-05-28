@@ -1,10 +1,17 @@
-web:
-  build: .
-  command: hepdata --debug run -h 0.0.0.0 -p 5000 --debugger --reload
-  ports:
+version: "3"
+services:
+  web:
+    build:
+      context: .
+      args:
+        - "APP_ENVIRONMENT=local"
+    command: hepdata run -h 0.0.0.0 -p 5000 --debugger --reload
+    ports:
     - "5000:5000"
-  environment:
-    - "APP_BROKER_URL=amqp://guest:guest@mq:5672//"
+    - "5555:5555"
+    environment:
+    - "APP_ENVIRONMENT=local"
+    - "APP_BROKER_URL=redis://cache:6379/0"
     - "APP_CACHE_REDIS_URL=redis://cache:6379/0"
     - "APP_CACHE_TYPE=redis"
     - "APP_CELERY_RESULT_BACKEND=redis://cache:6379/2"
@@ -13,19 +20,16 @@ web:
     - "APP_SESSION_TYPE=redis"
     - "APP_SESSION_REDIS_URL=redis://cache:6379/1"
     - "APP_SQLALCHEMY_DATABASE_URI=postgresql://hepdata:hepdata@db/hepdata"
-  read_only: true
-  links:
-    - cache
-    - es
-    - mq
-    - db
-  volumes:
+    - "SAUCE_USERNAME=${SAUCE_USERNAME}"
+    - "SAUCE_ACCESS_KEY=${SAUCE_ACCESS_KEY}"
+    read_only: false
+    volumes:
     - ".:/code"
-worker:
-  build: .
-  command: "celery worker -A hepdata.celery --loglevel=INFO"
-  environment:
-    - "APP_BROKER_URL=amqp://guest:guest@mq:5672//"
+  worker:
+    build: .
+    command: "celery worker -A hepdata.celery --loglevel=DEBUG"
+    environment:
+    - "APP_CELERY_BROKER_URL=redis://cache:6379/0"
     - "APP_CACHE_REDIS_URL=redis://cache:6379/0"
     - "APP_CACHE_TYPE=redis"
     - "APP_CELERY_RESULT_BACKEND=redis://cache:6379/2"
@@ -34,40 +38,37 @@ worker:
     - "APP_SESSION_TYPE=redis"
     - "APP_SESSION_REDIS_URL=redis://cache:6379/1"
     - "APP_SQLALCHEMY_DATABASE_URI=postgresql://hepdata:hepdata@db/hepdata"
-  read_only: true
-  links:
-    - cache
-    - es
-    - mq
-    - db
-  volumes_from:
-    - web
-cache:
-  image: redis
-  read_only: true
-  ports:
+    read_only: false
+    volumes:
+    - ".:/code"
+  cache:
+    image: redis
+    read_only: true
+    ports:
     - "6379:6379"
-db:
-  image: postgres
-  command: postgres
-  environment:
+  db:
+    build: ./docker/db/
+    command: postgres
+    environment:
     - "POSTGRES_USER=hepdata"
     - "POSTGRES_PASSWORD=hepdata"
     - "POSTGRES_DB=hepdata"
-  ports:
+    - "POSTGRES_TEST_DB=hepdata_test"
+    ports:
     - "5432:5432"
-  read_only: false
-mq:
-  image: rabbitmq:3-management
-  ports:
-    - "15672:15672"
-    - "5672:5672"
-  read_only: true
-es:
-  build: ./docker/es/
-  volumes:
-    - ./docker/es/elasticsearch-docker.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro
-  read_only: true
-  ports:
+    read_only: false
+  es:
+    image: elasticsearch:7.1.1
+    read_only: false
+    environment:
+      - node.name=es01
+      - cluster.name=hepdata
+      - cluster.initial_master_nodes=es01
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ports:
     - "9200:9200"
-    - "9300:9300"
+  converter:
+    image: hepdata/hepdata-converter-ws
+    ports:
+    - "5500:5000"
+    read_only: false

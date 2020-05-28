@@ -380,11 +380,6 @@ def process_payload(recid, file, redirect_url, synchronous=False):
 def process_saved_file(file_path, recid, userid, redirect_url, previous_status):
     errors = process_zip_archive(file_path, recid)
 
-    hepsubmission = get_latest_hepsubmission(publication_recid=recid)
-    hepsubmission.overall_status = previous_status
-    db.session.add(hepsubmission)
-    db.session.commit()
-
     uploader = User.query.get(userid)
     site_url = current_app.config.get('SITE_URL', 'https://www.hepdata.net')
 
@@ -395,6 +390,7 @@ def process_saved_file(file_path, recid, userid, redirect_url, previous_status):
     else:
         full_name = uploader.email
 
+    hepsubmission = get_latest_hepsubmission(publication_recid=recid)
     if errors:
         cleanup_submission(recid, hepsubmission.version, [])  # delete all tables if errors
         message_body = render_template('hepdata_theme/email/upload_errors.html',
@@ -418,6 +414,11 @@ def process_saved_file(file_path, recid, userid, redirect_url, previous_status):
         create_send_email_task(uploader.email,
                                '[HEPData] Submission {0} upload succeeded'.format(recid),
                                message_body)
+
+    # Reset the status of the submission back to the previous value.
+    hepsubmission.overall_status = previous_status
+    db.session.add(hepsubmission)
+    db.session.commit()
 
 
 def save_zip_file(file, id):

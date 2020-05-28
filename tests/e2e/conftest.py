@@ -60,6 +60,7 @@ def app(request):
     folder and subfolders will see this variant of the `app` fixture.
     """
     app = create_app()
+    test_db_host = app.config.get('TEST_DB_HOST', 'localhost')
     # Note that in Travis we add "TESTING=True" to config_local.py as well
     # to ensure that it's set before flask mail is initialised
     app.config.update(dict(
@@ -73,7 +74,7 @@ def app(request):
         SUBMISSION_INDEX='hepdata-submission-test',
         AUTHOR_INDEX='hepdata-authors-test',
         SQLALCHEMY_DATABASE_URI=os.environ.get(
-            'SQLALCHEMY_DATABASE_URI', 'postgresql+psycopg2://hepdata:hepdata@localhost/hepdata_test'),
+            'SQLALCHEMY_DATABASE_URI', 'postgresql+psycopg2://hepdata:hepdata@' + test_db_host + '/hepdata_test'),
         APP_DEFAULT_SECURE_HEADERS = {
             'force_https': False,
             'force_https_permanent': False,
@@ -193,7 +194,7 @@ def env_browser(request):
         'platform': 'Windows',
         'browserName': 'chrome',
         'build': os.environ.get('TRAVIS_BUILD_NUMBER',
-                                datetime.now().strftime("%Y-%m-%d %H:00ish")),
+                                datetime.utcnow().strftime("%Y-%m-%d %H:00ish")),
         'name': request.node.name,
         'username': sauce_username,
         'accessKey': sauce_access_key,
@@ -211,7 +212,7 @@ def env_browser(request):
 
     # Go to homepage and click cookie accept button so cookie bar is out of the way
     browser.get(flask.url_for('hepdata_theme.index', _external=True))
-    wait = WebDriverWait(browser, 5)
+    wait = WebDriverWait(browser, 10)
     wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, ".cc_btn_accept_all")))
     sleep(1)
     cookie_accept_btn = browser.find_element_by_css_selector(".cc_btn_accept_all")
