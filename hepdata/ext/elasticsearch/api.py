@@ -186,7 +186,7 @@ def reindex_all(index=None, author_index=None, recreate=False, batch=50, start=-
 
         count = min_recid
         while count <= max_recid:
-            rec_ids = range(count, min(count + batch, max_recid + 1))
+            rec_ids = list(range(count, min(count + batch, max_recid + 1)))
             if synchronous:
                 reindex_batch(rec_ids, index)
             else:
