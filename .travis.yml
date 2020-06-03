@@ -75,7 +75,7 @@ install:
 
 before_script:
   - "/home/travis/build/HEPData/hepdata/scripts/sc_tunnel_start.sh"
-  - "echo -e 'TESTING = True\nAPP_ENABLE_SECURE_HEADERS = False' > /home/travis/build/HEPData/hepdata/hepdata/config_local.py"
+  - "cp /home/travis/build/HEPData/hepdata/hepdata/config_local.travis.py > /home/travis/build/HEPData/hepdata/hepdata/config_local.py"
 
 script:
   # Secure environment variables are not available for forked repositories, so omit end-to-end tests run on Sauce Labs.
