@@ -6,4 +6,5 @@ CFG_CONVERTER_URL = 'http://localhost:5500'
 CFG_TMPDIR = '~/tmp'
 CFG_DATADIR = '~/tmp'
 MAIL_SERVER = 'localhost'
+APP_ENABLE_SECURE_HEADERS = False
 # RUN_SELENIUM_LOCALLY = True
