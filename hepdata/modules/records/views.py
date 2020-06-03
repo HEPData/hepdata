@@ -28,15 +28,17 @@ from __future__ import absolute_import, print_function
 
 import logging
 import json
+import time
 from dateutil import parser
-from flask_login import login_required
+from invenio_accounts.models import User
+from flask_login import login_required, login_user
 from flask import Blueprint, send_file, abort, redirect
 from sqlalchemy import or_
 import yaml
 try:
     from yaml import CBaseLoader as Loader
-except ImportError: #pragma: no cover
-    from yaml import BaseLoader as Loader #pragma: no cover
+except ImportError:  # pragma: no cover
+    from yaml import BaseLoader as Loader  # pragma: no cover
 
 from hepdata.config import CFG_DATA_TYPE, CFG_PUB_TYPE
 from hepdata.ext.elasticsearch.api import get_records_matching_field, get_count_for_collection, get_n_latest_records, \
@@ -44,7 +46,10 @@ from hepdata.ext.elasticsearch.api import get_records_matching_field, get_count_
 from hepdata.modules.email.api import send_new_upload_email, send_new_review_message_email, NoReviewersException, \
     send_question_email
 from hepdata.modules.inspire_api.views import get_inspire_record_information
-from hepdata.modules.records.api import *
+from hepdata.modules.records.api import request, determine_user_privileges, render_template, format_submission, \
+    render_record, current_user, db, jsonify, get_user_from_id, get_record_contents, extract_journal_info, \
+    user_allowed_to_perform_action, NoResultFound, OrderedDict, query_messages_for_data_review, returns_json, \
+    process_payload
 from hepdata.modules.submission.models import HEPSubmission, DataSubmission, \
     DataResource, DataReview, Message, Question
 from hepdata.modules.records.utils.common import get_record_by_id, \
@@ -184,7 +189,7 @@ def metadata(recid):
 
     try:
         record = get_record_contents(recid)
-    except Exception as e:
+    except Exception:
         record = None
 
     return render_record(recid=recid, record=record, version=version, output_format=serialization_format,
@@ -280,7 +285,6 @@ def get_table_details(recid, data_recid, version):
             key = location_parts[-1].replace("thumb_", "")
             if key not in tmp_assoc_files:
                 tmp_assoc_files[key] = {}
-
 
             if "thumb_" in alt_location and associated_data_file.file_type.lower() in IMAGE_TYPES:
                 tmp_assoc_files[key]['preview_location'] = '/record/resource/{0}?view=true'.format(
@@ -638,7 +642,7 @@ def sandbox():
         HEPSubmission.coordinator == current_id,
         or_(HEPSubmission.overall_status == 'sandbox',
             HEPSubmission.overall_status == 'sandbox_processing')
-        ).order_by(HEPSubmission.last_updated.desc()).all()
+    ).order_by(HEPSubmission.last_updated.desc()).all()
 
     for submission in submissions:
         submission.data_abstract = decode_string(submission.data_abstract)
@@ -686,10 +690,7 @@ def attach_information_to_record(recid):
 def consume_sandbox_payload():
     """
     Creates a new sandbox submission with a new file upload.
-
-    :param recid:
     """
-    import time
 
     if request.method == 'GET':
         return redirect('/record/sandbox')
@@ -700,6 +701,39 @@ def consume_sandbox_payload():
     file = request.files['hep_archive']
     redirect_url = request.url_root + "record/sandbox/{}"
     return process_payload(id, file, redirect_url)
+
+
+@blueprint.route('/sandbox/upload', methods=['GET', 'POST'])
+def upload_sandbox_payload():
+    """
+    Creates a new sandbox submission from comand line input.
+    """
+
+    if request.method == 'GET':
+        return redirect('/record/sandbox')
+
+    # user
+    user_email = request.form['email']
+    user = User.query.filter_by(email=user_email).first()
+    login_user(user)
+
+    # file
+    uploaded_file = request.files['file']
+
+    # record ID
+    if 'recid' in request.form.keys():
+        recid = request.form['recid']
+        hepsubmission_record = get_latest_hepsubmission(publication_recid=recid)
+        if User.query.filter_by(id=hepsubmission_record.coordinator).first().email != user_email:
+            raise Exception("Attempted to modify another's user record.")
+    else:
+        recid = (int(current_user.get_id())) + int(round(time.time()))
+        get_or_create_hepsubmission(recid, current_user.get_id(), status="sandbox")
+
+    # print(recid, user_email, uploaded_file)
+
+    redirect_url = request.url_root + "record/sandbox/{}"
+    return process_payload(recid, uploaded_file, redirect_url)
 
 
 @blueprint.route('/sandbox/<int:recid>/consume', methods=['GET', 'POST'])
