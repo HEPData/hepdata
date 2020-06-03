@@ -654,7 +654,7 @@ def process_data_tables(ctx, data_record_query, first_data_id,
                 "location": submission_record.location_in_publication,
                 "doi": submission_record.doi,
                 "description": truncate_string(
-                    decode_string(submission_record.description),
+                    submission_record.description,
                     20
                 )
             }

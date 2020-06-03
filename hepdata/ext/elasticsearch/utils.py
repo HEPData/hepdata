@@ -114,7 +114,7 @@ def push_keywords(docs):
 
 def tidy_bytestring(bytestring):
     # Converts a python3-style bytestring literal e.g. "b'hello world'" into a normal string
-    # We should be able to remove this method when we migrate to python3.
+    # We should be able to remove this method when we migrate to python3 and have reindexed
     if bytestring and bytestring.startswith("b'"):
         bytestring = bytestring.strip("b'\\n").strip()
     return bytestring

@@ -266,7 +266,7 @@ def get_table_details(recid, data_recid, version):
                     break
 
             table_contents["name"] = datasub_record.name
-            table_contents["title"] = decode_string(datasub_record.description)
+            table_contents["title"] = datasub_record.description
             table_contents["keywords"] = datasub_record.keywords
             table_contents["doi"] = datasub_record.doi
             table_contents["location"] = datasub_record.location_in_publication
@@ -418,7 +418,7 @@ def add_data_review_messsage(publication_recid, data_recid):
     """
 
     trace = []
-    message = encode_string(request.form.get('message', ''))
+    message = request.form.get('message', '')
     version = request.form['version']
     userid = current_user.get_id()
 
@@ -641,7 +641,7 @@ def sandbox():
         ).order_by(HEPSubmission.last_updated.desc()).all()
 
     for submission in submissions:
-        submission.data_abstract = decode_string(submission.data_abstract)
+        submission.data_abstract = submission.data_abstract
 
     return render_template('hepdata_records/sandbox.html',
                            ctx={"submissions": submissions})

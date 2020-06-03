@@ -22,6 +22,7 @@
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
+from invenio_db import db
 from invenio_pidstore.errors import PIDDoesNotExistError
 from invenio_pidstore.resolver import Resolver
 from invenio_records.api import Record
@@ -30,7 +31,7 @@ from sqlalchemy.orm.exc import NoResultFound
 
 from hepdata.config import CFG_PUB_TYPE
 from hepdata.ext.elasticsearch.api import get_record
-from hepdata.modules.submission.models import HEPSubmission
+from hepdata.modules.submission.models import HEPSubmission, License
 
 FILE_TYPES = {
     "py": "Python",
@@ -155,24 +156,16 @@ def zipdir(path, ziph):
             ziph.write(os.path.join(root, file))
 
 
-def get_prefilled_dictionary(fields, obj):
-    """
-    Given a list of fields, will return a dictionary that either contains the
-    field value, or an empty string.
-
-    :param fields:
-    :param obj:
-    :return:
-    """
+def get_license(license_obj):
     dict = {}
-    for field in fields:
+    for field in ["name", "url", "description"]:
         dict[field] = ""
-        if field in obj:
-            try:
-                dict[field] = encode_string(obj[field])
-            except AttributeError:
-                dict[field] = obj[field]
-    return dict
+        if field in license_obj:
+            dict[field] = license_obj[field]
+
+    return get_or_create(
+        db.session, License, name=dict['name'],
+        url=dict['url'], description=dict['description'])
 
 
 def find_file_in_directory(directory, file_predicate):

@@ -27,7 +27,7 @@
 from __future__ import absolute_import, print_function
 
 from invenio_accounts.models import User
-from sqlalchemy import func
+from sqlalchemy import TypeDecorator, types
 from invenio_db import db
 from datetime import datetime
 
@@ -49,6 +49,24 @@ data_reference_link = db.Table(
 )
 
 
+class LargeBinaryString(TypeDecorator):
+    impl = types.LargeBinary
+
+    def process_literal_param(self, value, dialect):
+        if isinstance(value, str):
+            value = value.encode('utf-8', errors='replace')
+
+        return value
+
+    process_bind_param = process_literal_param
+
+    def process_result_value(self, value, dialect):
+        if isinstance(value, bytes):
+            value = value.decode('utf-8', errors='replace')
+
+        return value
+
+
 class HEPSubmission(db.Model):
     """
     This is the main submission object. It maintains the
@@ -62,7 +80,7 @@ class HEPSubmission(db.Model):
     publication_recid = db.Column(db.Integer)
     inspire_id = db.Column(db.String(128))
 
-    data_abstract = db.Column(db.LargeBinary)
+    data_abstract = db.Column(LargeBinaryString)
 
     resources = db.relationship("DataResource",
                                  secondary="data_resource_link",
@@ -120,7 +138,7 @@ class DataSubmission(db.Model):
 
     location_in_publication = db.Column(db.String(256))
     name = db.Column(db.String(64))
-    description = db.Column(db.LargeBinary)
+    description = db.Column(LargeBinaryString)
     keywords = db.relationship("Keyword", secondary="keyword_submission",
                                cascade="all,delete")
 
@@ -158,7 +176,7 @@ class License(db.Model):
 
     name = db.Column(db.String(256))
     url = db.Column(db.String(256))
-    description = db.Column(db.LargeBinary)
+    description = db.Column(LargeBinaryString)
 
 
 class DataResource(db.Model):
@@ -169,7 +187,7 @@ class DataResource(db.Model):
 
     file_location = db.Column(db.String(256))
     file_type = db.Column(db.String(64), default="json")
-    file_description = db.Column(db.LargeBinary)
+    file_description = db.Column(LargeBinaryString)
 
     file_license = db.Column(db.Integer, db.ForeignKey("hepdata_license.id"),
                              nullable=True)
@@ -225,7 +243,7 @@ class Message(db.Model):
                    autoincrement=True)
 
     user = db.Column(db.Integer, db.ForeignKey(User.id))
-    message = db.Column(db.LargeBinary)
+    message = db.Column(LargeBinaryString)
 
     creation_date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow,
                               index=False)
@@ -242,7 +260,7 @@ class Question(db.Model):
     user = db.Column(db.Integer, db.ForeignKey(User.id))
     publication_recid = db.Column(db.Integer)
 
-    question = db.Column(db.LargeBinary)
+    question = db.Column(LargeBinaryString)
     creation_date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow,
                               index=False)
 
@@ -258,4 +276,4 @@ class RecordVersionCommitMessage(db.Model):
     creation_date = db.Column(
         db.DateTime, nullable=False, default=datetime.utcnow, index=True)
     version = db.Column(db.Integer, default=1)
-    message = db.Column(db.LargeBinary)
+    message = db.Column(LargeBinaryString)

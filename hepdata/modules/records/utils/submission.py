@@ -45,7 +45,7 @@ from hepdata.modules.submission.api import get_latest_hepsubmission
 from hepdata.modules.submission.models import DataSubmission, DataReview, \
     DataResource, License, Keyword, HEPSubmission, RecordVersionCommitMessage
 from hepdata.modules.records.utils.common import \
-    get_prefilled_dictionary, infer_file_type, encode_string, zipdir, get_record_by_id, contains_accepted_url
+    get_license, infer_file_type, encode_string, zipdir, get_record_by_id, contains_accepted_url
 from hepdata.modules.records.utils.common import get_or_create
 from hepdata.modules.records.utils.doi_minter import reserve_dois_for_data_submissions, reserve_doi_for_hepsubmission, \
     generate_dois_for_submission
@@ -59,10 +59,18 @@ import os
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.exc import SQLAlchemyError
 import yaml
+
 try:
     from yaml import CSafeLoader as Loader
 except ImportError: #pragma: no cover
     from yaml import SafeLoader as Loader #pragma: no cover
+
+def construct_yaml_str(self, node):
+    # Override the default string handling function
+    # to always return unicode objects
+    return self.construct_scalar(node)
+Loader.add_constructor(u'tag:yaml.org,2002:str', construct_yaml_str)
+
 from urllib.error import URLError
 
 logging.basicConfig()
@@ -223,12 +231,8 @@ def process_data_file(recid, version, basepath, data_obj, datasubmission, main_f
         file_location=main_file_path, file_type="data")
 
     if "data_license" in data_obj:
-        dict = get_prefilled_dictionary(
-            ["name", "url", "description"], data_obj["data_license"])
 
-        license = get_or_create(
-            db.session, License, name=dict['name'],
-            url=dict['url'], description=dict['description'])
+        license = get_license(data_obj["data_license"])
 
         main_data_file.file_license = license.id
 
@@ -276,7 +280,7 @@ def process_general_submission_info(basepath, submission_info_document, recid):
     hepsubmission = get_latest_hepsubmission(publication_recid=recid)
 
     if "comment" in submission_info_document:
-        hepsubmission.data_abstract = encode_string(submission_info_document['comment'])
+        hepsubmission.data_abstract = submission_info_document['comment']
 
     if "dateupdated" in submission_info_document:
         try:
@@ -344,16 +348,10 @@ def parse_additional_resources(basepath, recid, yaml_document):
         if resource_location:
             new_reference = DataResource(
                 file_location=resource_location, file_type=file_type,
-                file_description=encode_string(reference['description']))
+                file_description=reference['description'])
 
             if "license" in reference:
-                dict = get_prefilled_dictionary(
-                    ["name", "url", "description"],
-                    reference["license"])
-
-                resource_license = get_or_create(
-                    db.session, License, name=dict['name'],
-                    url=dict['url'], description=dict['description'])
+                resource_license = get_license(reference["license"])
                 new_reference.file_license = resource_license.id
 
             resources.append(new_reference)
@@ -512,12 +510,13 @@ def process_submission_directory(basepath, submission_file_path, recid, update=F
                             datasubmission = DataSubmission(
                                 publication_recid=recid,
                                 name=yaml_document["name"],
-                                description=encode_string(yaml_document["description"]),
+                                description=yaml_document["description"],
                                 version=hepsubmission.version)
                         else:
                             datasubmission = existing_datasubmission_query.one()
-                            datasubmission.description = encode_string(yaml_document["description"])
+                            datasubmission.description = yaml_document["description"]
                         db.session.add(datasubmission)
+
                     except SQLAlchemyError as sqlex:
                         errors[yaml_document["data_file"]] = [{"level": "error", "message": str(sqlex)}]
                         db.session.rollback()
