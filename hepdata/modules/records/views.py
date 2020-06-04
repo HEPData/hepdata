@@ -634,6 +634,37 @@ def consume_data_payload(recid):
         return redirect('/record/' + str(recid))
 
 
+@blueprint.route('/upload', methods=['GET', 'POST'])
+def upload_payload():
+    """
+    Upload a new submission from comand line input.
+    """
+
+    if request.method == 'GET':
+        return redirect('/')
+
+    # user, cookie, file, record ID
+    user_email = request.form['email']
+    invitation_cookie = request.form['invitation_cookie']
+    uploaded_file = request.files['file']
+    recid = request.form['recid']
+
+    hepsubmission_record = get_latest_hepsubmission(publication_recid=recid)
+
+    # check user is allowed to upload
+    if not any([(participant.role == 'uploader' and
+                 participant.email == user_email and
+                 str(participant.invitation_cookie) == invitation_cookie)
+                for participant in hepsubmission_record.participants]):
+        raise Exception("You are not allowed to upload to his record.")
+
+    user = User.query.filter_by(email=user_email).first()
+    login_user(user)
+
+    redirect_url = request.url_root + "record/{}"
+    return process_payload(recid, uploaded_file, redirect_url)
+
+
 @blueprint.route('/sandbox', methods=['GET'])
 @login_required
 def sandbox():
