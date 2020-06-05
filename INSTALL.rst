@@ -33,7 +33,7 @@ HEPData uses several services, which you will need to install before running HEP
  * `PostgreSQL <http://www.postgresql.org/>`_ (version 9.6) database server
  * `Redis <http://redis.io/>`_ for caching
  * `Elasticsearch <https://www.elastic.co/products/elasticsearch>`_ (version 7.1, not later versions) for indexing and information retrieval. See below for further instructions.
- * `Node.js <https://nodejs.org>`_ JavaScript run-time environment and its package manager `npm <https://www.npmjs.com/>`_.
+ * `Node.js <https://nodejs.org>`_ JavaScript run-time environment and its package manager `npm <https://www.npmjs.com/>`_. (If you're using a Debian-based OS, please follow the `official installation instructions <https://github.com/nodesource/distributions/blob/master/README.md#debinstall>`_ to install NodeJS (which will also install npm), to avoid issues with ``node-sass``.)
 
 These services can be installed using the relevant package manager for your system,
 for example, using ``yum`` or ``apt-get`` for Linux or ``brew`` for macOS.
@@ -109,7 +109,8 @@ installing in local mode causes problems and it is necessary to run the install 
 .. code-block:: console
 
    (hepdata)$ cd /
-   (hepdata)$ sudo npm install -g node-sass clean-css@3.4.28 uglify-js requirejs
+   (hepdata)$ sudo npm install -g clean-css@3.4.28 uglify-js requirejs
+   (hepdata)$ sudo npm install -g --unsafe-perm node-sass
    (hepdata)$ cd ~/src/hepdata
    (hepdata)$ ./scripts/clean_assets.sh
 
@@ -279,7 +280,7 @@ To run the tests:
 
 .. code-block:: console
 
-   $ docker-compose run web bash -c "/usr/var/sc-4.5.4-linux/bin/sc -u $SAUCE_USERNAME -k $SAUCE_ACCESS_KEY -x https://eu-central-1.saucelabs.com/rest/v1 & ./run-tests.sh"
+   $ docker-compose run web bash -c "/usr/local/var/sc-4.5.4-linux/bin/sc -u $SAUCE_USERNAME -k $SAUCE_ACCESS_KEY -x https://eu-central-1.saucelabs.com/rest/v1 & ./run-tests.sh"
 
 
 .. _docker-compose-tips:

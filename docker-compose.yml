@@ -4,7 +4,7 @@ services:
     build:
       context: .
       args:
-        - "APP_ENVIRONMENT=local"
+        - "APP_ENVIRONMENT=local-web"
     command: hepdata run -h 0.0.0.0 -p 5000 --debugger --reload
     ports:
     - "5000:5000"
@@ -27,7 +27,7 @@ services:
     - ".:/code"
   worker:
     build: .
-    command: "celery worker -A hepdata.celery --loglevel=DEBUG"
+    command: "celery worker -A hepdata.celery --loglevel=INFO"
     environment:
     - "APP_CELERY_BROKER_URL=redis://cache:6379/0"
     - "APP_CACHE_REDIS_URL=redis://cache:6379/0"
