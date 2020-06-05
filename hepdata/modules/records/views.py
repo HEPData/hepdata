@@ -31,7 +31,7 @@ import json
 import time
 from dateutil import parser
 from invenio_accounts.models import User
-from flask_login import login_required, login_user
+from flask_login import login_required, login_user, current_user
 from flask import Blueprint, send_file, abort, redirect
 from sqlalchemy import or_
 import yaml
@@ -717,7 +717,6 @@ def attach_information_to_record(recid):
 
 
 @blueprint.route('/sandbox/consume', methods=['GET', 'POST'])
-@login_required
 def consume_sandbox_payload():
     """
     Creates a new sandbox submission with a new file upload.
@@ -726,49 +725,22 @@ def consume_sandbox_payload():
     if request.method == 'GET':
         return redirect('/record/sandbox')
 
-    id = (int(current_user.get_id())) + int(round(time.time()))
+    if current_user.is_authenticated is False:
+        if 'email' not in request.form.keys():
+            raise Exception('User not logged in nor email provided.')
+        user_email = request.form['email']
+        user = User.query.filter_by(email=user_email).first()
+        login_user(user)
 
-    get_or_create_hepsubmission(id, current_user.get_id(), status="sandbox")
-    file = request.files['hep_archive']
-    redirect_url = request.url_root + "record/sandbox/{}"
-    return process_payload(id, file, redirect_url)
+    recid = (int(current_user.get_id())) + int(round(time.time()))
+    get_or_create_hepsubmission(recid, current_user.get_id(), status="sandbox")
 
-
-@blueprint.route('/sandbox/upload', methods=['GET', 'POST'])
-def upload_sandbox_payload():
-    """
-    Creates a new sandbox submission from comand line input.
-    """
-
-    if request.method == 'GET':
-        return redirect('/record/sandbox')
-
-    # user
-    user_email = request.form['email']
-    user = User.query.filter_by(email=user_email).first()
-    login_user(user)
-
-    # file
-    uploaded_file = request.files['file']
-
-    # record ID
-    if 'recid' in request.form.keys():
-        recid = request.form['recid']
-        hepsubmission_record = get_latest_hepsubmission(publication_recid=recid)
-        if User.query.filter_by(id=hepsubmission_record.coordinator).first().email != user_email:
-            raise Exception("Attempted to modify another's user record.")
-    else:
-        recid = (int(current_user.get_id())) + int(round(time.time()))
-        get_or_create_hepsubmission(recid, current_user.get_id(), status="sandbox")
-
-    # print(recid, user_email, uploaded_file)
-
+    uploaded_file = request.files['hep_archive']
     redirect_url = request.url_root + "record/sandbox/{}"
     return process_payload(recid, uploaded_file, redirect_url)
 
 
 @blueprint.route('/sandbox/<int:recid>/consume', methods=['GET', 'POST'])
-@login_required
 def update_sandbox_payload(recid):
     """
     Updates the Sandbox submission with a new file upload.
@@ -779,9 +751,19 @@ def update_sandbox_payload(recid):
     if request.method == 'GET':
         return redirect('/record/sandbox/' + str(recid))
 
-    file = request.files['hep_archive']
+    if current_user.is_authenticated is False:
+        if 'email' not in request.form.keys():
+            raise Exception('User not logged in nor email provided.')
+        user_email = request.form['email']
+        user = User.query.filter_by(email=user_email).first()
+        login_user(user)
+        hepsubmission_record = get_latest_hepsubmission(publication_recid=recid)
+        if User.query.filter_by(id=hepsubmission_record.coordinator).first().email != user_email:
+            raise Exception("Attempted to modify another's user record.")
+
+    uploaded_file = request.files['hep_archive']
     redirect_url = request.url_root + "record/sandbox/{}"
-    return process_payload(recid, file, redirect_url)
+    return process_payload(recid, uploaded_file, redirect_url)
 
 
 @blueprint.route('/add_resource/<string:type>/<int:identifier>/<int:version>', methods=['POST'])
