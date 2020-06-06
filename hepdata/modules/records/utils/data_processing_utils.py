@@ -21,7 +21,6 @@
 # In applying this license, CERN does not
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
-from __future__ import absolute_import, print_function
 
 from flask import current_app
 from collections import OrderedDict

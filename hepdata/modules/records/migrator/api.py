@@ -22,7 +22,6 @@
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
-from __future__ import absolute_import, print_function
 import socket
 from datetime import datetime, timedelta
 from urllib.error import HTTPError
@@ -219,7 +218,7 @@ def load_files(inspire_ids, send_tweet=False, synchronous=False, convert=False,
                     migrator.load_file.delay(inspire_id, send_tweet, convert=convert, base_url=base_url)
             except socket.error as se:
                 print("socket error...")
-                log.error(se.message)
+                log.error(se)
             except Exception as e:
                 print("Failed to load {0}. {1} ".format(inspire_id, e))
                 log.error("Failed to load {0}. {1} ".format(inspire_id, e))
@@ -392,7 +391,7 @@ class Migrator(object):
 
         except HTTPError as e:
             log.error("Failed to download {0}".format(inspire_id))
-            log.error(e.message)
+            log.error(e)
             return None
 
     def retrieve_publication_information(self, inspire_id):

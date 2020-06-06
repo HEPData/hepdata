@@ -24,7 +24,6 @@
 
 """Theme blueprint in order for template and static files to be loaded."""
 
-from __future__ import absolute_import, print_function
 import re
 
 from flask import Blueprint, render_template, current_app, redirect, request

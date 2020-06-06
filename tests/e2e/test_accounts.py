@@ -22,7 +22,6 @@
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
 """HEPData end to end testing of accounts."""
-from __future__ import absolute_import
 import flask
 
 from .conftest import e2e_assert, e2e_assert_url

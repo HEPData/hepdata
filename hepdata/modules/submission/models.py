@@ -24,8 +24,6 @@
 
 """Models for the HEPData Submission Workflow."""
 
-from __future__ import absolute_import, print_function
-
 from invenio_accounts.models import User
 from sqlalchemy import TypeDecorator, types
 from invenio_db import db

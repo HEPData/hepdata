@@ -17,7 +17,6 @@
 # 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
 #
 """HEPData Search Views."""
-from __future__ import division
 
 import json
 

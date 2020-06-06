@@ -24,8 +24,6 @@
 
 """HEPData module test cases."""
 
-from __future__ import absolute_import, print_function
-
 
 def test_version():
     """Test version import."""

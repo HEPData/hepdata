@@ -23,7 +23,6 @@
 
 """Provides high-level common email utilities."""
 
-from __future__ import absolute_import, print_function
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from smtplib import SMTP, SMTPRecipientsRefused
@@ -61,7 +60,7 @@ def send_email(destination, subject, message, reply_to_address=None):
         mmp_msg['Subject'] = subject
         mmp_msg['From'] = reply_to_address if reply_to_address else current_app.config['MAIL_DEFAULT_SENDER']
         mmp_msg['To'] = destination
-        
+
         part1 = MIMEText(message, 'html', 'utf-8')
         mmp_msg.attach(part1)
 

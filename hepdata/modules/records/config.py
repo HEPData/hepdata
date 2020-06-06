@@ -24,8 +24,6 @@
 
 """Configuration for HEPData Records."""
 
-from __future__ import absolute_import, print_function
-
 from flask_babelex import gettext
 from speaklater import make_lazy_gettext
 

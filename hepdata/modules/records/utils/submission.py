@@ -21,7 +21,6 @@
 # In applying this license, CERN does not
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
-from __future__ import absolute_import, print_function
 
 import json
 import logging
@@ -722,7 +721,7 @@ def unload_submission(record_id, version=1):
             delete_item_from_index(doc_type=CFG_PUB_TYPE, id=record_id)
             print("Removed publication {0} from index".format(record_id))
         except NotFoundError as nfe:
-            print(nfe.message)
+            print(nfe)
 
     print('Finished unloading record {0} version {1}.'.format(record_id, version))
 
