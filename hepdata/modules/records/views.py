@@ -26,6 +26,7 @@
 
 from __future__ import absolute_import, print_function
 
+import werkzeug
 import logging
 import json
 import time
@@ -616,7 +617,6 @@ def get_resource(resource_id):
 
 
 @blueprint.route('/<int:recid>/consume', methods=['GET', 'POST'])
-@login_required
 def consume_data_payload(recid):
     """
     This method persists, then presents the loaded data back to the user.
@@ -625,42 +625,28 @@ def consume_data_payload(recid):
     :return: page rendering
     """
 
-    if request.method == 'POST':
-        file = request.files['hep_archive']
-        redirect_url = request.url_root + "record/{}"
-        return process_payload(recid, file, redirect_url)
-
-    else:
-        return redirect('/record/' + str(recid))
-
-
-@blueprint.route('/upload', methods=['GET', 'POST'])
-def upload_payload():
-    """
-    Upload a new submission from comand line input.
-    """
-
     if request.method == 'GET':
         return redirect('/')
 
-    # user, cookie, file, record ID
-    user_email = request.form['email']
-    invitation_cookie = request.form['invitation_cookie']
-    uploaded_file = request.files['file']
-    recid = request.form['recid']
+    if current_user.is_authenticated is False:
+        if 'email' not in request.form.keys():
+            raise werkzeug.exceptions.Forbidden()
 
-    hepsubmission_record = get_latest_hepsubmission(publication_recid=recid)
+        user_email = request.form['email']
+        invitation_cookie = request.form['invitation_cookie']
+        hepsubmission_record = get_latest_hepsubmission(publication_recid=recid)
 
-    # check user is allowed to upload
-    if not any([(participant.role == 'uploader' and
-                 participant.email == user_email and
-                 str(participant.invitation_cookie) == invitation_cookie)
-                for participant in hepsubmission_record.participants]):
-        raise Exception("You are not allowed to upload to his record.")
+        # check user is allowed to upload
+        if not any([(participant.role == 'uploader' and
+                     participant.email == user_email and
+                     str(participant.invitation_cookie) == invitation_cookie)
+                    for participant in hepsubmission_record.participants]):
+            raise werkzeug.exceptions.Forbidden()
 
-    user = User.query.filter_by(email=user_email).first()
-    login_user(user)
+        user = User.query.filter_by(email=user_email).first()
+        login_user(user)
 
+    uploaded_file = request.files['hep_archive']
     redirect_url = request.url_root + "record/{}"
     return process_payload(recid, uploaded_file, redirect_url)
 
@@ -727,7 +713,7 @@ def consume_sandbox_payload():
 
     if current_user.is_authenticated is False:
         if 'email' not in request.form.keys():
-            raise Exception('User not logged in nor email provided.')
+            raise werkzeug.exceptions.Forbidden()
         user_email = request.form['email']
         user = User.query.filter_by(email=user_email).first()
         login_user(user)
@@ -753,7 +739,7 @@ def update_sandbox_payload(recid):
 
     if current_user.is_authenticated is False:
         if 'email' not in request.form.keys():
-            raise Exception('User not logged in nor email provided.')
+            raise werkzeug.exceptions.Forbidden()
         user_email = request.form['email']
         user = User.query.filter_by(email=user_email).first()
         login_user(user)
