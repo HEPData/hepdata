@@ -340,6 +340,7 @@ def process_payload(recid, file, redirect_url, synchronous=False):
     :param synchronous: bool
         Whether to process asynchronously via celery (default) or immediately (only recommended for tests)
     """
+
     if file and (allowed_file(file.filename)):
         file_path = save_zip_file(file, recid)
         hepsubmission = get_latest_hepsubmission(publication_recid=recid)
@@ -446,9 +447,17 @@ def process_zip_archive(file_path, id):
         submission_path = os.path.join(file_save_directory, remove_file_extension(filename))
         submission_temp_path = tempfile.mkdtemp(dir=current_app.config["CFG_TMPDIR"])
 
-        if filename.endswith('.yaml'):
+        if filename.endswith('.yaml.gz'):
+            print('Extracting: {} to {}'.format(file_path, file_path[:-3]))
+            if not extract(file_path, file_path[:-3]):
+                return {
+                    "Archive file extractor": [{
+                        "level": "error", "message": "{} is not a valid zip or tar archive file.".format(file_path)
+                    }]
+                }
+            return process_zip_archive(file_path[:-3], id)
+        elif filename.endswith('.yaml') or filename.endswith('.yaml.gz'):
             # we split the singular yaml file and create a submission directory
-
             error, last_updated = split_files(file_path, submission_temp_path)
             if error:
                 return {
@@ -457,7 +466,6 @@ def process_zip_archive(file_path, id):
                         "message": str(error)
                     }]
                 }
-
         else:
             # we are dealing with a zip, tar, etc. so we extract the contents
             if not extract(file_path, submission_temp_path):
@@ -476,6 +484,13 @@ def process_zip_archive(file_path, id):
         rmtree(submission_temp_path, ignore_errors=True) # can uncomment when this is definitely working
 
         submission_found = find_file_in_directory(submission_path, lambda x: x == "submission.yaml")
+
+        if not submission_found:
+            return {
+                "Archive file extractor": [{
+                    "level": "error", "message": "No submission.yaml file has been found in the archive."
+                }]
+            }
 
         basepath, submission_file_path = submission_found
         from_oldhepdata = False
