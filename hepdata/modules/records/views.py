@@ -32,7 +32,7 @@ import json
 import time
 from dateutil import parser
 from invenio_accounts.models import User
-from flask_login import login_required, login_user, current_user
+from flask_login import login_required, login_user
 from flask import Blueprint, send_file, abort, redirect
 from sqlalchemy import or_
 import yaml

@@ -456,7 +456,7 @@ def process_zip_archive(file_path, id):
                     }]
                 }
             return process_zip_archive(file_path[:-3], id)
-        elif filename.endswith('.yaml') or filename.endswith('.yaml.gz'):
+        elif filename.endswith('.yaml'):
             # we split the singular yaml file and create a submission directory
             error, last_updated = split_files(file_path, submission_temp_path)
             if error:
