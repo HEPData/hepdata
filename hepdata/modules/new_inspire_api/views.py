@@ -39,8 +39,8 @@ def get_inspire_record_information(inspire_rec_id):
     if content and status != 404:
         parsed_content = {
             'title': content['metadata']['titles'][0]['title'],
-            'doi': (content['metadata']['dois'] if 'dois' in content['metadata'] else None),
-            'authors': content['metadata']['authors'],
+            'doi': (content['metadata']['dois'][-1]['value'] if 'dois' in content['metadata'] and len(content['metadata']['dois']) > 0 else None),
+            'authors': [{'affiliations': [affiliation['value'] for affiliation in author['affiliations']], 'full_name': author['full_name']} for author in content['metadata']['authors']],
             'type': content['metadata']['document_type'][0],
             'abstract': (content['metadata']['abstracts'][-1]['value'] if 'abstracts' in content['metadata'].keys() else None),
             'creation_date': (expand_date(content['metadata']['preprint_date']) if 'preprint_date' in content['metadata'].keys() else
@@ -48,7 +48,11 @@ def get_inspire_record_information(inspire_rec_id):
             'arxiv_id': ('arXiv:' + content['metadata']['arxiv_eprints'][-1]['value'] if 'arxiv_eprints' in content['metadata'].keys() else None),
             'collaborations': ([collaboration['value'] for collaboration in content['metadata']['collaborations']] if 'collaborations' in content['metadata'] else None),
             'keywords': content['metadata']['keywords'],
-            'journal_info': (content['metadata']['publication_info'] if 'publication_info' in content['metadata'] else None),
+            'journal_info': ((content['metadata']['publication_info'][0]['journal_title'] + ' ' + content['metadata']['publication_info'][0]['journal_volume'] +
+                              ' (' + str(content['metadata']['publication_info'][0]['year']) + ') ' + content['metadata']['publication_info'][0]['artid'])
+                             if ('publication_info' in content['metadata'] and len(content['metadata']['publication_info']) > 0 and
+                                 all(keyword in content['metadata']['publication_info'][0].keys() for keyword in ['journal_title', 'journal_volume', 'year', 'artid'])) else
+                             content['metadata']['publication_info'] if 'publication_info' in content['metadata'] else None),
             'year': (content['metadata']['publication_info'][-1]['year'] if ('publication_info' in content['metadata'] and 'year' in content['metadata']['publication_info'][-1].keys())
                      else content['metadata']['preprint_date'].split("-")[0] if 'preprint_date' in content['metadata'].keys() else
                      content['metadata']['legacy_creation_date'].split("-")[0] if 'legacy_creation_date' in content['metadata'] else None),

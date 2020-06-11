@@ -30,13 +30,14 @@ from marcxml_parser import get_doi, get_title, get_authors, get_abstract, \
     get_arxiv, get_collaborations, get_keywords, get_date, get_journal_info, get_year, get_collection, \
     get_dissertation, expand_date, get_subject_areas
 
-blueprint = Blueprint('inspire_datasource',
-                      __name__,
-                      url_prefix='/inspire')
+blueprint = Blueprint('inspire_datasource', __name__, url_prefix='/inspire')
+
+USE_NEW_INSPIRE_API = False
 
 
 def get_inspire_record_information(inspire_rec_id):
     url = 'http://old.inspirehep.net/record/{0}/export/xm'.format(inspire_rec_id)
+    print('Looking up: ' + url)
     req = requests.get(url)
     content = req.content
     status = req.status_code
@@ -79,6 +80,7 @@ def get_inspire_record_information(inspire_rec_id):
                     content['creation_date'] = expand_date(content['year'])
 
         status = 'success'
+
     return content, status
 
 
@@ -100,3 +102,7 @@ def get_record_from_inspire():
                     'id': inspire_id,
                     'query': content,
                     'status': status})
+
+
+if USE_NEW_INSPIRE_API is True:
+    from hepdata.modules.new_inspire_api.views import get_inspire_record_information, get_record_from_inspire  # noqa
