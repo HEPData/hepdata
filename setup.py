@@ -47,21 +47,10 @@ extras_require = {
         'Sphinx>=1.8.5',
         'sphinx-click>=2.1.0',
     ],
-    'postgresql': [
-        'invenio-db[postgresql]>=1.0.0a6',
-    ],
-    'mysql': [
-        'invenio-db[mysql]>=1.0.0a6',
-    ],
-    'sqlite': [
-        'invenio-db>=1.0.0a6',
-    ],
     'tests': tests_require,
 }
 
 for name, reqs in extras_require.items():
-    if name in ('postgresql', 'mysql', 'sqlite'):
-        continue
     extras_require['all'].extend(reqs)
 
 setup_requires = [
