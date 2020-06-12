@@ -22,6 +22,8 @@
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
+from flask import current_app
+
 from invenio_db import db
 from invenio_pidstore.errors import PIDDoesNotExistError
 from invenio_pidstore.resolver import Resolver
@@ -237,3 +239,8 @@ def get_record_by_id(recid):
 def record_exists(*args, **kwargs):
     count = HEPSubmission.query.filter_by(**kwargs).count()
     return count > 0
+
+
+def get_data_path_for_filename(file_or_directory, *subdirs):
+    path = os.path.join(current_app.config['CFG_DATADIR'], file_or_directory, *subdirs)
+    return path

@@ -35,7 +35,7 @@ from hepdata.modules.converter import convert_zip_archive
 from hepdata.modules.submission.api import get_latest_hepsubmission
 from hepdata.modules.submission.models import HEPSubmission, DataResource, DataSubmission
 from hepdata.utils.file_extractor import extract, get_file_in_directory
-from hepdata.modules.records.utils.common import get_record_contents
+from hepdata.modules.records.utils.common import get_record_contents, get_data_path_for_filename
 
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy import func, or_
@@ -231,12 +231,12 @@ def download_submission(submission, file_format, offline=False, force=False, riv
                         "Currently supported formats: " + str(CFG_SUPPORTED_FORMATS),
         )
 
-    path = os.path.join(current_app.config['CFG_DATADIR'], str(submission.publication_recid))
+    path = get_data_path_for_filename(str(submission.publication_recid))
     data_filename = current_app.config['SUBMISSION_FILE_NAME_PATTERN'].format(submission.publication_recid, version)
 
     output_file = 'HEPData-{0}-v{1}-{2}.tar.gz'.format(file_identifier, submission.version, file_format)
 
-    converted_dir = os.path.join(current_app.config['CFG_DATADIR'], 'converted')
+    converted_dir = get_data_path_for_filename('converted')
     if not os.path.exists(converted_dir):
         os.mkdir(converted_dir)
 

@@ -45,7 +45,7 @@ from hepdata.modules.submission.models import DataSubmission, DataReview, \
     DataResource, License, Keyword, HEPSubmission, RecordVersionCommitMessage
 from hepdata.modules.records.utils.common import \
     get_license, infer_file_type, encode_string, zipdir, get_record_by_id, contains_accepted_url
-from hepdata.modules.records.utils.common import get_or_create
+from hepdata.modules.records.utils.common import get_or_create, get_data_path_for_filename
 from hepdata.modules.records.utils.doi_minter import reserve_dois_for_data_submissions, reserve_doi_for_hepsubmission, \
     generate_dois_for_submission
 from hepdata.modules.records.utils.resources import download_resource_file
@@ -608,15 +608,16 @@ def package_submission(basepath, recid, hep_submission_obj):
     :param hep_submission_obj: the HEPSubmission object representing
            the overall position
     """
-    if not os.path.exists(os.path.join(current_app.config['CFG_DATADIR'], str(recid))):
-        os.makedirs(os.path.join(current_app.config['CFG_DATADIR'], str(recid)))
+    path = get_data_path_for_filename(str(recid))
+    if not os.path.exists(path):
+        os.makedirs(path)
 
     version = hep_submission_obj.version
     if version == 0:
         version = 1
 
     zip_location = os.path.join(
-        current_app.config['CFG_DATADIR'], str(recid),
+        path,
         current_app.config['SUBMISSION_FILE_NAME_PATTERN']
             .format(recid, version))
     if os.path.exists(zip_location):
