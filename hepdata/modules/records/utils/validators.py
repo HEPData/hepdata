@@ -22,8 +22,6 @@
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
-from __future__ import absolute_import, print_function
-
 import logging
 import os
 
@@ -31,12 +29,6 @@ from hepdata_validator.data_file_validator import DataFileValidator
 from hepdata_validator.schema_downloader import HTTPSchemaDownloader
 from hepdata_validator.schema_resolver import JsonSchemaResolver
 from hepdata_validator.submission_file_validator import SubmissionFileValidator
-
-# This is compatible both with Python2 and Python3
-try:
-    from urllib.parse import urljoin
-except ImportError:                     # pragma: no cover
-    from urlparse import urljoin        # pragma: no cover
 
 logging.basicConfig()
 log = logging.getLogger(__name__)
