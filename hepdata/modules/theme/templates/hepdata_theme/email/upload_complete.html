@@ -1,0 +1,15 @@
+{% extends 'hepdata_theme/email/email_container.html' %}
+{% block email_type %}
+    Upload for Record {{ article }} Succeeded
+{% endblock %}
+
+{% block email_content %}
+
+  <p>Hi {{ name }},</p>
+
+  <p>Your upload for record <a href="{{ link }}" style="color: #9b59b6">{{ article }}</a> was successful.</p>
+
+  <p>
+      The <a href="{{ site_url }}" style="color: #9b59b6">HEPData</a> team
+  </p>
+{% endblock %}

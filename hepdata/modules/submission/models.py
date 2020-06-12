@@ -24,11 +24,10 @@
 
 """Models for the HEPData Submission Workflow."""
 
-from __future__ import absolute_import, print_function
-
 from invenio_accounts.models import User
-from sqlalchemy import func
+from sqlalchemy import TypeDecorator, types
 from invenio_db import db
+from datetime import datetime
 
 submission_participant_link = db.Table(
     'submission_participant_link',
@@ -48,6 +47,24 @@ data_reference_link = db.Table(
 )
 
 
+class LargeBinaryString(TypeDecorator):
+    impl = types.LargeBinary
+
+    def process_literal_param(self, value, dialect):
+        if isinstance(value, str):
+            value = value.encode('utf-8', errors='replace')
+
+        return value
+
+    process_bind_param = process_literal_param
+
+    def process_result_value(self, value, dialect):
+        if isinstance(value, bytes):
+            value = value.decode('utf-8', errors='replace')
+
+        return value
+
+
 class HEPSubmission(db.Model):
     """
     This is the main submission object. It maintains the
@@ -61,7 +78,7 @@ class HEPSubmission(db.Model):
     publication_recid = db.Column(db.Integer)
     inspire_id = db.Column(db.String(128))
 
-    data_abstract = db.Column(db.LargeBinary)
+    data_abstract = db.Column(LargeBinaryString)
 
     resources = db.relationship("DataResource",
                                  secondary="data_resource_link",
@@ -78,9 +95,9 @@ class HEPSubmission(db.Model):
     # invenio record created for them.
     overall_status = db.Column(db.String(128), default='todo')
 
-    created = db.Column(db.DateTime, nullable=False, default=func.now(), index=True)
+    created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, index=True)
 
-    last_updated = db.Column(db.DateTime, nullable=True, default=func.now(), index=True)
+    last_updated = db.Column(db.DateTime, nullable=True, default=datetime.utcnow, index=True)
 
     # this links to the latest version of the data files to be shown
     # in the submission and allows one to go back in time via the
@@ -119,7 +136,7 @@ class DataSubmission(db.Model):
 
     location_in_publication = db.Column(db.String(256))
     name = db.Column(db.String(64))
-    description = db.Column(db.LargeBinary)
+    description = db.Column(LargeBinaryString)
     keywords = db.relationship("Keyword", secondary="keyword_submission",
                                cascade="all,delete")
 
@@ -157,7 +174,7 @@ class License(db.Model):
 
     name = db.Column(db.String(256))
     url = db.Column(db.String(256))
-    description = db.Column(db.LargeBinary)
+    description = db.Column(LargeBinaryString)
 
 
 class DataResource(db.Model):
@@ -168,12 +185,12 @@ class DataResource(db.Model):
 
     file_location = db.Column(db.String(256))
     file_type = db.Column(db.String(64), default="json")
-    file_description = db.Column(db.LargeBinary)
+    file_description = db.Column(LargeBinaryString)
 
     file_license = db.Column(db.Integer, db.ForeignKey("hepdata_license.id"),
                              nullable=True)
 
-    created = db.Column(db.DateTime, nullable=False, default=func.now(),
+    created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow,
                         index=True)
 
 
@@ -200,11 +217,11 @@ class DataReview(db.Model):
     data_recid = db.Column(db.Integer, db.ForeignKey("datasubmission.id"))
 
     creation_date = db.Column(
-        db.DateTime, nullable=False, default=func.now(), index=True)
+        db.DateTime, nullable=False, default=datetime.utcnow, index=True)
 
     modification_date = db.Column(
-        db.DateTime, nullable=False, default=func.now(), index=True,
-        onupdate=func.now())
+        db.DateTime, nullable=False, default=datetime.utcnow, index=True,
+        onupdate=datetime.utcnow)
 
     # as in, passed, attention, to do
     status = db.Column(db.String(20), default="todo")
@@ -224,9 +241,9 @@ class Message(db.Model):
                    autoincrement=True)
 
     user = db.Column(db.Integer, db.ForeignKey(User.id))
-    message = db.Column(db.LargeBinary)
+    message = db.Column(LargeBinaryString)
 
-    creation_date = db.Column(db.DateTime, nullable=False, default=func.now(),
+    creation_date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow,
                               index=False)
 
 
@@ -241,8 +258,8 @@ class Question(db.Model):
     user = db.Column(db.Integer, db.ForeignKey(User.id))
     publication_recid = db.Column(db.Integer)
 
-    question = db.Column(db.LargeBinary)
-    creation_date = db.Column(db.DateTime, nullable=False, default=func.now(),
+    question = db.Column(LargeBinaryString)
+    creation_date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow,
                               index=False)
 
 
@@ -255,6 +272,6 @@ class RecordVersionCommitMessage(db.Model):
     recid = db.Column(db.Integer)
 
     creation_date = db.Column(
-        db.DateTime, nullable=False, default=func.now(), index=True)
+        db.DateTime, nullable=False, default=datetime.utcnow, index=True)
     version = db.Column(db.Integer, default=1)
-    message = db.Column(db.LargeBinary)
+    message = db.Column(LargeBinaryString)

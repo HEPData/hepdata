@@ -22,10 +22,9 @@
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
-from __future__ import absolute_import, print_function
 import socket
 from datetime import datetime, timedelta
-from urllib2 import HTTPError
+from urllib.error import HTTPError
 
 import requests
 from celery import shared_task
@@ -155,7 +154,7 @@ def add_or_update_records_since_date(date=None, send_tweet=False, convert=False)
     """
     if not date:
         # then use yesterdays date
-        yesterday = datetime.now() - timedelta(days=1)
+        yesterday = datetime.utcnow() - timedelta(days=1)
         date = yesterday.strftime("%Y%m%d")
 
     inspire_ids = get_all_ids_in_current_system(date)
@@ -219,7 +218,7 @@ def load_files(inspire_ids, send_tweet=False, synchronous=False, convert=False,
                     migrator.load_file.delay(inspire_id, send_tweet, convert=convert, base_url=base_url)
             except socket.error as se:
                 print("socket error...")
-                log.error(se.message)
+                log.error(se)
             except Exception as e:
                 print("Failed to load {0}. {1} ".format(inspire_id, e))
                 log.error("Failed to load {0}. {1} ".format(inspire_id, e))
@@ -250,7 +249,7 @@ class Migrator(object):
         :return: output location if successful, None if not
         """
         output_location = os.path.join(current_app.config["CFG_DATADIR"], inspire_id)
-        last_updated = datetime.now()
+        last_updated = datetime.utcnow()
 
         download = not os.path.exists(output_location) or (get_file_in_directory(output_location, 'yaml') is None)
 
@@ -392,7 +391,7 @@ class Migrator(object):
 
         except HTTPError as e:
             log.error("Failed to download {0}".format(inspire_id))
-            log.error(e.message)
+            log.error(e)
             return None
 
     def retrieve_publication_information(self, inspire_id):

@@ -21,7 +21,6 @@
 # In applying this license, CERN does not
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
-from __future__ import absolute_import, print_function
 
 import json
 import logging
@@ -45,7 +44,7 @@ from hepdata.modules.submission.api import get_latest_hepsubmission
 from hepdata.modules.submission.models import DataSubmission, DataReview, \
     DataResource, License, Keyword, HEPSubmission, RecordVersionCommitMessage
 from hepdata.modules.records.utils.common import \
-    get_prefilled_dictionary, infer_file_type, encode_string, zipdir, get_record_by_id, contains_accepted_url
+    get_license, infer_file_type, encode_string, zipdir, get_record_by_id, contains_accepted_url
 from hepdata.modules.records.utils.common import get_or_create
 from hepdata.modules.records.utils.doi_minter import reserve_dois_for_data_submissions, reserve_doi_for_hepsubmission, \
     generate_dois_for_submission
@@ -58,11 +57,19 @@ import os
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.exc import SQLAlchemyError
 import yaml
+
 try:
     from yaml import CSafeLoader as Loader
 except ImportError: #pragma: no cover
     from yaml import SafeLoader as Loader #pragma: no cover
-from urllib2 import URLError
+
+def construct_yaml_str(self, node):
+    # Override the default string handling function
+    # to always return unicode objects
+    return self.construct_scalar(node)
+Loader.add_constructor(u'tag:yaml.org,2002:str', construct_yaml_str)
+
+from urllib.error import URLError
 
 logging.basicConfig()
 log = logging.getLogger(__name__)
@@ -222,12 +229,8 @@ def process_data_file(recid, version, basepath, data_obj, datasubmission, main_f
         file_location=main_file_path, file_type="data")
 
     if "data_license" in data_obj:
-        dict = get_prefilled_dictionary(
-            ["name", "url", "description"], data_obj["data_license"])
 
-        license = get_or_create(
-            db.session, License, name=dict['name'],
-            url=dict['url'], description=dict['description'])
+        license = get_license(data_obj["data_license"])
 
         main_data_file.file_license = license.id
 
@@ -275,15 +278,15 @@ def process_general_submission_info(basepath, submission_info_document, recid):
     hepsubmission = get_latest_hepsubmission(publication_recid=recid)
 
     if "comment" in submission_info_document:
-        hepsubmission.data_abstract = encode_string(submission_info_document['comment'])
+        hepsubmission.data_abstract = submission_info_document['comment']
 
     if "dateupdated" in submission_info_document:
         try:
             hepsubmission.last_updated = parse(submission_info_document['dateupdated'], dayfirst=True)
         except ValueError:
-            hepsubmission.last_updated = datetime.now()
+            hepsubmission.last_updated = datetime.utcnow()
     else:
-        hepsubmission.last_updated = datetime.now()
+        hepsubmission.last_updated = datetime.utcnow()
 
     if "modifications" in submission_info_document:
         parse_modifications(hepsubmission, recid, submission_info_document)
@@ -346,13 +349,7 @@ def parse_additional_resources(basepath, recid, yaml_document):
                 file_description=reference['description'])
 
             if "license" in reference:
-                dict = get_prefilled_dictionary(
-                    ["name", "url", "description"],
-                    reference["license"])
-
-                resource_license = get_or_create(
-                    db.session, License, name=dict['name'],
-                    url=dict['url'], description=dict['description'])
+                resource_license = get_license(reference["license"])
                 new_reference.file_license = resource_license.id
 
             resources.append(new_reference)
@@ -365,7 +362,7 @@ def parse_modifications(hepsubmission, recid, submission_info_document):
         try:
             date = parse(modification['date'])
         except ValueError as ve:
-            date = datetime.now()
+            date = datetime.utcnow()
 
         # don't add another if it's not necessary to do so
         existing_participant = SubmissionParticipant.query.filter_by(
@@ -382,10 +379,9 @@ def parse_modifications(hepsubmission, recid, submission_info_document):
             db.session.add(participant)
 
 
-def _eos_fix_read_data(data_file_path):
+def _read_data_file(data_file_path):
     """
-    This gets rid of the issues where reading the file returns empty
-    string because eos has not yet flushed the file contents.
+    Read data file allowing for multiple attempts.
     """
     attempts = 0
     while True:
@@ -421,12 +417,22 @@ def process_submission_directory(basepath, submission_file_path, recid, update=F
     if submission_file_path is not None:
 
         submission_file_validator = get_submission_validator(from_oldhepdata)
-        is_valid_submission_file = submission_file_validator.validate(file_path=submission_file_path)
+
+        try:
+            with open(submission_file_path, 'r') as submission_file:
+                submission_processed = list(yaml.load_all(submission_file, Loader=Loader))
+        except Exception as ex:
+            errors = {"submission.yaml": [
+                {"level": "error", "message": "There was a problem parsing the file.\n" + str(ex)}
+            ]}
+            return errors
+
+        is_valid_submission_file = submission_file_validator.validate(
+            file_path=submission_file_path,
+            data=submission_processed,
+        )
 
         if is_valid_submission_file:
-
-            submission_file = open(submission_file_path, 'r')
-            submission_processed = yaml.load_all(submission_file, Loader=Loader)
 
             # process file, extracting contents, and linking
             # the data record with the parent publication
@@ -440,18 +446,6 @@ def process_submission_directory(basepath, submission_file_path, recid, update=F
 
             # On a new upload, we reset the flag to notify reviewers
             hepsubmission.reviewers_notified = False
-
-            # if it is finished and we receive an update,
-            # then we need to reopen the submission to allow for revisions.
-            if hepsubmission.overall_status == 'finished' and not update:
-                # we create a new HEPSubmission object
-                _rev_hepsubmission = HEPSubmission(publication_recid=recid,
-                                                   overall_status='todo',
-                                                   inspire_id=hepsubmission.inspire_id,
-                                                   coordinator=hepsubmission.coordinator,
-                                                   version=hepsubmission.version + 1)
-                db.session.add(_rev_hepsubmission)
-                hepsubmission = _rev_hepsubmission
 
             reserve_doi_for_hepsubmission(hepsubmission, update)
 
@@ -494,7 +488,7 @@ def process_submission_directory(basepath, submission_file_path, recid, update=F
                 else:
 
                     existing_datasubmission_query = DataSubmission.query \
-                        .filter_by(name=encode_string(yaml_document["name"]),
+                        .filter_by(name=yaml_document["name"],
                                    publication_recid=recid,
                                    version=hepsubmission.version)
 
@@ -504,13 +498,14 @@ def process_submission_directory(basepath, submission_file_path, recid, update=F
                         if existing_datasubmission_query.count() == 0:
                             datasubmission = DataSubmission(
                                 publication_recid=recid,
-                                name=encode_string(yaml_document["name"]),
-                                description=encode_string(yaml_document["description"]),
+                                name=yaml_document["name"],
+                                description=yaml_document["description"],
                                 version=hepsubmission.version)
                         else:
                             datasubmission = existing_datasubmission_query.one()
-                            datasubmission.description = encode_string(yaml_document["description"])
+                            datasubmission.description = yaml_document["description"]
                         db.session.add(datasubmission)
+
                     except SQLAlchemyError as sqlex:
                         errors[yaml_document["data_file"]] = [{"level": "error", "message": str(sqlex)}]
                         db.session.rollback()
@@ -518,7 +513,7 @@ def process_submission_directory(basepath, submission_file_path, recid, update=F
 
                     main_file_path = os.path.join(basepath, yaml_document["data_file"])
 
-                    data, ex = _eos_fix_read_data(main_file_path)
+                    data, ex = _read_data_file(main_file_path)
 
                     if not data or data is None or ex is not None:
 
@@ -549,17 +544,15 @@ def process_submission_directory(basepath, submission_file_path, recid, update=F
                             # for each of the independent_variables and dependent_variables.
                             indep_count = [len(indep['values']) for indep in data['independent_variables']]
                             dep_count = [len(dep['values']) for dep in data['dependent_variables']]
-                            if len(set(indep_count + dep_count)) > 1: # if more than one unique count
+                            if len(set(indep_count + dep_count)) > 1:  # if more than one unique count
                                 errors.setdefault(yaml_document["data_file"], []).append(
                                     {"level": "error", "message": "Inconsistent length of 'values' list:\n" +
                                                                   "independent_variables{}, dependent_variables{}".format(
                                                                       str(indep_count), str(dep_count))}
                                 )
 
-            submission_file.close()
-
             if no_general_submission_info:
-                hepsubmission.last_updated = datetime.now()
+                hepsubmission.last_updated = datetime.utcnow()
                 db.session.add(hepsubmission)
                 db.session.commit()
 
@@ -575,9 +568,6 @@ def process_submission_directory(basepath, submission_file_path, recid, update=F
 
                 admin_indexer = AdminIndexer()
                 admin_indexer.index_submission(hepsubmission)
-
-            else: # delete all tables if errors
-                cleanup_submission(recid, hepsubmission.version, {})
 
         else:
 
@@ -721,7 +711,7 @@ def unload_submission(record_id, version=1):
             delete_item_from_index(doc_type=CFG_PUB_TYPE, id=record_id)
             print("Removed publication {0} from index".format(record_id))
         except NotFoundError as nfe:
-            print(nfe.message)
+            print(nfe)
 
     print('Finished unloading record {0} version {1}.'.format(record_id, version))
 
@@ -766,7 +756,7 @@ def do_finalise(recid, publication_record=None, force_finalise=False,
                     delete_item_from_index(record["_id"],
                                            doc_type=CFG_DATA_TYPE, parent=record["_source"]["related_publication"])
 
-        current_time = "{:%Y-%m-%d %H:%M:%S}".format(datetime.now())
+        current_time = "{:%Y-%m-%d %H:%M:%S}".format(datetime.utcnow())
 
         for submission in submissions:
             finalise_datasubmission(current_time, existing_submissions,
@@ -783,7 +773,7 @@ def do_finalise(recid, publication_record=None, force_finalise=False,
 
             # The last updated date will be the current date (if record not migrated from the old site).
             if hep_submission.coordinator > 1:
-                hep_submission.last_updated = datetime.now()
+                hep_submission.last_updated = datetime.utcnow()
 
             if commit_message:
                 commit_record = RecordVersionCommitMessage(

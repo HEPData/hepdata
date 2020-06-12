@@ -28,7 +28,7 @@
     {%- endassets %}
 {%- endblock additional_assets %}
 
-
+{%- set messages = get_flashed_messages(with_categories=true) -%}
 
 {% block page_body %}
 
@@ -77,55 +77,86 @@
 
         <div class="row" style="padding-top: 120px;">
 
+          {%- if messages %}
+              {%- for category, message in messages %}
+                <div align="center" class="alert alert-{{category}}">{{ message }}</div>
+              {%- endfor %}
+          {%- endif %}
+
             {% if ctx.data_tables|length == 0 %}
                 <div class="container">
                     <div class="row">
-                        <div class="sandbox-upload-area col-md-7 text-center" id="sandbox-upload-area">
+                        {% if ctx.recid is not defined or ctx.is_submission_coordinator_or_admin %}
+                          <div class="sandbox-upload-area col-md-7 text-center" id="sandbox-upload-area">
 
-                            <img src="{{ url_for('static', filename='img/icon-upload.svg') }}"
-                                 width="70">
+                              <img src="{{ url_for('static', filename='img/icon-upload.svg') }}"
+                                   width="70">
 
-                            <h4>Upload an archive to the sandbox</h4>
+                              <h4>Upload an archive to the Sandbox</h4>
+                              <br/>
+                              <div class="upload-form">
+                                  <div class="alert alert-info">This is a private upload area.</div>
+
+                                  {% include 'hepdata_records/components/uploader_info.html' %}
+
+                                  <form action="/record/sandbox{% if ctx.recid %}/{% endif %}{{ ctx.recid }}/consume" name="sandbox-upload-form" method="post"
+                                        enctype=multipart/form-data>
+                                      <input type="file" name="hep_archive" id="root_file_upload"
+                                             data-iconName="fa fa-upload"
+                                             class="filestyle">
+                                      <br/>
+
+                                      <input type="submit" value="Upload and Process"
+                                             class="btn btn-primary"
+                                             onclick="hepdata_record.perform_upload_action('#sandbox-upload-area', 'sandbox-upload-form', ['#955BA5', '#2C3E50'], 'large_area')">
+                                  </form>
+                              </div>
+
+                          </div>
+
+                        {% else %}
+
+                          <div style="text-align: center">
+                            <h4>This Sandbox record {{ ctx.recid }} contains no valid data.</h4>
+                            <p>If it belongs to you, please log in to upload data.</p>
                             <br/>
-                            <div class="upload-form">
-                                <div class="alert alert-info">This is a private upload area.</div>
+                          </div>
 
-                                {% include 'hepdata_records/components/uploader_info.html' %}
+                        {% endif %}
 
-                                <form action="/record/sandbox{% if ctx.recid %}/{% endif %}{{ ctx.recid }}/consume" name="sandbox-upload-form" method="post"
-                                      enctype=multipart/form-data>
-                                    <input type="file" name="hep_archive" id="root_file_upload"
-                                           data-iconName="fa fa-upload"
-                                           class="filestyle">
-                                    <br/>
-
-                                    <input type="submit" value="Upload and Process"
-                                           class="btn btn-primary"
-                                           onclick="hepdata_record.perform_upload_action('#sandbox-upload-area', 'sandbox-upload-form', ['#955BA5', '#2C3E50'], 'large_area')">
-                                </form>
-                            </div>
-
-                        </div>
 
                         <div id="past_submissions" class="col-md-offset-1 col-md-4">
                           {% if ctx.submissions|length > 0 %}
                             <div class="well">
-                                <h4>Your sandbox submissions</h4>
+                                <h4>Your Sandbox submissions</h4>
 
                                     <div class="scrollable height30 row-fluid">
                                         {% for submission in ctx.submissions %}
                                             <div class="col-md-10 col-sm-10 col-xs-10">
                                                 <a href="/record/sandbox/{{ submission.publication_recid }}"
                                                    style="text-align: left">
-                                                    <div class="truncated-record-abstract">{{ submission.data_abstract }}</div>
+                                                    <div class="truncated-record-abstract">
+                                                      {% if submission.overall_status == 'sandbox_processing' %}
+                                                        {{ submission.publication_recid }} (processing)
+                                                      {% elif submission.data_abstract is none %}
+                                                        {{ submission.publication_recid }} (no data abstract)
+                                                      {% else %}
+                                                        {{ submission.data_abstract }}
+                                                      {% endif %}
+                                                    </div>
                                                 </a>
-                                                <p style="font-weight: bolder; color: #a1aec7; font-size: .7em; text-align: left">{{ submission.created.strftime('%Y-%m-%d %H:%M%p') }}</p>
+                                                <p style="font-weight: bolder; color: #a1aec7; font-size: .7em; text-align: left">
+                                                  Created {{ submission.created.strftime('%Y-%m-%d %H:%M UTC') }}<br/>
+                                                  Last updated {{ submission.last_updated.strftime('%Y-%m-%d %H:%M UTC') }}
+                                                </p>
                                             </div>
                                             <div class="col-md-2 col-sm-2 col-xs-2">
+                                              {% if submission.overall_status != 'sandbox_processing' %}
                                                 <button class="btn btn-sm btn-danger delete_button"
                                                         data-recid="{{ submission.publication_recid }}"><i
                                                         class="fa fa-trash"></i>
                                                 </button>
+                                              {% endif %}
                                             </div>
                                         {% endfor %}
                                     </div>

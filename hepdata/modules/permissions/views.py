@@ -81,7 +81,7 @@ def promote_or_demote_participant(recid, action, demote_or_promote,
         return json.dumps({"success": True, "recid": recid})
     except Exception as e:
         return json.dumps(
-            {"success": False, "recid": recid, "error": e.message})
+            {"success": False, "recid": recid, "error": str(e)})
 
 
 @blueprint.route('/manage/person/add/<int:recid>', methods=['POST'])
@@ -239,7 +239,7 @@ def assign_role(cookie):
 def check_is_sandbox_record(recid):
     try:
         submission = HEPSubmission.query.filter_by(publication_recid=recid).first()
-        return submission.overall_status == 'sandbox'
+        return submission.overall_status.startswith('sandbox')
     except Exception as e:
         return False
 

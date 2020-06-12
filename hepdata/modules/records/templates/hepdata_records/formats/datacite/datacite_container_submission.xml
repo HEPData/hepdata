@@ -30,11 +30,7 @@
     <version>{{ overall_submission.version }}</version>
     <descriptions>
         <description descriptionType="Abstract">
-            {% if overall_submission.data_abstract %}
-                {{ overall_submission.data_abstract.decode('utf-8') }}
-            {% else %}
-                {{ overall_submission.data_abstract }}
-            {% endif %}
+            {{ overall_submission.data_abstract }}
         </description>
     </descriptions>
 

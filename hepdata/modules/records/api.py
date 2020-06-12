@@ -29,20 +29,24 @@ from functools import wraps
 import subprocess
 
 import time
-from flask import redirect, request, render_template, jsonify, current_app, Response, abort
+from celery import shared_task
+from flask import redirect, request, render_template, jsonify, current_app, Response, abort, flash
 from flask_login import current_user
 from invenio_accounts.models import User
+from invenio_db import db
+from sqlalchemy import and_
 from sqlalchemy.orm.exc import NoResultFound
 from werkzeug.utils import secure_filename
 
 from hepdata.modules.converter import convert_oldhepdata_to_yaml
+from hepdata.modules.email.utils import create_send_email_task
 from hepdata.modules.permissions.api import user_allowed_to_perform_action
 from hepdata.modules.permissions.models import SubmissionParticipant
 from hepdata.modules.records.subscribers.api import is_current_user_subscribed_to_record
 from hepdata.modules.records.utils.common import decode_string, find_file_in_directory, allowed_file, \
     remove_file_extension, truncate_string, get_record_contents
 from hepdata.modules.records.utils.data_processing_utils import process_ctx
-from hepdata.modules.records.utils.submission import process_submission_directory, create_data_review
+from hepdata.modules.records.utils.submission import process_submission_directory, create_data_review, cleanup_submission
 from hepdata.modules.submission.api import get_latest_hepsubmission
 from hepdata.modules.records.utils.users import get_coordinators_in_system, has_role
 from hepdata.modules.records.utils.workflow import update_action_for_submission_participant
@@ -177,7 +181,7 @@ def format_tables(ctx, data_record_query, data_table, recid):
     if 'table' in request.args:
         if request.args['table']:
             ctx['table_to_show'] = request.args['table']
-    ctx['data_tables'] = data_table_metadata.values()
+    ctx['data_tables'] = list(data_table_metadata.values())
 
 
 def get_commit_message(ctx, recid):
@@ -236,7 +240,8 @@ def render_record(recid, record, version, output_format, light_mode=False):
 
     # Count number of all versions and number of finished versions of a publication record.
     version_count_all = HEPSubmission.query.filter(HEPSubmission.publication_recid == recid,
-                                                   HEPSubmission.overall_status != 'sandbox').count()
+                                                   and_(HEPSubmission.overall_status != 'sandbox',
+                                                        HEPSubmission.overall_status != 'sandbox_processing')).count()
     version_count_finished = HEPSubmission.query.filter_by(publication_recid=recid, overall_status='finished').count()
 
     # Number of versions that a user is allowed to access based on their permissions.
@@ -260,7 +265,12 @@ def render_record(recid, record, version, output_format, light_mode=False):
     hepdata_submission = get_latest_hepsubmission(publication_recid=recid, version=version)
 
     if hepdata_submission is not None:
-        if hepdata_submission.overall_status != 'sandbox':
+        if hepdata_submission.overall_status == 'processing':
+            ctx = {'recid': recid}
+            determine_user_privileges(recid, ctx)
+            return render_template('hepdata_records/publication_processing.html', ctx=ctx)
+
+        elif not hepdata_submission.overall_status.startswith('sandbox'):
             ctx = format_submission(recid, record, version, version_count, hepdata_submission)
             increment(recid)
 
@@ -318,15 +328,46 @@ def render_record(recid, record, version, output_format, light_mode=False):
         abort(404)
 
 
-def process_payload(recid, file, redirect_url):
+def process_payload(recid, file, redirect_url, synchronous=False):
+    """Process an uploaded file
+
+    :param recid: int
+        The id of the record to update
+    :param file: file
+        The file to process
+    :param redirect_url: string
+        Redirect URL to record, for use if the upload fails or in synchronous mode
+    :param synchronous: bool
+        Whether to process asynchronously via celery (default) or immediately (only recommended for tests)
+    """
     if file and (allowed_file(file.filename)):
-        errors = process_zip_archive(file, recid)
-        if errors:
-            return render_template('hepdata_records/error_page.html',
-                                   redirect_url=redirect_url.format(recid), errors=errors)
+        file_path = save_zip_file(file, recid)
+        hepsubmission = get_latest_hepsubmission(publication_recid=recid)
+
+        if hepsubmission.overall_status == 'finished':
+            # If it is finished and we receive an update,
+            # then we need to reopen the submission to allow for revisions,
+            # by creating a new HEPSubmission object.
+            _rev_hepsubmission = HEPSubmission(publication_recid=recid,
+                                               overall_status='todo',
+                                               inspire_id=hepsubmission.inspire_id,
+                                               coordinator=hepsubmission.coordinator,
+                                               version=hepsubmission.version + 1)
+            db.session.add(_rev_hepsubmission)
+            hepsubmission = _rev_hepsubmission
+
+        previous_status = hepsubmission.overall_status
+        hepsubmission.overall_status = 'sandbox_processing' if previous_status == 'sandbox' else 'processing'
+        db.session.add(hepsubmission)
+        db.session.commit()
+
+        if synchronous:
+            process_saved_file(file_path, recid, current_user.get_id(), redirect_url, previous_status)
         else:
-            update_action_for_submission_participant(recid, current_user.get_id(), 'uploader')
-            return redirect(redirect_url.format(recid))
+            process_saved_file.delay(file_path, recid, current_user.get_id(), redirect_url, previous_status)
+            flash('File saved. You will receive an email when the file has been processed.', 'info')
+
+        return redirect(redirect_url.format(recid))
     else:
         return render_template('hepdata_records/error_page.html', redirect_url=redirect_url.format(recid),
                                message="Incorrect file type uploaded.",
@@ -335,19 +376,73 @@ def process_payload(recid, file, redirect_url):
                                                                   + " (or a .oldhepdata or single .yaml file)."}]})
 
 
-def process_zip_archive(file, id):
+@shared_task
+def process_saved_file(file_path, recid, userid, redirect_url, previous_status):
+    errors = process_zip_archive(file_path, recid)
+
+    uploader = User.query.get(userid)
+    site_url = current_app.config.get('SITE_URL', 'https://www.hepdata.net')
+
+    submission_participant = SubmissionParticipant.query.filter_by(
+        publication_recid=recid, user_account=userid, role='uploader').first()
+    if submission_participant:
+        full_name = submission_participant.full_name
+    else:
+        full_name = uploader.email
+
+    hepsubmission = get_latest_hepsubmission(publication_recid=recid)
+    if errors:
+        cleanup_submission(recid, hepsubmission.version, [])  # delete all tables if errors
+        message_body = render_template('hepdata_theme/email/upload_errors.html',
+                                       name=full_name,
+                                       article=recid,
+                                       redirect_url=redirect_url.format(recid),
+                                       errors=errors,
+                                       site_url=site_url)
+
+        create_send_email_task(uploader.email,
+                               '[HEPData] Submission {0} upload failed'.format(recid),
+                               message_body)
+    else:
+        update_action_for_submission_participant(recid, userid, 'uploader')
+        message_body = render_template('hepdata_theme/email/upload_complete.html',
+                                       name=full_name,
+                                       article=recid,
+                                       link=redirect_url.format(recid),
+                                       site_url=site_url)
+
+        create_send_email_task(uploader.email,
+                               '[HEPData] Submission {0} upload succeeded'.format(recid),
+                               message_body)
+
+    # Reset the status of the submission back to the previous value.
+    hepsubmission.overall_status = previous_status
+    db.session.add(hepsubmission)
+    db.session.commit()
+
+
+def save_zip_file(file, id):
     filename = secure_filename(file.filename)
     time_stamp = str(int(round(time.time())))
     file_save_directory = os.path.join(current_app.config['CFG_DATADIR'], str(id), time_stamp)
 
+    if filename.endswith('.oldhepdata'):
+        file_save_directory = os.path.join(file_save_directory, 'oldhepdata')
+
     if not os.path.exists(file_save_directory):
         os.makedirs(file_save_directory)
+    file_path = os.path.join(file_save_directory, filename)
+
+    print('Saving file to {}'.format(file_path))
+    file.save(file_path)
+    return file_path
+
+
+def process_zip_archive(file_path, id):
+    (file_save_directory, filename) = os.path.split(file_path)
 
     if not filename.endswith('.oldhepdata'):
-        file_path = os.path.join(file_save_directory, filename)
-        print('Saving file to {}'.format(file_path))
-        file.save(file_path)
-
+        file_save_directory = os.path.dirname(file_path)
         submission_path = os.path.join(file_save_directory, remove_file_extension(filename))
         submission_temp_path = tempfile.mkdtemp(dir=current_app.config["CFG_TMPDIR"])
 
@@ -382,21 +477,13 @@ def process_zip_archive(file, id):
 
         submission_found = find_file_in_directory(submission_path, lambda x: x == "submission.yaml")
 
-    else:
-        file_path = os.path.join(file_save_directory, 'oldhepdata')
-        if not os.path.exists(file_path):
-            os.makedirs(file_path)
-
-        print('Saving file to {}'.format(os.path.join(file_path, filename)))
-        file.save(os.path.join(file_path, filename))
-
-        submission_found = False
-
-    if submission_found:
         basepath, submission_file_path = submission_found
         from_oldhepdata = False
+
     else:
-        result = check_and_convert_from_oldhepdata(file_path, id, time_stamp)
+        file_dir = os.path.dirname(file_save_directory)
+        time_stamp = os.path.split(file_dir)[1]
+        result = check_and_convert_from_oldhepdata(os.path.dirname(file_save_directory), id, time_stamp)
 
         # Check for errors
         if type(result) == dict:
@@ -405,7 +492,8 @@ def process_zip_archive(file, id):
             basepath, submission_file_path = result
             from_oldhepdata = True
 
-    return process_submission_directory(basepath, submission_file_path, id, from_oldhepdata=from_oldhepdata)
+    return process_submission_directory(basepath, submission_file_path, id,
+                                        from_oldhepdata=from_oldhepdata)
 
 
 def check_and_convert_from_oldhepdata(input_directory, id, timestamp):
@@ -565,8 +653,11 @@ def process_data_tables(ctx, data_record_query, first_data_id,
                 "name": submission_record.name,
                 "location": submission_record.location_in_publication,
                 "doi": submission_record.doi,
-                "description": decode_string(
-                    truncate_string(submission_record.description, 20))}
+                "description": truncate_string(
+                    submission_record.description,
+                    20
+                )
+            }
 
             if first_data_id == -1:
                 first_data_id = submission_record.id

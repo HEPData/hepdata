@@ -8,7 +8,7 @@ fi
 
 echo "Setting up Sauce Connect."
 tmp_dir=$(mktemp -d -t sc-XXXXXX)
-sc_version=4.5.4
+sc_version=4.6.2
 cd $tmp_dir
 
 echo "Downloading Sauce Connect..."

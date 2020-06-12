@@ -42,13 +42,13 @@ def download_resource_file(recid, resource_path):
     if not os.path.exists(output_location):
         os.makedirs(output_location)
 
-    import urllib2
+    from urllib.request import urlopen
 
     url = resource_path
     if 'resource' in resource_path:
         url = base_url.format(resource_path)
 
-    response = urllib2.urlopen(url)
+    response = urlopen(url)
     contents = response.read()
     # save to tmp file
 

@@ -1,0 +1,53 @@
+{% extends 'hepdata_theme/email/email_container.html' %}
+{% block email_type %}
+    Errors in Upload for Record {{ article }}
+{% endblock %}
+
+{% block email_content %}
+
+    Hi {{ name }},
+
+    <div>
+        <h4 style="color: #C03A2B;">{% if header_message %}
+            {{ header_message }}
+        {% else %}
+            Validation error encountered
+        {% endif %}
+        </h4>
+
+        <p>
+            {% if message %}
+                {{ message }}
+            {% else %}
+                A number of errors were encountered by our
+                <a href="https://github.com/HEPData/hepdata-validator" target="_blank">validation</a> code.
+                Our validation ensures that your submission files match the format described
+                <a href="https://github.com/HEPData/hepdata-submission" target="_blank">here</a>.
+                You can validate your YAML files offline using
+                <a href="https://raw.githubusercontent.com/HEPData/hepdata-submission/master/scripts/check.py" target="_blank">this script</a>.
+            {% endif %}
+        </p>
+
+        {% if redirect_url %}
+          <p style="font-weight: bolder">Please fix your submission and reupload via
+            the associated <a href="{{ redirect_url }}" target="_blank">record</a> page.</p>
+        {% endif %}
+
+        <br/>
+        {% for file, file_errors in errors.items() %}
+            <p style="color: #3B5169; font-weight: bolder; font-size: 1.2em;">{{ file }}</p>
+            {% for error in file_errors %}
+                <div style="background-color:#ECF0F1;min-height:40px;margin:3px;border-radius:0 4px 4px 0;">
+                    <div style="background-color:#C03A2B;padding:10px;width:10%;border-radius:4px 0 0 4px;color: #fff;float:left!important;">{{ error.level }}</div>
+                    <div style="padding:10px;width:75%;text-align:left;color: #3B5169;float:right!important;">{{ error.message|safe }}</div>
+                    <div style="clear:both;"></div>
+                </div>
+            {% endfor %}
+        {% endfor %}
+      </div>
+    </div>
+
+    <p>
+        The <a href="{{ site_url }}" style="color: #9b59b6">HEPData</a> team
+    </p>
+{% endblock %}

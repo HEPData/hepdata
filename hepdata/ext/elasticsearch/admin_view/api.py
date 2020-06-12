@@ -106,7 +106,7 @@ class AdminIndexer:
         s = Search(index=self.index)
         # Filter by date to approximately 20 years ago, to ensure there aren't more
         # than 10000 buckets
-        date_20_years_ago = (datetime.now() - timedelta(days=int(20*365.25))).date()
+        date_20_years_ago = (datetime.utcnow() - timedelta(days=int(20*365.25))).date()
         s = s.filter('range', **{'last_updated': {'gte': str(date_20_years_ago)}})
         s.aggs.bucket('daily_workflows', 'date_histogram',
                       field='last_updated',
@@ -178,7 +178,9 @@ class AdminIndexer:
         if recreate:
             self.recreate_index()
 
-        submissions = HEPSubmission.query.filter(HEPSubmission.overall_status != 'sandbox' and HEPSubmission.coordinator > 1).all()
+        submissions = HEPSubmission.query.filter(HEPSubmission.overall_status != 'sandbox' and \
+                                                 HEPSubmission.overall_status != 'sandbox_processing' and \
+                                                 HEPSubmission.coordinator > 1).all()
 
         for submission in submissions:
             self.index_submission(submission)

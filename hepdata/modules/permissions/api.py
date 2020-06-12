@@ -25,6 +25,7 @@ from functools import partial
 from operator import is_not
 
 from flask_login import current_user
+from sqlalchemy import or_
 
 from hepdata.modules.permissions.models import SubmissionParticipant, CoordinatorRequest
 from hepdata.modules.records.utils.common import get_record_contents
@@ -61,7 +62,7 @@ def get_records_participated_in_by_user():
         _coordinator = [get_record_contents(x.publication_recid) for x in as_coordinator]
         result['coordinator'] = filter(partial(is_not, None), _coordinator)
 
-    return result
+    return list(result)
 
 
 def get_pending_request():
@@ -166,10 +167,11 @@ def write_submissions_to_files():
 
         # For version 1 or version 2, write number of unfinished and finished submissions.
         for version in (1, 2):
-            number_todo = HEPSubmission.query.filter_by(
-                coordinator=user_id,
-                overall_status='todo',
-                version=version).count()
+            number_todo = HEPSubmission.query.filter(
+                HEPSubmission.coordinator == user_id,
+                or_(HEPSubmission.overall_status == 'todo',
+                    HEPSubmission.overall_status == 'processing'),
+                HEPSubmission.version == version).count()
             number_finished = HEPSubmission.query.filter_by(
                 coordinator=user_id,
                 overall_status='finished',

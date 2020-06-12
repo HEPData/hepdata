@@ -21,7 +21,6 @@
 # In applying this license, CERN does not
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
-from __future__ import absolute_import, print_function
 
 import copy
 import os
@@ -40,8 +39,10 @@ def _(x):
 SQLALCHEMY_DATABASE_URI = os.environ.get(
     "SQLALCHEMY_DATABASE_URI",
     "postgresql+psycopg2://hepdata:hepdata@localhost/hepdata")
-SQLALCHEMY_ECHO = False
-SQLALCHEMY_POOL_RECYCLE = 7200
+SQLALCHEMY_ENGINE_OPTIONS = {
+    'echo': False,
+    'pool_recycle': 7200
+}
 
 # Default language and timezone
 BABEL_DEFAULT_LANGUAGE = 'en'
@@ -53,7 +54,7 @@ I18N_LANGUAGES = [
 ]
 
 # Distributed task queue
-BROKER_URL = "redis://localhost:6379/0"
+CELERY_BROKER_URL = "redis://localhost:6379/0"
 CELERY_RESULT_BACKEND = "redis://localhost:6379/1"
 CELERY_ACCEPT_CONTENT = ['json', 'msgpack', 'yaml']
 
@@ -278,7 +279,6 @@ SUBMISSION_FILE_NAME_PATTERN = 'HEPData-{}-v{}-yaml.zip'
 PYTHONWARNINGS="ignore:Unverified HTTPS request"
 
 PRODUCTION_MODE = False
-EOS_DATADIR = 'root://eospublic.cern.ch//eos/hepdata/prod/var/data' # TO DO: move to Puppet configuration
 
 RUN_SELENIUM_LOCALLY = False
 

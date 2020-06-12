@@ -24,19 +24,17 @@
 
 """Blueprint for HEPData-Records."""
 
-from __future__ import absolute_import, print_function
-
 import logging
 import json
 from dateutil import parser
 from flask_login import login_required
-from flask import Blueprint, send_file, abort, current_app, redirect
+from flask import Blueprint, send_file, abort, redirect
+from sqlalchemy import or_
 import yaml
 try:
     from yaml import CBaseLoader as Loader
 except ImportError: #pragma: no cover
     from yaml import BaseLoader as Loader #pragma: no cover
-from invenio_db import db
 
 from hepdata.config import CFG_DATA_TYPE, CFG_PUB_TYPE
 from hepdata.ext.elasticsearch.api import get_records_matching_field, get_count_for_collection, get_n_latest_records, \
@@ -74,15 +72,23 @@ blueprint = Blueprint(
 @blueprint.route('/sandbox/<int:id>', methods=['GET'])
 def sandbox_display(id):
 
-    hepdata_submission = HEPSubmission.query.filter_by(
-        publication_recid=id, overall_status='sandbox').first()
+    hepdata_submission = HEPSubmission.query.filter(
+        HEPSubmission.publication_recid == id,
+        or_(HEPSubmission.overall_status == 'sandbox',
+            HEPSubmission.overall_status == 'sandbox_processing')).first()
 
     if hepdata_submission is not None:
-        ctx = format_submission(id, None, 1, 1, hepdata_submission)
-        ctx['mode'] = 'sandbox'
-        ctx['show_review_widget'] = False
-        increment(id)
-        return render_template('hepdata_records/sandbox.html', ctx=ctx)
+        if hepdata_submission.overall_status == 'sandbox_processing':
+            ctx = {'recid': id}
+            determine_user_privileges(id, ctx)
+            return render_template('hepdata_records/publication_processing.html', ctx=ctx)
+        else:
+            ctx = format_submission(id, None, 1, 1, hepdata_submission)
+            ctx['mode'] = 'sandbox'
+            ctx['show_review_widget'] = False
+            increment(id)
+            return render_template('hepdata_records/sandbox.html', ctx=ctx)
+
     else:
         return render_template('hepdata_records/error_page.html', recid=None,
                                message="No submission exists with that ID.",
@@ -284,7 +290,7 @@ def get_table_details(recid, data_recid, version):
                                              'alt_location': alt_location})
 
         # add associated files to the table contents
-        table_contents['associated_files'] = tmp_assoc_files.values()
+        table_contents['associated_files'] = list(tmp_assoc_files.values())
 
     table_contents["review"] = {}
 
@@ -410,7 +416,7 @@ def add_data_review_messsage(publication_recid, data_recid):
     """
 
     trace = []
-    message = encode_string(request.form.get('message', ''))
+    message = request.form.get('message', '')
     version = request.form['version']
     userid = current_user.get_id()
 
@@ -604,6 +610,7 @@ def get_resource(resource_id):
 
 
 @blueprint.route('/<int:recid>/consume', methods=['GET', 'POST'])
+@login_required
 def consume_data_payload(recid):
     """
     This method persists, then presents the loaded data back to the user.
@@ -614,7 +621,8 @@ def consume_data_payload(recid):
 
     if request.method == 'POST':
         file = request.files['hep_archive']
-        return process_payload(recid, file, '/record/{}')
+        redirect_url = request.url_root + "record/{}"
+        return process_payload(recid, file, redirect_url)
 
     else:
         return redirect('/record/' + str(recid))
@@ -624,10 +632,15 @@ def consume_data_payload(recid):
 @login_required
 def sandbox():
     current_id = current_user.get_id()
-    submissions = HEPSubmission.query.filter_by(coordinator=current_id, overall_status='sandbox').order_by(
-        HEPSubmission.id.desc()).all()
+    submissions = HEPSubmission.query.filter(
+        HEPSubmission.coordinator == current_id,
+        or_(HEPSubmission.overall_status == 'sandbox',
+            HEPSubmission.overall_status == 'sandbox_processing')
+        ).order_by(HEPSubmission.last_updated.desc()).all()
+
     for submission in submissions:
-        submission.data_abstract = decode_string(submission.data_abstract)
+        submission.data_abstract = submission.data_abstract
+
     return render_template('hepdata_records/sandbox.html',
                            ctx={"submissions": submissions})
 
@@ -666,7 +679,8 @@ def attach_information_to_record(recid):
                         'message': 'No record with that recid was found.'})
 
 
-@blueprint.route('/sandbox/consume', methods=['POST'])
+@blueprint.route('/sandbox/consume', methods=['GET', 'POST'])
+@login_required
 def consume_sandbox_payload():
     """
     Creates a new sandbox submission with a new file upload.
@@ -675,14 +689,19 @@ def consume_sandbox_payload():
     """
     import time
 
+    if request.method == 'GET':
+        return redirect('/record/sandbox')
+
     id = (int(current_user.get_id())) + int(round(time.time()))
 
     get_or_create_hepsubmission(id, current_user.get_id(), status="sandbox")
     file = request.files['hep_archive']
-    return process_payload(id, file, '/record/sandbox/{}')
+    redirect_url = request.url_root + "record/sandbox/{}"
+    return process_payload(id, file, redirect_url)
 
 
-@blueprint.route('/sandbox/<int:recid>/consume', methods=['POST'])
+@blueprint.route('/sandbox/<int:recid>/consume', methods=['GET', 'POST'])
+@login_required
 def update_sandbox_payload(recid):
     """
     Updates the Sandbox submission with a new file upload.
@@ -690,8 +709,12 @@ def update_sandbox_payload(recid):
     :param recid:
     """
 
+    if request.method == 'GET':
+        return redirect('/record/sandbox/' + str(recid))
+
     file = request.files['hep_archive']
-    return process_payload(recid, file, '/record/sandbox/{}')
+    redirect_url = request.url_root + "record/sandbox/{}"
+    return process_payload(recid, file, redirect_url)
 
 
 @blueprint.route('/add_resource/<string:type>/<int:identifier>/<int:version>', methods=['POST'])
