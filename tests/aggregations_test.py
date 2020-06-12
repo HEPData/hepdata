@@ -356,7 +356,12 @@ def test_parse_aggregations():
             'type': 'cmenergies'
         }
     ]
-    assert(parse_aggregations(aggregations) == expected)
+
+    parsed_aggregations = parse_aggregations(aggregations)
+    assert(len(parsed_aggregations) == len(expected))
+
+    for agg in parsed_aggregations:
+        assert(agg in expected)
 
 
 def test_create_dummy_cmenergies_facets():

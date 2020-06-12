@@ -24,8 +24,6 @@
 
 """Jinja utilities for Invenio."""
 
-from __future__ import absolute_import, print_function
-
 import pkg_resources
 
 from hepdata.modules.permissions.models import SubmissionParticipant

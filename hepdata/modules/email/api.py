@@ -29,7 +29,7 @@ from flask_login import current_user
 from hepdata.modules.email.utils import create_send_email_task
 from hepdata.modules.permissions.models import SubmissionParticipant
 from hepdata.modules.records.subscribers.api import get_users_subscribed_to_record
-from hepdata.modules.records.utils.common import get_record_by_id, encode_string, decode_string
+from hepdata.modules.records.utils.common import get_record_by_id
 from flask import render_template
 
 from hepdata.modules.submission.api import get_latest_hepsubmission, get_submission_participants_for_record
@@ -67,7 +67,7 @@ def send_new_review_message_email(review, message, user):
         name=', '.join(set(full_names)),
         actor=user.email,
         table_name=table_information.name,
-        table_message=decode_string(message.message),
+        table_message=message.message,
         article=review.publication_recid,
         title=record['title'],
         site_url=site_url,
@@ -186,24 +186,14 @@ def notify_subscribers(hepsubmission, record):
 
 def send_cookie_email(submission_participant,
                       record_information, message=None):
-    try:
-        message_body = render_template(
-            'hepdata_theme/email/invite.html',
-            name=submission_participant.full_name,
-            role=submission_participant.role,
-            title=encode_string(record_information['title']),
-            site_url=current_app.config.get('SITE_URL', 'https://www.hepdata.net'),
-            invite_token=submission_participant.invitation_cookie,
-            message=message)
-    except UnicodeDecodeError:
-        message_body = render_template(
-            'hepdata_theme/email/invite.html',
-            name=submission_participant.full_name,
-            role=submission_participant.role,
-            site_url=current_app.config.get('SITE_URL', 'https://www.hepdata.net'),
-            title=None,
-            invite_token=submission_participant.invitation_cookie,
-            message=message)
+    message_body = render_template(
+        'hepdata_theme/email/invite.html',
+        name=submission_participant.full_name,
+        role=submission_participant.role,
+        title=record_information['title'],
+        site_url=current_app.config.get('SITE_URL', 'https://www.hepdata.net'),
+        invite_token=submission_participant.invitation_cookie,
+        message=message)
 
     create_send_email_task(submission_participant.email,
                            "[HEPData] Invitation to be a {0} of record {1} in HEPData".format(

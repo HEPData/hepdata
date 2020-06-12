@@ -22,8 +22,6 @@
 
 """HEPData Dashboard Views."""
 
-from __future__ import absolute_import, print_function
-
 from flask import Blueprint, jsonify, request, render_template
 from flask_login import login_required, current_user
 

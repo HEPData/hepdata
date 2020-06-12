@@ -17,7 +17,6 @@
 # 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
 #
 """HEPData Search Views."""
-from __future__ import division
 
 import json
 
@@ -29,7 +28,7 @@ from hepdata.ext.elasticsearch.api import search as es_search, \
 from hepdata.modules.records.utils.common import decode_string
 from hepdata.utils.session import get_session_item, set_session_item
 from hepdata.utils.url import modify_query
-from config import HEPDATA_CFG_MAX_RESULTS_PER_PAGE, HEPDATA_CFG_FACETS
+from .config import HEPDATA_CFG_MAX_RESULTS_PER_PAGE, HEPDATA_CFG_FACETS
 
 blueprint = Blueprint('es_search',
                       __name__,
@@ -170,8 +169,7 @@ def parse_query_parameters(request_args):
     :param request_args: [dict-like structure] Any structure supporting get calls
     :result: [dict] Parsed parameters
     """
-
-    args = {key: value[0] for (key, value) in dict(request_args).iteritems()}
+    args = dict(request_args)
     min_date, max_date = check_date(args)
     check_cmenergies(args)
     check_page(args)

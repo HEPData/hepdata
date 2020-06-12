@@ -22,7 +22,7 @@
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
 
-from aggregations import parse_aggregations
+from .aggregations import parse_aggregations
 from hepdata.config import CFG_DATA_TYPE, CFG_PUB_TYPE
 from hepdata.utils.miscellaneous import splitter
 
@@ -48,7 +48,7 @@ def map_result(es_result, query_filters=None):
     results = []
     for paper, datatables in aggregated:
         mapped_hit = get_basic_record_information(paper)
-        data = map(get_basic_record_information, datatables)
+        data = list(map(get_basic_record_information, datatables))
         mapped_hit.update({
             'data': data,
             'total_tables': len(data),
@@ -84,17 +84,17 @@ def match_tables_to_papers(tables, papers):
 
 
 def get_basic_record_information(record):
-    from utils import parse_and_format_date, tidy_bytestring
+    from .utils import parse_and_format_date, tidy_bytestring
     source = record['_source']
 
     # Collaborations
     collaborations = source.get('collaborations', [])
-    if isinstance(collaborations, basestring):
+    if isinstance(collaborations, str):
         collaborations = [collaborations]
 
     authors = source.get('summary_authors', None)
     if authors:
-        authors = map(lambda x: x['full_name'], authors)
+        authors = list(map(lambda x: x['full_name'], authors))
 
     datestring = source.get('creation_date')
 
@@ -109,7 +109,7 @@ def get_basic_record_information(record):
 
 def fetch_remaining_papers(tables, papers):
     from hepdata.ext.elasticsearch.api import fetch_record
-    hit_papers = map(lambda x: int(x['_id']), papers)
+    hit_papers = list(map(lambda x: int(x['_id']), papers))
     for table in tables:
         paper_id = table['_source'].get('related_publication')
         if paper_id and paper_id not in hit_papers:

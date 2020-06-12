@@ -21,7 +21,6 @@
 # In applying this license, CERN does not
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
-from __future__ import absolute_import, print_function
 
 import copy
 import os
@@ -40,8 +39,10 @@ def _(x):
 SQLALCHEMY_DATABASE_URI = os.environ.get(
     "SQLALCHEMY_DATABASE_URI",
     "postgresql+psycopg2://hepdata:hepdata@localhost/hepdata")
-SQLALCHEMY_ECHO = False
-SQLALCHEMY_POOL_RECYCLE = 7200
+SQLALCHEMY_ENGINE_OPTIONS = {
+    'echo': False,
+    'pool_recycle': 7200
+}
 
 # Default language and timezone
 BABEL_DEFAULT_LANGUAGE = 'en'

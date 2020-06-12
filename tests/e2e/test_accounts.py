@@ -24,11 +24,11 @@
 """HEPData end to end testing of accounts."""
 import flask
 
-from conftest import e2e_assert, e2e_assert_url
+from .conftest import e2e_assert, e2e_assert_url
 from invenio_accounts import testutils
 from itsdangerous import URLSafeTimedSerializer
 from flask_security import utils
-
+from passlib.context import CryptContext
 
 def test_user_registration_and_login(live_server, env_browser):
     """E2E user registration and login test."""
@@ -95,7 +95,7 @@ def test_user_registration_and_login(live_server, env_browser):
            in info_element.text)
 
     # 9a Generate a confirmation token (this is how it's done in flask_security)
-    data = ['2', utils.md5(user_email)]
+    data = ['2', utils.hash_data(user_email)]
     serializer = URLSafeTimedSerializer(
         secret_key="CHANGE_ME",
         salt="CHANGE_ME"

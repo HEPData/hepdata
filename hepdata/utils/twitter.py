@@ -22,8 +22,6 @@
 
 """Twitter API."""
 
-from __future__ import absolute_import, print_function
-
 from hepdata.modules.records.utils.common import encode_string, decode_string, truncate_string
 from twitter import Twitter
 from twitter import OAuth

@@ -13,7 +13,7 @@ Options for installing
 **********************
 
 There are two ways to get HEPData running locally: either install and run all the services on your local machine, or
-run it via `Docker Compose <https://docs.docker.com/compose/>`_.
+run it via `Docker Compose <https://docs.docker.com/compose/>`__.
 
 Using ``docker-compose`` is the quickest way to get up-and-running. However, it has some disadvantages:
  * It requires more resources on your local machine as it runs several Docker containers.
@@ -33,7 +33,7 @@ HEPData uses several services, which you will need to install before running HEP
  * `PostgreSQL <http://www.postgresql.org/>`_ (version 9.6) database server
  * `Redis <http://redis.io/>`_ for caching
  * `Elasticsearch <https://www.elastic.co/products/elasticsearch>`_ (version 7.1, not later versions) for indexing and information retrieval. See below for further instructions.
- * `Node.js <https://nodejs.org>`_ JavaScript run-time environment and its package manager `npm <https://www.npmjs.com/>`_.
+ * `Node.js <https://nodejs.org>`_ JavaScript run-time environment and its package manager `npm <https://www.npmjs.com/>`_. (If you're using a Debian-based OS, please follow the `official installation instructions <https://github.com/nodesource/distributions/blob/master/README.md#debinstall>`_ to install NodeJS (which will also install npm), to avoid issues with ``node-sass``.)
 
 These services can be installed using the relevant package manager for your system,
 for example, using ``yum`` or ``apt-get`` for Linux or ``brew`` for macOS.
@@ -66,8 +66,9 @@ Installation
 
 Python
 ------
+The HEPData code is only compatible with Python 3 (not Python 2).  It has been tested with Python 3.6.
 
-First install all requirements in a `virtualenv <https://virtualenv.pypa.io/en/stable/installation/>`_
+First install all requirements in a `virtualenv <https://virtualenv.pypa.io/en/stable/installation.html>`_
 using `virtualenvwrapper <https://virtualenvwrapper.readthedocs.io/en/latest/install.html>`_:
 
 .. code-block:: console
@@ -75,10 +76,10 @@ using `virtualenvwrapper <https://virtualenvwrapper.readthedocs.io/en/latest/ins
    $ mkvirtualenv hepdata
    (hepdata)$ mkdir ~/src/
    (hepdata)$ cd ~/src/
-   (hepdata)$ git clone https://github.com/HEPData/hepdata
+   (hepdata)$ git clone https://github.com/HEPData/hepdata.git
    (hepdata)$ cd hepdata
    (hepdata)$ pip install --upgrade pip
-   (hepdata)$ pip install -e . --pre --upgrade -r requirements.txt
+   (hepdata)$ pip install -e .[all] --upgrade -r requirements.txt
 
 Use of config_local.py
 ----------------------
@@ -86,12 +87,14 @@ Use of config_local.py
 The ``hepdata/config.py`` contains default configuration options, which often need to be overridden in a local instance.
 For example, DOI minting should be switched off in a non-production instance, otherwise finalising a new record will
 give an error message due to a lack of DataCite authorisation credentials.
+The option ``APP_ENABLE_SECURE_HEADERS = False`` is **required** for an ``http`` (rather than ``https``) ``SITE_URL``.
 Rather than edit ``hepdata/config.py``, it is more convenient to define custom options in a separate file
 ``hepdata/config_local.py`` that will be ignored by Git.  For example, to switch off email, DOI minting, Twitter,
 use a local converter URL, and specify custom temporary and data directories:
 
 .. code-block:: python
 
+   APP_ENABLE_SECURE_HEADERS = False
    SITE_URL = "http://localhost:5000"
    TESTING = True
    NO_DOI_MINTING = True
@@ -99,6 +102,8 @@ use a local converter URL, and specify custom temporary and data directories:
    CFG_CONVERTER_URL = 'http://localhost:5500'
    CFG_TMPDIR = '/mt/home/watt/tmp/hepdata/tmp'
    CFG_DATADIR = '/mt/home/watt/tmp/hepdata/data'
+
+An example file ``hepdata/config_local.local.py`` is provided, which can be copied to ``hepdata/config_local.py``.
 
 JavaScript
 ----------
@@ -109,7 +114,8 @@ installing in local mode causes problems and it is necessary to run the install 
 .. code-block:: console
 
    (hepdata)$ cd /
-   (hepdata)$ sudo npm install -g node-sass clean-css@3.4.28 uglify-js requirejs
+   (hepdata)$ sudo npm install -g clean-css@3.4.28 uglify-js requirejs
+   (hepdata)$ sudo npm install -g --unsafe-perm node-sass
    (hepdata)$ cd ~/src/hepdata
    (hepdata)$ ./scripts/clean_assets.sh
 
@@ -120,7 +126,7 @@ Run Celery (-B runs celery beat):
 
 .. code-block:: console
 
-   (hepdata)$ celery worker -E -B -A hepdata.celery
+   (hepdata)$ celery worker -l info -E -B -A hepdata.celery
 
 PostgreSQL
 ----------
@@ -197,12 +203,13 @@ locally you have several options:
 2. Run Selenium locally using ChromeDriver.
     1. Install `ChromeDriver <https://chromedriver.chromium.org>`_
        (matched to your version of `Chrome <https://www.google.com/chrome/>`_).
-    2. Include ``RUN_SELENIUM_LOCALLY = True`` in your ``hepdata/config_local.py`` file.
+    2. Include ``RUN_SELENIUM_LOCALLY = True`` and ``RATELIMIT_ENABLED = False`` in your ``hepdata/config_local.py`` file.
+    3. You might need to close Chrome before running the end-to-end tests.
 
-3. Omit the end-to-end tests when running locally, by running ``py.test tests -k 'not tests/e2e'`` instead of ``run-tests.sh``.
+3. Omit the end-to-end tests when running locally, by running ``pytest tests -k 'not tests/e2e'`` instead of ``run-tests.sh``.
 
 
-Once you have set up Selenium or SauceLabs, you can run the tests using:
+Once you have set up Selenium or Sauce Labs, you can run the tests using:
 
 .. code-block:: console
 
@@ -251,7 +258,7 @@ on the Kubernetes cluster at CERN.
 
 For local development you can use the ``docker-compose.yml`` file to run the HEPData docker image and its required services.
 
-First, ensure you have installed `Docker <https://docs.docker.com/install/>`_ and `Docker Compose <https://docs.docker.com/compose/install/>`_.
+First, ensure you have installed `Docker <https://docs.docker.com/install/>`_ and `Docker Compose <https://docs.docker.com/compose/install/>`__.
 
 Copy the file ``config_local.docker_compose.py`` to ``config_local.py``.
 
@@ -279,7 +286,7 @@ To run the tests:
 
 .. code-block:: console
 
-   $ docker-compose run web bash -c "/usr/var/sc-4.5.4-linux/bin/sc -u $SAUCE_USERNAME -k $SAUCE_ACCESS_KEY -x https://eu-central-1.saucelabs.com/rest/v1 & ./run-tests.sh"
+   $ docker-compose run web bash -c "/usr/local/var/sc-4.5.4-linux/bin/sc -u $SAUCE_USERNAME -k $SAUCE_ACCESS_KEY -x https://eu-central-1.saucelabs.com/rest/v1 & ./run-tests.sh"
 
 
 .. _docker-compose-tips:

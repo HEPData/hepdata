@@ -34,7 +34,7 @@ def modify_query(path, **new_values):
     """
     args = request.args.copy()
 
-    for key, value in new_values.items():
+    for key, value in list(new_values.items()):
         if value is not None:
             args[key] = value
         elif key in args:

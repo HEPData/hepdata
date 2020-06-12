@@ -52,7 +52,7 @@ def create_data_structure(ctx):
         first_author = authors[0]
 
     record = {"title": title,
-              "abstract": ctx.get('abstract'),
+              "abstract": str(ctx.get('abstract')),
               "inspire_id": ctx.get("inspire_id"),
               "first_author": first_author,
               "authors": authors
@@ -83,7 +83,7 @@ def update_record(recid, ctx):
     """
     print('Updating record {}'.format(recid))
     record = get_record_by_id(recid)
-    for key, value in ctx.iteritems():
+    for key, value in ctx.items():
         record[key] = value
     record["recid"] = recid
 
