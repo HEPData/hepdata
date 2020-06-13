@@ -241,6 +241,21 @@ def record_exists(*args, **kwargs):
     return count > 0
 
 
-def get_data_path_for_filename(file_or_directory, *subdirs):
-    path = os.path.join(current_app.config['CFG_DATADIR'], file_or_directory, *subdirs)
+def find_submission_data_file_path(submission, version):
+    # Try old location as well as new, so downloads still work whilst files
+    # are being migrated
+    data_filename = current_app.config['SUBMISSION_FILE_NAME_PATTERN'] \
+                               .format(submission.publication_recid, version)
+
+    path = get_data_path_for_filename(str(submission.publication_recid),
+                                      data_filename)
+
+    if not os.path.isfile(path):
+        path = os.path.join(current_app.config['CFG_DATADIR'],
+                            str(submission.publication_recid), data_filename)
+    return path
+
+
+def get_data_path_for_filename(file_or_directory, *subpaths):
+    path = os.path.join(current_app.config['CFG_DATADIR'], file_or_directory, *subpaths)
     return path

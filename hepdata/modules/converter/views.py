@@ -35,7 +35,8 @@ from hepdata.modules.converter import convert_zip_archive
 from hepdata.modules.submission.api import get_latest_hepsubmission
 from hepdata.modules.submission.models import HEPSubmission, DataResource, DataSubmission
 from hepdata.utils.file_extractor import extract, get_file_in_directory
-from hepdata.modules.records.utils.common import get_record_contents, get_data_path_for_filename
+from hepdata.modules.records.utils.common import get_record_contents, \
+    get_data_path_for_filename, find_submission_data_file_path
 
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy import func, or_
@@ -231,9 +232,6 @@ def download_submission(submission, file_format, offline=False, force=False, riv
                         "Currently supported formats: " + str(CFG_SUPPORTED_FORMATS),
         )
 
-    path = get_data_path_for_filename(str(submission.publication_recid))
-    data_filename = current_app.config['SUBMISSION_FILE_NAME_PATTERN'].format(submission.publication_recid, version)
-
     output_file = 'HEPData-{0}-v{1}-{2}.tar.gz'.format(file_identifier, submission.version, file_format)
 
     converted_dir = get_data_path_for_filename('converted')
@@ -286,8 +284,7 @@ def download_submission(submission, file_format, offline=False, force=False, riv
                     converter_options['rivet_analysis_name'] = '{0}_{1}_I{2}'.format(
                         ''.join(record['collaborations']).upper(), year, submission.inspire_id)
 
-    data_filepath = os.path.join(path, data_filename)
-
+    data_filepath = find_submission_data_file_path(submission, version)
     converted_file = convert_zip_archive(data_filepath, output_path, converter_options)
     if not offline:
         return send_file(converted_file, as_attachment=True)
