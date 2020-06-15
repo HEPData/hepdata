@@ -21,9 +21,6 @@
 # In applying this license, CERN does not
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
-
-from flask import current_app
-
 from invenio_db import db
 from invenio_pidstore.errors import PIDDoesNotExistError
 from invenio_pidstore.resolver import Resolver
@@ -239,27 +236,3 @@ def get_record_by_id(recid):
 def record_exists(*args, **kwargs):
     count = HEPSubmission.query.filter_by(**kwargs).count()
     return count > 0
-
-
-def find_submission_data_file_path(submission, version):
-    # Try old location as well as new, so downloads still work whilst files
-    # are being migrated
-    data_filename = current_app.config['SUBMISSION_FILE_NAME_PATTERN'] \
-                               .format(submission.publication_recid, version)
-
-    path = get_data_path_for_filename(str(submission.publication_recid),
-                                      data_filename)
-
-    if not os.path.isfile(path):
-        path = os.path.join(current_app.config['CFG_DATADIR'],
-                            str(submission.publication_recid), data_filename)
-    return path
-
-
-def get_converted_directory_path(record_id):
-    return os.path.join(current_app.config['CFG_DATADIR'], 'converted')
-
-
-def get_data_path_for_filename(file_or_directory, *subpaths):
-    path = os.path.join(current_app.config['CFG_DATADIR'], file_or_directory, *subpaths)
-    return path

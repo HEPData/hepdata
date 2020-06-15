@@ -45,7 +45,8 @@ from hepdata.modules.submission.models import DataSubmission, DataReview, \
     DataResource, License, Keyword, HEPSubmission, RecordVersionCommitMessage
 from hepdata.modules.records.utils.common import \
     get_license, infer_file_type, encode_string, zipdir, get_record_by_id, contains_accepted_url
-from hepdata.modules.records.utils.common import get_or_create, get_data_path_for_filename
+from hepdata.modules.records.utils.common import get_or_create
+from hepdata.modules.records.utils.data_files import get_data_path_for_record
 from hepdata.modules.records.utils.doi_minter import reserve_dois_for_data_submissions, reserve_doi_for_hepsubmission, \
     generate_dois_for_submission
 from hepdata.modules.records.utils.resources import download_resource_file
@@ -608,7 +609,7 @@ def package_submission(basepath, recid, hep_submission_obj):
     :param hep_submission_obj: the HEPSubmission object representing
            the overall position
     """
-    path = get_data_path_for_filename(str(recid))
+    path = get_data_path_for_record(str(recid))
     if not os.path.exists(path):
         os.makedirs(path)
 

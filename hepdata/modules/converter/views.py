@@ -35,8 +35,10 @@ from hepdata.modules.converter import convert_zip_archive
 from hepdata.modules.submission.api import get_latest_hepsubmission
 from hepdata.modules.submission.models import HEPSubmission, DataResource, DataSubmission
 from hepdata.utils.file_extractor import extract, get_file_in_directory
-from hepdata.modules.records.utils.common import get_record_contents, \
-    get_converted_directory_path, find_submission_data_file_path
+from hepdata.modules.records.utils.common import get_record_contents
+from hepdata.modules.records.utils.data_files import get_converted_directory_path, \
+    find_submission_data_file_path
+
 
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy import func, or_
@@ -284,7 +286,7 @@ def download_submission(submission, file_format, offline=False, force=False, riv
                     converter_options['rivet_analysis_name'] = '{0}_{1}_I{2}'.format(
                         ''.join(record['collaborations']).upper(), year, submission.inspire_id)
 
-    data_filepath = find_submission_data_file_path(submission, version)
+    data_filepath = find_submission_data_file_path(submission)
     converted_file = convert_zip_archive(data_filepath, output_path, converter_options)
     if not offline:
         return send_file(converted_file, as_attachment=True)

@@ -36,7 +36,8 @@ from invenio_db import db
 from hepdata.ext.elasticsearch.api import get_records_matching_field, index_record_ids
 from hepdata.modules.inspire_api.views import get_inspire_record_information
 from hepdata.modules.dashboard.views import do_finalise
-from hepdata.modules.records.utils.common import record_exists, get_data_path_for_filename
+from hepdata.modules.records.utils.common import record_exists
+from hepdata.modules.records.utils.data_files import get_data_path_for_record
 
 from hepdata.modules.records.utils.submission import \
     process_submission_directory, get_or_create_hepsubmission, \
@@ -248,7 +249,7 @@ class Migrator(object):
         :param inspire_id:
         :return: output location if successful, None if not
         """
-        output_location = get_data_path_for_filename(inspire_id)
+        output_location = get_data_path_for_record(inspire_id)
         last_updated = datetime.utcnow()
 
         download = not os.path.exists(output_location) or (get_file_in_directory(output_location, 'yaml') is None)
@@ -258,7 +259,7 @@ class Migrator(object):
             file_location = self.download_file(inspire_id)
 
             if file_location:
-                output_location = get_data_path_for_filename(inspire_id)
+                output_location = get_data_path_for_record(inspire_id)
                 error, last_updated = split_files(file_location, output_location, "{0}.zip".format(output_location))
 
                 # remove temporary download file after processing
