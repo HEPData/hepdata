@@ -634,7 +634,6 @@ def consume_data_payload(recid):
         invitation_cookie = request.form['invitation_cookie']
         hepsubmission_record = get_latest_hepsubmission(publication_recid=recid)
 
-        print([participant.invitation_cookie for participant in hepsubmission_record.participants])
         # check user is allowed to upload
         if not any([(participant.role == 'uploader' and
                      participant.email == user_email and
