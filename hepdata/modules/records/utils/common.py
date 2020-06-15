@@ -256,6 +256,10 @@ def find_submission_data_file_path(submission, version):
     return path
 
 
+def get_converted_directory_path(record_id):
+    return os.path.join(current_app.config['CFG_DATADIR'], 'converted')
+
+
 def get_data_path_for_filename(file_or_directory, *subpaths):
     path = os.path.join(current_app.config['CFG_DATADIR'], file_or_directory, *subpaths)
     return path

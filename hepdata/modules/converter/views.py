@@ -36,7 +36,7 @@ from hepdata.modules.submission.api import get_latest_hepsubmission
 from hepdata.modules.submission.models import HEPSubmission, DataResource, DataSubmission
 from hepdata.utils.file_extractor import extract, get_file_in_directory
 from hepdata.modules.records.utils.common import get_record_contents, \
-    get_data_path_for_filename, find_submission_data_file_path
+    get_converted_directory_path, find_submission_data_file_path
 
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy import func, or_
@@ -234,7 +234,7 @@ def download_submission(submission, file_format, offline=False, force=False, riv
 
     output_file = 'HEPData-{0}-v{1}-{2}.tar.gz'.format(file_identifier, submission.version, file_format)
 
-    converted_dir = get_data_path_for_filename('converted')
+    converted_dir = get_converted_directory_path(file_identifier)
     if not os.path.exists(converted_dir):
         os.mkdir(converted_dir)
 
