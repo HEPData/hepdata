@@ -81,7 +81,7 @@ def promote_or_demote_participant(recid, action, demote_or_promote,
         return json.dumps({"success": True, "recid": recid})
     except Exception as e:
         return json.dumps(
-            {"success": False, "recid": recid, "error": e.message})
+            {"success": False, "recid": recid, "error": str(e)})
 
 
 @blueprint.route('/manage/person/add/<int:recid>', methods=['POST'])

@@ -24,8 +24,6 @@
 
 """Blueprint for HEPData-Records."""
 
-from __future__ import absolute_import, print_function
-
 import werkzeug
 import logging
 import json
@@ -54,7 +52,7 @@ from hepdata.modules.records.api import request, determine_user_privileges, rend
 from hepdata.modules.submission.models import HEPSubmission, DataSubmission, \
     DataResource, DataReview, Message, Question
 from hepdata.modules.records.utils.common import get_record_by_id, \
-    default_time, IMAGE_TYPES, encode_string, decode_string
+    default_time, IMAGE_TYPES, decode_string
 from hepdata.modules.records.utils.data_processing_utils import \
     generate_table_structure
 from hepdata.modules.records.utils.submission import create_data_review, \
@@ -190,7 +188,7 @@ def metadata(recid):
 
     try:
         record = get_record_contents(recid)
-    except Exception:
+    except Exception as e:
         record = None
 
     return render_record(recid=recid, record=record, version=version, output_format=serialization_format,
@@ -297,7 +295,7 @@ def get_table_details(recid, data_recid, version):
                                              'alt_location': alt_location})
 
         # add associated files to the table contents
-        table_contents['associated_files'] = tmp_assoc_files.values()
+        table_contents['associated_files'] = list(tmp_assoc_files.values())
 
     table_contents["review"] = {}
 
@@ -423,7 +421,7 @@ def add_data_review_messsage(publication_recid, data_recid):
     """
 
     trace = []
-    message = encode_string(request.form.get('message', ''))
+    message = request.form.get('message', '')
     version = request.form['version']
     userid = current_user.get_id()
 
@@ -636,6 +634,7 @@ def consume_data_payload(recid):
         invitation_cookie = request.form['invitation_cookie']
         hepsubmission_record = get_latest_hepsubmission(publication_recid=recid)
 
+        print([participant.invitation_cookie for participant in hepsubmission_record.participants])
         # check user is allowed to upload
         if not any([(participant.role == 'uploader' and
                      participant.email == user_email and
@@ -662,7 +661,7 @@ def sandbox():
     ).order_by(HEPSubmission.last_updated.desc()).all()
 
     for submission in submissions:
-        submission.data_abstract = decode_string(submission.data_abstract)
+        submission.data_abstract = submission.data_abstract
 
     return render_template('hepdata_records/sandbox.html',
                            ctx={"submissions": submissions})

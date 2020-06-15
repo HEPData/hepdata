@@ -62,7 +62,7 @@ def get_records_participated_in_by_user():
         _coordinator = [get_record_contents(x.publication_recid) for x in as_coordinator]
         result['coordinator'] = filter(partial(is_not, None), _coordinator)
 
-    return result
+    return list(result)
 
 
 def get_pending_request():

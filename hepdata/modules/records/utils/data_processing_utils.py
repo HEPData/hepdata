@@ -21,10 +21,9 @@
 # In applying this license, CERN does not
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
-from __future__ import absolute_import, print_function
 
 from flask import current_app
-from ordereddict import OrderedDict
+from collections import OrderedDict
 
 import re
 
@@ -115,7 +114,7 @@ def process_dependent_variables(group_count, record, table_contents,
 
                 record["qualifiers"][qualifier_name].append(
                     {"type": qualifier["name"],
-                     "value": unicode(qualifier["value"]) + (
+                     "value": str(qualifier["value"]) + (
                          ' ' + qualifier['units'] if 'units' in qualifier else ''),
                      "colspan": 1, "group": group_count})
 

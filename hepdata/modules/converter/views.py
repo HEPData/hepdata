@@ -19,7 +19,6 @@
 
 """HEPData Converter Views."""
 
-from __future__ import absolute_import, print_function
 import logging
 import os
 
@@ -500,7 +499,7 @@ def download_datatable(datasubmission, file_format, *args, **kwargs):
                                                   version=datasubmission.version).first()
 
     if datasubmission.doi and not hepsubmission.overall_status.startswith('sandbox'):
-        options['hepdata_doi'] = datasubmission.doi.rsplit('/', 1)[0].encode('ascii')
+        options['hepdata_doi'] = datasubmission.doi.rsplit('/', 1)[0]
 
     if file_format == 'yoda':
         rivet_analysis_name = kwargs.pop('rivet_analysis_name', '')

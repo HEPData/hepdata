@@ -75,7 +75,7 @@ def get_count(recid):
             result = DailyAccessStatistic.query.with_entities(
                 func.sum(DailyAccessStatistic.count).label('sum')).filter(
                 DailyAccessStatistic.publication_recid == recid).one()
-            return {"sum": int(result.sum)}
+            return {"sum": int(result[0])}
 
         except Exception as e:
             log.info('No stats record found for {0}. Returning one.'.format(recid))

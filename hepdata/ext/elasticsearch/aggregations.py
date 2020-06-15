@@ -170,7 +170,7 @@ def create_dummy_cmenergies_facets(query_filters=None):
                     base = 1
 
                 interval = int(base * math.floor(interval / base))
-                filter_limits = range(min_limit, max_limit, interval)
+                filter_limits = list(range(min_limit, max_limit, interval))
                 filter_limits.append(max_limit)
 
     for i in range(len(filter_limits)-1):

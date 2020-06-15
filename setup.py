@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
-# This file is part of hepdata.
-# Copyright (C) 2015 CERN.
+# This file is part of HEPData.
+# Copyright (C) 2020 CERN.
 #
 # hepdata is free software; you can redistribute it
 # and/or modify it under the terms of the GNU General Public License as
@@ -34,41 +34,31 @@ readme = open('README.rst').read()
 history = open('CHANGES.rst').read()
 
 tests_require = [
-    'check-manifest>=0.25',
-    'coverage>=4.0',
-    'isort>=4.2.2',
-    'mock>=1.3.0',
-    'pydocstyle>=1.0.0',
-    'pytest-cache>=1.0',
-    'pytest-cov>=1.8.0',
-    'pytest-flask>=0.10.0',
-    'pytest-pep8>=1.0.6',
-    'pytest>=2.8.0',
-    'selenium>=3.141',
-    'six>=1.10.0'
-
+    'pytest>=5.4.2',
+    'pytest-cov>=2.9.0',
+    'pytest-flask>=1.0.0',
+    'pytest-mock>=3.1.0',
+    'selenium>=3.141.0'
 ]
 
-extras_require = {'docs': [
-    'Sphinx>=1.8.5', 'sphinx-click>=2.1.0',
-], 'postgresql': [
-    'invenio-db[postgresql]>=1.0.0a6',
-], 'mysql': [
-    'invenio-db[mysql]>=1.0.0a6',
-], 'sqlite': [
-    'invenio-db>=1.0.0a6',
-], 'tests': tests_require, 'all': []}
+extras_require = {
+    'all': [],
+    'docs': [
+        'Sphinx>=1.8.5',
+        'sphinx-click>=2.1.0',
+    ],
+    'tests': tests_require,
+}
 
 for name, reqs in extras_require.items():
-    if name in ('postgresql', 'mysql', 'sqlite'):
-        continue
     extras_require['all'].extend(reqs)
 
 setup_requires = [
     'Babel>=1.3',
 ]
 
-install_requires = [] # packages moved to requirements.txt with specific versions
+# Packages moved to requirements.txt with specific versions
+install_requires = []
 
 packages = find_packages()
 

@@ -29,7 +29,7 @@ from hepdata.modules.records.utils.submission import get_or_create_hepsubmission
 from hepdata.modules.records.utils.workflow import create_record
 from invenio_accounts.models import User, Role
 from pytest_mock import mocker
-import conftest
+from . import conftest
 import pytest
 
 dashboardTestMockObjects = {
@@ -149,7 +149,7 @@ def test_prepare_submissions_admin(app, load_submission):
                 'title': u'My Journal Paper',
                 'versions': 1
             },
-            'stats': {'attention': 0L, 'passed': 0L, 'todo': 0L},
+            'stats': {'attention': 0, 'passed': 0, 'todo': 0},
             'status': u'todo'
         })
 
