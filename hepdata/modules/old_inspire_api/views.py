@@ -32,8 +32,6 @@ from .marcxml_parser import get_doi, get_title, get_authors, get_abstract, \
 
 blueprint = Blueprint('inspire_datasource', __name__, url_prefix='/inspire')
 
-USE_NEW_INSPIRE_API = False
-
 
 def get_inspire_record_information(inspire_rec_id):
     url = 'http://old.inspirehep.net/record/{0}/export/xm'.format(inspire_rec_id)
@@ -102,7 +100,3 @@ def get_record_from_inspire():
                     'id': inspire_id,
                     'query': content,
                     'status': status})
-
-
-if USE_NEW_INSPIRE_API is True:
-    from hepdata.modules.new_inspire_api.views import get_inspire_record_information, get_record_from_inspire  # noqa

@@ -91,6 +91,7 @@ def test_migration(app, load_default_data, identifiers):
 
 
 def test_load_file(app, migrator):
+    print('___test_load_file___')
     with app.app_context():
         success = migrator.load_file('ins1487726')
         assert (success)

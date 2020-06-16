@@ -5,7 +5,7 @@ import difflib
 import sys
 
 from hepdata.modules.new_inspire_api import views as new_views
-from hepdata.modules.inspire_api import views as old_views
+from hepdata.modules.old_inspire_api import views as old_views
 
 if sys.version_info[0] > 2:
     unicode = None
