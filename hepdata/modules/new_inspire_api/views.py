@@ -42,7 +42,7 @@ def get_inspire_record_information(inspire_rec_id):
             'doi': (content['metadata']['dois'][-1]['value'] if 'dois' in content['metadata'] and len(content['metadata']['dois']) > 0 else None),
             'authors': [{'affiliation': (author['affiliations'][0]['value'] if 'affiliations' in author.keys() else ''),
                          'full_name': author['full_name']} for author in content['metadata']['authors']],
-            'type': content['metadata']['document_type'][0],
+            'type': content['metadata']['document_type'],
             'abstract': (content['metadata']['abstracts'][-1]['value'] if 'abstracts' in content['metadata'].keys() else None),
             'creation_date': (expand_date(content['metadata']['preprint_date']) if 'preprint_date' in content['metadata'].keys() else
                               content['metadata']['legacy_creation_date'] if 'legacy_creation_date' in content['metadata'] else None),
@@ -62,7 +62,7 @@ def get_inspire_record_information(inspire_rec_id):
                      content['metadata']['legacy_creation_date'].split("-")[0] if 'legacy_creation_date' in content['metadata'] else None),
             'subject_area': (content['metadata']['arxiv_eprints'][-1]['categories'] if 'arxiv_eprints' in content['metadata'].keys() else None),
         }
-        if 'thesis' == parsed_content['type'] and 'thesis_info' in content['metadata'].keys():
+        if 'thesis' in parsed_content['type'] and 'thesis_info' in content['metadata'].keys():
             content['dissertation'] = content['metadata']['thesis_info']
             if 'date' in content['metadata']['thesis_info'].keys():
                 parsed_content['year'] = content['metadata']['thesis_info']['date']
@@ -70,7 +70,21 @@ def get_inspire_record_information(inspire_rec_id):
                     parsed_content['creation_date'] = expand_date(parsed_content['year'])
         status = 'success'
     else:
-        parsed_content = content
+        parsed_content = {
+            'title': None,
+            'doi': None,
+            'authors': None,
+            'type': [],
+            'abstract': None,
+            'creation_date': None,
+            'arxiv_id': None,
+            'collaborations': [],
+            'keywords': [],
+            'journal_info': None,
+            'year': None,
+            'subject_area': None
+        }
+        status = 'success'
 
     return parsed_content, status
 
