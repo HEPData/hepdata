@@ -24,8 +24,6 @@
 
 """Blueprint for HEPData-Records."""
 
-from __future__ import absolute_import, print_function
-
 import logging
 import json
 from dateutil import parser
@@ -292,7 +290,7 @@ def get_table_details(recid, data_recid, version):
                                              'alt_location': alt_location})
 
         # add associated files to the table contents
-        table_contents['associated_files'] = tmp_assoc_files.values()
+        table_contents['associated_files'] = list(tmp_assoc_files.values())
 
     table_contents["review"] = {}
 
@@ -418,7 +416,7 @@ def add_data_review_messsage(publication_recid, data_recid):
     """
 
     trace = []
-    message = encode_string(request.form.get('message', ''))
+    message = request.form.get('message', '')
     version = request.form['version']
     userid = current_user.get_id()
 
@@ -641,7 +639,7 @@ def sandbox():
         ).order_by(HEPSubmission.last_updated.desc()).all()
 
     for submission in submissions:
-        submission.data_abstract = decode_string(submission.data_abstract)
+        submission.data_abstract = submission.data_abstract
 
     return render_template('hepdata_records/sandbox.html',
                            ctx={"submissions": submissions})

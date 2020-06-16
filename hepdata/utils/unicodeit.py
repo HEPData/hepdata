@@ -2,7 +2,7 @@
 """Converts LaTeX tags to unicode (https://www.unicodeit.net)."""
 
 # Copyright (c) 2010 Sven Kreiss, Kyle Cranmer
-from __future__ import unicode_literals
+
 __author__ = "Sven Kreiss <sk@svenkreiss.com>, Kyle Cranmer <kyle.cranmer@nyu.edu>"
 __version__ = "0.6.2"
 import sys, re

@@ -24,8 +24,7 @@
 
 """PyTest Config"""
 
-from __future__ import absolute_import, print_function
-
+from builtins import str
 import multiprocessing
 import os
 import shutil
@@ -52,7 +51,7 @@ from hepdata.modules.records.migrator.api import load_files
 from tests.conftest import get_identifiers
 
 
-@pytest.fixture()
+@pytest.fixture(scope='session')
 def app(request):
     """Flask application fixture for E2E/integration/selenium tests.
     Overrides the `app` fixture found in `../conftest.py`. Tests/files in this
@@ -60,8 +59,10 @@ def app(request):
     """
     app = create_app()
     test_db_host = app.config.get('TEST_DB_HOST', 'localhost')
-    # Note that in Travis we add "TESTING=True" to config_local.py as well
-    # to ensure that it's set before flask mail is initialised
+    # Note that in Travis we add "TESTING=True" and
+    # "APP_ENABLE_SECURE_HEADERS=True" to config_local.py as well,
+    # to ensure that they're set before the app is initialised,
+    # as changing them later doesn't have the desired effect.
     app.config.update(dict(
         TESTING=True,
         TEST_RUNNER="celery.contrib.test_runner.CeleryTestSuiteRunner",
@@ -73,7 +74,10 @@ def app(request):
         SUBMISSION_INDEX='hepdata-submission-test',
         AUTHOR_INDEX='hepdata-authors-test',
         SQLALCHEMY_DATABASE_URI=os.environ.get(
-            'SQLALCHEMY_DATABASE_URI', 'postgresql+psycopg2://hepdata:hepdata@' + test_db_host + '/hepdata_test')
+            'SQLALCHEMY_DATABASE_URI',
+            'postgresql+psycopg2://hepdata:hepdata@' + test_db_host + '/hepdata_test'
+        ),
+        APP_ENABLE_SECURE_HEADERS=False
     ))
 
     with app.app_context():

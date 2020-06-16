@@ -26,7 +26,7 @@ from bs4 import BeautifulSoup
 from flask import request, Blueprint, jsonify
 
 from hepdata.modules.records.utils.common import record_exists
-from marcxml_parser import get_doi, get_title, get_authors, get_abstract, \
+from .marcxml_parser import get_doi, get_title, get_authors, get_abstract, \
     get_arxiv, get_collaborations, get_keywords, get_date, get_journal_info, get_year, get_collection, \
     get_dissertation, expand_date, get_subject_areas
 

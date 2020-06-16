@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # This file is part of HEPData.
-# Copyright (C) 2015 CERN.
+# Copyright (C) 2020 CERN.
 #
 # HEPData is free software; you can redistribute it
 # and/or modify it under the terms of the GNU General Public License as
@@ -43,7 +43,7 @@ services:
   - xvfb
 
 python:
-  - "2.7"
+  - "3.6"
 
 before_install:
   # See: https://docs.travis-ci.com/user/database-setup/#Installing-specific-versions-of-ElasticSearch
@@ -60,14 +60,14 @@ before_install:
   - "travis_retry psql -c 'CREATE DATABASE hepdata_test OWNER hepdata;' -U postgres"
 
 install:
-  - "travis_retry pip install -r requirements.txt"
-  - "travis_retry pip install -e .[all,postgresql] --pre"
+  - "travis_retry pip install --force-reinstall -r requirements.txt"
+  - "travis_retry pip install -e .[tests]"
   - "travis_retry hepdata db init"
   - "travis_retry hepdata db create"
   - "travis_retry hepdata utils reindex -rc True"
   - "travis_retry npm update && npm install --silent -g node-sass clean-css@3.4.28 uglify-js requirejs"
   - "hepdata npm"
-  - "cd /home/travis/virtualenv/python2.7.15/var/hepdata-instance/static/"
+  - "cd /home/travis/virtualenv/python3.6.7/var/hepdata-instance/static/"
   - "travis_retry npm install"
   - "hepdata collect -v"
   - "hepdata assets build"
@@ -75,15 +75,15 @@ install:
 
 before_script:
   - "/home/travis/build/HEPData/hepdata/scripts/sc_tunnel_start.sh"
-  - "echo 'TESTING = True' > /home/travis/build/HEPData/hepdata/hepdata/config_local.py"
+  - "cp /home/travis/build/HEPData/hepdata/hepdata/config_local.travis.py /home/travis/build/HEPData/hepdata/hepdata/config_local.py"
 
 script:
   # Secure environment variables are not available for forked repositories, so omit end-to-end tests run on Sauce Labs.
   - "if [[ -z ${SAUCE_USERNAME} || -z ${SAUCE_ACCESS_KEY} ]]; then py.test tests -k 'not tests/e2e'; else py.test tests; fi"
-  - "rm /home/travis/build/HEPData/hepdata/hepdata/config_local.{py,pyc}"
+  - "rm /home/travis/build/HEPData/hepdata/hepdata/{config_local.py,__pycache__/config_local*}"
 
 after_success:
-  - coveralls
+  - "coveralls"
 
 after_script:
   - "/home/travis/build/HEPData/hepdata/scripts/sc_tunnel_stop.sh"

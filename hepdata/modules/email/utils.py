@@ -23,7 +23,6 @@
 
 """Provides high-level common email utilities."""
 
-from __future__ import absolute_import, print_function
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from smtplib import SMTP, SMTPRecipientsRefused
@@ -31,8 +30,6 @@ from smtplib import SMTP, SMTPRecipientsRefused
 from celery import shared_task
 from flask import current_app
 from flask_celeryext import create_celery_app
-
-from hepdata.modules.records.utils.common import encode_string
 
 
 def create_send_email_task(destination, subject, message, reply_to_address=None):
@@ -58,17 +55,17 @@ def send_email(destination, subject, message, reply_to_address=None):
     try:
         connection = connect()
         mmp_msg = MIMEMultipart('alternative')
-        mmp_msg['Subject'] = encode_string(subject)
+        mmp_msg['Subject'] = subject
         mmp_msg['From'] = reply_to_address if reply_to_address else current_app.config['MAIL_DEFAULT_SENDER']
         mmp_msg['To'] = destination
 
-        part1 = MIMEText(encode_string(message), 'html')
+        part1 = MIMEText(message, 'html', 'utf-8')
         mmp_msg.attach(part1)
 
         recipients = destination.split(',')
         recipients.append(current_app.config['ADMIN_EMAIL'])
 
-        connection.sendmail(current_app.config['MAIL_DEFAULT_SENDER'], recipients, mmp_msg.as_string())
+        connection.send_message(mmp_msg, current_app.config['MAIL_DEFAULT_SENDER'], recipients)
         connection.quit()
     except SMTPRecipientsRefused as smtp_error:
         send_error_mail(smtp_error)

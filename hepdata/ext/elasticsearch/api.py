@@ -33,8 +33,8 @@ from hepdata.ext.elasticsearch.document_enhancers import enhance_data_document, 
 from .config.es_config import sort_fields_mapping, add_default_aggregations
 from .utils import calculate_sort_order, prepare_author_for_indexing
 from hepdata.config import CFG_PUB_TYPE, CFG_DATA_TYPE
-from query_builder import QueryBuilder, HEPDataQueryParser
-from process_results import map_result, merge_results
+from .query_builder import QueryBuilder, HEPDataQueryParser
+from .process_results import map_result, merge_results
 from invenio_db import db
 import logging
 
@@ -186,7 +186,7 @@ def reindex_all(index=None, author_index=None, recreate=False, batch=50, start=-
 
         count = min_recid
         while count <= max_recid:
-            rec_ids = range(count, min(count + batch, max_recid + 1))
+            rec_ids = list(range(count, min(count + batch, max_recid + 1)))
             if synchronous:
                 reindex_batch(rec_ids, index)
             else:
@@ -341,7 +341,7 @@ def process_cmenergies(keywords):
                     cmenergy_range.sort()
                     cmenergies.append({"gte": cmenergy_range[0], "lte": cmenergy_range[1]})
                 else:
-                    log.warn("Invalid value for cmenergies: %s" % cmenergy)
+                    log.warning("Invalid value for cmenergies: %s" % cmenergy)
 
         keywords['cmenergies'] = cmenergies
 
@@ -358,7 +358,7 @@ def index_record_ids(record_ids, index=None):
     """
     from hepdata.modules.records.utils.common import get_record_by_id
 
-    docs = filter(None, [get_record_by_id(recid) for recid in record_ids])
+    docs = list(filter(None, [get_record_by_id(recid) for recid in record_ids]))
 
     existing_record_ids = [doc['recid'] for doc in docs]
     log.info('Indexing existing record IDs: {}'.format(existing_record_ids))
@@ -451,7 +451,7 @@ def recreate_index(index=None):
 
     :param index: [string] name of the index. If None a default is used
     """
-    from config.record_mapping import mapping
+    from .config.record_mapping import mapping
 
     body = {
         "mappings": {

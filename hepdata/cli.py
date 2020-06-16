@@ -24,8 +24,6 @@
 
 """HEPData CLI module."""
 
-from __future__ import absolute_import, print_function
-
 import click
 from flask import current_app
 from flask.cli import with_appcontext

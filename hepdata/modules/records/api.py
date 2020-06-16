@@ -181,7 +181,7 @@ def format_tables(ctx, data_record_query, data_table, recid):
     if 'table' in request.args:
         if request.args['table']:
             ctx['table_to_show'] = request.args['table']
-    ctx['data_tables'] = data_table_metadata.values()
+    ctx['data_tables'] = list(data_table_metadata.values())
 
 
 def get_commit_message(ctx, recid):
@@ -653,8 +653,11 @@ def process_data_tables(ctx, data_record_query, first_data_id,
                 "name": submission_record.name,
                 "location": submission_record.location_in_publication,
                 "doi": submission_record.doi,
-                "description": decode_string(
-                    truncate_string(submission_record.description, 20))}
+                "description": truncate_string(
+                    submission_record.description,
+                    20
+                )
+            }
 
             if first_data_id == -1:
                 first_data_id = submission_record.id
