@@ -15,19 +15,23 @@ def string_diff(string1, string2):
     return [entry for entry in difflib.ndiff(string1, string2) if entry[0] != ' ']
 
 
+# get inspire record information now and cache it to reduce run test run times
+# note: the last record '1999999' does not exist, it is used to test that case
 old_dict = {"1245023": old_views.get_inspire_record_information("1245023"),
             "1283842": old_views.get_inspire_record_information("1283842"),
             "1311487": old_views.get_inspire_record_information("1311487"),
-            "1487726": old_views.get_inspire_record_information("1487726")}
+            "1487726": old_views.get_inspire_record_information("1487726"),
+            "1999999": old_views.get_inspire_record_information("1999999")}
 new_dict = {"1245023": new_views.get_inspire_record_information("1245023"),
             "1283842": new_views.get_inspire_record_information("1283842"),
             "1311487": new_views.get_inspire_record_information("1311487"),
-            "1487726": new_views.get_inspire_record_information("1487726")}
+            "1487726": new_views.get_inspire_record_information("1487726"),
+            "1999999": old_views.get_inspire_record_information("1999999")}
 
 
 @pytest.mark.parametrize(
     "inspire_id",
-    ["1245023", "1283842", "1311487", "1487726"]
+    ["1245023", "1283842", "1311487", "1487726", "1999999"]
 )
 def test_dict_keys(inspire_id):
     print('___test_dict_keys___')
@@ -40,7 +44,7 @@ def test_dict_keys(inspire_id):
 
 @pytest.mark.parametrize(
     "inspire_id",
-    ["1245023", "1283842", "1311487", "1487726"]
+    ["1245023", "1283842", "1311487", "1487726", "1999999"]
 )
 @pytest.mark.parametrize(
     "dict_key",
@@ -55,6 +59,7 @@ def test_dict_values(inspire_id, dict_key):
 
     assert old_code == new_code
 
+    # convert to normal string/unicode
     if str(type(old_content[dict_key])) == "<class 'bs4.element.NavigableString'>":
         if sys.version_info[0] > 2:
             old_content[dict_key] = str(old_content[dict_key])
@@ -76,23 +81,25 @@ def test_dict_values(inspire_id, dict_key):
     else:
         print(new_content[dict_key])
 
-    if dict_key == 'subject_area':
+    if dict_key == 'subject_area':  # subject area changed from 'HEP Experiment' to 'hep-ex', allow it
         assert ((old_content[dict_key] == ['HEP Experiment'] and new_content[dict_key] == ['hep-ex']) or old_content[dict_key] == new_content[dict_key])
 
-    elif dict_key == 'keywords':
+    elif dict_key == 'keywords':  # keywords used to have 'name' & 'value', now it is just 'value' in the pattern: 'new_value' = 'old_name': 'old_value'
         old_keywords = set([entry['name'] + ": " + entry['value'] if entry['name'] != '' else entry['value'] for entry in old_content[dict_key]])
-        new_keywords = set([":".join(entry.split(':')[:2]) for entry in new_content[dict_key]])
+        new_keywords = set([":".join(entry['value'].split(':')[:2]) for entry in new_content[dict_key]])
         assert old_keywords - new_keywords == set()
 
     elif dict_key == 'type':
-        # old 'type' is a list and there doesn't seem to be an equivalent in the new metadata
-        pass
+        # old 'type' list has more information than can be found in the new 'type', just check types
+        assert isinstance(old_content[dict_key], list) and isinstance(new_content[dict_key], list)
 
     elif type(old_content[dict_key]) in [str, unicode] and type(new_content[dict_key]) in [str, unicode]:
+        # some strings have been updated (e.g. abstract or journal name), allow for up to 10% difference
         stringdiff = string_diff(old_content[dict_key], new_content[dict_key])
         assert float(len(stringdiff)) / len(old_content[dict_key]) < 0.1   # at most 10% difference
         if len(stringdiff) != 0:
             print("Warning: {} % difference in strings.".format(float(len(stringdiff)) / len(old_content[dict_key]) * 100))
 
     else:
+        # last case scenario: identical match or old_content has None value for this key
         assert old_content[dict_key] == new_content[dict_key] or old_content[dict_key] is None

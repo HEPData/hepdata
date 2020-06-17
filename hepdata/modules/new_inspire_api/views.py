@@ -48,7 +48,7 @@ def get_inspire_record_information(inspire_rec_id):
                               content['metadata']['legacy_creation_date'] if 'legacy_creation_date' in content['metadata'] else None),
             'arxiv_id': ('arXiv:' + content['metadata']['arxiv_eprints'][-1]['value'] if 'arxiv_eprints' in content['metadata'].keys() else None),
             'collaborations': ([collaboration['value'] for collaboration in content['metadata']['collaborations']] if 'collaborations' in content['metadata'] else None),
-            'keywords': [entry['value'] for entry in content['metadata']['keywords']],
+            'keywords': content['metadata']['keywords'],
             'journal_info': ((content['metadata']['publication_info'][0]['journal_title'] + ' ' + content['metadata']['publication_info'][0]['journal_volume'] +
                               ' (' + str(content['metadata']['publication_info'][0]['year']) + ') ' + (
                                   content['metadata']['publication_info'][0]['artid'] if 'artid' in content['metadata']['publication_info'][0].keys() else
