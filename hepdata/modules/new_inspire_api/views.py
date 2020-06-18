@@ -29,9 +29,10 @@ from hepdata.modules.records.utils.common import record_exists
 blueprint = Blueprint('inspire_datasource', __name__, url_prefix='/inspire')
 
 
-def get_inspire_record_information(inspire_rec_id):
+def get_inspire_record_information(inspire_rec_id, verbose=False):
     url = 'http://inspirehep.net/api/literature/{}'.format(inspire_rec_id)
-    print('Looking up: ' + url)
+    if verbose:
+        print('\rLooking up: ' + url)
     req = requests.get(url)
     content = req.json()
     status = req.status_code
@@ -47,27 +48,33 @@ def get_inspire_record_information(inspire_rec_id):
             'creation_date': (expand_date(content['metadata']['preprint_date']) if 'preprint_date' in content['metadata'].keys() else
                               content['metadata']['legacy_creation_date'] if 'legacy_creation_date' in content['metadata'] else None),
             'arxiv_id': ('arXiv:' + content['metadata']['arxiv_eprints'][-1]['value'] if 'arxiv_eprints' in content['metadata'].keys() else None),
-            'collaborations': ([collaboration['value'] for collaboration in content['metadata']['collaborations']] if 'collaborations' in content['metadata'] else None),
-            'keywords': content['metadata']['keywords'],
-            'journal_info': ((content['metadata']['publication_info'][0]['journal_title'] + ' ' + content['metadata']['publication_info'][0]['journal_volume'] +
+            'collaborations': ([collaboration['value'] for collaboration in content['metadata']['collaborations']] if 'collaborations' in content['metadata'] else []),
+            'keywords': content['metadata']['keywords'] if 'keywords' in content['metadata'].keys() else [],
+            'journal_info': (((content['metadata']['publication_info'][0]['journal_title'] + ' ' if 'journal_title' in content['metadata']['publication_info'][0] else '') +
+                              content['metadata']['publication_info'][0]['journal_volume'] +
                               ' (' + str(content['metadata']['publication_info'][0]['year']) + ') ' + (
                                   content['metadata']['publication_info'][0]['artid'] if 'artid' in content['metadata']['publication_info'][0].keys() else
                                   content['metadata']['publication_info'][0]['page_start'] + "-" + content['metadata']['publication_info'][0]['page_end'] if
                                   'page_start' in content['metadata']['publication_info'][0].keys() and 'page_end' in content['metadata']['publication_info'][0].keys() else ''))
                              if ('publication_info' in content['metadata'] and len(content['metadata']['publication_info']) > 0 and
-                                 all(keyword in content['metadata']['publication_info'][0].keys() for keyword in ['journal_title', 'journal_volume', 'year'])) else
-                             content['metadata']['publication_info'] if 'publication_info' in content['metadata'] else None),
+                                 all(keyword in content['metadata']['publication_info'][0].keys() for keyword in ['journal_volume', 'year'])) else
+                             content['metadata']['publication_info'] if 'publication_info' in content['metadata'] else 'No Journal Information'),
             'year': (str(content['metadata']['publication_info'][-1]['year']) if ('publication_info' in content['metadata'] and 'year' in content['metadata']['publication_info'][-1].keys())
                      else content['metadata']['preprint_date'].split("-")[0] if 'preprint_date' in content['metadata'].keys() else
                      content['metadata']['legacy_creation_date'].split("-")[0] if 'legacy_creation_date' in content['metadata'] else None),
-            'subject_area': (content['metadata']['arxiv_eprints'][-1]['categories'] if 'arxiv_eprints' in content['metadata'].keys() else None),
+            'subject_area': (content['metadata']['arxiv_eprints'][-1]['categories'] if 'arxiv_eprints' in content['metadata'].keys() else
+                             [content['metadata']['inspire_categories'][0]['term']] if 'inspire_categories' in content['metadata'].keys() and
+                             len(content['metadata']['inspire_categories']) > 0 and 'term' in content['metadata']['inspire_categories'][0].keys() else[]),
         }
         if 'thesis' in parsed_content['type'] and 'thesis_info' in content['metadata'].keys():
-            content['dissertation'] = content['metadata']['thesis_info']
+            parsed_content['dissertation'] = content['metadata']['thesis_info']
             if 'date' in content['metadata']['thesis_info'].keys():
                 parsed_content['year'] = content['metadata']['thesis_info']['date']
                 if parsed_content['year'] is not None:
-                    parsed_content['creation_date'] = expand_date(parsed_content['year'])
+                    if content['metadata']['legacy_creation_date'][:4] == parsed_content['year']:
+                        parsed_content['creation_date'] = content['metadata']['legacy_creation_date']
+                    else:
+                        parsed_content['creation_date'] = expand_date(parsed_content['year'])
         status = 'success'
     else:
         parsed_content = {
@@ -80,9 +87,9 @@ def get_inspire_record_information(inspire_rec_id):
             'arxiv_id': None,
             'collaborations': [],
             'keywords': [],
-            'journal_info': None,
+            'journal_info': 'No Journal Information',
             'year': None,
-            'subject_area': None
+            'subject_area': [],
         }
         status = 'success'
 
@@ -120,7 +127,7 @@ def expand_date(value):
     :param value:
     :return:
     """
-    if value is '':
+    if value == '':
         return value
 
     date_parts = value.split('-')
