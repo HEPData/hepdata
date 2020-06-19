@@ -287,6 +287,8 @@ RUN_SELENIUM_LOCALLY = False
 # It can be removed for invenio-oauthclient>=1.3.0.
 APP_ALLOWED_HOSTS = []
 
+LOGGING_SENTRY_CELERY = True  # for invenio-logging
+
 # Import local config file if it is present.
 try:
     from hepdata.config_local import *

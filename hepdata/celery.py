@@ -28,4 +28,6 @@ from flask_celeryext import create_celery_app
 
 from .factory import create_app
 
-celery = create_celery_app(create_app())
+from .config import LOGGING_SENTRY_CELERY
+
+celery = create_celery_app(create_app(LOGGING_SENTRY_CELERY=LOGGING_SENTRY_CELERY))
