@@ -22,6 +22,7 @@ var hepdata_record = (function () {
 
       perform_upload_action: function (placement, form_name, colors, insertion_type) {
         var message = '<p>Uploading files...</p>'
+        message += '<p>(Timeout after 60 seconds.)</p>'
         var html = '<div id="upload-progress"></div>' +
           '<div>' + message + '</div>';
         if (insertion_type === 'large_area') {
