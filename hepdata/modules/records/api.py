@@ -374,8 +374,8 @@ def process_payload(recid, file, redirect_url, synchronous=False):
         return render_template('hepdata_records/error_page.html', redirect_url=redirect_url.format(recid),
                                message="Incorrect file type uploaded.",
                                errors={"Submission": [{"level": "error",
-                                                       "message": "You must upload a .zip, .tar, .tar.gz or .tgz file"
-                                                                  + " (or a .oldhepdata or single .yaml file)."}]})
+                                                       "message": "You must upload a .zip, .tar, .tar.gz or .tgz file" +
+                                                       " (or a .oldhepdata or single .yaml file)."}]})
 
 
 @shared_task
@@ -482,7 +482,7 @@ def process_zip_archive(file_path, id):
         copy_command = ['cp']
         print('Copying with: {} -r {} {}'.format(' '.join(copy_command), submission_temp_path + '/.', submission_path))
         subprocess.check_output(copy_command + ['-r',  submission_temp_path + '/.', submission_path])
-        rmtree(submission_temp_path, ignore_errors=True) # can uncomment when this is definitely working
+        rmtree(submission_temp_path, ignore_errors=True)  # can uncomment when this is definitely working
 
         submission_found = find_file_in_directory(submission_path, lambda x: x == "submission.yaml")
 
