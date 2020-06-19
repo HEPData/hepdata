@@ -29,7 +29,7 @@ import time
 from werkzeug.utils import secure_filename
 from hepdata.config import CFG_CONVERTER_URL, CFG_SUPPORTED_FORMATS
 
-from hepdata_converter_ws_client import convert
+from hepdata_converter_ws_client import convert, Error
 from hepdata.modules.permissions.api import user_allowed_to_perform_action
 from hepdata.modules.converter import convert_zip_archive
 from hepdata.modules.submission.api import get_latest_hepsubmission
@@ -89,9 +89,13 @@ def convert_endpoint():
         'filename': filename[:-4],
     }
     output_file = os.path.join(current_app.config['CFG_TMPDIR'], timestamp + '.tar.gz')
-    conversion_result = convert_zip_archive(input_archive, output_file, options)
 
-    os.remove(input_archive)
+    try:
+        conversion_result = convert_zip_archive(input_archive, output_file, options)
+    except Error as error:  # hepdata_converter_ws_client.Error
+        return display_error(title='Report concerns to info@hepdata.net', description=str(error))
+    finally:
+        os.remove(input_archive)
 
     if not conversion_result:
         return display_error(
@@ -288,11 +292,19 @@ def download_submission(submission, file_format, offline=False, force=False, riv
 
     data_filepath = os.path.join(path, data_filename)
 
-    converted_file = convert_zip_archive(data_filepath, output_path, converter_options)
-    if not offline:
-        return send_file(converted_file, as_attachment=True)
-    else:
-        print('File for {0} created successfully at {1}'.format(file_identifier, output_path))
+    try:
+        converted_file = convert_zip_archive(data_filepath, output_path, converter_options)
+        if not offline:
+            return send_file(converted_file, as_attachment=True)
+        else:
+            print('File for {0} created successfully at {1}'.format(file_identifier, output_path))
+    except Error as error:  # hepdata_converter_ws_client.Error
+        if not offline:
+            return display_error(title='Report concerns to info@hepdata.net', description=str(error))
+        else:
+            print('File conversion for {0} at {1} failed: {2}'.format(
+                file_identifier, output_path, str(error)
+            ))
 
 
 @blueprint.route('/table/<inspire_id>/<path:table_name>/<file_format>')
@@ -523,13 +535,16 @@ def download_datatable(datasubmission, file_format, *args, **kwargs):
                     options['rivet_analysis_name'] = '{0}_{1}_I{2}'.format(
                         ''.join(record['collaborations']).upper(), year, datasubmission.publication_inspire_id)
 
-    successful = convert(
-        CFG_CONVERTER_URL,
-        record_path,
-        output=output_path + '-dir',
-        options=options,
-        extract=False,
-    )
+    try:
+        successful = convert(
+            CFG_CONVERTER_URL,
+            record_path,
+            output=output_path + '-dir',
+            options=options,
+            extract=False,
+        )
+    except Error as error:  # hepdata_converter_ws_client.Error
+        return display_error(title='Report concerns to info@hepdata.net', description=str(error))
 
     if successful:
         new_path = output_path + "." + file_format
@@ -555,6 +570,7 @@ def display_error(title='Unknown Error', description=''):
     """
     return render_template(
         'hepdata_records/error_page.html',
+        header_message='Converter error encountered',
         message=title,
         errors={
             "Converter": [{

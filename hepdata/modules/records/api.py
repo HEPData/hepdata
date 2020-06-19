@@ -56,6 +56,7 @@ from hepdata.modules.submission.models import RecordVersionCommitMessage, DataSu
 from hepdata.utils.file_extractor import extract
 from hepdata.utils.users import get_user_from_id
 from bs4 import BeautifulSoup
+from hepdata_converter_ws_client import Error
 
 import tempfile
 from shutil import rmtree
@@ -529,27 +530,33 @@ def check_and_convert_from_oldhepdata(input_directory, id, timestamp):
         return {
             "Converter": [{
                 "level": "error",
-                "message": "No file with .oldhepdata extension or a submission.yaml"
-                           " file has been found in the archive."
+                "message": "No file with .oldhepdata extension has been found."
             }]
         }
 
     converted_temp_dir = tempfile.mkdtemp(dir=current_app.config["CFG_TMPDIR"])
     converted_temp_path = os.path.join(converted_temp_dir, 'yaml')
 
-    successful = convert_oldhepdata_to_yaml(oldhepdata_found[1], converted_temp_path)
+    try:
+        successful = convert_oldhepdata_to_yaml(oldhepdata_found[1], converted_temp_path)
+        if not successful:
+            # Parse error message from title of HTML file, removing part of string after final "//".
+            soup = BeautifulSoup(open(converted_temp_path), "lxml")
+            errormsg = soup.title.string.rsplit("//", 1)[0]
+
+    except Error as error:  # hepdata_converter_ws_client.Error
+        successful = False
+        errormsg = str(error)
+
     if not successful:
-        # Parse error message from title of HTML file, removing part of string after final "//".
-        soup = BeautifulSoup(open(converted_temp_path), "lxml")
-        errormsg = soup.title.string.rsplit("//", 1)[0]
-        rmtree(converted_temp_dir, ignore_errors=True) # can uncomment when this is definitely working
+        rmtree(converted_temp_dir, ignore_errors=True)  # can uncomment when this is definitely working
 
         return {
             "Converter": [{
                 "level": "error",
                 "message": "The conversion from oldhepdata "
                            "to the YAML format has not succeeded. "
-                           "Error message from converter follows.\n" + errormsg
+                           "Error message from converter follows:<br/><br/>" + errormsg
             }]
         }
     else:

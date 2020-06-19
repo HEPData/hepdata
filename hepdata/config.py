@@ -282,6 +282,11 @@ PRODUCTION_MODE = False
 
 RUN_SELENIUM_LOCALLY = False
 
+# This is needed for invenio-oauthclient==1.1.3.
+# Default value of None gives an exception.
+# It can be removed for invenio-oauthclient>=1.3.0.
+APP_ALLOWED_HOSTS = []
+
 # Import local config file if it is present.
 try:
     from hepdata.config_local import *
