@@ -67,7 +67,7 @@ def test_dict_values(inspire_id, dict_key):
 
 def compare(inspire_id, old_content, new_content, dict_key, silent=False, max_string_diff=0.1):
 
-    print("\rComparing {} of inspire {}.            ".format(dict_key, inspire_id), end='')
+    print("\rComparing {} of inspire {}.       ".format(dict_key, inspire_id), end='')
 
     # convert to normal string/unicode
     if str(type(old_content[dict_key])) == "<class 'bs4.element.NavigableString'>":
@@ -119,6 +119,10 @@ def compare(inspire_id, old_content, new_content, dict_key, silent=False, max_st
         # allow 1 year difference in 'year' keyword entry (different versions of same record?)
         if (dict_key == 'year' and old_content[dict_key].isdigit() and new_content[dict_key].isdigit() and
            abs(int(old_content[dict_key]) - int(new_content[dict_key])) == 1):
+            return
+
+        # if old is contianed in new then allow it
+        if old_content[dict_key] in new_content[dict_key]:
             return
 
         # some strings have been updated (e.g. abstract or journal name), allow for up to 10% difference (default)

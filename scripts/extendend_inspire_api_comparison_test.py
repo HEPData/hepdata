@@ -20,7 +20,7 @@ print("__extendend_inspire_api_comparison_test__")
 
 page = 1
 
-while page < 50:
+while page < 100:
 
     response = requests.get("http://inspirehep.net/api/literature?q=external_system_identifiers.schema:HEPData&page={}".format(page))
 
@@ -45,6 +45,8 @@ while page < 50:
             try:
                 compare(inspire_id, old_content, new_content, dict_key, silent=True, max_string_diff=1)
             except AssertionError:
-                print(" Failed on {}, {} vs {}.".format(dict_key, old_content[dict_key], new_content[dict_key]))
+                WarningColourStart = '\033[93m'
+                WarningColourEnd = '\033[0m'
+                print(WarningColourStart + "Failed on {}, {} vs {}.".format(dict_key, old_content[dict_key], new_content[dict_key]) + WarningColourEnd)
 
 print("\rEND OF EXTENDED INSPIRE API TEST.                            ")

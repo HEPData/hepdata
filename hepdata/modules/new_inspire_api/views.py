@@ -58,7 +58,11 @@ def get_inspire_record_information(inspire_rec_id, verbose=False):
                                   'page_start' in content['metadata']['publication_info'][0].keys() and 'page_end' in content['metadata']['publication_info'][0].keys() else ''))
                              if ('publication_info' in content['metadata'] and len(content['metadata']['publication_info']) > 0 and
                                  all(keyword in content['metadata']['publication_info'][0].keys() for keyword in ['journal_volume', 'year'])) else
-                             content['metadata']['publication_info'] if 'publication_info' in content['metadata'] else 'No Journal Information'),
+                             content['metadata']['publication_info'][0]['pubinfo_freetext'] if ('publication_info' in content['metadata'] and
+                                                                                                len(content['metadata']['publication_info']) > 0 and
+                                                                                                type(content['metadata']['publication_info'][0]) is dict and
+                                                                                                'pubinfo_freetext' in content['metadata']['publication_info'][0].keys()) else
+                             content['metadata']['publication_info'] if 'publication_info' in content['metadata'].keys() else 'No Journal Information'),
             'year': (str(content['metadata']['publication_info'][-1]['year']) if ('publication_info' in content['metadata'] and 'year' in content['metadata']['publication_info'][-1].keys())
                      else content['metadata']['preprint_date'].split("-")[0] if 'preprint_date' in content['metadata'].keys() else
                      content['metadata']['legacy_creation_date'].split("-")[0] if 'legacy_creation_date' in content['metadata'] else None),
@@ -68,6 +72,11 @@ def get_inspire_record_information(inspire_rec_id, verbose=False):
         }
         if 'thesis' in parsed_content['type'] and 'thesis_info' in content['metadata'].keys():
             parsed_content['dissertation'] = content['metadata']['thesis_info']
+            if ('institutions' in parsed_content['dissertation'].keys() and
+               len(parsed_content['dissertation']['institutions']) == 1 and
+               'name' in parsed_content['dissertation']['institutions'][0]):
+                parsed_content['dissertation']['institution'] = parsed_content['dissertation']['institutions'][0]['name']
+                parsed_content['dissertation'].pop('institutions')
             if 'date' in content['metadata']['thesis_info'].keys():
                 parsed_content['year'] = content['metadata']['thesis_info']['date']
                 if parsed_content['year'] is not None:
@@ -75,6 +84,8 @@ def get_inspire_record_information(inspire_rec_id, verbose=False):
                         parsed_content['creation_date'] = content['metadata']['legacy_creation_date']
                     else:
                         parsed_content['creation_date'] = expand_date(parsed_content['year'])
+        elif 'thesis' in parsed_content['type'] and 'thesis_info' not in content['metadata'].keys():
+            parsed_content['dissertation'] = {}
         status = 'success'
     else:
         parsed_content = {
