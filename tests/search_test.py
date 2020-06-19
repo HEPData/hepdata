@@ -306,10 +306,10 @@ def test_prepare_authors_for_indexing(app):
 def test_match_tables_to_papers():
     papers = [
         {"_id": 1, "recid": 1, "authors": [], "title": "Test",
-         "keywords": [""]},
+         "keywords": [""], "_source": {"version": 2}},
 
         {"_id": 4, "recid": 4, "authors": [], "title": "Test 2",
-         "keywords": [""]}
+         "keywords": [""], "_source": {"version": 2}}
 
     ]
 
@@ -320,7 +320,7 @@ def test_match_tables_to_papers():
                                  "keywords": [{"name": "reaction", "value": "PP --> PX"}]}}
     ]
 
-    aggregated = match_tables_to_papers(tables, papers)
+    aggregated = match_tables_to_papers(tables, papers, sort_by_id=False)
 
     assert (aggregated is not [])
     assert (len(aggregated) == 2)
