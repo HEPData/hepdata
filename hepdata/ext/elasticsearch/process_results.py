@@ -69,13 +69,16 @@ def match_tables_to_papers(tables, papers):
         relevant_tables = [t for t in tables
                            if t['_source']['related_publication'] == paper_id]
 
-        # Create a function to extract numbers from titles and sort with it
+        # Create a function to extract table numbers from their DOIs.
         def sort_key(elem):
-            """ Extract the numbers from the title. """
-            title = elem['_source']['title']
-            numbers = [int(x) for x in title.split() if x.isdigit()]
-            return numbers[0] if numbers else title
+            """ Get the table number from the DOI. """
+            try:
+                table_num = int(elem['_source']['doi'].split('/')[-1].lstrip('t'))
+            except ValueError:  # this shouldn't happen
+                table_num = 0
+            return table_num
 
+        # Sort the tables into the order they appear in the record.
         relevant_tables.sort(key=sort_key)
 
         aggregated.append((paper, relevant_tables))

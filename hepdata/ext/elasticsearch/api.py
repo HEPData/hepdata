@@ -207,24 +207,16 @@ def reindex_batch(rec_ids, index):
 
 
 @default_index
-def get_record(record_id, doc_type, index=None, parent=None):
+def get_record(record_id, index=None):
     """ Fetch a given record from ES.
-    Parent must be defined for fetching datatable records.
 
     :param record_id: [int] ES record id
-    :param doc_type: [string] type of document. "publication" or "datatable"
     :param index: [string] name of the index. If None a default is used
-    :param parent: [int] record id of the potential parent
 
     :return: [dict] Fetched record
     """
     try:
-        if doc_type == CFG_DATA_TYPE and parent:
-            result = es.get(index=index,
-                            id=record_id, parent=parent)
-        else:
-            result = es.get(index=index, id=record_id)
-
+        result = es.get(index=index, id=record_id)
         return result.get('_source', result)
     except (NotFoundError, RequestError):
         return None
