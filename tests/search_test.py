@@ -325,6 +325,10 @@ def test_match_tables_to_papers():
     assert (aggregated is not [])
     assert (len(aggregated) == 2)
 
+    tables[0]["_source"]["doi"] = "10.17182/hepdata.1234.v2/t1a"  # invalid DOI format
+    aggregated = match_tables_to_papers(tables, papers)
+    assert (len(aggregated) == 2)
+
 
 def test_get_basic_record_information():
     test_record = {
