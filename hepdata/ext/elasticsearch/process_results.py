@@ -25,7 +25,6 @@
 from .aggregations import parse_aggregations
 from hepdata.config import CFG_DATA_TYPE, CFG_PUB_TYPE
 from hepdata.utils.miscellaneous import splitter
-from hepdata.modules.submission.models import DataSubmission
 
 
 def merge_results(pub_result, data_result):
@@ -63,25 +62,24 @@ def map_result(es_result, query_filters=None):
             'total': total_hits}
 
 
-def match_tables_to_papers(tables, papers, sort_by_id=True):
+def match_tables_to_papers(tables, papers):
     aggregated = []
     for paper in papers:
         paper_id = int(paper['_id'])
-        version = paper['_source']['version']
         relevant_tables = [t for t in tables
                            if t['_source']['related_publication'] == paper_id]
 
-        # Create a function to extract table IDs from the database and sort with it.
+        # Create a function to extract table numbers from their DOIs.
         def sort_key(elem):
-            """ Get the table ID from the database. """
-            datasubmission = DataSubmission.query.filter_by(
-                associated_recid=elem['_source']['recid'], version=version
-            ).one()
-            return datasubmission.id
+            """ Get the table number from the DOI. """
+            try:
+                table_num = int(elem['_source']['doi'].split('/')[-1].lstrip('t'))
+            except ValueError:  # this shouldn't happen
+                table_num = 0
+            return table_num
 
-        # Sort the tables into the order they appear in the record (but omit for tests).
-        if sort_by_id:
-            relevant_tables.sort(key=sort_key)
+        # Sort the tables into the order they appear in the record.
+        relevant_tables.sort(key=sort_key)
 
         aggregated.append((paper, relevant_tables))
 

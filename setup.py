@@ -66,7 +66,7 @@ packages = find_packages()
 class PyTest(TestCommand):
     """PyTest Test."""
 
-    user_options = [('pytest-args=', 'a', "Arguments to pass to py.test")]
+    user_options = [('pytest-args=', 'a', "Arguments to pass to pytest")]
 
     def initialize_options(self):
         """Init pytest."""

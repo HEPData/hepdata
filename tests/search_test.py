@@ -314,13 +314,13 @@ def test_match_tables_to_papers():
     ]
 
     tables = [
-        {"recid": 2, "_source": {"related_publication": 1, "title": "Table1",
+        {"recid": 2, "_source": {"related_publication": 1, "title": "Table1", "doi": "10.17182/hepdata.1234.v2/t1",
                                  "keywords": [{"name": "reaction", "value": "PP --> PP"}]}},
-        {"recid": 3, "_source": {"related_publication": 1, "title": "Table2",
+        {"recid": 3, "_source": {"related_publication": 1, "title": "Table2", "doi": "10.17182/hepdata.1234.v2/t2",
                                  "keywords": [{"name": "reaction", "value": "PP --> PX"}]}}
     ]
 
-    aggregated = match_tables_to_papers(tables, papers, sort_by_id=False)
+    aggregated = match_tables_to_papers(tables, papers)
 
     assert (aggregated is not [])
     assert (len(aggregated) == 2)
