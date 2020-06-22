@@ -67,8 +67,8 @@ def get_inspire_record_information(inspire_rec_id, verbose=False):
                      else content['metadata']['preprint_date'].split("-")[0] if 'preprint_date' in content['metadata'].keys() else
                      content['metadata']['legacy_creation_date'].split("-")[0] if 'legacy_creation_date' in content['metadata'] else None),
             'subject_area': (content['metadata']['arxiv_eprints'][-1]['categories'] if 'arxiv_eprints' in content['metadata'].keys() else
-                             [content['metadata']['inspire_categories'][0]['term']] if 'inspire_categories' in content['metadata'].keys() and
-                             len(content['metadata']['inspire_categories']) > 0 and 'term' in content['metadata']['inspire_categories'][0].keys() else[]),
+                             [entry['term'] for entry in content['metadata']['inspire_categories'] if 'term' in entry.keys()] if ('inspire_categories' in content['metadata'].keys() and
+                             len(content['metadata']['inspire_categories']) > 0) else[]),
         }
         if 'thesis' in parsed_content['type'] and 'thesis_info' in content['metadata'].keys():
             parsed_content['dissertation'] = content['metadata']['thesis_info']
@@ -84,6 +84,12 @@ def get_inspire_record_information(inspire_rec_id, verbose=False):
                         parsed_content['creation_date'] = content['metadata']['legacy_creation_date']
                     else:
                         parsed_content['creation_date'] = expand_date(parsed_content['year'])
+            if 'degree_type' in parsed_content['dissertation'].keys():
+                parsed_content['dissertation']['type'] = parsed_content['dissertation'].pop('degree_type')
+            if 'type' in parsed_content['dissertation'].keys() and parsed_content['dissertation']['type'] == "phd":
+                parsed_content['dissertation']['type'] == "PhD"
+            if 'date' in parsed_content['dissertation'].keys():
+                parsed_content['dissertation']['defence_date'] = parsed_content['dissertation'].pop('date')
         elif 'thesis' in parsed_content['type'] and 'thesis_info' not in content['metadata'].keys():
             parsed_content['dissertation'] = {}
         status = 'success'

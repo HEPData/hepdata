@@ -20,7 +20,7 @@ print("__extendend_inspire_api_comparison_test__")
 
 page = 1
 
-while page < 100:
+while page < 500:
 
     response = requests.get("http://inspirehep.net/api/literature?q=external_system_identifiers.schema:HEPData&page={}".format(page))
 
