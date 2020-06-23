@@ -42,7 +42,7 @@ def get_inspire_record_information(inspire_rec_id, verbose=False):
             'title': content['metadata']['titles'][0]['title'],
             'doi': (content['metadata']['dois'][-1]['value'] if 'dois' in content['metadata'] and len(content['metadata']['dois']) > 0 else None),
             'authors': [{'affiliation': (author['affiliations'][0]['value'] if 'affiliations' in author.keys() else ''),
-                         'full_name': author['full_name']} for author in content['metadata']['authors']],
+                         'full_name': author['full_name']} for author in content['metadata']['authors']] if 'authors' in content['metadata'].keys() else None,
             'type': content['metadata']['document_type'],
             'abstract': (content['metadata']['abstracts'][-1]['value'] if 'abstracts' in content['metadata'].keys() else None),
             'creation_date': (expand_date(content['metadata']['preprint_date']) if 'preprint_date' in content['metadata'].keys() else
@@ -50,25 +50,29 @@ def get_inspire_record_information(inspire_rec_id, verbose=False):
             'arxiv_id': ('arXiv:' + content['metadata']['arxiv_eprints'][-1]['value'] if 'arxiv_eprints' in content['metadata'].keys() else None),
             'collaborations': ([collaboration['value'] for collaboration in content['metadata']['collaborations']] if 'collaborations' in content['metadata'] else []),
             'keywords': content['metadata']['keywords'] if 'keywords' in content['metadata'].keys() else [],
-            'journal_info': (((content['metadata']['publication_info'][0]['journal_title'] + ' ' if 'journal_title' in content['metadata']['publication_info'][0] else '') +
-                              content['metadata']['publication_info'][0]['journal_volume'] +
-                              ' (' + str(content['metadata']['publication_info'][0]['year']) + ') ' + (
-                                  content['metadata']['publication_info'][0]['artid'] if 'artid' in content['metadata']['publication_info'][0].keys() else
-                                  content['metadata']['publication_info'][0]['page_start'] + "-" + content['metadata']['publication_info'][0]['page_end'] if
-                                  'page_start' in content['metadata']['publication_info'][0].keys() and 'page_end' in content['metadata']['publication_info'][0].keys() else ''))
-                             if ('publication_info' in content['metadata'] and len(content['metadata']['publication_info']) > 0 and
-                                 all(keyword in content['metadata']['publication_info'][0].keys() for keyword in ['journal_volume', 'year'])) else
-                             content['metadata']['publication_info'][0]['pubinfo_freetext'] if ('publication_info' in content['metadata'] and
-                                                                                                len(content['metadata']['publication_info']) > 0 and
-                                                                                                type(content['metadata']['publication_info'][0]) is dict and
-                                                                                                'pubinfo_freetext' in content['metadata']['publication_info'][0].keys()) else
-                             content['metadata']['publication_info'] if 'publication_info' in content['metadata'].keys() else 'No Journal Information'),
+            'journal_info': ((content['metadata']['publication_info'][0]['journal_title'] + ' ' if 'journal_title' in content['metadata']['publication_info'][0].keys() else '') +
+                             (content['metadata']['publication_info'][0]['journal_volume'] + ' ' if 'journal_volume' in content['metadata']['publication_info'][0].keys() else '') +
+                             ('(' + str(content['metadata']['publication_info'][0]['year']) + ') ' if 'year' in content['metadata']['publication_info'][0].keys() else '') +
+                             (content['metadata']['publication_info'][0]['artid'] if 'artid' in content['metadata']['publication_info'][0].keys() else
+                              content['metadata']['publication_info'][0]['page_start'] + "-" + content['metadata']['publication_info'][0]['page_end'] if
+                                 'page_start' in content['metadata']['publication_info'][0].keys() and 'page_end' in content['metadata']['publication_info'][0].keys() else '')
+                             if ('publication_info' in content['metadata'] and
+                                 (any([key in ['journal_title', 'journal_volume', 'year', 'artid'] for key in content['metadata']['publication_info'][0].keys()]) or
+                                 'page_start' in content['metadata']['publication_info'][0].keys() and 'page_end' in content['metadata']['publication_info'][0].keys())) else
+                             content['metadata']['publication_info'][0]['pubinfo_freetext'] if (
+                                 'publication_info' in content['metadata'] and len(content['metadata']['publication_info']) > 0 and
+                                 type(content['metadata']['publication_info'][0]) is dict and 'pubinfo_freetext' in content['metadata']['publication_info'][0].keys()) else
+                             content['metadata']['publication_info'] if 'publication_info' in content['metadata'].keys() else
+                             content['metadata']['public_notes'][0]['value'].replace("Submitted to ", "") if (
+                                 'public_notes' in content['metadata'].keys() and len(content['metadata']['public_notes']) > 0 and
+                                 'value' in content['metadata']['public_notes'][0].keys() and "Submitted to " in content['metadata']['public_notes'][0]['value']) else
+                             'No Journal Information'),
             'year': (str(content['metadata']['publication_info'][-1]['year']) if ('publication_info' in content['metadata'] and 'year' in content['metadata']['publication_info'][-1].keys())
                      else content['metadata']['preprint_date'].split("-")[0] if 'preprint_date' in content['metadata'].keys() else
                      content['metadata']['legacy_creation_date'].split("-")[0] if 'legacy_creation_date' in content['metadata'] else None),
-            'subject_area': (content['metadata']['arxiv_eprints'][-1]['categories'] if 'arxiv_eprints' in content['metadata'].keys() else
+            'subject_area': (content['metadata']['arxiv_eprints'][-1]['categories'] if 'arxiv_eprints' in content['metadata'].keys() else [] +
                              [entry['term'] for entry in content['metadata']['inspire_categories'] if 'term' in entry.keys()] if ('inspire_categories' in content['metadata'].keys() and
-                             len(content['metadata']['inspire_categories']) > 0) else[]),
+                             len(content['metadata']['inspire_categories']) > 0) else []),
         }
         if 'thesis' in parsed_content['type'] and 'thesis_info' in content['metadata'].keys():
             parsed_content['dissertation'] = content['metadata']['thesis_info']
@@ -87,9 +91,11 @@ def get_inspire_record_information(inspire_rec_id, verbose=False):
             if 'degree_type' in parsed_content['dissertation'].keys():
                 parsed_content['dissertation']['type'] = parsed_content['dissertation'].pop('degree_type')
             if 'type' in parsed_content['dissertation'].keys() and parsed_content['dissertation']['type'] == "phd":
-                parsed_content['dissertation']['type'] == "PhD"
+                parsed_content['dissertation']['type'] = "PhD"
+            if 'type' in parsed_content['dissertation'].keys() and parsed_content['dissertation']['type'] == "master":
+                parsed_content['dissertation']['type'] = "Master"
             if 'date' in parsed_content['dissertation'].keys():
-                parsed_content['dissertation']['defence_date'] = parsed_content['dissertation'].pop('date')
+                parsed_content['dissertation']['defense_date'] = parsed_content['dissertation'].pop('date')
         elif 'thesis' in parsed_content['type'] and 'thesis_info' not in content['metadata'].keys():
             parsed_content['dissertation'] = {}
         status = 'success'

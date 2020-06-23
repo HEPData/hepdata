@@ -99,8 +99,9 @@ def compare(inspire_id, old_content, new_content, dict_key, silent=False, max_st
     if dict_key == 'subject_area':
 
         # subject area changed from 'HEP Experiment' to 'hep-ex', allow it
-        assert (any([entry in ['hep-ex', 'hep-ph', 'nucl-ex', 'Experiment-HEP', 'Experiment-Nucl', 'Theory-Nucl'] for entry in new_content[dict_key]]) or
-                old_content[dict_key] == new_content[dict_key])
+        assert(old_content[dict_key] == new_content[dict_key] or old_content[dict_key] == [] or
+               (any(['HEP Experiment' in entry for entry in old_content[dict_key]]) and any(['Experiment' in entry or 'ex' in entry for entry in new_content[dict_key]])) or
+               (any(['HEP Theory' in entry for entry in old_content[dict_key]]) and any(['Theory' in entry or 'th' in entry for entry in new_content[dict_key]])))
 
     elif dict_key == 'keywords':
 
