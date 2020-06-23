@@ -63,9 +63,9 @@ def get_inspire_record_information(inspire_rec_id, verbose=False):
                                  'publication_info' in content['metadata'] and len(content['metadata']['publication_info']) > 0 and
                                  type(content['metadata']['publication_info'][0]) is dict and 'pubinfo_freetext' in content['metadata']['publication_info'][0].keys()) else
                              content['metadata']['publication_info'] if 'publication_info' in content['metadata'].keys() else
-                             content['metadata']['public_notes'][0]['value'].replace("Submitted to ", "") if (
-                                 'public_notes' in content['metadata'].keys() and len(content['metadata']['public_notes']) > 0 and
-                                 'value' in content['metadata']['public_notes'][0].keys() and "Submitted to " in content['metadata']['public_notes'][0]['value']) else
+                             [public_note['value'].replace("Submitted to ", "") for public_note in content['metadata']['public_notes'] if
+                              'value' in public_note.keys() and "Submitted to " in public_note['value']][0] if ('public_notes' in content['metadata'].keys() and any(
+                                  ['value' in public_note.keys() and "Submitted to " in public_note['value'] for public_note in content['metadata']['public_notes']])) else
                              'No Journal Information'),
             'year': (str(content['metadata']['publication_info'][-1]['year']) if ('publication_info' in content['metadata'] and 'year' in content['metadata']['publication_info'][-1].keys())
                      else content['metadata']['preprint_date'].split("-")[0] if 'preprint_date' in content['metadata'].keys() else
