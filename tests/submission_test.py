@@ -176,19 +176,11 @@ def test_invalid_submission_yaml(app, admin_idx):
     errors = process_submission_directory(directory,
                                        os.path.join(directory, 'submission.yaml'),
                                        12345)
-    expected_errors = {
-        'submission.yaml': [
-            {
-                'level': 'error',
-                'message': f"""There was a problem parsing the file.
-while scanning a simple key
-  in "{directory}/submission.yaml", line 5, column 1
-could not find expected ':'
-  in "{directory}/submission.yaml", line 6, column 3"""
-            }
-        ]
-    }
-    assert(errors == expected_errors)
+
+    assert('submission.yaml' in errors)
+    assert(len(errors['submission.yaml']) == 1)
+    assert(errors['submission.yaml'][0]['level'] == 'error')
+    assert(errors['submission.yaml'][0]['message'].startswith("There was a problem parsing the file"))
 
 
 def test_invalid_data_yaml(app, admin_idx):
@@ -209,16 +201,8 @@ def test_invalid_data_yaml(app, admin_idx):
     errors = process_submission_directory(directory,
                                        os.path.join(directory, 'submission.yaml'),
                                        12345)
-    expected_errors = {
-        'data1.yaml': [
-            {
-                'level': 'error',
-                'message': f"""There was a problem parsing the file.
-while parsing a block mapping
-  in "{directory}/data1.yaml", line 3, column 3
-expected <block end>, but found '<block sequence start>'
-  in "{directory}/data1.yaml", line 6, column 5"""
-            }
-        ]
-    }
-    assert(errors == expected_errors)
+
+    assert('data1.yaml' in errors)
+    assert(len(errors['data1.yaml']) == 1)
+    assert(errors['data1.yaml'][0]['level'] == 'error')
+    assert(errors['data1.yaml'][0]['message'].startswith("There was a problem parsing the file"))
