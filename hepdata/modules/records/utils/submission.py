@@ -449,12 +449,6 @@ def process_submission_directory(basepath, submission_file_path, recid, update=F
         # process file, extracting contents, and linking
         # the data record with the parent publication
         hepsubmission = get_latest_hepsubmission(publication_recid=recid)
-        if hepsubmission is None:
-            HEPSubmission(publication_recid=recid,
-                          overall_status='todo',
-                          inspire_id=hepsubmission.inspire_id,
-                          coordinator=kwargs.get('user_id') if 'user_id' in kwargs else int(current_user.get_id()),
-                          version=hepsubmission.version + 1)
 
         # On a new upload, we reset the flag to notify reviewers
         hepsubmission.reviewers_notified = False
