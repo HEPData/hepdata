@@ -59,10 +59,8 @@ def app(request):
     """
     app = create_app()
     test_db_host = app.config.get('TEST_DB_HOST', 'localhost')
-    # Note that in Travis we add "TESTING=True" and
-    # "APP_ENABLE_SECURE_HEADERS=True" to config_local.py as well,
-    # to ensure that they're set before the app is initialised,
-    # as changing them later doesn't have the desired effect.
+    # Note that in Travis we add "TESTING=True" to config_local.py as well
+    # to ensure that it's set before flask mail is initialised
     app.config.update(dict(
         TESTING=True,
         TEST_RUNNER="celery.contrib.test_runner.CeleryTestSuiteRunner",
@@ -74,10 +72,23 @@ def app(request):
         SUBMISSION_INDEX='hepdata-submission-test',
         AUTHOR_INDEX='hepdata-authors-test',
         SQLALCHEMY_DATABASE_URI=os.environ.get(
-            'SQLALCHEMY_DATABASE_URI',
-            'postgresql+psycopg2://hepdata:hepdata@' + test_db_host + '/hepdata_test'
-        ),
-        APP_ENABLE_SECURE_HEADERS=False
+            'SQLALCHEMY_DATABASE_URI', 'postgresql+psycopg2://hepdata:hepdata@' + test_db_host + '/hepdata_test'),
+        APP_DEFAULT_SECURE_HEADERS = {
+            'force_https': False,
+            'force_https_permanent': False,
+            'force_file_save': False,
+            'frame_options': 'sameorigin',
+            'frame_options_allow_from': None,
+            'strict_transport_security': False,
+            'strict_transport_security_preload': False,
+            'strict_transport_security_max_age': 31556926,  # One year in seconds
+            'strict_transport_security_include_subdomains': True,
+            'content_security_policy': {},
+            'content_security_policy_report_uri': None,
+            'content_security_policy_report_only': False,
+            'session_cookie_secure': True,
+            'session_cookie_http_only': True
+        }
     ))
 
     with app.app_context():
