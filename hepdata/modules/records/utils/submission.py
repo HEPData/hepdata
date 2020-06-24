@@ -385,14 +385,16 @@ def _read_data_file(data_file_path):
     Read data file allowing for multiple attempts.
     """
     attempts = 0
+    data = {}
+    ex = None
+
     while True:
-        data = {}
-        ex = None
         try:
             with open(data_file_path, 'r') as data_file:
                 data = yaml.load(data_file, Loader=Loader)
-        except Exception as ex:
+        except Exception as e:
             attempts += 1
+            ex = e
         # allow multiple attempts to read file in case of temporary disk problems
         if (data and data is not None) or attempts > 5:
             break
