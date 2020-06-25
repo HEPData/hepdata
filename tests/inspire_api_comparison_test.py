@@ -98,10 +98,10 @@ def compare(inspire_id, old_content, new_content, dict_key, silent=False, max_st
 
     if dict_key == 'subject_area':
 
-        # subject area changed from 'HEP Experiment' to 'hep-ex', allow it
+        # subject area strings changed, for example 'HEP Experiment' changed to 'hep-ex' or 'Experiment-HEP', allow it
         assert(old_content[dict_key] == new_content[dict_key] or old_content[dict_key] == [] or
-               (any(['HEP Experiment' in entry for entry in old_content[dict_key]]) and any(['Experiment' in entry or 'ex' in entry for entry in new_content[dict_key]])) or
-               (any(['HEP Theory' in entry for entry in old_content[dict_key]]) and any(['Theory' in entry or 'th' in entry for entry in new_content[dict_key]])))
+               (any(['HEP Experiment' in entry for entry in old_content[dict_key]]) and any(['ex' in entry for entry in new_content[dict_key]])) or
+               (any(['HEP Theory' in entry for entry in old_content[dict_key]]) and any(['th' in entry for entry in new_content[dict_key]])))
 
     elif dict_key == 'keywords':
 
@@ -124,6 +124,10 @@ def compare(inspire_id, old_content, new_content, dict_key, silent=False, max_st
 
         # if old is contianed in new then allow it
         if old_content[dict_key] in new_content[dict_key]:
+            return
+
+        # if all journal info is 'No Journal Information' then mark it as passed
+        if dict_key == 'journal_info' and old_content['journal_info'] == 'No Journal Information':
             return
 
         # some strings have been updated (e.g. abstract or journal name), allow for up to 10% difference (default)

@@ -70,10 +70,13 @@ def get_inspire_record_information(inspire_rec_id, verbose=False):
             'year': (str(content['metadata']['publication_info'][-1]['year']) if ('publication_info' in content['metadata'] and 'year' in content['metadata']['publication_info'][-1].keys())
                      else content['metadata']['preprint_date'].split("-")[0] if 'preprint_date' in content['metadata'].keys() else
                      content['metadata']['legacy_creation_date'].split("-")[0] if 'legacy_creation_date' in content['metadata'] else None),
-            'subject_area': (content['metadata']['arxiv_eprints'][-1]['categories'] if 'arxiv_eprints' in content['metadata'].keys() else [] +
-                             [entry['term'] for entry in content['metadata']['inspire_categories'] if 'term' in entry.keys()] if ('inspire_categories' in content['metadata'].keys() and
-                             len(content['metadata']['inspire_categories']) > 0) else []),
+            'subject_area': list(set(((content['metadata']['arxiv_eprints'][-1]['categories'] if 'arxiv_eprints' in content['metadata'].keys() else []) +
+                                      ([entry['term'].replace('Experiment-HEP', 'hep-ex').replace('Experiment-Nucl', 'nucl-ex').replace('Theory-Nucl', 'nucl-th') for
+                                        entry in content['metadata']['inspire_categories'] if 'term' in entry.keys() and entry['term'] != 'Other'] if (
+                                            'inspire_categories' in content['metadata'].keys() and len(content['metadata']['inspire_categories']) > 0) else [])))),
         }
+        if '. All figures' in parsed_content['journal_info']:
+            parsed_content['journal_info'] = parsed_content['journal_info'].replace('. All figures', '')
         if 'thesis' in parsed_content['type'] and 'thesis_info' in content['metadata'].keys():
             parsed_content['dissertation'] = content['metadata']['thesis_info']
             if ('institutions' in parsed_content['dissertation'].keys() and
@@ -89,11 +92,9 @@ def get_inspire_record_information(inspire_rec_id, verbose=False):
                     else:
                         parsed_content['creation_date'] = expand_date(parsed_content['year'])
             if 'degree_type' in parsed_content['dissertation'].keys():
-                parsed_content['dissertation']['type'] = parsed_content['dissertation'].pop('degree_type')
-            if 'type' in parsed_content['dissertation'].keys() and parsed_content['dissertation']['type'] == "phd":
-                parsed_content['dissertation']['type'] = "PhD"
-            if 'type' in parsed_content['dissertation'].keys() and parsed_content['dissertation']['type'] == "master":
-                parsed_content['dissertation']['type'] = "Master"
+                parsed_content['dissertation']['type'] = parsed_content['dissertation'].pop('degree_type').title()
+                if parsed_content['dissertation']['type'] == "Phd":
+                    parsed_content['dissertation']['type'] = "PhD"
             if 'date' in parsed_content['dissertation'].keys():
                 parsed_content['dissertation']['defense_date'] = parsed_content['dissertation'].pop('date')
         elif 'thesis' in parsed_content['type'] and 'thesis_info' not in content['metadata'].keys():
