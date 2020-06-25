@@ -25,12 +25,14 @@
 import os
 from time import sleep
 
+from invenio_db import db
+
 from hepdata.ext.elasticsearch.api import get_records_matching_field
 from hepdata.modules.records.api import format_submission
 from hepdata.modules.records.utils.common import infer_file_type, contains_accepted_url, allowed_file, record_exists, \
     get_record_contents
 from hepdata.modules.records.utils.submission import process_submission_directory, do_finalise, unload_submission
-from hepdata.modules.submission.models import DataSubmission
+from hepdata.modules.submission.models import DataSubmission, HEPSubmission
 from hepdata.modules.submission.views import process_submission_payload
 
 
@@ -160,3 +162,47 @@ def test_create_submission(app, admin_idx):
 
         admin_idx_results = admin_idx.search(term=hepdata_submission.publication_recid, fields=['recid'])
         assert (len(admin_idx_results) == 0)
+
+
+def test_invalid_submission_yaml(app, admin_idx):
+    """
+    Test the right thing happens when the submission.yaml is invalid
+    :return:
+    """
+
+    base_dir = os.path.dirname(os.path.realpath(__file__))
+
+    directory = os.path.join(base_dir, 'test_data/test_invalid_submission_file')
+    errors = process_submission_directory(directory,
+                                       os.path.join(directory, 'submission.yaml'),
+                                       12345)
+
+    assert('submission.yaml' in errors)
+    assert(len(errors['submission.yaml']) == 1)
+    assert(errors['submission.yaml'][0]['level'] == 'error')
+    assert(errors['submission.yaml'][0]['message'].startswith("There was a problem parsing the file"))
+
+
+def test_invalid_data_yaml(app, admin_idx):
+    """
+    Test the right thing happens when a data yaml file is invalid
+    :return:
+    """
+
+    base_dir = os.path.dirname(os.path.realpath(__file__))
+
+    hepsubmission = HEPSubmission(publication_recid=12345,
+                                  overall_status='todo',
+                                  version=1)
+    db.session.add(hepsubmission)
+    db.session.commit()
+
+    directory = os.path.join(base_dir, 'test_data/test_invalid_data_file')
+    errors = process_submission_directory(directory,
+                                       os.path.join(directory, 'submission.yaml'),
+                                       12345)
+
+    assert('data1.yaml' in errors)
+    assert(len(errors['data1.yaml']) == 1)
+    assert(errors['data1.yaml'][0]['level'] == 'error')
+    assert(errors['data1.yaml'][0]['message'].startswith("There was a problem parsing the file"))

@@ -1,0 +1,37 @@
+independent_variables: []
+dependent_variables:
+- header: {name: SIG(fiducial), units: FB}
+  qualifiers:
+  - {name: RE, value: P P --> Z0 < LEPTON+ LEPTON- > Z0 < LEPTON+ LEPTON- > X}
+    - {name: SQRT(S), units: GEV, value: 7000} # Invalid indentation
+  values:
+  - value: 25.4
+    errors:
+    - asymerror: {minus: -3.0, plus: 3.3}
+      label: stat
+    - asymerror: {minus: -1.0, plus: 1.2}
+      label: sys
+    - {symerror: 1.0, label: 'sys,lumi'}
+- header: {name: SIG(fiducial), units: FB}
+  qualifiers:
+  - {name: RE, value: P P --> Z0 < LEPTON+ LEPTON- > Z0* < LEPTON+ LEPTON- > X}
+  - {name: SQRT(S), units: GEV, value: 7000}
+  values:
+  - value: 29.8
+    errors:
+    - asymerror: {minus: -3.5, plus: 3.8}
+      label: stat
+    - asymerror: {minus: -1.5, plus: 1.7}
+      label: sys
+    - {symerror: 1.2, label: 'sys,lumi'}
+- header: {name: SIG(fiducial), units: FB}
+  qualifiers:
+  - {name: RE, value: P P --> Z0 < LEPTON+ LEPTON- > Z0 < NU NUBAR > X}
+  - {name: SQRT(S), units: GEV, value: 7000}
+  values:
+  - value: 12.7
+    errors:
+    - asymerror: {minus: -2.9, plus: 3.1}
+      label: stat
+    - {symerror: 1.7, label: sys}
+    - {symerror: 0.5, label: 'sys,lumi'}
