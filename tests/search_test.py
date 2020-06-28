@@ -329,6 +329,10 @@ def test_match_tables_to_papers():
     aggregated = match_tables_to_papers(tables, papers)
     assert (len(aggregated) == 2)
 
+    tables[0]["_source"]["doi"] = None  # missing DOI
+    aggregated = match_tables_to_papers(tables, papers)
+    assert (len(aggregated) == 2)
+
 
 def test_get_basic_record_information():
     test_record = {
