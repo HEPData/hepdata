@@ -56,7 +56,7 @@ def tweet(title, collaborations, url, version=1):
             twitter = Twitter(auth=OAuth(OAUTH_TOKEN, OAUTH_SECRET, CONSUMER_KEY, CONSUMER_SECRET))
 
             cleaned_title = decode_string(encode_string(title))  # in case of binary characters in title
-            cleaned_title = replace([cleaned_title])[0]  # use UnicodeIt to replace LaTeX expressions
+            cleaned_title = decode_string(replace([cleaned_title])[0])  # use UnicodeIt to replace LaTeX expressions
             cleaned_title = cleanup_latex(cleaned_title)  # remove some remaining LaTeX encodings
 
             words = len(cleaned_title.split())
