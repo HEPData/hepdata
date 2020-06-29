@@ -84,6 +84,7 @@ def update_record(recid, ctx):
     print('Updating record {}'.format(recid))
     record = get_record_by_id(recid)
     for key, value in ctx.items():
+        # print("updating key {} with value {}".format(key, value))
         record[key] = value
     record["recid"] = recid
 

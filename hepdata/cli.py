@@ -43,6 +43,9 @@ from hepdata.utils.twitter import tweet
 from hepdata.modules.email.api import send_finalised_email
 from hepdata.modules.records.utils.doi_minter import generate_dois_for_submission, generate_doi_for_table
 from hepdata.modules.permissions.api import write_submissions_to_files
+from hepdata.modules.records.utils.workflow import update_record
+from hepdata.modules.inspire_api.views import get_inspire_record_information
+
 
 from invenio_db import db
 
@@ -416,3 +419,14 @@ def reindex():
 def write_stats_to_files():
     """Writes some statistics on number of submissions per Coordinator to files."""
     write_submissions_to_files()
+
+
+@cli.command()
+@with_appcontext
+@click.option('--inspire-id', '-i', type=str, help='Specify inspire ID of record to update.')
+def update_record_info(inspire_id):
+    hepsubmission = get_latest_hepsubmission(inspire_id=inspire_id)
+    recid = hepsubmission.publication_recid
+    ctx, _ = get_inspire_record_information(inspire_id)
+    # print(ctx)
+    update_record(recid, ctx)
