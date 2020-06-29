@@ -74,7 +74,7 @@ def match_tables_to_papers(tables, papers):
             """ Get the table number from the DOI. """
             try:
                 table_num = int(elem['_source']['doi'].split('/')[-1].lstrip('t'))
-            except ValueError:  # this shouldn't happen
+            except (ValueError, AttributeError):  # this shouldn't happen
                 table_num = 0
             return table_num
 
