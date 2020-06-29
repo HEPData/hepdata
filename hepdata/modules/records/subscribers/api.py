@@ -52,7 +52,7 @@ def get_records_subscribed_by_current_user():
     subscriptions = Subscribers.query.filter(Subscribers.subscribers.contains(current_user)).all()
     if subscriptions:
         records = [get_record_contents(x.publication_recid) for x in subscriptions]
-        return filter(partial(is_not, None), records)
+        return list(filter(partial(is_not, None), records))
 
     else:
         return []

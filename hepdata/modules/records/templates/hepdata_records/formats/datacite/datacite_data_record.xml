@@ -39,11 +39,7 @@
         </description>
 
         <description descriptionType="Other">
-            {% if table_description %}
-                {{ table_description.decode('utf-8') }}
-            {% else %}
-                {{ table_description }}
-            {% endif %}
+            {{ table_description }}
         </description>
     </descriptions>
 
