@@ -439,7 +439,8 @@ def update_record_info(inspire_id, send_email=False):
         print("Failed to retrieve publication information for {0}".format(inspire_id))
         return
 
-    index_record_ids([record_information["recid"]])
-    generate_dois_for_submission.delay(inspire_id=inspire_id)  # update metadata stored in DataCite
-    if send_email:
-        notify_publication_update(hep_submission, record_information)   # send email to all participants
+    if hep_submission.overall_status == 'finished':
+        index_record_ids([record_information["recid"]])
+        generate_dois_for_submission.delay(inspire_id=inspire_id)  # update metadata stored in DataCite
+        if send_email:
+            notify_publication_update(hep_submission, record_information)   # send email to all participants
