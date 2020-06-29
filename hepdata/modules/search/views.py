@@ -73,9 +73,10 @@ def check_max_results(args):
     max_results = args.get('size', HEPDATA_CFG_MAX_RESULTS_PER_PAGE)
     try:
         max_results = int(max_results)
-        if max_results < 1 or max_results > 200:
-            raise ValueError
     except ValueError:
+        max_results = HEPDATA_CFG_MAX_RESULTS_PER_PAGE
+
+    if max_results < 1 or max_results > 200:
         max_results = 200 if max_results > 200 else HEPDATA_CFG_MAX_RESULTS_PER_PAGE
 
     args['size'] = max_results
