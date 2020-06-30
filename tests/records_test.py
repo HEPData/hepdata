@@ -25,6 +25,7 @@
 from io import open
 import os
 import yaml
+import datetime
 
 from flask_login import login_user
 from invenio_accounts.models import User
@@ -39,6 +40,7 @@ from hepdata.modules.records.utils.users import get_coordinators_in_system, has_
 from hepdata.modules.records.utils.workflow import update_record, create_record
 from hepdata.modules.submission.models import HEPSubmission
 from tests.conftest import TEST_EMAIL
+from hepdata.modules.records.utils.records_update_utils import get_all_updated_records_since_date
 
 
 def test_record_creation(app):
@@ -173,3 +175,10 @@ def test_upload_valid_file(app):
         assert(hepdata_submissions[1].data_abstract.startswith('CERN-LHC.  Measurements of the cross section  for ZZ production'))
         assert(hepdata_submissions[1].version == 2)
         assert(hepdata_submissions[1].overall_status == 'todo')
+
+
+def test_get_updated_records_on_date(app):
+    d0 = datetime.date.today()
+    d1 = datetime.date(2020, 6, 29)
+    delta = d0 - d1
+    assert(get_all_updated_records_since_date(delta.days) == ['1650066', '1650063', '756925'])
