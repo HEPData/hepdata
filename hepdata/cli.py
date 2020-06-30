@@ -425,12 +425,16 @@ def write_stats_to_files():
 
 @cli.command()
 @with_appcontext
-@click.option('--inspire-id', '-i', type=str, help='Specify inspire ID of record to update.')
+@click.option('--inspire-id', '-i', type=str, required=True, help='Specify inspire ID of record to update.')
+@click.option('--recid', '-r', type=str, default='', help='Specify an HEPData record ID to update given the Inspire ID. This is to be used for not yet finilised submissions.')
 @click.option('--send_email', '-e', default=False, type=bool, help='Whether or not to send email about update.')
-def update_record_info(inspire_id, send_email=False):
+def update_record_info(inspire_id, recid='', send_email=False):
     inspire_id = inspire_id.replace("ins", "")
-    hep_submission = get_latest_hepsubmission(inspire_id=inspire_id)
-    recid = hep_submission.publication_recid
+
+    if recid == '':
+        hep_submission = get_latest_hepsubmission(inspire_id=inspire_id)
+        recid = hep_submission.publication_recid
+
     updated_record_information, status = get_inspire_record_information(inspire_id)
 
     if status == 'success':
@@ -439,7 +443,7 @@ def update_record_info(inspire_id, send_email=False):
         print("Failed to retrieve publication information for {0}".format(inspire_id))
         return
 
-    if hep_submission.overall_status == 'finished':
+    if recid == '' and hep_submission.overall_status == 'finished':
         index_record_ids([record_information["recid"]])
         generate_dois_for_submission.delay(inspire_id=inspire_id)  # update metadata stored in DataCite
         if send_email:
