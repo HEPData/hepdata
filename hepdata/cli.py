@@ -43,11 +43,7 @@ from hepdata.utils.twitter import tweet
 from hepdata.modules.email.api import send_finalised_email
 from hepdata.modules.records.utils.doi_minter import generate_dois_for_submission, generate_doi_for_table
 from hepdata.modules.permissions.api import write_submissions_to_files
-from hepdata.modules.records.utils.workflow import update_record
-from hepdata.modules.inspire_api.views import get_inspire_record_information
-# from hepdata.modules.old_inspire_api.views import get_inspire_record_information
-from hepdata.ext.elasticsearch.api import index_record_ids
-from hepdata.modules.email.api import notify_publication_update
+from hepdata.modules.records.utils.records_update_utils import get_all_updated_records_since_date, update_record_info
 
 from invenio_db import db
 
@@ -428,23 +424,14 @@ def write_stats_to_files():
 @click.option('--inspire-id', '-i', type=str, required=True, help='Specify inspire ID of record to update.')
 @click.option('--recid', '-r', type=str, default='', help='Specify an HEPData record ID to update given the Inspire ID. This is to be used for not yet finilised submissions.')
 @click.option('--send_email', '-e', default=False, type=bool, help='Whether or not to send email about update.')
-def update_record_info(inspire_id, recid='', send_email=False):
-    inspire_id = inspire_id.replace("ins", "")
+def cli_update_record_info(inspire_id, recid='', send_email=False):
+    update_record_info(inspire_id, recid, send_email)
 
-    if recid == '':
-        hep_submission = get_latest_hepsubmission(inspire_id=inspire_id)
-        recid = hep_submission.publication_recid
 
-    updated_record_information, status = get_inspire_record_information(inspire_id)
-
-    if status == 'success':
-        record_information = update_record(recid, updated_record_information)
-    else:
-        print("Failed to retrieve publication information for {0}".format(inspire_id))
-        return
-
-    if recid == '' and hep_submission.overall_status == 'finished':
-        index_record_ids([record_information["recid"]])
-        generate_dois_for_submission.delay(inspire_id=inspire_id)  # update metadata stored in DataCite
-        if send_email:
-            notify_publication_update(hep_submission, record_information)   # send email to all participants
+@cli.command()
+@with_appcontext
+@click.option('--date', '-d', type=str, required=True, help='Specify date since when to update records.')
+def update_records_info_since(date):
+    inspire_ids = get_all_updated_records_since_date(date, verbose=True)
+    for inspire_id in inspire_ids:
+        update_record_info(inspire_id)

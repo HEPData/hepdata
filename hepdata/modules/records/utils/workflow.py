@@ -33,6 +33,7 @@ from invenio_db import db
 
 from hepdata.modules.records.utils.common import get_record_by_id
 
+
 def create_data_structure(ctx):
     """
     The data structures need to be normalised before being stored in

@@ -1,7 +1,38 @@
-import sys
 import datetime
 import requests
 import math
+
+from hepdata.modules.records.utils.doi_minter import generate_dois_for_submission
+from hepdata.modules.submission.api import get_latest_hepsubmission
+from hepdata.modules.records.utils.workflow import update_record
+from hepdata.modules.inspire_api.views import get_inspire_record_information
+from hepdata.ext.elasticsearch.api import index_record_ids
+from hepdata.modules.email.api import notify_publication_update
+
+
+def update_record_info(inspire_id, recid='', send_email=False):
+    inspire_id = inspire_id.replace("ins", "")
+
+    if recid == '':
+        hep_submission = get_latest_hepsubmission(inspire_id=inspire_id)
+        if hep_submission is None:
+            print("Failed to retrieve hep submission for {0}".format(inspire_id))
+            return
+        recid = hep_submission.publication_recid
+
+    updated_record_information, status = get_inspire_record_information(inspire_id)
+
+    if status == 'success':
+        record_information = update_record(recid, updated_record_information)
+    else:
+        print("Failed to retrieve publication information for {0}".format(inspire_id))
+        return
+
+    if recid == '' and hep_submission.overall_status == 'finished':
+        index_record_ids([record_information["recid"]])
+        generate_dois_for_submission.delay(inspire_id=inspire_id)  # update metadata stored in DataCite
+        if send_email:
+            notify_publication_update(hep_submission, record_information)   # send email to all participants
 
 
 def get_all_updated_records_since_date(date, verbose=False):
@@ -62,7 +93,3 @@ def get_all_updated_records_since_date(date, verbose=False):
             print("\rChecked {} records. {} were updated since {}.".format(counter, len(ids), date))
 
     return ids
-
-
-if __name__ == "__main__":
-    print(get_all_updated_records_since_date(sys.argv[1], verbose=True))
