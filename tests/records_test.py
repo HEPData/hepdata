@@ -40,7 +40,7 @@ from hepdata.modules.records.utils.users import get_coordinators_in_system, has_
 from hepdata.modules.records.utils.workflow import update_record, create_record
 from hepdata.modules.submission.models import HEPSubmission
 from tests.conftest import TEST_EMAIL
-from hepdata.modules.records.utils.records_update_utils import get_all_updated_records_since_date
+from hepdata.modules.records.utils.records_update_utils import get_all_updated_records_since_date, update_record_info
 
 
 def test_record_creation(app):
@@ -181,4 +181,9 @@ def test_get_updated_records_on_date(app):
     d0 = datetime.date.today()
     d1 = datetime.date(2020, 6, 29)
     delta = d0 - d1
-    assert(get_all_updated_records_since_date(delta.days) == ['1650066', '1650063', '756925'])
+    assert(set(get_all_updated_records_since_date(delta.days)) == set(['1650066', '1650063', '756925']))
+
+
+def test_update_record_info(app):
+    # dummy test: the record doesn't exist on Travis, so it's basically checking it can handle not-found record case
+    assert(update_record_info("1311487") is None)
