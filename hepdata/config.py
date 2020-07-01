@@ -289,6 +289,24 @@ APP_ALLOWED_HOSTS = []
 
 LOGGING_SENTRY_CELERY = True  # for invenio-logging
 
+# Talisman settings (see https://github.com/GoogleCloudPlatform/flask-talisman).
+# We don't want the web pods to use https.
+APP_DEFAULT_SECURE_HEADERS = {
+    'force_https': False,
+    'force_https_permanent': False,
+    'force_file_save': False,
+    'frame_options': 'sameorigin',
+    'frame_options_allow_from': None,
+    'strict_transport_security': False,
+    'strict_transport_security_preload': False,
+    'strict_transport_security_include_subdomains': True,
+    'content_security_policy': {},
+    'content_security_policy_report_uri': None,
+    'content_security_policy_report_only': False,
+    'session_cookie_secure': True,
+    'session_cookie_http_only': True
+}
+
 # Import local config file if it is present.
 try:
     from hepdata.config_local import *
