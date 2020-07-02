@@ -632,11 +632,11 @@ def consume_data_payload(recid):
 
         user_email = request.form['email']
         invitation_cookie = request.form['invitation_cookie']
-        hepsubmission_record = get_latest_hepsubmission(publication_recid=recid)
+        hepsubmission_record = get_latest_hepsubmission(publication_recid=recid, overall_status='todo')
 
         # check user is allowed to upload
         if not any([(participant.role == 'uploader' and
-                     participant.email == user_email and
+                     participant.email.lower() == user_email.lower() and
                      str(participant.invitation_cookie) == invitation_cookie)
                     for participant in hepsubmission_record.participants]):
             raise werkzeug.exceptions.Forbidden()
@@ -741,8 +741,8 @@ def update_sandbox_payload(recid):
         user_email = request.form['email']
         user = User.query.filter_by(email=user_email).first()
         login_user(user)
-        hepsubmission_record = get_latest_hepsubmission(publication_recid=recid)
-        if User.query.filter_by(id=hepsubmission_record.coordinator).first().email != user_email:
+        hepsubmission_record = get_latest_hepsubmission(publication_recid=recid, overall_status='sandbox')
+        if User.query.filter_by(id=hepsubmission_record.coordinator).first().email.lower() != user_email.lower():
             raise Exception("Attempted to modify another's user record.")
 
     uploaded_file = request.files['hep_archive']
