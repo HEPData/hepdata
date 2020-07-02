@@ -628,18 +628,31 @@ def consume_data_payload(recid):
 
     if current_user.is_authenticated is False:
         if 'email' not in request.form.keys():
-            raise werkzeug.exceptions.Forbidden()
+            raise werkzeug.exceptions.BadRequest(description="!!!USER EMAIL IS REQUIRED: SPECIFY ONE USING -e USER-EMAIL!!!")
 
         user_email = request.form['email']
         invitation_cookie = request.form['invitation_cookie']
         hepsubmission_record = get_latest_hepsubmission(publication_recid=recid, overall_status='todo')
+        if hepsubmission_record is None:
+            raise werkzeug.exceptions.NotFound(description="!!!RECORD NOT FOUND!!!")
+
+        # check user associated with this email exists
+        if User.query.filter_by(email=user_email).first() is None:
+            raise werkzeug.exceptions.NotFound(description="!!!EMAIL DOES NOT CORRESPOND TO ANY USER!!!")
 
         # check user is allowed to upload
         if not any([(participant.role == 'uploader' and
                      participant.email.lower() == user_email.lower() and
                      str(participant.invitation_cookie) == invitation_cookie)
                     for participant in hepsubmission_record.participants]):
-            raise werkzeug.exceptions.Forbidden()
+            if not any([(participant.role == 'uploader' and
+                         participant.email.lower() == user_email.lower())
+                        for participant in hepsubmission_record.participants]):
+                raise werkzeug.exceptions.Forbidden(description="!!!EMAIL DOES NOT CORRESPOND TO ANY UPLOADER FOR THIS RECORD!!!")
+            elif not any([(participant.role == 'uploader' and
+                           str(participant.invitation_cookie) == invitation_cookie)
+                          for participant in hepsubmission_record.participants]):
+                raise werkzeug.exceptions.Forbidden(description="!!!INVITATION COOKIE DID NOT MATCH!!!")
 
         user = User.query.filter_by(email=user_email).first()
         login_user(user)
@@ -711,8 +724,13 @@ def consume_sandbox_payload():
 
     if current_user.is_authenticated is False:
         if 'email' not in request.form.keys():
-            raise werkzeug.exceptions.Forbidden()
+            raise werkzeug.exceptions.BadRequest(description="!!!USER EMAIL IS REQUIRED: SPECIFY ONE USING -e USER-EMAIL!!!")
         user_email = request.form['email']
+
+        # check user associated with this email exists
+        if User.query.filter_by(email=user_email).first() is None:
+            raise werkzeug.exceptions.NotFound(description="!!!EMAIL DOES NOT CORRESPOND TO ANY USER!!!")
+
         user = User.query.filter_by(email=user_email).first()
         login_user(user)
 
@@ -737,13 +755,19 @@ def update_sandbox_payload(recid):
 
     if current_user.is_authenticated is False:
         if 'email' not in request.form.keys():
-            raise werkzeug.exceptions.Forbidden()
+            raise werkzeug.exceptions.BadRequest(description="!!!USER EMAIL IS REQUIRED: SPECIFY ONE USING -e USER-EMAIL!!!")
         user_email = request.form['email']
+
+        # check user associated with this email exists
+        if User.query.filter_by(email=user_email).first() is None:
+            raise werkzeug.exceptions.NotFound(description="!!!EMAIL DOES NOT CORRESPOND TO ANY USER!!!")
+
         user = User.query.filter_by(email=user_email).first()
         login_user(user)
+
         hepsubmission_record = get_latest_hepsubmission(publication_recid=recid, overall_status='sandbox')
         if User.query.filter_by(id=hepsubmission_record.coordinator).first().email.lower() != user_email.lower():
-            raise Exception("Attempted to modify another's user record.")
+            raise werkzeug.exceptions.Forbidden(description="!!!ATTEMPTED TO MODIFY ANOTHER USERS SANDBOX RECORD!!!")
 
     uploaded_file = request.files['hep_archive']
     redirect_url = request.url_root + "record/sandbox/{}"
