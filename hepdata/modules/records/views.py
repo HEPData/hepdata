@@ -766,6 +766,8 @@ def update_sandbox_payload(recid):
         login_user(user)
 
         hepsubmission_record = get_latest_hepsubmission(publication_recid=recid, overall_status='sandbox')
+        if hepsubmission_record is None:
+            raise werkzeug.exceptions.NotFound(description="!!!SANDBOX RECORD NOT FOUND!!!")
         if User.query.filter_by(id=hepsubmission_record.coordinator).first().email.lower() != user_email.lower():
             raise werkzeug.exceptions.Forbidden(description="!!!ATTEMPTED TO MODIFY ANOTHER USERS SANDBOX RECORD!!!")
 
