@@ -193,7 +193,7 @@ def test_upload_invalid_file(app):
             )
             response, code = process_payload(recid, test_file, '/test_redirect_url', synchronous=True)
 
-        assert(code == 500)
+        assert(code == 400)
         assert(response.json == {
                 'message': 'You must upload a .zip, .tar, .tar.gz or .tgz file'
                            ' (or a .oldhepdata or single .yaml file).'
