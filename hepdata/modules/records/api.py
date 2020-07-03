@@ -375,7 +375,7 @@ def process_payload(recid, file, redirect_url, synchronous=False):
                                message="Incorrect file type uploaded.",
                                errors={"Submission": [{"level": "error",
                                                        "message": "You must upload a .zip, .tar, .tar.gz or .tgz file" +
-                                                       " (or a .oldhepdata or single .yaml file)."}]})
+                                                       " (or a .oldhepdata or single .yaml or .yaml.gz file)."}]})
 
 
 @shared_task
@@ -453,7 +453,7 @@ def process_zip_archive(file_path, id):
             if not extract(file_path, file_path[:-3]):
                 return {
                     "Archive file extractor": [{
-                        "level": "error", "message": "{} is not a valid zip or tar archive file.".format(file_path)
+                        "level": "error", "message": "{} is not a valid .gz file.".format(file_path)
                     }]
                 }
             return process_zip_archive(file_path[:-3], id)
