@@ -340,6 +340,8 @@ def process_payload(recid, file, redirect_url, synchronous=False):
         Redirect URL to record, for use if the upload fails or in synchronous mode
     :param synchronous: bool
         Whether to process asynchronously via celery (default) or immediately (only recommended for tests)
+    :return: JSONResponse either containing 'url' (for success cases) or
+             'message' (for error cases, which will give a 400 error).
     """
     if file and (allowed_file(file.filename)):
         file_path = save_zip_file(file, recid)
