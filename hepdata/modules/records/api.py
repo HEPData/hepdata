@@ -371,7 +371,7 @@ def process_payload(recid, file, redirect_url, synchronous=False):
         return jsonify({'url': redirect_url.format(recid)})
     else:
         return jsonify({"message": "You must upload a .zip, .tar, .tar.gz or .tgz file"
-                       + " (or a .oldhepdata or single .yaml file)."}), 500
+                       + " (or a .oldhepdata or single .yaml file)."}), 400
 
 
 @shared_task
