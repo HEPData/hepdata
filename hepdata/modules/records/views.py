@@ -30,8 +30,10 @@ import json
 import time
 from dateutil import parser
 from invenio_accounts.models import User
+from flask import current_app
 from flask_login import login_required, login_user
 from flask import Blueprint, send_file, abort, redirect
+from flask_security.utils import verify_password
 from sqlalchemy import or_, func
 import yaml
 try:
@@ -628,7 +630,7 @@ def consume_data_payload(recid):
     if request.method == 'GET':
         return redirect('/record/' + str(recid))
 
-    if current_user.is_authenticated is False:  # code for hepdata-cli upload
+    if current_user.is_authenticated is False and 'hep-cli' in request.form.keys() and request.form['hep-cli'] == 'True':  # code for hepdata-cli upload
         if 'email' not in request.form.keys():
             raise werkzeug.exceptions.BadRequest(description="!!!USER EMAIL IS REQUIRED: SPECIFY ONE USING -e USER-EMAIL!!!")
 
@@ -651,8 +653,13 @@ def consume_data_payload(recid):
             raise werkzeug.exceptions.Forbidden(description="!!!EMAIL DOES NOT CORRESPOND TO A CONFIRMED UPLOADER FOR THIS RECORD!!!")
         elif str(participant.invitation_cookie) != invitation_cookie:
             raise werkzeug.exceptions.Forbidden(description="!!!INVITATION COOKIE DID NOT MATCH!!!")
+        elif verify_password(request.form['pswd'], user.password) is False:
+            raise werkzeug.exceptions.BadRequest(description="!!!WRONG PASSWORD, TRY AGAIN.!!!")
+        else:
+            login_user(user)
 
-        login_user(user)
+    elif current_user.is_authenticated is False:
+        return current_app.login_manager.unauthorized()
 
     uploaded_file = request.files['hep_archive']
     redirect_url = request.url_root + "record/{}"
@@ -720,7 +727,7 @@ def consume_sandbox_payload():
     if request.method == 'GET':
         return redirect('/record/sandbox')
 
-    if current_user.is_authenticated is False:  # code for hepdata-cli upload
+    if current_user.is_authenticated is False and 'hep-cli' in request.form.keys() and request.form['hep-cli'] == 'True':  # code for hepdata-cli upload
         if 'email' not in request.form.keys():
             raise werkzeug.exceptions.BadRequest(description="!!!USER EMAIL IS REQUIRED: SPECIFY ONE USING -e USER-EMAIL!!!")
         user_email = request.form['email']
@@ -729,8 +736,13 @@ def consume_sandbox_payload():
         user = User.query.filter(func.lower(User.email) == user_email.lower(), User.active.is_(True), User.confirmed_at.isnot(None)).first()
         if user is None:
             raise werkzeug.exceptions.NotFound(description="!!!EMAIL {0} DOES NOT CORRESPOND TO ANY ACTIVE USER!!!".format(user_email))
+        elif verify_password(request.form['pswd'], user.password) is False:
+            raise werkzeug.exceptions.BadRequest(description="!!!WRONG PASSWORD, TRY AGAIN.!!!")
+        else:
+            login_user(user)
 
-        login_user(user)
+    elif current_user.is_authenticated is False:
+        return current_app.login_manager.unauthorized()
 
     recid = (int(current_user.get_id())) + int(round(time.time()))
     get_or_create_hepsubmission(recid, current_user.get_id(), status="sandbox")
@@ -752,7 +764,7 @@ def update_sandbox_payload(recid):
     if request.method == 'GET':
         return redirect('/record/sandbox/' + str(recid))
 
-    if current_user.is_authenticated is False:  # code for hepdata-cli upload
+    if current_user.is_authenticated is False and 'hep-cli' in request.form.keys() and request.form['hep-cli'] == 'True':  # code for hepdata-cli upload
         if 'email' not in request.form.keys():
             raise werkzeug.exceptions.BadRequest(description="!!!USER EMAIL IS REQUIRED: SPECIFY ONE USING -e USER-EMAIL!!!")
         user_email = request.form['email']
@@ -762,13 +774,18 @@ def update_sandbox_payload(recid):
         if user is None:
             raise werkzeug.exceptions.NotFound(description="!!!EMAIL {0} DOES NOT CORRESPOND TO ANY ACTIVE USER!!!".format(user_email))
 
-        login_user(user)
-
         hepsubmission_record = get_latest_hepsubmission(publication_recid=recid, overall_status='sandbox')
         if hepsubmission_record is None:
             raise werkzeug.exceptions.NotFound(description="!!!SANDBOX RECORD {} NOT FOUND!!!".format(str(recid)))
         elif hepsubmission_record.coordinator != user.id:
             raise werkzeug.exceptions.Forbidden(description="!!!ATTEMPTED TO MODIFY SANDBOX RECORD OF ANOTHER USER!!!")
+        elif verify_password(request.form['pswd'], user.password) is False:
+            raise werkzeug.exceptions.BadRequest(description="!!!WRONG PASSWORD, TRY AGAIN.!!!")
+        else:
+            login_user(user)
+
+    elif current_user.is_authenticated is False:
+        return current_app.login_manager.unauthorized()
 
     uploaded_file = request.files['hep_archive']
     redirect_url = request.url_root + "record/sandbox/{}"
