@@ -624,7 +624,9 @@ def consume_data_payload(recid):
     It is also used by the hepdata-cli tool to upload a submission.
 
     :param recid: record id to attach the data to
-    :return: page rendering
+    :return: For POST requests, returns JSONResponse either containing 'url'
+             (for success cases) or 'message' (for error cases, which will
+             give a 400 error). For GET requests, redirects to the record.
     """
 
     if request.method == 'GET':
