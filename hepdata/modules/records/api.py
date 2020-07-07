@@ -340,6 +340,8 @@ def process_payload(recid, file, redirect_url, synchronous=False):
         Redirect URL to record, for use if the upload fails or in synchronous mode
     :param synchronous: bool
         Whether to process asynchronously via celery (default) or immediately (only recommended for tests)
+    :return: JSONResponse either containing 'url' (for success cases) or
+             'message' (for error cases, which will give a 400 error).
     """
     if file and (allowed_file(file.filename)):
         file_path = save_zip_file(file, recid)
@@ -368,13 +370,10 @@ def process_payload(recid, file, redirect_url, synchronous=False):
             process_saved_file.delay(file_path, recid, current_user.get_id(), redirect_url, previous_status)
             flash('File saved. You will receive an email when the file has been processed.', 'info')
 
-        return redirect(redirect_url.format(recid))
+        return jsonify({'url': redirect_url.format(recid)})
     else:
-        return render_template('hepdata_records/error_page.html', redirect_url=redirect_url.format(recid),
-                               message="Incorrect file type uploaded.",
-                               errors={"Submission": [{"level": "error",
-                                                       "message": "You must upload a .zip, .tar, .tar.gz or .tgz file"
-                                                                  + " (or a .oldhepdata or single .yaml file)."}]})
+        return jsonify({"message": "You must upload a .zip, .tar, .tar.gz or .tgz file"
+                       + " (or a .oldhepdata or single .yaml file)."}), 400
 
 
 @shared_task
