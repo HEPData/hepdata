@@ -299,12 +299,13 @@ APP_DEFAULT_SECURE_HEADERS = {
     'frame_options_allow_from': None,
     'strict_transport_security': False,
     'strict_transport_security_preload': False,
+    'strict_transport_security_max_age': 31556926,  # One year in seconds
     'strict_transport_security_include_subdomains': True,
     'content_security_policy': {},
     'content_security_policy_report_uri': None,
     'content_security_policy_report_only': False,
-    'session_cookie_secure': True,
-    'session_cookie_http_only': True
+    'session_cookie_secure': False,
+    'session_cookie_http_only': False
 }
 
 # Import local config file if it is present.
