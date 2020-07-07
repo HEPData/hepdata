@@ -59,8 +59,10 @@ def app(request):
     """
     app = create_app()
     test_db_host = app.config.get('TEST_DB_HOST', 'localhost')
-    # Note that in Travis we add "TESTING=True" to config_local.py as well
-    # to ensure that it's set before flask mail is initialised
+    # Note that in Travis we add "TESTING=True" and
+    # "APP_ENABLE_SECURE_HEADERS=False" to config_local.py as well,
+    # to ensure that they're set before the app is initialised,
+    # as changing them later doesn't have the desired effect.
     app.config.update(dict(
         TESTING=True,
         TEST_RUNNER="celery.contrib.test_runner.CeleryTestSuiteRunner",
