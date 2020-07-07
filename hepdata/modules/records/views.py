@@ -634,29 +634,29 @@ def consume_data_payload(recid):
 
     if current_user.is_authenticated is False and 'hep-cli' in request.form.keys() and request.form['hep-cli'] == 'True':  # code for hepdata-cli upload
         if 'email' not in request.form.keys():
-            raise werkzeug.exceptions.BadRequest(description="!!!USER EMAIL IS REQUIRED: SPECIFY ONE USING -e USER-EMAIL!!!")
+            return jsonify({"message": "User email is required: specify one using -e user-email."}), 400
 
         user_email = request.form['email']
         invitation_cookie = request.form['invitation_cookie']
         hepsubmission_record = get_latest_hepsubmission(publication_recid=recid, overall_status='todo')
         if hepsubmission_record is None:
-            raise werkzeug.exceptions.NotFound(description="!!!RECORD {0} NOT FOUND!!!".format(str(recid)))
+            return jsonify({"message": "Record {} not found.".format(str(recid))}), 404
 
         # check user associated with this email exists and is active with a confirmed email address
         user = User.query.filter(func.lower(User.email) == user_email.lower(), User.active.is_(True), User.confirmed_at.isnot(None)).first()
         if user is None:
-            raise werkzeug.exceptions.NotFound(description="!!!EMAIL {0} DOES NOT CORRESPOND TO ANY ACTIVE USER!!!".format(user_email))
+            return jsonify({"message": "Email {} does not correspond to any active user.".format(str(user_email))}), 404
 
         # check user is allowed to upload and supplies the correct invitation cookie
         participant = SubmissionParticipant.query.filter_by(
             user_account=user.id, role='uploader', publication_recid=recid, status='primary'
         ).first()
         if participant is None:
-            raise werkzeug.exceptions.Forbidden(description="!!!EMAIL DOES NOT CORRESPOND TO A CONFIRMED UPLOADER FOR THIS RECORD!!!")
+            return jsonify({"message": "Email {} does not correspond to a confirmed uploader for this record.".format(str(user_email))}), 404
         elif str(participant.invitation_cookie) != invitation_cookie:
-            raise werkzeug.exceptions.Forbidden(description="!!!INVITATION COOKIE DID NOT MATCH!!!")
+            return jsonify({"message": "Invitation cookie did not match."}), 403
         elif verify_password(request.form['pswd'], user.password) is False:
-            raise werkzeug.exceptions.BadRequest(description="!!!WRONG PASSWORD, TRY AGAIN.!!!")
+            return jsonify({"message": "Wrong password, please try again."}), 403
         else:
             login_user(user)
 
@@ -731,15 +731,15 @@ def consume_sandbox_payload():
 
     if current_user.is_authenticated is False and 'hep-cli' in request.form.keys() and request.form['hep-cli'] == 'True':  # code for hepdata-cli upload
         if 'email' not in request.form.keys():
-            raise werkzeug.exceptions.BadRequest(description="!!!USER EMAIL IS REQUIRED: SPECIFY ONE USING -e USER-EMAIL!!!")
+            return jsonify({"message": "User email is required: specify one using -e user-email."}), 400
         user_email = request.form['email']
 
         # check user associated with this email exists and is active with a confirmed email address
         user = User.query.filter(func.lower(User.email) == user_email.lower(), User.active.is_(True), User.confirmed_at.isnot(None)).first()
         if user is None:
-            raise werkzeug.exceptions.NotFound(description="!!!EMAIL {0} DOES NOT CORRESPOND TO ANY ACTIVE USER!!!".format(user_email))
+            return jsonify({"message": "Email {} does not correspond to a confirmed uploader for this record.".format(str(user_email))}), 404
         elif verify_password(request.form['pswd'], user.password) is False:
-            raise werkzeug.exceptions.BadRequest(description="!!!WRONG PASSWORD, TRY AGAIN.!!!")
+            return jsonify({"message": "Wrong password, please try again."}), 403
         else:
             login_user(user)
 
@@ -768,21 +768,21 @@ def update_sandbox_payload(recid):
 
     if current_user.is_authenticated is False and 'hep-cli' in request.form.keys() and request.form['hep-cli'] == 'True':  # code for hepdata-cli upload
         if 'email' not in request.form.keys():
-            raise werkzeug.exceptions.BadRequest(description="!!!USER EMAIL IS REQUIRED: SPECIFY ONE USING -e USER-EMAIL!!!")
+            return jsonify({"message": "User email is required: specify one using -e user-email."}), 400
         user_email = request.form['email']
 
         # check user associated with this email exists and is active with a confirmed email address
         user = User.query.filter(func.lower(User.email) == user_email.lower(), User.active.is_(True), User.confirmed_at.isnot(None)).first()
         if user is None:
-            raise werkzeug.exceptions.NotFound(description="!!!EMAIL {0} DOES NOT CORRESPOND TO ANY ACTIVE USER!!!".format(user_email))
+            return jsonify({"message": "Email {} does not correspond to a confirmed uploader for this record.".format(str(user_email))}), 404
 
         hepsubmission_record = get_latest_hepsubmission(publication_recid=recid, overall_status='sandbox')
         if hepsubmission_record is None:
-            raise werkzeug.exceptions.NotFound(description="!!!SANDBOX RECORD {} NOT FOUND!!!".format(str(recid)))
+            return jsonify({"message": "Sandbox record {} not found".format(str(recid))}), 404
         elif hepsubmission_record.coordinator != user.id:
-            raise werkzeug.exceptions.Forbidden(description="!!!ATTEMPTED TO MODIFY SANDBOX RECORD OF ANOTHER USER!!!")
+            return jsonify({"message": "Attempted to modify sandbox record of another user"}), 403
         elif verify_password(request.form['pswd'], user.password) is False:
-            raise werkzeug.exceptions.BadRequest(description="!!!WRONG PASSWORD, TRY AGAIN.!!!")
+            return jsonify({"message": "Wrong password, please try again."}), 400
         else:
             login_user(user)
 
