@@ -87,14 +87,12 @@ Use of config_local.py
 The ``hepdata/config.py`` contains default configuration options, which often need to be overridden in a local instance.
 For example, DOI minting should be switched off in a non-production instance, otherwise finalising a new record will
 give an error message due to a lack of DataCite authorisation credentials.
-The option ``APP_ENABLE_SECURE_HEADERS = False`` is **required** for an ``http`` (rather than ``https``) ``SITE_URL``.
 Rather than edit ``hepdata/config.py``, it is more convenient to define custom options in a separate file
 ``hepdata/config_local.py`` that will be ignored by Git.  For example, to switch off email, DOI minting, Twitter,
 use a local converter URL, and specify custom temporary and data directories:
 
 .. code-block:: python
 
-   APP_ENABLE_SECURE_HEADERS = False
    SITE_URL = "http://localhost:5000"
    TESTING = True
    NO_DOI_MINTING = True
