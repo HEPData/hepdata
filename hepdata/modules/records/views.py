@@ -616,7 +616,9 @@ def consume_data_payload(recid):
     This method persists, then presents the loaded data back to the user.
 
     :param recid: record id to attach the data to
-    :return: page rendering
+    :return: For POST requests, returns JSONResponse either containing 'url'
+             (for success cases) or 'message' (for error cases, which will
+             give a 400 error). For GET requests, redirects to the record.
     """
 
     if request.method == 'POST':
