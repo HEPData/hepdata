@@ -22,14 +22,20 @@
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 import hashlib
+import logging
 import os
 import shutil
 
+from celery import shared_task
 from flask import current_app
 from invenio_db import db
 
+from hepdata.modules.email.utils import create_send_email_task
 from hepdata.modules.submission.api import get_latest_hepsubmission
 from hepdata.modules.submission.models import DataSubmission, HEPSubmission, DataResource
+
+logging.basicConfig()
+log = logging.getLogger(__name__)
 
 
 def find_submission_data_file_path(submission):
@@ -41,7 +47,6 @@ def find_submission_data_file_path(submission):
                                .format(submission.publication_recid,
                                        submission.version)
 
-    print("looking for submission with path %s" % str(submission.publication_recid))
     path = get_data_path_for_record(str(submission.publication_recid),
                                     data_filename)
 
@@ -81,19 +86,26 @@ def get_subdir_name(record_id):
     return str(hex_dig)[:2]
 
 
-def move_data_files(record_ids, synchronous=True):
+def move_data_files(record_ids, synchronous=False):
     if record_ids is None:
         qry = db.session.query(HEPSubmission.publication_recid)
         result = qry.all()
         record_ids = [r[0] for r in result]
 
+    log.info("Got records: %s" % record_ids)
+    if not synchronous:
+        log.info("Sending tasks to celery.")
+
     for rec_id in record_ids:
-        # TODO: use celery if not synchronous
-        move_files_for_record(rec_id)
+        if synchronous:
+            move_files_for_record(rec_id)
+        else:
+            move_files_for_record.delay(rec_id)
 
 
+@shared_task
 def move_files_for_record(rec_id):
-    print("Moving files for record %s" % rec_id)
+    log.debug("Moving files for record %s" % rec_id)
     hep_submission = get_latest_hepsubmission(publication_recid=rec_id)
     errors = []
 
@@ -106,7 +118,7 @@ def move_files_for_record(rec_id):
     old_paths = [path for path in old_paths if os.path.isdir(path)]
 
     new_path = get_data_path_for_record(str(rec_id))
-    print("Moving files from %s to %s" % (old_paths, new_path))
+    log.debug("Moving files from %s to %s" % (old_paths, new_path))
 
     os.makedirs(new_path, exist_ok=True)
 
@@ -120,10 +132,10 @@ def move_files_for_record(rec_id):
                         id=data_submission.data_file
                         ).first()
 
-        print("    Checking file %s" % resource.file_location)
+        log.debug("    Checking file %s" % resource.file_location)
 
         if resource.file_location.startswith(new_path):
-            print("    File already in new location. Continuing.")
+            log.debug("    File already in new location. Continuing.")
             continue
 
         sub_path = None
@@ -134,7 +146,7 @@ def move_files_for_record(rec_id):
 
         if sub_path:
             new_file_path = os.path.join(new_path, sub_path)
-            print("    Moving to new path %s" % new_file_path)
+            log.debug("    Moving to new path %s" % new_file_path)
             os.makedirs(os.path.dirname(new_file_path), exist_ok=True)
             try:
                 shutil.move(resource.file_location, new_file_path)
@@ -143,20 +155,20 @@ def move_files_for_record(rec_id):
                               "Error was: %s"
                               % (resource.file_location, new_file_path, resource.id, str(e)))
 
-            print("    Updating data record")
+            log.debug("    Updating data record")
             resource.file_location = new_file_path
             db.session.add(resource)
             db.session.commit()
 
         else:
-            print("    Location %s not recognised" % resource.file_location)
+            log.debug("    Location %s not recognised" % resource.file_location)
             errors.append("Location %s not recognised for data resource id %s"
                           % (resource.file_location, resource.id))
 
     # Move rest of files in old_paths
     for old_path in old_paths:
         for f in os.listdir(old_path):
-            print("Moving file %s" % f)
+            log.debug("Moving file %s" % f)
             try:
                 shutil.move(os.path.join(old_path, f), os.path.join(new_path, f))
             except Exception as e:
@@ -175,5 +187,10 @@ def move_files_for_record(rec_id):
 
     # TODO: send an email with details of errors
     if errors:
-        print("ERRORS moving files for record id %s:\n%s" % (rec_id, '\n'.join(errors)))
-        exit(1)
+        message = "<div>ERRORS moving files for record id %s:<ul><li>\n%s</li></ul></div>" \
+                  % (rec_id, '</li><li>'.join(errors).replace('\n', '<br>'))
+
+        create_send_email_task(current_app.config['ADMIN_EMAIL'],
+                               subject="[HEPData] Errors moving files for record id %s" % rec_id,
+                               message=message,
+                               reply_to_address=current_app.config['ADMIN_EMAIL'])
