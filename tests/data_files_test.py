@@ -27,8 +27,8 @@
 import os
 
 from hepdata.modules.records.utils.data_files import get_subdir_name, \
-    get_data_path_for_record, get_converted_directory_path, \
-    find_submission_data_file_path
+    get_data_path_for_record, get_old_data_path_for_record, \
+    get_converted_directory_path, find_submission_data_file_path
 from hepdata.modules.submission.models import HEPSubmission
 
 
@@ -42,6 +42,13 @@ def test_get_data_path_for_record(app):
     assert(get_data_path_for_record('ins12345') == data_dir + '/96/ins12345')
     assert(get_data_path_for_record('ins12345', 'mysubdir', 'file.xyz')
            == data_dir + '/96/ins12345/mysubdir/file.xyz')
+
+
+def test_get_old_data_path_for_record(app):
+    data_dir = app.config['CFG_DATADIR']
+    assert(get_old_data_path_for_record('ins12345') == data_dir + '/ins12345')
+    assert(get_old_data_path_for_record('ins12345', 'mysubdir', 'file.xyz')
+           == data_dir + '/ins12345/mysubdir/file.xyz')
 
 
 def test_get_converted_directory_path(app):

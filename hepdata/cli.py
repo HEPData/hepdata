@@ -36,6 +36,7 @@ from hepdata.modules.submission.api import get_latest_hepsubmission
 from .factory import create_app
 from hepdata.config import CFG_PUB_TYPE
 from hepdata.ext.elasticsearch.api import reindex_all, get_records_matching_field
+from hepdata.modules.records.utils import data_files
 from hepdata.modules.records.utils.submission import unload_submission
 from hepdata.modules.records.migrator.api import load_files, update_submissions, get_all_ids_in_current_system, \
     add_or_update_records_since_date, update_analyses
@@ -313,6 +314,25 @@ def execute(query):
             for i, row in enumerate(result):
                 print('Row {}:'.format(i + 1), row)
         db.session.commit()
+
+
+@utils.command()
+@with_appcontext
+@click.option('--recids', '-r', type=str, default=None,
+              help='Unload specific recids from the system.')
+def move_data_files(recids):
+    """Move data files into new data file locations."""
+    if recids is None:
+        click.confirm('About to move all files to new data file location. Do you want to continue?',
+                      abort=True)
+        click.echo('Moving files for all submissions.')
+    else:
+        recids = recids.split(',')
+        click.echo("Moving data files for recids: {}".format(recids))
+
+    # Pass to data_files method
+    # TODO: add synchronous option
+    data_files.move_data_files(recids)
 
 
 @cli.group()

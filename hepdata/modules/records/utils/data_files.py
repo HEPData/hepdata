@@ -23,8 +23,13 @@
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 import hashlib
 import os
+import shutil
 
 from flask import current_app
+from invenio_db import db
+
+from hepdata.modules.submission.api import get_latest_hepsubmission
+from hepdata.modules.submission.models import DataSubmission, HEPSubmission, DataResource
 
 
 def find_submission_data_file_path(submission):
@@ -36,12 +41,13 @@ def find_submission_data_file_path(submission):
                                .format(submission.publication_recid,
                                        submission.version)
 
+    print("looking for submission with path %s" % str(submission.publication_recid))
     path = get_data_path_for_record(str(submission.publication_recid),
                                     data_filename)
 
     if not os.path.isfile(path):
-        path = os.path.join(current_app.config['CFG_DATADIR'],
-                            str(submission.publication_recid), data_filename)
+        path = get_old_data_path_for_record(str(submission.publication_recid),
+                                            data_filename)
     return path
 
 
@@ -61,7 +67,113 @@ def get_data_path_for_record(record_id, *subpaths):
     return path
 
 
+def get_old_data_path_for_record(record_id, *subpaths):
+    """Return the path for data files for the given record id."""
+    path = os.path.join(current_app.config['CFG_DATADIR'],
+                        record_id,
+                        *subpaths)
+    return path
+
+
 def get_subdir_name(record_id):
     hash_object = hashlib.sha256(record_id.encode())
     hex_dig = hash_object.hexdigest()
     return str(hex_dig)[:2]
+
+
+def move_data_files(record_ids, synchronous=True):
+    if record_ids is None:
+        qry = db.session.query(HEPSubmission.publication_recid)
+        result = qry.all()
+        record_ids = [r[0] for r in result]
+
+    for rec_id in record_ids:
+        # TODO: use celery if not synchronous
+        move_files_for_record(rec_id)
+
+
+def move_files_for_record(rec_id):
+    print("Moving files for record %s" % rec_id)
+    hep_submission = get_latest_hepsubmission(publication_recid=rec_id)
+    errors = []
+
+    # Need to check both rec_id (for newer submissions) and inspire_id
+    # (for migrated submissions)
+    old_paths = [get_old_data_path_for_record(str(rec_id))]
+    if hep_submission.inspire_id is not None:
+        old_paths.append(get_old_data_path_for_record('ins%s' % hep_submission.inspire_id))
+
+    old_paths = [path for path in old_paths if os.path.isdir(path)]
+
+    new_path = get_data_path_for_record(str(rec_id))
+    print("Moving files from %s to %s" % (old_paths, new_path))
+
+    os.makedirs(new_path, exist_ok=True)
+
+    # Move data submissions
+    data_submissions = DataSubmission.query.filter_by(
+                            publication_recid=rec_id
+                            ).all()
+    for data_submission in data_submissions:
+        # Get file_location
+        resource = DataResource.query.filter_by(
+                        id=data_submission.data_file
+                        ).first()
+
+        print("    Checking file %s" % resource.file_location)
+
+        if resource.file_location.startswith(new_path):
+            print("    File already in new location. Continuing.")
+            continue
+
+        sub_path = None
+        for path in old_paths:
+            if resource.file_location.startswith(path):
+                sub_path = resource.file_location.split(path + '/', 1)[1]
+                break
+
+        if sub_path:
+            new_file_path = os.path.join(new_path, sub_path)
+            print("    Moving to new path %s" % new_file_path)
+            os.makedirs(os.path.dirname(new_file_path), exist_ok=True)
+            try:
+                shutil.move(resource.file_location, new_file_path)
+            except Exception as e:
+                errors.append("Unable to move file from %s to %s for data resource id %s\n"
+                              "Error was: %s"
+                              % (resource.file_location, new_file_path, resource.id, str(e)))
+
+            print("    Updating data record")
+            resource.file_location = new_file_path
+            db.session.add(resource)
+            db.session.commit()
+
+        else:
+            print("    Location %s not recognised" % resource.file_location)
+            errors.append("Location %s not recognised for data resource id %s"
+                          % (resource.file_location, resource.id))
+
+    # Move rest of files in old_paths
+    for old_path in old_paths:
+        for f in os.listdir(old_path):
+            print("Moving file %s" % f)
+            try:
+                shutil.move(os.path.join(old_path, f), os.path.join(new_path, f))
+            except Exception as e:
+                errors.append("Unable to move file from %s to %s\n"
+                              "Error was: %s"
+                              % (os.path.join(old_path, f), os.path.join(new_path, f),
+                                 resource.id, str(e)))
+
+        # Remove directory, which should be empty
+        try:
+            os.rmdir(old_path)
+        except Exception as e:
+            errors.append("Unable to remove directory %s\n"
+                          "Error was: %s"
+                          % (old_path, str(e)))
+
+    # TODO: send an email with details of errors
+    if errors:
+        print("ERRORS moving files for record id %s:\n%s" % (rec_id, '\n'.join(errors)))
+        exit(1)
