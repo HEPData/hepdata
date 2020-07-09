@@ -194,3 +194,13 @@ def move_files_for_record(rec_id):
                                subject="[HEPData] Errors moving files for record id %s" % rec_id,
                                message=message,
                                reply_to_address=current_app.config['ADMIN_EMAIL'])
+
+
+def delete_old_converted_files():
+    with os.scandir(os.path.join(current_app.config['CFG_DATADIR'],
+                    'converted')) as entries:
+        for entry in entries:
+            if entry.is_file() or entry.is_symlink():
+                os.remove(entry.path)
+            elif entry.is_dir():
+                shutil.rmtree(entry.path)

@@ -317,11 +317,12 @@ def execute(query):
 
 
 @utils.command()
-@with_appcontext
 @click.option('--recids', '-r', type=str, default=None,
-              help='Unload specific recids from the system.')
-def move_data_files(recids):
-    """Move data files into new data file locations."""
+              help='Move data files for specific recids only.')
+@click.option('--delete-old-converted-files', type=bool,
+              help='Delete old converted files?')
+def move_data_files(recids, delete_old_converted_files):
+    """Move data files into new data file locations. Deletes converted files for all records."""
     if recids is None:
         click.confirm('About to move all files to new data file location. Do you want to continue?',
                       abort=True)
@@ -331,8 +332,12 @@ def move_data_files(recids):
         click.echo("Moving data files for recids: {}".format(recids))
 
     # Pass to data_files method
-    # TODO: add synchronous option
     data_files.move_data_files(recids)
+
+    if not delete_old_converted_files:
+        click.confirm('About to delete ALL files in the old converted directory. Do you want to continue?',
+                      abort=True)
+    data_files.delete_old_converted_files()
 
 
 @cli.group()
