@@ -340,6 +340,14 @@ def move_data_files(recids, delete_old_converted_files):
     data_files.delete_old_converted_files()
 
 
+@utils.command()
+@click.option('--record-id', '-r', type=str, default=None, prompt=True,
+              help='Record id for which to get information')
+def get_data_path(record_id):
+    click.echo("Files for record %s are at: %s"
+               % (record_id, data_files.get_data_path_for_record(record_id)))
+
+
 @cli.group()
 def doi_utils():
     """DOI utils."""
