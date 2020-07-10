@@ -48,7 +48,7 @@ def get_inspire_record_information(inspire_rec_id, verbose=False):
             'authors': [{'affiliation': (author['affiliations'][0]['value'] if 'affiliations' in author.keys() else ''),
                          'full_name': author['full_name']} for author in content['metadata']['authors']] if 'authors' in content['metadata'].keys() else None,
             'type': content['metadata']['document_type'],
-            'abstract': ([abstract['value'] for abstract in content['metadata']['abstracts'] if abstract['source'] == 'arXiv'][0] if
+            'abstract': ([abstract['value'] for abstract in content['metadata']['abstracts'] if 'source' in abstract.keys() and abstract['source'] == 'arXiv'][-1] if
                          'abstracts' in content['metadata'].keys() and any(['source' in abstract.keys() and 'value' in abstract.keys() and abstract['source'] == 'arXiv'
                                                                             for abstract in content['metadata']['abstracts']]) else
                          content['metadata']['abstracts'][0]['value'] if 'abstracts' in content['metadata'].keys() else None),
