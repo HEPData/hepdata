@@ -34,7 +34,10 @@ while page <= math.ceil(total / 10):
 
         print("\rTesting inspire id {}, entry number: {} of {}.".format(inspire_id, (page - 2) * 10 + i + 1, total), end='\n')
 
-        old_content, old_status = old_views.get_inspire_record_information(inspire_id)
+        try:
+            old_content, old_status = old_views.get_inspire_record_information(inspire_id)
+        except AttributeError:
+            print("AttributeError in old inspire api")
         new_content, new_status = new_views.get_inspire_record_information(inspire_id)
 
         assert old_status == new_status
@@ -42,7 +45,7 @@ while page <= math.ceil(total / 10):
         for dict_key in old_content.keys():
 
             try:
-                compare(inspire_id, old_content, new_content, dict_key, silent=True, max_string_diff=1)
+                compare(inspire_id, old_content, new_content, dict_key, silent=True, max_string_diff=0.5)
             except AssertionError:
                 WarningColourStart = '\033[93m'
                 WarningColourEnd = '\033[0m'
