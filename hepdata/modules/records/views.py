@@ -617,55 +617,75 @@ def get_resource(resource_id):
         return abort(404)
 
 
+@blueprint.route('/cli_upload', methods=['GET', 'POST'])
+def cli_upload():
+
+    if request.method == 'GET':
+        return redirect('/')
+
+    # email must be provided
+    if 'email' not in request.form.keys():
+        return jsonify({"message": "User email is required: specify one using -e user-email."}), 400
+    user_email = request.form['email']
+
+    # check user associated with this email exists and is active with a confirmed email address
+    user = User.query.filter(func.lower(User.email) == user_email.lower(), User.active.is_(True), User.confirmed_at.isnot(None)).first()
+    user = User.query.filter(func.lower(User.email) == user_email.lower(), User.active.is_(True), User.confirmed_at.isnot(None)).first()
+    if user is None:
+        return jsonify({"message": "Email {} does not correspond to any active user.".format(str(user_email))}), 404
+    elif verify_password(request.form['pswd'], user.password) is False:
+        return jsonify({"message": "Wrong password, please try again."}), 403
+    else:
+        login_user(user)
+
+    sandbox = False if request.form['sandbox'] == 'False' else True if request.form['sandbox'] == 'True' else None
+    recid = request.form['recid'] if 'recid' in request.form.keys() else None
+    invitation_cookie = request.form['invitation_cookie'] if 'invitation_cookie' in request.form.keys() else None
+
+    if sandbox is True:
+        if recid is None:
+            return consume_sandbox_payload()  # '/sandbox/consume'
+        else:
+            # check that sandbox record exists and belongs to this user
+            hepsubmission_record = get_latest_hepsubmission(publication_recid=recid, overall_status='sandbox')
+            if hepsubmission_record is None:
+                return jsonify({"message": "Sandbox record {} not found".format(str(recid))}), 404
+            elif hepsubmission_record.coordinator != user.id:
+                return jsonify({"message": "Attempted to modify sandbox record of another user"}), 403
+            else:
+                return update_sandbox_payload(recid)  # '/sandbox/<int:recid>/consume'
+    else:
+        # check that record exists and has 'todo' status
+        hepsubmission_record = get_latest_hepsubmission(publication_recid=recid, overall_status='todo')
+        if hepsubmission_record is None:
+            return jsonify({"message": "Record {} not found.".format(str(recid))}), 404
+        # check user is allowed to upload to this record and supplies the correct invitation cookie
+        participant = SubmissionParticipant.query.filter_by(user_account=user.id, role='uploader', publication_recid=recid, status='primary').first()
+        if participant is None:
+            return jsonify({"message": "Email {} does not correspond to a confirmed uploader for this record.".format(str(user_email))}), 404
+        elif str(participant.invitation_cookie) != invitation_cookie:
+            return jsonify({"message": "Invitation cookie did not match."}), 403
+        return consume_data_payload(recid)  # '/<int:recid>/consume'
+
+
 @blueprint.route('/<int:recid>/consume', methods=['GET', 'POST'])
+@login_required
 def consume_data_payload(recid):
     """
     This method persists, then presents the loaded data back to the user.
-    It is also used by the hepdata-cli tool to upload a submission.
-
     :param recid: record id to attach the data to
     :return: For POST requests, returns JSONResponse either containing 'url'
              (for success cases) or 'message' (for error cases, which will
              give a 400 error). For GET requests, redirects to the record.
     """
 
-    if request.method == 'GET':
+    if request.method == 'POST':
+        file = request.files['hep_archive']
+        redirect_url = request.url_root + "record/{}"
+        return process_payload(recid, file, redirect_url)
+
+    else:
         return redirect('/record/' + str(recid))
-
-    if current_user.is_authenticated is False and 'hep-cli' in request.form.keys() and request.form['hep-cli'] == 'True':  # code for hepdata-cli upload
-        if 'email' not in request.form.keys():
-            return jsonify({"message": "User email is required: specify one using -e user-email."}), 400
-
-        user_email = request.form['email']
-        invitation_cookie = request.form['invitation_cookie']
-        hepsubmission_record = get_latest_hepsubmission(publication_recid=recid, overall_status='todo')
-        if hepsubmission_record is None:
-            return jsonify({"message": "Record {} not found.".format(str(recid))}), 404
-
-        # check user associated with this email exists and is active with a confirmed email address
-        user = User.query.filter(func.lower(User.email) == user_email.lower(), User.active.is_(True), User.confirmed_at.isnot(None)).first()
-        if user is None:
-            return jsonify({"message": "Email {} does not correspond to any active user.".format(str(user_email))}), 404
-
-        # check user is allowed to upload and supplies the correct invitation cookie
-        participant = SubmissionParticipant.query.filter_by(
-            user_account=user.id, role='uploader', publication_recid=recid, status='primary'
-        ).first()
-        if participant is None:
-            return jsonify({"message": "Email {} does not correspond to a confirmed uploader for this record.".format(str(user_email))}), 404
-        elif str(participant.invitation_cookie) != invitation_cookie:
-            return jsonify({"message": "Invitation cookie did not match."}), 403
-        elif verify_password(request.form['pswd'], user.password) is False:
-            return jsonify({"message": "Wrong password, please try again."}), 403
-        else:
-            login_user(user)
-
-    elif current_user.is_authenticated is False:
-        return current_app.login_manager.unauthorized()
-
-    uploaded_file = request.files['hep_archive']
-    redirect_url = request.url_root + "record/{}"
-    return process_payload(recid, uploaded_file, redirect_url)
 
 
 @blueprint.route('/sandbox', methods=['GET'])
@@ -720,78 +740,38 @@ def attach_information_to_record(recid):
 
 
 @blueprint.route('/sandbox/consume', methods=['GET', 'POST'])
+@login_required
 def consume_sandbox_payload():
     """
     Creates a new sandbox submission with a new file upload.
-    It is also used by the hepdata-cli tool to upload a submission.
+    :param recid:
     """
 
     if request.method == 'GET':
         return redirect('/record/sandbox')
 
-    if current_user.is_authenticated is False and 'hep-cli' in request.form.keys() and request.form['hep-cli'] == 'True':  # code for hepdata-cli upload
-        if 'email' not in request.form.keys():
-            return jsonify({"message": "User email is required: specify one using -e user-email."}), 400
-        user_email = request.form['email']
+    id = (int(current_user.get_id())) + int(round(time.time()))
 
-        # check user associated with this email exists and is active with a confirmed email address
-        user = User.query.filter(func.lower(User.email) == user_email.lower(), User.active.is_(True), User.confirmed_at.isnot(None)).first()
-        if user is None:
-            return jsonify({"message": "Email {} does not correspond to a confirmed uploader for this record.".format(str(user_email))}), 404
-        elif verify_password(request.form['pswd'], user.password) is False:
-            return jsonify({"message": "Wrong password, please try again."}), 403
-        else:
-            login_user(user)
-
-    elif current_user.is_authenticated is False:
-        return current_app.login_manager.unauthorized()
-
-    recid = (int(current_user.get_id())) + int(round(time.time()))
-    get_or_create_hepsubmission(recid, current_user.get_id(), status="sandbox")
-
-    uploaded_file = request.files['hep_archive']
+    get_or_create_hepsubmission(id, current_user.get_id(), status="sandbox")
+    file = request.files['hep_archive']
     redirect_url = request.url_root + "record/sandbox/{}"
-    return process_payload(recid, uploaded_file, redirect_url)
+    return process_payload(id, file, redirect_url)
 
 
 @blueprint.route('/sandbox/<int:recid>/consume', methods=['GET', 'POST'])
+@login_required
 def update_sandbox_payload(recid):
     """
     Updates the Sandbox submission with a new file upload.
-    It is also used by the hepdata-cli tool to upload a submission.
-
-    :param recid: record id to attach the data to
+    :param recid:
     """
 
     if request.method == 'GET':
         return redirect('/record/sandbox/' + str(recid))
 
-    if current_user.is_authenticated is False and 'hep-cli' in request.form.keys() and request.form['hep-cli'] == 'True':  # code for hepdata-cli upload
-        if 'email' not in request.form.keys():
-            return jsonify({"message": "User email is required: specify one using -e user-email."}), 400
-        user_email = request.form['email']
-
-        # check user associated with this email exists and is active with a confirmed email address
-        user = User.query.filter(func.lower(User.email) == user_email.lower(), User.active.is_(True), User.confirmed_at.isnot(None)).first()
-        if user is None:
-            return jsonify({"message": "Email {} does not correspond to a confirmed uploader for this record.".format(str(user_email))}), 404
-
-        hepsubmission_record = get_latest_hepsubmission(publication_recid=recid, overall_status='sandbox')
-        if hepsubmission_record is None:
-            return jsonify({"message": "Sandbox record {} not found".format(str(recid))}), 404
-        elif hepsubmission_record.coordinator != user.id:
-            return jsonify({"message": "Attempted to modify sandbox record of another user"}), 403
-        elif verify_password(request.form['pswd'], user.password) is False:
-            return jsonify({"message": "Wrong password, please try again."}), 400
-        else:
-            login_user(user)
-
-    elif current_user.is_authenticated is False:
-        return current_app.login_manager.unauthorized()
-
-    uploaded_file = request.files['hep_archive']
+    file = request.files['hep_archive']
     redirect_url = request.url_root + "record/sandbox/{}"
-    return process_payload(recid, uploaded_file, redirect_url)
+    return process_payload(recid, file, redirect_url)
 
 
 @blueprint.route('/add_resource/<string:type>/<int:identifier>/<int:version>', methods=['POST'])
