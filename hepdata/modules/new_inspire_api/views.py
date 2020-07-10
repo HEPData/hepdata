@@ -39,12 +39,16 @@ def get_inspire_record_information(inspire_rec_id, verbose=False):
         content = req.json()
 
         parsed_content = {
-            'title': content['metadata']['titles'][0]['title'],
+            'title': ([title_translation['title'] for title_translation in content['metadata']['title_translations'] if title_translation['language'] == 'en'][0] if
+                      'title_translations' in content['metadata'].keys() and any(
+                          ['language' in title_translation.keys() and 'title' in title_translation.keys() and title_translation['language'] == 'en'
+                           for title_translation in content['metadata']['title_translations']]) else
+                      content['metadata']['titles'][0]['title']),
             'doi': (content['metadata']['dois'][-1]['value'] if 'dois' in content['metadata'] and len(content['metadata']['dois']) > 0 else None),
             'authors': [{'affiliation': (author['affiliations'][0]['value'] if 'affiliations' in author.keys() else ''),
                          'full_name': author['full_name']} for author in content['metadata']['authors']] if 'authors' in content['metadata'].keys() else None,
             'type': content['metadata']['document_type'],
-            'abstract': (content['metadata']['abstracts'][-1]['value'] if 'abstracts' in content['metadata'].keys() else None),
+            'abstract': (content['metadata']['abstracts'][0]['value'] if 'abstracts' in content['metadata'].keys() else None),
             'creation_date': (expand_date(content['metadata']['preprint_date']) if 'preprint_date' in content['metadata'].keys() else
                               content['metadata']['legacy_creation_date'] if 'legacy_creation_date' in content['metadata'] else None),
             'arxiv_id': ('arXiv:' + content['metadata']['arxiv_eprints'][-1]['value'] if 'arxiv_eprints' in content['metadata'].keys() else None),

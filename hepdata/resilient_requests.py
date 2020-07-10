@@ -8,8 +8,8 @@ from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
 
 
-DEFAULT_TIMEOUT = 55  # seconds
-TOTAL_RETRIES = 5
+DEFAULT_TIMEOUT = 60 + 55  # seconds
+TOTAL_RETRIES = 8
 
 
 class TimeoutHTTPAdapter(HTTPAdapter):
@@ -28,7 +28,7 @@ class TimeoutHTTPAdapter(HTTPAdapter):
 
 
 retry_strategy = Retry(total=TOTAL_RETRIES,
-                       backoff_factor=2,
+                       backoff_factor=4,
                        status_forcelist=[429, 500, 502, 503, 504],
                        method_whitelist=["GET", "POST"])
 adapter = TimeoutHTTPAdapter(max_retries=retry_strategy)
