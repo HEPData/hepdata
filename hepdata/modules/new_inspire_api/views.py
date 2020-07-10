@@ -21,10 +21,9 @@
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
 
-import requests
-
 from flask import request, Blueprint, jsonify
 from hepdata.modules.records.utils.common import record_exists
+from hepdata.resilient_requests import resilient_requests
 
 blueprint = Blueprint('inspire_datasource', __name__, url_prefix='/inspire')
 
@@ -33,11 +32,12 @@ def get_inspire_record_information(inspire_rec_id, verbose=False):
     url = 'http://inspirehep.net/api/literature/{}'.format(inspire_rec_id)
     if verbose:
         print('\rLooking up: ' + url)
-    req = requests.get(url)
-    content = req.json()
+    req = resilient_requests('get', url)
     status = req.status_code
 
-    if content and status != 404:
+    if status == 200:
+        content = req.json()
+
         parsed_content = {
             'title': content['metadata']['titles'][0]['title'],
             'doi': (content['metadata']['dois'][-1]['value'] if 'dois' in content['metadata'] and len(content['metadata']['dois']) > 0 else None),

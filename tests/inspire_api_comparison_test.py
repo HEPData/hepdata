@@ -2,13 +2,9 @@
 
 import pytest
 import difflib
-import sys
 
 from hepdata.modules.new_inspire_api import views as new_views
 from hepdata.modules.old_inspire_api import views as old_views
-
-if sys.version_info[0] > 2:
-    unicode = None
 
 
 def string_diff(string1, string2):
@@ -69,12 +65,9 @@ def compare(inspire_id, old_content, new_content, dict_key, silent=False, max_st
 
     print("\rComparing {} of inspire {}.       ".format(dict_key, inspire_id), end='')
 
-    # convert to normal string/unicode
+    # convert to normal string
     if str(type(old_content[dict_key])) == "<class 'bs4.element.NavigableString'>":
-        if sys.version_info[0] > 2:
-            old_content[dict_key] = str(old_content[dict_key])
-        else:
-            old_content[dict_key] = unicode(old_content[dict_key])
+        old_content[dict_key] = str(old_content[dict_key])
 
     if dict_key == 'year':
         old_content[dict_key] = str(old_content[dict_key])
@@ -82,14 +75,14 @@ def compare(inspire_id, old_content, new_content, dict_key, silent=False, max_st
 
     if silent is False:
         print(type(old_content[dict_key]))
-        if type(old_content[dict_key]) in [str, unicode, list]:
+        if type(old_content[dict_key]) in [str, list]:
             print(old_content[dict_key][:50])
             if len(old_content[dict_key]) > 50:
                 print("...")
         else:
             print(old_content[dict_key])
         print(type(new_content[dict_key]))
-        if type(new_content[dict_key]) in [str, unicode, list]:
+        if type(new_content[dict_key]) in [str, list]:
             print(new_content[dict_key][:50])
             if len(new_content[dict_key]) > 50:
                 print("...")
@@ -115,7 +108,7 @@ def compare(inspire_id, old_content, new_content, dict_key, silent=False, max_st
         # old 'type' list has more information than can be found in the new 'type', just check types
         assert isinstance(old_content[dict_key], list) and isinstance(new_content[dict_key], list)
 
-    elif type(old_content[dict_key]) in [str, unicode] and type(new_content[dict_key]) in [str, unicode]:
+    elif type(old_content[dict_key]) is str and type(new_content[dict_key]) is str:
 
         # allow 1 year difference in 'year' keyword entry (different versions of same record?)
         if (dict_key == 'year' and old_content[dict_key].isdigit() and new_content[dict_key].isdigit() and
