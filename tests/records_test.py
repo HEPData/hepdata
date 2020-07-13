@@ -51,8 +51,6 @@ def test_record_creation(app):
         assert (record_information['title'] == 'My Journal Paper')
 
 
-
-
 def test_record_update(app):
     """___test_record_update___"""
     with app.app_context():
@@ -129,7 +127,7 @@ def test_upload_valid_file(app):
         hepdata_submission = HEPSubmission.query.filter_by(
             publication_recid=recid).first()
         assert(hepdata_submission is not None)
-        assert(hepdata_submission.data_abstract == None)
+        assert(hepdata_submission.data_abstract is None)
         assert(hepdata_submission.created < hepdata_submission.last_updated)
         assert(hepdata_submission.version == 1)
         assert(hepdata_submission.overall_status == 'todo')
@@ -177,6 +175,67 @@ def test_upload_valid_file(app):
         assert(hepdata_submissions[1].overall_status == 'todo')
 
 
+def test_upload_valid_file_yaml_gz(app):
+    # Test uploading and processing a file for a record
+    with app.app_context():
+        base_dir = os.path.dirname(os.path.realpath(__file__))
+        user = User.query.first()
+        login_user(user)
+
+        recid = '1512299'
+        get_or_create_hepsubmission(recid, 1)
+
+        hepdata_submission = HEPSubmission.query.filter_by(
+            publication_recid=recid).first()
+        assert(hepdata_submission is not None)
+        assert(hepdata_submission.data_abstract is None)
+        assert(hepdata_submission.created < hepdata_submission.last_updated)
+        assert(hepdata_submission.version == 1)
+        assert(hepdata_submission.overall_status == 'todo')
+
+        with open(os.path.join(base_dir, 'test_data/1512299.yaml.gz'), "rb") as stream:
+            test_file = FileStorage(
+                stream=stream,
+                filename="1512299.yaml.gz"
+            )
+            response = process_payload(recid, test_file, '/test_redirect_url', synchronous=True)
+
+        assert(response.json == {'url': '/test_redirect_url'})
+
+        # Check the submission has been updated
+        hepdata_submission = HEPSubmission.query.filter_by(
+            publication_recid=recid).first()
+        assert(hepdata_submission.data_abstract.startswith('Unfolded differential decay rates of four kinematic variables'))
+        assert(hepdata_submission.created < hepdata_submission.last_updated)
+        assert(hepdata_submission.version == 1)
+        assert(hepdata_submission.overall_status == 'todo')
+
+        # Set the status to finished and try again, to check versioning
+        hepdata_submission.overall_status = 'finished'
+        db.session.add(hepdata_submission)
+
+        # Refresh user
+        user = User.query.first()
+        login_user(user)
+
+        with open(os.path.join(base_dir, 'test_data/1512299.yaml.gz'), "rb") as stream:
+            test_file = FileStorage(
+                stream=stream,
+                filename="1512299.yaml.gz"
+            )
+            process_payload(recid, test_file, '/test_redirect_url', synchronous=True)
+
+        # Check the submission has been updated
+        hepdata_submissions = HEPSubmission.query.filter_by(
+            publication_recid=recid).order_by(HEPSubmission.last_updated).all()
+        assert(len(hepdata_submissions) == 2)
+        assert(hepdata_submissions[0].version == 1)
+        assert(hepdata_submissions[0].overall_status == 'finished')
+        assert(hepdata_submissions[1].data_abstract.startswith('Unfolded differential decay rates of four kinematic variables'))
+        assert(hepdata_submissions[1].version == 2)
+        assert(hepdata_submissions[1].overall_status == 'todo')
+
+
 def test_upload_invalid_file(app):
     # Test uploading an invalid file
     with app.app_context():
@@ -195,6 +254,6 @@ def test_upload_invalid_file(app):
 
         assert(code == 400)
         assert(response.json == {
-                'message': 'You must upload a .zip, .tar, .tar.gz or .tgz file'
-                           ' (or a .oldhepdata or single .yaml file).'
+            'message': 'You must upload a .zip, .tar, .tar.gz or .tgz file'
+            ' (or a .oldhepdata or single .yaml or .yaml.gz file).'
         })

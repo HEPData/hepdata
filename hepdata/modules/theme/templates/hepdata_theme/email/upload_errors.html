@@ -30,7 +30,8 @@
 
         {% if redirect_url %}
           <p style="font-weight: bolder">Please fix your submission and reupload via
-            the associated <a href="{{ redirect_url }}" target="_blank">record</a> page.</p>
+            the associated <a href="{{ redirect_url }}" target="_blank">record</a> page
+            (or by using the <a href="https://pypi.org/project/hepdata-cli/" target="_blank">hepdata-cli</a> tool).</p>
         {% endif %}
 
         <br/>
@@ -44,7 +45,6 @@
                 </div>
             {% endfor %}
         {% endfor %}
-      </div>
     </div>
 
     <p>

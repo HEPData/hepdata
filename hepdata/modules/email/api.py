@@ -193,6 +193,8 @@ def send_cookie_email(submission_participant,
         title=record_information['title'],
         site_url=current_app.config.get('SITE_URL', 'https://www.hepdata.net'),
         invite_token=submission_participant.invitation_cookie,
+        recid=submission_participant.publication_recid,
+        email=submission_participant.email,
         message=message)
 
     create_send_email_task(submission_participant.email,
