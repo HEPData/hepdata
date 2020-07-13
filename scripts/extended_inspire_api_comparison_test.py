@@ -38,6 +38,7 @@ while page <= math.ceil(total / 10):
             old_content, old_status = old_views.get_inspire_record_information(inspire_id)
         except AttributeError:
             print("AttributeError in old inspire api")
+            continue
         new_content, new_status = new_views.get_inspire_record_information(inspire_id)
 
         assert old_status == new_status

@@ -44,7 +44,7 @@ def get_inspire_record_information(inspire_rec_id, verbose=False):
                           ['language' in title_translation.keys() and 'title' in title_translation.keys() and title_translation['language'] == 'en'
                            for title_translation in content['metadata']['title_translations']]) else
                       content['metadata']['titles'][0]['title']),
-            'doi': (content['metadata']['dois'][-1]['value'] if 'dois' in content['metadata'] and len(content['metadata']['dois']) > 0 else None),
+            'doi': (content['metadata']['dois'][0]['value'] if 'dois' in content['metadata'] and len(content['metadata']['dois']) > 0 else None),
             'authors': [{'affiliation': (author['affiliations'][0]['value'] if 'affiliations' in author.keys() else ''),
                          'full_name': author['full_name']} for author in content['metadata']['authors']] if 'authors' in content['metadata'].keys() else None,
             'type': content['metadata']['document_type'],
@@ -74,7 +74,9 @@ def get_inspire_record_information(inspire_rec_id, verbose=False):
                               'value' in public_note.keys() and "Submitted to " in public_note['value']][0] if ('public_notes' in content['metadata'].keys() and any(
                                   ['value' in public_note.keys() and "Submitted to " in public_note['value'] for public_note in content['metadata']['public_notes']])) else
                              'No Journal Information'),
-            'year': (str(content['metadata']['publication_info'][0]['year']) if ('publication_info' in content['metadata'] and 'year' in content['metadata']['publication_info'][0].keys())
+            'year': ([imprint['date'] for imprint in content['metadata']['imprints'] if 'date' in imprint.keys() and len(imprint['date']) == 4][0] if 'imprints'
+                     in content['metadata'].keys() and any(['date' in imprint.keys() and len(imprint['date']) == 4 for imprint in content['metadata']['imprints']]) else
+                     str(content['metadata']['publication_info'][0]['year']) if ('publication_info' in content['metadata'] and 'year' in content['metadata']['publication_info'][0].keys())
                      else content['metadata']['preprint_date'].split("-")[0] if 'preprint_date' in content['metadata'].keys() else
                      content['metadata']['legacy_creation_date'].split("-")[0] if 'legacy_creation_date' in content['metadata'] else None),
             'subject_area': list(set(((content['metadata']['arxiv_eprints'][-1]['categories'] if 'arxiv_eprints' in content['metadata'].keys() else []) +
