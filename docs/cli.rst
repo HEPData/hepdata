@@ -36,7 +36,7 @@ A command line interface (CLI) allows certain management commands to be run on t
    :show-nested:
 
 .. click:: hepdata.cli:doi_utils
-   :prog: hepdata doi_utils
+   :prog: hepdata doi-utils
    :show-nested:
 
 .. click:: hepdata.cli:converter
