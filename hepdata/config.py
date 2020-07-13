@@ -209,9 +209,9 @@ CONSUMER_SECRET = ""
 USE_TWITTER = True
 TWITTER_HANDLE_MAPPINGS = {
     "lhcb": "@LHCbPhysics",
-    "atlas": "@ATLASexperiment",
+    "atlas": "@AtlasPapers",
     "cms": "@CMSpapers",
-    "alice": "@ALICEexperiment",
+    "alice": "@AlicePapers",
     "t2k": "@Tokai2Kamioka",
     "phenix": "@RHIC_PHENIX",
     "star": "@RHIC_STAR",
