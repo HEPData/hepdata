@@ -30,7 +30,7 @@ from shutil import move
 
 from hepdata_converter_ws_client import convert
 
-from hepdata.config import CFG_CONVERTER_URL
+from hepdata.config import CFG_CONVERTER_URL, CFG_CONVERTER_TIMEOUT
 from hepdata.modules.records.utils.common import find_file_in_directory
 
 
@@ -64,6 +64,7 @@ def convert_zip_archive(input_archive, output_archive, options):
         output=output_archive,
         options=options,
         extract=False,
+        timeout=CFG_CONVERTER_TIMEOUT,
     )
     rmtree(input_root_dir)
 
@@ -93,7 +94,8 @@ def convert_oldhepdata_to_yaml(input_path, output_path):
         CFG_CONVERTER_URL,
         input_path,
         output=output_path,
-        options=options
+        options=options,
+        timeout=CFG_CONVERTER_TIMEOUT,
     )
 
     return successful

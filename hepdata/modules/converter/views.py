@@ -27,7 +27,7 @@ from flask import Blueprint, send_file, render_template, \
     request, current_app, redirect, abort
 import time
 from werkzeug.utils import secure_filename
-from hepdata.config import CFG_CONVERTER_URL, CFG_SUPPORTED_FORMATS
+from hepdata.config import CFG_CONVERTER_URL, CFG_SUPPORTED_FORMATS, CFG_CONVERTER_TIMEOUT
 
 from hepdata_converter_ws_client import convert, Error
 from hepdata.modules.permissions.api import user_allowed_to_perform_action
@@ -542,6 +542,7 @@ def download_datatable(datasubmission, file_format, *args, **kwargs):
             output=output_path + '-dir',
             options=options,
             extract=False,
+            timeout=CFG_CONVERTER_TIMEOUT,
         )
     except Error as error:  # hepdata_converter_ws_client.Error
         return display_error(title='Report concerns to info@hepdata.net', description=str(error))
