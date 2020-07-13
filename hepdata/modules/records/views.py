@@ -24,13 +24,11 @@
 
 """Blueprint for HEPData-Records."""
 
-import werkzeug
 import logging
 import json
 import time
 from dateutil import parser
 from invenio_accounts.models import User
-from flask import current_app
 from flask_login import login_required, login_user
 from flask import Blueprint, send_file, abort, redirect
 from flask_security.utils import verify_password
@@ -41,7 +39,7 @@ try:
 except ImportError:  # pragma: no cover
     from yaml import BaseLoader as Loader  # pragma: no cover
 
-from hepdata.config import CFG_DATA_TYPE, CFG_PUB_TYPE
+from hepdata.config import CFG_DATA_TYPE, CFG_PUB_TYPE, SITE_URL
 from hepdata.ext.elasticsearch.api import get_records_matching_field, get_count_for_collection, get_n_latest_records, \
     index_record_ids
 from hepdata.modules.email.api import send_new_upload_email, send_new_review_message_email, NoReviewersException, \
@@ -619,6 +617,11 @@ def get_resource(resource_id):
 
 @blueprint.route('/cli_upload', methods=['GET', 'POST'])
 def cli_upload():
+    """
+    Used by the hepdata-cli tool to upload a submission.
+
+    :return:
+    """
 
     if request.method == 'GET':
         return redirect('/')
@@ -628,33 +631,44 @@ def cli_upload():
         return jsonify({"message": "User email is required: specify one using -e user-email."}), 400
     user_email = request.form['email']
 
+    # password must be provided
+    if 'pswd' not in request.form.keys():
+        return jsonify({"message": "User password is required."}), 400
+    user_pswd = request.form['pswd']
+
     # check user associated with this email exists and is active with a confirmed email address
     user = User.query.filter(func.lower(User.email) == user_email.lower(), User.active.is_(True), User.confirmed_at.isnot(None)).first()
-    user = User.query.filter(func.lower(User.email) == user_email.lower(), User.active.is_(True), User.confirmed_at.isnot(None)).first()
     if user is None:
-        return jsonify({"message": "Email {} does not correspond to any active user.".format(str(user_email))}), 404
-    elif verify_password(request.form['pswd'], user.password) is False:
+        return jsonify({"message": "Email {} does not match an active confirmed user.".format(user_email)}), 404
+    elif user.password is None:
+        return jsonify({"message": "Set HEPData password from {} first.".format(SITE_URL + '/lost-password/')}), 403
+    elif verify_password(user_pswd, user.password) is False:
         return jsonify({"message": "Wrong password, please try again."}), 403
     else:
         login_user(user)
 
-    sandbox = False if request.form['sandbox'] == 'False' else True if request.form['sandbox'] == 'True' else None
+    # sandbox must be provided
+    if 'sandbox' not in request.form.keys():
+        return jsonify({"message": "sandbox (True or False) is required."}), 400
+    str_sandbox = request.form['sandbox']
+    is_sandbox = False if str_sandbox == 'False' else True if str_sandbox == 'True' else None
+
     recid = request.form['recid'] if 'recid' in request.form.keys() else None
     invitation_cookie = request.form['invitation_cookie'] if 'invitation_cookie' in request.form.keys() else None
 
-    if sandbox is True:
+    if is_sandbox is True:
         if recid is None:
             return consume_sandbox_payload()  # '/sandbox/consume'
         else:
             # check that sandbox record exists and belongs to this user
             hepsubmission_record = get_latest_hepsubmission(publication_recid=recid, overall_status='sandbox')
             if hepsubmission_record is None:
-                return jsonify({"message": "Sandbox record {} not found".format(str(recid))}), 404
+                return jsonify({"message": "Sandbox record {} not found.".format(str(recid))}), 404
             elif hepsubmission_record.coordinator != user.id:
-                return jsonify({"message": "Attempted to modify sandbox record of another user"}), 403
+                return jsonify({"message": "Attempted to modify sandbox record of another user."}), 403
             else:
                 return update_sandbox_payload(recid)  # '/sandbox/<int:recid>/consume'
-    else:
+    elif is_sandbox is False:
         # check that record exists and has 'todo' status
         hepsubmission_record = get_latest_hepsubmission(publication_recid=recid, overall_status='todo')
         if hepsubmission_record is None:
@@ -673,6 +687,7 @@ def cli_upload():
 def consume_data_payload(recid):
     """
     This method persists, then presents the loaded data back to the user.
+
     :param recid: record id to attach the data to
     :return: For POST requests, returns JSONResponse either containing 'url'
              (for success cases) or 'message' (for error cases, which will
@@ -744,6 +759,7 @@ def attach_information_to_record(recid):
 def consume_sandbox_payload():
     """
     Creates a new sandbox submission with a new file upload.
+
     :param recid:
     """
 
@@ -763,6 +779,7 @@ def consume_sandbox_payload():
 def update_sandbox_payload(recid):
     """
     Updates the Sandbox submission with a new file upload.
+
     :param recid:
     """
 

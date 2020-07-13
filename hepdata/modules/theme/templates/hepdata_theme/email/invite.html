@@ -18,14 +18,21 @@
 
     <a href="{{ site_url }}/permissions/assign/{{ invite_token }}" style="padding-left: 20px;">{{ site_url }}/permissions/assign/{{ invite_token }}</a>
 
-    <p>You can then upload from <a href="{{ site_url }}/record/{{ recid }}">{{ site_url }}/record/{{ recid }}</a>.</p>
+    {% if role == 'uploader' %}
 
-    <p>Alternatively, upload from the command line after installing the <a href="https://pypi.org/project/hepdata-cli/">hepdata-cli</a> tool:</p>
+      <p>You can then upload from <a href="{{ site_url }}/record/{{ recid }}">{{ site_url }}/record/{{ recid }}</a>.</p>
 
-    <p style="font-weight: lighter; padding-left: 20px;"><code>hepdata-cli upload /path/to/upload_file.tar.gz -e {{ email }} -r {{ recid }} -i {{ invite_token }} -s False</code></p>
+      <p>Alternatively, upload from the command line after installing the <a href="https://pypi.org/project/hepdata-cli/">hepdata-cli</a> tool:</p>
 
-    <p>Note that you first need to <a href="{{ site_url }}/signup/">sign up</a> for a HEPData account associated with email address {{ email }},
-      confirm your email address, and assign permissions by clicking the link above containing your invitation cookie.</p>
+      <p style="font-weight: lighter; padding-left: 20px;"><code>hepdata-cli upload /path/to/upload_file.tar.gz -e {{ email }} -r {{ recid }} -i {{ invite_token }} -s False</code></p>
+
+      <p>
+        Note that you first need to <a href="{{ site_url }}/signup/">sign up</a> for a HEPData account associated with email address {{ email }},
+        confirm your email address, and assign permissions by clicking the link above containing your invitation cookie.
+        If you have signed up with CERN/ORCID authentication, you will also need to <a href="{{ site_url }}/lost-password/">set a password</a>.
+      </p>
+
+    {% endif %}
 
     {% if message %}
         <p>
