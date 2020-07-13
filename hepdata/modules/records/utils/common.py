@@ -71,7 +71,7 @@ URL_PATTERNS = [
     "sourceforge",
 ]
 
-ALLOWED_EXTENSIONS = ('.zip', '.tar', '.tar.gz', '.tgz', '.oldhepdata', '.yaml')
+ALLOWED_EXTENSIONS = ('.zip', '.tar', '.tar.gz', '.tgz', '.oldhepdata', '.yaml', '.yaml.gz')
 
 
 def contains_accepted_url(file):

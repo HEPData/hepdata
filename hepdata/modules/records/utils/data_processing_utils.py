@@ -58,8 +58,8 @@ def fix_nan_inf(value):
     return value
 
 
-def process_independent_variables(table_contents, x_axes,
-                                  independent_variable_headers):
+def process_independent_variables(table_contents, x_axes, independent_variable_headers):
+
     if len(table_contents["independent_variables"]) == 0 and table_contents["dependent_variables"]:
         pad_independent_variables(table_contents)
 

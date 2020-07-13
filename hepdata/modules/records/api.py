@@ -343,6 +343,7 @@ def process_payload(recid, file, redirect_url, synchronous=False):
     :return: JSONResponse either containing 'url' (for success cases) or
              'message' (for error cases, which will give a 400 error).
     """
+
     if file and (allowed_file(file.filename)):
         file_path = save_zip_file(file, recid)
         hepsubmission = get_latest_hepsubmission(publication_recid=recid)
@@ -372,8 +373,8 @@ def process_payload(recid, file, redirect_url, synchronous=False):
 
         return jsonify({'url': redirect_url.format(recid)})
     else:
-        return jsonify({"message": "You must upload a .zip, .tar, .tar.gz or .tgz file"
-                       + " (or a .oldhepdata or single .yaml file)."}), 400
+        return jsonify({"message": "You must upload a .zip, .tar, .tar.gz or .tgz file" +
+                        " (or a .oldhepdata or single .yaml or .yaml.gz file)."}), 400
 
 
 @shared_task
@@ -446,9 +447,17 @@ def process_zip_archive(file_path, id):
         submission_path = os.path.join(file_save_directory, remove_file_extension(filename))
         submission_temp_path = tempfile.mkdtemp(dir=current_app.config["CFG_TMPDIR"])
 
-        if filename.endswith('.yaml'):
+        if filename.endswith('.yaml.gz'):
+            print('Extracting: {} to {}'.format(file_path, file_path[:-3]))
+            if not extract(file_path, file_path[:-3]):
+                return {
+                    "Archive file extractor": [{
+                        "level": "error", "message": "{} is not a valid .gz file.".format(file_path)
+                    }]
+                }
+            return process_zip_archive(file_path[:-3], id)
+        elif filename.endswith('.yaml'):
             # we split the singular yaml file and create a submission directory
-
             error, last_updated = split_files(file_path, submission_temp_path)
             if error:
                 return {
@@ -457,7 +466,6 @@ def process_zip_archive(file_path, id):
                         "message": str(error)
                     }]
                 }
-
         else:
             # we are dealing with a zip, tar, etc. so we extract the contents
             if not extract(file_path, submission_temp_path):
@@ -473,7 +481,7 @@ def process_zip_archive(file_path, id):
         copy_command = ['cp']
         print('Copying with: {} -r {} {}'.format(' '.join(copy_command), submission_temp_path + '/.', submission_path))
         subprocess.check_output(copy_command + ['-r',  submission_temp_path + '/.', submission_path])
-        rmtree(submission_temp_path, ignore_errors=True) # can uncomment when this is definitely working
+        rmtree(submission_temp_path, ignore_errors=True)  # can uncomment when this is definitely working
 
         submission_found = find_file_in_directory(submission_path, lambda x: x == "submission.yaml")
 
