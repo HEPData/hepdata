@@ -26,27 +26,33 @@
 
 import logging
 import json
+import time
 from dateutil import parser
-from flask_login import login_required
+from invenio_accounts.models import User
+from flask_login import login_required, login_user
 from flask import Blueprint, send_file, abort, redirect
-from sqlalchemy import or_
+from flask_security.utils import verify_password
+from sqlalchemy import or_, func
 import yaml
 try:
     from yaml import CBaseLoader as Loader
-except ImportError: #pragma: no cover
-    from yaml import BaseLoader as Loader #pragma: no cover
+except ImportError:  # pragma: no cover
+    from yaml import BaseLoader as Loader  # pragma: no cover
 
-from hepdata.config import CFG_DATA_TYPE, CFG_PUB_TYPE
+from hepdata.config import CFG_DATA_TYPE, CFG_PUB_TYPE, SITE_URL
 from hepdata.ext.elasticsearch.api import get_records_matching_field, get_count_for_collection, get_n_latest_records, \
     index_record_ids
 from hepdata.modules.email.api import send_new_upload_email, send_new_review_message_email, NoReviewersException, \
     send_question_email
 from hepdata.modules.inspire_api.views import get_inspire_record_information
-from hepdata.modules.records.api import *
+from hepdata.modules.records.api import request, determine_user_privileges, render_template, format_submission, \
+    render_record, current_user, db, jsonify, get_user_from_id, get_record_contents, extract_journal_info, \
+    user_allowed_to_perform_action, NoResultFound, OrderedDict, query_messages_for_data_review, returns_json, \
+    process_payload
 from hepdata.modules.submission.models import HEPSubmission, DataSubmission, \
     DataResource, DataReview, Message, Question
 from hepdata.modules.records.utils.common import get_record_by_id, \
-    default_time, IMAGE_TYPES, encode_string, decode_string
+    default_time, IMAGE_TYPES, decode_string
 from hepdata.modules.records.utils.data_processing_utils import \
     generate_table_structure
 from hepdata.modules.records.utils.submission import create_data_review, \
@@ -55,6 +61,7 @@ from hepdata.modules.submission.api import get_latest_hepsubmission
 from hepdata.modules.records.utils.workflow import \
     update_action_for_submission_participant
 from hepdata.modules.stats.views import increment
+from hepdata.modules.permissions.models import SubmissionParticipant
 
 logging.basicConfig()
 log = logging.getLogger(__name__)
@@ -278,7 +285,6 @@ def get_table_details(recid, data_recid, version):
             key = location_parts[-1].replace("thumb_", "")
             if key not in tmp_assoc_files:
                 tmp_assoc_files[key] = {}
-
 
             if "thumb_" in alt_location and associated_data_file.file_type.lower() in IMAGE_TYPES:
                 tmp_assoc_files[key]['preview_location'] = '/record/resource/{0}?view=true'.format(
@@ -609,6 +615,73 @@ def get_resource(resource_id):
         return abort(404)
 
 
+@blueprint.route('/cli_upload', methods=['GET', 'POST'])
+def cli_upload():
+    """
+    Used by the hepdata-cli tool to upload a submission.
+
+    :return:
+    """
+
+    if request.method == 'GET':
+        return redirect('/')
+
+    # email must be provided
+    if 'email' not in request.form.keys():
+        return jsonify({"message": "User email is required: specify one using -e user-email."}), 400
+    user_email = request.form['email']
+
+    # password must be provided
+    if 'pswd' not in request.form.keys():
+        return jsonify({"message": "User password is required."}), 400
+    user_pswd = request.form['pswd']
+
+    # check user associated with this email exists and is active with a confirmed email address
+    user = User.query.filter(func.lower(User.email) == user_email.lower(), User.active.is_(True), User.confirmed_at.isnot(None)).first()
+    if user is None:
+        return jsonify({"message": "Email {} does not match an active confirmed user.".format(user_email)}), 404
+    elif user.password is None:
+        return jsonify({"message": "Set HEPData password from {} first.".format(SITE_URL + '/lost-password/')}), 403
+    elif verify_password(user_pswd, user.password) is False:
+        return jsonify({"message": "Wrong password, please try again."}), 403
+    else:
+        login_user(user)
+
+    # sandbox must be provided
+    if 'sandbox' not in request.form.keys():
+        return jsonify({"message": "sandbox (True or False) is required."}), 400
+    str_sandbox = request.form['sandbox']
+    is_sandbox = False if str_sandbox == 'False' else True if str_sandbox == 'True' else None
+
+    recid = request.form['recid'] if 'recid' in request.form.keys() else None
+    invitation_cookie = request.form['invitation_cookie'] if 'invitation_cookie' in request.form.keys() else None
+
+    if is_sandbox is True:
+        if recid is None:
+            return consume_sandbox_payload()  # '/sandbox/consume'
+        else:
+            # check that sandbox record exists and belongs to this user
+            hepsubmission_record = get_latest_hepsubmission(publication_recid=recid, overall_status='sandbox')
+            if hepsubmission_record is None:
+                return jsonify({"message": "Sandbox record {} not found.".format(str(recid))}), 404
+            elif hepsubmission_record.coordinator != user.id:
+                return jsonify({"message": "Attempted to modify sandbox record of another user."}), 403
+            else:
+                return update_sandbox_payload(recid)  # '/sandbox/<int:recid>/consume'
+    elif is_sandbox is False:
+        # check that record exists and has 'todo' status
+        hepsubmission_record = get_latest_hepsubmission(publication_recid=recid, overall_status='todo')
+        if hepsubmission_record is None:
+            return jsonify({"message": "Record {} not found.".format(str(recid))}), 404
+        # check user is allowed to upload to this record and supplies the correct invitation cookie
+        participant = SubmissionParticipant.query.filter_by(user_account=user.id, role='uploader', publication_recid=recid, status='primary').first()
+        if participant is None:
+            return jsonify({"message": "Email {} does not correspond to a confirmed uploader for this record.".format(str(user_email))}), 404
+        elif str(participant.invitation_cookie) != invitation_cookie:
+            return jsonify({"message": "Invitation cookie did not match."}), 403
+        return consume_data_payload(recid)  # '/<int:recid>/consume'
+
+
 @blueprint.route('/<int:recid>/consume', methods=['GET', 'POST'])
 @login_required
 def consume_data_payload(recid):
@@ -638,7 +711,7 @@ def sandbox():
         HEPSubmission.coordinator == current_id,
         or_(HEPSubmission.overall_status == 'sandbox',
             HEPSubmission.overall_status == 'sandbox_processing')
-        ).order_by(HEPSubmission.last_updated.desc()).all()
+    ).order_by(HEPSubmission.last_updated.desc()).all()
 
     for submission in submissions:
         submission.data_abstract = submission.data_abstract
@@ -689,7 +762,6 @@ def consume_sandbox_payload():
 
     :param recid:
     """
-    import time
 
     if request.method == 'GET':
         return redirect('/record/sandbox')
