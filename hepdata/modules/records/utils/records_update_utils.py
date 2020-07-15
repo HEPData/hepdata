@@ -62,9 +62,10 @@ def get_all_updated_records_since_date(date, verbose=False):
     while page < 1000:
 
         if date_is_delta_from_today:
-            response = requests.get("https://inspirehep.net/api/literature?q=external_system_identifiers.schema:HEPData%20and%20du%20today-{}&page={}".format(date, page))
+            response = requests.get('https://inspirehep.net/api/literature?sort=mostrecent&size=25&page={}'.format(page) +
+                                    '&q=external_system_identifiers.schema%3AHEPData%20and%20legacy_version%3A{}%2A'.format(specified_time.strftime("%Y%m%d")))
         else:
-            response = requests.get("http://inspirehep.net/api/literature?q=external_system_identifiers.schema:HEPData&page={}".format(page))
+            response = requests.get("https://inspirehep.net/api/literature?q=external_system_identifiers.schema:HEPData&page={}".format(page))
 
         total = response.json()['hits']['total']
 

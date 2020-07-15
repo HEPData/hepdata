@@ -265,9 +265,7 @@ def test_get_updated_records_on_date(app):
     d0 = datetime.date.today()
     d1 = datetime.date(2020, 6, 29)
     delta = d0 - d1
-    set(get_all_updated_records_since_date(delta.days, verbose=True))  # at the moment this is just a check that no exception is thrown
-    # the following is broken by the 1 digit limitation in delta.days parameter (due to url call to inspire)
-    # assert(set(get_all_updated_records_since_date(delta.days, verbose=True)) == set(['1650066', '1650063', '756925']))
+    assert(set(get_all_updated_records_since_date(delta.days, verbose=True)) == set(['1650066', '1650063', '756925']))
 
 
 def test_update_record_info(app):
