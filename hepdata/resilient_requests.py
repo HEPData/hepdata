@@ -8,7 +8,7 @@ from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
 
 
-DEFAULT_TIMEOUT = 60 + 55  # seconds
+DEFAULT_TIMEOUT = 58  # seconds
 TOTAL_RETRIES = 8
 
 
