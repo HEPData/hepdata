@@ -64,8 +64,6 @@ def get_inspire_record_information(inspire_rec_id, verbose=False):
     else:
         parsed_content = deepcopy(parsed_content_defaults)
 
-    print(parsed_content)
-
     return parsed_content, 'success'
 
 
