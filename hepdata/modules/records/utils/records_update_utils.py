@@ -61,10 +61,8 @@ def _get_inspire_records_updated(on_or_since, date, verbose=False):
 
     specified_time = _get_time(date)
 
-    if verbose and on_or_since == 'on':
-        print("Obtaining inspire ids of records updated on {}.".format(specified_time.strftime('%Y-%m-%d')))
-    if verbose and on_or_since == 'since':
-        print("Obtaining inspire ids of records updated since {}.".format(specified_time.strftime('%Y-%m-%d')))
+    if verbose:
+        print("Obtaining inspire ids of records updated {} {}.".format(on_or_since, specified_time.strftime('%Y-%m-%d')))
 
     url = _get_url(1, specified_time, on_or_since)
     response = resilient_requests('get', url)
@@ -73,10 +71,8 @@ def _get_inspire_records_updated(on_or_since, date, verbose=False):
     total_hits = response.json()['hits']['total']
     total_pages = math.ceil(total_hits / RECORDS_PER_PAGE)
 
-    if verbose and on_or_since == 'on':
-        print("\r{} records were updated on {}.".format(total_hits, specified_time.strftime('%Y-%m-%d')))
-    if verbose and on_or_since == 'since':
-        print("\r{} records were updated since {}.".format(total_hits, specified_time.strftime('%Y-%m-%d')))
+    if verbose:
+        print("\r{} records were updated {} {}.".format(total_hits, on_or_since, specified_time.strftime('%Y-%m-%d')))
 
     ids = []
 

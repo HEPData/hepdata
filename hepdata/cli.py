@@ -419,7 +419,12 @@ def write_stats_to_files():
     write_submissions_to_files()
 
 
-@cli.command()
+@cli.group()
+def inspire():
+    """INSPIRE utils to update publication information."""
+
+
+@inspire.command()
 @with_appcontext
 @click.option('--inspire-id', '-i', type=str, required=True, help='Specify inspire ID of record to update.')
 @click.option('--recid', '-r', type=str, default='', help='Specify an HEPData record ID to update given the Inspire ID. This is to be used for not yet finilised submissions.')
@@ -428,7 +433,7 @@ def cli_update_record_info(inspire_id, recid='', send_email=False):
     update_record_info(inspire_id, recid, send_email)
 
 
-@cli.command()
+@inspire.command()
 @with_appcontext
 @click.option('--date', '-d', type=str, required=True, help='Specify date since when to update records.')
 def update_records_info_since(date):
@@ -437,10 +442,18 @@ def update_records_info_since(date):
         update_record_info(inspire_id)
 
 
-@cli.command()
+@inspire.command()
 @with_appcontext
 @click.option('--date', '-d', type=str, required=True, help='Specify date on which to update records.')
 def update_records_info_on(date):
     inspire_ids = get_inspire_records_updated_on(date, verbose=True)
+    for inspire_id in inspire_ids:
+        update_record_info(inspire_id)
+
+
+@inspire.command()
+@with_appcontext
+def update_all_records_info():
+    inspire_ids = get_inspire_records_updated_since('1899-01-01', verbose=True)
     for inspire_id in inspire_ids:
         update_record_info(inspire_id)

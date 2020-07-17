@@ -46,3 +46,7 @@ A command line interface (CLI) allows certain management commands to be run on t
 .. click:: hepdata.cli:submissions
    :prog: hepdata submissions
    :show-nested:
+
+.. click:: hepdata.cli:inspire
+   :prog: hepdata inspire
+   :show-nested:
