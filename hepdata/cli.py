@@ -43,7 +43,7 @@ from hepdata.utils.twitter import tweet
 from hepdata.modules.email.api import send_finalised_email
 from hepdata.modules.records.utils.doi_minter import generate_dois_for_submission, generate_doi_for_table
 from hepdata.modules.permissions.api import write_submissions_to_files
-from hepdata.modules.records.utils.records_update_utils import get_all_updated_records_since_date, update_record_info
+from hepdata.modules.records.utils.records_update_utils import get_inspire_records_updated_since, get_inspire_records_updated_on, update_record_info
 
 from invenio_db import db
 
@@ -432,6 +432,15 @@ def cli_update_record_info(inspire_id, recid='', send_email=False):
 @with_appcontext
 @click.option('--date', '-d', type=str, required=True, help='Specify date since when to update records.')
 def update_records_info_since(date):
-    inspire_ids = get_all_updated_records_since_date(date, verbose=True)
+    inspire_ids = get_inspire_records_updated_since(date, verbose=True)
+    for inspire_id in inspire_ids:
+        update_record_info(inspire_id)
+
+
+@cli.command()
+@with_appcontext
+@click.option('--date', '-d', type=str, required=True, help='Specify date since when to update records.')
+def update_records_info_on(date):
+    inspire_ids = get_inspire_records_updated_on(date, verbose=True)
     for inspire_id in inspire_ids:
         update_record_info(inspire_id)

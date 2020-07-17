@@ -40,7 +40,7 @@ from hepdata.modules.records.utils.users import get_coordinators_in_system, has_
 from hepdata.modules.records.utils.workflow import update_record, create_record
 from hepdata.modules.submission.models import HEPSubmission
 from tests.conftest import TEST_EMAIL
-from hepdata.modules.records.utils.records_update_utils import get_all_updated_records_since_date, update_record_info
+from hepdata.modules.records.utils.records_update_utils import get_inspire_records_updated_since, get_inspire_records_updated_on, update_record_info
 
 
 def test_record_creation(app):
@@ -261,11 +261,16 @@ def test_upload_invalid_file(app):
         })
 
 
+def test_get_updated_records_since_date(app):
+    ids_on = get_inspire_records_updated_on(1, verbose=True)
+    ids_on += get_inspire_records_updated_on(2, verbose=True)
+    ids_on += get_inspire_records_updated_on(3, verbose=True)
+    ids_since = get_inspire_records_updated_since(3, verbose=True)
+    assert set(ids_on) == set(ids_since)
+
+
 def test_get_updated_records_on_date(app):
-    d0 = datetime.date.today()
-    d1 = datetime.date(2020, 6, 29)
-    delta = d0 - d1
-    assert(set(get_all_updated_records_since_date(delta.days, verbose=True)) == set(['1650066', '1650063', '756925']))
+    assert(set(get_inspire_records_updated_on("2020-06-29", verbose=True)) == set(['1650066', '1650063', '756925']))
 
 
 def test_update_record_info(app):
