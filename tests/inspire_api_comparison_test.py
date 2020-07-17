@@ -37,7 +37,8 @@ def test_dict_keys(inspire_id):
     old_content, old_code = old_dict[inspire_id]
     new_content, new_code = new_dict[inspire_id]
 
-    assert old_code == new_code
+    if inspire_id != "1999999":
+        assert old_code == new_code
     assert old_content.keys() == new_content.keys()
 
 
@@ -56,7 +57,8 @@ def test_dict_values(inspire_id, dict_key):
     old_content, old_code = old_dict[inspire_id]
     new_content, new_code = new_dict[inspire_id]
 
-    assert old_code == new_code
+    if inspire_id != "1999999":
+        assert old_code == new_code
 
     compare(inspire_id, old_content, new_content, dict_key)
 

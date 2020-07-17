@@ -61,10 +61,12 @@ def get_inspire_record_information(inspire_rec_id, verbose=False):
         elif 'thesis' in parsed_content['type'] and 'thesis_info' not in content['metadata'].keys():
             parsed_content['dissertation'] = {}
 
+        status = 'success'
+
     else:
         parsed_content = deepcopy(parsed_content_defaults)
 
-    return parsed_content, 'success'
+    return parsed_content, status
 
 
 @blueprint.route('/search', methods=['GET'])
