@@ -123,6 +123,9 @@
             url: '/record/attach_information/' + $(this).attr('data-recid'),
             data: {'inspire_id': window.inspire_id},
             success: function (data) {
+                if (data.status != 'success') {
+                    alert("Error (" + data.status + ")! " + data.message)
+                }
                 setTimeout(function () {
                     window.location = "/dashboard";
                 }, 1000);

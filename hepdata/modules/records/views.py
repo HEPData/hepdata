@@ -736,7 +736,7 @@ def attach_information_to_record(recid):
     content["inspire_id"] = inspire_id
 
     record = get_record_by_id(recid)
-    if record is not None:
+    if record is not None and status == 'success':
         content['recid'] = recid
         record.update(content)
         record.commit()
@@ -749,9 +749,14 @@ def attach_information_to_record(recid):
         db.session.commit()
 
         return jsonify({'status': 'success'})
+
+    elif status != 'success':
+        return jsonify({'status': status,
+                        'message': 'Request for INSPIRE record {} failed.'.format(inspire_id)})
+
     else:
         return jsonify({'status': 'failed',
-                        'message': 'No record with that recid was found.'})
+                        'message': 'No record with recid {} was found.'.format(str(recid))})
 
 
 @blueprint.route('/sandbox/consume', methods=['GET', 'POST'])
