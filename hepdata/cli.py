@@ -429,31 +429,35 @@ def inspire():
 @click.option('--inspire-id', '-i', type=str, required=True, help='Specify inspire ID of record to update.')
 @click.option('--recid', '-r', type=str, default='', help='Specify an HEPData record ID to update given the Inspire ID. This is to be used for not yet finilised submissions.')
 @click.option('--send_email', '-e', default=False, type=bool, help='Whether or not to send email about update.')
-def cli_update_record_info(inspire_id, recid='', send_email=False):
-    update_record_info(inspire_id, recid, send_email)
+@click.option('--verbose', '-v', is_flag=True, default=False, type=bool, help='Whether or not to display additional information of the function call.')
+def cli_update_record_info(inspire_id, recid='', send_email=False, verbose=False):
+    update_record_info(inspire_id, recid, send_email, verbose=verbose)
 
 
 @inspire.command()
 @with_appcontext
 @click.option('--date', '-d', type=str, required=True, help='Specify date since when to update records.')
-def update_records_info_since(date):
-    inspire_ids = get_inspire_records_updated_since(date, verbose=True)
+@click.option('--verbose', '-v', is_flag=True, default=False, type=bool, help='Whether or not to display additional information of the function call.')
+def update_records_info_since(date, verbose=False):
+    inspire_ids = get_inspire_records_updated_since(date, verbose=verbose)
     for inspire_id in inspire_ids:
-        update_record_info(inspire_id)
+        update_record_info(inspire_id, verbose=verbose)
 
 
 @inspire.command()
 @with_appcontext
 @click.option('--date', '-d', type=str, required=True, help='Specify date on which to update records.')
-def update_records_info_on(date):
-    inspire_ids = get_inspire_records_updated_on(date, verbose=True)
+@click.option('--verbose', '-v', is_flag=True, default=False, type=bool, help='Whether or not to display additional information of the function call.')
+def update_records_info_on(date, verbose=False):
+    inspire_ids = get_inspire_records_updated_on(date, verbose=verbose)
     for inspire_id in inspire_ids:
-        update_record_info(inspire_id)
+        update_record_info(inspire_id, verbose=verbose)
 
 
 @inspire.command()
 @with_appcontext
-def update_all_records_info():
-    inspire_ids = get_inspire_records_updated_since('1899-01-01', verbose=True)
+@click.option('--verbose', '-v', is_flag=True, default=False, type=bool, help='Whether or not to display additional information of the function call.')
+def update_all_records_info(verbose=False):
+    inspire_ids = get_inspire_records_updated_since('1899-01-01', verbose=verbose)
     for inspire_id in inspire_ids:
-        update_record_info(inspire_id)
+        update_record_info(inspire_id, verbose=verbose)

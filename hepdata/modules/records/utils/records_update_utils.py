@@ -14,7 +14,7 @@ from hepdata.resilient_requests import resilient_requests
 RECORDS_PER_PAGE = 10
 
 
-def update_record_info(inspire_id, recid='', send_email=False):
+def update_record_info(inspire_id, recid='', send_email=False, verbose=False):
     inspire_id = inspire_id.replace("ins", "")
 
     if recid == '':
@@ -23,6 +23,9 @@ def update_record_info(inspire_id, recid='', send_email=False):
             print("Failed to retrieve hep submission for {0}".format(inspire_id))
             return
         recid = hep_submission.publication_recid
+
+    if verbose:
+        print("Updating recid {} with information from inspire record {}".format(recid, inspire_id))
 
     updated_record_information, status = get_inspire_record_information(inspire_id)
 
@@ -33,6 +36,8 @@ def update_record_info(inspire_id, recid='', send_email=False):
             if key not in record_information or record_information[key] != value:
                 same_information = False
                 break
+        if verbose:
+            print('Information needs to be updated:', not(same_information))
         if same_information:
             return
         record_information = update_record(recid, updated_record_information)
@@ -40,7 +45,7 @@ def update_record_info(inspire_id, recid='', send_email=False):
         print("Failed to retrieve publication information for {0}".format(inspire_id))
         return
 
-    if recid == '' and hep_submission.overall_status == 'finished':
+    if hep_submission.overall_status == 'finished':
         index_record_ids([record_information["recid"]])
         generate_dois_for_submission.delay(inspire_id=inspire_id)  # update metadata stored in DataCite
         if send_email:
