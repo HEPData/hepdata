@@ -62,6 +62,11 @@ CELERY_BEAT_SCHEDULE = {
     'update_analyses': {
         'task': 'hepdata.modules.records.migrator.api.update_analyses',
         'schedule': timedelta(hours=12)
+    },
+    'update_from_inspire': {
+        'task': 'hepdata.cli.update_records_info_on',
+        'schedule': timedelta(days=1),
+        'args': (1),
     }
 }
 
