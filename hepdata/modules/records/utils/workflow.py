@@ -33,7 +33,6 @@ from invenio_db import db
 
 from hepdata.modules.records.utils.common import get_record_by_id
 
-
 def create_data_structure(ctx):
     """
     The data structures need to be normalised before being stored in
@@ -85,7 +84,6 @@ def update_record(recid, ctx):
     print('Updating record {}'.format(recid))
     record = get_record_by_id(recid)
     for key, value in ctx.items():
-        # print("updating key {} with value {}".format(key, value))
         record[key] = value
     record["recid"] = recid
 
