@@ -439,7 +439,7 @@ def update_records_info_since(date):
 
 @cli.command()
 @with_appcontext
-@click.option('--date', '-d', type=str, required=True, help='Specify date since when to update records.')
+@click.option('--date', '-d', type=str, required=True, help='Specify date on which to update records.')
 def update_records_info_on(date):
     inspire_ids = get_inspire_records_updated_on(date, verbose=True)
     for inspire_id in inspire_ids:
