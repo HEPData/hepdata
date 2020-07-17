@@ -262,7 +262,8 @@ def test_upload_invalid_file(app):
 
 
 def test_get_updated_records_since_date(app):
-    ids_on = get_inspire_records_updated_on(1, verbose=True)
+    ids_on = get_inspire_records_updated_on(0, verbose=True)
+    ids_on += get_inspire_records_updated_on(1, verbose=True)
     ids_on += get_inspire_records_updated_on(2, verbose=True)
     ids_on += get_inspire_records_updated_on(3, verbose=True)
     ids_since = get_inspire_records_updated_since(3, verbose=True)
