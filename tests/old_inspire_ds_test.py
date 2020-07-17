@@ -3,8 +3,8 @@ import json
 
 from flask import url_for
 
-from hepdata.modules.inspire_api.marcxml_parser import expand_date
-from hepdata.modules.inspire_api.views import get_inspire_record_information
+from hepdata.modules.old_inspire_api.marcxml_parser import expand_date
+from hepdata.modules.old_inspire_api.views import get_inspire_record_information
 from hepdata.modules.records.utils.common import decode_string
 
 

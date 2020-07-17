@@ -107,7 +107,7 @@ mapping = {
             "institution": {
                 "type": "text"
             },
-            "defense_data": {
+            "defense_date": {
                 "type": "text"
             }
         }
@@ -196,7 +196,7 @@ mapping = {
     "parent_child_join": {
         "type": "join",
         "relations": {
-          "parent_publication": "child_datatable"
+            "parent_publication": "child_datatable"
         }
-      }
+    }
 }

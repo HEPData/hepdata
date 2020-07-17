@@ -19,10 +19,3 @@
 # In applying this license, CERN does not
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
-
-USE_NEW_INSPIRE_API = True
-
-if USE_NEW_INSPIRE_API is True:
-    from hepdata.modules.new_inspire_api.views import get_inspire_record_information, get_record_from_inspire, blueprint  # noqa
-else:
-    from hepdata.modules.old_inspire_api.views import get_inspire_record_information, get_record_from_inspire, blueprint  # noqa
