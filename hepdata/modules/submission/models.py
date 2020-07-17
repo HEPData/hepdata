@@ -48,6 +48,10 @@ data_reference_link = db.Table(
 
 
 class LargeBinaryString(TypeDecorator):
+    """
+    Decorator for unicode strings which are stored in the DB as LargeBinary objects,
+    to allow them to be treated as strings in python3
+    """
     impl = types.LargeBinary
 
     def process_literal_param(self, value, dialect):
@@ -126,6 +130,9 @@ keyword_identifier = db.Table(
 
 
 class DataSubmission(db.Model):
+    """
+    The submission object associated with a data table.
+    """
     __tablename__ = "datasubmission"
 
     id = db.Column(db.Integer, primary_key=True, nullable=False,
@@ -178,6 +185,19 @@ class License(db.Model):
 
 
 class DataResource(db.Model):
+    """
+    Details of a data resource, which could be a data table, an image, a
+    script, a ROOT file, or a link to an external website or GitHub repo.
+
+    Data resources can be related to submissions in various ways:
+
+    - Resources relating to a submission (HEPSubmission.resources) are linked
+      via the `data_resource_link` table
+    - Data files belonging to a data table (`DataSubmission.data_file`)
+      are linked via the `data_file` field of `datasubmission`
+    - Resources relating to a data table (`DataSubmission.resources`) are
+      linked via the `datafile_identifier` table
+    """
     __tablename__ = "dataresource"
 
     id = db.Column(
