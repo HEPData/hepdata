@@ -137,6 +137,7 @@ CFG_DATA_KEYWORDS = ['observables', 'reactions', 'cmenergies', 'phrases']
 
 CFG_CONVERTER_URL = 'https://converter.hepdata.net'
 CFG_SUPPORTED_FORMATS = ['yaml', 'root', 'csv', 'yoda']
+CFG_CONVERTER_TIMEOUT = 58  # timeout in seconds
 
 CFG_TMPDIR = tempfile.gettempdir()
 CFG_DATADIR = tempfile.gettempdir()
@@ -208,9 +209,9 @@ CONSUMER_SECRET = ""
 USE_TWITTER = True
 TWITTER_HANDLE_MAPPINGS = {
     "lhcb": "@LHCbPhysics",
-    "atlas": "@ATLASexperiment",
+    "atlas": "@AtlasPapers",
     "cms": "@CMSpapers",
-    "alice": "@ALICEexperiment",
+    "alice": "@AlicePapers",
     "t2k": "@Tokai2Kamioka",
     "phenix": "@RHIC_PHENIX",
     "star": "@RHIC_STAR",
@@ -281,6 +282,32 @@ PYTHONWARNINGS="ignore:Unverified HTTPS request"
 PRODUCTION_MODE = False
 
 RUN_SELENIUM_LOCALLY = False
+
+# This is needed for invenio-oauthclient==1.1.3.
+# Default value of None gives an exception.
+# It can be removed for invenio-oauthclient>=1.3.0.
+APP_ALLOWED_HOSTS = []
+
+LOGGING_SENTRY_CELERY = True  # for invenio-logging
+
+# Talisman settings (see https://github.com/GoogleCloudPlatform/flask-talisman).
+# We don't want the web pods to use https.
+APP_DEFAULT_SECURE_HEADERS = {
+    'force_https': False,
+    'force_https_permanent': False,
+    'force_file_save': False,
+    'frame_options': 'sameorigin',
+    'frame_options_allow_from': None,
+    'strict_transport_security': False,
+    'strict_transport_security_preload': False,
+    'strict_transport_security_max_age': 31556926,  # One year in seconds
+    'strict_transport_security_include_subdomains': True,
+    'content_security_policy': {},
+    'content_security_policy_report_uri': None,
+    'content_security_policy_report_only': False,
+    'session_cookie_secure': False,
+    'session_cookie_http_only': False
+}
 
 # Import local config file if it is present.
 try:

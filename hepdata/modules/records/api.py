@@ -57,6 +57,7 @@ from hepdata.modules.submission.models import RecordVersionCommitMessage, DataSu
 from hepdata.utils.file_extractor import extract
 from hepdata.utils.users import get_user_from_id
 from bs4 import BeautifulSoup
+from hepdata_converter_ws_client import Error
 
 import tempfile
 from shutil import rmtree
@@ -340,7 +341,10 @@ def process_payload(recid, file, redirect_url, synchronous=False):
         Redirect URL to record, for use if the upload fails or in synchronous mode
     :param synchronous: bool
         Whether to process asynchronously via celery (default) or immediately (only recommended for tests)
+    :return: JSONResponse either containing 'url' (for success cases) or
+             'message' (for error cases, which will give a 400 error).
     """
+
     if file and (allowed_file(file.filename)):
         file_path = save_zip_file(file, recid)
         hepsubmission = get_latest_hepsubmission(publication_recid=recid)
@@ -368,13 +372,10 @@ def process_payload(recid, file, redirect_url, synchronous=False):
             process_saved_file.delay(file_path, recid, current_user.get_id(), redirect_url, previous_status)
             flash('File saved. You will receive an email when the file has been processed.', 'info')
 
-        return redirect(redirect_url.format(recid))
+        return jsonify({'url': redirect_url.format(recid)})
     else:
-        return render_template('hepdata_records/error_page.html', redirect_url=redirect_url.format(recid),
-                               message="Incorrect file type uploaded.",
-                               errors={"Submission": [{"level": "error",
-                                                       "message": "You must upload a .zip, .tar, .tar.gz or .tgz file"
-                                                                  + " (or a .oldhepdata or single .yaml file)."}]})
+        return jsonify({"message": "You must upload a .zip, .tar, .tar.gz or .tgz file" +
+                        " (or a .oldhepdata or single .yaml or .yaml.gz file)."}), 400
 
 
 @shared_task
@@ -447,9 +448,17 @@ def process_zip_archive(file_path, id):
         submission_path = os.path.join(file_save_directory, remove_file_extension(filename))
         submission_temp_path = tempfile.mkdtemp(dir=current_app.config["CFG_TMPDIR"])
 
-        if filename.endswith('.yaml'):
+        if filename.endswith('.yaml.gz'):
+            print('Extracting: {} to {}'.format(file_path, file_path[:-3]))
+            if not extract(file_path, file_path[:-3]):
+                return {
+                    "Archive file extractor": [{
+                        "level": "error", "message": "{} is not a valid .gz file.".format(file_path)
+                    }]
+                }
+            return process_zip_archive(file_path[:-3], id)
+        elif filename.endswith('.yaml'):
             # we split the singular yaml file and create a submission directory
-
             error, last_updated = split_files(file_path, submission_temp_path)
             if error:
                 return {
@@ -458,7 +467,6 @@ def process_zip_archive(file_path, id):
                         "message": str(error)
                     }]
                 }
-
         else:
             # we are dealing with a zip, tar, etc. so we extract the contents
             if not extract(file_path, submission_temp_path):
@@ -474,9 +482,16 @@ def process_zip_archive(file_path, id):
         copy_command = ['cp']
         print('Copying with: {} -r {} {}'.format(' '.join(copy_command), submission_temp_path + '/.', submission_path))
         subprocess.check_output(copy_command + ['-r',  submission_temp_path + '/.', submission_path])
-        rmtree(submission_temp_path, ignore_errors=True) # can uncomment when this is definitely working
+        rmtree(submission_temp_path, ignore_errors=True)  # can uncomment when this is definitely working
 
         submission_found = find_file_in_directory(submission_path, lambda x: x == "submission.yaml")
+
+        if not submission_found:
+            return {
+                "Archive file extractor": [{
+                    "level": "error", "message": "No submission.yaml file has been found in the archive."
+                }]
+            }
 
         basepath, submission_file_path = submission_found
         from_oldhepdata = False
@@ -515,27 +530,33 @@ def check_and_convert_from_oldhepdata(input_directory, id, timestamp):
         return {
             "Converter": [{
                 "level": "error",
-                "message": "No file with .oldhepdata extension or a submission.yaml"
-                           " file has been found in the archive."
+                "message": "No file with .oldhepdata extension has been found."
             }]
         }
 
     converted_temp_dir = tempfile.mkdtemp(dir=current_app.config["CFG_TMPDIR"])
     converted_temp_path = os.path.join(converted_temp_dir, 'yaml')
 
-    successful = convert_oldhepdata_to_yaml(oldhepdata_found[1], converted_temp_path)
+    try:
+        successful = convert_oldhepdata_to_yaml(oldhepdata_found[1], converted_temp_path)
+        if not successful:
+            # Parse error message from title of HTML file, removing part of string after final "//".
+            soup = BeautifulSoup(open(converted_temp_path), "lxml")
+            errormsg = soup.title.string.rsplit("//", 1)[0]
+
+    except Error as error:  # hepdata_converter_ws_client.Error
+        successful = False
+        errormsg = str(error)
+
     if not successful:
-        # Parse error message from title of HTML file, removing part of string after final "//".
-        soup = BeautifulSoup(open(converted_temp_path), "lxml")
-        errormsg = soup.title.string.rsplit("//", 1)[0]
-        rmtree(converted_temp_dir, ignore_errors=True) # can uncomment when this is definitely working
+        rmtree(converted_temp_dir, ignore_errors=True)  # can uncomment when this is definitely working
 
         return {
             "Converter": [{
                 "level": "error",
                 "message": "The conversion from oldhepdata "
                            "to the YAML format has not succeeded. "
-                           "Error message from converter follows.\n" + errormsg
+                           "Error message from converter follows:<br/><br/>" + errormsg
             }]
         }
     else:

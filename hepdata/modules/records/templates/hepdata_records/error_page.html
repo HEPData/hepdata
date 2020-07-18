@@ -49,7 +49,7 @@
 
 
             <br/>
-            {% for file, file_errors in errors.iteritems() %}
+            {% for file, file_errors in errors.items() %}
                 <p class="file-name">{{ file }}</p>
                 {% for error in file_errors %}
                     <div class="validation-error-message-block">
@@ -62,4 +62,3 @@
         </div>
     </div>
 {% endblock %}
-

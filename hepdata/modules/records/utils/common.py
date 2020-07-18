@@ -70,7 +70,7 @@ URL_PATTERNS = [
     "sourceforge",
 ]
 
-ALLOWED_EXTENSIONS = ('.zip', '.tar', '.tar.gz', '.tgz', '.oldhepdata', '.yaml')
+ALLOWED_EXTENSIONS = ('.zip', '.tar', '.tar.gz', '.tgz', '.oldhepdata', '.yaml', '.yaml.gz')
 
 
 def contains_accepted_url(file):
@@ -210,7 +210,7 @@ def get_record_contents(recid):
     :param recid: Record ID to get.
     :return: a dictionary containing the record contents if the recid exists, None otherwise.
     """
-    record = get_record(recid, doc_type=CFG_PUB_TYPE)
+    record = get_record(recid)
     if record is None:
         try:
             record = get_record_by_id(recid)

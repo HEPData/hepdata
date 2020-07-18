@@ -386,14 +386,16 @@ def _read_data_file(data_file_path):
     Read data file allowing for multiple attempts.
     """
     attempts = 0
+    data = {}
+    ex = None
+
     while True:
-        data = {}
-        ex = None
         try:
             with open(data_file_path, 'r') as data_file:
                 data = yaml.load(data_file, Loader=Loader)
-        except Exception as ex:
+        except Exception as e:
             attempts += 1
+            ex = e
         # allow multiple attempts to read file in case of temporary disk problems
         if (data and data is not None) or attempts > 5:
             break
@@ -416,182 +418,161 @@ def process_submission_directory(basepath, submission_file_path, recid, update=F
     added_file_names = []
     errors = {}
 
-    if submission_file_path is not None:
+    if submission_file_path is None:
+        # return an error
+        errors = {"submission.yaml": [
+            {"level": "error", "message": "No submission.yaml file found in submission."}
+        ]}
+        return errors
 
-        if from_oldhepdata:
-            # The schema_version='0.1.0' argument is a temporary fix for hepdata-converter v0.1.35.
-            # Needed for "data_license: {description: null, name: null, url: null}" lines in submission.yaml.
-            # TO DO: remove the default "data_license" written to submission.yaml by the hepdata-converter.
-            # Then if using a hepdata-converter-ws Docker container, can remove this temporary fix.
-            # Note added: also use schema_version='0.1.0' for YAML files migrated from old HepData site.
-            submission_file_validator = SubmissionFileValidator(schema_version='0.1.0')
+    if from_oldhepdata:
+        # The schema_version='0.1.0' argument is a temporary fix for hepdata-converter v0.1.35.
+        # Needed for "data_license: {description: null, name: null, url: null}" lines in submission.yaml.
+        # TO DO: remove the default "data_license" written to submission.yaml by the hepdata-converter.
+        # Then if using a hepdata-converter-ws Docker container, can remove this temporary fix.
+        # Note added: also use schema_version='0.1.0' for YAML files migrated from old HepData site.
+        submission_file_validator = SubmissionFileValidator(schema_version='0.1.0')
+    else:
+        submission_file_validator = SubmissionFileValidator()
+
+    try:
+        with open(submission_file_path, 'r') as submission_file:
+            submission_processed = list(yaml.load_all(submission_file, Loader=Loader))
+    except Exception as ex:
+        errors = {"submission.yaml": [
+            {"level": "error", "message": "There was a problem parsing the file.\n" + str(ex)}
+        ]}
+        return errors
+
+    is_valid_submission_file = submission_file_validator.validate(file_path=submission_file_path,
+                                                                  data=submission_processed)
+
+    if is_valid_submission_file:
+
+        # process file, extracting contents, and linking
+        # the data record with the parent publication
+        hepsubmission = get_latest_hepsubmission(publication_recid=recid)
+
+        # On a new upload, we reset the flag to notify reviewers
+        hepsubmission.reviewers_notified = False
+
+        reserve_doi_for_hepsubmission(hepsubmission, update)
+
+        no_general_submission_info = True
+
+        if from_oldhepdata:  # use for YAML files migrated from old HepData site
+            data_file_validator = DataFileValidator(schema_version='0.1.0')
         else:
-            submission_file_validator = SubmissionFileValidator()
+            data_file_validator = DataFileValidator()
 
-        try:
-            with open(submission_file_path, 'r') as submission_file:
-                submission_processed = list(yaml.load_all(submission_file, Loader=Loader))
-        except Exception as ex:
-            errors = {"submission.yaml": [
-                {"level": "error", "message": "There was a problem parsing the file.\n" + str(ex)}
-            ]}
-            return errors
+        # Delete all data records associated with this submission.
+        # Fixes problems with ordering where the table names are changed between uploads.
+        # See https://github.com/HEPData/hepdata/issues/112
+        # Side effect that reviews will be deleted between uploads.
+        cleanup_submission(recid, hepsubmission.version, added_file_names)
 
-        is_valid_submission_file = submission_file_validator.validate(file_path=submission_file_path,
-                                                                      data=submission_processed)
+        for yaml_document_index, yaml_document in enumerate(submission_processed):
+            if not yaml_document:
+                continue
 
-        if is_valid_submission_file:
+            # Check for presence of local files given as additional_resources.
+            if 'additional_resources' in yaml_document:
+                for resource in yaml_document['additional_resources']:
+                    location = os.path.join(basepath, resource['location'])
+                    if not resource['location'].startswith(('http', '/resource/')):
+                        if not os.path.isfile(location):
+                            errors[resource['location']] = [{"level": "error", "message":
+                                "Missing 'additional_resources' file from uploaded archive."}]
+                        elif '/' in resource['location']:
+                            errors[resource['location']] = [{"level": "error", "message":
+                                "Location of 'additional_resources' file should not contain '/'."}]
 
-            # process file, extracting contents, and linking
-            # the data record with the parent publication
-            hepsubmission = get_latest_hepsubmission(publication_recid=recid)
-            if hepsubmission is None:
-                HEPSubmission(publication_recid=recid,
-                              overall_status='todo',
-                              inspire_id=hepsubmission.inspire_id,
-                              coordinator=kwargs.get('user_id') if 'user_id' in kwargs else int(current_user.get_id()),
-                              version=hepsubmission.version + 1)
+            if not yaml_document_index and 'name' not in yaml_document:
 
-            # On a new upload, we reset the flag to notify reviewers
-            hepsubmission.reviewers_notified = False
+                no_general_submission_info = False
+                process_general_submission_info(basepath, yaml_document, recid)
 
-            reserve_doi_for_hepsubmission(hepsubmission, update)
+            elif not all(k in yaml_document for k in ('name', 'description', 'keywords', 'data_file')):
 
-            no_general_submission_info = True
+                errors["submission.yaml"] = [{"level": "error", "message": "YAML document with index {} ".format(
+                    yaml_document_index) + "missing one or more required keys (name, description, keywords, data_file)."}]
 
-            if from_oldhepdata:  # use for YAML files migrated from old HepData site
-                data_file_validator = DataFileValidator(schema_version='0.1.0')
             else:
-                data_file_validator = DataFileValidator()
 
-            # Delete all data records associated with this submission.
-            # Fixes problems with ordering where the table names are changed between uploads.
-            # See https://github.com/HEPData/hepdata/issues/112
-            # Side effect that reviews will be deleted between uploads.
-            cleanup_submission(recid, hepsubmission.version, added_file_names)
+                existing_datasubmission_query = DataSubmission.query \
+                    .filter_by(name=yaml_document["name"],
+                               publication_recid=recid,
+                               version=hepsubmission.version)
 
-            for yaml_document_index, yaml_document in enumerate(submission_processed):
-                if not yaml_document:
+                added_file_names.append(yaml_document["name"])
+
+                try:
+                    if existing_datasubmission_query.count() == 0:
+                        datasubmission = DataSubmission(
+                            publication_recid=recid,
+                            name=yaml_document["name"],
+                            description=yaml_document["description"],
+                            version=hepsubmission.version)
+                    else:
+                        datasubmission = existing_datasubmission_query.one()
+                        datasubmission.description = yaml_document["description"]
+                    db.session.add(datasubmission)
+
+                except SQLAlchemyError as sqlex:
+                    errors[yaml_document["data_file"]] = [{"level": "error", "message": str(sqlex)}]
+                    db.session.rollback()
                     continue
 
-                # Check for presence of local files given as additional_resources.
-                if 'additional_resources' in yaml_document:
-                    for resource in yaml_document['additional_resources']:
-                        location = os.path.join(basepath, resource['location'])
-                        if not resource['location'].startswith(('http', '/resource/')):
-                            if not os.path.isfile(location):
-                                errors[resource['location']] = [{"level": "error", "message":
-                                    "Missing 'additional_resources' file from uploaded archive."}]
-                            elif '/' in resource['location']:
-                                errors[resource['location']] = [{"level": "error", "message":
-                                    "Location of 'additional_resources' file should not contain '/'."}]
+                main_file_path = os.path.join(basepath, yaml_document["data_file"])
 
-                if not yaml_document_index and 'name' not in yaml_document:
+                data, ex = _read_data_file(main_file_path)
 
-                    no_general_submission_info = False
-                    process_general_submission_info(basepath, yaml_document, recid)
+                if not data or data is None or ex is not None:
 
-                elif not all(k in yaml_document for k in ('name', 'description', 'keywords', 'data_file')):
+                    errors[yaml_document["data_file"]] = \
+                        [{"level": "error", "message": "There was a problem parsing the file.\n" + str(ex)}]
 
-                    errors["submission.yaml"] = [{"level": "error", "message": "YAML document with index {} ".format(
-                        yaml_document_index) + "missing one or more required keys (name, description, keywords, data_file)."}]
+                elif '/' in yaml_document["data_file"]:
+
+                    errors[yaml_document["data_file"]] = \
+                        [{"level": "error", "message": "Name of data_file should not contain '/'.\n"}]
 
                 else:
 
-                    existing_datasubmission_query = DataSubmission.query \
-                        .filter_by(name=yaml_document["name"],
-                                   publication_recid=recid,
-                                   version=hepsubmission.version)
-
-                    added_file_names.append(yaml_document["name"])
-
-                    try:
-                        if existing_datasubmission_query.count() == 0:
-                            datasubmission = DataSubmission(
-                                publication_recid=recid,
-                                name=yaml_document["name"],
-                                description=yaml_document["description"],
-                                version=hepsubmission.version)
-                        else:
-                            datasubmission = existing_datasubmission_query.one()
-                            datasubmission.description = yaml_document["description"]
-                        db.session.add(datasubmission)
-
-                    except SQLAlchemyError as sqlex:
-                        errors[yaml_document["data_file"]] = [{"level": "error", "message": str(sqlex)}]
-                        db.session.rollback()
-                        continue
-
-                    main_file_path = os.path.join(basepath, yaml_document["data_file"])
-
-                    data, ex = _read_data_file(main_file_path)
-
-                    if not data or data is None or ex is not None:
-
-                        errors[yaml_document["data_file"]] = \
-                            [{"level": "error", "message": "There was a problem parsing the file.\n" + str(ex)}]
-
-                    elif '/' in yaml_document["data_file"]:
-
-                        errors[yaml_document["data_file"]] = \
-                            [{"level": "error", "message": "Name of data_file should not contain '/'.\n"}]
-
+                    if data_file_validator.validate(file_path=main_file_path, data=data):
+                        try:
+                            process_data_file(recid, hepsubmission.version, basepath, yaml_document,
+                                          datasubmission, main_file_path)
+                        except SQLAlchemyError as sqlex:
+                            errors[yaml_document["data_file"]] = [{"level": "error", "message":
+                                "There was a problem processing the file.\n" + str(sqlex)}]
+                            db.session.rollback()
                     else:
+                        errors.update(process_validation_errors_for_display(data_file_validator.get_messages()))
+                        data_file_validator.clear_messages()
 
-                        if data_file_validator.validate(file_path=main_file_path, data=data):
-                            try:
-                                process_data_file(recid, hepsubmission.version, basepath, yaml_document,
-                                              datasubmission, main_file_path)
-                            except SQLAlchemyError as sqlex:
-                                errors[yaml_document["data_file"]] = [{"level": "error", "message":
-                                    "There was a problem processing the file.\n" + str(sqlex)}]
-                                db.session.rollback()
-                        else:
-                            errors = process_validation_errors_for_display(data_file_validator.get_messages())
-                            data_file_validator.clear_messages()
-
-                        if yaml_document["data_file"] not in errors:
-                            # Check that the length of the 'values' list is consistent
-                            # for each of the independent_variables and dependent_variables.
-                            indep_count = [len(indep['values']) for indep in data['independent_variables']]
-                            dep_count = [len(dep['values']) for dep in data['dependent_variables']]
-                            if len(set(indep_count + dep_count)) > 1:  # if more than one unique count
-                                errors.setdefault(yaml_document["data_file"], []).append(
-                                    {"level": "error", "message": "Inconsistent length of 'values' list:\n" +
-                                                                  "independent_variables{}, dependent_variables{}".format(
-                                                                      str(indep_count), str(dep_count))}
-                                )
-
-            if no_general_submission_info:
-                hepsubmission.last_updated = datetime.utcnow()
-                db.session.add(hepsubmission)
-                db.session.commit()
-
-            # The line below is commented out since it does not preserve the order of tables.
-            # Delete all tables above instead: side effect of deleting reviews between uploads.
-            #cleanup_submission(recid, hepsubmission.version, added_file_names)
-
+        if no_general_submission_info:
+            hepsubmission.last_updated = datetime.utcnow()
+            db.session.add(hepsubmission)
             db.session.commit()
 
-            if len(errors) is 0:
-                errors = package_submission(basepath, recid, hepsubmission)
-                reserve_dois_for_data_submissions(publication_recid=recid, version=hepsubmission.version)
+        # The line below is commented out since it does not preserve the order of tables.
+        # Delete all tables above instead: side effect of deleting reviews between uploads.
+        #cleanup_submission(recid, hepsubmission.version, added_file_names)
 
-                admin_indexer = AdminIndexer()
-                admin_indexer.index_submission(hepsubmission)
+        db.session.commit()
 
-        else:
+        if len(errors) is 0:
+            errors = package_submission(basepath, recid, hepsubmission)
+            reserve_dois_for_data_submissions(publication_recid=recid, version=hepsubmission.version)
 
-            errors = process_validation_errors_for_display(submission_file_validator.get_messages())
-            submission_file_validator.clear_messages()
+            admin_indexer = AdminIndexer()
+            admin_indexer.index_submission(hepsubmission)
 
     else:
-        # return an error
-        errors = {"submission.yaml": [
-            {"level": "error",
-             "message": "No submission.yaml file found in submission."}
-        ]}
-        return errors
+
+        errors = process_validation_errors_for_display(submission_file_validator.get_messages())
+        submission_file_validator.clear_messages()
 
     # we return all the errors collectively.
     # This makes more sense that returning errors as

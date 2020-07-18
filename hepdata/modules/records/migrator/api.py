@@ -368,7 +368,7 @@ class Migrator(object):
         yaml_file = os.path.join(base_dir, 'static', inspire_id + '.yaml')
         if os.path.isfile(yaml_file):
             print("Found {}".format(yaml_file))
-            tmp_file = tempfile.NamedTemporaryFile(dir=current_app.config["CFG_TMPDIR"], delete=False)
+            tmp_file = tempfile.NamedTemporaryFile(mode='w+', dir=current_app.config["CFG_TMPDIR"], delete=False)
             tmp_file.close()
             copyfile(yaml_file, tmp_file.name)
             return tmp_file.name
@@ -381,7 +381,7 @@ class Migrator(object):
                 yaml = response.text
                 # save to tmp file
 
-                tmp_file = tempfile.NamedTemporaryFile(dir=current_app.config["CFG_TMPDIR"],
+                tmp_file = tempfile.NamedTemporaryFile(mode='w+', dir=current_app.config["CFG_TMPDIR"],
                                                        delete=False)
                 tmp_file.write(yaml)
                 tmp_file.close()
