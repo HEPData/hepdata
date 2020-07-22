@@ -317,6 +317,16 @@ def execute(query):
 
 
 @utils.command()
+def cleanup_old_files(recids):
+    """Deletes db entries and files that are no longer used"""
+    click.confirm('About to delete all DB entries and files that are no longer used. Do you want to continue?',
+                      abort=True)
+
+    # Pass to data_files method
+    data_files.cleanup_all_resources(recids)
+
+
+@utils.command()
 @click.option('--recids', '-r', type=str, default=None,
               help='Move data files for specific recids only.')
 @click.option('--delete-old-converted-files', type=bool,

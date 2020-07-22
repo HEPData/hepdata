@@ -33,7 +33,7 @@ from invenio_db import db
 from hepdata.modules.email.utils import create_send_email_task
 from hepdata.modules.records.utils.common import allowed_file
 from hepdata.modules.submission.api import get_latest_hepsubmission
-from hepdata.modules.submission.models import DataSubmission, HEPSubmission, DataResource, data_reference_link
+from hepdata.modules.submission.models import DataSubmission, HEPSubmission, DataResource
 
 logging.basicConfig()
 log = logging.getLogger(__name__)
@@ -85,6 +85,128 @@ def get_subdir_name(record_id):
     hash_object = hashlib.sha256(record_id.encode())
     hex_dig = hash_object.hexdigest()
     return str(hex_dig)[:2]
+
+
+def _delete_all_orphan_file_resources():
+
+    db.session.execute(
+        'CREATE TEMP TABLE valid_resource_ids(id INT)'
+    )
+
+    # 7963 rows in data_resource_link
+    # all rows map to valid hepsubmissions
+    db.session.execute(
+        'INSERT INTO valid_resource_ids '
+        'SELECT dataresource_id FROM data_resource_link'
+    )
+
+    # 258k data submissions
+    db.session.execute(
+        'INSERT INTO valid_resource_ids '
+        'SELECT data_file FROM datasubmission'
+    )
+
+    # 196k rows in datafile_identifier
+    # all map to valid datasubmissions
+    db.session.execute(
+        'INSERT INTO valid_resource_ids '
+        'SELECT dataresource_id FROM datafile_identifier'
+    )
+
+    # valid_resource_ids will now have about 462k entries
+    # 769k rows in dataresource
+    # NOT EXISTS should be more efficient than NOT IN
+    db.session.execute(
+        'DELETE FROM dataresource '
+        'WHERE NOT EXISTS ( '
+        ' SELECT id from valid_resource_ids WHERE valid_resource_ids.id = dataresource.id'
+        ')'
+    )
+    db.session.commit()
+
+
+def _find_all_current_dataresources(rec_id):
+    """Get all DataResource objects associated with the record"""
+    hep_submissions = HEPSubmission.query.filter_by(
+                        publication_recid=rec_id
+                        ).all()
+    resources = []
+    for submission in hep_submissions:
+        resources.extend(submission.resources)
+
+    data_submissions = DataSubmission.query.filter_by(
+                            publication_recid=rec_id
+                            ).all()
+    for data_submission in data_submissions:
+        resources.append(DataResource.query.filter_by(
+                            id=data_submission.data_file
+                            ).first())
+        resources.extend(data_submission.resources)
+
+    return resources
+
+
+def cleanup_old_files(hepsubmission, current_folder=None, check_old_data_paths=True):
+    """Remove old files not related to a current version of the submission"""
+    rec_id = str(hepsubmission.publication_recid)
+    record_data_paths = [get_data_path_for_record(rec_id)]
+
+    if check_old_data_paths:
+        record_data_paths.append(get_old_data_path_for_record(rec_id))
+        if hepsubmission.inspire_id is not None:
+            record_data_paths.append(get_old_data_path_for_record('ins%s' % hepsubmission.inspire_id))
+
+    current_filepaths = set()
+
+    if hepsubmission.overall_status == 'sandbox' and current_folder:
+        current_filepaths.add(current_folder)
+    else:
+        path_prefixes = [f"{path}/" for path in record_data_paths]
+        current_resources = _find_all_current_dataresources(hepsubmission.publication_recid)
+
+        for r in current_resources:
+            if not r.file_location.startswith('http'):
+                found = False
+                for path_prefix in path_prefixes:
+                    if r.file_location.startswith(path_prefix):
+                        subdirs = r.file_location.split(path_prefix, 1)[1]
+                        top_subdir = subdirs.split(os.sep, 1)[0]
+                        current_filepaths.add(os.path.join(path_prefix, top_subdir))
+                        found = True
+                        break
+
+                if not found:
+                    log.warning("Unknown file %s" % r.file_location)
+
+    log.debug("Current valid paths: %s" % ','.join(current_filepaths))
+
+    for record_data_path in record_data_paths:
+        log.debug("Scanning directory: %s" % record_data_path)
+
+        if os.path.isdir(record_data_path):
+            with os.scandir(record_data_path) as entries:
+                for entry in entries:
+                    log.debug("Checking entry: %s" % entry.path)
+                    if entry.is_dir():
+                        if entry.path not in current_filepaths:
+                            log.debug("Removing %s" % entry.path)
+                            shutil.rmtree(entry.path)
+
+
+def cleanup_all_resources(record_ids):
+    # First, clean up all orphaned file resources
+    _delete_all_orphan_file_resources()
+
+    qry = db.session.query(HEPSubmission.publication_recid)
+    result = qry.distinct()
+    record_ids = [r[0] for r in result]
+
+    log.info("Got records: %s" % record_ids)
+
+    # TODO: use celery
+    for rec_id in record_ids:
+        hepsubmission = get_latest_hepsubmission(publication_recid=rec_id)
+        cleanup_old_files(hepsubmission, check_old_data_paths=True)
 
 
 def move_data_files(record_ids, synchronous=False):

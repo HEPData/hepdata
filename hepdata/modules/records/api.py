@@ -46,7 +46,7 @@ from hepdata.modules.records.subscribers.api import is_current_user_subscribed_t
 from hepdata.modules.records.utils.common import decode_string, find_file_in_directory, allowed_file, \
     remove_file_extension, truncate_string, get_record_contents
 from hepdata.modules.records.utils.data_processing_utils import process_ctx
-from hepdata.modules.records.utils.data_files import get_data_path_for_record
+from hepdata.modules.records.utils.data_files import get_data_path_for_record, cleanup_old_files
 from hepdata.modules.records.utils.submission import process_submission_directory, create_data_review, cleanup_submission
 from hepdata.modules.submission.api import get_latest_hepsubmission
 from hepdata.modules.records.utils.users import get_coordinators_in_system, has_role
@@ -421,6 +421,10 @@ def process_saved_file(file_path, recid, userid, redirect_url, previous_status):
     hepsubmission.overall_status = previous_status
     db.session.add(hepsubmission)
     db.session.commit()
+
+    # Delete any previous upload folders relating to non-final versions
+    # of this hepsubmission
+    cleanup_old_files(hepsubmission, os.path.dirname(file_path))
 
 
 def save_zip_file(file, id):
