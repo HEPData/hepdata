@@ -24,10 +24,16 @@
 
 """Models for the HEPData Submission Workflow."""
 
+import logging
+import os
+
 from invenio_accounts.models import User
-from sqlalchemy import TypeDecorator, types
+from sqlalchemy import TypeDecorator, types, event
 from invenio_db import db
 from datetime import datetime
+
+logging.basicConfig()
+log = logging.getLogger(__name__)
 
 submission_participant_link = db.Table(
     'submission_participant_link',
@@ -165,6 +171,23 @@ class DataSubmission(db.Model):
     version = db.Column(db.Integer, default=0)
 
 
+@event.listens_for(db.Session, 'before_flush')
+def receive_before_flush(session, flush_context, instances):
+    """Listen for the 'before_flush' event to check for DataSubmission
+    deletions and ensure the DataResource mapped to the data_file field
+    is deleted."""
+    for obj in session.deleted:
+        if isinstance(obj, DataSubmission):
+            try:
+                log.debug("Deleting data resource %s" % obj.data_file)
+                dataresource = DataResource.query.filter_by(id=obj.data_file).one()
+                db.session.delete(dataresource)
+            except Exception as e:
+                log.error("Unable to delete data resource with id %s whilst "
+                          "deleting data submission id %s. Error was: %s"
+                          % (obj.id, obj.data_file, e))
+
+
 class Keyword(db.Model):
     __tablename__ = "keyword"
 
@@ -212,6 +235,18 @@ class DataResource(db.Model):
 
     created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow,
                         index=True)
+
+
+@event.listens_for(DataResource, 'after_delete')
+def receive_data_resource_after_delete(mapper, connection, target):
+    "Delete the file on disk when a DataResource is deleted"
+    log.debug("Deleting data resource id %s" % target.id)
+    if not target.file_location.startswith('http'):
+        if os.path.isfile(target.file_location):
+            log.debug('Deleting file %s' % target.file_location)
+            os.remove(target.file_location)
+        else:
+            log.error("Could not remove file %s" % target.file_location)
 
 
 datareview_messages = db.Table('review_messages',
