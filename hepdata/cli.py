@@ -317,13 +317,13 @@ def execute(query):
 
 
 @utils.command()
-def cleanup_old_files(recids):
+def cleanup_old_files():
     """Deletes db entries and files that are no longer used"""
     click.confirm('About to delete all DB entries and files that are no longer used. Do you want to continue?',
                       abort=True)
 
     # Pass to data_files method
-    data_files.cleanup_all_resources(recids)
+    data_files.cleanup_all_resources()
 
 
 @utils.command()

@@ -193,7 +193,7 @@ def cleanup_old_files(hepsubmission, current_folder=None, check_old_data_paths=T
                             shutil.rmtree(entry.path)
 
 
-def cleanup_all_resources(record_ids):
+def cleanup_all_resources():
     # First, clean up all orphaned file resources
     _delete_all_orphan_file_resources()
 
