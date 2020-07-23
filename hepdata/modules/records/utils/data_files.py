@@ -88,40 +88,58 @@ def get_subdir_name(record_id):
 
 
 def _delete_all_orphan_file_resources():
-
-    db.session.execute(
-        'CREATE TEMP TABLE valid_resource_ids(id INT)'
+    """Deletes all entries in the DataResource table which do not map to
+    an existing HEPSubmission or DataSubmission.
+    """
+    # We need to lock the tables from which we are selecting until
+    # we have a full set of valid resource ids, to ensure we don't delete
+    # new entries.
+    # Current stats:
+    # ~8k rows in data_resource_link - explain analyse on QA takes 10ms
+    # ~258k data submissions - explain analyse on QA takes 239ms
+    # ~196k rows in datafile_identifier - explain analyse on QA takes 92ms
+    # Produces ~300k orphans on QA.
+    result = db.session.execute(
+        """
+        CREATE TEMP TABLE valid_resource_ids(id INT);
+        LOCK TABLE data_resource_link IN EXCLUSIVE MODE;
+        INSERT INTO valid_resource_ids
+            SELECT dataresource_id FROM data_resource_link;
+        LOCK TABLE datasubmission IN EXCLUSIVE MODE;
+        INSERT INTO valid_resource_ids
+            SELECT data_file FROM datasubmission;
+        LOCK TABLE datafile_identifier IN EXCLUSIVE MODE;
+        INSERT INTO valid_resource_ids
+            SELECT dataresource_id FROM datafile_identifier;
+        SELECT id FROM dataresource
+            WHERE NOT EXISTS (
+                 SELECT id from valid_resource_ids
+                    WHERE valid_resource_ids.id = dataresource.id
+            );
+        """
     )
 
-    # 7963 rows in data_resource_link
-    # all rows map to valid hepsubmissions
-    db.session.execute(
-        'INSERT INTO valid_resource_ids '
-        'SELECT dataresource_id FROM data_resource_link'
-    )
+    ids_to_delete = [x[0] for x in result]
+    db.session.rollback()
 
-    # 258k data submissions
-    db.session.execute(
-        'INSERT INTO valid_resource_ids '
-        'SELECT data_file FROM datasubmission'
-    )
+    # Batch up the ids to delete, and use the SQLAlchemy objects
+    # to do the deletion, to ensure the files are also deleted from disk.
+    count = 0
+    batch_size = 100
+    while count <= len(ids_to_delete):
+        end = min(len(ids_to_delete), count+batch_size)
+        batch = list(ids_to_delete[count:end])
+        _delete_orphan_dataresource_batch.delay(batch)
+        count += batch_size
 
-    # 196k rows in datafile_identifier
-    # all map to valid datasubmissions
-    db.session.execute(
-        'INSERT INTO valid_resource_ids '
-        'SELECT dataresource_id FROM datafile_identifier'
-    )
 
-    # valid_resource_ids will now have about 462k entries
-    # 769k rows in dataresource
-    # NOT EXISTS should be more efficient than NOT IN
-    db.session.execute(
-        'DELETE FROM dataresource '
-        'WHERE NOT EXISTS ( '
-        ' SELECT id from valid_resource_ids WHERE valid_resource_ids.id = dataresource.id'
-        ')'
-    )
+@shared_task
+def _delete_orphan_dataresource_batch(ids):
+    """Deletes the data resources with the given ids."""
+    resources = DataResource.query.filter(DataResource.id.in_(ids)).all()
+    for resource in resources:
+        db.session.delete(resource)
+
     db.session.commit()
 
 
