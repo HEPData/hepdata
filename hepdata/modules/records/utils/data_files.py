@@ -196,22 +196,19 @@ def cleanup_old_files(hepsubmission, current_folder=None, check_old_data_paths=T
                 if not found:
                     log.warning("Unknown file %s" % r.file_location)
 
-    log.debug("Current valid paths: %s" % ','.join(current_filepaths))
-
     for record_data_path in record_data_paths:
         log.debug("Scanning directory: %s" % record_data_path)
 
         if os.path.isdir(record_data_path):
             with os.scandir(record_data_path) as entries:
                 for entry in entries:
-                    log.debug("Checking entry: %s" % entry.path)
                     if entry.is_dir():
                         if entry.path not in current_filepaths:
                             log.debug("Removing %s" % entry.path)
                             shutil.rmtree(entry.path)
 
 
-def cleanup_all_resources():
+def cleanup_all_resources(synchronous=False):
     # First, clean up all orphaned file resources
     _delete_all_orphan_file_resources()
 
@@ -221,10 +218,17 @@ def cleanup_all_resources():
 
     log.info("Got records: %s" % record_ids)
 
-    # TODO: use celery
     for rec_id in record_ids:
-        hepsubmission = get_latest_hepsubmission(publication_recid=rec_id)
-        cleanup_old_files(hepsubmission, check_old_data_paths=True)
+        if synchronous:
+            cleanup_old_files_for_record(rec_id)
+        else:
+            cleanup_old_files_for_record.delay(rec_id)
+
+
+@shared_task
+def cleanup_old_files_for_record(rec_id):
+    hepsubmission = get_latest_hepsubmission(publication_recid=rec_id)
+    cleanup_old_files(hepsubmission, check_old_data_paths=True)
 
 
 def move_data_files(record_ids, synchronous=False):
