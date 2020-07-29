@@ -51,10 +51,12 @@ from hepdata.utils.file_extractor import get_file_in_directory
 
 from hepdata.modules.records.utils.doi_minter import generate_dois_for_submission
 from hepdata.modules.email.api import notify_publication_update
+from hepdata.config import LOGGING_CONSOLE_LEVEL
 
 
 logging.basicConfig()
 log = logging.getLogger(__name__)
+log.setLevel(LOGGING_CONSOLE_LEVEL)
 
 
 class FailedSubmission(Exception):

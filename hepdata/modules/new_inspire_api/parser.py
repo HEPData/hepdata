@@ -20,6 +20,8 @@
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
+"""Functions for parsing the new INSPIRE JSON metadata."""
+
 from copy import deepcopy
 
 parsed_content_defaults = {

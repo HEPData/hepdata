@@ -43,7 +43,8 @@ from hepdata.utils.twitter import tweet
 from hepdata.modules.email.api import send_finalised_email
 from hepdata.modules.records.utils.doi_minter import generate_dois_for_submission, generate_doi_for_table
 from hepdata.modules.permissions.api import write_submissions_to_files
-from hepdata.modules.records.utils.records_update_utils import get_inspire_records_updated_since, get_inspire_records_updated_on, update_record_info
+from hepdata.modules.records.utils.records_update_utils import update_record_info, update_records_info_since, \
+    update_records_info_on, update_all_records_info
 
 from invenio_db import db
 
@@ -426,38 +427,31 @@ def inspire():
 
 @inspire.command()
 @with_appcontext
-@click.option('--inspire-id', '-i', type=str, required=True, help='Specify inspire ID of record to update.')
-@click.option('--recid', '-r', type=str, default='', help='Specify an HEPData record ID to update given the Inspire ID. This is to be used for not yet finilised submissions.')
+@click.option('--inspire_id', '-i', type=str, required=True, help='Specify Inspire ID of record to update.')
 @click.option('--send_email', '-e', default=False, type=bool, help='Whether or not to send email about update.')
-@click.option('--verbose', '-v', is_flag=True, default=False, type=bool, help='Whether or not to display additional information of the function call.')
-def cli_update_record_info(inspire_id, recid='', send_email=False, verbose=False):
-    update_record_info(inspire_id, recid, send_email, verbose=verbose)
+def cli_update_record_info(inspire_id, send_email=False):
+    """Update publication information from INSPIRE for a specific record."""
+    update_record_info(inspire_id, send_email)
 
 
 @inspire.command()
 @with_appcontext
 @click.option('--date', '-d', type=str, required=True, help='Specify date since when to update records.')
-@click.option('--verbose', '-v', is_flag=True, default=False, type=bool, help='Whether or not to display additional information of the function call.')
-def update_records_info_since(date, verbose=False):
-    inspire_ids = get_inspire_records_updated_since(date, verbose=verbose)
-    for inspire_id in inspire_ids:
-        update_record_info(inspire_id, verbose=verbose)
+def cli_update_records_info_since(date):
+    """Update publication information from INSPIRE for all records updated *since* a certain date."""
+    update_records_info_since(date)
 
 
 @inspire.command()
 @with_appcontext
 @click.option('--date', '-d', type=str, required=True, help='Specify date on which to update records.')
-@click.option('--verbose', '-v', is_flag=True, default=False, type=bool, help='Whether or not to display additional information of the function call.')
-def update_records_info_on(date, verbose=False):
-    inspire_ids = get_inspire_records_updated_on(date, verbose=verbose)
-    for inspire_id in inspire_ids:
-        update_record_info(inspire_id, verbose=verbose)
+def cli_update_records_info_on(date):
+    """Update publication information from INSPIRE for all records updated *on* a certain date."""
+    update_records_info_on(date)
 
 
 @inspire.command()
 @with_appcontext
-@click.option('--verbose', '-v', is_flag=True, default=False, type=bool, help='Whether or not to display additional information of the function call.')
-def update_all_records_info(verbose=False):
-    inspire_ids = get_inspire_records_updated_since('1899-01-01', verbose=verbose)
-    for inspire_id in inspire_ids:
-        update_record_info(inspire_id, verbose=verbose)
+def cli_update_all_records_info():
+    """Update publication information from INSPIRE for *all* records."""
+    update_all_records_info()

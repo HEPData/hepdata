@@ -2,11 +2,13 @@
 
 from flask import Blueprint, redirect, abort, send_file, url_for
 from hepdata.ext.elasticsearch.api import get_records_matching_field
+from hepdata.config import LOGGING_CONSOLE_LEVEL
 import logging
 import os
 
 logging.basicConfig()
 log = logging.getLogger(__name__)
+log.setLevel(LOGGING_CONSOLE_LEVEL)
 
 blueprint = Blueprint('doi_banner', __name__,
                       url_prefix="",

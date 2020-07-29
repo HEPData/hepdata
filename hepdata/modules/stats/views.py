@@ -24,9 +24,11 @@ from invenio_db import db
 from sqlalchemy import func
 
 from hepdata.modules.stats.models import DailyAccessStatistic
+from hepdata.config import LOGGING_CONSOLE_LEVEL
 
 logging.basicConfig()
 log = logging.getLogger(__name__)
+log.setLevel(LOGGING_CONSOLE_LEVEL)
 
 
 def get_date():

@@ -32,9 +32,11 @@ from flask import current_app
 
 from hepdata.modules.records.utils.common import get_record_contents
 from hepdata.modules.submission.models import HEPSubmission, DataSubmission
+from hepdata.config import LOGGING_CONSOLE_LEVEL
 
 logging.basicConfig()
 log = logging.getLogger(__name__)
+log.setLevel(LOGGING_CONSOLE_LEVEL)
 
 
 class ESSubmission(Document):

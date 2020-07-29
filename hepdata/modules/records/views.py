@@ -39,7 +39,7 @@ try:
 except ImportError:  # pragma: no cover
     from yaml import BaseLoader as Loader  # pragma: no cover
 
-from hepdata.config import CFG_DATA_TYPE, CFG_PUB_TYPE, SITE_URL
+from hepdata.config import CFG_DATA_TYPE, CFG_PUB_TYPE, SITE_URL, LOGGING_CONSOLE_LEVEL
 from hepdata.ext.elasticsearch.api import get_records_matching_field, get_count_for_collection, get_n_latest_records, \
     index_record_ids
 from hepdata.modules.email.api import send_new_upload_email, send_new_review_message_email, NoReviewersException, \
@@ -65,6 +65,7 @@ from hepdata.modules.permissions.models import SubmissionParticipant
 
 logging.basicConfig()
 log = logging.getLogger(__name__)
+log.setLevel(LOGGING_CONSOLE_LEVEL)
 
 blueprint = Blueprint(
     'hepdata_records',

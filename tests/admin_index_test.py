@@ -18,10 +18,12 @@
 import logging
 
 from elasticsearch_dsl import Index
+from hepdata.config import LOGGING_CONSOLE_LEVEL
 
 
 logging.basicConfig()
 log = logging.getLogger(__name__)
+log.setLevel(LOGGING_CONSOLE_LEVEL)
 
 
 def test_recreate_index(admin_idx):

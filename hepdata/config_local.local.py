@@ -6,5 +6,6 @@ CFG_CONVERTER_URL = 'http://localhost:5500'
 CFG_TMPDIR = '~/tmp'
 CFG_DATADIR = '~/tmp'
 MAIL_SERVER = 'localhost'
+LOGGING_CONSOLE_LEVEL = 'INFO'  # for logging (and invenio-logging)
 # RUN_SELENIUM_LOCALLY = True
 # RATELIMIT_ENABLED = False

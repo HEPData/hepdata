@@ -27,7 +27,7 @@ from celery import shared_task
 from hepdata.modules.converter.views import download_submission
 from hepdata.modules.submission.api import get_latest_hepsubmission
 
-@shared_task()
+@shared_task
 def convert_and_store(inspire_id, file_format, force):
     """
     Converts a submission to a given file format, and stores

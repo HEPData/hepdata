@@ -28,7 +28,7 @@ import logging
 from dateutil.parser import parse
 from flask import current_app
 
-from hepdata.config import CFG_PUB_TYPE, CFG_DATA_TYPE
+from hepdata.config import CFG_PUB_TYPE, CFG_DATA_TYPE, LOGGING_CONSOLE_LEVEL
 from hepdata.modules.permissions.models import SubmissionParticipant
 from hepdata.modules.submission.api import get_latest_hepsubmission
 
@@ -36,6 +36,7 @@ FORMATS = ['json', 'root', 'yaml', 'csv', 'yoda']
 
 logging.basicConfig()
 log = logging.getLogger(__name__)
+log.setLevel(LOGGING_CONSOLE_LEVEL)
 
 
 def add_id(doc):

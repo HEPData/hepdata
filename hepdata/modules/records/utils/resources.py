@@ -24,10 +24,12 @@
 import logging
 import os
 
+from hepdata.config import LOGGING_CONSOLE_LEVEL
 from flask import current_app
 
 logging.basicConfig()
 log = logging.getLogger(__name__)
+log.setLevel(LOGGING_CONSOLE_LEVEL)
 
 
 def download_resource_file(recid, resource_path):

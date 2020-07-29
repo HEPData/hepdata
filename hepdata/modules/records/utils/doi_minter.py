@@ -32,10 +32,12 @@ from sqlalchemy.orm.exc import NoResultFound
 
 from hepdata.modules.submission.models import DataSubmission, HEPSubmission, DataResource, License
 from hepdata.modules.records.utils.common import get_record_by_id
+from hepdata.config import LOGGING_CONSOLE_LEVEL
 import logging
 
 logging.basicConfig()
 log = logging.getLogger(__name__)
+log.setLevel(LOGGING_CONSOLE_LEVEL)
 
 
 @shared_task
