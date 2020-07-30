@@ -42,7 +42,7 @@ blueprint = Blueprint('inspire_datasource', __name__, url_prefix='/inspire')
 
 def get_inspire_record_information(inspire_rec_id):
     url = 'https://inspirehep.net/api/literature/{}'.format(inspire_rec_id)
-    log.debug('\rLooking up: ' + url)
+    log.debug('Looking up: ' + url)
     req = resilient_requests('get', url)
     status = req.status_code
 

@@ -48,11 +48,12 @@ def update_record_info(inspire_id, send_email=False):
     if status == 'success':
         record_information = get_record_by_id(recid)
         same_information = True
-        for key, value in updated_record_information.items():
-            if key not in record_information or record_information[key] != value:
-                log.debug('Key {} has new value {}'.format(key, value))
-                same_information = False
-                break
+        if record_information is not None:
+            for key, value in updated_record_information.items():
+                if key not in record_information or record_information[key] != value:
+                    log.debug('Key {} has new value {}'.format(key, value))
+                    same_information = False
+                    break
         log.info('Information needs to be updated: {}'.format(str(not(same_information))))
         if same_information:
             return
