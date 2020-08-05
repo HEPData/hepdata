@@ -89,7 +89,7 @@ For example, DOI minting should be switched off in a non-production instance, ot
 give an error message due to a lack of DataCite authorisation credentials.
 Rather than edit ``hepdata/config.py``, it is more convenient to define custom options in a separate file
 ``hepdata/config_local.py`` that will be ignored by Git.  For example, to switch off email, DOI minting, Twitter,
-use logging at ``INFO`` level, use a local converter URL, and specify custom temporary and data directories:
+use a local converter URL, and specify custom temporary and data directories:
 
 .. code-block:: python
 
@@ -97,7 +97,6 @@ use logging at ``INFO`` level, use a local converter URL, and specify custom tem
    TESTING = True
    NO_DOI_MINTING = True
    USE_TWITTER = False
-   LOGGING_CONSOLE_LEVEL = 'INFO'
    CFG_CONVERTER_URL = 'http://localhost:5500'
    CFG_TMPDIR = '/mt/home/watt/tmp/hepdata/tmp'
    CFG_DATADIR = '/mt/home/watt/tmp/hepdata/data'
@@ -176,10 +175,11 @@ server (e.g. ``sudo systemctl restart postgresql-9.6``).
 Run a local development server
 ------------------------------
 
-Now, start HEPData:
+Now, switch Flask to the development environment and enable debug mode, then start the HEPData web application:
 
 .. code-block:: console
 
+   (hepdata)$ export FLASK_ENV=development
    (hepdata)$ hepdata run --debugger --reload
    (hepdata)$ firefox http://localhost:5000/
 

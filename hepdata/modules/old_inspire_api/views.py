@@ -31,12 +31,10 @@ from .marcxml_parser import get_doi, get_title, get_authors, get_abstract, \
     get_arxiv, get_collaborations, get_keywords, get_date, get_journal_info, get_year, get_collection, \
     get_dissertation, expand_date, get_subject_areas
 
-from hepdata.config import LOGGING_CONSOLE_LEVEL
 import logging
 
 logging.basicConfig()
 log = logging.getLogger(__name__)
-log.setLevel(LOGGING_CONSOLE_LEVEL)
 
 blueprint = Blueprint('inspire_datasource', __name__, url_prefix='/inspire')
 

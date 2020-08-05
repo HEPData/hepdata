@@ -294,7 +294,6 @@ RUN_SELENIUM_LOCALLY = False
 APP_ALLOWED_HOSTS = []
 
 LOGGING_SENTRY_CELERY = True  # for invenio-logging
-LOGGING_CONSOLE_LEVEL = 'WARNING'  # for logging (and invenio-logging)
 
 # Talisman settings (see https://github.com/GoogleCloudPlatform/flask-talisman).
 # We don't want the web pods to use https.

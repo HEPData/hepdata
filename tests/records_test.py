@@ -277,9 +277,9 @@ def test_get_updated_records_on_date(app):
 
 def test_update_record_info(app):
     """Test update of publication information from INSPIRE."""
-    assert (update_record_info(None) is None)  # case where Inspire ID is None
+    assert update_record_info(None) == 'Inspire ID is None'  # case where Inspire ID is None
     for inspire_id in ('1311487', '19999999'):  # check both a valid and invalid Inspire ID
-        assert (update_record_info(inspire_id) is None)  # before HEPSubmission object has been created
+        assert update_record_info(inspire_id) == 'No HEPData submission'  # before creation of HEPSubmission object
         submission = process_submission_payload(
             inspire_id=inspire_id, submitter_id=1,
             reviewer={'name': 'Reviewer', 'email': 'reviewer@hepdata.net'},
@@ -288,6 +288,9 @@ def test_update_record_info(app):
         )
         submission.overall_status = 'finished'
         db.session.add(submission)
-        assert (update_record_info(inspire_id, send_email=True) is None)
-        assert (update_record_info(inspire_id) is None)  # check case where information already current
+        if inspire_id == '19999999':
+            assert update_record_info(inspire_id) == 'Invalid Inspire ID'
+        else:
+            assert update_record_info(inspire_id, send_email=True) == 'Success'
+            assert update_record_info(inspire_id) == 'No update needed'  # check case where information already current
         unload_submission(submission.publication_recid)

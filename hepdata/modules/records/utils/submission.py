@@ -32,7 +32,7 @@ from elasticsearch import NotFoundError, ConnectionTimeout
 from flask import current_app
 from flask_celeryext import create_celery_app
 from flask_login import current_user
-from hepdata.config import CFG_DATA_TYPE, CFG_PUB_TYPE, LOGGING_CONSOLE_LEVEL
+from hepdata.config import CFG_DATA_TYPE, CFG_PUB_TYPE
 from hepdata.ext.elasticsearch.admin_view.api import AdminIndexer
 from hepdata.ext.elasticsearch.api import get_records_matching_field, \
     delete_item_from_index, index_record_ids, push_data_keywords
@@ -74,7 +74,6 @@ from urllib.error import URLError
 
 logging.basicConfig()
 log = logging.getLogger(__name__)
-log.setLevel(LOGGING_CONSOLE_LEVEL)
 
 
 def remove_submission(record_id, version=1):

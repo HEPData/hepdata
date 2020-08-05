@@ -22,6 +22,7 @@ services:
     - "APP_SQLALCHEMY_DATABASE_URI=postgresql://hepdata:hepdata@db/hepdata"
     - "SAUCE_USERNAME=${SAUCE_USERNAME}"
     - "SAUCE_ACCESS_KEY=${SAUCE_ACCESS_KEY}"
+    - "FLASK_ENV=development"
     read_only: false
     volumes:
     - ".:/code"

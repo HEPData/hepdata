@@ -431,7 +431,8 @@ def inspire():
 @click.option('--send_email', '-e', default=False, type=bool, help='Whether or not to send email about update.')
 def cli_update_record_info(inspire_id, send_email=False):
     """Update publication information from INSPIRE for a specific record."""
-    update_record_info(inspire_id, send_email)
+    status = update_record_info(inspire_id, send_email)
+    print('Updated Inspire ID {} with status: {}'.format(inspire_id, status))
 
 
 @inspire.command()

@@ -11,14 +11,12 @@ from hepdata.modules.inspire_api.views import get_inspire_record_information
 from hepdata.ext.elasticsearch.api import index_record_ids
 from hepdata.modules.email.api import notify_publication_update
 from hepdata.resilient_requests import resilient_requests
-from hepdata.config import LOGGING_CONSOLE_LEVEL
 
 from celery import shared_task
 import logging
 
 logging.basicConfig()
 log = logging.getLogger(__name__)
-log.setLevel(LOGGING_CONSOLE_LEVEL)
 
 
 RECORDS_PER_PAGE = 10
@@ -30,14 +28,14 @@ def update_record_info(inspire_id, send_email=False):
 
     if inspire_id is None:
         log.error("Inspire ID is None")
-        return
+        return 'Inspire ID is None'
 
     inspire_id = inspire_id.replace("ins", "")
 
     hep_submission = get_latest_hepsubmission(inspire_id=inspire_id)
     if hep_submission is None:
         log.warning("Failed to retrieve HEPData submission for Inspire ID {0}".format(inspire_id))
-        return
+        return 'No HEPData submission'
 
     recid = hep_submission.publication_recid
 
@@ -56,11 +54,11 @@ def update_record_info(inspire_id, send_email=False):
                     break
         log.info('Information needs to be updated: {}'.format(str(not(same_information))))
         if same_information:
-            return
+            return 'No update needed'
         record_information = update_record(recid, updated_record_information)
     else:
         log.warning("Failed to retrieve publication information for Inspire record {0}".format(inspire_id))
-        return
+        return 'Invalid Inspire ID'
 
     if hep_submission.overall_status == 'finished':
         index_record_ids([recid])  # index for Elasticsearch
@@ -68,13 +66,16 @@ def update_record_info(inspire_id, send_email=False):
         if send_email:
             notify_publication_update(hep_submission, record_information)   # send email to all participants
 
+    return 'Success'
+
 
 @shared_task
 def update_records_info_since(date):
     """Update publication information from INSPIRE for all records updated *since* a certain date."""
     inspire_ids = get_inspire_records_updated_since(date)
     for inspire_id in inspire_ids:
-        update_record_info.delay(inspire_id)
+        status = update_record_info.delay(inspire_id)
+        log.info('Updated Inspire ID {} with status: {}'.format(inspire_id, status))
 
 
 @shared_task
@@ -82,7 +83,8 @@ def update_records_info_on(date):
     """Update publication information from INSPIRE for all records updated *on* a certain date."""
     inspire_ids = get_inspire_records_updated_on(date)
     for inspire_id in inspire_ids:
-        update_record_info.delay(inspire_id)
+        status = update_record_info.delay(inspire_id)
+        log.info('Updated Inspire ID {} with status: {}'.format(inspire_id, status))
 
 
 @shared_task
@@ -90,7 +92,8 @@ def update_all_records_info():
     """Update publication information from INSPIRE for *all* records."""
     inspire_ids = get_inspire_records_updated_since('1899-01-01')
     for inspire_id in inspire_ids:
-        update_record_info.delay(inspire_id)
+        status = update_record_info.delay(inspire_id)
+        log.info('Updated Inspire ID {} with status: {}'.format(inspire_id, status))
 
 
 def get_inspire_records_updated_since(date):

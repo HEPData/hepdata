@@ -36,11 +36,9 @@ from hepdata.modules.submission.api import get_latest_hepsubmission, get_submiss
 from hepdata.modules.submission.models import DataSubmission
 from hepdata.utils.users import get_user_from_id
 from invenio_accounts.models import User
-from hepdata.config import LOGGING_CONSOLE_LEVEL
 
 logging.basicConfig()
 log = logging.getLogger(__name__)
-log.setLevel(LOGGING_CONSOLE_LEVEL)
 
 
 def send_new_review_message_email(review, message, user):

@@ -30,12 +30,10 @@ from hepdata.resilient_requests import resilient_requests
 from hepdata.modules.new_inspire_api.parser import parsed_content_defaults, get_title, get_doi, get_authors, get_type, get_abstract, \
     get_creation_date, get_arxiv_id, get_collaborations, get_keywords, get_journal_info, get_year, get_subject_area, updated_parsed_content_for_thesis
 
-from hepdata.config import LOGGING_CONSOLE_LEVEL
 import logging
 
 logging.basicConfig()
 log = logging.getLogger(__name__)
-log.setLevel(LOGGING_CONSOLE_LEVEL)
 
 blueprint = Blueprint('inspire_datasource', __name__, url_prefix='/inspire')
 

@@ -26,7 +26,7 @@ from flask import Blueprint, send_file, render_template, \
     request, current_app, redirect, abort
 import time
 from werkzeug.utils import secure_filename
-from hepdata.config import CFG_CONVERTER_URL, CFG_SUPPORTED_FORMATS, CFG_CONVERTER_TIMEOUT, LOGGING_CONSOLE_LEVEL
+from hepdata.config import CFG_CONVERTER_URL, CFG_SUPPORTED_FORMATS, CFG_CONVERTER_TIMEOUT
 
 from hepdata_converter_ws_client import convert, Error
 from hepdata.modules.permissions.api import user_allowed_to_perform_action
@@ -43,7 +43,6 @@ from dateutil.parser import parse
 
 logging.basicConfig()
 log = logging.getLogger(__name__)
-log.setLevel(LOGGING_CONSOLE_LEVEL)
 
 blueprint = Blueprint('converter', __name__,
                       url_prefix="/download",

@@ -6,7 +6,6 @@ CFG_CONVERTER_URL = 'http://converter:5000'
 CFG_TMPDIR = '/code/tmp'
 CFG_DATADIR = '/code/tmp'
 MAIL_SERVER = 'localhost'
-LOGGING_CONSOLE_LEVEL = 'INFO'  # for logging (and invenio-logging)
 CELERY_BROKER_URL = "redis://cache:6379/0"
 CELERY_RESULT_BACKEND = "redis://cache:6379/1"
 CACHE_REDIS_URL = "redis://cache:6379/0"

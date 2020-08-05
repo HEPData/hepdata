@@ -28,7 +28,6 @@ import os
 
 from hepdata.modules.records.utils.common import zipdir
 from hepdata.modules.records.utils.data_processing_utils import str_presenter
-from hepdata.config import LOGGING_CONSOLE_LEVEL
 import shutil
 import yaml
 try:
@@ -42,7 +41,6 @@ from dateutil.parser import parse
 import logging
 logging.basicConfig()
 log = logging.getLogger(__name__)
-log.setLevel(LOGGING_CONSOLE_LEVEL)
 
 def write_submission_yaml_block(document, submission_yaml,
                                 type="info"):
