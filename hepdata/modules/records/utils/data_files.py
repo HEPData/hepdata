@@ -68,7 +68,7 @@ def get_data_path_for_record(record_id, *subpaths):
     """Return the path for data files for the given record id."""
     path = os.path.join(current_app.config['CFG_DATADIR'],
                         get_subdir_name(record_id),
-                        record_id,
+                        str(record_id),
                         *subpaths)
     return path
 
@@ -76,13 +76,13 @@ def get_data_path_for_record(record_id, *subpaths):
 def get_old_data_path_for_record(record_id, *subpaths):
     """Return the path for data files for the given record id."""
     path = os.path.join(current_app.config['CFG_DATADIR'],
-                        record_id,
+                        str(record_id),
                         *subpaths)
     return path
 
 
 def get_subdir_name(record_id):
-    hash_object = hashlib.sha256(record_id.encode())
+    hash_object = hashlib.sha256(str(record_id).encode())
     hex_dig = hash_object.hexdigest()
     return str(hex_dig)[:2]
 
@@ -177,7 +177,7 @@ def delete_all_files(rec_id, check_old_data_paths=True):
     if check_old_data_paths:
         record_data_paths.append(get_old_data_path_for_record(rec_id))
         hepsubmission = get_latest_hepsubmission(publication_recid=rec_id)
-        if hepsubmission.inspire_id is not None:
+        if hepsubmission and hepsubmission.inspire_id is not None:
             record_data_paths.append(get_old_data_path_for_record('ins%s' % hepsubmission.inspire_id))
 
     for record_data_path in record_data_paths:
