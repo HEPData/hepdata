@@ -23,6 +23,8 @@
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
 import os
+import shutil
+import time
 from time import sleep
 
 from invenio_db import db
@@ -31,6 +33,7 @@ from hepdata.ext.elasticsearch.api import get_records_matching_field
 from hepdata.modules.records.api import format_submission
 from hepdata.modules.records.utils.common import infer_file_type, contains_accepted_url, allowed_file, record_exists, \
     get_record_contents
+from hepdata.modules.records.utils.data_files import get_data_path_for_record
 from hepdata.modules.records.utils.submission import process_submission_directory, do_finalise, unload_submission
 from hepdata.modules.submission.models import DataSubmission, HEPSubmission
 from hepdata.modules.submission.views import process_submission_payload
@@ -113,12 +116,16 @@ def test_create_submission(app, admin_idx):
         # test upload works
         base_dir = os.path.dirname(os.path.realpath(__file__))
 
-        directory = os.path.join(base_dir, 'test_data/test_submission')
+        test_directory = os.path.join(base_dir, 'test_data/test_submission')
+        time_stamp = str(int(round(time.time())))
+        directory = get_data_path_for_record(hepdata_submission.publication_recid, time_stamp)
+        shutil.copytree(test_directory, directory)
+        assert(os.path.exists(directory))
+
         process_submission_directory(directory, os.path.join(directory, 'submission.yaml'),
                                      hepdata_submission.publication_recid)
 
         admin_idx_results = admin_idx.search(term=hepdata_submission.publication_recid, fields=['recid'])
-        print(admin_idx_results)
         assert(admin_idx_results is not None)
 
         data_submissions = DataSubmission.query.filter_by(
@@ -162,6 +169,9 @@ def test_create_submission(app, admin_idx):
 
         admin_idx_results = admin_idx.search(term=hepdata_submission.publication_recid, fields=['recid'])
         assert (len(admin_idx_results) == 0)
+
+        # Check file dir has been deleted
+        assert(not os.path.exists(directory))
 
 
 def test_invalid_submission_yaml(app, admin_idx):
