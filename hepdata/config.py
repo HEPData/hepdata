@@ -25,7 +25,7 @@
 import copy
 import os
 import tempfile
-from datetime import timedelta
+from celery.schedules import crontab
 
 from invenio_oauthclient.contrib.orcid import REMOTE_APP as ORCID_REMOTE_APP
 from invenio_oauthclient.contrib import cern
@@ -61,8 +61,13 @@ CELERY_ACCEPT_CONTENT = ['json', 'msgpack', 'yaml']
 CELERY_BEAT_SCHEDULE = {
     'update_analyses': {
         'task': 'hepdata.modules.records.migrator.api.update_analyses',
-        'schedule': timedelta(hours=12)
-    }
+        'schedule': crontab(minute=0, hour=0),  # execute daily at midnight UTC
+    },
+    'update_from_inspire': {
+        'task': 'hepdata.modules.records.utils.records_update_utils.update_records_info_on',
+        'schedule': crontab(minute=0, hour=2),  # execute daily at 2am UTC
+        'args': (1,),  # INSPIRE records (with HEPData) updated yesterday
+    },
 }
 
 # Cache

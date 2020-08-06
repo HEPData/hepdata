@@ -22,7 +22,6 @@
 import logging
 import os
 
-from celery import shared_task
 from flask import Blueprint, send_file, render_template, \
     request, current_app, redirect, abort
 import time
@@ -204,7 +203,6 @@ def download_submission_with_recid(*args, **kwargs):
     return download_submission(submission, kwargs.pop('file_format'), rivet_analysis_name=kwargs.pop('rivet', ''))
 
 
-@shared_task()
 def download_submission(submission, file_format, offline=False, force=False, rivet_analysis_name=''):
     """
     Gets the submission file and either serves it back directly from YAML, or converts it

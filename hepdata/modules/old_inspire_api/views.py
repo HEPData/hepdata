@@ -20,6 +20,7 @@
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
+"""Get publication information using old INSPIRE API."""
 
 import requests
 from bs4 import BeautifulSoup
@@ -30,13 +31,17 @@ from .marcxml_parser import get_doi, get_title, get_authors, get_abstract, \
     get_arxiv, get_collaborations, get_keywords, get_date, get_journal_info, get_year, get_collection, \
     get_dissertation, expand_date, get_subject_areas
 
+import logging
+
+logging.basicConfig()
+log = logging.getLogger(__name__)
+
 blueprint = Blueprint('inspire_datasource', __name__, url_prefix='/inspire')
 
 
-def get_inspire_record_information(inspire_rec_id, verbose=False):
+def get_inspire_record_information(inspire_rec_id):
     url = 'http://old.inspirehep.net/record/{0}/export/xm'.format(inspire_rec_id)
-    if verbose:
-        print('\rLooking up: ' + url)
+    log.debug('Looking up: ' + url)
     req = requests.get(url)
     content = req.content
     status = req.status_code

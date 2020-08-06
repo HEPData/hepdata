@@ -20,6 +20,8 @@
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
+"""Get publication information using new INSPIRE API."""
+
 from copy import deepcopy
 
 from flask import request, Blueprint, jsonify
@@ -28,13 +30,17 @@ from hepdata.resilient_requests import resilient_requests
 from hepdata.modules.new_inspire_api.parser import parsed_content_defaults, get_title, get_doi, get_authors, get_type, get_abstract, \
     get_creation_date, get_arxiv_id, get_collaborations, get_keywords, get_journal_info, get_year, get_subject_area, updated_parsed_content_for_thesis
 
+import logging
+
+logging.basicConfig()
+log = logging.getLogger(__name__)
+
 blueprint = Blueprint('inspire_datasource', __name__, url_prefix='/inspire')
 
 
-def get_inspire_record_information(inspire_rec_id, verbose=False):
-    url = 'http://inspirehep.net/api/literature/{}'.format(inspire_rec_id)
-    if verbose:
-        print('\rLooking up: ' + url)
+def get_inspire_record_information(inspire_rec_id):
+    url = 'https://inspirehep.net/api/literature/{}'.format(inspire_rec_id)
+    log.debug('Looking up: ' + url)
     req = resilient_requests('get', url)
     status = req.status_code
 

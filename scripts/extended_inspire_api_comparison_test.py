@@ -3,7 +3,6 @@
 import sys
 import os
 import math
-import time
 
 from hepdata.resilient_requests import resilient_requests
 from hepdata.modules.new_inspire_api import views as new_views
@@ -14,16 +13,16 @@ sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/../tests/")
 from inspire_api_comparison_test import compare  # noqa
 
 
-print("__extendend_inspire_api_comparison_test__")
+print("__extended_inspire_api_comparison_test__")
 
 page = 1
-response = resilient_requests("get", "http://inspirehep.net/api/literature?q=external_system_identifiers.schema:HEPData&page={}".format(page))
+response = resilient_requests("get", "https://inspirehep.net/api/literature?q=external_system_identifiers.schema:HEPData&page={}".format(page))
 total = int(response.json()['hits']['total'])
 
 
 while page <= math.ceil(total / 10):
 
-    response = resilient_requests("get", "http://inspirehep.net/api/literature?q=external_system_identifiers.schema:HEPData&page={}".format(page))
+    response = resilient_requests("get", "https://inspirehep.net/api/literature?q=external_system_identifiers.schema:HEPData&page={}".format(page))
     response.raise_for_status()
 
     page += 1

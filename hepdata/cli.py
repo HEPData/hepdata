@@ -43,6 +43,8 @@ from hepdata.utils.twitter import tweet
 from hepdata.modules.email.api import send_finalised_email
 from hepdata.modules.records.utils.doi_minter import generate_dois_for_submission, generate_doi_for_table
 from hepdata.modules.permissions.api import write_submissions_to_files
+from hepdata.modules.records.utils.records_update_utils import update_record_info, update_records_info_since, \
+    update_records_info_on, update_all_records_info
 
 from invenio_db import db
 
@@ -416,3 +418,41 @@ def reindex():
 def write_stats_to_files():
     """Writes some statistics on number of submissions per Coordinator to files."""
     write_submissions_to_files()
+
+
+@cli.group()
+def inspire():
+    """INSPIRE utils to update publication information."""
+
+
+@inspire.command()
+@with_appcontext
+@click.option('--inspire_id', '-i', type=str, required=True, help='Specify Inspire ID of record to update.')
+@click.option('--send_email', '-e', default=False, type=bool, help='Whether or not to send email about update.')
+def cli_update_record_info(inspire_id, send_email=False):
+    """Update publication information from INSPIRE for a specific record."""
+    status = update_record_info(inspire_id, send_email)
+    print('Updated Inspire ID {} with status: {}'.format(inspire_id, status))
+
+
+@inspire.command()
+@with_appcontext
+@click.option('--date', '-d', type=str, required=True, help='Specify date since when to update records.')
+def cli_update_records_info_since(date):
+    """Update publication information from INSPIRE for all records updated *since* a certain date."""
+    update_records_info_since(date)
+
+
+@inspire.command()
+@with_appcontext
+@click.option('--date', '-d', type=str, required=True, help='Specify date on which to update records.')
+def cli_update_records_info_on(date):
+    """Update publication information from INSPIRE for all records updated *on* a certain date."""
+    update_records_info_on(date)
+
+
+@inspire.command()
+@with_appcontext
+def cli_update_all_records_info():
+    """Update publication information from INSPIRE for *all* records."""
+    update_all_records_info()

@@ -16,6 +16,9 @@
 # You should have received a copy of the GNU General Public License
 # along with HEPData; if not, write to the Free Software Foundation, Inc.,
 # 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
+
+"""Functions for parsing the old INSPIRE MARCXML metadata."""
+
 from dateutil.parser import parse
 
 marc_tags = {

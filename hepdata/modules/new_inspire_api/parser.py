@@ -20,6 +20,8 @@
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
+"""Functions for parsing the new INSPIRE JSON metadata."""
+
 from copy import deepcopy
 
 parsed_content_defaults = {
@@ -129,13 +131,13 @@ def get_journal_info(metadata):
     default_journal_info, journal_info = deepcopy(parsed_content_defaults['journal_info']), ''
     if 'publication_info' in metadata:
         if 'journal_title' in metadata['publication_info'][0].keys():
-            journal_info += metadata['publication_info'][0]['journal_title']
+            journal_info += metadata['publication_info'][0]['journal_title'] + ' '
         if 'journal_volume' in metadata['publication_info'][0].keys():
-            journal_info += metadata['publication_info'][0]['journal_volume']
+            journal_info += metadata['publication_info'][0]['journal_volume'] + ' '
         if 'year' in metadata['publication_info'][0].keys():
             journal_info += '(' + str(metadata['publication_info'][0]['year']) + ') '
         if 'artid' in metadata['publication_info'][0].keys():
-            journal_info += metadata['publication_info'][0]['artid']
+            journal_info += metadata['publication_info'][0]['artid'] + ' '
         if 'page_start' in metadata['publication_info'][0].keys() and 'page_end' in metadata['publication_info'][0].keys():
             journal_info += metadata['publication_info'][0]['page_start'] + "-" + metadata['publication_info'][0]['page_end']
         if journal_info != '':

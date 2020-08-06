@@ -25,6 +25,7 @@
 from io import open, StringIO
 import os
 import yaml
+import datetime
 
 from flask_login import login_user
 from invenio_accounts.models import User
@@ -32,13 +33,15 @@ from invenio_db import db
 from werkzeug.datastructures import FileStorage
 
 from hepdata.modules.records.api import process_payload
-from hepdata.modules.records.utils.submission import get_or_create_hepsubmission
+from hepdata.modules.records.utils.submission import get_or_create_hepsubmission, unload_submission
 from hepdata.modules.records.utils.common import get_record_by_id
 from hepdata.modules.records.utils.data_processing_utils import generate_table_structure
 from hepdata.modules.records.utils.users import get_coordinators_in_system, has_role
 from hepdata.modules.records.utils.workflow import update_record, create_record
 from hepdata.modules.submission.models import HEPSubmission
+from hepdata.modules.submission.views import process_submission_payload
 from tests.conftest import TEST_EMAIL
+from hepdata.modules.records.utils.records_update_utils import get_inspire_records_updated_since, get_inspire_records_updated_on, update_record_info
 
 
 def test_record_creation(app):
@@ -257,3 +260,37 @@ def test_upload_invalid_file(app):
             'message': 'You must upload a .zip, .tar, .tar.gz or .tgz file'
             ' (or a .oldhepdata or single .yaml or .yaml.gz file).'
         })
+
+
+def test_get_updated_records_since_date(app):
+    ids_on = get_inspire_records_updated_on(0)
+    ids_on += get_inspire_records_updated_on(1)
+    ids_on += get_inspire_records_updated_on(2)
+    ids_on += get_inspire_records_updated_on(3)
+    ids_since = get_inspire_records_updated_since(3)
+    assert set(ids_on) == set(ids_since)
+
+
+def test_get_updated_records_on_date(app):
+    assert(set(get_inspire_records_updated_on("2020-06-29")) == set(['1650066', '1650063', '756925']))
+
+
+def test_update_record_info(app):
+    """Test update of publication information from INSPIRE."""
+    assert update_record_info(None) == 'Inspire ID is None'  # case where Inspire ID is None
+    for inspire_id in ('1311487', '19999999'):  # check both a valid and invalid Inspire ID
+        assert update_record_info(inspire_id) == 'No HEPData submission'  # before creation of HEPSubmission object
+        submission = process_submission_payload(
+            inspire_id=inspire_id, submitter_id=1,
+            reviewer={'name': 'Reviewer', 'email': 'reviewer@hepdata.net'},
+            uploader={'name': 'Uploader', 'email': 'uploader@hepdata.net'},
+            send_upload_email=False
+        )
+        submission.overall_status = 'finished'
+        db.session.add(submission)
+        if inspire_id == '19999999':
+            assert update_record_info(inspire_id) == 'Invalid Inspire ID'
+        else:
+            assert update_record_info(inspire_id, send_email=True) == 'Success'
+            assert update_record_info(inspire_id) == 'No update needed'  # check case where information already current
+        unload_submission(submission.publication_recid)

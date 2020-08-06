@@ -381,7 +381,7 @@ def index_record_ids(record_ids, index=None):
         else:
 
             if 'version' not in doc:
-                log.warn('Skipping unfinished record ID {}'.format(doc['recid']))
+                log.warning('Skipping unfinished record ID {}'.format(doc['recid']))
                 continue
 
             author_docs = prepare_author_for_indexing(doc)
