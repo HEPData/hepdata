@@ -26,6 +26,7 @@ import copy
 import os
 import tempfile
 from celery.schedules import crontab
+from datetime import timedelta
 
 from invenio_oauthclient.contrib.orcid import REMOTE_APP as ORCID_REMOTE_APP
 from invenio_oauthclient.contrib import cern
@@ -77,6 +78,7 @@ CACHE_TYPE = "redis"
 
 # Session
 SESSION_REDIS = "redis://localhost:6379/0"
+PERMANENT_SESSION_LIFETIME = timedelta(days=1)
 
 # ElasticSearch
 ELASTICSEARCH_HOST = "localhost"
@@ -270,11 +272,11 @@ ANALYSES_ENDPOINTS = {
         'endpoint_url': 'http://rivet.hepforge.org/analyses.json',
         'url_template': 'http://rivet.hepforge.org/analyses/{0}'
     },
-    'ufo': {},
-    'xfitter': {},
-    'applgrid': {},
-    'fastnlo': {},
-    'madanalysis': {}
+    #'ufo': {},
+    #'xfitter': {},
+    #'applgrid': {},
+    #'fastnlo': {},
+    #'madanalysis': {},
 }
 
 ADMIN_EMAIL = 'info@hepdata.net'
