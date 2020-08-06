@@ -246,7 +246,7 @@ def parse_inspireids_from_string(records_to_unload):
 def unload(recids):
     """
     Remove records given their HEPData IDs from the database.
-    Removes all database entries, leaves the files on the server.
+    Removes all database entries and corresponding files.
     """
     records_to_unload = recids.split(',')
 
@@ -354,6 +354,7 @@ def move_data_files(recids, delete_old_converted_files):
 @click.option('--record-id', '-r', type=str, default=None, prompt=True,
               help='Record id for which to get information')
 def get_data_path(record_id):
+    """Gets the file path where data files for the given record are stored."""
     click.echo("Files for record %s are at: %s"
                % (record_id, data_files.get_data_path_for_record(record_id)))
 

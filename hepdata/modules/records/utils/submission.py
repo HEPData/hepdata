@@ -46,7 +46,8 @@ from hepdata.modules.submission.models import DataSubmission, DataReview, \
 from hepdata.modules.records.utils.common import \
     get_license, infer_file_type, encode_string, zipdir, get_record_by_id, contains_accepted_url
 from hepdata.modules.records.utils.common import get_or_create
-from hepdata.modules.records.utils.data_files import get_data_path_for_record
+from hepdata.modules.records.utils.data_files import get_data_path_for_record, \
+    cleanup_old_files, delete_all_files, delete_packaged_file
 from hepdata.modules.records.utils.doi_minter import reserve_dois_for_data_submissions, reserve_doi_for_hepsubmission, \
     generate_dois_for_submission
 from hepdata.modules.records.utils.resources import download_resource_file
@@ -79,7 +80,7 @@ log = logging.getLogger(__name__)
 
 def remove_submission(record_id, version=1):
     """
-    Removes the database entries related to a record.
+    Removes the database entries and data files related to a record.
 
     :param record_id:
     :param version:
@@ -93,6 +94,8 @@ def remove_submission(record_id, version=1):
         try:
             for hepdata_submission in hepdata_submissions:
                 db.session.delete(hepdata_submission)
+                delete_packaged_file(hepdata_submission)
+
         except NoResultFound as nrf:
             print(nrf.args)
 
@@ -147,6 +150,13 @@ def remove_submission(record_id, version=1):
 
         db.session.commit()
         db.session.flush()
+
+        if version == 1:
+            delete_all_files(record_id)
+        else:
+            latest_submission = get_latest_hepsubmission(publication_recid=record_id)
+            cleanup_old_files(latest_submission)
+
         return True
 
     except Exception as e:

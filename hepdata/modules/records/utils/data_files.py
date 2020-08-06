@@ -164,6 +164,30 @@ def _find_all_current_dataresources(rec_id):
     return resources
 
 
+def delete_packaged_file(hepsubmission):
+    packaged_filepath = find_submission_data_file_path(hepsubmission)
+    if os.path.isfile(packaged_filepath):
+        log.debug("Removing %s" % packaged_filepath)
+        os.remove(packaged_filepath)
+
+
+def delete_all_files(rec_id, check_old_data_paths=True):
+    record_data_paths = [get_data_path_for_record(rec_id)]
+
+    if check_old_data_paths:
+        record_data_paths.append(get_old_data_path_for_record(rec_id))
+        hepsubmission = get_latest_hepsubmission(publication_recid=rec_id)
+        if hepsubmission.inspire_id is not None:
+            record_data_paths.append(get_old_data_path_for_record('ins%s' % hepsubmission.inspire_id))
+
+    for record_data_path in record_data_paths:
+        log.debug("Scanning directory: %s" % record_data_path)
+
+        if os.path.isdir(record_data_path):
+            log.debug("Removing %s" % record_data_path)
+            shutil.rmtree(record_data_path)
+
+
 def cleanup_old_files(hepsubmission, current_folder=None, check_old_data_paths=True):
     """Remove old files not related to a current version of the submission"""
     rec_id = str(hepsubmission.publication_recid)
@@ -196,6 +220,9 @@ def cleanup_old_files(hepsubmission, current_folder=None, check_old_data_paths=T
                 if not found:
                     log.warning("Unknown file %s" % r.file_location)
 
+    packaged_filepath = find_submission_data_file_path(hepsubmission)
+    packaged_filename = os.path.basename(packaged_filepath)
+
     for record_data_path in record_data_paths:
         log.debug("Scanning directory: %s" % record_data_path)
 
@@ -206,6 +233,14 @@ def cleanup_old_files(hepsubmission, current_folder=None, check_old_data_paths=T
                         if entry.path not in current_filepaths:
                             log.debug("Removing %s" % entry.path)
                             shutil.rmtree(entry.path)
+                    else:
+                        # Corner case: new upload uses new data
+                        # file path, but previous upload still uses old path
+                        # Need to delete packaged file in old path.
+                        if entry.name == packaged_filename and \
+                                entry.path != packaged_filepath:
+                            log.debug("Removing %s" % entry.path)
+                            os.remove(entry.path)
 
 
 def cleanup_all_resources(synchronous=False):
