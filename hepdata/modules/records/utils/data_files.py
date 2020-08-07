@@ -61,13 +61,13 @@ def get_converted_directory_path(record_id):
     """Return the path for converted files for the given record id"""
     return os.path.join(current_app.config['CFG_DATADIR'],
                         'converted',
-                        get_subdir_name(record_id))
+                        _get_subdir_name(record_id))
 
 
 def get_data_path_for_record(record_id, *subpaths):
     """Return the path for data files for the given record id."""
     path = os.path.join(current_app.config['CFG_DATADIR'],
-                        get_subdir_name(record_id),
+                        _get_subdir_name(record_id),
                         str(record_id),
                         *subpaths)
     return path
@@ -81,10 +81,143 @@ def get_old_data_path_for_record(record_id, *subpaths):
     return path
 
 
-def get_subdir_name(record_id):
+def _get_subdir_name(record_id):
     hash_object = hashlib.sha256(str(record_id).encode())
     hex_dig = hash_object.hexdigest()
     return str(hex_dig)[:2]
+
+
+def delete_packaged_file(hepsubmission):
+    """
+    Deletes the packaged data file for the given submission
+    """
+    packaged_filepath = find_submission_data_file_path(hepsubmission)
+    if os.path.isfile(packaged_filepath):
+        log.debug("Removing %s" % packaged_filepath)
+        os.remove(packaged_filepath)
+
+
+def delete_all_files(rec_id, check_old_data_paths=True):
+    """
+    Deletes all data files across ALL versions of a record.
+    """
+    record_data_paths = [get_data_path_for_record(rec_id)]
+
+    if check_old_data_paths:
+        record_data_paths.append(get_old_data_path_for_record(rec_id))
+        hepsubmission = get_latest_hepsubmission(publication_recid=rec_id)
+        if hepsubmission and hepsubmission.inspire_id is not None:
+            record_data_paths.append(get_old_data_path_for_record('ins%s' % hepsubmission.inspire_id))
+
+    for record_data_path in record_data_paths:
+        log.debug("Scanning directory: %s" % record_data_path)
+
+        if os.path.isdir(record_data_path):
+            log.debug("Removing %s" % record_data_path)
+            shutil.rmtree(record_data_path)
+
+
+def cleanup_old_files(hepsubmission, current_folder=None, check_old_data_paths=True):
+    """Remove old files not related to a current version of the submission"""
+    rec_id = str(hepsubmission.publication_recid)
+    record_data_paths = [get_data_path_for_record(rec_id)]
+
+    if check_old_data_paths:
+        record_data_paths.append(get_old_data_path_for_record(rec_id))
+        if hepsubmission.inspire_id is not None:
+            record_data_paths.append(get_old_data_path_for_record('ins%s' % hepsubmission.inspire_id))
+
+    current_filepaths = set()
+
+    if hepsubmission.overall_status == 'sandbox' and current_folder:
+        current_filepaths.add(current_folder)
+    else:
+        path_prefixes = [f"{path}/" for path in record_data_paths]
+        current_resources = _find_all_current_dataresources(hepsubmission.publication_recid)
+
+        for r in current_resources:
+            if not r.file_location.startswith('http'):
+                found = False
+                for path_prefix in path_prefixes:
+                    if r.file_location.startswith(path_prefix):
+                        subdirs = r.file_location.split(path_prefix, 1)[1]
+                        top_subdir = subdirs.split(os.sep, 1)[0]
+                        current_filepaths.add(os.path.join(path_prefix, top_subdir))
+                        found = True
+                        break
+
+                if not found:
+                    log.warning("Unknown file %s" % r.file_location)
+
+    packaged_filepath = find_submission_data_file_path(hepsubmission)
+    packaged_filename = os.path.basename(packaged_filepath)
+
+    for record_data_path in record_data_paths:
+        log.debug("Scanning directory: %s" % record_data_path)
+
+        if os.path.isdir(record_data_path):
+            with os.scandir(record_data_path) as entries:
+                for entry in entries:
+                    if entry.is_dir() and \
+                            entry.path not in current_filepaths:
+                        log.debug("Removing %s" % entry.path)
+                        shutil.rmtree(entry.path)
+
+                    elif entry.name == packaged_filename and \
+                            entry.path != packaged_filepath:
+                        # Corner case: new upload uses new data
+                        # file path, but previous upload still uses old path
+                        # Need to delete packaged file in old path.
+                        log.debug("Removing %s" % entry.path)
+                        os.remove(entry.path)
+
+
+def _find_all_current_dataresources(rec_id):
+    """Get all DataResource objects associated with all versions of the record"""
+    hep_submissions = HEPSubmission.query.filter_by(
+                        publication_recid=rec_id
+                        ).all()
+    resources = []
+    for submission in hep_submissions:
+        resources.extend(submission.resources)
+
+    data_submissions = DataSubmission.query.filter_by(
+                            publication_recid=rec_id
+                            ).all()
+    for data_submission in data_submissions:
+        resources.append(DataResource.query.filter_by(
+                            id=data_submission.data_file
+                            ).first())
+        resources.extend(data_submission.resources)
+
+    return resources
+
+
+# Functions below relate to cli clean up and move data files functions
+# (see https://github.com/HEPData/hepdata/issues/139 and
+# https://github.com/HEPData/hepdata/issues/218) - we may be able to
+# remove them once the cleanup has been run.
+
+def cleanup_all_resources(synchronous=False):
+    """Cleans up unused resources for all records
+    First checks for orphaned data resources in the db and deletes them.
+    Then goes through all records and deletes unused files on disk.
+    """
+    # Clean up all orphaned file resources
+    _delete_all_orphan_file_resources()
+
+    # Iterate through all records and clean up old files
+    qry = db.session.query(HEPSubmission.publication_recid)
+    result = qry.distinct()
+    record_ids = [r[0] for r in result]
+
+    log.info("Got records: %s" % record_ids)
+
+    for rec_id in record_ids:
+        if synchronous:
+            _cleanup_old_files_for_record(rec_id)
+        else:
+            _cleanup_old_files_for_record.delay(rec_id)
 
 
 def _delete_all_orphan_file_resources():
@@ -143,130 +276,17 @@ def _delete_orphan_dataresource_batch(ids):
     db.session.commit()
 
 
-def _find_all_current_dataresources(rec_id):
-    """Get all DataResource objects associated with the record"""
-    hep_submissions = HEPSubmission.query.filter_by(
-                        publication_recid=rec_id
-                        ).all()
-    resources = []
-    for submission in hep_submissions:
-        resources.extend(submission.resources)
-
-    data_submissions = DataSubmission.query.filter_by(
-                            publication_recid=rec_id
-                            ).all()
-    for data_submission in data_submissions:
-        resources.append(DataResource.query.filter_by(
-                            id=data_submission.data_file
-                            ).first())
-        resources.extend(data_submission.resources)
-
-    return resources
-
-
-def delete_packaged_file(hepsubmission):
-    packaged_filepath = find_submission_data_file_path(hepsubmission)
-    if os.path.isfile(packaged_filepath):
-        log.debug("Removing %s" % packaged_filepath)
-        os.remove(packaged_filepath)
-
-
-def delete_all_files(rec_id, check_old_data_paths=True):
-    record_data_paths = [get_data_path_for_record(rec_id)]
-
-    if check_old_data_paths:
-        record_data_paths.append(get_old_data_path_for_record(rec_id))
-        hepsubmission = get_latest_hepsubmission(publication_recid=rec_id)
-        if hepsubmission and hepsubmission.inspire_id is not None:
-            record_data_paths.append(get_old_data_path_for_record('ins%s' % hepsubmission.inspire_id))
-
-    for record_data_path in record_data_paths:
-        log.debug("Scanning directory: %s" % record_data_path)
-
-        if os.path.isdir(record_data_path):
-            log.debug("Removing %s" % record_data_path)
-            shutil.rmtree(record_data_path)
-
-
-def cleanup_old_files(hepsubmission, current_folder=None, check_old_data_paths=True):
-    """Remove old files not related to a current version of the submission"""
-    rec_id = str(hepsubmission.publication_recid)
-    record_data_paths = [get_data_path_for_record(rec_id)]
-
-    if check_old_data_paths:
-        record_data_paths.append(get_old_data_path_for_record(rec_id))
-        if hepsubmission.inspire_id is not None:
-            record_data_paths.append(get_old_data_path_for_record('ins%s' % hepsubmission.inspire_id))
-
-    current_filepaths = set()
-
-    if hepsubmission.overall_status == 'sandbox' and current_folder:
-        current_filepaths.add(current_folder)
-    else:
-        path_prefixes = [f"{path}/" for path in record_data_paths]
-        current_resources = _find_all_current_dataresources(hepsubmission.publication_recid)
-
-        for r in current_resources:
-            if not r.file_location.startswith('http'):
-                found = False
-                for path_prefix in path_prefixes:
-                    if r.file_location.startswith(path_prefix):
-                        subdirs = r.file_location.split(path_prefix, 1)[1]
-                        top_subdir = subdirs.split(os.sep, 1)[0]
-                        current_filepaths.add(os.path.join(path_prefix, top_subdir))
-                        found = True
-                        break
-
-                if not found:
-                    log.warning("Unknown file %s" % r.file_location)
-
-    packaged_filepath = find_submission_data_file_path(hepsubmission)
-    packaged_filename = os.path.basename(packaged_filepath)
-
-    for record_data_path in record_data_paths:
-        log.debug("Scanning directory: %s" % record_data_path)
-
-        if os.path.isdir(record_data_path):
-            with os.scandir(record_data_path) as entries:
-                for entry in entries:
-                    if entry.is_dir():
-                        if entry.path not in current_filepaths:
-                            log.debug("Removing %s" % entry.path)
-                            shutil.rmtree(entry.path)
-                    else:
-                        # Corner case: new upload uses new data
-                        # file path, but previous upload still uses old path
-                        # Need to delete packaged file in old path.
-                        if entry.name == packaged_filename and \
-                                entry.path != packaged_filepath:
-                            log.debug("Removing %s" % entry.path)
-                            os.remove(entry.path)
-
-
-def cleanup_all_resources(synchronous=False):
-    # First, clean up all orphaned file resources
-    _delete_all_orphan_file_resources()
-
-    qry = db.session.query(HEPSubmission.publication_recid)
-    result = qry.distinct()
-    record_ids = [r[0] for r in result]
-
-    log.info("Got records: %s" % record_ids)
-
-    for rec_id in record_ids:
-        if synchronous:
-            cleanup_old_files_for_record(rec_id)
-        else:
-            cleanup_old_files_for_record.delay(rec_id)
-
-
 @shared_task
-def cleanup_old_files_for_record(rec_id):
+def _cleanup_old_files_for_record(rec_id):
+    """Wrapper method for use by celery when cleaning old files"""
     hepsubmission = get_latest_hepsubmission(publication_recid=rec_id)
     cleanup_old_files(hepsubmission, check_old_data_paths=True)
 
 
-def move_data_files(record_ids, synchronous=False):
+def move_data_files(record_ids, synchronous=True):
+    """Move data files to new location, i.e. using a hash for a
+    subdirectory to reduce the number of directories on the disk.
+    """
     if record_ids is None:
         qry = db.session.query(HEPSubmission.publication_recid)
         result = qry.distinct()
@@ -279,13 +299,14 @@ def move_data_files(record_ids, synchronous=False):
 
     for rec_id in record_ids:
         if synchronous:
-            move_files_for_record(rec_id)
+            _move_files_for_record(rec_id)
         else:
-            move_files_for_record.delay(rec_id)
+            _move_files_for_record.delay(rec_id)
 
 
 @shared_task
-def move_files_for_record(rec_id):
+def _move_files_for_record(rec_id):
+    """Move data files for given record from old to new location."""
     log.debug("Moving files for record %s" % rec_id)
     hep_submissions = HEPSubmission.query.filter_by(
                         publication_recid=rec_id
@@ -294,7 +315,7 @@ def move_files_for_record(rec_id):
 
     # Need to check both rec_id (for newer submissions) and inspire_id
     # (for migrated submissions)
-    old_paths = [get_old_data_path_for_record(str(rec_id))]
+    old_paths = [get_old_data_path_for_record(rec_id)]
     if hep_submissions[0].inspire_id is not None:
         old_paths.append(get_old_data_path_for_record('ins%s' % hep_submissions[0].inspire_id))
 
@@ -302,33 +323,16 @@ def move_files_for_record(rec_id):
 
     old_paths = [path for path in old_paths if os.path.isdir(path)]
 
-    new_path = get_data_path_for_record(str(rec_id))
+    new_path = get_data_path_for_record(rec_id)
     log.debug("Moving files from %s to %s" % (old_paths, new_path))
 
     os.makedirs(new_path, exist_ok=True)
 
-    # Move data submissions
-    data_submissions = DataSubmission.query.filter_by(
-                            publication_recid=rec_id
-                            ).all()
-    for data_submission in data_submissions:
-        resource = DataResource.query.filter_by(
-                        id=data_submission.data_file
-                        ).first()
-        resource_errors = move_data_resource(resource, old_paths, new_path)
+    # Find all data resources
+    resources = _find_all_current_dataresources(rec_id)
+    for resource in resources:
+        resource_errors = _move_data_resource(resource, old_paths, new_path)
         errors.extend(resource_errors)
-
-        for additional_resource in data_submission.resources:
-            resource_errors = move_data_resource(additional_resource, old_paths, new_path)
-
-    # Move other data resources, for all versions of the record.
-    log.debug("Checking data resources")
-    for hep_submission in hep_submissions:
-        log.debug("Checking submission %s" % hep_submission)
-        for resource in hep_submission.resources:
-            log.debug("Checking resource %s" % resource)
-            resource_errors = move_data_resource(resource, old_paths, new_path)
-            errors.extend(resource_errors)
 
     # Move rest of files in old_paths
     for old_path in old_paths:
@@ -373,7 +377,7 @@ def move_files_for_record(rec_id):
                                reply_to_address=current_app.config['ADMIN_EMAIL'])
 
 
-def move_data_resource(resource, old_paths, new_path):
+def _move_data_resource(resource, old_paths, new_path):
     errors = []
     log.debug("    Checking file %s" % resource.file_location)
 
@@ -423,3 +427,14 @@ def delete_old_converted_files():
                 os.remove(entry.path)
             elif entry.is_dir():
                 shutil.rmtree(entry.path)
+
+
+def find_old_files():
+    """
+    List files in data dir that do not match a known pattern.
+    """
+    # What about files that relate to a deleted record?
+    # Can we run cleanup_old_files based on a inspire or record id?
+    # Should cleanup_old_files also delete the yaml.zip or .hepdata file?
+    # Run this at end of move_data_files to see what's left.
+    pass

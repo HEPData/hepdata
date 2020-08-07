@@ -26,15 +26,15 @@
 
 import os
 
-from hepdata.modules.records.utils.data_files import get_subdir_name, \
+from hepdata.modules.records.utils.data_files import _get_subdir_name, \
     get_data_path_for_record, get_old_data_path_for_record, \
     get_converted_directory_path, find_submission_data_file_path
 from hepdata.modules.submission.models import HEPSubmission
 
 
 def test_get_subdir_name():
-    assert(get_subdir_name('mynewtestdir') == '17')
-    assert(get_subdir_name('ins12345') == '96')
+    assert(_get_subdir_name('mynewtestdir') == '17')
+    assert(_get_subdir_name('ins12345') == '96')
 
 
 def test_get_data_path_for_record(app):
