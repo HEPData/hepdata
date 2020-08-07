@@ -24,6 +24,8 @@
 """HEPData records test cases."""
 from io import open, StringIO
 import os
+import re
+from time import sleep
 import yaml
 
 from flask_login import login_user
@@ -32,9 +34,10 @@ from invenio_db import db
 from werkzeug.datastructures import FileStorage
 
 from hepdata.modules.records.api import process_payload
-from hepdata.modules.records.utils.submission import get_or_create_hepsubmission
+from hepdata.modules.records.utils.submission import get_or_create_hepsubmission, unload_submission
 from hepdata.modules.records.utils.common import get_record_by_id
 from hepdata.modules.records.utils.data_processing_utils import generate_table_structure
+from hepdata.modules.records.utils.data_files import get_data_path_for_record
 from hepdata.modules.records.utils.users import get_coordinators_in_system, has_role
 from hepdata.modules.records.utils.workflow import update_record, create_record
 from hepdata.modules.submission.models import HEPSubmission
@@ -153,10 +156,14 @@ def test_upload_valid_file(app):
         hepdata_submission.overall_status = 'finished'
         db.session.add(hepdata_submission)
 
+        # Sleep before uploading new version to avoid dir name conflict
+        sleep(1)
+
         # Refresh user
         user = User.query.first()
         login_user(user)
 
+        # Upload a new version
         with open(os.path.join(base_dir, 'test_data/TestHEPSubmission.zip'), "rb") as stream:
             test_file = FileStorage(
                 stream=stream,
@@ -173,6 +180,47 @@ def test_upload_valid_file(app):
         assert(hepdata_submissions[1].data_abstract.startswith('CERN-LHC.  Measurements of the cross section  for ZZ production'))
         assert(hepdata_submissions[1].version == 2)
         assert(hepdata_submissions[1].overall_status == 'todo')
+
+        # Check that there are 2 subdirectories and 2 zip files under the record's main path
+        directory = get_data_path_for_record(hepdata_submission.publication_recid)
+        assert(os.path.exists(directory))
+        filepaths = os.listdir(directory)
+        assert(len(filepaths) == 4)
+
+        dir_count = 0
+        file_count = 0
+        for path in filepaths:
+            if os.path.isdir(os.path.join(directory, path)):
+                dir_count += 1
+                assert(re.match(r"\d{10}", path) is not None)
+            else:
+                file_count += 1
+                assert(re.match(r"HEPData-12345-v[12]-yaml.zip", path) is not None)
+
+        assert(dir_count == 2)
+        assert(file_count == 2)
+
+        # Delete the v2 submission and check db and v2 files have been removed
+        unload_submission(hepdata_submission.publication_recid, version=2)
+
+        hepdata_submissions = HEPSubmission.query.filter_by(
+            publication_recid=recid).order_by(HEPSubmission.last_updated).all()
+        assert(len(hepdata_submissions) == 1)
+        assert(hepdata_submissions[0].version == 1)
+        assert(hepdata_submissions[0].overall_status == 'finished')
+
+        filepaths = os.listdir(directory)
+        assert(len(filepaths) == 2)
+        assert("HEPData-12345-v1-yaml.zip" in filepaths)
+
+        # Delete the v2 submission and check everything has been removed
+        unload_submission(hepdata_submission.publication_recid, version=1)
+
+        hepdata_submissions = HEPSubmission.query.filter_by(
+            publication_recid=recid).order_by(HEPSubmission.last_updated).all()
+        assert(len(hepdata_submissions) == 0)
+
+        assert(not os.path.exists(directory))
 
 
 def test_upload_valid_file_yaml_gz(app):
