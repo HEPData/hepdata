@@ -269,7 +269,8 @@ class DataReview(db.Model):
         nullable=False, autoincrement=True)
 
     publication_recid = db.Column(db.Integer)
-    data_recid = db.Column(db.Integer, db.ForeignKey("datasubmission.id"))
+    data_recid = db.Column(db.Integer,
+                           db.ForeignKey("datasubmission.id", ondelete='CASCADE'))
 
     creation_date = db.Column(
         db.DateTime, nullable=False, default=datetime.utcnow, index=True)

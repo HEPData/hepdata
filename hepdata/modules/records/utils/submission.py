@@ -166,9 +166,9 @@ def remove_submission(record_id, version=1):
 
 def cleanup_submission(recid, version, to_keep):
     """
-    Removes old, unreferenced tables from the database.
+    Removes old datasubmission records from the database.
     This ensures that when users replace a submission,
-    previous tables are not left behind in the database.
+    previous records are not left behind in the database.
 
     :param recid: publication recid of parent
     :param version: version number of record
@@ -182,12 +182,6 @@ def cleanup_submission(recid, version, to_keep):
         for data_submission in data_submissions:
 
             if not (data_submission.name in to_keep):
-                data_reviews = DataReview.query.filter_by(
-                    data_recid=data_submission.id).all()
-
-                for review in data_reviews:
-                    db.session.delete(review)
-
                 db.session.delete(data_submission)
 
         db.session.commit()
@@ -198,7 +192,8 @@ def cleanup_submission(recid, version, to_keep):
 
 def cleanup_data_resources(data_submission):
     """
-    Removes additional resources from the database to avoid duplications.
+    Removes additional resources for a datasubmission
+    from the database to avoid duplications.
     This ensures that when users replace a submission,
     old resources are not left behind in the database.
 
