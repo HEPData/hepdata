@@ -121,106 +121,119 @@ def test_upload_valid_file(app):
     # Test uploading and processing a file for a record
     with app.app_context():
         base_dir = os.path.dirname(os.path.realpath(__file__))
-        user = User.query.first()
-        login_user(user)
 
-        recid = '12345'
-        get_or_create_hepsubmission(recid, 1)
+        for i, status in enumerate(["todo", "sandbox"]):
+            user = User.query.first()
+            login_user(user)
 
-        hepdata_submission = HEPSubmission.query.filter_by(
-            publication_recid=recid).first()
-        assert(hepdata_submission is not None)
-        assert(hepdata_submission.data_abstract is None)
-        assert(hepdata_submission.created < hepdata_submission.last_updated)
-        assert(hepdata_submission.version == 1)
-        assert(hepdata_submission.overall_status == 'todo')
+            recid = f'12345{i}'
+            get_or_create_hepsubmission(recid, 1, status=status)
 
-        with open(os.path.join(base_dir, 'test_data/TestHEPSubmission.zip'), "rb") as stream:
-            test_file = FileStorage(
-                stream=stream,
-                filename="TestHEPSubmission.zip"
-            )
-            response = process_payload(recid, test_file, '/test_redirect_url', synchronous=True)
+            hepdata_submission = HEPSubmission.query.filter_by(
+                publication_recid=recid).first()
+            assert(hepdata_submission is not None)
+            assert(hepdata_submission.data_abstract is None)
+            assert(hepdata_submission.created < hepdata_submission.last_updated)
+            assert(hepdata_submission.version == 1)
+            assert(hepdata_submission.overall_status == status)
 
-        assert(response.json == {'url': '/test_redirect_url'})
+            with open(os.path.join(base_dir, 'test_data/TestHEPSubmission.zip'), "rb") as stream:
+                test_file = FileStorage(
+                    stream=stream,
+                    filename="TestHEPSubmission.zip"
+                )
+                response = process_payload(recid, test_file, '/test_redirect_url', synchronous=True)
 
-        # Check the submission has been updated
-        hepdata_submission = HEPSubmission.query.filter_by(
-            publication_recid=recid).first()
-        assert(hepdata_submission.data_abstract.startswith('CERN-LHC.  Measurements of the cross section  for ZZ production'))
-        assert(hepdata_submission.created < hepdata_submission.last_updated)
-        assert(hepdata_submission.version == 1)
-        assert(hepdata_submission.overall_status == 'todo')
+            assert(response.json == {'url': '/test_redirect_url'})
 
-        # Set the status to finished and try again, to check versioning
-        hepdata_submission.overall_status = 'finished'
-        db.session.add(hepdata_submission)
+            # Check the submission has been updated
+            hepdata_submission = HEPSubmission.query.filter_by(
+                publication_recid=recid).first()
+            assert(hepdata_submission.data_abstract.startswith('CERN-LHC.  Measurements of the cross section  for ZZ production'))
+            assert(hepdata_submission.created < hepdata_submission.last_updated)
+            assert(hepdata_submission.version == 1)
+            assert(hepdata_submission.overall_status == status)
 
-        # Sleep before uploading new version to avoid dir name conflict
-        sleep(1)
+            # Set the status to finished and try again, to check versioning
+            if status == "todo":
+                hepdata_submission.overall_status = 'finished'
+                db.session.add(hepdata_submission)
 
-        # Refresh user
-        user = User.query.first()
-        login_user(user)
+            # Sleep before uploading new version to avoid dir name conflict
+            sleep(1)
 
-        # Upload a new version
-        with open(os.path.join(base_dir, 'test_data/TestHEPSubmission.zip'), "rb") as stream:
-            test_file = FileStorage(
-                stream=stream,
-                filename="TestHEPSubmission.zip"
-            )
-            process_payload(recid, test_file, '/test_redirect_url', synchronous=True)
+            # Refresh user
+            user = User.query.first()
+            login_user(user)
 
-        # Check the submission has been updated
-        hepdata_submissions = HEPSubmission.query.filter_by(
-            publication_recid=recid).order_by(HEPSubmission.last_updated).all()
-        assert(len(hepdata_submissions) == 2)
-        assert(hepdata_submissions[0].version == 1)
-        assert(hepdata_submissions[0].overall_status == 'finished')
-        assert(hepdata_submissions[1].data_abstract.startswith('CERN-LHC.  Measurements of the cross section  for ZZ production'))
-        assert(hepdata_submissions[1].version == 2)
-        assert(hepdata_submissions[1].overall_status == 'todo')
+            # Upload a new version
+            with open(os.path.join(base_dir, 'test_data/TestHEPSubmission.zip'), "rb") as stream:
+                test_file = FileStorage(
+                    stream=stream,
+                    filename="TestHEPSubmission.zip"
+                )
+                process_payload(recid, test_file, '/test_redirect_url', synchronous=True)
 
-        # Check that there are 2 subdirectories and 2 zip files under the record's main path
-        directory = get_data_path_for_record(hepdata_submission.publication_recid)
-        assert(os.path.exists(directory))
-        filepaths = os.listdir(directory)
-        assert(len(filepaths) == 4)
+            # Check the submission has been updated (overridden for a sandbox;
+            # new version for normal submission)
+            expected_versions = 2 if status == "todo" else 1
+            hepdata_submissions = HEPSubmission.query.filter_by(
+                publication_recid=recid).order_by(HEPSubmission.last_updated).all()
+            assert(len(hepdata_submissions) == expected_versions)
+            assert(hepdata_submissions[0].version == 1)
 
-        dir_count = 0
-        file_count = 0
-        for path in filepaths:
-            if os.path.isdir(os.path.join(directory, path)):
-                dir_count += 1
-                assert(re.match(r"\d{10}", path) is not None)
-            else:
-                file_count += 1
-                assert(re.match(r"HEPData-12345-v[12]-yaml.zip", path) is not None)
+            if status == "todo":
+                assert(hepdata_submissions[0].overall_status == 'finished')
 
-        assert(dir_count == 2)
-        assert(file_count == 2)
+            assert(hepdata_submissions[-1].data_abstract.startswith('CERN-LHC.  Measurements of the cross section  for ZZ production'))
+            assert(hepdata_submissions[-1].version == expected_versions)
+            assert(hepdata_submissions[-1].overall_status == status)
 
-        # Delete the v2 submission and check db and v2 files have been removed
-        unload_submission(hepdata_submission.publication_recid, version=2)
+            # Check that there are the expected number of subdirectories and
+            # zip files under the record's main path
+            # For status = 'todo' (standard submission) there will be 1 file
+            # and 1 dir for each of 2 versions; for the sandbox submission
+            # there will just be 1 file and 1 dir.
+            directory = get_data_path_for_record(hepdata_submission.publication_recid)
+            assert(os.path.exists(directory))
+            filepaths = os.listdir(directory)
+            assert(len(filepaths) == 2*expected_versions)
 
-        hepdata_submissions = HEPSubmission.query.filter_by(
-            publication_recid=recid).order_by(HEPSubmission.last_updated).all()
-        assert(len(hepdata_submissions) == 1)
-        assert(hepdata_submissions[0].version == 1)
-        assert(hepdata_submissions[0].overall_status == 'finished')
+            dir_count = 0
+            file_count = 0
+            for path in filepaths:
+                if os.path.isdir(os.path.join(directory, path)):
+                    dir_count += 1
+                    assert(re.match(r"\d{10}", path) is not None)
+                else:
+                    file_count += 1
+                    assert(re.match(r"HEPData-%s-v[12]-yaml.zip" % recid, path) is not None)
 
-        filepaths = os.listdir(directory)
-        assert(len(filepaths) == 2)
-        assert("HEPData-12345-v1-yaml.zip" in filepaths)
+            assert(dir_count == expected_versions)
+            assert(file_count == expected_versions)
 
-        # Delete the v2 submission and check everything has been removed
-        unload_submission(hepdata_submission.publication_recid, version=1)
+            if status == "todo":
+                # Delete the v2 submission and check db and v2 files have been removed
+                unload_submission(hepdata_submission.publication_recid, version=2)
 
-        hepdata_submissions = HEPSubmission.query.filter_by(
-            publication_recid=recid).order_by(HEPSubmission.last_updated).all()
-        assert(len(hepdata_submissions) == 0)
+                hepdata_submissions = HEPSubmission.query.filter_by(
+                    publication_recid=recid).order_by(HEPSubmission.last_updated).all()
+                assert(len(hepdata_submissions) == 1)
+                assert(hepdata_submissions[0].version == 1)
+                assert(hepdata_submissions[0].overall_status == 'finished')
 
-        assert(not os.path.exists(directory))
+                filepaths = os.listdir(directory)
+                assert(len(filepaths) == 2)
+                assert(f"HEPData-12345{i}-v1-yaml.zip" in filepaths)
+
+            # Delete the submission and check everything has been removed
+            unload_submission(hepdata_submission.publication_recid, version=1)
+
+            hepdata_submissions = HEPSubmission.query.filter_by(
+                publication_recid=recid).order_by(HEPSubmission.last_updated).all()
+            assert(len(hepdata_submissions) == 0)
+
+            assert(not os.path.exists(directory))
 
 
 def test_upload_valid_file_yaml_gz(app):
