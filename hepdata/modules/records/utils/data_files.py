@@ -198,7 +198,7 @@ def _find_all_current_dataresources(rec_id):
 # https://github.com/HEPData/hepdata/issues/218) - we may be able to
 # remove them once the cleanup has been run.
 
-def cleanup_all_resources(synchronous=False):
+def cleanup_all_resources(synchronous=False):  # pragma: no cover
     """Cleans up unused resources for all records
     First checks for orphaned data resources in the db and deletes them.
     Then goes through all records and deletes unused files on disk.
@@ -220,7 +220,7 @@ def cleanup_all_resources(synchronous=False):
             _cleanup_old_files_for_record.delay(rec_id)
 
 
-def _delete_all_orphan_file_resources():
+def _delete_all_orphan_file_resources():  # pragma: no cover
     """Deletes all entries in the DataResource table which do not map to
     an existing HEPSubmission or DataSubmission.
     """
@@ -267,7 +267,7 @@ def _delete_all_orphan_file_resources():
 
 
 @shared_task
-def _delete_orphan_dataresource_batch(ids):
+def _delete_orphan_dataresource_batch(ids):  # pragma: no cover
     """Deletes the data resources with the given ids."""
     resources = DataResource.query.filter(DataResource.id.in_(ids)).all()
     for resource in resources:
@@ -277,13 +277,13 @@ def _delete_orphan_dataresource_batch(ids):
 
 
 @shared_task
-def _cleanup_old_files_for_record(rec_id):
+def _cleanup_old_files_for_record(rec_id):  # pragma: no cover
     """Wrapper method for use by celery when cleaning old files"""
     hepsubmission = get_latest_hepsubmission(publication_recid=rec_id)
     cleanup_old_files(hepsubmission, check_old_data_paths=True)
 
 
-def move_data_files(record_ids, synchronous=True):
+def move_data_files(record_ids, synchronous=True):  # pragma: no cover
     """Move data files to new location, i.e. using a hash for a
     subdirectory to reduce the number of directories on the disk.
     """
@@ -305,7 +305,7 @@ def move_data_files(record_ids, synchronous=True):
 
 
 @shared_task
-def _move_files_for_record(rec_id):
+def _move_files_for_record(rec_id):  # pragma: no cover
     """Move data files for given record from old to new location."""
     log.debug("Moving files for record %s" % rec_id)
     hep_submissions = HEPSubmission.query.filter_by(
@@ -377,7 +377,7 @@ def _move_files_for_record(rec_id):
                                reply_to_address=current_app.config['ADMIN_EMAIL'])
 
 
-def _move_data_resource(resource, old_paths, new_path):
+def _move_data_resource(resource, old_paths, new_path):  # pragma: no cover
     errors = []
     log.debug("    Checking file %s" % resource.file_location)
 
@@ -419,7 +419,7 @@ def _move_data_resource(resource, old_paths, new_path):
     return errors
 
 
-def delete_old_converted_files():
+def delete_old_converted_files():  # pragma: no cover
     with os.scandir(os.path.join(current_app.config['CFG_DATADIR'],
                     'converted')) as entries:
         for entry in entries:
@@ -429,7 +429,7 @@ def delete_old_converted_files():
                 shutil.rmtree(entry.path)
 
 
-def find_old_files():
+def find_old_files():  # pragma: no cover
     """
     List files in data dir that do not match a known pattern.
     """
