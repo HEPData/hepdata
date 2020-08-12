@@ -34,6 +34,7 @@ from hepdata.modules.email.utils import create_send_email_task
 from hepdata.modules.records.utils.common import allowed_file
 from hepdata.modules.submission.api import get_latest_hepsubmission
 from hepdata.modules.submission.models import DataSubmission, HEPSubmission, DataResource
+from hepdata.utils.celery import count_tasks_with_status
 
 logging.basicConfig()
 log = logging.getLogger(__name__)
@@ -291,6 +292,17 @@ def move_data_files(record_ids, synchronous=True):  # pragma: no cover
         qry = db.session.query(HEPSubmission.publication_recid)
         result = qry.distinct()
         record_ids = [r[0] for r in result]
+
+        # Check celery queue to ensure _cleanup_old_files_for_record has finished
+        # (or is not running)
+        cleanup_task_name = _cleanup_old_files_for_record.__module__ + '.' \
+            + _cleanup_old_files_for_record.__name__
+        cleanup_task_count = count_tasks_with_status('active', cleanup_task_name) \
+            + count_tasks_with_status('reserved', cleanup_task_name)
+
+        if cleanup_task_count > 0:
+            print("Cleanup tasks are still running. Try again later.")
+            return
 
     log.info("Got records: %s" % record_ids)
 
