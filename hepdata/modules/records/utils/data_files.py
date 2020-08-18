@@ -194,6 +194,23 @@ def _find_all_current_dataresources(rec_id):
     return resources
 
 
+def move_inspire_data_files(inspire_output_location, recid):
+    """Moves output location based on inspire_id to new location based on
+    record id. For use by migrator where files are retrieved before a record
+    is created.
+    """
+    output_location = get_data_path_for_record(recid)
+    shutil.move(inspire_output_location, output_location)
+    parent = os.path.dirname(inspire_output_location)
+    try:
+        # Delete parent dir if empty
+        os.rmdir(parent)
+    except OSError:
+        pass
+
+    return output_location
+
+
 # Functions below relate to cli clean up and move data files functions
 # (see https://github.com/HEPData/hepdata/issues/139 and
 # https://github.com/HEPData/hepdata/issues/218) - we may be able to
@@ -328,8 +345,10 @@ def _move_files_for_record(rec_id):  # pragma: no cover
     # Need to check both rec_id (for newer submissions) and inspire_id
     # (for migrated submissions)
     old_paths = [get_old_data_path_for_record(rec_id)]
-    if hep_submissions[0].inspire_id is not None:
-        old_paths.append(get_old_data_path_for_record('ins%s' % hep_submissions[0].inspire_id))
+    inspire_id = hep_submissions[0].inspire_id
+    if inspire_id is not None:
+        old_paths.append(get_old_data_path_for_record('ins%s' % inspire_id))
+        old_paths.append(get_old_data_path_for_record(inspire_id))
 
     log.debug("Checking old paths %s" % old_paths)
 
@@ -376,6 +395,20 @@ def _move_files_for_record(rec_id):  # pragma: no cover
                 errors.append("Unable to remove directory %s\n"
                               "Error was: %s"
                               % (dirpath, str(e)))
+
+    # If there's a zip file from the migration, move that to the new dir too.
+    if inspire_id is not None:
+        zip_name = f'ins{inspire_id}.zip'
+        old_zip_path = os.path.join(current_app.config['CFG_DATADIR'],
+                                    zip_name)
+        if os.path.isfile(old_zip_path):
+            try:
+                new_zip_path = os.path.join(new_path, zip_name)
+                shutil.move(old_zip_path, new_zip_path)
+            except Exception as e:
+                errors.append("Unable to move archive file from %s to %s\n"
+                              "Error was: %s"
+                              % (old_zip_path, new_zip_path, str(e)))
 
     # Send an email with details of errors
     if errors:

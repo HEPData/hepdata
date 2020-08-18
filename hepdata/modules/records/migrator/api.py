@@ -37,7 +37,8 @@ from hepdata.ext.elasticsearch.api import get_records_matching_field, index_reco
 from hepdata.modules.inspire_api.views import get_inspire_record_information
 from hepdata.modules.dashboard.views import do_finalise
 from hepdata.modules.records.utils.common import record_exists
-from hepdata.modules.records.utils.data_files import get_data_path_for_record
+from hepdata.modules.records.utils.data_files import get_data_path_for_record, \
+    move_inspire_data_files
 
 from hepdata.modules.records.utils.submission import \
     process_submission_directory, get_or_create_hepsubmission, \
@@ -241,15 +242,20 @@ class Migrator(object):
     def __init__(self, base_url="http://hepdata.cedar.ac.uk/view/{0}/yaml"):
         self.base_url = base_url
 
-    def prepare_files_for_submission(self, inspire_id, force_retrieval=False):
+    def prepare_files_for_submission(self, inspire_id, rec_id=None, force_retrieval=False):
         """
         Either returns a file if it already exists, or downloads it and
         splits it.
 
         :param inspire_id:
+        :param rec_id: record id if record already exists
         :return: output location if successful, None if not
         """
-        output_location = get_data_path_for_record(inspire_id)
+        if rec_id:
+            output_location = get_data_path_for_record(rec_id)
+        else:
+            output_location = get_data_path_for_record(inspire_id)
+
         last_updated = datetime.utcnow()
 
         download = not os.path.exists(output_location) or (get_file_in_directory(output_location, 'yaml') is None)
@@ -259,8 +265,11 @@ class Migrator(object):
             file_location = self.download_file(inspire_id)
 
             if file_location:
-                output_location = get_data_path_for_record(inspire_id)
-                error, last_updated = split_files(file_location, output_location, "{0}.zip".format(output_location))
+                error, last_updated = split_files(
+                    file_location,
+                    output_location,
+                    os.path.join(output_location, "{}.zip".format(inspire_id))
+                )
 
                 # remove temporary download file after processing
                 try:
@@ -279,7 +288,7 @@ class Migrator(object):
                     send_tweet=False, convert=False):
         self = Migrator()
 
-        output_location, oldsite_last_updated = self.prepare_files_for_submission(inspire_id, force_retrieval=True)
+        output_location, oldsite_last_updated = self.prepare_files_for_submission(inspire_id, recid, force_retrieval=True)
         if output_location:
             updated_record_information, status = self.retrieve_publication_information(inspire_id)
             if status == 'success':
@@ -326,8 +335,8 @@ class Migrator(object):
     @shared_task
     def load_file(inspire_id, send_tweet=False, convert=False, base_url='http://hepdata.cedar.ac.uk/view/{0}/yaml'):
         self = Migrator(base_url)
-        output_location, oldsite_last_updated = self.prepare_files_for_submission(inspire_id)
-        if output_location:
+        inspire_output_location, oldsite_last_updated = self.prepare_files_for_submission(inspire_id)
+        if inspire_output_location:
 
             publication_information, status = self.retrieve_publication_information(inspire_id)
             if status == "success":
@@ -337,6 +346,10 @@ class Migrator(object):
                 return False
 
             try:
+                # Move current output location (based on inspire_id)
+                # to new location (based on record id)
+                output_location = move_inspire_data_files(inspire_output_location, record_information['recid'])
+
                 recid = self.load_submission(
                     record_information, output_location,
                     os.path.join(output_location, "submission.yaml"))
