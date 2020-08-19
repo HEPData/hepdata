@@ -200,13 +200,26 @@ def move_inspire_data_files(inspire_output_location, recid):
     is created.
     """
     output_location = get_data_path_for_record(recid)
-    shutil.move(inspire_output_location, output_location)
-    parent = os.path.dirname(inspire_output_location)
-    try:
-        # Delete parent dir if empty
-        os.rmdir(parent)
-    except OSError:
-        pass
+    paths_to_delete = []
+
+    if os.path.isdir(output_location):
+        # move individual entries to new location
+        with os.scandir(inspire_output_location) as entries:
+            for entry in entries:
+                shutil.move(entry.path, os.path.join(output_location, entry.name))
+        # Delete parent dir
+        paths_to_delete.append(inspire_output_location)
+    else:
+        # Can just move whole directory
+        shutil.move(inspire_output_location, output_location)
+
+    paths_to_delete.append(os.path.dirname(inspire_output_location))
+
+    for path in paths_to_delete:
+        try:
+            os.rmdir(path)
+        except OSError:
+            pass
 
     return output_location
 
