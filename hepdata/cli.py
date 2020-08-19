@@ -366,8 +366,10 @@ def clean_remaining_files():
               help='Record id for which to get information')
 def get_data_path(record_id):
     """Gets the file path where data files for the given record are stored."""
-    click.echo("Files for record %s are at: %s"
+    click.echo("Files for record %s are at:\t\t %s"
                % (record_id, data_files.get_data_path_for_record(record_id)))
+    click.echo("Converted files for record %s are at:\t %s"
+               % (record_id, data_files.get_converted_directory_path(record_id)))
 
 
 @cli.group()

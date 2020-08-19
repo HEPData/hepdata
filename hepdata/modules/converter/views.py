@@ -238,7 +238,7 @@ def download_submission(submission, file_format, offline=False, force=False, riv
 
     output_file = 'HEPData-{0}-v{1}-{2}.tar.gz'.format(file_identifier, submission.version, file_format)
 
-    converted_dir = get_converted_directory_path(file_identifier)
+    converted_dir = get_converted_directory_path(submission.publication_recid)
     if not os.path.exists(converted_dir):
         os.makedirs(converted_dir)
 
