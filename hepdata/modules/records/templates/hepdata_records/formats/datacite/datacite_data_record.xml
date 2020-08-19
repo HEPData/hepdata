@@ -81,7 +81,7 @@
     <relatedIdentifiers>
         {% if publication_info.inspire_id %}
             <relatedIdentifier relatedIdentifierType="URL" relationType="IsSupplementTo">
-                http://inspirehep.net/literature/{{ publication_info.inspire_id }}
+                https://inspirehep.net/literature/{{ publication_info.inspire_id }}
             </relatedIdentifier>
         {% endif %}
 

@@ -28,6 +28,7 @@ import uuid
 from invenio_accounts.models import User
 from invenio_db import db
 from sqlalchemy_utils import UUIDType
+from hepdata.modules.submission.models import LargeBinaryString
 
 
 class CoordinatorRequest(db.Model):
@@ -38,7 +39,7 @@ class CoordinatorRequest(db.Model):
 
     user = db.Column(db.Integer, db.ForeignKey(User.id))
     collaboration = db.Column(db.String(512))
-    message = db.Column(db.LargeBinary)
+    message = db.Column(LargeBinaryString)
 
     approved = db.Column(db.Boolean, default=False)
     in_queue = db.Column(db.Boolean, default=True)

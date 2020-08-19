@@ -20,6 +20,8 @@
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
+"""Choose old or new INSPIRE API."""
+
 USE_NEW_INSPIRE_API = True
 
 if USE_NEW_INSPIRE_API is True:

@@ -175,10 +175,11 @@ server (e.g. ``sudo systemctl restart postgresql-9.6``).
 Run a local development server
 ------------------------------
 
-Now, start HEPData:
+Now, switch Flask to the development environment and enable debug mode, then start the HEPData web application:
 
 .. code-block:: console
 
+   (hepdata)$ export FLASK_ENV=development
    (hepdata)$ hepdata run --debugger --reload
    (hepdata)$ firefox http://localhost:5000/
 

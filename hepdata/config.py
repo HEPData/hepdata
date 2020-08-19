@@ -25,6 +25,7 @@
 import copy
 import os
 import tempfile
+from celery.schedules import crontab
 from datetime import timedelta
 
 from invenio_oauthclient.contrib.orcid import REMOTE_APP as ORCID_REMOTE_APP
@@ -61,8 +62,13 @@ CELERY_ACCEPT_CONTENT = ['json', 'msgpack', 'yaml']
 CELERY_BEAT_SCHEDULE = {
     'update_analyses': {
         'task': 'hepdata.modules.records.migrator.api.update_analyses',
-        'schedule': timedelta(hours=12)
-    }
+        'schedule': crontab(minute=0, hour=0),  # execute daily at midnight UTC
+    },
+    'update_from_inspire': {
+        'task': 'hepdata.modules.records.utils.records_update_utils.update_records_info_on',
+        'schedule': crontab(minute=0, hour=2),  # execute daily at 2am UTC
+        'args': (1,),  # INSPIRE records (with HEPData) updated yesterday
+    },
 }
 
 # Cache
@@ -72,6 +78,7 @@ CACHE_TYPE = "redis"
 
 # Session
 SESSION_REDIS = "redis://localhost:6379/0"
+PERMANENT_SESSION_LIFETIME = timedelta(days=1)
 
 # ElasticSearch
 ELASTICSEARCH_HOST = "localhost"
@@ -265,11 +272,11 @@ ANALYSES_ENDPOINTS = {
         'endpoint_url': 'http://rivet.hepforge.org/analyses.json',
         'url_template': 'http://rivet.hepforge.org/analyses/{0}'
     },
-    'ufo': {},
-    'xfitter': {},
-    'applgrid': {},
-    'fastnlo': {},
-    'madanalysis': {}
+    #'ufo': {},
+    #'xfitter': {},
+    #'applgrid': {},
+    #'fastnlo': {},
+    #'madanalysis': {},
 }
 
 ADMIN_EMAIL = 'info@hepdata.net'
