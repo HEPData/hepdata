@@ -199,6 +199,7 @@ def move_inspire_data_files(inspire_output_location, recid):
     record id. For use by migrator where files are retrieved before a record
     is created.
     """
+    print("Moving inspire data files")
     output_location = get_data_path_for_record(recid)
     paths_to_delete = []
 
@@ -221,6 +222,7 @@ def move_inspire_data_files(inspire_output_location, recid):
         except OSError:
             pass
 
+    print("Returning %s" %output_location)
     return output_location
 
 
@@ -243,6 +245,9 @@ def cleanup_all_resources(synchronous=False):  # pragma: no cover
     record_ids = [r[0] for r in result]
 
     log.info("Got records: %s" % record_ids)
+
+    if not synchronous:
+        log.info("Sending tasks to celery.")
 
     for rec_id in record_ids:
         if synchronous:
@@ -314,7 +319,7 @@ def _cleanup_old_files_for_record(rec_id):  # pragma: no cover
     cleanup_old_files(hepsubmission, check_old_data_paths=True)
 
 
-def move_data_files(record_ids, synchronous=True):  # pragma: no cover
+def move_data_files(record_ids, synchronous=False):  # pragma: no cover
     """Move data files to new location, i.e. using a hash for a
     subdirectory to reduce the number of directories on the disk.
     """
@@ -478,21 +483,64 @@ def _move_data_resource(resource, old_paths, new_path):  # pragma: no cover
 
 
 def delete_old_converted_files():  # pragma: no cover
-    with os.scandir(os.path.join(current_app.config['CFG_DATADIR'],
-                    'converted')) as entries:
+    converted_path = os.path.join(current_app.config['CFG_DATADIR'],
+                                  'converted')
+    if os.path.isdir(converted_path):
+        with os.scandir(converted_path) as entries:
+            for entry in entries:
+                if entry.is_file() or entry.is_symlink():
+                    os.remove(entry.path)
+                elif entry.is_dir():
+                    shutil.rmtree(entry.path)
+
+
+def clean_remaining_files(synchronous=True):  # pragma: no cover
+    """
+    Looks for files in data dir that do not match a known pattern.
+    For folders that look like a sandbox record (timestamp), check db
+    and delete.
+    For everthing else, send an email.
+    """
+    # Check celery queue to ensure _cleanup_old_files_for_record has finished
+    # (or is not running)
+    move_task_name = _move_files_for_record.__module__ + '.' \
+        + _move_files_for_record.__name__
+    move_task_count = count_tasks_with_status('active', move_task_name) \
+        + count_tasks_with_status('reserved', move_task_name)
+
+    if move_task_count > 0:
+        print("File moving tasks are still running. Try again later.")
+        return
+
+    unknown_files = []
+
+    data_dir = current_app.config['CFG_DATADIR']
+    with os.scandir(data_dir) as entries:
         for entry in entries:
-            if entry.is_file() or entry.is_symlink():
-                os.remove(entry.path)
-            elif entry.is_dir():
-                shutil.rmtree(entry.path)
+            log.debug("Checking %s" % entry.path)
+            recognised = False
+            if entry.is_dir():
+                # If dirname has 2 chars it's in our expected format.
+                if entry.name == 'converted' or len(entry.name) == 2:
+                    recognised = True
+                else:
+                    # Is it a deleted sandbox entry?
+                    if len(entry.name) == 10 and \
+                            entry.name.isdigit():
+                        # This is probably a deleted sandbox entry
+                        recognised = True
+                        rec_id = int(entry.name)
+                        submission_count = HEPSubmission.query.filter_by(publication_recid=rec_id).count()
+                        if submission_count == 0:
+                            log.debug("Deleting %s" %entry.path)
+                            shutil.rmtree(entry.path)
+                        else:
+                            log.warning("Sandbox entry %s is still in old file location" % entry.name)
 
+            if not recognised:
+                unknown_files.append(entry.path)
 
-def find_old_files():  # pragma: no cover
-    """
-    List files in data dir that do not match a known pattern.
-    """
-    # What about files that relate to a deleted record?
-    # Can we run cleanup_old_files based on a inspire or record id?
-    # Should cleanup_old_files also delete the yaml.zip or .hepdata file?
-    # Run this at end of move_data_files to see what's left.
-    pass
+    if unknown_files:
+        print("The following files were found in %s which were not recognised:" % data_dir)
+        for f in unknown_files:
+            print("    %s" % f)

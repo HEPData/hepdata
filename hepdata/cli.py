@@ -329,9 +329,7 @@ def cleanup_old_files():
 @utils.command()
 @click.option('--recids', '-r', type=str, default=None,
               help='Move data files for specific recids only.')
-@click.option('--delete-old-converted-files', type=bool,
-              help='Delete old converted files?')
-def move_data_files(recids, delete_old_converted_files):
+def move_data_files(recids):
     """Move data files into new data file locations. Deletes converted files for all records."""
     if recids is None:
         click.confirm('About to move all files to new data file location. Do you want to continue?',
@@ -344,8 +342,19 @@ def move_data_files(recids, delete_old_converted_files):
     # Pass to data_files method
     data_files.move_data_files(recids)
 
-    if not delete_old_converted_files:
-        click.confirm('About to delete ALL files in the old converted directory. Do you want to continue?',
+
+@utils.command()
+def clean_remaining_files():
+    """Deletes files that remain in data dir after cleanup and move-data-files have been run."""
+
+    click.confirm("Have you already run hepdata utils move-data-files?",
+                  abort=True)
+    click.echo('Checking remaining files.')
+
+    # Pass to data_files method
+    data_files.clean_remaining_files()
+
+    click.confirm('About to delete ALL files in the old converted directory. Do you want to continue?',
                       abort=True)
     data_files.delete_old_converted_files()
 
