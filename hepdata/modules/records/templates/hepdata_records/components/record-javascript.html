@@ -21,7 +21,7 @@
     $(document).ready(function () {
 
         HEPDATA.upload_max_size = {{ config['UPLOAD_MAX_SIZE']|default(52000000) }};
-        HEPDATA.upload_timeout = {{ config['NGINX_TIMEOUT']|default(298000) }};
+        HEPDATA.upload_timeout = {{ config['NGINX_TIMEOUT']|default(298) }};
 
         hepdata_record.initialise();
         hepdata_resources.initialise({{ ctx.recid|default(0) }}, {{ ctx.version|default(0) }});

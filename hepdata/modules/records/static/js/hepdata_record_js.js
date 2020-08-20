@@ -74,7 +74,7 @@ var hepdata_record = (function () {
             processData: false,
             contentType: false,
             cache: false,
-            timeout: HEPDATA.upload_timeout,
+            timeout: HEPDATA.upload_timeout * 1000,
             success: function (data) {
               window.location.href = data['url'];
             },
