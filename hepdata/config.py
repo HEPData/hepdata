@@ -202,6 +202,9 @@ PIDSTORE_DATACITE_URL = "https://mds.datacite.org"
 TESTING = False  # switch off email using TESTING = True
 NO_DOI_MINTING = False  # switch off DOI minting using NO_DOI_MINTING = True
 
+UPLOAD_MAX_SIZE = 52000000 # Upload limit in bytes
+NGINX_TIMEOUT = 298000 # Client-side timeout in ms (should be slightly smaller than server timeout)
+
 # To get twitter to work, go to https://apps.twitter.com/ and create an application owned by the user account to
 # which the tweets will be sent. Then, follow the instructions here to get hold of access tokens:
 # https://dev.twitter.com/docs/auth/tokens-devtwittercom

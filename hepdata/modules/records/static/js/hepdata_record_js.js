@@ -25,6 +25,17 @@ var hepdata_record = (function () {
           event.preventDefault();
         }
 
+        var form = document.forms[form_name];
+        var upload_size = $('input[name="hep_archive"]')[0].files[0].size;
+        if (upload_size > HEPDATA.upload_max_size) {
+          var message = '<p>Your submission was too large to be uploaded. Please reduce the size of your upload file to less than 50 MB and try again. Please contact info@hepdata.net if you need any further information.</p>'
+          message += '<p><a href="" onclick="window.location.reload(false);">Try again</a></p>'
+          var html = '<div id="upload-message">' + message + '</div>';
+          $(".upload-form").css('display', 'none');
+          $(placement).append(html);
+          return;
+        }
+
         var message = '<p>Uploading files...</p>'
         message += '<p>(Timeout after 60 seconds.)</p>'
         var html = '<div id="upload-progress"></div>' +
@@ -52,7 +63,6 @@ var hepdata_record = (function () {
           {"width": 200, "height": 200}
         );
 
-        var form = document.forms[form_name];
         var data = new FormData(form);
 
 		    $.ajax({
@@ -64,11 +74,11 @@ var hepdata_record = (function () {
             processData: false,
             contentType: false,
             cache: false,
-            timeout: 58000,
+            timeout: HEPDATA.upload_timeout,
             success: function (data) {
               window.location.href = data['url'];
             },
-            error: function (e) {
+            error: function (e, statusCode, text) {
               message = "<p>We were unable to upload your file.</p>";
 
               if (e.statusText == "timeout") {
@@ -76,7 +86,8 @@ var hepdata_record = (function () {
               } else if (e.responseJSON && e.responseJSON['message']) {
                 message += "<p>" + e.responseJSON['message'] + "</p>";
               } else {
-                message += "<p>An unknown error occurred. Please try again later, or contact info@hepdata.net if the message persists.</p>"
+                message += "<p>An unexpected error occurred. Please try again later, or contact info@hepdata.net if the message persists.</p>"
+                message += "<p>Error details: " + e.status + " " + text + "</p>"
               }
 
               message += '<p><a href="" onclick="window.location.reload(false);">Try again</a></p>'
