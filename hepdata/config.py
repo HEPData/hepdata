@@ -137,6 +137,9 @@ SEARCH_ELASTIC_HOSTS = [
 
 SEARCH_AUTOINDEX = []
 
+UPLOAD_MAX_SIZE = 52000000 # Upload limit in bytes
+NGINX_TIMEOUT = 298 # Client-side timeout in s (should be slightly smaller than server timeout)
+
 CFG_PUB_TYPE = 'publication'
 CFG_DATA_TYPE = 'datatable'
 CFG_SUBMISSIONS_TYPE = 'submission'
@@ -144,7 +147,7 @@ CFG_DATA_KEYWORDS = ['observables', 'reactions', 'cmenergies', 'phrases']
 
 CFG_CONVERTER_URL = 'https://converter.hepdata.net'
 CFG_SUPPORTED_FORMATS = ['yaml', 'root', 'csv', 'yoda']
-CFG_CONVERTER_TIMEOUT = 58  # timeout in seconds
+CFG_CONVERTER_TIMEOUT = NGINX_TIMEOUT # timeout in seconds
 
 CFG_TMPDIR = tempfile.gettempdir()
 CFG_DATADIR = tempfile.gettempdir()
