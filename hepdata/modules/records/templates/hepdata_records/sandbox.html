@@ -138,7 +138,7 @@
                                                     <div class="truncated-record-abstract">
                                                       {% if submission.overall_status == 'sandbox_processing' %}
                                                         {{ submission.publication_recid }} (processing)
-                                                      {% elif submission.data_abstract is none %}
+                                                      {% elif not submission.data_abstract %}
                                                         {{ submission.publication_recid }} (no data abstract)
                                                       {% else %}
                                                         {{ submission.data_abstract }}

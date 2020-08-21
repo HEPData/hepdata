@@ -28,16 +28,18 @@ var hepdata_record = (function () {
         var form = document.forms[form_name];
         var upload_size = $('input[name="hep_archive"]')[0].files[0].size;
         if (upload_size > HEPDATA.upload_max_size) {
-          var message = '<p>Your submission was too large to be uploaded. Please reduce the size of your upload file to less than 50 MB and try again. Please contact info@hepdata.net if you need any further information.</p>'
-          message += '<p><a href="" onclick="window.location.reload(false);">Try again</a></p>'
+          var message = '<p>Your submission of size ' + Math.round(upload_size/1024/1024) + ' MB is too large to be uploaded.</p>';
+          message += '<p>Please reduce the size of your upload file to less than ' + Math.round(HEPDATA.upload_max_size/1024/1024) + ' MB and try again.</p>';
+          message += '<p>Please contact info@hepdata.net if you need any further information.</p>';
+          message += '<p><a href="" onclick="window.location.reload(false);">Try again</a></p>';
           var html = '<div id="upload-message">' + message + '</div>';
           $(".upload-form").css('display', 'none');
           $(placement).append(html);
           return;
         }
 
-        var message = '<p>Uploading files...</p>'
-        message += '<p>(Timeout after 60 seconds.)</p>'
+        var message = '<p>Uploading file...</p>'
+        message += '<p>(Timeout after ' + Math.round(HEPDATA.upload_timeout/60) + ' minutes.)</p>';
         var html = '<div id="upload-progress"></div>' +
           '<div id="upload-message">' + message + '</div>';
         if (insertion_type === 'large_area') {
@@ -82,12 +84,14 @@ var hepdata_record = (function () {
               message = "<p>We were unable to upload your file.</p>";
 
               if (e.statusText == "timeout") {
-                message += "<p>Your submission was too large to be uploaded within the timeout limit. Please try to reduce the size of your upload file (preferably to ~10 MB or less) and try again. This limit may be increased in future. Please contact info@hepdata.net if you need any further information.</p>";
+                message += "<p>Your submission was too large to be uploaded within the timeout limit of " + Math.round(HEPDATA.upload_timeout/60)+ " minutes.</p>";
+                message += "<p>Please reduce the size of your upload file and try again.</p>";
+                message += "<p>Please contact info@hepdata.net if you need any further information.</p>";
               } else if (e.responseJSON && e.responseJSON['message']) {
                 message += "<p>" + e.responseJSON['message'] + "</p>";
               } else {
-                message += "<p>An unexpected error occurred. Please try again later, or contact info@hepdata.net if the message persists.</p>"
-                message += "<p>Error details: " + e.status + " " + text + "</p>"
+                message += "<p>An unexpected error occurred. Please try again later, or contact info@hepdata.net if the message persists.</p>";
+                message += "<p>Error details: " + e.status + " " + text + "</p>";
               }
 
               message += '<p><a href="" onclick="window.location.reload(false);">Try again</a></p>'

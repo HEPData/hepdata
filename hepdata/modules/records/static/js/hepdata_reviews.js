@@ -76,7 +76,7 @@ HEPDATA.render_review_message = function (placement, message) {
   var message_container = d3.select(placement).append('div').attr('class', 'container-fluid');
   var message_item = message_container.append('div').attr('class', 'message-item row-fluid');
   var message_info = message_item.append('div').attr('class', 'message-info col-md-12');
-  message_info.append('p').attr('class', 'message-time').html(date_time[0] + ' at ' + date_time[1]);
+  message_info.append('p').attr('class', 'message-time').html(date_time[0] + ' at ' + date_time[1] + ' UTC');
   var message_div = message_item.append('div').attr('class', 'message-content col-md-12');
   message_div.append('p').attr('class', 'reviewer').text(message.user);
   message_div.append('p').text(message.message);

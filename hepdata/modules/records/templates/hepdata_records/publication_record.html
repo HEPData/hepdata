@@ -265,7 +265,8 @@
 
                     {% if (ctx.show_review_widget or ctx.show_upload_widget or ctx.is_submission_coordinator_or_admin) and ctx.status != 'finished' %}
                         {% include 'hepdata_records/components/reviewer-widget.html' %}
-                        <script>
+                        {% if (ctx.show_review_widget or ctx.is_submission_coordinator_or_admin) %}
+                          <script>
                             function handleShortCuts(e) {
                                 var evtobj = window.event ? event : e;
 
@@ -282,6 +283,7 @@
 
                             document.onkeydown = handleShortCuts;
                         </script>
+                       {% endif %}
                     {% endif %}
 
                     {% if ctx.show_upload_widget or (ctx.is_submission_coordinator_or_admin or ctx.status == 'finished') %}
