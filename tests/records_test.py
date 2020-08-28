@@ -33,15 +33,17 @@ from invenio_db import db
 from werkzeug.datastructures import FileStorage
 
 from hepdata.modules.records.api import process_payload
-from hepdata.modules.records.utils.submission import get_or_create_hepsubmission, unload_submission
+from hepdata.modules.records.utils.submission import get_or_create_hepsubmission, process_submission_directory, do_finalise, unload_submission
 from hepdata.modules.records.utils.common import get_record_by_id
 from hepdata.modules.records.utils.data_processing_utils import generate_table_structure
 from hepdata.modules.records.utils.users import get_coordinators_in_system, has_role
 from hepdata.modules.records.utils.workflow import update_record, create_record
 from hepdata.modules.submission.models import HEPSubmission
 from hepdata.modules.submission.views import process_submission_payload
+from hepdata.modules.submission.api import get_latest_hepsubmission
 from tests.conftest import TEST_EMAIL
 from hepdata.modules.records.utils.records_update_utils import get_inspire_records_updated_since, get_inspire_records_updated_on, update_record_info
+from hepdata.modules.inspire_api.views import get_inspire_record_information
 
 
 def test_record_creation(app):
@@ -286,11 +288,27 @@ def test_update_record_info(app):
             uploader={'name': 'Uploader', 'email': 'uploader@hepdata.net'},
             send_upload_email=False
         )
-        submission.overall_status = 'finished'
-        db.session.add(submission)
+
+        # Process the files to create DataSubmission tables in the DB.
+        base_dir = os.path.dirname(os.path.realpath(__file__))
+        directory = os.path.join(base_dir, 'test_data/test_submission')
+        process_submission_directory(directory, os.path.join(directory, 'submission.yaml'),
+                                     submission.publication_recid)
+        do_finalise(submission.publication_recid, force_finalise=True, convert=False)
+
         if inspire_id == '19999999':
             assert update_record_info(inspire_id) == 'Invalid Inspire ID'
         else:
+
+            # First change the publication information to that of a different record.
+            different_inspire_record_information, status = get_inspire_record_information('1650066')
+            assert status == 'success'
+            hep_submission = get_latest_hepsubmission(inspire_id=inspire_id)
+            assert hep_submission is not None
+            update_record(hep_submission.publication_recid, different_inspire_record_information)
+
+            # Then can check that the update works and that a further update is not required.
             assert update_record_info(inspire_id, send_email=True) == 'Success'
             assert update_record_info(inspire_id) == 'No update needed'  # check case where information already current
+
         unload_submission(submission.publication_recid)

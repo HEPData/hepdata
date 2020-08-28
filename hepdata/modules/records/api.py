@@ -233,7 +233,7 @@ def extract_journal_info(record):
                     'institution']
             else:
                 record['journal_info'] = "PhD Thesis"
-        elif 'conferencepaper' in record['type']:
+        elif 'conference paper' in record['type']:
             record['journal_info'] = "Conference Paper"
 
 
