@@ -146,32 +146,41 @@ def create_dummy_cmenergies_facets(query_filters=None):
     buckets = []
 
     if query_filters:
-        cmenergy_filter_vals = [v for (k,v) in query_filters if k == 'cmenergies' and len(v) > 1]
+        cmenergy_filter_vals = [v for (k,v) in query_filters if k == 'cmenergies']
         if cmenergy_filter_vals:
             # Create filters based on current selection
-            min_limit = int(math.floor(min([v[0] for v in cmenergy_filter_vals])))
-            max_limit = int(math.ceil(max([v[1] for v in cmenergy_filter_vals])))
+            min_limit = int(math.floor(min(
+                [v[0] for v in cmenergy_filter_vals])
+            ))
+            max_limit = int(math.ceil(max(
+                [v[1] if len(v) > 1 else v[0] for v in cmenergy_filter_vals])
+            ))
             if max_limit == MAX_CMENERGY:
                 filter_limits = [min_limit, MAX_CMENERGY]
             else:
                 span = max_limit - min_limit
-                interval = math.ceil(span / 5)
-                base = 5
-
-                if span > 1000:
-                    base = 500
-                elif span > 200:
-                    base = 50
-                elif span > 50:
-                    base = 10
-                elif span > 10:
+                if span > 0:
+                    interval = math.ceil(span / 5)
                     base = 5
-                else:
-                    base = 1
 
-                interval = int(base * math.floor(interval / base))
-                filter_limits = list(range(min_limit, max_limit, interval))
-                filter_limits.append(max_limit)
+                    if span > 1000:
+                        base = 500
+                    elif span > 200:
+                        base = 50
+                    elif span > 50:
+                        base = 10
+                    elif span > 10:
+                        base = 5
+                    else:
+                        base = 1
+
+                    interval = int(base * math.floor(interval / base))
+                    filter_limits = list(range(min_limit, max_limit, interval))
+                    filter_limits.append(max_limit)
+                else:
+                    # If the span is 0, we've only got a single value, so the
+                    # aggregations won't make sense - don't show them.
+                    filter_limits = []
 
     for i in range(len(filter_limits)-1):
         lower_limit = filter_limits[i]
