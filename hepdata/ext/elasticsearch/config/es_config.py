@@ -75,6 +75,8 @@ def get_filter_field(name, value):
         if len(value) > 1:
             key = "lt" if value[1] > value[0] else "lte"
             val_dict[key] = value[1]
+        else:
+            val_dict["lte"] = value[0]
 
         value = val_dict
 
