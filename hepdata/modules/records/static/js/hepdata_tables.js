@@ -96,7 +96,7 @@ HEPDATA.table_renderer = {
 
         HEPDATA.current_table_name = table_data.name;
 
-        $("#table_name").html(table_data.name);
+        $("#table_name").text(table_data.name);
         $("#table_location").html(table_data.location);
         $("#table_doi_contents").html('<a href="https://doi.org/' + table_data.doi + '" target="_blank">' + table_data.doi + '</a>');
 
