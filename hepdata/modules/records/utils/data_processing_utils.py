@@ -24,8 +24,10 @@
 
 from flask import current_app
 from collections import OrderedDict
-
 import re
+
+from hepdata.utils.miscellaneous import sanitize_html
+
 
 def pad_independent_variables(table_contents):
     """
@@ -207,12 +209,14 @@ def generate_table_structure(table_contents):
 
     record = {"name": table_contents["name"], "doi": table_contents["doi"],
               "location": table_contents["location"],
-              "description": table_contents["title"], "qualifiers": {},
+              "qualifiers": {},
               "qualifier_order": [], "headers": [],
               "review": table_contents["review"],
               "associated_files": table_contents["associated_files"],
               "keywords": {},
               "values": []}
+
+    record["description"] = sanitize_html(table_contents["title"])
 
     # add in keywords
     if table_contents['keywords'] is not None:
