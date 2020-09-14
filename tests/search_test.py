@@ -67,7 +67,8 @@ def test_query_builder_add_filters():
         ("collaboration", "test_collaboration"),
         ("subject_areas", "test_subject_area"),
         ("date", [2000, 2001, 2002]),
-        ("reactions", "test_reaction")
+        ("reactions", "test_reaction"),
+        ("cmenergies", [1000.0])
     ])
 
     assert(s.to_dict() == {
@@ -77,7 +78,13 @@ def test_query_builder_add_filters():
                     {"term": {"collaborations.raw": "test_collaboration"}},
                     {"term": {"subject_area.raw": "test_subject_area"}},
                     {"terms": {"year": ["2000", "2001", "2002"]}},
-                    {"term": {"data_keywords.reactions.raw": "test_reaction"}}
+                    {"term": {"data_keywords.reactions.raw": "test_reaction"}},
+                    {"range": {
+                        "data_keywords.cmenergies": {
+                            'gte': 1000.0,
+                            'lte': 1000.0
+                        }
+                    }}
                 ],
                 'must': [{
                     "nested": {

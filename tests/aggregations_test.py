@@ -131,7 +131,6 @@ def test_parse_cmenergies_aggregations_filtered():
     assert(parse_cmenergies_aggregations(buckets, query_filters2) == expected2)
 
 
-
 def test_parse_collaboration_aggregations():
     buckets = [
         {'key': 'collab1', 'doc_count': 3},
@@ -403,7 +402,6 @@ def test_create_dummy_cmenergies_facets():
     }
     assert(create_dummy_cmenergies_facets() == expected)
 
-    # Uncomment these tests once we reinstate the cmenergies aggregations with ES>=7.4
     expected_filtered1 = {
         'vals': [
             {'doc_count': None,
@@ -442,3 +440,12 @@ def test_create_dummy_cmenergies_facets():
         'type': 'cmenergies'
     }
     assert(create_dummy_cmenergies_facets([('cmenergies', [1000.0, 7000.0])]) == expected_filtered2)
+
+    expected_filtered3 = {
+        'vals': [],
+        'max_values': 5,
+        'printable_name': 'CM Energies (GeV)',
+        'type': 'cmenergies'
+    }
+    assert(create_dummy_cmenergies_facets([('cmenergies', [1000.0, 1000.0])]) == expected_filtered3)
+    assert(create_dummy_cmenergies_facets([('cmenergies', [1000.0])]) == expected_filtered3)
