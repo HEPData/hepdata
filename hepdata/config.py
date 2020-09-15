@@ -302,7 +302,7 @@ LOGGING_SENTRY_CELERY = True  # for invenio-logging
 
 # HTML attributes and tags allowed in record descriptions
 ALLOWED_HTML_ATTRS = {'*': ['class'], 'a': ['href', 'title', 'name', 'class', 'rel'], 'abbr': ['title'], 'acronym': ['title']}
-ALLOWED_HTML_TAGS = ['a', 'abbr', 'acronym', 'b', 'blockquote', 'br', 'code', 'div', 'em', 'h1', 'h2', 'h3', 'h4', 'h5', 'i', 'li', 'ol', 'p', 'pre', 'span', 'strike', 'strong', 'sub', 'sup', 'u', 'ul']
+ALLOWED_HTML_TAGS = ['a', 'abbr', 'acronym', 'b', 'blockquote', 'br', 'code', 'div', 'em', 'i', 'li', 'ol', 'p', 'pre', 'span', 'strike', 'strong', 'sub', 'sup', 'u', 'ul']
 
 # Talisman settings (see https://github.com/GoogleCloudPlatform/flask-talisman).
 # We don't want the web pods to use https.
