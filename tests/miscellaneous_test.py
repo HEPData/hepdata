@@ -70,6 +70,8 @@ def test_sanitize_html(app):
              "<b>Here is some bold text</b> and &lt;script&gt;here is a dodgy script&lt;/script&gt;"),
             ("Dphi correlation functions for 0.15<pT<4 GEV/c and 4<p_T^trig<6 GEV/c.",
              "Dphi correlation functions for 0.15&lt;pT&lt;4 GEV/c and 4&lt;p_T^trig&lt;6 GEV/c."),
+            ("Dphi correlation functions for 2 < pT < 4  GEV/c and 4 < p_T^trig < 6 GEV/c",
+             "Dphi correlation functions for 2 &lt; pT &lt; 4  GEV/c and 4 &lt; p_T^trig &lt; 6 GEV/c"),
             ("Variation of Tkin with <β> for different energies and centralities.",
              "Variation of Tkin with &lt;β&gt; for different energies and centralities."),
             ("""- - - - - - - - Overview of HEPData Record - - - - - - - - <br/><br/>
