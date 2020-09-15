@@ -212,7 +212,11 @@ HEPDATA.table_renderer = {
         .enter().append('li').attr('class', 'chip');
 
       var individual_kw_link = individual_kw.append('a').attr('href', function (d) {
-        return '/search?q=&' + d.key + "=" + d.value.trim().replace(/\+/g, "%2B").replace(/\s/g, "+");
+        val = d.value.trim().replace(/\+/g, "%2B").replace(/\s/g, "+")
+        if (d.key == 'cmenergies') {
+          val = val.replace(/-/g, "%2C")
+        }
+        return '/search?q=&' + d.key + "=" + val;
       });
 
       individual_kw_link.append('i').attr('class', 'fa fa-tag').style({'margin-right': '5px', 'display': 'inline'});
