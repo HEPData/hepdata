@@ -34,7 +34,7 @@ from werkzeug.datastructures import FileStorage
 
 from hepdata.modules.records.api import process_payload
 from hepdata.modules.records.utils.submission import get_or_create_hepsubmission, process_submission_directory, do_finalise, unload_submission
-from hepdata.modules.records.utils.common import get_record_by_id
+from hepdata.modules.records.utils.common import get_record_by_id, get_record_contents
 from hepdata.modules.records.utils.data_processing_utils import generate_table_structure
 from hepdata.modules.records.utils.users import get_coordinators_in_system, has_role
 from hepdata.modules.records.utils.workflow import update_record, create_record
@@ -74,6 +74,29 @@ def test_get_record(app, client):
     with app.app_context():
         content = client.get('/record/1')
         assert (content is not None)
+
+
+def test_get_record_contents(app, load_default_data, identifiers):
+    # Status finished - should use ES to get results
+    record1 = get_record_contents(1, status='finished')
+    for key in ["inspire_id", "title"]:
+        assert (record1[key] == identifiers[0][key])
+
+    # Status todo - should use DB for result
+    record2 = get_record_contents(1, status='todo')
+    # DB returns data from an Invenio RecordMetadata obj so has fewer fields
+    # than the ES dict
+    for key in record2.keys():
+        if key == 'last_updated':
+            # Date format is slightly different for DB vs ES
+            assert(record2[key].replace(' ', 'T') == record1[key])
+        else:
+            assert(record2[key] == record1[key])
+
+    record3 = get_record_contents(1)
+    assert (record3 == record1)
+
+    assert(get_record_contents(9999999) is None)
 
 
 def test_get_coordinators(app):

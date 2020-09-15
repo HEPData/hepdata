@@ -380,3 +380,11 @@ def test_reindex_all(app, load_default_data, identifiers):
     # Search should work again
     results = es_api.search('', index=index)
     assert(results['total'] == len(identifiers))
+
+
+def test_get_record(app, load_default_data, identifiers):
+    record = es_api.get_record(1)
+    for key in ["inspire_id", "title"]:
+        assert (record[key] == identifiers[0][key])
+
+    assert(es_api.get_record(9999999) is None)

@@ -216,8 +216,13 @@ def get_record(record_id, index=None):
     :return: [dict] Fetched record
     """
     try:
-        result = es.get(index=index, id=record_id)
-        return result.get('_source', result)
+        search = RecordsSearch(using=es, index=index).source(includes="*")
+        result = search.get_record(record_id).execute()
+        if result.hits.total.value > 0:
+            return result.hits[0].to_dict()
+        else:
+            return None
+
     except (NotFoundError, RequestError):
         return None
 
