@@ -301,6 +301,7 @@ APP_ALLOWED_HOSTS = []
 LOGGING_SENTRY_CELERY = True  # for invenio-logging
 
 # HTML attributes and tags allowed in record descriptions
+# If these are modified, update tips.rst in hepdata-submission
 ALLOWED_HTML_ATTRS = {'*': ['class'], 'a': ['href', 'title', 'name', 'class', 'rel'], 'abbr': ['title'], 'acronym': ['title']}
 ALLOWED_HTML_TAGS = ['a', 'abbr', 'acronym', 'b', 'blockquote', 'br', 'code', 'div', 'em', 'i', 'li', 'ol', 'p', 'pre', 'span', 'strike', 'strong', 'sub', 'sup', 'u', 'ul']
 
