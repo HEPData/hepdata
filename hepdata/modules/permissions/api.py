@@ -52,17 +52,17 @@ def get_records_participated_in_by_user():
     result = {'uploader': [], 'reviewer': [], 'coordinator': []}
     if as_uploader:
         _uploader = [get_record_contents(x.publication_recid) for x in as_uploader]
-        result['uploader'] = filter(partial(is_not, None), _uploader)
+        result['uploader'] = list(filter(partial(is_not, None), _uploader))
 
     if as_reviewer:
         _uploader = [get_record_contents(x.publication_recid) for x in as_reviewer]
-        result['reviewer'] = filter(partial(is_not, None), _uploader)
+        result['reviewer'] = list(filter(partial(is_not, None), _uploader))
 
     if as_coordinator:
         _coordinator = [get_record_contents(x.publication_recid) for x in as_coordinator]
-        result['coordinator'] = filter(partial(is_not, None), _coordinator)
+        result['coordinator'] = list(filter(partial(is_not, None), _coordinator))
 
-    return list(result)
+    return result
 
 
 def get_pending_request():
