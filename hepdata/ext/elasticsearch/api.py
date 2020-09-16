@@ -23,7 +23,7 @@ import re
 from celery import shared_task
 from dateutil.parser import parse
 from flask import current_app
-from elasticsearch.exceptions import NotFoundError, RequestError
+from elasticsearch.exceptions import TransportError
 from elasticsearch_dsl import Search
 from elasticsearch_dsl.query import QueryString, Q
 from invenio_pidstore.models import RecordIdentifier
@@ -216,9 +216,14 @@ def get_record(record_id, index=None):
     :return: [dict] Fetched record
     """
     try:
-        result = es.get(index=index, id=record_id)
-        return result.get('_source', result)
-    except (NotFoundError, RequestError):
+        search = RecordsSearch(using=es, index=index).source(includes="*")
+        result = search.get_record(record_id).execute()
+        if result.hits.total.value > 0:
+            return result.hits[0].to_dict()
+        else:
+            return None
+
+    except TransportError:
         return None
 
 

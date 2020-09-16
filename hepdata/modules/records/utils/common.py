@@ -204,14 +204,19 @@ def truncate_string(string, words):
     return truncated_string
 
 
-def get_record_contents(recid):
+def get_record_contents(recid, status=None):
     """
     Tries to get record from Elasticsearch first. Failing that, it tries from the database.
 
     :param recid: Record ID to get.
+    :param status: Status of submission. If provided and not 'finished', will not check elasticsearch first.
     :return: a dictionary containing the record contents if the recid exists, None otherwise.
     """
-    record = get_record(recid)
+    record = None
+
+    if status is None or status == 'finished':
+        record = get_record(recid)
+
     if record is None:
         try:
             record = get_record_by_id(recid)
