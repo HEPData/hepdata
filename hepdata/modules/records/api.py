@@ -675,9 +675,10 @@ def process_data_tables(ctx, data_record_query, first_data_id,
                 "name": submission_record.name,
                 "location": submission_record.location_in_publication,
                 "doi": submission_record.doi,
-                "description": truncate_string(
-                    sanitize_html(submission_record.description),
-                    20
+                "description": sanitize_html(
+                    truncate_string(submission_record.description, 20),
+                    tags=[],
+                    strip=True
                 )
             }
 
