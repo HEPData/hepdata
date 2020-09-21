@@ -151,7 +151,8 @@ class AdminIndexer:
         for sub_participant in submission.participants:
             participants.append({'full_name': sub_participant.full_name, 'role': sub_participant.role})
 
-        record_information = get_record_contents(submission.publication_recid)
+        record_information = get_record_contents(submission.publication_recid,
+                                                 submission.overall_status)
 
         data_count = DataSubmission.query.filter(DataSubmission.publication_recid == submission.publication_recid,
                                                  DataSubmission.version == submission.version).count()
