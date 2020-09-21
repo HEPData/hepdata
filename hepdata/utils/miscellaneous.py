@@ -20,9 +20,53 @@
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
+import re
+
+import bleach
+
+
 def splitter(data, predicate):
     """Split a list according to a given predicate (lambda)."""
     yes, no = [], []
     for d in data:
         (yes if predicate(d) else no).append(d)
     return yes, no
+
+
+def sanitize_html(value, tags=None, attributes=None, strip=False):
+    """Sanitize HTML.
+
+    :param tags: Allowed HTML ``tags``. Configuration set by Invenio-Config.
+    :param attributes: Allowed HTML ``attributes``. Configuration set by
+        Invenio-Config.
+    :param strip: Whether to strip tags that are not allowed. Defaults to
+        False (escapes rather than strips disallowed tags).
+
+    Use this function when you need to include unescaped HTML that contains
+    user provided data.
+    """
+    if value is None:
+        return value
+
+    from flask import current_app
+
+    value = value.strip()
+
+    # Look for conditions like v1<x<v2 which look like invalid HTML,
+    # and escape them before running bleach
+    p = re.compile('<([^>]*?)<')
+    escaped = p.sub(r'&lt;\1&lt;', value)
+
+    tags = tags if tags is not None \
+        else current_app.config.get('ALLOWED_HTML_TAGS', [])
+    attributes = attributes if attributes is not None \
+        else current_app.config.get('ALLOWED_HTML_ATTRS', {})
+
+    cleaned = bleach.clean(
+        escaped,
+        tags=tags,
+        attributes=attributes,
+        strip=strip
+    )
+
+    return cleaned
