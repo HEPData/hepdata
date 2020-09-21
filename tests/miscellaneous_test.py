@@ -68,10 +68,14 @@ def test_sanitize_html(app):
         test_cases = [
             ("<b>Here is some bold text</b> and <script>here is a dodgy script</script>",
              "<b>Here is some bold text</b> and &lt;script&gt;here is a dodgy script&lt;/script&gt;"),
-            ("Dphi correlation functions for 0.15<pT<4 GEV/c and 4<p_T^trig<6 GEV/c.",
-             "Dphi correlation functions for 0.15&lt;pT&lt;4 GEV/c and 4&lt;p_T^trig&lt;6 GEV/c."),
+            ("<i>Dphi</i> correlation functions for 0.15<pT<4 GEV/c and 4<p_T^trig<6 GEV/c.",
+             "<i>Dphi</i> correlation functions for 0.15&lt;pT&lt;4 GEV/c and 4&lt;p_T^trig&lt;6 GEV/c."),
             ("Dphi correlation functions for 2 < pT < 4  GEV/c and 4 < p_T^trig < 6 GEV/c",
              "Dphi correlation functions for 2 &lt; pT &lt; 4  GEV/c and 4 &lt; p_T^trig &lt; 6 GEV/c"),
+            ("Dphi correlation functions for pT<0.15 GEV/c",
+             "Dphi correlation functions for pT&lt;0.15 GEV/c"),
+            ("Dphi correlation functions for pT>4 GEV/c",
+             "Dphi correlation functions for pT&gt;4 GEV/c"),
             ("Variation of Tkin with <β> for different energies and centralities.",
              "Variation of Tkin with &lt;β&gt; for different energies and centralities."),
             ("""- - - - - - - - Overview of HEPData Record - - - - - - - - <br/><br/>
@@ -85,7 +89,8 @@ SRs</a> <li><a href=\"89413?version=1&table=Backgroundfit3\">inclusive SF-0J SRs
 </li><li><a href=\"89413?version=1&amp;table=Backgroundfit2\">VRs</a> </li><li><a href=\"89413?version=1&amp;table=Backgroundfit5\">inclusive
 DF-0J SRs</a> </li><li><a href=\"89413?version=1&amp;table=Backgroundfit6\">inclusive DF-1J
 SRs</a> </li><li><a href=\"89413?version=1&amp;table=Backgroundfit3\">inclusive SF-0J SRs</a>
-</li><li><a href=\"89413?version=1&amp;table=Backgroundfit4\">inclusive SF-1J SRs</a> </li></ul>""")
+</li><li><a href=\"89413?version=1&amp;table=Backgroundfit4\">inclusive SF-1J SRs</a> </li></ul>"""),
+            (None, None)
         ]
 
         # Test default params
@@ -102,3 +107,5 @@ SRs</a> </li><li><a href=\"89413?version=1&amp;table=Backgroundfit3\">inclusive 
         assert(sanitize_html("<a href=\"89413?version=1&amp;table=Backgroundfit3\">inclusive SF-0J SRs</a>",
                              attributes=["title"])
                == "<a>inclusive SF-0J SRs</a>")
+        assert(sanitize_html(test_cases[1][0], tags=[], strip=True)
+               == "Dphi correlation functions for 0.15&lt;pT&lt;4 GEV/c and 4&lt;p_T^trig&lt;6 GEV/c.")

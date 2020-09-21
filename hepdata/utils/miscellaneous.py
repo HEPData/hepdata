@@ -20,8 +20,10 @@
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
+import re
+
 import bleach
-import html
+
 
 def splitter(data, predicate):
     """Split a list according to a given predicate (lambda)."""
@@ -43,29 +45,28 @@ def sanitize_html(value, tags=None, attributes=None, strip=False):
     Use this function when you need to include unescaped HTML that contains
     user provided data.
     """
+    if value is None:
+        return value
+
     from flask import current_app
 
-    # The lines below were copied from invenio-formatter but with the addition
-    # of the strip parameter.
     value = value.strip()
+
+    # Look for conditions like v1<x<v2 which look like invalid HTML,
+    # and escape them before running bleach
+    p = re.compile('<([^>]*?)<')
+    escaped = p.sub(r'&lt;\1&lt;', value)
+
+    tags = tags if tags is not None \
+        else current_app.config.get('ALLOWED_HTML_TAGS', [])
+    attributes = attributes if attributes is not None \
+        else current_app.config.get('ALLOWED_HTML_ATTRS', {})
+
     cleaned = bleach.clean(
-        value,
-        tags=tags or current_app.config.get('ALLOWED_HTML_TAGS', []),
-        attributes=attributes or current_app.config.get(
-            'ALLOWED_HTML_ATTRS', {}),
+        escaped,
+        tags=tags,
+        attributes=attributes,
         strip=strip
     )
 
-    # If bleach.clean returns a shorter string than the original input,
-    # it must have cut off some 'invalid' HTML (rather than expanded any
-    # disallowed tags). This is unlikely to be intended behaviour so it's
-    # more likely that there are some < or > signs in there without spaces,
-    # and that we should not treat the fragment as HTML.
-    # Only do this step if using the default arguments, otherwise we might
-    # expect tags/attributes to be stripped and the resulting string to be
-    # shorter
-    if not strip and tags is None and attributes is None \
-            and len(cleaned) < len(value):
-        return html.escape(value, quote=True)
-    else:
-        return cleaned
+    return cleaned
