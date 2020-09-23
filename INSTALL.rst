@@ -230,22 +230,6 @@ Alternatively, after `installing Docker <https://docs.docker.com/install/>`_, yo
 then specify ``CFG_CONVERTER_URL = 'http://localhost:5500'`` in ``hepdata/config_local.py`` (see above).
 
 
-Run using honcho
-----------------
-
-Note added: I haven't tested if this method works.  The ``Procfile`` has not been updated since 2016.
-This section should be removed if it no longer works, unless any problems can be fixed.
-
-Honcho will run elasticsearch, redis, celery, and the web application for you automatically.
-Just workon your virtual environment, go to the root directory of hepdata source where you can see a file called
-Procfile. Then install flower if you haven't done so already, and then start honcho.
-
-.. code-block:: console
-
-   (hepdata)$ pip install flower
-   (hepdata)$ honcho start
-
-
 .. _running-docker-compose:
 
 **************************
