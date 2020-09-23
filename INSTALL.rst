@@ -124,7 +124,7 @@ Run Celery (-B runs celery beat):
 
 .. code-block:: console
 
-   (hepdata)$ celery worker -l info -E -B -A hepdata.celery
+   (hepdata)$ celery worker -l info -E -B -A hepdata.celery -Q celery,priority
 
 PostgreSQL
 ----------
