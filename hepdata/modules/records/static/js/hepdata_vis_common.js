@@ -150,8 +150,7 @@ HEPDATA.dataprocessing = {
 
               processed_value = HEPDATA.dataprocessing.processed_key(processed_value, 'x', options);
               processed_value = HEPDATA.dataprocessing.processed_key(processed_value, 'y', options);
-              if (isNaN(processed_value.value) ||
-                  (options.y_scale == 'log' && processed_value.value == 0)) continue;
+              if (isNaN(processed_value.value)) continue;
 
 
               if (processed_value.value < HEPDATA.stats.min_value) HEPDATA.stats.min_value = processed_value.value;
