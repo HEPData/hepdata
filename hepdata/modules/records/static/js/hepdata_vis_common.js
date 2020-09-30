@@ -27,13 +27,13 @@ HEPDATA.visualization.utils = {
         return d.x;
       })).rangePoints([0, max_range]);
     } else {
-      var scale = scale_type == 'log' && HEPDATA.stats.min_x > 0 ? d3.scale.log() : d3.scale.linear();
+      var scale = scale_type == 'log' ? d3.scale.log() : d3.scale.linear();
       var range = [0, max_range];
       if (min == null) {
         min = 0; max = 1;
       } else if (min == max) {
         // If only one value, rescale so value is drawn in middle of axis.
-        if (scale_type == 'log' && HEPDATA.stats.min_x > 0) {
+        if (scale_type == 'log') {
           min = 0.5*min;
           max = 2.0*max;
         } else {
@@ -167,7 +167,10 @@ HEPDATA.dataprocessing = {
 
               processed_value = HEPDATA.dataprocessing.processed_key(processed_value, 'x', options);
               if (isNaN(processed_value.y) ||
-                  (options.y_scale == 'log' && processed_value.y == 0)) continue;
+                  (options.y_scale == 'log' && processed_value.y == 0) ||
+                  (options.x_scale == 'log' && (processed_value.x == 0 || processed_value.x_min == 0))) {
+                    continue;
+              }
               processed_value = HEPDATA.dataprocessing.processed_key(processed_value, 'y', options);
 
             }
@@ -412,7 +415,7 @@ HEPDATA.legends = {
       HEPDATA.visualization.histogram.render_option("Fill bars", 'bool', "fill_bars", rendering_options, "HEPDATA.visualization.histogram.toggle_bool_option('fill_bars', this)");
     }
 
-    if (HEPDATA.stats.min_x > 0 && HEPDATA.stats.min_x < HEPDATA.stats.max_x) HEPDATA.visualization.histogram.render_option("Log Scale (X)", 'scale', "x_scale", rendering_options, "HEPDATA.visualization.histogram.toggle_scale_option('x_scale', this)");
+    if (HEPDATA.stats.min_x < HEPDATA.stats.max_x) HEPDATA.visualization.histogram.render_option("Log Scale (X)", 'scale', "x_scale", rendering_options, "HEPDATA.visualization.histogram.toggle_scale_option('x_scale', this)");
     if (HEPDATA.stats.min_y < HEPDATA.stats.max_y) HEPDATA.visualization.histogram.render_option("Log Scale (Y)", 'scale', "y_scale", rendering_options, "HEPDATA.visualization.histogram.toggle_scale_option('y_scale', this)");
 
     rendering_options.append("hr");

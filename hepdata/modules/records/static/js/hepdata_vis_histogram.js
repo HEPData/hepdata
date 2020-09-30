@@ -77,7 +77,9 @@ HEPDATA.visualization.histogram = {
 
       if (_aggregated_values[value_obj.name]["y_errors"]) {
         _aggregated_values[value_obj.name]["values"].push(value_obj);
-      } else if (HEPDATA.visualization.histogram.options.mode != HEPDATA.visualization.histogram.modes.scatter && value_obj.x_min != undefined) {
+      } else if (HEPDATA.visualization.histogram.options.mode != HEPDATA.visualization.histogram.modes.scatter &&
+                 value_obj.x_min != undefined &&
+                 (HEPDATA.visualization.histogram.options.x_scale != 'log' || value_obj.x_min > 0)) {
         _aggregated_values[value_obj.name]["values"].push({
           x: value_obj.x_min,
           y: value_obj.y,
