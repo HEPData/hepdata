@@ -39,11 +39,16 @@ ACCEPTED_REMOTE_SCHEMAS = [
     {
         'base_url': 'https://scikit-hep.org/pyhf/schemas/1.0.0/',
         'schemas': [
-            'jsonpatch.json',
-            'measurement.json',
-            'model.json',
-            'patchset.json',
-            'workspace.json',
+            # The schemas need to be rendered by HEPData.
+            # Containing fields: `independent_variables` and `dependent_variables`
+            # Ref: https://github.com/HEPData/hepdata/pull/241#issuecomment-702389464
+            #
+            # None of the following pyhf schemas at v1.0.0 comply:
+            # 'jsonpatch.json',
+            # 'measurement.json',
+            # 'model.json',
+            # 'patchset.json',
+            # 'workspace.json',
         ],
     },
 ]
