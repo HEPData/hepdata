@@ -62,6 +62,10 @@ from hepdata_converter_ws_client import Error
 import tempfile
 from shutil import rmtree
 
+import logging
+logging.basicConfig()
+log = logging.getLogger(__name__)
+
 RECORD_PLAIN_TEXT = {
     "passed": "passed review",
     "attention": "attention required",
@@ -380,6 +384,12 @@ def process_payload(recid, file, redirect_url, synchronous=False):
 
 @shared_task
 def process_saved_file(file_path, recid, userid, redirect_url, previous_status):
+
+    hepsubmission = get_latest_hepsubmission(publication_recid=recid)
+    if hepsubmission.overall_status != 'processing' and hepsubmission.overall_status != 'sandbox_processing':
+        log.error('Record {} is not in a processing state.'.format(recid))
+        return
+
     errors = process_zip_archive(file_path, recid)
 
     uploader = User.query.get(userid)
@@ -392,7 +402,6 @@ def process_saved_file(file_path, recid, userid, redirect_url, previous_status):
     else:
         full_name = uploader.email
 
-    hepsubmission = get_latest_hepsubmission(publication_recid=recid)
     if errors:
         cleanup_submission(recid, hepsubmission.version, [])  # delete all tables if errors
         message_body = render_template('hepdata_theme/email/upload_errors.html',
