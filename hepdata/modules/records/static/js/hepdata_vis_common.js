@@ -166,8 +166,8 @@ HEPDATA.dataprocessing = {
 
               processed_value = HEPDATA.dataprocessing.processed_key(processed_value, 'x', options);
               if (isNaN(processed_value.y) ||
-                  (options.y_scale == 'log' && processed_value.y == 0) ||
-                  (options.x_scale == 'log' && (processed_value.x == 0 || processed_value.x_min == 0))) {
+                  (options.y_scale == 'log' && processed_value.y <= 0) ||
+                  (options.x_scale == 'log' && (processed_value.x <= 0 || processed_value.x_min <= 0))) {
                     continue;
               }
               processed_value = HEPDATA.dataprocessing.processed_key(processed_value, 'y', options);
