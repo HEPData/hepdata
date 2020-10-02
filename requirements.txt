@@ -14,7 +14,7 @@ Flask-Login==0.3.2
 gevent==1.4.0
 gunicorn==19.5.0
 hepdata-converter-ws-client==0.1.6
-hepdata-validator==0.2.2
+hepdata-validator==0.2.3
 idna<2.8,>=2.5             # Indirect ('invenio-search', 'email-validator')
 invenio-access==1.0.2      # Indirect (needed by invenio-admin)
 invenio-accounts==1.0.2
