@@ -332,7 +332,7 @@ HEPDATA.dataprocessing = {
           HEPDATA.stats['min_' + key] = processed_value_obj[key + '_min'];
         }
 
-      } else if (!isNaN(parseFloat(val["value"]))) {
+      } else if (!isNaN(val["value"])) {
         processed_value_obj[key] = +val["value"];
 
         if (processed_value_obj[key] > HEPDATA.stats['max_' + key]) HEPDATA.stats['max_' + key] = processed_value_obj[key];
