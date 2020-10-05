@@ -58,6 +58,12 @@ I18N_LANGUAGES = [
 CELERY_BROKER_URL = "redis://localhost:6379/0"
 CELERY_RESULT_BACKEND = "redis://localhost:6379/1"
 CELERY_ACCEPT_CONTENT = ['json', 'msgpack', 'yaml']
+CELERY_WORKER_PREFETCH_MULTIPLIER = 1
+CELERY_TASK_CREATE_MISSING_QUEUES = True
+CELERY_TASK_ROUTES = {
+    'hepdata.modules.email.utils.send_email': {'queue': 'priority'},
+    'hepdata.modules.records.api.process_saved_file': {'queue': 'priority'},
+}
 
 CELERY_BEAT_SCHEDULE = {
     'update_analyses': {
