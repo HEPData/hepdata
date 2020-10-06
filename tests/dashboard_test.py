@@ -20,6 +20,7 @@
 # In applying this license, CERN does not
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
+from invenio_db import db
 from hepdata.modules.dashboard.api import add_user_to_metadata, \
     create_record_for_dashboard, prepare_submissions, \
     get_pending_invitations_for_user
@@ -152,6 +153,84 @@ def test_prepare_submissions_admin(app, load_submission):
             'stats': {'attention': 0, 'passed': 0, 'todo': 0},
             'status': u'todo'
         })
+
+
+def test_prepare_submissions_participant(app, load_submission):
+    with app.app_context():
+        record_information = create_record({
+            'journal_info': 'Phys. Letts',
+            'title': 'My Journal Paper',
+            'inspire_id': '1487726'
+        })
+        hepsubmission = get_or_create_hepsubmission(record_information['recid'])
+
+        user = User(email='test@test.com', password='hello1', active=True)
+        db.session.add(user)
+        db.session.commit()
+
+        participant = SubmissionParticipant(
+            publication_recid=record_information['recid'],
+            role="uploader",
+            email='test@test.com',
+            status='primary',
+            user_account=user.id)
+        db.session.add(participant)
+        hepsubmission.participants.append(participant)
+        db.session.add(hepsubmission)
+        db.session.commit()
+
+        participant_submissions = prepare_submissions(user)
+        assert(len(participant_submissions) == 1)
+        assert(participant_submissions[str(record_information['recid'])] == {
+            'metadata': {
+                'coordinator': {'email': u'test@hepdata.net',
+                                'name': u'test@hepdata.net',
+                                'id': 1},
+                'recid': str(record_information['recid']),
+                'role': ['uploader'],
+                'show_coord_view': False,
+                'start_date': hepsubmission.created,
+                'last_updated': hepsubmission.last_updated,
+                'title': u'My Journal Paper',
+                'versions': 1
+            },
+            'stats': {'attention': 0, 'passed': 0, 'todo': 0},
+            'status': u'todo'
+        })
+
+        # Add a new submission as coordinator
+        record_information2 = create_record({
+            'journal_info': 'Another Journal',
+            'title': 'My New Journal Paper',
+            'inspire_id': '123456'
+        })
+        hepsubmission = get_or_create_hepsubmission(record_information2['recid'], coordinator=user.id)
+        all_submissions = prepare_submissions(user)
+        assert(len(all_submissions) == 2)
+        assert(all_submissions[str(record_information2['recid'])] == {
+            'metadata': {
+                'coordinator': {'email': u'test@test.com',
+                                'name': u'test@test.com',
+                                'id': user.id},
+                'recid': str(record_information2['recid']),
+                'role': ['coordinator'],
+                'show_coord_view': True,
+                'start_date': hepsubmission.created,
+                'last_updated': hepsubmission.last_updated,
+                'title': u'My New Journal Paper',
+                'versions': 1
+            },
+            'stats': {'attention': 0, 'passed': 0, 'todo': 0},
+            'status': u'todo'
+        })
+
+        # change status to 'finished' and check new submission no longer appears
+        hepsubmission.overall_status = 'finished'
+        db.session.add(hepsubmission)
+        db.session.commit()
+        all_submissions = prepare_submissions(user)
+        assert(len(all_submissions) == 1)
+        assert(list(all_submissions.keys()) == [str(record_information['recid'])])
 
 
 def test_get_pending_invitations_for_user_empty(app):
