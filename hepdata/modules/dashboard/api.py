@@ -102,37 +102,35 @@ def prepare_submissions(current_user):
     """
 
     submissions = OrderedDict()
-    hepdata_submission_records = []
 
-    if has_role(current_user, 'admin'):
-        # if the user is a superadmin, show everything here.
-        # The final rendering in the dashboard should be different
-        # though considering the user him/herself is probably not a
-        # reviewer/uploader
-        hepdata_submission_records = HEPSubmission.query.filter(
-            or_(HEPSubmission.overall_status == 'processing',
-                HEPSubmission.overall_status == 'todo')).order_by(
-            HEPSubmission.last_updated.desc()).all()
-    else:
-        # we just want to pick out people with access to particular records,
-        # i.e. submissions for which they are primary reviewers.
+    query = HEPSubmission.query.filter(
+        HEPSubmission.overall_status.in_(['processing', 'todo']),
+    )
 
-        participant_records = SubmissionParticipant.query.filter_by(
+    # if the user is a superadmin, show everything here.
+    # The final rendering in the dashboard should be different
+    # though considering the user him/herself is probably not a
+    # reviewer/uploader
+    if not has_role(current_user, 'admin'):
+        # Not an admin user
+        # We just want to pick out people with access to particular records,
+        # i.e. submissions for which they are primary reviewers or coordinators.
+
+        inner_query = SubmissionParticipant.query.filter_by(
             user_account=int(current_user.get_id()),
-            status='primary').order_by(SubmissionParticipant.id.desc()).all()
+            status='primary'
+        ).with_entities(
+            SubmissionParticipant.publication_recid
+        )
 
-        for participant_record in participant_records:
-            hepdata_submission_records += HEPSubmission.query.filter(
-                HEPSubmission.publication_recid == participant_record.publication_recid,
-                or_(HEPSubmission.overall_status == 'processing',
-                    HEPSubmission.overall_status == 'todo')).order_by(HEPSubmission.last_updated.desc()).all()
+        query.filter(
+            or_(HEPSubmission.coordinator == int(current_user.get_id()),
+                HEPSubmission.publication_recid.in_(inner_query))
+        )
 
-        coordinator_submissions = HEPSubmission.query.filter(
-            HEPSubmission.coordinator == int(current_user.get_id()),
-            or_(HEPSubmission.overall_status == 'processing',
-                HEPSubmission.overall_status == 'todo')).order_by(HEPSubmission.last_updated.desc()).all()
-
-        hepdata_submission_records += coordinator_submissions
+    hepdata_submission_records = query.order_by(
+        HEPSubmission.last_updated.desc()
+    )
 
     for hepdata_submission in hepdata_submission_records:
 
