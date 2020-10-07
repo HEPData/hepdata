@@ -44,7 +44,7 @@ HEPDATA.visualization.heatmap = {
 
     HEPDATA.visualization.heatmap.placement = placement;
 
-    var processed_dict = HEPDATA.dataprocessing.process_data_values(data);
+    var processed_dict = HEPDATA.dataprocessing.process_data_values(data, HEPDATA.visualization.heatmap.options);
 
     HEPDATA.visualization.heatmap.render_axis_selector(data, "#legend");
 
