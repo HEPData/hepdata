@@ -1,4 +1,6 @@
 var dashboard = (function () {
+  var data = {};
+
   var initialise_list_filter = function () {
     $(".filter-list li").bind('click', function () {
       var id_parts = this.id.split("-");
@@ -142,20 +144,46 @@ var dashboard = (function () {
     });
   };
 
+  var load_submissions = function() {
+    $.get("/dashboard/dashboard-submissions").done(function (data) {
+      $('#submissions-loader').hide();
+      $('#hep-submissions').html(data).fadeIn(500);
+      dashboard.render_submission_stats();
+    }).fail(function () {
+      $('#submissions-loader').hide();
+      $('#hep-submissions').html("Unable to load submissions. Please try again later.").fadeIn(500);
+    });
+  }
+
+  var display_loader = function() {
+    $('#submissions-loader').show();
+    HEPDATA.render_loader(
+      "#submissions-loader",
+      [
+        {x: 26, y: 30, color: "#955BA5"},
+        {x: -60, y: 55, color: "#FFFFFF"},
+        {x: 37, y: -10, color: "#955BA5"},
+        {x: -60, y: 10, color: "#955BA5"},
+        {x: -27, y: -30, color: "#955BA5"},
+        {x: 60, y: -55, color: "#FFFFFF"}
+      ],
+      {"width": 200, "height": 200}
+    );
+  };
+
   return {
-    initialise: function (data) {
+    initialise: function () {
+      display_loader();
+
       MathJax.Hub.Config({
         tex2jax: {inlineMath: [['$', '$'], ['\\(', '\\)']]}
       });
 
       MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
 
-      for (var submission_idx in data) {
-        HEPDATA.visualization.submission_status.render(data[submission_idx]);
-      }
-
       initialise_list_filter();
       initialise_finalise_btn();
+      load_submissions();
       load_watched_records();
       load_permissions();
 
@@ -176,6 +204,12 @@ var dashboard = (function () {
       }).fail(function (data) {
         alert("Unable to unwatch this record. An error occurred.");
       })
+    },
+
+    render_submission_stats: function () {
+      for (var submission_idx in this.data) {
+        HEPDATA.visualization.submission_status.render(this.data[submission_idx]);
+      }
     }
   }
 })();

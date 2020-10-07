@@ -54,7 +54,20 @@ def dashboard():
     dashboard that reflects the
     current status of all submissions of which they are a participant.
     """
+    user_profile = current_userprofile.query.filter_by(user_id=current_user.get_id()).first()
 
+    ctx = {'user_is_admin': has_role(current_user, 'admin'),
+           'user_profile': user_profile,
+           'user_has_coordinator_request': get_pending_request(),
+           'pending_coordinator_requests': get_pending_coordinator_requests(),
+           'pending_invites': get_pending_invitations_for_user(current_user)}
+
+    return render_template('hepdata_dashboard/dashboard.html', ctx=ctx)
+
+
+@blueprint.route('/dashboard-submissions')
+@login_required
+def dashboard_submissions():
     submissions = prepare_submissions(current_user)
 
     submission_meta = []
@@ -90,17 +103,12 @@ def dashboard():
 
         submission_meta.append(submissions[record_id]["metadata"])
 
-    user_profile = current_userprofile.query.filter_by(user_id=current_user.get_id()).first()
+    ctx = {
+        'submissions': submission_meta,
+        'submission_stats': submission_stats
+    }
 
-    ctx = {'user_is_admin': has_role(current_user, 'admin'),
-           'submissions': submission_meta,
-           'user_profile': user_profile,
-           'user_has_coordinator_request': get_pending_request(),
-           'pending_coordinator_requests': get_pending_coordinator_requests(),
-           'submission_stats': json.dumps(submission_stats),
-           'pending_invites': get_pending_invitations_for_user(current_user)}
-
-    return render_template('hepdata_dashboard/dashboard.html', ctx=ctx)
+    return render_template('hepdata_dashboard/dashboard-submissions.html', ctx=ctx)
 
 
 @blueprint.route('/delete/<int:recid>')

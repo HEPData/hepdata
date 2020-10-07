@@ -175,7 +175,13 @@ body, html {
       -webkit-padding-start: 0px;
       width: 100%;
       padding: 0px;
+    }
 
+    #submissions-loader {
+      padding-top: 60px;
+      padding-bottom: 40px;
+      width: 200px;
+      margin: 0 auto;
     }
 
     .watch-list, .permission-list {
@@ -774,4 +780,3 @@ body, html {
   }
 
 }
-
