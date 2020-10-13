@@ -33,11 +33,11 @@ HEPDATA.visualization.histogram = {
     HEPDATA.visualization.histogram.data = data;
     HEPDATA.visualization.histogram.placement = placement;
     HEPDATA.visualization.histogram.histogram_added = false;
+    HEPDATA.reset_stats();
 
     HEPDATA.visualization.histogram.options = $.extend(HEPDATA.visualization.histogram.options, options);
 
-    var processed_dict = HEPDATA.dataprocessing.process_data_values(data);
-
+    var processed_dict = HEPDATA.dataprocessing.process_data_values(data, HEPDATA.visualization.histogram.options);
 
     if ((data.headers[0] == undefined || data.headers[0].name == '') && data.values.length == 0) {
       d3.select(placement).append("div").attr("class", "alert alert-warning").text("Unable to render a plot since there is no data to render.");
@@ -48,7 +48,7 @@ HEPDATA.visualization.histogram = {
     HEPDATA.visualization.histogram.x_index = data.headers[0].name;
 
     HEPDATA.visualization.histogram.x_scale = HEPDATA.visualization.utils.calculate_x_scale(HEPDATA.visualization.histogram.options.x_scale, HEPDATA.stats.min_x, HEPDATA.stats.max_x, HEPDATA.visualization.histogram.options, processed_dict["processed"]);
-    HEPDATA.visualization.histogram.y_scale = HEPDATA.visualization.utils.calculate_y_scale(HEPDATA.visualization.histogram.options.y_scale, HEPDATA.stats.min_y, HEPDATA.stats.max_y, HEPDATA.visualization.histogram.options);
+    HEPDATA.visualization.histogram.y_scale = HEPDATA.visualization.utils.calculate_y_scale(HEPDATA.visualization.histogram.options.y_scale, HEPDATA.stats.min_y, HEPDATA.stats.max_y, HEPDATA.visualization.histogram.options, processed_dict["processed"]);
 
     HEPDATA.visualization.histogram.x_axis = d3.svg.axis().scale(HEPDATA.visualization.histogram.x_scale).orient("bottom").tickPadding(2);
     HEPDATA.visualization.histogram.y_axis = d3.svg.axis().scale(HEPDATA.visualization.histogram.y_scale).orient("left").tickPadding(2);
@@ -77,7 +77,9 @@ HEPDATA.visualization.histogram = {
 
       if (_aggregated_values[value_obj.name]["y_errors"]) {
         _aggregated_values[value_obj.name]["values"].push(value_obj);
-      } else if (HEPDATA.visualization.histogram.options.mode != HEPDATA.visualization.histogram.modes.scatter && value_obj.x_min != undefined) {
+      } else if (HEPDATA.visualization.histogram.options.mode != HEPDATA.visualization.histogram.modes.scatter &&
+                 value_obj.x_min != undefined &&
+                 (HEPDATA.visualization.histogram.options.x_scale != 'log' || value_obj.x_min > 0)) {
         _aggregated_values[value_obj.name]["values"].push({
           x: value_obj.x_min,
           y: value_obj.y,
@@ -291,7 +293,8 @@ HEPDATA.visualization.histogram = {
         dot_groups.append("line")
           .attr("x1", 0)
           .attr("y1", function (d) {
-            if (!isNaN(d.quad_error.err_minus)) {
+            if (!isNaN(d.quad_error.err_minus) &&
+                (HEPDATA.visualization[type].options.y_scale != 'log' || (d.y + d.quad_error.err_minus) > 0)) {
               return HEPDATA.visualization[type].y_scale(d.y + d.quad_error.err_minus) - HEPDATA.visualization[type].y_scale(d.y);
             } else {
               return 0;
@@ -299,7 +302,8 @@ HEPDATA.visualization.histogram = {
           })
           .attr("x2", 0)
           .attr("y2", function (d) {
-            if (!isNaN(d.quad_error.err_plus)) {
+            if (!isNaN(d.quad_error.err_plus) &&
+                (HEPDATA.visualization[type].options.y_scale != 'log' || (d.y + d.quad_error.err_plus) > 0)) {
               return HEPDATA.visualization[type].y_scale(d.y + d.quad_error.err_plus) - HEPDATA.visualization[type].y_scale(d.y);
             } else {
               return 0;

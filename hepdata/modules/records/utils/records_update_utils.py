@@ -5,10 +5,11 @@ import math
 
 from hepdata.modules.records.utils.doi_minter import generate_dois_for_submission
 from hepdata.modules.submission.api import get_latest_hepsubmission
+from hepdata.modules.submission.models import DataSubmission
 from hepdata.modules.records.utils.common import get_record_by_id
 from hepdata.modules.records.utils.workflow import update_record
 from hepdata.modules.inspire_api.views import get_inspire_record_information
-from hepdata.ext.elasticsearch.api import index_record_ids
+from hepdata.ext.elasticsearch.api import index_record_ids, push_data_keywords
 from hepdata.modules.email.api import notify_publication_update
 from hepdata.resilient_requests import resilient_requests
 
@@ -37,33 +38,58 @@ def update_record_info(inspire_id, send_email=False):
         log.warning("Failed to retrieve HEPData submission for Inspire ID {0}".format(inspire_id))
         return 'No HEPData submission'
 
-    recid = hep_submission.publication_recid
+    publication_recid = hep_submission.publication_recid
 
-    log.info("Updating recid {} with information from Inspire record {}".format(recid, inspire_id))
+    log.info("Updating recid {} with information from Inspire record {}".format(publication_recid, inspire_id))
 
-    updated_record_information, status = get_inspire_record_information(inspire_id)
+    updated_inspire_record_information, status = get_inspire_record_information(inspire_id)
 
     if status == 'success':
-        record_information = get_record_by_id(recid)
-        same_information = True
-        if record_information is not None:
+
+        # Also need to update publication information for data records.
+        data_submissions = DataSubmission.query.filter_by(
+            publication_recid=publication_recid, version=hep_submission.version
+        ).order_by(DataSubmission.id.asc())
+        record_ids = [publication_recid]  # list of record IDs
+        for data_submission in data_submissions:
+            record_ids.append(data_submission.associated_recid)
+
+        same_information = {}
+        for index, recid in enumerate(record_ids):
+
+            if index == 0:
+                updated_record_information = updated_inspire_record_information
+            else:
+                # Only update selected keys for data records.
+                updated_record_information = {
+                    key: updated_inspire_record_information[key] for key in (
+                        'authors', 'creation_date', 'journal_info', 'collaborations'
+                    )
+                }
+
+            record_information = get_record_by_id(recid)
+            same_information[recid] = True
             for key, value in updated_record_information.items():
                 if key not in record_information or record_information[key] != value:
-                    log.debug('Key {} has new value {}'.format(key, value))
-                    same_information = False
+                    log.debug('For recid {}, key {} has new value {}'.format(recid, key, value))
+                    same_information[recid] = False
+                    update_record(recid, updated_record_information)
                     break
-        log.info('Information needs to be updated: {}'.format(str(not(same_information))))
-        if same_information:
+            log.info('For recid {}, information needs to be updated: {}'.format(recid, str(not(same_information[recid]))))
+
+        if all(same for same in same_information.values()):
             return 'No update needed'
-        record_information = update_record(recid, updated_record_information)
+
     else:
         log.warning("Failed to retrieve publication information for Inspire record {0}".format(inspire_id))
         return 'Invalid Inspire ID'
 
     if hep_submission.overall_status == 'finished':
-        index_record_ids([recid])  # index for Elasticsearch
+        index_record_ids(record_ids)  # index for Elasticsearch
+        push_data_keywords(pub_ids=[recid])
         generate_dois_for_submission.delay(inspire_id=inspire_id)  # update metadata stored in DataCite
         if send_email:
+            record_information = get_record_by_id(publication_recid)
             notify_publication_update(hep_submission, record_information)   # send email to all participants
 
     return 'Success'

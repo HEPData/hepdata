@@ -58,6 +58,12 @@ I18N_LANGUAGES = [
 CELERY_BROKER_URL = "redis://localhost:6379/0"
 CELERY_RESULT_BACKEND = "redis://localhost:6379/1"
 CELERY_ACCEPT_CONTENT = ['json', 'msgpack', 'yaml']
+CELERY_WORKER_PREFETCH_MULTIPLIER = 1
+CELERY_TASK_CREATE_MISSING_QUEUES = True
+CELERY_TASK_ROUTES = {
+    'hepdata.modules.email.utils.send_email': {'queue': 'priority'},
+    'hepdata.modules.records.api.process_saved_file': {'queue': 'priority'},
+}
 
 CELERY_BEAT_SCHEDULE = {
     'update_analyses': {
@@ -137,6 +143,9 @@ SEARCH_ELASTIC_HOSTS = [
 
 SEARCH_AUTOINDEX = []
 
+UPLOAD_MAX_SIZE = 52000000 # Upload limit in bytes
+NGINX_TIMEOUT = 298 # Client-side timeout in s (should be slightly smaller than server timeout)
+
 CFG_PUB_TYPE = 'publication'
 CFG_DATA_TYPE = 'datatable'
 CFG_SUBMISSIONS_TYPE = 'submission'
@@ -144,7 +153,7 @@ CFG_DATA_KEYWORDS = ['observables', 'reactions', 'cmenergies', 'phrases']
 
 CFG_CONVERTER_URL = 'https://converter.hepdata.net'
 CFG_SUPPORTED_FORMATS = ['yaml', 'root', 'csv', 'yoda']
-CFG_CONVERTER_TIMEOUT = 58  # timeout in seconds
+CFG_CONVERTER_TIMEOUT = NGINX_TIMEOUT # timeout in seconds
 
 CFG_TMPDIR = tempfile.gettempdir()
 CFG_DATADIR = tempfile.gettempdir()
@@ -296,6 +305,11 @@ RUN_SELENIUM_LOCALLY = False
 APP_ALLOWED_HOSTS = []
 
 LOGGING_SENTRY_CELERY = True  # for invenio-logging
+
+# HTML attributes and tags allowed in record descriptions
+# If these are modified, update tips.rst in hepdata-submission
+ALLOWED_HTML_ATTRS = {'a': ['href', 'title', 'name', 'rel'], 'abbr': ['title'], 'acronym': ['title']}
+ALLOWED_HTML_TAGS = ['a', 'abbr', 'acronym', 'b', 'blockquote', 'br', 'code', 'div', 'em', 'i', 'li', 'ol', 'p', 'pre', 'span', 'strike', 'strong', 'sub', 'sup', 'u', 'ul']
 
 # Talisman settings (see https://github.com/GoogleCloudPlatform/flask-talisman).
 # We don't want the web pods to use https.

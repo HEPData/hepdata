@@ -1,5 +1,6 @@
 Babel==2.3.4
 beautifulsoup4==4.5.1
+bleach==3.1.5
 celery==4.4.0
 click==7.1.1
 datacite==1.0.1
@@ -12,8 +13,8 @@ Flask-Cors==3.0.2
 Flask-Login==0.3.2
 gevent==1.4.0
 gunicorn==19.5.0
-hepdata-converter-ws-client==0.1.5
-hepdata-validator==0.2.2
+hepdata-converter-ws-client==0.1.6
+hepdata-validator==0.2.3
 idna<2.8,>=2.5             # Indirect ('invenio-search', 'email-validator')
 invenio-access==1.0.2      # Indirect (needed by invenio-admin)
 invenio-accounts==1.0.2

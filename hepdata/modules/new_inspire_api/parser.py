@@ -29,7 +29,7 @@ parsed_content_defaults = {
     'doi': None,
     'authors': None,
     'type': [],
-    'abstract': None,
+    'abstract': 'None',
     'creation_date': None,
     'arxiv_id': None,
     'collaborations': [],
@@ -126,7 +126,7 @@ def get_keywords(metadata):
 def get_journal_info(metadata):
     """
     Get the journal information of the publication. Format is 'title volume (year) article page_start-page_end' if at least one of these information is available,
-    otherwise attempt to obtain it from 'pubinfo_freetext' or 'publication_info' or 'public_notes'. Defaults to 'No Journal Information'.
+    otherwise attempt to obtain it from 'pubinfo_freetext' or 'publication_info' or 'report_numbers' or 'public_notes'. Defaults to 'No Journal Information'.
     """
     default_journal_info, journal_info = deepcopy(parsed_content_defaults['journal_info']), ''
     if 'publication_info' in metadata:
@@ -141,12 +141,13 @@ def get_journal_info(metadata):
         if 'page_start' in metadata['publication_info'][0].keys() and 'page_end' in metadata['publication_info'][0].keys():
             journal_info += metadata['publication_info'][0]['page_start'] + "-" + metadata['publication_info'][0]['page_end']
         if journal_info != '':
+            journal_info = journal_info.strip()  # trim to remove whitespace
             return journal_info
     if ('publication_info' in metadata and len(metadata['publication_info']) > 0 and type(metadata['publication_info'][0]) is dict and
        'pubinfo_freetext' in metadata['publication_info'][0].keys()):
         journal_info = metadata['publication_info'][0]['pubinfo_freetext']
-    elif 'publication_info' in metadata.keys():
-        journal_info = metadata['publication_info']
+    elif 'report_numbers' in metadata and len(metadata['report_numbers']) > 0:
+        journal_info = metadata['report_numbers'][0]['value']
     elif ('public_notes' in metadata.keys() and any(['value' in public_note.keys() and "Submitted to " in public_note['value'] for public_note in metadata['public_notes']])):
         journal_info = [public_note['value'].replace("Submitted to ", "") for public_note in metadata['public_notes'] if
                         ('value' in public_note.keys() and "Submitted to " in public_note['value'])][0]

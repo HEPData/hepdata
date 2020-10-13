@@ -138,7 +138,7 @@
                                                     <div class="truncated-record-abstract">
                                                       {% if submission.overall_status == 'sandbox_processing' %}
                                                         {{ submission.publication_recid }} (processing)
-                                                      {% elif submission.data_abstract is none %}
+                                                      {% elif not submission.data_abstract %}
                                                         {{ submission.publication_recid }} (no data abstract)
                                                       {% else %}
                                                         {{ submission.data_abstract }}
@@ -220,7 +220,7 @@
 
                         <div class="record-abstract-content scrollable" style="min-height: 550px">
                             {% if ctx.record.data_abstract %}
-                              {{ ctx.record.data_abstract }}
+                              {{ ctx.record.data_abstract|safe }}
                             {% elif ctx.record.abstract %}
                                 {{ ctx.record.abstract }}
                             {% else %}
@@ -258,5 +258,3 @@
         })
     </script>
 {% endblock %}
-
-

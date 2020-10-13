@@ -27,13 +27,13 @@ HEPDATA.visualization.utils = {
         return d.x;
       })).rangePoints([0, max_range]);
     } else {
-      var scale = scale_type == 'log' && HEPDATA.stats.min_x > 0 ? d3.scale.log() : d3.scale.linear();
+      var scale = scale_type == 'log' ? d3.scale.log() : d3.scale.linear();
       var range = [0, max_range];
       if (min == null) {
         min = 0; max = 1;
       } else if (min == max) {
         // If only one value, rescale so value is drawn in middle of axis.
-        if (scale_type == 'log' && HEPDATA.stats.min_x > 0) {
+        if (scale_type == 'log') {
           min = 0.5*min;
           max = 2.0*max;
         } else {
@@ -45,13 +45,13 @@ HEPDATA.visualization.utils = {
     }
   },
 
-  calculate_y_scale: function (scale_type, min, max, options) {
-    var scale = scale_type == 'log' && HEPDATA.stats.min_y > 0 ? d3.scale.log() : d3.scale.linear();
+  calculate_y_scale: function (scale_type, min, max, options, data) {
+    var scale = scale_type == 'log' ? d3.scale.log() : d3.scale.linear();
     if (min > max) {
       min = 0; max = 1;
     } else if (min == max) {
       // If only one value, rescale so value is drawn in middle of axis.
-      if (scale_type == 'log' && HEPDATA.stats.min_y > 0) {
+      if (scale_type == 'log') {
         min = 0.5*min;
         max = 2.0*max;
       } else {
@@ -70,7 +70,7 @@ HEPDATA.dataprocessing = {
    * We need to flatten things out into objects representing each X,Y pair for display.
    * @param data_values
    */
-  process_data_values: function (data) {
+  process_data_values: function (data, options) {
     var processed_values = [];
     var toignore = [];
     var all_errors = [];
@@ -148,9 +148,10 @@ HEPDATA.dataprocessing = {
                 "row": data_record
               };
 
-              processed_value = HEPDATA.dataprocessing.processed_key(processed_value, 'x');
-              processed_value = HEPDATA.dataprocessing.processed_key(processed_value, 'y');
+              processed_value = HEPDATA.dataprocessing.processed_key(processed_value, 'x', options);
+              processed_value = HEPDATA.dataprocessing.processed_key(processed_value, 'y', options);
               if (isNaN(processed_value.value)) continue;
+
 
               if (processed_value.value < HEPDATA.stats.min_value) HEPDATA.stats.min_value = processed_value.value;
               if (processed_value.value > HEPDATA.stats.max_value) HEPDATA.stats.max_value = processed_value.value;
@@ -163,9 +164,13 @@ HEPDATA.dataprocessing = {
                 "row": data_record
               };
 
-              processed_value = HEPDATA.dataprocessing.processed_key(processed_value, 'x');
-              if (isNaN(processed_value.y)) continue;
-              processed_value = HEPDATA.dataprocessing.processed_key(processed_value, 'y');
+              processed_value = HEPDATA.dataprocessing.processed_key(processed_value, 'x', options);
+              if (isNaN(processed_value.y) ||
+                  (options.y_scale == 'log' && processed_value.y <= 0) ||
+                  (options.x_scale == 'log' && (processed_value.x <= 0 || processed_value.x_min <= 0))) {
+                    continue;
+              }
+              processed_value = HEPDATA.dataprocessing.processed_key(processed_value, 'y', options);
 
             }
 
@@ -200,11 +205,14 @@ HEPDATA.dataprocessing = {
                   errors_obj.err_minus = Math.min(down_err, up_err, 0);
                 }
 
-                if (errors_obj.y + errors_obj.err_plus > HEPDATA.stats.max_y) HEPDATA.stats.max_y = errors_obj.err_plus + errors_obj.y;
-                if (errors_obj.y + errors_obj.err_minus < HEPDATA.stats.min_y) HEPDATA.stats.min_y = errors_obj.err_minus + errors_obj.y;
-
                 summed_uncertainties["up"] += Math.pow(errors_obj.err_plus, 2);
                 summed_uncertainties["down"] += Math.pow(errors_obj.err_minus, 2);
+
+                // If error bars would go to 0, just omit them
+                if (options.y_scale == 'log' && errors_obj.y + errors_obj.err_minus <= 0) continue;
+
+                if (errors_obj.y + errors_obj.err_plus > HEPDATA.stats.max_y) HEPDATA.stats.max_y = errors_obj.err_plus + errors_obj.y;
+                if (errors_obj.y + errors_obj.err_minus < HEPDATA.stats.min_y) HEPDATA.stats.min_y = errors_obj.err_minus + errors_obj.y;
 
                 errors.push(errors_obj);
                 all_errors.push(errors_obj);
@@ -219,6 +227,9 @@ HEPDATA.dataprocessing = {
                 'label': 'Summed',
                 'name': data_header_value
               };
+
+              if (options.y_scale == 'log' &&
+                  processed_value["quad_error"].y + processed_value["quad_error"]["err_minus"] <= 0) continue;
 
               if (summed_uncertainties["up"] == 0 && summed_uncertainties["down"] == 0) {
                 processed_value["quad_error"]["label"] = "hidden";
@@ -276,7 +287,7 @@ HEPDATA.dataprocessing = {
    * @param processed_value_obj
    * @param key - e.g. x or y to be processed
    */
-  processed_key: function (processed_value_obj, key) {
+  processed_key: function (processed_value_obj, key, options) {
     var val = processed_value_obj[key];
 
     if (val != undefined) {
@@ -305,7 +316,10 @@ HEPDATA.dataprocessing = {
         }
 
         if (processed_value_obj[key + '_max'] > HEPDATA.stats['max_' + key]) HEPDATA.stats['max_' + key] = processed_value_obj[key + '_max'];
-        if (processed_value_obj[key + '_min'] < HEPDATA.stats['min_' + key]) HEPDATA.stats['min_' + key] = processed_value_obj[key + '_min'];
+        if (processed_value_obj[key + '_min'] < HEPDATA.stats['min_' + key] &&
+            (options[key + '_scale'] != 'log' || processed_value_obj[key + '_min'] > 0)) {
+          HEPDATA.stats['min_' + key] = processed_value_obj[key + '_min'];
+        }
 
       } else if (typeof(val["value"]) == 'string' && val["value"].split('-').length > 1 && val["value"].split('-')[0] && !isNaN(val["value"].split('-')[1]) && !isNaN(val["value"].split('-')[0])) {
         var low_high = val["value"].split('-');
@@ -315,13 +329,19 @@ HEPDATA.dataprocessing = {
         processed_value_obj[key] = +processed_value_obj[key + '_min'] + ((processed_value_obj[key + '_max'] - processed_value_obj[key + '_min']) / 2);
 
         if (processed_value_obj[key + '_max'] > HEPDATA.stats['max_' + key]) HEPDATA.stats['max_' + key] = processed_value_obj[key + '_max'];
-        if (processed_value_obj[key + '_min'] < HEPDATA.stats['min_' + key]) HEPDATA.stats['min_' + key] = processed_value_obj[key + '_min'];
+        if (processed_value_obj[key + '_min'] < HEPDATA.stats['min_' + key] &&
+            (options[key + '_scale'] != 'log' || processed_value_obj[key + '_min'] > 0)) {
+          HEPDATA.stats['min_' + key] = processed_value_obj[key + '_min'];
+        }
 
-      } else if (!isNaN(parseFloat(val["value"]))) {
+      } else if (!isNaN(val["value"])) {
         processed_value_obj[key] = +val["value"];
 
         if (processed_value_obj[key] > HEPDATA.stats['max_' + key]) HEPDATA.stats['max_' + key] = processed_value_obj[key];
-        if (processed_value_obj[key] < HEPDATA.stats['min_' + key]) HEPDATA.stats['min_' + key] = processed_value_obj[key];
+        if (processed_value_obj[key] < HEPDATA.stats['min_' + key] &&
+            (options[key + '_scale'] != 'log' || processed_value_obj[key] > 0)) {
+          HEPDATA.stats['min_' + key] = processed_value_obj[key];
+        }
 
       } else if (typeof val == 'object' && (isNaN(val["value"]) || val["value"] == '')) {
         processed_value_obj[key] = val["value"];
@@ -334,7 +354,10 @@ HEPDATA.dataprocessing = {
 
         processed_value_obj[key] = +val;
         if (processed_value_obj[key] > HEPDATA.stats['max_' + key]) HEPDATA.stats['max_' + key] = processed_value_obj[key];
-        if (processed_value_obj[key] < HEPDATA.stats['min_' + key]) HEPDATA.stats['min_' + key] = processed_value_obj[key];
+        if (processed_value_obj[key] < HEPDATA.stats['min_' + key] &&
+            (options[key + '_scale'] != 'log' || processed_value_obj[key] > 0)) {
+          HEPDATA.stats['min_' + key] = processed_value_obj[key];
+        }
 
       } else if (key == 'x') {
         processed_value_obj[key] = val;
@@ -393,8 +416,8 @@ HEPDATA.legends = {
       HEPDATA.visualization.histogram.render_option("Fill bars", 'bool', "fill_bars", rendering_options, "HEPDATA.visualization.histogram.toggle_bool_option('fill_bars', this)");
     }
 
-    if (HEPDATA.stats.min_x > 0 && HEPDATA.stats.min_x < HEPDATA.stats.max_x) HEPDATA.visualization.histogram.render_option("Log Scale (X)", 'scale', "x_scale", rendering_options, "HEPDATA.visualization.histogram.toggle_scale_option('x_scale', this)");
-    if (HEPDATA.stats.min_y > 0 && HEPDATA.stats.min_y < HEPDATA.stats.max_y) HEPDATA.visualization.histogram.render_option("Log Scale (Y)", 'scale', "y_scale", rendering_options, "HEPDATA.visualization.histogram.toggle_scale_option('y_scale', this)");
+    if (HEPDATA.stats.min_x < HEPDATA.stats.max_x) HEPDATA.visualization.histogram.render_option("Log Scale (X)", 'scale', "x_scale", rendering_options, "HEPDATA.visualization.histogram.toggle_scale_option('x_scale', this)");
+    if (HEPDATA.stats.min_y < HEPDATA.stats.max_y) HEPDATA.visualization.histogram.render_option("Log Scale (Y)", 'scale', "y_scale", rendering_options, "HEPDATA.visualization.histogram.toggle_scale_option('y_scale', this)");
 
     rendering_options.append("hr");
     d3.select(legend_placement).append("div").attr("class", "legend-info").text("Deselect variables or hide different error bars by clicking on them.");

@@ -28,7 +28,7 @@ services:
     - ".:/code"
   worker:
     build: .
-    command: "celery worker -A hepdata.celery --loglevel=INFO"
+    command: "celery worker -A hepdata.celery --loglevel=INFO -Q celery,priority"
     environment:
     - "APP_CELERY_BROKER_URL=redis://cache:6379/0"
     - "APP_CACHE_REDIS_URL=redis://cache:6379/0"

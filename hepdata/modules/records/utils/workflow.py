@@ -61,7 +61,7 @@ def create_data_structure(ctx):
     optional_keys = ["related_publication", "recid", "keywords", "dissertation", "type",
                      "control_number", "doi", "creation_date", "year", "hepdata_doi",
                      "last_updated", "data_endpoints", "collaborations",
-                     "journal_info", "uploaders", "reviewers", "subject_area"]
+                     "journal_info", "uploaders", "reviewers", "subject_area", "arxiv_id"]
 
     for key in optional_keys:
         if key in ctx:

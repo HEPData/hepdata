@@ -5,10 +5,10 @@
         <span style="font-weight: bolder">PhD Thesis, {{ record.year }}</span>.
     {% endif %}
 
-{% elif record.journal_info == 'No Journal Information' and 'conferencepaper' in record.type %}
+{% elif record.journal_info == 'No Journal Information' and 'conference paper' in record.type %}
     <span style="font-weight: bolder">Conference Paper, {{ record.year }}</span>.
 {% elif record.journal_info == 'No Journal Information' %}
     <span style="font-weight: bolder">{{ record.year }}</span>.
 {% elif record.journal_info %}
-    <span style="font-weight: bolder">{{ record.journal_info }}, {{ record.year }}</span>.
+    <span style="font-weight: bolder">{{ record.journal_info|trim }}, {{ record.year }}</span>.
 {% endif %}

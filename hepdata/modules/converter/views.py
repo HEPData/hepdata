@@ -271,7 +271,8 @@ def download_submission(submission, file_format, offline=False, force=False, riv
         if rivet_analysis_name:
             converter_options['rivet_analysis_name'] = rivet_analysis_name
         elif submission.inspire_id:
-            record = get_record_contents(submission.publication_recid)
+            record = get_record_contents(submission.publication_recid,
+                                         submission.overall_status)
             if record:
                 # Check if this record has a Rivet analysis, then extract the Rivet analysis name from the URL.
                 if 'analyses' in record:
@@ -516,7 +517,8 @@ def download_datatable(datasubmission, file_format, *args, **kwargs):
         if rivet_analysis_name:
             options['rivet_analysis_name'] = rivet_analysis_name
         elif datasubmission.publication_inspire_id:
-            record = get_record_contents(datasubmission.publication_recid)
+            record = get_record_contents(datasubmission.publication_recid,
+                                         hepsubmission.overall_status)
             if record:
                 # Check if this record has a Rivet analysis, then extract the Rivet analysis name from the URL.
                 if 'analyses' in record:

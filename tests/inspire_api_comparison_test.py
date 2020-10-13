@@ -19,18 +19,20 @@ old_dict = {"1245023": old_views.get_inspire_record_information("1245023"),
             "1311487": old_views.get_inspire_record_information("1311487"),
             "1487726": old_views.get_inspire_record_information("1487726"),
             "143687": old_views.get_inspire_record_information("143687"),
+            "1498199": old_views.get_inspire_record_information("1498199"),
             "1999999": old_views.get_inspire_record_information("1999999")}
 new_dict = {"1245023": new_views.get_inspire_record_information("1245023"),
             "1283842": new_views.get_inspire_record_information("1283842"),
             "1311487": new_views.get_inspire_record_information("1311487"),
             "1487726": new_views.get_inspire_record_information("1487726"),
             "143687": new_views.get_inspire_record_information("143687"),
+            "1498199": new_views.get_inspire_record_information("1498199"),
             "1999999": new_views.get_inspire_record_information("1999999")}
 
 
 @pytest.mark.parametrize(
     "inspire_id",
-    ["1245023", "1283842", "1311487", "1487726", "143687", "1999999"]
+    ["1245023", "1283842", "1311487", "1487726", "143687", "1498199", "1999999"]
 )
 def test_dict_keys(inspire_id):
     print('___test_dict_keys___')
@@ -44,7 +46,7 @@ def test_dict_keys(inspire_id):
 
 @pytest.mark.parametrize(
     "inspire_id",
-    ["1245023", "1283842", "1311487", "1487726", "143687", "1999999"]
+    ["1245023", "1283842", "1311487", "1487726", "143687", "1498199", "1999999"]
 )
 @pytest.mark.parametrize(
     "dict_key",
@@ -117,7 +119,7 @@ def compare(inspire_id, old_content, new_content, dict_key, silent=False, max_st
            abs(int(old_content[dict_key]) - int(new_content[dict_key])) == 1):
             return
 
-        # if old is contianed in new then allow it
+        # if old is contained in new then allow it
         if old_content[dict_key] in new_content[dict_key]:
             return
 

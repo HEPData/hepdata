@@ -55,12 +55,17 @@ from hepdata.modules.records.utils.yaml_utils import split_files
 from hepdata.modules.stats.views import increment, get_count
 from hepdata.modules.submission.models import RecordVersionCommitMessage, DataSubmission, HEPSubmission, DataReview
 from hepdata.utils.file_extractor import extract
+from hepdata.utils.miscellaneous import sanitize_html
 from hepdata.utils.users import get_user_from_id
 from bs4 import BeautifulSoup
 from hepdata_converter_ws_client import Error
 
 import tempfile
 from shutil import rmtree
+
+import logging
+logging.basicConfig()
+log = logging.getLogger(__name__)
 
 RECORD_PLAIN_TEXT = {
     "passed": "passed review",
@@ -137,7 +142,7 @@ def format_submission(recid, record, version, version_count, hepdata_submission,
 
         ctx['recid'] = recid
         ctx["status"] = hepdata_submission.overall_status
-        ctx['record']['data_abstract'] = decode_string(hepdata_submission.data_abstract)
+        ctx['record']['data_abstract'] = sanitize_html(decode_string(hepdata_submission.data_abstract))
 
         extract_journal_info(record)
 
@@ -234,7 +239,7 @@ def extract_journal_info(record):
                     'institution']
             else:
                 record['journal_info'] = "PhD Thesis"
-        elif 'conferencepaper' in record['type']:
+        elif 'conference paper' in record['type']:
             record['journal_info'] = "Conference Paper"
 
 
@@ -380,6 +385,12 @@ def process_payload(recid, file, redirect_url, synchronous=False):
 
 @shared_task
 def process_saved_file(file_path, recid, userid, redirect_url, previous_status):
+
+    hepsubmission = get_latest_hepsubmission(publication_recid=recid)
+    if hepsubmission.overall_status != 'processing' and hepsubmission.overall_status != 'sandbox_processing':
+        log.error('Record {} is not in a processing state.'.format(recid))
+        return
+
     errors = process_zip_archive(file_path, recid)
 
     uploader = User.query.get(userid)
@@ -392,7 +403,6 @@ def process_saved_file(file_path, recid, userid, redirect_url, previous_status):
     else:
         full_name = uploader.email
 
-    hepsubmission = get_latest_hepsubmission(publication_recid=recid)
     if errors:
         cleanup_submission(recid, hepsubmission.version, [])  # delete all tables if errors
         message_body = render_template('hepdata_theme/email/upload_errors.html',
@@ -679,9 +689,10 @@ def process_data_tables(ctx, data_record_query, first_data_id,
                 "name": submission_record.name,
                 "location": submission_record.location_in_publication,
                 "doi": submission_record.doi,
-                "description": truncate_string(
-                    submission_record.description,
-                    20
+                "description": sanitize_html(
+                    truncate_string(submission_record.description, 20),
+                    tags=[],
+                    strip=True
                 )
             }
 

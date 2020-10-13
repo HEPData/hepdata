@@ -12,7 +12,7 @@
             {{ ctx.record.year }}){% endif %}
     {% endfor %}
 {% endif %}
-<p>{{ ctx.record.title }}. {{ ctx.record.journal_info }}.</p>
+<p>{{ ctx.record.title }}. {{ ctx.record.journal_info|trim }}.</p>
 <p><strong>https://doi.org/{{ ctx.record.doi }}</strong></p>
 
 <a href="https://inspirehep.net/literature/{{ ctx.record.inspire_id }}" class="btn btn-default btn-sm" target="_new">View

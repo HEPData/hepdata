@@ -35,16 +35,18 @@ from invenio_db import db
 from werkzeug.datastructures import FileStorage
 
 from hepdata.modules.records.api import process_payload
-from hepdata.modules.records.utils.submission import get_or_create_hepsubmission, unload_submission
-from hepdata.modules.records.utils.common import get_record_by_id
+from hepdata.modules.records.utils.submission import get_or_create_hepsubmission, process_submission_directory, do_finalise, unload_submission
+from hepdata.modules.records.utils.common import get_record_by_id, get_record_contents
 from hepdata.modules.records.utils.data_processing_utils import generate_table_structure
 from hepdata.modules.records.utils.data_files import get_data_path_for_record
 from hepdata.modules.records.utils.users import get_coordinators_in_system, has_role
 from hepdata.modules.records.utils.workflow import update_record, create_record
 from hepdata.modules.submission.models import HEPSubmission
 from hepdata.modules.submission.views import process_submission_payload
+from hepdata.modules.submission.api import get_latest_hepsubmission
 from tests.conftest import TEST_EMAIL
 from hepdata.modules.records.utils.records_update_utils import get_inspire_records_updated_since, get_inspire_records_updated_on, update_record_info
+from hepdata.modules.inspire_api.views import get_inspire_record_information
 
 
 def test_record_creation(app):
@@ -75,6 +77,29 @@ def test_get_record(app, client):
     with app.app_context():
         content = client.get('/record/1')
         assert (content is not None)
+
+
+def test_get_record_contents(app, load_default_data, identifiers):
+    # Status finished - should use ES to get results
+    record1 = get_record_contents(1, status='finished')
+    for key in ["inspire_id", "title"]:
+        assert (record1[key] == identifiers[0][key])
+
+    # Status todo - should use DB for result
+    record2 = get_record_contents(1, status='todo')
+    # DB returns data from an Invenio RecordMetadata obj so has fewer fields
+    # than the ES dict
+    for key in record2.keys():
+        if key == 'last_updated':
+            # Date format is slightly different for DB vs ES
+            assert(record2[key].replace(' ', 'T') == record1[key])
+        else:
+            assert(record2[key] == record1[key])
+
+    record3 = get_record_contents(1)
+    assert (record3 == record1)
+
+    assert(get_record_contents(9999999) is None)
 
 
 def test_get_coordinators(app):
@@ -347,11 +372,27 @@ def test_update_record_info(app):
             uploader={'name': 'Uploader', 'email': 'uploader@hepdata.net'},
             send_upload_email=False
         )
-        submission.overall_status = 'finished'
-        db.session.add(submission)
+
+        # Process the files to create DataSubmission tables in the DB.
+        base_dir = os.path.dirname(os.path.realpath(__file__))
+        directory = os.path.join(base_dir, 'test_data/test_submission')
+        process_submission_directory(directory, os.path.join(directory, 'submission.yaml'),
+                                     submission.publication_recid)
+        do_finalise(submission.publication_recid, force_finalise=True, convert=False)
+
         if inspire_id == '19999999':
             assert update_record_info(inspire_id) == 'Invalid Inspire ID'
         else:
+
+            # First change the publication information to that of a different record.
+            different_inspire_record_information, status = get_inspire_record_information('1650066')
+            assert status == 'success'
+            hep_submission = get_latest_hepsubmission(inspire_id=inspire_id)
+            assert hep_submission is not None
+            update_record(hep_submission.publication_recid, different_inspire_record_information)
+
+            # Then can check that the update works and that a further update is not required.
             assert update_record_info(inspire_id, send_email=True) == 'Success'
             assert update_record_info(inspire_id) == 'No update needed'  # check case where information already current
+
         unload_submission(submission.publication_recid)

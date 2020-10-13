@@ -96,7 +96,7 @@ HEPDATA.table_renderer = {
 
         HEPDATA.current_table_name = table_data.name;
 
-        $("#table_name").html(table_data.name);
+        $("#table_name").text(table_data.name);
         $("#table_location").html(table_data.location);
         $("#table_doi_contents").html('<a href="https://doi.org/' + table_data.doi + '" target="_blank">' + table_data.doi + '</a>');
 
@@ -212,7 +212,11 @@ HEPDATA.table_renderer = {
         .enter().append('li').attr('class', 'chip');
 
       var individual_kw_link = individual_kw.append('a').attr('href', function (d) {
-        return '/search?q=&' + d.key + "=" + d.value.trim().replace(/\+/g, "%2B").replace(/\s/g, "+");
+        val = d.value.trim().replace(/\+/g, "%2B").replace(/\s/g, "+")
+        if (d.key == 'cmenergies') {
+          val = val.replace(/-/g, "%2C")
+        }
+        return '/search?q=&' + d.key + "=" + val;
       });
 
       individual_kw_link.append('i').attr('class', 'fa fa-tag').style({'margin-right': '5px', 'display': 'inline'});
