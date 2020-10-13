@@ -144,14 +144,32 @@ var dashboard = (function () {
     });
   };
 
-  var load_submissions = function() {
-    $.get("/dashboard/dashboard-submissions").done(function (data) {
+  var load_submissions = function(element) {
+    var href = window.location.href;
+    if (element && element.href) {
+      href = element.href;
+    }
+    const url = new URL(href);
+    var page = url.searchParams.get('page');
+    if (!page) page = 1;
+
+    $.get("/dashboard/dashboard-submissions?page="+page).done(function (data) {
       $('#submissions-loader').hide();
-      $('#hep-submissions').html(data).fadeIn(500);
+      $('#submissions-wrapper').html(data).fadeIn(500);
       dashboard.render_submission_stats();
+
+      $('#submission-filter').attr(
+        'placeholder',
+        "Filter " + dashboard.data.length + " submission" + (dashboard.data.length > 1 ? 's' : '')
+      );      
+
+      $('.pagination li a').click(function(event) {
+        event.preventDefault();
+        load_submissions(this);
+      });
     }).fail(function () {
       $('#submissions-loader').hide();
-      $('#hep-submissions').html("Unable to load submissions. Please try again later.").fadeIn(500);
+      $('#submissions-wrapper').html("Unable to load submissions. Please try again later.").fadeIn(500);
     });
   }
 

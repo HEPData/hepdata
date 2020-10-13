@@ -1,6 +1,7 @@
 {% set current_page = ctx.pages.current %}
 {% set first_page = (current_page == 1) %}
 {% set last_page = (current_page == ctx.pages.total) %}
+{% set endpoint = ctx.pages.endpoint %}
 
 <div class="pagination-bar" align="center">
     <div class="form-group">
@@ -9,26 +10,26 @@
             <li {% if first_page %} class="disabled" {% endif %}>
                 {% set this_page = '1' %}
                 <a title="first"
-                   href={{ ctx.modify_query('.search', page=this_page) }}>«</a>
+                   href={{ ctx.modify_query(endpoint, page=this_page) }}>«</a>
             </li>
 
             <li {% if first_page %} class="disabled" {% endif %}>
                 {% set this_page = '1' if first_page else (current_page - 1) %}
                 <a title="prev"
-                   href={{ ctx.modify_query('.search', page=this_page) }}>‹</a>
+                   href={{ ctx.modify_query(endpoint, page=this_page) }}>‹</a>
             </li>
 
             {% if not first_page %}
                 <li>
                     {% set this_page =  (current_page - 1) %}
-                    <a href={{ ctx.modify_query('.search', page=this_page) }}>
+                    <a href={{ ctx.modify_query(endpoint, page=this_page) }}>
                         {{ current_page - 1 }}
                     </a>
                 </li>
             {% endif %}
 
             <li class="active">
-                <a href={{ ctx.modify_query('.search', page=current_page) }}>
+                <a href={{ ctx.modify_query(endpoint, page=current_page) }}>
                     {{ current_page }}
                 </a>
             </li>
@@ -36,7 +37,7 @@
             {% if not last_page %}
                 <li>
                     {% set this_page = (current_page + 1) %}
-                    <a href={{ ctx.modify_query('.search', page=this_page) }}>
+                    <a href={{ ctx.modify_query(endpoint, page=this_page) }}>
                         {{ current_page + 1 }}
                     </a>
                 </li>
@@ -46,13 +47,13 @@
                 {% set this_page = ctx.pages.total if last_page
                                                    else (current_page + 1) %}
                 <a title="next"
-                   href={{ ctx.modify_query('.search', page=this_page) }}>›</a>
+                   href={{ ctx.modify_query(endpoint, page=this_page) }}>›</a>
             </li>
 
             <li {% if last_page %} class="disabled" {% endif %}>
                 {% set this_page = ctx.pages.total %}
                 <a title="last"
-                   href={{ ctx.modify_query('.search', page=this_page) }}>»</a>
+                   href={{ ctx.modify_query(endpoint, page=this_page) }}>»</a>
             </li>
         </ul>
     </div>

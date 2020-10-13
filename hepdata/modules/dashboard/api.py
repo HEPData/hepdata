@@ -93,7 +93,7 @@ def create_record_for_dashboard(record_id, submissions, current_user, coordinato
                 submissions[record_id]["metadata"]["role"].append(user_role)
 
 
-def prepare_submissions(current_user):
+def prepare_submissions(current_user, items_per_page=25, current_page=1):
     """
     Finds all the relevant submissions for a user, or all submissions if the logged in user is a 'super admin'.
 
@@ -128,9 +128,13 @@ def prepare_submissions(current_user):
                 HEPSubmission.publication_recid.in_(inner_query))
         )
 
+    total = query.count()
+
+    offset = (current_page - 1) * items_per_page
+
     hepdata_submission_records = query.order_by(
         HEPSubmission.last_updated.desc()
-    )
+    ).limit(items_per_page).offset(offset).all()
 
     for hepdata_submission in hepdata_submission_records:
 
@@ -171,7 +175,7 @@ def prepare_submissions(current_user):
                     submissions[str(hepdata_submission.publication_recid)][
                         "stats"][status] += status_count
 
-    return submissions
+    return (total, submissions)
 
 
 def get_pending_invitations_for_user(user):

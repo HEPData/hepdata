@@ -1,3 +1,8 @@
+{% if ctx.pages and ctx.pages.total > 0 %}
+    {% include "hepdata_theme/pagination.html" %}
+{% endif %}
+
+<ul id="hep-submissions">
 {% for submission in ctx.submissions %}
     <li id="{{ submission.recid }}" class="submission-item">
         <div class="container-fluid">
@@ -109,6 +114,11 @@
         </div>
     </li>
 {% endfor %}
+</ul>
+
+{% if ctx.pages and ctx.pages.total > 0 %}
+    {% include "hepdata_theme/pagination.html" %}
+{% endif %}
 
 <script>
 

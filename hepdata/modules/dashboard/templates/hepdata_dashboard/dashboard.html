@@ -193,14 +193,13 @@
 
                         <div class="filter" align="center">
                             <input id="submission-filter"
-                                   placeholder="Filter {{ ctx.submissions |length }} submission{% if ctx.submissions |length > 1 %}s{% endif %}"
                                    name="data-table-filter"
                                    onkeyup="HEPDATA.filter_content('#submission-filter','#hep-submissions')">
                         </div>
 
                         <div id="submissions-list">
                           <div id="submissions-loader"></div>
-                          <ul id="hep-submissions"></ul>
+                          <div id="submissions-wrapper"></div>
                         </div>
                     </div>
                 </div>

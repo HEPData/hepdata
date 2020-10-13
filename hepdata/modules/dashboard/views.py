@@ -37,7 +37,9 @@ from hepdata.modules.records.utils.users import has_role
 from hepdata.modules.records.utils.common import get_record_by_id
 from hepdata.modules.records.utils.workflow import update_record
 from hepdata.modules.inspire_api.views import get_inspire_record_information
+from hepdata.utils.url import modify_query
 import json
+import math
 
 from invenio_userprofiles import current_userprofile
 
@@ -68,7 +70,9 @@ def dashboard():
 @blueprint.route('/dashboard-submissions')
 @login_required
 def dashboard_submissions():
-    submissions = prepare_submissions(current_user)
+    current_page = request.args.get('page', default=1, type=int)
+    size = request.args.get('size', 25)
+    total, submissions = prepare_submissions(current_user, size, current_page)
 
     submission_meta = []
     submission_stats = []
@@ -103,7 +107,15 @@ def dashboard_submissions():
 
         submission_meta.append(submissions[record_id]["metadata"])
 
+    total_pages = int(math.ceil(total / size))
+
     ctx = {
+        'pages': {
+            'total': total_pages,
+            'current': current_page,
+            'endpoint': '.dashboard'
+        },
+        'modify_query': modify_query,
         'submissions': submission_meta,
         'submission_stats': submission_stats
     }

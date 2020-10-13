@@ -118,7 +118,8 @@ def test_create_record_for_dashboard(app):
 def test_prepare_submissions_empty(app):
     with app.app_context():
         user = User(email='test@test.com', password='hello1', active=True, id=101)
-        submissions = prepare_submissions(user)
+        total, submissions = prepare_submissions(user)
+        assert(total == 0)
         assert(submissions == {})
 
 
@@ -135,7 +136,8 @@ def test_prepare_submissions_admin(app, load_submission):
         role = Role(name='admin')
         user = User(email='test@test.com', password='hello1', active=True,
                     id=101, roles=[role])
-        submissions = prepare_submissions(user)
+        total, submissions = prepare_submissions(user)
+        assert(total == 1)
         assert(len(submissions) == 1)
         assert(submissions[str(record_information['recid'])] == {
             'metadata': {
@@ -179,7 +181,8 @@ def test_prepare_submissions_participant(app, load_submission):
         db.session.add(hepsubmission)
         db.session.commit()
 
-        participant_submissions = prepare_submissions(user)
+        total, participant_submissions = prepare_submissions(user)
+        assert(total == 1)
         assert(len(participant_submissions) == 1)
         assert(participant_submissions[str(record_information['recid'])] == {
             'metadata': {
@@ -205,7 +208,8 @@ def test_prepare_submissions_participant(app, load_submission):
             'inspire_id': '123456'
         })
         hepsubmission = get_or_create_hepsubmission(record_information2['recid'], coordinator=user.id)
-        all_submissions = prepare_submissions(user)
+        total, all_submissions = prepare_submissions(user)
+        assert(total == 2)
         assert(len(all_submissions) == 2)
         assert(all_submissions[str(record_information2['recid'])] == {
             'metadata': {
@@ -224,11 +228,24 @@ def test_prepare_submissions_participant(app, load_submission):
             'status': u'todo'
         })
 
+        total, page1_submissions = prepare_submissions(user, 1)
+        assert(total == 2)
+        assert(len(page1_submissions) == 1)
+        assert(page1_submissions[str(record_information2['recid'])]
+               == all_submissions[str(record_information2['recid'])])
+
+        total, page2_submissions = prepare_submissions(user, 1, 2)
+        assert(total == 2)
+        assert(len(page2_submissions) == 1)
+        assert(page2_submissions[str(record_information['recid'])]
+               == all_submissions[str(record_information['recid'])])
+
         # change status to 'finished' and check new submission no longer appears
         hepsubmission.overall_status = 'finished'
         db.session.add(hepsubmission)
         db.session.commit()
-        all_submissions = prepare_submissions(user)
+        total, all_submissions = prepare_submissions(user)
+        assert(total == 1)
         assert(len(all_submissions) == 1)
         assert(list(all_submissions.keys()) == [str(record_information['recid'])])
 
