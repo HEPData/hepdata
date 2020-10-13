@@ -362,10 +362,31 @@ def clean_remaining_files():
 
 
 @utils.command()
-@click.option('--record-id', '-r', type=str, default=None, prompt=True,
+@click.option('--record-id', '-r', type=str, default=None,
               help='Record id for which to get information')
-def get_data_path(record_id):
+@click.option('--inspire-id', '-i', type=str, default=None,
+              help='Inspire id for which to get information')
+def get_data_path(record_id=None, inspire_id=None):
     """Gets the file path where data files for the given record are stored."""
+    if record_id:
+        # Check record exists
+        record = get_record_by_id(record_id)
+        if not record:
+            click.echo("No record with id %s" % record_id)
+            return
+    elif inspire_id:
+        hepsubmission = HEPSubmission.query.filter_by(inspire_id=inspire_id).first()
+        if hepsubmission is None:
+            click.echo("No record with inspire id %s" % record_id)
+            return
+        else:
+            record_id = hepsubmission.publication_recid
+            click.echo("Inspire ID %s maps to record id %s" % (inspire_id, record_id))
+
+    else:
+        click.echo("Please provide either record-id or inspire-id.")
+        return
+
     click.echo("Files for record %s are at:\t\t %s"
                % (record_id, data_files.get_data_path_for_record(record_id)))
     click.echo("Converted files for record %s are at:\t %s"
