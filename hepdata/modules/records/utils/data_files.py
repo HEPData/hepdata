@@ -462,12 +462,19 @@ def _move_data_resource(resource, old_paths, new_path):  # pragma: no cover
         new_file_path = os.path.join(new_path, sub_path)
         log.debug("    Moving to new path %s" % new_file_path)
         os.makedirs(os.path.dirname(new_file_path), exist_ok=True)
-        try:
-            shutil.move(resource.file_location, new_file_path)
-        except Exception as e:
-            errors.append("Unable to move file from %s to %s for data resource id %s\n"
-                          "Error was: %s"
-                          % (resource.file_location, new_file_path, resource.id, str(e)))
+        if os.path.exists(resource.file_location):
+            try:
+                shutil.move(resource.file_location, new_file_path)
+            except Exception as e:
+                errors.append("Unable to move file from %s to %s for data resource id %s\n"
+                              "Error was: %s"
+                              % (resource.file_location, new_file_path, resource.id, str(e)))
+
+        elif not os.path.exists(new_file_path):
+            # File does not exist in old or new locations - something has gone wrong
+            errors.append("File for for data resource id %s does not exist at "
+                          "either old path (%s) or new path (%s)"
+                          % (resource.id, resource.file_location, new_file_path))
 
         log.debug("    Updating data record")
         resource.file_location = new_file_path
