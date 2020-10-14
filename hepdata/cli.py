@@ -370,14 +370,14 @@ def get_data_path(record_id=None, inspire_id=None):
     """Gets the file path where data files for the given record are stored."""
     if record_id:
         # Check record exists
-        record = get_record_by_id(record_id)
-        if not record:
+        hepsubmission = get_latest_hepsubmission(publication_recid=record_id)
+        if hepsubmission is None:
             click.echo("No record with id %s" % record_id)
             return
     elif inspire_id:
-        hepsubmission = HEPSubmission.query.filter_by(inspire_id=inspire_id).first()
+        hepsubmission = get_latest_hepsubmission(inspire_id=inspire_id)
         if hepsubmission is None:
-            click.echo("No record with inspire id %s" % record_id)
+            click.echo("No record with inspire id %s" % inspire_id)
             return
         else:
             record_id = hepsubmission.publication_recid
