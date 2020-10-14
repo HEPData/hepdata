@@ -34,7 +34,7 @@ from hepdata.modules.email.utils import create_send_email_task
 from hepdata.modules.records.utils.common import allowed_file
 from hepdata.modules.submission.api import get_latest_hepsubmission
 from hepdata.modules.submission.models import DataSubmission, HEPSubmission, DataResource
-from hepdata.utils.celery import count_tasks_with_status
+from hepdata.utils.celery import count_tasks_in_queue
 
 logging.basicConfig()
 log = logging.getLogger(__name__)
@@ -236,6 +236,10 @@ def cleanup_all_resources(synchronous=False):  # pragma: no cover
     First checks for orphaned data resources in the db and deletes them.
     Then goes through all records and deletes unused files on disk.
     """
+    if _check_for_running_tasks():
+        # exit as tasks are currently running
+        return
+
     # Clean up all orphaned file resources
     _delete_all_orphan_file_resources()
 
@@ -254,6 +258,19 @@ def cleanup_all_resources(synchronous=False):  # pragma: no cover
             _cleanup_old_files_for_record(rec_id)
         else:
             _cleanup_old_files_for_record.delay(rec_id)
+
+
+def _check_for_running_tasks():
+    # Check celery queue to ensure any data files tasks have finished
+    # (or are not running)
+    data_files_task_count = count_tasks_in_queue(task_name_prefix=_check_for_running_tasks.__module__)
+
+    if data_files_task_count > 0:
+        log.error("%s data files tasks are still running. Try again later."
+                  % data_files_task_count)
+        return True
+    else:
+        return False
 
 
 def _delete_all_orphan_file_resources():  # pragma: no cover
@@ -323,21 +340,14 @@ def move_data_files(record_ids, synchronous=False):  # pragma: no cover
     """Move data files to new location, i.e. using a hash for a
     subdirectory to reduce the number of directories on the disk.
     """
+    if _check_for_running_tasks():
+        # exit as tasks are currently running
+        return
+
     if record_ids is None:
         qry = db.session.query(HEPSubmission.publication_recid)
         result = qry.distinct()
         record_ids = [r[0] for r in result]
-
-        # Check celery queue to ensure _cleanup_old_files_for_record has finished
-        # (or is not running)
-        cleanup_task_name = _cleanup_old_files_for_record.__module__ + '.' \
-            + _cleanup_old_files_for_record.__name__
-        cleanup_task_count = count_tasks_with_status('active', cleanup_task_name) \
-            + count_tasks_with_status('reserved', cleanup_task_name)
-
-        if cleanup_task_count > 0:
-            print("Cleanup tasks are still running. Try again later.")
-            return
 
     log.info("Got records: %s" % record_ids)
 
@@ -508,15 +518,8 @@ def clean_remaining_files(synchronous=True):  # pragma: no cover
     and delete.
     For everthing else, send an email.
     """
-    # Check celery queue to ensure _cleanup_old_files_for_record has finished
-    # (or is not running)
-    move_task_name = _move_files_for_record.__module__ + '.' \
-        + _move_files_for_record.__name__
-    move_task_count = count_tasks_with_status('active', move_task_name) \
-        + count_tasks_with_status('reserved', move_task_name)
-
-    if move_task_count > 0:
-        print("File moving tasks are still running. Try again later.")
+    if _check_for_running_tasks():
+        # exit as tasks are currently running
         return
 
     unknown_files = []

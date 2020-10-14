@@ -22,25 +22,21 @@
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
+import json
+
 from celery import current_app as celery_app
 
 
-def count_tasks_with_status(status, task_name=None):
-    inspector = celery_app.control.inspect()
-
-    if status == 'active':
-        tasks = inspector.active()
-    elif status == 'reserved':
-        tasks = inspector.reserved()
-    elif status == 'scheduled':
-        tasks = inspector.reserved()
-    else:
-        raise ValueError(f"Unknown celery task status {status}")
-
+def count_tasks_in_queue(queue_name='celery', task_name_prefix=None):
     count = 0
 
-    for worker, task_list in tasks.items():
-        for task in task_list:
-            if task_name is None or task_name == task['name']:
-                count += 1
+    with celery_app.pool.acquire(block=True) as conn:
+        tasks = conn.default_channel.client.lrange(queue_name, 0, -1)
+        if tasks:
+            for task in tasks:
+                task_data = json.loads(task)
+                name = task_data.get('headers', {}).get('task')
+                if task_name_prefix is None or name.startswith(task_name_prefix):
+                    count += 1
+
     return count
