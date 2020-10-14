@@ -40,12 +40,9 @@ def is_resource_added_to_submission(recid, version, resource_url):
 
 def get_latest_hepsubmission(*args, **kwargs):
     """
-    Gets or creates a new HEPSubmission record.
+    Gets the latest HEPSubmission record matching the given kwargs
 
-    :param recid: the publication record id
-    :param coordinator: the user id of the user who owns this record
-    :param status: e.g. todo, finished
-    :return: the newly created HEPSubmission object
+    :return: the HEPSubmission object or None
     """
 
     hepsubmissions = HEPSubmission.query.filter_by(**kwargs).all()
