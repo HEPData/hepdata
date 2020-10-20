@@ -36,6 +36,7 @@ from hepdata.modules.submission.api import get_latest_hepsubmission
 from .factory import create_app
 from hepdata.config import CFG_PUB_TYPE
 from hepdata.ext.elasticsearch.api import reindex_all, get_records_matching_field
+from hepdata.modules.records.utils import data_files
 from hepdata.modules.records.utils.submission import unload_submission
 from hepdata.modules.records.migrator.api import load_files, update_submissions, get_all_ids_in_current_system, \
     add_or_update_records_since_date, update_analyses
@@ -247,7 +248,7 @@ def parse_inspireids_from_string(records_to_unload):
 def unload(recids):
     """
     Remove records given their HEPData IDs from the database.
-    Removes all database entries, leaves the files on the server.
+    Removes all database entries and corresponding files.
     """
     records_to_unload = recids.split(',')
 
@@ -315,6 +316,81 @@ def execute(query):
             for i, row in enumerate(result):
                 print('Row {}:'.format(i + 1), row)
         db.session.commit()
+
+
+@utils.command()
+def cleanup_old_files():
+    """Deletes db entries and files that are no longer used"""
+    click.confirm('About to delete all DB entries and files that are no longer used. Do you want to continue?',
+                      abort=True)
+
+    # Pass to data_files method
+    data_files.cleanup_all_resources()
+
+
+@utils.command()
+@click.option('--recids', '-r', type=str, default=None,
+              help='Move data files for specific recids only.')
+def move_data_files(recids):
+    """Move data files into new data file locations. Deletes converted files for all records."""
+    if recids is None:
+        click.confirm('About to move all files to new data file location. Do you want to continue?',
+                      abort=True)
+        click.echo('Moving files for all submissions.')
+    else:
+        recids = recids.split(',')
+        click.echo("Moving data files for recids: {}".format(recids))
+
+    # Pass to data_files method
+    data_files.move_data_files(recids)
+
+
+@utils.command()
+def clean_remaining_files():
+    """Deletes files that remain in data dir after cleanup and move-data-files have been run."""
+
+    click.confirm("Have you already run hepdata utils move-data-files?",
+                  abort=True)
+    click.echo('Checking remaining files.')
+
+    # Pass to data_files method
+    data_files.clean_remaining_files()
+
+    click.confirm('About to delete ALL files in the old converted directory. Do you want to continue?',
+                      abort=True)
+    data_files.delete_old_converted_files()
+
+
+@utils.command()
+@click.option('--record-id', '-r', type=str, default=None,
+              help='Record id for which to get information')
+@click.option('--inspire-id', '-i', type=str, default=None,
+              help='Inspire id for which to get information')
+def get_data_path(record_id=None, inspire_id=None):
+    """Gets the file path where data files for the given record are stored."""
+    if record_id:
+        # Check record exists
+        hepsubmission = get_latest_hepsubmission(publication_recid=record_id)
+        if hepsubmission is None:
+            click.echo("No record with id %s" % record_id)
+            return
+    elif inspire_id:
+        hepsubmission = get_latest_hepsubmission(inspire_id=inspire_id)
+        if hepsubmission is None:
+            click.echo("No record with inspire id %s" % inspire_id)
+            return
+        else:
+            record_id = hepsubmission.publication_recid
+            click.echo("Inspire ID %s maps to record id %s" % (inspire_id, record_id))
+
+    else:
+        click.echo("Please provide either record-id or inspire-id.")
+        return
+
+    click.echo("Files for record %s are at:\t\t %s"
+               % (record_id, data_files.get_data_path_for_record(record_id)))
+    click.echo("Converted files for record %s are at:\t %s"
+               % (record_id, data_files.get_converted_directory_path(record_id)))
 
 
 @cli.group()

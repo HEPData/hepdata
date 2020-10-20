@@ -24,7 +24,7 @@
 import logging
 import os
 
-from flask import current_app
+from hepdata.modules.records.utils.data_files import get_data_path_for_record
 
 logging.basicConfig()
 log = logging.getLogger(__name__)
@@ -37,7 +37,7 @@ def download_resource_file(recid, resource_path):
     """
     base_url = "http://hepdata.cedar.ac.uk/{}"
 
-    output_location = os.path.join(current_app.config['CFG_DATADIR'], str(recid), 'resources')
+    output_location = os.path.join(get_data_path_for_record(str(recid)), 'resources')
 
     if not os.path.exists(output_location):
         os.makedirs(output_location)

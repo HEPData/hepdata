@@ -46,6 +46,8 @@ from hepdata.modules.submission.models import DataSubmission, DataReview, \
 from hepdata.modules.records.utils.common import \
     get_license, infer_file_type, encode_string, zipdir, get_record_by_id, contains_accepted_url
 from hepdata.modules.records.utils.common import get_or_create
+from hepdata.modules.records.utils.data_files import get_data_path_for_record, \
+    cleanup_old_files, delete_all_files, delete_packaged_file
 from hepdata.modules.records.utils.doi_minter import reserve_dois_for_data_submissions, reserve_doi_for_hepsubmission, \
     generate_dois_for_submission
 from hepdata.modules.records.utils.resources import download_resource_file
@@ -77,7 +79,7 @@ log = logging.getLogger(__name__)
 
 def remove_submission(record_id, version=1):
     """
-    Removes the database entries related to a record.
+    Removes the database entries and data files related to a record.
 
     :param record_id:
     :param version:
@@ -91,6 +93,8 @@ def remove_submission(record_id, version=1):
         try:
             for hepdata_submission in hepdata_submissions:
                 db.session.delete(hepdata_submission)
+                delete_packaged_file(hepdata_submission)
+
         except NoResultFound as nrf:
             print(nrf.args)
 
@@ -145,6 +149,13 @@ def remove_submission(record_id, version=1):
 
         db.session.commit()
         db.session.flush()
+
+        if version == 1:
+            delete_all_files(record_id)
+        else:
+            latest_submission = get_latest_hepsubmission(publication_recid=record_id)
+            cleanup_old_files(latest_submission)
+
         return True
 
     except Exception as e:
@@ -154,9 +165,9 @@ def remove_submission(record_id, version=1):
 
 def cleanup_submission(recid, version, to_keep):
     """
-    Removes old, unreferenced tables from the database.
+    Removes old datasubmission records from the database.
     This ensures that when users replace a submission,
-    previous tables are not left behind in the database.
+    previous records are not left behind in the database.
 
     :param recid: publication recid of parent
     :param version: version number of record
@@ -170,12 +181,6 @@ def cleanup_submission(recid, version, to_keep):
         for data_submission in data_submissions:
 
             if not (data_submission.name in to_keep):
-                data_reviews = DataReview.query.filter_by(
-                    data_recid=data_submission.id).all()
-
-                for review in data_reviews:
-                    db.session.delete(review)
-
                 db.session.delete(data_submission)
 
         db.session.commit()
@@ -186,7 +191,8 @@ def cleanup_submission(recid, version, to_keep):
 
 def cleanup_data_resources(data_submission):
     """
-    Removes additional resources from the database to avoid duplications.
+    Removes additional resources for a datasubmission
+    from the database to avoid duplications.
     This ensures that when users replace a submission,
     old resources are not left behind in the database.
 
@@ -578,15 +584,16 @@ def package_submission(basepath, recid, hep_submission_obj):
     :param hep_submission_obj: the HEPSubmission object representing
            the overall position
     """
-    if not os.path.exists(os.path.join(current_app.config['CFG_DATADIR'], str(recid))):
-        os.makedirs(os.path.join(current_app.config['CFG_DATADIR'], str(recid)))
+    path = get_data_path_for_record(str(recid))
+    if not os.path.exists(path):
+        os.makedirs(path)
 
     version = hep_submission_obj.version
     if version == 0:
         version = 1
 
     zip_location = os.path.join(
-        current_app.config['CFG_DATADIR'], str(recid),
+        path,
         current_app.config['SUBMISSION_FILE_NAME_PATTERN']
             .format(recid, version))
     if os.path.exists(zip_location):

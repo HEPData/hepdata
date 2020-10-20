@@ -46,6 +46,7 @@ from hepdata.modules.records.subscribers.api import is_current_user_subscribed_t
 from hepdata.modules.records.utils.common import decode_string, find_file_in_directory, allowed_file, \
     remove_file_extension, truncate_string, get_record_contents
 from hepdata.modules.records.utils.data_processing_utils import process_ctx
+from hepdata.modules.records.utils.data_files import get_data_path_for_record, cleanup_old_files
 from hepdata.modules.records.utils.submission import process_submission_directory, create_data_review, cleanup_submission
 from hepdata.modules.submission.api import get_latest_hepsubmission
 from hepdata.modules.records.utils.users import get_coordinators_in_system, has_role
@@ -431,11 +432,15 @@ def process_saved_file(file_path, recid, userid, redirect_url, previous_status):
     db.session.add(hepsubmission)
     db.session.commit()
 
+    # Delete any previous upload folders relating to non-final versions
+    # of this hepsubmission
+    cleanup_old_files(hepsubmission, os.path.dirname(file_path))
+
 
 def save_zip_file(file, id):
     filename = secure_filename(file.filename)
     time_stamp = str(int(round(time.time())))
-    file_save_directory = os.path.join(current_app.config['CFG_DATADIR'], str(id), time_stamp)
+    file_save_directory = get_data_path_for_record(str(id), time_stamp)
 
     if filename.endswith('.oldhepdata'):
         file_save_directory = os.path.join(file_save_directory, 'oldhepdata')
@@ -526,7 +531,7 @@ def check_and_convert_from_oldhepdata(input_directory, id, timestamp):
     Check if the input directory contains a .oldhepdata file
     and convert it to YAML if it happens.
     """
-    converted_path = os.path.join(current_app.config['CFG_DATADIR'], str(id), timestamp, 'yaml')
+    converted_path = get_data_path_for_record(str(id), timestamp, 'yaml')
 
     if not os.path.exists(converted_path):
         os.makedirs(converted_path)

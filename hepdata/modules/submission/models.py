@@ -24,10 +24,16 @@
 
 """Models for the HEPData Submission Workflow."""
 
+import logging
+import os
+
 from invenio_accounts.models import User
-from sqlalchemy import TypeDecorator, types
+from sqlalchemy import TypeDecorator, types, event
 from invenio_db import db
 from datetime import datetime
+
+logging.basicConfig()
+log = logging.getLogger(__name__)
 
 submission_participant_link = db.Table(
     'submission_participant_link',
@@ -48,6 +54,10 @@ data_reference_link = db.Table(
 
 
 class LargeBinaryString(TypeDecorator):
+    """
+    Decorator for unicode strings which are stored in the DB as LargeBinary objects,
+    to allow them to be treated as strings in python3
+    """
     impl = types.LargeBinary
 
     def process_literal_param(self, value, dialect):
@@ -126,6 +136,9 @@ keyword_identifier = db.Table(
 
 
 class DataSubmission(db.Model):
+    """
+    The submission object associated with a data table.
+    """
     __tablename__ = "datasubmission"
 
     id = db.Column(db.Integer, primary_key=True, nullable=False,
@@ -158,6 +171,23 @@ class DataSubmission(db.Model):
     version = db.Column(db.Integer, default=0)
 
 
+@event.listens_for(db.Session, 'before_flush')
+def receive_before_flush(session, flush_context, instances):
+    """Listen for the 'before_flush' event to check for DataSubmission
+    deletions and ensure the DataResource mapped to the data_file field
+    is deleted."""
+    for obj in session.deleted:
+        if isinstance(obj, DataSubmission):
+            try:
+                log.debug("Deleting data resource %s" % obj.data_file)
+                dataresource = DataResource.query.filter_by(id=obj.data_file).one()
+                db.session.delete(dataresource)
+            except Exception as e:
+                log.error("Unable to delete data resource with id %s whilst "
+                          "deleting data submission id %s. Error was: %s"
+                          % (obj.id, obj.data_file, e))
+
+
 class Keyword(db.Model):
     __tablename__ = "keyword"
 
@@ -178,6 +208,19 @@ class License(db.Model):
 
 
 class DataResource(db.Model):
+    """
+    Details of a data resource, which could be a data table, an image, a
+    script, a ROOT file, or a link to an external website or GitHub repo.
+
+    Data resources can be related to submissions in various ways:
+
+    - Resources relating to a submission (HEPSubmission.resources) are linked
+      via the `data_resource_link` table
+    - Data files belonging to a data table (`DataSubmission.data_file`)
+      are linked via the `data_file` field of `datasubmission`
+    - Resources relating to a data table (`DataSubmission.resources`) are
+      linked via the `datafile_identifier` table
+    """
     __tablename__ = "dataresource"
 
     id = db.Column(
@@ -192,6 +235,18 @@ class DataResource(db.Model):
 
     created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow,
                         index=True)
+
+
+@event.listens_for(DataResource, 'after_delete')
+def receive_data_resource_after_delete(mapper, connection, target):
+    "Delete the file on disk when a DataResource is deleted"
+    log.debug("Deleting data resource id %s" % target.id)
+    if not target.file_location.startswith('http'):
+        if os.path.isfile(target.file_location):
+            log.debug('Deleting file %s' % target.file_location)
+            os.remove(target.file_location)
+        else:
+            log.error("Could not remove file %s" % target.file_location)
 
 
 datareview_messages = db.Table('review_messages',
@@ -214,7 +269,8 @@ class DataReview(db.Model):
         nullable=False, autoincrement=True)
 
     publication_recid = db.Column(db.Integer)
-    data_recid = db.Column(db.Integer, db.ForeignKey("datasubmission.id"))
+    data_recid = db.Column(db.Integer,
+                           db.ForeignKey("datasubmission.id", ondelete='CASCADE'))
 
     creation_date = db.Column(
         db.DateTime, nullable=False, default=datetime.utcnow, index=True)
