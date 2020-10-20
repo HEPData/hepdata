@@ -516,7 +516,7 @@ def clean_remaining_files(synchronous=True):  # pragma: no cover
     Looks for files in data dir that do not match a known pattern.
     For folders that look like a sandbox record (timestamp), check db
     and delete.
-    For everthing else, send an email.
+    For everything else, display on the console and send an email.
     """
     if _check_for_running_tasks():
         # exit as tasks are currently running
@@ -551,6 +551,19 @@ def clean_remaining_files(synchronous=True):  # pragma: no cover
                 unknown_files.append(entry.path)
 
     if unknown_files:
-        print("The following files were found in %s which were not recognised:" % data_dir)
+        print("The following files/directories were found in %s which were not recognised:" % data_dir)
         for f in unknown_files:
             print("    %s" % f)
+
+        print("These files will remain on the filesystem unless they are manually cleaned up.")
+
+        print("Sending email with this info.")
+        message = "<div>After moving files, the following files/directories were found in %s which were not recognised:"\
+                  "<ul><li>\n%s</li></ul>" \
+                  "<p>These files will remain on the filesystem unless they are manually cleaned up.</p></div>" \
+                  % (data_dir, '</li><li>'.join(unknown_files))
+
+        create_send_email_task(current_app.config['ADMIN_EMAIL'],
+                               subject="[HEPData] Files remaining in %s after migration" % data_dir,
+                               message=message,
+                               reply_to_address=current_app.config['ADMIN_EMAIL'])
