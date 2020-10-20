@@ -531,8 +531,15 @@ def clean_remaining_files(synchronous=True):  # pragma: no cover
             recognised = False
             if entry.is_dir():
                 # If dirname has 2 chars it's in our expected format.
-                if entry.name == 'converted' or len(entry.name) == 2:
+                if entry.name == 'converted':
                     recognised = True
+                elif len(entry.name) == 2:
+                    # Valid dir, but also check subpaths
+                    recognised = True
+                    with os.scandir(entry.path) as subdir_entries:
+                        for sub_entry in subdir_entries:
+                            if not sub_entry.name.isdigit():
+                                unknown_files.append(sub_entry.path)
                 else:
                     # Is it a deleted sandbox entry?
                     if len(entry.name) == 10 and \
