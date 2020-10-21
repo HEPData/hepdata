@@ -26,6 +26,7 @@ from invenio_assets import NpmBundle
 
 dashboard_js = NpmBundle(
     'js/dashboard.js',
+    'js/lib/typeahead.bundle.min.js',
     filters='jsmin,uglifyjs',
     output="gen/hepdata.dashboard.%(version)s.js"
 )

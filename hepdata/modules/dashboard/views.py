@@ -28,7 +28,7 @@ from flask_login import login_required, current_user
 from hepdata.ext.elasticsearch.admin_view.api import AdminIndexer
 from hepdata.ext.elasticsearch.api import reindex_all
 from hepdata.ext.elasticsearch.api import push_data_keywords
-from hepdata.modules.dashboard.api import prepare_submissions, get_pending_invitations_for_user
+from hepdata.modules.dashboard.api import prepare_submissions, get_pending_invitations_for_user, get_submission_count, list_submission_titles
 from hepdata.modules.permissions.api import get_pending_request, get_pending_coordinator_requests
 from hepdata.modules.permissions.views import check_is_sandbox_record
 from hepdata.modules.records.utils.submission import unload_submission, do_finalise
@@ -70,9 +70,15 @@ def dashboard():
 @blueprint.route('/dashboard-submissions')
 @login_required
 def dashboard_submissions():
+    filter_record_id = request.args.get('record_id')
     current_page = request.args.get('page', default=1, type=int)
     size = request.args.get('size', 25)
-    total, submissions = prepare_submissions(current_user, size, current_page)
+    submissions = prepare_submissions(
+        current_user,
+        items_per_page=size,
+        current_page=current_page,
+        record_id=filter_record_id
+    )
 
     submission_meta = []
     submission_stats = []
@@ -107,20 +113,30 @@ def dashboard_submissions():
 
         submission_meta.append(submissions[record_id]["metadata"])
 
-    total_pages = int(math.ceil(total / size))
+    total_records = get_submission_count(current_user)
+    total_pages = int(math.ceil(total_records / size))
 
     ctx = {
-        'pages': {
-            'total': total_pages,
-            'current': current_page,
-            'endpoint': '.dashboard'
-        },
         'modify_query': modify_query,
         'submissions': submission_meta,
         'submission_stats': submission_stats
     }
 
+    if filter_record_id is None:
+        ctx['pages'] = {
+            'total': total_pages,
+            'current': current_page,
+            'endpoint': '.dashboard'
+        }
+
     return render_template('hepdata_dashboard/dashboard-submissions.html', ctx=ctx)
+
+
+@blueprint.route('/dashboard-submission-titles')
+@login_required
+def dashboard_submission_titles():
+    return jsonify(list_submission_titles(current_user))
+
 
 
 @blueprint.route('/delete/<int:recid>')

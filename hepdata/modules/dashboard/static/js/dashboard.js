@@ -1,25 +1,6 @@
 var dashboard = (function () {
   var data = {};
 
-  var initialise_list_filter = function () {
-    $(".filter-list li").bind('click', function () {
-      var id_parts = this.id.split("-");
-      var item_parent = id_parts[0];
-      // we need to reset all of the items to unselected before selecting the new item.
-      $("#" + item_parent + "-filter li").each(function () {
-        $(this).removeClass("filter-selected");
-        $(this).addClass("filter-inactive");
-      });
-
-      $(this).addClass("filter-selected");
-      $(this).removeClass("filter-inactive");
-
-      HEPDATA.current_filters[item_parent] = id_parts[1].replace("_", " ");
-      $("#clear-" + item_parent).removeClass("hidden");
-      HEPDATA.filter_content('', '#hep-submissions');
-    });
-  };
-
   var initialise_finalise_btn = function () {
     $(".finalise-btn").bind("click", function () {
       $("#finalise_submission_button").attr('data-recid', $(this).attr('data-recid'));
@@ -144,24 +125,15 @@ var dashboard = (function () {
     });
   };
 
-  var load_submissions = function(element) {
-    var href = window.location.href;
-    if (element && element.href) {
-      href = element.href;
-    }
-    const url = new URL(href);
-    var page = url.searchParams.get('page');
-    if (!page) page = 1;
+  var load_submissions_from_params = function(params) {
+    $('#submissions-wrapper').hide()
+    display_loader();
 
-    $.get("/dashboard/dashboard-submissions?page="+page).done(function (data) {
+    var url = "/dashboard/dashboard-submissions?" + $.param(params);
+    $.get(url).done(function (data) {
       $('#submissions-loader').hide();
       $('#submissions-wrapper').html(data).fadeIn(500);
       dashboard.render_submission_stats();
-
-      $('#submission-filter').attr(
-        'placeholder',
-        "Filter " + dashboard.data.length + " submission" + (dashboard.data.length > 1 ? 's' : '')
-      );      
 
       $('.pagination li a').click(function(event) {
         event.preventDefault();
@@ -172,6 +144,18 @@ var dashboard = (function () {
       $('#submissions-wrapper').html("Unable to load submissions. Please try again later.").fadeIn(500);
     });
   }
+
+  var load_submissions = function(element) {
+    var href = window.location.href;
+    if (element && element.href) {
+      href = element.href;
+    }
+    var url = new URL(href);
+    var page = url.searchParams.get('page');
+    if (!page) page = 1;
+
+    load_submissions_from_params({'page': page});
+  };
 
   var display_loader = function() {
     $('#submissions-loader').show();
@@ -189,10 +173,57 @@ var dashboard = (function () {
     );
   };
 
+  var initialise_list_filter = function () {
+
+    // Simple matcher for typeahead filter
+    var substringMatcher = function(data) {
+      return function findMatches(query, callback) {
+        var matches = [];
+        $.each(data, function(i, datum) {
+          if (datum.title.toLowerCase().indexOf(query.toLowerCase()) >= 0) {
+            matches.push(datum);
+          }
+        });
+        callback(matches);
+      }
+    }
+
+    $.get('/dashboard/dashboard-submission-titles').done(function (data) {
+
+      $('#submission-filter').typeahead(
+        { highlight: true },
+        {
+          source: substringMatcher(data),
+          templates: {
+            suggestion: function(result) {
+              return $('<p>').attr('id',result.id).text(result.title)[0].outerHTML;
+            }
+          }
+        }
+      );
+
+      $('#submission-filter').bind('typeahead:select', function (event, suggestion) {
+        $(this).typeahead('val', suggestion.title);
+        load_submissions_from_params({'record_id': suggestion.id});
+      });
+
+      $('#submission-filter').attr(
+        'placeholder',
+        "Filter " + data.length + " submission" + (data.length > 1 ? 's' : '')
+      );
+
+      $('#submission-filter').after(
+        $("<i>").attr("class", "fa fa-times-circle").click(function() {
+          $('#submission-filter').typeahead('val', '');
+          load_submissions_from_params({});
+        })
+      );
+
+    });
+  };
+
   return {
     initialise: function () {
-      display_loader();
-
       MathJax.Hub.Config({
         tex2jax: {inlineMath: [['$', '$'], ['\\(', '\\)']]}
       });
