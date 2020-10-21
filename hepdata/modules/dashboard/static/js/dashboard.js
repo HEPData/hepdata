@@ -126,13 +126,21 @@ var dashboard = (function () {
   };
 
   var load_submissions_from_params = function(params) {
-    $('#submissions-wrapper').hide()
-    display_loader();
+    var loader_placement = "#submissions-loader";
+
+    // If there's already a submission list put the loader there (to keep the pagination)
+    var submission_list = $('#hep-submissions');
+    if (submission_list.length > 0) {
+      submission_list.empty().addClass('loader').css('width', '200px');
+      loader_placement = '#hep-submissions'
+    }
+    display_loader(loader_placement);
 
     var url = "/dashboard/dashboard-submissions?" + $.param(params);
     $.get(url).done(function (data) {
-      $('#submissions-loader').hide();
+      $(loader_placement).hide();
       $('#submissions-wrapper').html(data).fadeIn(500);
+
       dashboard.render_submission_stats();
 
       $('.pagination li a').click(function(event) {
@@ -140,7 +148,7 @@ var dashboard = (function () {
         load_submissions(this);
       });
     }).fail(function () {
-      $('#submissions-loader').hide();
+      $(loader_placement).hide();
       $('#submissions-wrapper').html("Unable to load submissions. Please try again later.").fadeIn(500);
     });
   }
@@ -157,10 +165,10 @@ var dashboard = (function () {
     load_submissions_from_params({'page': page});
   };
 
-  var display_loader = function() {
-    $('#submissions-loader').show();
+  var display_loader = function(placement) {
+    $(placement).show();
     HEPDATA.render_loader(
-      "#submissions-loader",
+      placement,
       [
         {x: 26, y: 30, color: "#955BA5"},
         {x: -60, y: 55, color: "#FFFFFF"},
