@@ -408,7 +408,9 @@ def test_update_record_info(app):
         # Process the files to create DataSubmission tables in the DB.
         base_dir = os.path.dirname(os.path.realpath(__file__))
         directory = os.path.join(base_dir, 'test_data/test_submission')
-        process_submission_directory(directory, os.path.join(directory, 'submission.yaml'),
+        tmp_path = os.path.join(tempfile.mkdtemp(), 'test_submission')
+        shutil.copytree(directory, tmp_path)
+        process_submission_directory(tmp_path, os.path.join(tmp_path, 'submission.yaml'),
                                      submission.publication_recid)
         do_finalise(submission.publication_recid, force_finalise=True, convert=False)
 
