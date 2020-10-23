@@ -27,6 +27,8 @@ import os
 import re
 from time import sleep
 import yaml
+import shutil
+import tempfile
 import datetime
 
 from flask_login import login_user
@@ -34,7 +36,7 @@ from invenio_accounts.models import User
 from invenio_db import db
 from werkzeug.datastructures import FileStorage
 
-from hepdata.modules.records.api import process_payload
+from hepdata.modules.records.api import process_payload, process_zip_archive, move_files
 from hepdata.modules.records.utils.submission import get_or_create_hepsubmission, process_submission_directory, do_finalise, unload_submission
 from hepdata.modules.records.utils.common import get_record_by_id, get_record_contents
 from hepdata.modules.records.utils.data_processing_utils import generate_table_structure
@@ -348,6 +350,36 @@ def test_upload_invalid_file(app):
         })
 
 
+def test_process_zip_archive_invalid(app):
+    # Test uploading a zip containing broken symlinks
+    base_dir = os.path.dirname(os.path.realpath(__file__))
+    file_path = os.path.join(base_dir, 'test_data/submission_invalid_symlink.tgz')
+    tmp_path = tempfile.mkdtemp()
+    shutil.copy2(file_path, tmp_path)
+    tmp_file_path = os.path.join(tmp_path, 'submission_invalid_symlink.tgz')
+    errors = process_zip_archive(tmp_file_path, 1)
+    assert("Exceptions when copying files" in errors)
+    assert(len(errors["Exceptions when copying files"]) == 1)
+    assert(errors["Exceptions when copying files"][0].get("level") == "error")
+    assert(errors["Exceptions when copying files"][0].get("message")
+           == "Invalid file TestHEPSubmissionInvalidSymlink/invalid_file_name.txt: "
+           "[Errno 2] No such file or directory: "
+           "'TestHEPSubmissionInvalidSymlink/invalid_file_name.txt'"
+           )
+
+    shutil.rmtree(tmp_path)
+
+
+def test_move_files_invalid_path():
+    errors = move_files('this_is_not_a_real_path', tempfile.mkdtemp())
+    assert("Exceptions when copying files" in errors)
+    assert(len(errors["Exceptions when copying files"]) == 1)
+    assert(errors["Exceptions when copying files"][0].get("level") == "error")
+    assert(errors["Exceptions when copying files"][0].get("message")
+           == "[Errno 2] No such file or directory: 'this_is_not_a_real_path'"
+           )
+
+
 def test_get_updated_records_since_date(app):
     ids_on = get_inspire_records_updated_on(0)
     ids_on += get_inspire_records_updated_on(1)
@@ -376,7 +408,9 @@ def test_update_record_info(app):
         # Process the files to create DataSubmission tables in the DB.
         base_dir = os.path.dirname(os.path.realpath(__file__))
         directory = os.path.join(base_dir, 'test_data/test_submission')
-        process_submission_directory(directory, os.path.join(directory, 'submission.yaml'),
+        tmp_path = os.path.join(tempfile.mkdtemp(), 'test_submission')
+        shutil.copytree(directory, tmp_path)
+        process_submission_directory(tmp_path, os.path.join(tmp_path, 'submission.yaml'),
                                      submission.publication_recid)
         do_finalise(submission.publication_recid, force_finalise=True, convert=False)
 
