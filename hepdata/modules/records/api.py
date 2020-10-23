@@ -61,7 +61,7 @@ from bs4 import BeautifulSoup
 from hepdata_converter_ws_client import Error
 
 import tempfile
-from shutil import rmtree
+import shutil
 
 import logging
 logging.basicConfig()
@@ -490,13 +490,9 @@ def process_zip_archive(file_path, id):
                     }]
                 }
 
-        if not os.path.exists(submission_path):
-            os.makedirs(submission_path)
-
-        copy_command = ['cp']
-        print('Copying with: {} -r {} {}'.format(' '.join(copy_command), submission_temp_path + '/.', submission_path))
-        subprocess.check_output(copy_command + ['-r',  submission_temp_path + '/.', submission_path])
-        rmtree(submission_temp_path, ignore_errors=True)  # can uncomment when this is definitely working
+        copy_errors = move_files(submission_temp_path, submission_path)
+        if copy_errors:
+            return copy_errors
 
         submission_found = find_file_in_directory(submission_path, lambda x: x == "submission.yaml")
 
@@ -533,9 +529,6 @@ def check_and_convert_from_oldhepdata(input_directory, id, timestamp):
     """
     converted_path = get_data_path_for_record(str(id), timestamp, 'yaml')
 
-    if not os.path.exists(converted_path):
-        os.makedirs(converted_path)
-
     oldhepdata_found = find_file_in_directory(
         input_directory,
         lambda x: x.endswith('.oldhepdata'),
@@ -563,7 +556,7 @@ def check_and_convert_from_oldhepdata(input_directory, id, timestamp):
         errormsg = str(error)
 
     if not successful:
-        rmtree(converted_temp_dir, ignore_errors=True)  # can uncomment when this is definitely working
+        shutil.rmtree(converted_temp_dir, ignore_errors=True)  # can uncomment when this is definitely working
 
         return {
             "Converter": [{
@@ -574,12 +567,43 @@ def check_and_convert_from_oldhepdata(input_directory, id, timestamp):
             }]
         }
     else:
-        copy_command = ['cp']
-        print('Copying with: {} -r {} {}'.format(' '.join(copy_command), converted_temp_path + '/.', converted_path))
-        subprocess.check_output(copy_command + ['-r', converted_temp_path + '/.', converted_path])
-        rmtree(converted_temp_dir, ignore_errors=True) # can uncomment when this is definitely working
+        copy_errors = move_files(converted_temp_path, converted_path)
+        if copy_errors:
+            return copy_errors
 
     return find_file_in_directory(converted_path, lambda x: x == "submission.yaml")
+
+
+def move_files(submission_temp_path, submission_path):
+    print('Copying files from {} to {}'.format(submission_temp_path + '/.', submission_path))
+    try:
+        shutil.copytree(submission_temp_path, submission_path, symlinks=False)
+    except shutil.Error as e:
+        errors = []
+        for srcname, dstname, exception in e.args[0]:
+            # Remove full paths from filenames before sending error message to user
+            filename = srcname.replace(submission_temp_path + '/', '')
+            msg = str(exception).replace(submission_temp_path + '/', '').replace(submission_path + '/', '')
+            errors.append({
+                "level": "error",
+                "message": 'Invalid file {}: {}'.format(filename, msg)
+            })
+
+        return {
+            "Exceptions when copying files": errors
+        }
+    except Exception as e:
+        # Remove full paths from filenames before sending error message to user
+        msg = str(e).replace(submission_temp_path + '/', '').replace(submission_path + '/', '')
+        return {
+            "Exceptions when copying files": [{
+                "level": "error",
+                "message": msg
+            }]
+        }
+
+    finally:
+        shutil.rmtree(submission_temp_path, ignore_errors=True)
 
 
 def query_messages_for_data_review(data_review_record, messages):
