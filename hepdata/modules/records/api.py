@@ -483,7 +483,12 @@ def process_zip_archive(file_path, id):
                 }
         else:
             # we are dealing with a zip, tar, etc. so we extract the contents
-            if not extract(file_path, submission_temp_path):
+            try:
+                unzipped_path = extract(file_path, submission_temp_path)
+            except Exception as e:
+                unzipped_path = None
+
+            if not unzipped_path:
                 return {
                     "Archive file extractor": [{
                         "level": "error", "message": "{} is not a valid zip or tar archive file.".format(file_path)

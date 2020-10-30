@@ -366,7 +366,19 @@ def test_process_zip_archive_invalid(app):
            "[Errno 2] No such file or directory: "
            "'TestHEPSubmissionInvalidSymlink/invalid_file_name.txt'"
            )
+    shutil.rmtree(tmp_path)
 
+    # Test uploading an invalid tarfile (real example: user ran 'tar -czvf' then 'gzip')
+    file_path = os.path.join(base_dir, 'test_data/submission_invalid_tarfile.tgz.gz')
+    tmp_path = tempfile.mkdtemp()
+    shutil.copy2(file_path, tmp_path)
+    tmp_file_path = os.path.join(tmp_path, 'submission_invalid_tarfile.tgz.gz')
+    errors = process_zip_archive(tmp_file_path, 1)
+    assert ("Archive file extractor" in errors)
+    assert (len(errors["Archive file extractor"]) == 1)
+    assert (errors["Archive file extractor"][0].get("level") == "error")
+    assert (errors["Archive file extractor"][0].get("message")
+            == "{} is not a valid zip or tar archive file.".format(tmp_file_path))
     shutil.rmtree(tmp_path)
 
 
