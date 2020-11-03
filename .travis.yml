@@ -69,7 +69,7 @@ install:
   - "hepdata npm"
   - "cd /home/travis/virtualenv/python3.6.7/var/hepdata-instance/static/"
   - "travis_retry npm install"
-  - "hepdata collect -v"
+  - "hepdata collect"
   - "hepdata assets build"
   - "cd /home/travis/build/HEPData/hepdata"
 
