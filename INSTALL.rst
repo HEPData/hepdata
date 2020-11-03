@@ -113,7 +113,7 @@ installing in local mode causes problems and it is necessary to run the install 
 
    (hepdata)$ cd /
    (hepdata)$ sudo npm install -g clean-css@3.4.28 uglify-js requirejs
-   (hepdata)$ sudo npm install -g --unsafe-perm node-sass
+   (hepdata)$ sudo npm install -g --unsafe-perm node-sass@4.14.1
    (hepdata)$ cd ~/src/hepdata
    (hepdata)$ ./scripts/clean_assets.sh
 
