@@ -48,6 +48,12 @@ def create_send_email_task(destination, subject, message, reply_to_address=None)
         create_celery_app(current_app)
         print('Sending email to {0}'.format(destination))
         send_email.delay(destination, subject, message, reply_to_address)
+    else:
+        print('Not sending email as TESTING=True; would have sent email to {0}:'.format(destination))
+        import re
+        clean = re.compile('(?s)<.*?>')
+        newlines = re.compile(r'(?ms)(\n(\s*)){2,}')
+        print(re.sub(newlines, '\n', re.sub(clean, '', message)))
 
 
 @shared_task
