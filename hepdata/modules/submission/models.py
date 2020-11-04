@@ -181,8 +181,9 @@ def receive_before_flush(session, flush_context, instances):
         if isinstance(obj, DataSubmission):
             try:
                 log.debug("Deleting data resource %s" % obj.data_file)
-                dataresource = DataResource.query.filter_by(id=obj.data_file).one()
-                db.session.delete(dataresource)
+                dataresource = DataResource.query.filter_by(id=obj.data_file).first()
+                if dataresource:
+                    db.session.delete(dataresource)
             except Exception as e:
                 log.error("Unable to delete data resource with id %s whilst "
                           "deleting data submission id %s. Error was: %s"
