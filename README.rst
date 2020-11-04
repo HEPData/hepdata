@@ -2,8 +2,8 @@
 HEPData
 =======
 
-.. image:: https://img.shields.io/travis/HEPData/hepdata/master
-   :target: https://travis-ci.org/HEPData/hepdata/branches
+.. image:: https://img.shields.io/travis/com/HEPData/hepdata/master
+   :target: https://travis-ci.com/github/HEPData/hepdata/branches
    :alt: Travis Status
 
 .. image:: https://coveralls.io/repos/github/HEPData/hepdata/badge.svg?branch=master
