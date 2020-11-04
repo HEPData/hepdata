@@ -174,8 +174,9 @@ class DataSubmission(db.Model):
 @event.listens_for(db.Session, 'before_flush')
 def receive_before_flush(session, flush_context, instances):
     """Listen for the 'before_flush' event to check for DataSubmission
-    deletions and ensure the DataResource mapped to the data_file field
-    is deleted."""
+    deletions and ensure related DataResource and DataReview entries are
+    loaded by SQLAlchemy before deletion to ensure all cascades, event
+    listeners, etc are run."""
     for obj in session.deleted:
         if isinstance(obj, DataSubmission):
             try:
@@ -185,7 +186,17 @@ def receive_before_flush(session, flush_context, instances):
             except Exception as e:
                 log.error("Unable to delete data resource with id %s whilst "
                           "deleting data submission id %s. Error was: %s"
-                          % (obj.id, obj.data_file, e))
+                          % (obj.data_file, obj.id, e))
+
+            log.debug("Deleting reviews for data submission %s" % obj.id)
+            reviews = DataReview.query.filter_by(data_recid=obj.id).all()
+            for review in reviews:
+                try:
+                    db.session.delete(review)
+                except Exception as e:
+                    log.error("Unable to delete review with id %s whilst "
+                              "deleting data submission id %s. Error was: %s"
+                              % (review.id, obj.id, e))
 
 
 class Keyword(db.Model):
