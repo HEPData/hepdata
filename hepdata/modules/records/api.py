@@ -434,7 +434,7 @@ def process_saved_file(file_path, recid, userid, redirect_url, previous_status):
 
     # Delete any previous upload folders relating to non-final versions
     # of this hepsubmission
-    cleanup_old_files(hepsubmission, os.path.dirname(file_path))
+    cleanup_old_files(hepsubmission)
 
 
 def save_zip_file(file, id):
