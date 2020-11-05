@@ -56,7 +56,103 @@ var dashboard = (function () {
     })
   };
 
+  var generate_permissions_paginator = function(pagination_list, current_page, total_results, items_per_page) {
+    var total_pages = Math.ceil(total_results / items_per_page);
+    var pages_to_show = Array(
+      {
+        'enabled': (current_page > 1),
+        'text': '«',
+        'page': 1,
+        'title': 'first'
+      },
+      {
+        'enabled': (current_page > 1),
+        'text': '‹',
+        'page': (current_page > 1) ? current_page - 1 : 1,
+        'title': 'prev'
+      }
+    );
+
+    if (current_page > 1) {
+      pages_to_show.push(
+        {
+          'enabled': true,
+          'text': current_page - 1,
+          'page': current_page - 1
+        }
+      );
+    }
+
+    pages_to_show.push(
+      {
+        'text': current_page,
+        'page': current_page,
+        'active': true,
+        'enabled': false
+      }
+    );
+
+    if (current_page < total_pages) {
+      pages_to_show.push(
+        {
+          'enabled': true,
+          'text': current_page + 1,
+          'page': current_page + 1
+        }
+      );
+    }
+
+    pages_to_show.push(
+      {
+        'enabled': (current_page < total_pages),
+        'text': '›',
+        'page': (current_page < total_pages) ? current_page + 1 : total_pages,
+        'title': 'next'
+      },
+      {
+        'enabled': (current_page < total_pages),
+        'text': '»',
+        'page': total_pages,
+        'title': 'last'
+      }
+    );
+
+    pagination_list.selectAll("li").remove();
+    pagination_list.selectAll("li")
+      .data(pages_to_show).enter()
+      .append("li").attr("class", function (d) {
+        return d.active ? 'active' : (d.enabled ? '' : 'disabled');
+      })
+      .append("a").attr("href", '#')
+      .attr("title", function (d) {
+        return d.title;
+      })
+      .text(function (d) {
+        return d.text;
+      })
+      .on('click', function (d) {
+        event.preventDefault();
+        return update_pagination(this, d.page, total_results, items_per_page);
+      });
+  }
+
+  var update_pagination = function(current_element, page, total_results, items_per_page) {
+    paginator = d3.select(current_element.parentElement.parentElement);
+    generate_permissions_paginator(paginator, page, total_results, items_per_page);
+    first_item = (page - 1) * items_per_page;
+
+    d3.select(paginator.node().parentElement.parentElement).selectAll(".row").each(function(data, i) {
+      if (i < first_item || i >= first_item + items_per_page) {
+        $(this).hide();
+      } else {
+        $(this).show();
+      }
+    });
+  }
+
   var load_permissions = function () {
+    d3.select("#permissions").append("div").attr("align", "center").attr('id', 'permissions_loader');
+    display_loader('#permissions_loader');
 
     $.get('/permissions/list').done(function (data) {
 
@@ -96,10 +192,15 @@ var dashboard = (function () {
             .attr("role", "tabpanel")
             .attr("id", key);
 
+          var items_per_page = 5;
+
           // tab_content = '<div role="tabpanel" class="tab-pane active" id="home">...</div>'
           var permission_item = permission_list.selectAll("div.row").data(data[key]).enter()
             .append("div")
             .attr("class", "row item")
+            .attr("style", function (d, i) {
+              return i < items_per_page ? '' : 'display:none;';
+            })
             .attr("id", function (d) {
               return 'rec' + d.recid;
             });
@@ -119,6 +220,14 @@ var dashboard = (function () {
           permission_item_info.append("div").attr("class", "label label-info").text(function (d) {
             return key;
           });
+
+          // Add paginator similar to theme/templates/pagination.html
+          if (data[key].length > items_per_page) {
+            var pagination_list = permission_list
+              .append("div").attr("class", "pagination-bar").attr("align", "center")
+              .append("ul").attr("class", "pagination");
+            generate_permissions_paginator(pagination_list, 1, data[key].length, items_per_page);
+          }
         }
       );
 
