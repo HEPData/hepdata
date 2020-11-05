@@ -118,7 +118,7 @@ def delete_all_files(rec_id, check_old_data_paths=True):
             shutil.rmtree(record_data_path)
 
 
-def cleanup_old_files(hepsubmission, current_folder=None, check_old_data_paths=True):
+def cleanup_old_files(hepsubmission, check_old_data_paths=True):
     """Remove old files not related to a current version of the submission"""
     rec_id = str(hepsubmission.publication_recid)
     record_data_paths = [get_data_path_for_record(rec_id)]
@@ -130,25 +130,22 @@ def cleanup_old_files(hepsubmission, current_folder=None, check_old_data_paths=T
 
     current_filepaths = set()
 
-    if hepsubmission.overall_status == 'sandbox' and current_folder:
-        current_filepaths.add(current_folder)
-    else:
-        path_prefixes = [f"{path}/" for path in record_data_paths]
-        current_resources = _find_all_current_dataresources(hepsubmission.publication_recid)
+    path_prefixes = [f"{path}/" for path in record_data_paths]
+    current_resources = _find_all_current_dataresources(hepsubmission.publication_recid)
 
-        for r in current_resources:
-            if not r.file_location.startswith('http'):
-                found = False
-                for path_prefix in path_prefixes:
-                    if r.file_location.startswith(path_prefix):
-                        subdirs = r.file_location.split(path_prefix, 1)[1]
-                        top_subdir = subdirs.split(os.sep, 1)[0]
-                        current_filepaths.add(os.path.join(path_prefix, top_subdir))
-                        found = True
-                        break
+    for r in current_resources:
+        if not r.file_location.startswith('http'):
+            found = False
+            for path_prefix in path_prefixes:
+                if r.file_location.startswith(path_prefix):
+                    subdirs = r.file_location.split(path_prefix, 1)[1]
+                    top_subdir = subdirs.split(os.sep, 1)[0]
+                    current_filepaths.add(os.path.join(path_prefix, top_subdir))
+                    found = True
+                    break
 
-                if not found:
-                    log.warning("Unknown file %s" % r.file_location)
+            if not found:
+                log.warning("Unknown file %s" % r.file_location)
 
     packaged_filepath = find_submission_data_file_path(hepsubmission)
     packaged_filename = os.path.basename(packaged_filepath)
