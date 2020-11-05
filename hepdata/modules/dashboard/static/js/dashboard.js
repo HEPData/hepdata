@@ -250,6 +250,11 @@ var dashboard = (function () {
       $(loader_placement).hide();
       $('#submissions-wrapper').html(data).fadeIn(500);
 
+      $(".inspire-btn").bind("click", function () {
+        $("#inspire-add-button").attr('data-recid', $(this).attr("data-recid"));
+        $("#inspireDialog").modal();
+      });
+
       dashboard.render_submission_stats();
 
       $('.pagination li a').click(function(event) {
@@ -352,11 +357,6 @@ var dashboard = (function () {
       load_submissions();
       load_watched_records();
       load_permissions();
-
-      $(".inspire-btn").bind("click", function () {
-        $("#inspire-add-button").attr('data-recid', $(this).attr("data-recid"));
-        $("#inspireDialog").modal();
-      });
 
       $(".reindex-btn").bind("click", function () {
         $("#reindexDialog").modal();
