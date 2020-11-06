@@ -263,7 +263,8 @@ def search():
             'q': query_params['q'],
             'max_results': query_params['size'],
             'pages': {'current': query_params['current_page'],
-                      'total': total_pages},
+                      'total': total_pages,
+                      'endpoint': '.search'},
             'filters': dict(query_params['filters']),
         }
 

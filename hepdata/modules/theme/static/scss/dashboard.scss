@@ -175,7 +175,13 @@ body, html {
       -webkit-padding-start: 0px;
       width: 100%;
       padding: 0px;
+    }
 
+    .loader {
+      padding-top: 60px;
+      padding-bottom: 40px;
+      width: 200px;
+      margin: 0 auto;
     }
 
     .watch-list, .permission-list {
@@ -368,21 +374,68 @@ body, html {
       overflow-y: scroll;
     }
 
+    .form-group {
+      margin-bottom: 0;
+    }
+
     .filter {
 
-      padding-bottom: 2em;
+      padding-bottom: 0;
       width: 100%;
 
       input {
+        background-color: $navy;
+        background-image: none;
         border: none;
-        background: $navy url(/static/img/icons/icon_filter.svg) 8px 10px no-repeat;
-        background-size: 23px;
-        padding: 10px 10px 10px 35px;
-        width: 100%;
         border-radius: 5px;
         color: white;
         font-size: 1.2em;
         margin: 0 auto;
+      }
+
+      .tt-input {
+        background-image: url(/static/img/icons/icon_filter.svg);
+        background-position: 8px 10px;
+        background-repeat: no-repeat;
+        background-size: 23px;
+        padding: 10px 35px;
+      }
+
+      .twitter-typeahead {
+        width: 100%;
+      }
+
+      .tt-menu {
+        background-color: white;
+        color: $navy;
+        text-align: left;
+        border-radius: 0 0 5px 5px;
+        top: 66% !important;
+        width: 100%;
+      }
+
+      .tt-suggestion {
+        margin: 0;
+        padding: 2px 35px;
+        font-size: 1.2em;
+
+        &:hover {
+          background-color: #894B9D;
+          color: #fff;
+          cursor: pointer;
+        }
+
+        &:last-child {
+          border-radius: 0 0 5px 5px;
+        }
+      }
+
+      .fa {
+        position: relative;
+        left: 48%;
+        top: -30px;
+        color: #955BA5;
+        font-size: 16px;
       }
     }
 
@@ -774,4 +827,3 @@ body, html {
   }
 
 }
-

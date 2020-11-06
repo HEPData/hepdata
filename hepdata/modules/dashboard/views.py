@@ -28,7 +28,7 @@ from flask_login import login_required, current_user
 from hepdata.ext.elasticsearch.admin_view.api import AdminIndexer
 from hepdata.ext.elasticsearch.api import reindex_all
 from hepdata.ext.elasticsearch.api import push_data_keywords
-from hepdata.modules.dashboard.api import prepare_submissions, get_pending_invitations_for_user
+from hepdata.modules.dashboard.api import prepare_submissions, get_pending_invitations_for_user, get_submission_count, list_submission_titles
 from hepdata.modules.permissions.api import get_pending_request, get_pending_coordinator_requests
 from hepdata.modules.permissions.views import check_is_sandbox_record
 from hepdata.modules.records.utils.submission import unload_submission, do_finalise
@@ -37,7 +37,9 @@ from hepdata.modules.records.utils.users import has_role
 from hepdata.modules.records.utils.common import get_record_by_id
 from hepdata.modules.records.utils.workflow import update_record
 from hepdata.modules.inspire_api.views import get_inspire_record_information
+from hepdata.utils.url import modify_query
 import json
+import math
 
 from invenio_userprofiles import current_userprofile
 
@@ -54,8 +56,29 @@ def dashboard():
     dashboard that reflects the
     current status of all submissions of which they are a participant.
     """
+    user_profile = current_userprofile.query.filter_by(user_id=current_user.get_id()).first()
 
-    submissions = prepare_submissions(current_user)
+    ctx = {'user_is_admin': has_role(current_user, 'admin'),
+           'user_profile': user_profile,
+           'user_has_coordinator_request': get_pending_request(),
+           'pending_coordinator_requests': get_pending_coordinator_requests(),
+           'pending_invites': get_pending_invitations_for_user(current_user)}
+
+    return render_template('hepdata_dashboard/dashboard.html', ctx=ctx)
+
+
+@blueprint.route('/dashboard-submissions')
+@login_required
+def dashboard_submissions():
+    filter_record_id = request.args.get('record_id')
+    current_page = request.args.get('page', default=1, type=int)
+    size = request.args.get('size', 25)
+    submissions = prepare_submissions(
+        current_user,
+        items_per_page=size,
+        current_page=current_page,
+        record_id=filter_record_id
+    )
 
     submission_meta = []
     submission_stats = []
@@ -90,17 +113,30 @@ def dashboard():
 
         submission_meta.append(submissions[record_id]["metadata"])
 
-    user_profile = current_userprofile.query.filter_by(user_id=current_user.get_id()).first()
+    total_records = get_submission_count(current_user)
+    total_pages = int(math.ceil(total_records / size))
 
-    ctx = {'user_is_admin': has_role(current_user, 'admin'),
-           'submissions': submission_meta,
-           'user_profile': user_profile,
-           'user_has_coordinator_request': get_pending_request(),
-           'pending_coordinator_requests': get_pending_coordinator_requests(),
-           'submission_stats': json.dumps(submission_stats),
-           'pending_invites': get_pending_invitations_for_user(current_user)}
+    ctx = {
+        'modify_query': modify_query,
+        'submissions': submission_meta,
+        'submission_stats': submission_stats
+    }
 
-    return render_template('hepdata_dashboard/dashboard.html', ctx=ctx)
+    if filter_record_id is None:
+        ctx['pages'] = {
+            'total': total_pages,
+            'current': current_page,
+            'endpoint': '.dashboard'
+        }
+
+    return render_template('hepdata_dashboard/dashboard-submissions.html', ctx=ctx)
+
+
+@blueprint.route('/dashboard-submission-titles')
+@login_required
+def dashboard_submission_titles():
+    return jsonify(list_submission_titles(current_user))
+
 
 
 @blueprint.route('/delete/<int:recid>')

@@ -25,6 +25,7 @@
 from collections import OrderedDict
 
 from invenio_accounts.models import User
+
 from sqlalchemy import and_, or_, func
 
 from hepdata.modules.permissions.models import SubmissionParticipant
@@ -93,46 +94,33 @@ def create_record_for_dashboard(record_id, submissions, current_user, coordinato
                 submissions[record_id]["metadata"]["role"].append(user_role)
 
 
-def prepare_submissions(current_user):
+def get_submission_count(current_user):
+    query = _prepare_submission_query(current_user)
+    return query.count()
+
+
+def prepare_submissions(current_user, items_per_page=25, current_page=1, record_id=None):
     """
     Finds all the relevant submissions for a user, or all submissions if the logged in user is a 'super admin'.
 
     :param current_user: User obj
+    :param items_per_page: maximum number of items to return
+    :param current_page: page of current set of results (starting at 1)
     :return: OrderedDict of submissions
     """
 
     submissions = OrderedDict()
-    hepdata_submission_records = []
 
-    if has_role(current_user, 'admin'):
-        # if the user is a superadmin, show everything here.
-        # The final rendering in the dashboard should be different
-        # though considering the user him/herself is probably not a
-        # reviewer/uploader
-        hepdata_submission_records = HEPSubmission.query.filter(
-            or_(HEPSubmission.overall_status == 'processing',
-                HEPSubmission.overall_status == 'todo')).order_by(
-            HEPSubmission.last_updated.desc()).all()
-    else:
-        # we just want to pick out people with access to particular records,
-        # i.e. submissions for which they are primary reviewers.
+    query = _prepare_submission_query(current_user)
 
-        participant_records = SubmissionParticipant.query.filter_by(
-            user_account=int(current_user.get_id()),
-            status='primary').order_by(SubmissionParticipant.id.desc()).all()
+    if record_id:
+        query = query.filter(HEPSubmission.publication_recid == record_id)
 
-        for participant_record in participant_records:
-            hepdata_submission_records += HEPSubmission.query.filter(
-                HEPSubmission.publication_recid == participant_record.publication_recid,
-                or_(HEPSubmission.overall_status == 'processing',
-                    HEPSubmission.overall_status == 'todo')).order_by(HEPSubmission.last_updated.desc()).all()
+    offset = (current_page - 1) * items_per_page
 
-        coordinator_submissions = HEPSubmission.query.filter(
-            HEPSubmission.coordinator == int(current_user.get_id()),
-            or_(HEPSubmission.overall_status == 'processing',
-                HEPSubmission.overall_status == 'todo')).order_by(HEPSubmission.last_updated.desc()).all()
-
-        hepdata_submission_records += coordinator_submissions
+    hepdata_submission_records = query.order_by(
+        HEPSubmission.last_updated.desc()
+    ).limit(items_per_page).offset(offset).all()
 
     for hepdata_submission in hepdata_submission_records:
 
@@ -174,6 +162,53 @@ def prepare_submissions(current_user):
                         "stats"][status] += status_count
 
     return submissions
+
+
+def list_submission_titles(current_user):
+    query = _prepare_submission_query(current_user)
+
+    hepdata_submission_records = query.order_by(
+        HEPSubmission.last_updated.desc()
+    ).all()
+
+    titles = []
+    for hepsubmission in hepdata_submission_records:
+        publication_record = get_record_by_id(int(hepsubmission.publication_recid))
+        titles.append({
+            'id': int(hepsubmission.publication_recid),
+            'title': publication_record['title']
+        })
+
+    return titles
+
+
+def _prepare_submission_query(current_user):
+    query = HEPSubmission.query.filter(
+        HEPSubmission.overall_status.in_(['processing', 'todo']),
+    )
+
+    # if the user is a superadmin, show everything here.
+    # The final rendering in the dashboard should be different
+    # though considering the user him/herself is probably not a
+    # reviewer/uploader
+    if not has_role(current_user, 'admin'):
+        # Not an admin user
+        # We just want to pick out people with access to particular records,
+        # i.e. submissions for which they are primary reviewers or coordinators.
+
+        inner_query = SubmissionParticipant.query.filter_by(
+            user_account=int(current_user.get_id()),
+            status='primary'
+        ).with_entities(
+            SubmissionParticipant.publication_recid
+        )
+
+        query.filter(
+            or_(HEPSubmission.coordinator == int(current_user.get_id()),
+                HEPSubmission.publication_recid.in_(inner_query))
+        )
+
+    return query
 
 
 def get_pending_invitations_for_user(user):

@@ -1,0 +1,129 @@
+{% if ctx.pages and ctx.pages.total > 0 %}
+    {% include "hepdata_theme/pagination.html" %}
+{% endif %}
+
+<ul id="hep-submissions">
+{% for submission in ctx.submissions %}
+    <li id="{{ submission.recid }}" class="submission-item">
+        <div class="container-fluid">
+            <div class="row">
+
+                <div class="col-md-2 text-center">
+                    {% if submission.review_flag == 'todo' %}
+                        <img src="{{ url_for('static', filename='img/nodata.svg') }}"
+                             alt="No data uploaded yet"
+                             width="50px"/><br/>
+                        {% if submission.submission_status=='processing' %}
+                            <span class="in-progress">Processing</span>
+                        {% else %}
+                            <span class="in-progress">No data</span>
+                        {% endif %}
+                    {% else %}
+                        <p class="status">
+                            {% if submission.submission_status=='todo' %}
+                                <span class="in-progress">In Progress</span>
+                            {% elif submission.submission_status=='processing' %}
+                                <span class="in-progress">Processing</span>
+                            {% else %}
+                                <span class="complete">Complete</span>
+                            {% endif %}
+                        </p>
+                        <div id="submission-{{ submission.recid }}">
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="col-md-7">
+
+                    <p class="start-date">
+                        {% if submission.show_coord_view %}
+                            <span class="label label-info">Coordinator</span>
+                        {% endif %}
+                        {% for role in submission.role %}
+                            <span class="label label-info">
+                            <span class="fa fa-{% if role == 'coordinator' %}gavel {% elif role == 'reviewer' %}check{% else %}upload{% endif %}"
+                                  style="padding-right: 5px;"></span>{{ role }}</span>
+                        {% endfor %}
+                        <span class="label label-default">Version {{ submission.versions }}</span>
+                    </p>
+
+                    <p class="start-date">
+                        Started
+                        {{ submission.start_date.strftime('%d %B %Y at %H:%M UTC') }}
+                        <br/>
+                        Last updated
+                        {{ submission.last_updated.strftime('%d %B %Y at %H:%M UTC') }}
+
+
+                    </p>
+                    <h4><a href="/record/{{ submission.recid }}"
+                           target="_blank">{{ submission.title }}</a>
+
+                        {% if submission.requires_inspire_id and submission.submission_status=='todo' %}
+                            <button class="btn btn-primary btn-xs inspire-btn"
+                                    id="inspire-btn-{{ submission.recid }}"
+                                    data-recid="{{ submission.recid }}">
+                                Attach INSPIRE Record
+                            </button>
+                        {% endif %}
+                    </h4>
+                </div>
+
+
+                <div class="col-md-3 actions">
+                    {% if ctx.user_is_admin or submission.show_coord_view %}
+                        {% if not submission.requires_inspire_id %}
+
+                            {% if submission.review_flag == 'passed' and submission.submission_status=='todo' %}
+                                <button class="btn btn-success btn-sm finalise-btn pull-right"
+                                        id="finalise-btn-{{ submission.recid }}"
+                                        data-recid="{{ submission.recid }}"
+                                        data-versions="{{ submission.versions }}">
+                                    Finalise
+                                </button>
+
+                            {% endif %}
+                        {% endif %}
+
+                        <button class="btn btn-sm btn-default pull-right manage-submission-trigger"
+                                data-recid="{{ submission.recid }}"
+                                data-toggle="modal"
+                                data-target="#manageWidget"><span
+                                class="fa fa-cogs"></span>
+                        </button>
+
+                        <button class="btn btn-sm btn-danger pull-right delete-submission-trigger"
+                                data-recid="{{ submission.recid }}"
+                                data-toggle="modal"
+                                data-target="#deleteWidget"
+                                style="margin-right: 5px;">
+                          <span class="fa fa-trash-o"></span>
+                        </button>
+
+                    {% else %}
+                        <button class="btn btn-sm btn-default pull-right conversation-trigger"
+                                data-recid="{{ submission.recid }}"
+                                data-toggle="modal"
+                                data-target="#conversationDialog"><span
+                                class="fa fa-comment" s></span>
+                        </button>
+                    {% endif %}
+                </div>
+
+            </div>
+        </div>
+    </li>
+{% endfor %}
+</ul>
+
+{% if ctx.pages and ctx.pages.total > 0 %}
+    {% include "hepdata_theme/pagination.html" %}
+{% endif %}
+
+<script>
+
+    $(document).ready(function () {
+        dashboard.data = {{ctx.submission_stats | safe}};
+    });
+
+</script>
