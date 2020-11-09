@@ -84,16 +84,16 @@ jobs:
       run: |
         hepdata db init
         hepdata db create
-    - name: Reindex
-      env:
-        FLASK_ENV: development
-      run: |
         hepdata utils reindex -rc True
-    - name: Setup npm and build assets
+    - name: Setup npm and build assets 1
       env:
         FLASK_ENV: development
       run: |
-        npm update && npm install --silent -g node-sass@4.14.1 clean-css@3.4.28 uglify-js requirejs
+        npm update && npm install -g node-sass@4.14.1 clean-css@3.4.28 uglify-js requirejs
+    - name: Setup npm and build assets 2
+      env:
+        FLASK_ENV: development
+      run: |
         hepdata npm
         cd /opt/hostedtoolcache/Python/3.6.12/x64/var/hepdata-instance
         npm install
