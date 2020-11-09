@@ -74,42 +74,42 @@ jobs:
         python -m pip install twine wheel coveralls requirements-builder
         python -m pip install --force-reinstall -r requirements.txt
         python -m pip install -e .[tests]
-    - name: Initialise hepdata
-      env:
-        FLASK_ENV: development
-      run: |
-        hepdata db init
-        hepdata db create
-    - name: Reindex
-      env:
-        FLASK_ENV: development
-      run: |
-        hepdata utils reindex -rc True
-    - name: Setup npm and build assets
-      env:
-        FLASK_ENV: development
-      run: |
-        npm update && npm install --silent -g node-sass@4.14.1 clean-css@3.4.28 uglify-js requirejs
-        hepdata npm
-        cd /opt/hostedtoolcache/Python/3.6.12/x64/var/hepdata-instance
-        npm install
-        hepdata collect
-        hepdata assets build
-        cd -
-        cp hepdata/config_local.gh.py hepdata/config_local.py
-    - name: Setup Sauce Connect
-      env:
-        SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
-        SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY}}
-      run: |
-        ./scripts/sc_tunnel_start.sh
-    - name: Run tests
-      run: |
-        if [[ -z ${{ secrets.SAUCE_USERNAME }} || -z ${{ secrets.SAUCE_ACCESS_KEY}} ]]; then py.test tests -k 'not tests/e2e'; else py.test tests; fi
-        rm hepdata/{config_local.py,__pycache__/config_local*}
-    - name: Stop Sauce Connect
-      run: |
-        ./scripts/sc_tunnel_stop.sh
+    # - name: Initialise hepdata
+    #   env:
+    #     FLASK_ENV: development
+    #   run: |
+    #     hepdata db init
+    #     hepdata db create
+    # - name: Reindex
+    #   env:
+    #     FLASK_ENV: development
+    #   run: |
+    #     hepdata utils reindex -rc True
+    # - name: Setup npm and build assets
+    #   env:
+    #     FLASK_ENV: development
+    #   run: |
+    #     npm update && npm install --silent -g node-sass@4.14.1 clean-css@3.4.28 uglify-js requirejs
+    #     hepdata npm
+    #     cd /opt/hostedtoolcache/Python/3.6.12/x64/var/hepdata-instance
+    #     npm install
+    #     hepdata collect
+    #     hepdata assets build
+    #     cd -
+    #     cp hepdata/config_local.gh.py hepdata/config_local.py
+    # - name: Setup Sauce Connect
+    #   env:
+    #     SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
+    #     SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY}}
+    #   run: |
+    #     ./scripts/sc_tunnel_start.sh
+    # - name: Run tests
+    #   run: |
+    #     if [[ -z ${{ secrets.SAUCE_USERNAME }} || -z ${{ secrets.SAUCE_ACCESS_KEY}} ]]; then py.test tests -k 'not tests/e2e'; else py.test tests; fi
+    #     rm hepdata/{config_local.py,__pycache__/config_local*}
+    # - name: Stop Sauce Connect
+    #   run: |
+    #     ./scripts/sc_tunnel_stop.sh
 
 # TODO: add in coveralls and deploy steps
 
