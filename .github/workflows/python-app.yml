@@ -75,6 +75,8 @@ jobs:
         python -m pip install --force-reinstall -r requirements.txt
         python -m pip install -e .[tests]
     - name: Initialise hepdata
+      env:
+        FLASK_ENV: development
       run: |
         hepdata db init
         hepdata db create
