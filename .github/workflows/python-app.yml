@@ -72,7 +72,7 @@ jobs:
         hepdata utils reindex -rc True
         npm update && npm install --silent -g node-sass@4.14.1 clean-css@3.4.28 uglify-js requirejs
         hepdata npm
-        cd /usr/local/var/hepdata-instance
+        cd /opt/hostedtoolcache/Python/3.6.12/x64/var/hepdata-instance
         npm install
         hepdata collect
         hepdata assets build
