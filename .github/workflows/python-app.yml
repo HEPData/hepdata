@@ -5,7 +5,7 @@ name: Python application
 
 on:
   push:
-    branches: [ master ]
+    branches: [ github-actions ]
   pull_request:
     branches: [ master ]
 
@@ -14,23 +14,81 @@ jobs:
 
     runs-on: ubuntu-latest
 
+    # Service containers to run with `runner-job`
+    services:
+      postgres:
+        image: postgres:9.6
+        # Provide the password for postgres
+        env:
+          - "POSTGRES_USER=hepdata"
+          - "POSTGRES_PASSWORD=hepdata"
+          - "POSTGRES_DB=hepdata"
+          - "POSTGRES_TEST_DB=hepdata_test"
+        # Set health checks to wait until postgres has started
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          # Maps tcp port 5432 on service container to the host
+          - 5432:5432
+
+      cache:
+        image: redis
+        ports:
+          - "6379:6379"
+
+      elasticsearch:
+        image: elasticsearch:7.1.1
+        env:
+          - node.name=es01
+          - cluster.name=hepdata
+          - cluster.initial_master_nodes=es01
+          - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+        ports:
+        - "9200:9200"
+
     steps:
     - uses: actions/checkout@v2
-    - name: Set up Python 3.8
+    - name: Set up Python 3.6
       uses: actions/setup-python@v2
       with:
-        python-version: 3.8
+        python-version: 3.6
+    - name: Debug info # remove once complete
+      run: |
+        pwd
+        python -c "import sys; print(sys.prefix)"
     - name: Install dependencies
       run: |
-        python -m pip install --upgrade pip
-        pip install flake8 pytest
-        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-    - name: Lint with flake8
+        python -m pip install --upgrade pip setuptools py
+        python -m pip install twine wheel coveralls requirements-builder
+        python -m pip install --force-reinstall -r requirements.txt"
+        python -m pip install -e .[tests]"
+    - name: Initialise hepdata
       run: |
-        # stop the build if there are Python syntax errors or undefined names
-        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-        # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-    - name: Test with pytest
+        hepdata db init
+        hepdata db create
+        hepdata utils reindex -rc True
+        npm update && npm install --silent -g node-sass@4.14.1 clean-css@3.4.28 uglify-js requirejs
+        hepdata npm
+        cd /usr/local/var/hepdata-instance
+        npm install
+        hepdata collect
+        hepdata assets build
+        cd -
+        cp hepdata/config_local.gh.py hepdata/config_local.py
+    - name: Setup Sauce Connect
       run: |
-        pytest
+        ./scripts/sc_tunnel_start.sh
+    - name: Run tests
+      run: |
+        if [[ -z ${SAUCE_USERNAME} || -z ${SAUCE_ACCESS_KEY} ]]; then py.test tests -k 'not tests/e2e'; else py.test tests; fi
+        rm hepdata/{config_local.py,__pycache__/config_local*}
+    - name: Stop Sauce Connect
+      run: |
+        ./scripts/sc_tunnel_stop.sh
+
+# TODO: add in coveralls and deploy steps
+
+# DO NOT COMMIT until travis branch builds are off.
