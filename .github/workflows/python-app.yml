@@ -90,14 +90,15 @@ jobs:
         FLASK_ENV: development
       run: |
         npm update && npm install -g node-sass@4.14.1 clean-css@3.4.28 uglify-js requirejs
+        hepdata npm
+        cd /opt/hostedtoolcache/Python/3.6.12/x64/var/hepdata-instance
+        ls -l
+        npm install
     - name: Setup npm and build assets 2
       env:
         FLASK_ENV: development
       run: |
-        hepdata npm
-        cd /opt/hostedtoolcache/Python/3.6.12/x64/var/hepdata-instance
-        npm install
-        hepdata collect
+        hepdata collect -v
         hepdata assets build
         cd -
         cp hepdata/config_local.gh.py hepdata/config_local.py
