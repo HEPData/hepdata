@@ -79,11 +79,14 @@ jobs:
         cd -
         cp hepdata/config_local.gh.py hepdata/config_local.py
     - name: Setup Sauce Connect
+      env:
+        SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
+        SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY}}
       run: |
         ./scripts/sc_tunnel_start.sh
     - name: Run tests
       run: |
-        if [[ -z ${SAUCE_USERNAME} || -z ${SAUCE_ACCESS_KEY} ]]; then py.test tests -k 'not tests/e2e'; else py.test tests; fi
+        if [[ -z ${{ secrets.SAUCE_USERNAME }} || -z ${{ secrets.SAUCE_ACCESS_KEY}} ]]; then py.test tests -k 'not tests/e2e'; else py.test tests; fi
         rm hepdata/{config_local.py,__pycache__/config_local*}
     - name: Stop Sauce Connect
       run: |
