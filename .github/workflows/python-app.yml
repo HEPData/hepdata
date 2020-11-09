@@ -20,10 +20,10 @@ jobs:
         image: postgres:9.6
         # Provide the password for postgres
         env:
-          - "POSTGRES_USER=hepdata"
-          - "POSTGRES_PASSWORD=hepdata"
-          - "POSTGRES_DB=hepdata"
-          - "POSTGRES_TEST_DB=hepdata_test"
+          POSTGRES_USER: hepdata
+          POSTGRES_PASSWORD: hepdata
+          POSTGRES_DB: hepdata
+          POSTGRES_TEST_DB: hepdata_test
         # Set health checks to wait until postgres has started
         options: >-
           --health-cmd pg_isready
@@ -42,10 +42,10 @@ jobs:
       elasticsearch:
         image: elasticsearch:7.1.1
         env:
-          - node.name=es01
-          - cluster.name=hepdata
-          - cluster.initial_master_nodes=es01
-          - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+          node.name: es01
+          cluster.name: hepdata
+          cluster.initial_master_nodes: es01
+          ES_JAVA_OPTS: -Xms512m -Xmx512m
         ports:
         - "9200:9200"
 
