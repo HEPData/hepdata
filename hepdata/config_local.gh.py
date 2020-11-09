@@ -6,8 +6,8 @@ CELERY_BROKER_URL = "redis://cache:6379/0"
 CELERY_RESULT_BACKEND = "redis://cache:6379/1"
 CACHE_REDIS_URL = "redis://cache:6379/0"
 SESSION_REDIS = "redis://cache:6379/0"
-TEST_DB_HOST = "db"
-ELASTICSEARCH_HOST = "es"
+TEST_DB_HOST = "postgres"
+ELASTICSEARCH_HOST = "elasticsearch"
 SEARCH_ELASTIC_HOSTS = [
-    'es:9200'
+    'elasticsearch:9200'
 ]
