@@ -1,6 +1,6 @@
 #!/bin/bash -e
 
-TAG="${TRAVIS_TAG:-$(git describe --always --tags)}"
+TAG="${CI_TAG:-$(git describe --always --tags)}"
 
 retry() {
     "${@}" || "${@}" || exit 2
@@ -54,7 +54,7 @@ logout() {
 
 deployQA() {
   app="${1}"
-  if [ -z "${TRAVIS_TAG}" ]; then
+  if [ -z "${CI_TAG}" ]; then
     echo "Deploying ${app} ..."
     curl -X POST \
       -F token=${DEPLOY_QA_TOKEN} \

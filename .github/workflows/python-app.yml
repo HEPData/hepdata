@@ -107,6 +107,14 @@ jobs:
         rm hepdata/{config_local.py,__pycache__/config_local*}
     - name: Coveralls
       uses: AndreMiras/coveralls-python-action@develop
+    - name: Deploy
+      if: contains(github.ref, "github-actions") || github.event_name == 'release' # FIXME: change ref name to master
+      env:
+        CI_TAG: ${{ github.event.release.tag_name }}
+        DOCKERHUB_USER: ${{ secrets.DOCKERHUB_USER }}
+        DOCKERHUB_PASSWORD: ${{ secrets.DOCKERHUB_PASSWORD }}
+      run: |
+        ./build-and-deploy.sh
 
 
 # TODO: add in deploy step
