@@ -102,7 +102,12 @@ jobs:
       run: |
         if [[ -z ${{ secrets.SAUCE_USERNAME }} || -z ${{ secrets.SAUCE_ACCESS_KEY}} ]]; then py.test tests -k 'not tests/e2e'; else py.test tests; fi
         rm hepdata/{config_local.py,__pycache__/config_local*}
+    - name: Coveralls
+      uses: coverallsapp/github-action@master
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
 
-# TODO: add in coveralls and deploy steps
+
+# TODO: add in deploy step
 
 # DO NOT COMMIT until travis branch builds are off.
