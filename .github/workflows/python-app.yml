@@ -98,13 +98,10 @@ jobs:
         username: ${{ secrets.SAUCE_USERNAME }}
         accessKey: ${{ secrets.SAUCE_ACCESS_KEY }}
         restUrl: https://eu-central-1.saucelabs.com/rest/v1
-    - name: Run sample test
+    - name: Run tests
       run: |
-        py.test tests/admin_index_test.py
-    # - name: Run tests
-    #   run: |
-    #     if [[ -z ${{ secrets.SAUCE_USERNAME }} || -z ${{ secrets.SAUCE_ACCESS_KEY}} ]]; then py.test tests -k 'not tests/e2e'; else py.test tests; fi
-    #     rm hepdata/{config_local.py,__pycache__/config_local*}
+        if [[ -z ${{ secrets.SAUCE_USERNAME }} || -z ${{ secrets.SAUCE_ACCESS_KEY}} ]]; then py.test tests -k 'not tests/e2e'; else py.test tests; fi
+        rm hepdata/{config_local.py,__pycache__/config_local*}
 
 # TODO: add in coveralls and deploy steps
 
