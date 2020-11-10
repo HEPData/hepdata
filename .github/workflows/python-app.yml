@@ -98,18 +98,15 @@ jobs:
         cd -
         cp hepdata/config_local.gh.py hepdata/config_local.py
     - name: Setup Sauce Connect
-      env:
-        SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
-        SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY}}
-      run: |
-        ./scripts/sc_tunnel_start.sh
+      uses: saucelabs/sauce-connect-action@master
+      with:
+        username: ${{ secrets.SAUCE_USERNAME }}
+        accessKey: ${{ secrets.SAUCE_ACCESS_KEY }}
+        restUrl: https://eu-central-1.saucelabs.com/rest/v1
     - name: Run tests
       run: |
         if [[ -z ${{ secrets.SAUCE_USERNAME }} || -z ${{ secrets.SAUCE_ACCESS_KEY}} ]]; then py.test tests -k 'not tests/e2e'; else py.test tests; fi
         rm hepdata/{config_local.py,__pycache__/config_local*}
-    - name: Stop Sauce Connect
-      run: |
-        ./scripts/sc_tunnel_stop.sh
 
 # TODO: add in coveralls and deploy steps
 
