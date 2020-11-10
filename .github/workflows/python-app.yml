@@ -10,7 +10,8 @@ on:
     branches: [ master ]
 
 jobs:
-  build:
+
+  test:
 
     runs-on: ubuntu-latest
 
@@ -67,10 +68,6 @@ jobs:
         key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
         restore-keys: |
           ${{ runner.os }}-pip-
-    - name: Debug info # remove once complete
-      run: |
-        pwd
-        python -c "import sys; print(sys.prefix)"
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip setuptools py
@@ -104,14 +101,18 @@ jobs:
         SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY }}
       run: |
         if [[ -z ${{ secrets.SAUCE_USERNAME }} || -z ${{ secrets.SAUCE_ACCESS_KEY}} ]]; then py.test tests -k 'not tests/e2e'; else py.test tests; fi
-        rm hepdata/{config_local.py,__pycache__/config_local*}
     - name: Run coveralls
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         coveralls
-    - name: Deploy
-      if: contains(github.ref, 'master') || github.event_name == 'release'
+
+  deploy:
+    needs: test
+    if: contains(github.ref, 'github-actions') || github.event_name == 'release' # FIXME: change ref match to master
+    runs-on: ubuntu-latest
+    - uses: actions/checkout@v2
+    - name: Deploy to DockerHub
       env:
         CI_TAG: ${{ github.event.release.tag_name }}
         DOCKERHUB_USER: ${{ secrets.DOCKERHUB_USER }}
