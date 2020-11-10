@@ -106,10 +106,10 @@ jobs:
         if [[ -z ${{ secrets.SAUCE_USERNAME }} || -z ${{ secrets.SAUCE_ACCESS_KEY}} ]]; then py.test tests -k 'not tests/e2e'; else py.test tests; fi
         rm hepdata/{config_local.py,__pycache__/config_local*}
     - name: Run coveralls
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          coveralls
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        coveralls
     - name: Deploy
       if: contains(github.ref, 'master') || github.event_name == 'release'
       env:
