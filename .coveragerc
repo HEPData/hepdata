@@ -1,5 +1,6 @@
 [run]
 source = hepdata
+relative_files = True
 omit = *hepdata/wsgi.py
        *hepdata/cli.py
        *hepdata/celery.py
