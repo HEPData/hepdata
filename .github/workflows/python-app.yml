@@ -22,8 +22,7 @@ jobs:
         env:
           POSTGRES_USER: hepdata
           POSTGRES_PASSWORD: hepdata
-          POSTGRES_DB: hepdata
-          POSTGRES_TEST_DB: hepdata_test
+          POSTGRES_DB: hepdata_test
         # Set health checks to wait until postgres has started
         options: >-
           --health-cmd pg_isready
