@@ -182,7 +182,8 @@ def env_browser(request):
                                 datetime.utcnow().strftime("%Y-%m-%d %H:00ish")),
         'name': request.node.name,
         'username': sauce_username,
-        'accessKey': sauce_access_key
+        'accessKey': sauce_access_key,
+        'tunnelIdentifier': os.environ.get('GITHUB_RUN_ID', '')
     }
 
     if not RUN_SELENIUM_LOCALLY:
