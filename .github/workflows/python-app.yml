@@ -98,7 +98,7 @@ jobs:
         cache-name: cache-node-modules
       with:
         path: ~/.npm
-        key: ${{ runner.os }}-test-${{ env.cache-name }}-${{ hashFiles(format('{{{0}/**/package-lock.json}}', env.HEPDATA_STATIC_PATH)) }}
+        key: ${{ runner.os }}-test-${{ env.cache-name }}-${{ hashFiles('**/bundles.py') }}
         restore-keys: |
           ${{ runner.os }}-test-${{ env.cache-name }}-
     - name: Install dependencies
