@@ -149,6 +149,6 @@ jobs:
       env:
         CI_TAG: ${{ github.event.release.tag_name }}
         DOCKERHUB_USER: ${{ secrets.DOCKERHUB_USER }}
-        DOCKERHUB_PASSWORD: ${{ secrets.DOCKERHUB_PASSWORD }}
+        DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
       run: |
         ./build-and-deploy.sh

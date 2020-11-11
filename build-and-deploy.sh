@@ -10,7 +10,7 @@ login() {
   echo "Logging into Docker Hub"
   retry docker login \
       "--username=${DOCKERHUB_USER}" \
-      "--password=${DOCKERHUB_PASSWORD}"
+      "--password=${DOCKERHUB_TOKEN}"
 }
 
 buildPush() {
