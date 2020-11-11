@@ -42,9 +42,9 @@ buildPush() {
       --cache-from "${image}"
   fi
 
-  echo "Pushing image to ${image}:${TAG}"
-  retry docker push "${image}:${TAG}"
-  retry docker push "${image}"
+  # echo "Pushing image to ${image}:${TAG}"
+  # retry docker push "${image}:${TAG}"
+  # retry docker push "${image}"
 }
 
 logout() {
