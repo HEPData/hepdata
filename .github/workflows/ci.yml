@@ -142,7 +142,7 @@ jobs:
 
   deploy:
     needs: test
-    if: contains(github.ref, 'github-actions') || github.event_name == 'release' # FIXME: change ref match to master
+    if: contains(github.ref, 'master') || github.event_name == 'release'
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
