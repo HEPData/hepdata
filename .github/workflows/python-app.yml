@@ -75,19 +75,32 @@ jobs:
       uses: actions/setup-python@v2
       with:
         python-version: 3.6
-    - name: Install node
+    - name: Set up node
       uses: actions/setup-node@v1
       with:
         node-version: '12'
+    - name: Get static file path
+      run: |
+        export PYTHON_SYS_PREFIX=`python -c "import sys; print(sys.prefix)"`
+        echo "HEPDATA_STATIC_PATH=${PYTHON_SYS_PREFIX}/var/hepdata-instance/static/" >> $GITHUB_ENV
     - name: Cache pip modules
       uses: actions/cache@v2
       env:
         cache-name: cache-pip-modules
       with:
         path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        key: ${{ runner.os }}-test-${{ env.cache-name }}-${{ hashFiles('**/requirements.txt') }}
         restore-keys: |
-          ${{ runner.os }}-pip-
+          ${{ runner.os }}-test-${{ env.cache-name }}-
+    - name: Cache node modules
+      uses: actions/cache@v2
+      env:
+        cache-name: cache-node-modules
+      with:
+        path: ~/.npm
+        key: ${{ runner.os }}-test-${{ env.cache-name }}-${{ hashFiles(format('{{{0}/**/package-lock.json}}', env.HEPDATA_STATIC_PATH)) }}
+        restore-keys: |
+          ${{ runner.os }}-test-${{ env.cache-name }}-
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip setuptools py
@@ -103,8 +116,7 @@ jobs:
       run: |
         npm update && npm install --silent -g node-sass@4.14.1 clean-css@3.4.28 uglify-js requirejs
         hepdata npm
-        export PYTHON_SYS_PREFIX=`python -c "import sys; print(sys.prefix)"`
-        cd ${PYTHON_SYS_PREFIX}/var/hepdata-instance/static/
+        cd $HEPDATA_STATIC_PATH
         npm install
         hepdata collect
         hepdata assets build
