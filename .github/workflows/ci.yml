@@ -26,7 +26,6 @@ name: Continuous Integration
 
 on:
   push:
-    branches: [ github-actions ]
   pull_request:
     branches: [ master ]
 
