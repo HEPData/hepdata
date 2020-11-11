@@ -236,7 +236,7 @@ then specify ``CFG_CONVERTER_URL = 'http://localhost:5500'`` in ``hepdata/config
 Running via docker-compose
 **************************
 
-The Dockerfile is used by Travis CI to build a Docker image and push to DockerHub ready for deployment in production
+The Dockerfile is used by GitHub Actions CI to build a Docker image and push to DockerHub ready for deployment in production
 on the Kubernetes cluster at CERN.
 
 For local development you can use the ``docker-compose.yml`` file to run the HEPData docker image and its required services.

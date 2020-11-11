@@ -1,6 +1,6 @@
 #!/bin/bash -e
 
-TAG="${TRAVIS_TAG:-$(git describe --always --tags)}"
+TAG="${CI_TAG:-$(git describe --always --tags)}"
 
 retry() {
     "${@}" || "${@}" || exit 2
@@ -10,7 +10,7 @@ login() {
   echo "Logging into Docker Hub"
   retry docker login \
       "--username=${DOCKERHUB_USER}" \
-      "--password=${DOCKERHUB_PASSWORD}"
+      "--password=${DOCKERHUB_TOKEN}"
 }
 
 buildPush() {
@@ -54,7 +54,7 @@ logout() {
 
 deployQA() {
   app="${1}"
-  if [ -z "${TRAVIS_TAG}" ]; then
+  if [ -z "${CI_TAG}" ]; then
     echo "Deploying ${app} ..."
     curl -X POST \
       -F token=${DEPLOY_QA_TOKEN} \

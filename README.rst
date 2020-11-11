@@ -2,9 +2,9 @@
 HEPData
 =======
 
-.. image:: https://img.shields.io/travis/com/HEPData/hepdata/master
-   :target: https://travis-ci.com/github/HEPData/hepdata/branches
-   :alt: Travis Status
+.. image:: https://github.com/HEPData/hepdata/workflows/Continuous%20Integration/badge.svg?branch=master
+   :target: https://github.com/HEPData/hepdata/actions?query=branch%3Amaster
+   :alt: GitHub Actions Build Status
 
 .. image:: https://coveralls.io/repos/github/HEPData/hepdata/badge.svg?branch=master
    :target: https://coveralls.io/github/HEPData/hepdata?branch=master

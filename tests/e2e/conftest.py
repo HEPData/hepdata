@@ -59,7 +59,7 @@ def app(request):
     """
     app = create_app()
     test_db_host = app.config.get('TEST_DB_HOST', 'localhost')
-    # Note that in Travis we add "TESTING=True" and
+    # Note that in GitHub Actions we add "TESTING=True" and
     # "APP_ENABLE_SECURE_HEADERS=False" to config_local.py as well,
     # to ensure that they're set before the app is initialised,
     # as changing them later doesn't have the desired effect.
@@ -178,12 +178,12 @@ def env_browser(request):
     desired_cap = {
         'platform': 'Windows',
         'browserName': 'chrome',
-        'build': os.environ.get('TRAVIS_BUILD_NUMBER',
+        'build': os.environ.get('GITHUB_RUN_ID',
                                 datetime.utcnow().strftime("%Y-%m-%d %H:00ish")),
         'name': request.node.name,
         'username': sauce_username,
         'accessKey': sauce_access_key,
-        'tunnelIdentifier': os.environ.get('TRAVIS_JOB_NUMBER', '')
+        'tunnelIdentifier': os.environ.get('GITHUB_RUN_ID', '')
     }
 
     if not RUN_SELENIUM_LOCALLY:
@@ -219,7 +219,7 @@ def make_screenshot(driver, name):
 
 def e2e_assert(driver, assertion, message = None):
     """Wrapper for assert which will print the current page text if the assertion is false.
-    This will allow us to see any errors which only occur on Travis.
+    This will allow us to see any errors which only occur on CI.
     """
     if not assertion:
         print('========== Failed assertion in selenium test. ===================================')

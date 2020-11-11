@@ -1,0 +1,155 @@
+# -*- coding: utf-8 -*-
+#
+# This file is part of HEPData.
+# Copyright (C) 2020 CERN.
+#
+# HEPData is free software; you can redistribute it
+# and/or modify it under the terms of the GNU General Public License as
+# published by the Free Software Foundation; either version 2 of the
+# License, or (at your option) any later version.
+#
+# HEPData is distributed in the hope that it will be
+# useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with HEPData; if not, write to the
+# Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston,
+# MA 02111-1307, USA.
+#
+# In applying this license, CERN does not
+# waive the privileges and immunities granted to it by virtue of its status
+# as an Intergovernmental Organization or submit itself to any jurisdiction.
+
+name: Continuous Integration
+
+on:
+  push:
+  pull_request:
+    branches: [ master ]
+
+jobs:
+
+  test:
+
+    runs-on: ubuntu-latest
+
+    # Service containers to run with `runner-job`
+    services:
+      postgres:
+        image: postgres:9.6
+        # Provide the password for postgres
+        env:
+          POSTGRES_USER: hepdata
+          POSTGRES_PASSWORD: hepdata
+          POSTGRES_DB: hepdata_test
+        # Set health checks to wait until postgres has started
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+      redis:
+        image: redis
+        ports:
+          - "6379:6379"
+
+      elasticsearch:
+        image: elasticsearch:7.1.1
+        env:
+          node.name: es01
+          cluster.name: hepdata
+          cluster.initial_master_nodes: es01
+          ES_JAVA_OPTS: -Xms512m -Xmx512m
+        ports:
+        - "9200:9200"
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python 3.6
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.6
+    - name: Set up node
+      uses: actions/setup-node@v1
+      with:
+        node-version: '12'
+    - name: Get static file path
+      run: |
+        export PYTHON_SYS_PREFIX=`python -c "import sys; print(sys.prefix)"`
+        echo "HEPDATA_STATIC_PATH=${PYTHON_SYS_PREFIX}/var/hepdata-instance/static/" >> $GITHUB_ENV
+    - name: Cache pip modules
+      uses: actions/cache@v2
+      env:
+        cache-name: cache-pip-modules
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-test-${{ env.cache-name }}-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-test-${{ env.cache-name }}-
+    - name: Cache node modules
+      uses: actions/cache@v2
+      env:
+        cache-name: cache-node-modules
+      with:
+        path: ~/.npm
+        key: ${{ runner.os }}-test-${{ env.cache-name }}-${{ hashFiles('**/bundles.py') }}
+        restore-keys: |
+          ${{ runner.os }}-test-${{ env.cache-name }}-
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip setuptools py
+        python -m pip install twine wheel coveralls requirements-builder
+        python -m pip install --force-reinstall -r requirements.txt
+        python -m pip install -e .[tests]
+    - name: Initialise hepdata
+      run: |
+        hepdata db init
+        hepdata db create
+        hepdata utils reindex -rc True
+    - name: Setup npm and build assets
+      run: |
+        npm update && npm install --silent -g node-sass@4.14.1 clean-css@3.4.28 uglify-js requirejs
+        hepdata npm
+        cd $HEPDATA_STATIC_PATH
+        npm install
+        hepdata collect
+        hepdata assets build
+        cd -
+        cp hepdata/config_local.gh.py hepdata/config_local.py
+    - name: Setup Sauce Connect
+      uses: saucelabs/sauce-connect-action@master
+      with:
+        username: ${{ secrets.SAUCE_USERNAME }}
+        accessKey: ${{ secrets.SAUCE_ACCESS_KEY }}
+        restUrl: https://eu-central-1.saucelabs.com/rest/v1
+        tunnelIdentifier: ${{ github.run_id }}
+    - name: Run tests
+      env:
+        SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
+        SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY }}
+      run: |
+        if [[ -z ${{ secrets.SAUCE_USERNAME }} || -z ${{ secrets.SAUCE_ACCESS_KEY}} ]]; then py.test tests -k 'not tests/e2e'; else py.test tests; fi
+    - name: Run coveralls
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        coveralls
+
+  deploy:
+    needs: test
+    if: contains(github.ref, 'master') || github.event_name == 'release'
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Deploy to DockerHub
+      env:
+        CI_TAG: ${{ github.event.release.tag_name }}
+        DOCKERHUB_USER: ${{ secrets.DOCKERHUB_USER }}
+        DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+      run: |
+        ./build-and-deploy.sh
