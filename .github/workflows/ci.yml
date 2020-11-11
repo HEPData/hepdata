@@ -127,7 +127,7 @@ jobs:
         username: ${{ secrets.SAUCE_USERNAME }}
         accessKey: ${{ secrets.SAUCE_ACCESS_KEY }}
         restUrl: https://eu-central-1.saucelabs.com/rest/v1
-        tunnelIdentifier: $GITHUB_RUN_ID
+        tunnelIdentifier: ${{ env.GITHUB_RUN_ID }}
     - name: Run tests
       env:
         SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
