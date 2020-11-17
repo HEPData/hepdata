@@ -183,9 +183,12 @@ def _find_all_current_dataresources(rec_id):
                             publication_recid=rec_id
                             ).all()
     for data_submission in data_submissions:
-        resources.append(DataResource.query.filter_by(
-                            id=data_submission.data_file
-                            ).first())
+        data_file_resource = DataResource.query.filter_by(
+                                id=data_submission.data_file
+                                ).first()
+        if data_file_resource:
+            resources.append(data_file_resource)
+
         resources.extend(data_submission.resources)
 
     return resources
