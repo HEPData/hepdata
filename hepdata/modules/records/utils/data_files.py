@@ -397,22 +397,18 @@ def _move_files_for_record(rec_id):  # pragma: no cover
     for old_path in old_paths:
         for dir_name, subdir_list, file_list in os.walk(old_path):
             for filename in file_list:
-                if allowed_file(filename):
-                    full_path = os.path.join(dir_name, filename)
-                    log.debug("Found remaining file: %s" % full_path)
-                    sub_path = full_path.split(old_path + '/', 1)[1]
-                    new_file_path = os.path.join(new_path, sub_path)
-                    log.debug("Moving %s to %s" % (full_path, new_file_path))
-                    try:
-                        os.makedirs(os.path.dirname(new_file_path), exist_ok=True)
-                        shutil.move(full_path, new_file_path)
-                    except Exception as e:
-                        errors.append("Unable to move file from %s to %s\n"
-                                      "Error was: %s"
-                                      % (full_path, new_file_path, str(e)))
-                else:
-                    errors.append("Unrecognized file %s. Will not move file."
-                                  % filename)
+                full_path = os.path.join(dir_name, filename)
+                log.debug("Found remaining file: %s" % full_path)
+                sub_path = full_path.split(old_path + '/', 1)[1]
+                new_file_path = os.path.join(new_path, sub_path)
+                log.debug("Moving %s to %s" % (full_path, new_file_path))
+                try:
+                    os.makedirs(os.path.dirname(new_file_path), exist_ok=True)
+                    shutil.move(full_path, new_file_path)
+                except Exception as e:
+                    errors.append("Unable to move file from %s to %s\n"
+                                  "Error was: %s"
+                                  % (full_path, new_file_path, str(e)))
 
         # Remove directories, which should be empty
         for dirpath, _, _ in os.walk(old_path, topdown=False):
