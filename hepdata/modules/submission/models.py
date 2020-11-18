@@ -253,10 +253,16 @@ class DataResource(db.Model):
 def receive_data_resource_after_delete(mapper, connection, target):
     "Delete the file on disk when a DataResource is deleted"
     log.debug("Deleting data resource id %s" % target.id)
-    if not target.file_location.startswith('http'):
+    if not target.file_location.lower().startswith('http'):
         if os.path.isfile(target.file_location):
-            log.debug('Deleting file %s' % target.file_location)
-            os.remove(target.file_location)
+            # Check whether there's another dataresource with the same file
+            # location before deleting.
+            file_count = DataResource.query.filter_by(
+                    file_location=target.file_location
+                ).count()
+            if file_count == 0:
+                log.debug('Deleting file %s' % target.file_location)
+                os.remove(target.file_location)
         else:
             log.error("Could not remove file %s" % target.file_location)
 
