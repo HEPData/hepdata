@@ -134,7 +134,7 @@ def cleanup_old_files(hepsubmission, check_old_data_paths=True):
     current_resources = _find_all_current_dataresources(hepsubmission.publication_recid)
 
     for r in current_resources:
-        if not r.file_location.startswith('http'):
+        if not r.file_location.lower().startswith('http'):
             found = False
             for path_prefix in path_prefixes:
                 if r.file_location.startswith(path_prefix):
@@ -453,7 +453,7 @@ def _move_data_resource(resource, old_paths, new_path):  # pragma: no cover
         log.debug("    File already in new location. Continuing.")
         return errors
 
-    if resource.file_location.startswith('http'):
+    if resource.file_location.lower().startswith('http'):
         log.debug("    File is remote URL. Continuing.")
         return errors
 
