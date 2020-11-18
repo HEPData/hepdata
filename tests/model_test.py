@@ -18,6 +18,7 @@
 
 import logging
 import os.path
+import shutil
 
 from invenio_db import db
 
@@ -61,6 +62,16 @@ def test_data_submission_cascades(app):
         db.session.commit()
         resources.append(dataresource)
 
+    # Create an extra DataResource linking to file0.txt but
+    # not linked to the submission
+    # (because this situation has arisen in prod)
+    dataresource = DataResource(
+        file_location=os.path.join(files_dir, 'file0.txt'),
+        file_type="data"
+    )
+    db.session.add(dataresource)
+    db.session.commit()
+
     assert(len(os.listdir(files_dir)) == 3)
 
     datasubmission.data_file = resources[0].id
@@ -92,11 +103,12 @@ def test_data_submission_cascades(app):
 
     assert(len(dataresources) == 0)
 
-    # Check files are also deleted
-    assert(os.listdir(files_dir) == [])
+    # Check files are also deleted, apart from file0
+    # as that's referenced by another DataResource
+    assert(os.listdir(files_dir) == ['file0.txt'])
 
     # Tidy up
-    os.rmdir(files_dir)
+    shutil.rmtree(files_dir)
 
 
 def test_data_review_cascades(app):
