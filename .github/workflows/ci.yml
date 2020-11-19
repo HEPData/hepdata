@@ -133,7 +133,7 @@ jobs:
         SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
         SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY }}
       run: |
-        if [[ -z ${{ secrets.SAUCE_USERNAME }} || -z ${{ secrets.SAUCE_ACCESS_KEY}} ]]; then py.test tests -k 'not tests/e2e'; else py.test tests; fi
+        if [[ -z ${{ secrets.SAUCE_USERNAME }} || -z ${{ secrets.SAUCE_ACCESS_KEY}} ]]; then py.test tests -k 'not tests/e2e'; else py.test -vv tests; fi
     - name: Run coveralls
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
