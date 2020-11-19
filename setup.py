@@ -38,6 +38,7 @@ tests_require = [
     'pytest-cov>=2.9.0',
     'pytest-flask>=1.0.0',
     'pytest-mock>=3.1.0',
+    'pytest-timeout>=1.4.2',
     'selenium>=3.141.0'
 ]
 
