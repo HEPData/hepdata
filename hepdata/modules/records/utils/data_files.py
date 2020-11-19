@@ -134,7 +134,7 @@ def cleanup_old_files(hepsubmission, check_old_data_paths=True):
     current_resources = _find_all_current_dataresources(hepsubmission.publication_recid)
 
     for r in current_resources:
-        if not r.file_location.startswith('http'):
+        if not r.file_location.lower().startswith('http'):
             found = False
             for path_prefix in path_prefixes:
                 if r.file_location.startswith(path_prefix):
@@ -410,19 +410,14 @@ def _move_files_for_record(rec_id):  # pragma: no cover
                         errors.append("Unable to move file from %s to %s\n"
                                       "Error was: %s"
                                       % (full_path, new_file_path, str(e)))
-                else:
-                    errors.append("Unrecognized file %s. Will not move file."
-                                  % filename)
 
-        # Remove directories, which should be empty
-        for dirpath, _, _ in os.walk(old_path, topdown=False):
-            log.debug("Removing directory %s" % dirpath)
-            try:
-                os.rmdir(dirpath)
-            except Exception as e:
-                errors.append("Unable to remove directory %s\n"
-                              "Error was: %s"
-                              % (dirpath, str(e)))
+        # Remove old directory (along with any unrecognized files that remain)
+        try:
+            shutil.rmtree(old_path)
+        except Exception as e:
+            errors.append("Unable to remove directory %s\n"
+                          "Error was: %s"
+                          % (old_path, str(e)))
 
     # If there's a zip file from the migration, move that to the new dir too.
     if inspire_id is not None:
@@ -458,7 +453,7 @@ def _move_data_resource(resource, old_paths, new_path):  # pragma: no cover
         log.debug("    File already in new location. Continuing.")
         return errors
 
-    if resource.file_location.startswith('http'):
+    if resource.file_location.lower().startswith('http'):
         log.debug("    File is remote URL. Continuing.")
         return errors
 
