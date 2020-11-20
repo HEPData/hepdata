@@ -545,19 +545,17 @@ def clean_remaining_files(synchronous=True):  # pragma: no cover
                         for sub_entry in subdir_entries:
                             if not sub_entry.name.isdigit():
                                 unknown_files.append(sub_entry.path)
-                else:
-                    # Is it a deleted sandbox entry?
-                    if len(entry.name) == 10 and \
-                            entry.name.isdigit():
-                        # This is probably a deleted sandbox entry
-                        recognised = True
-                        rec_id = int(entry.name)
-                        submission_count = HEPSubmission.query.filter_by(publication_recid=rec_id).count()
-                        if submission_count == 0:
-                            log.debug("Deleting %s" %entry.path)
-                            shutil.rmtree(entry.path)
-                        else:
-                            log.warning("Sandbox entry %s is still in old file location" % entry.name)
+                elif entry.name.isdigit():
+                    # This is probably either a deleted sandbox entry or a hangover from
+                    # a migration from hepdata.cedar.ac.uk that was later deleted
+                    recognised = True
+                    rec_id = int(entry.name)
+                    submission_count = HEPSubmission.query.filter_by(publication_recid=rec_id).count()
+                    if submission_count == 0:
+                        log.debug("Deleting %s" % entry.path)
+                        shutil.rmtree(entry.path)
+                    else:
+                        log.warning("Record id %s is still in old file location" % entry.name)
 
             if not recognised:
                 unknown_files.append(entry.path)
