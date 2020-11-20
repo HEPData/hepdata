@@ -478,8 +478,13 @@ def _move_data_resource(resource, old_paths, new_path, is_sandbox=False):  # pra
         if os.path.exists(resource.file_location):
             try:
                 shutil.move(resource.file_location, new_file_path)
+
+                log.debug("    Updating data record")
+                resource.file_location = new_file_path
+                db.session.add(resource)
+                db.session.commit()
             except Exception as e:
-                errors.append("Unable to move file from %s to %s for data resource id %s\n"
+                errors.append("Unable to move file from %s to %s or to update file_location for data resource id %s\n"
                               "Error was: %s"
                               % (resource.file_location, new_file_path, resource.id, str(e)))
 
@@ -490,11 +495,6 @@ def _move_data_resource(resource, old_paths, new_path, is_sandbox=False):  # pra
             errors.append("File for for data resource id %s does not exist at "
                           "either old path (%s) or new path (%s)"
                           % (resource.id, resource.file_location, new_file_path))
-
-        log.debug("    Updating data record")
-        resource.file_location = new_file_path
-        db.session.add(resource)
-        db.session.commit()
 
     else:
         log.debug("    Location %s not recognised" % resource.file_location)
