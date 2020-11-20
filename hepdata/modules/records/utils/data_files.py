@@ -387,10 +387,13 @@ def _move_files_for_record(rec_id):  # pragma: no cover
 
     os.makedirs(new_path, exist_ok=True)
 
+    is_sandbox = hep_submissions[0].status == 'sandbox'
+
     # Find all data resources
     resources = _find_all_current_dataresources(rec_id)
     for resource in resources:
-        resource_errors = _move_data_resource(resource, old_paths, new_path)
+        resource_errors = _move_data_resource(resource, old_paths, new_path,
+                                              is_sandbox=is_sandbox)
         errors.extend(resource_errors)
 
     # Move rest of files in old_paths
@@ -450,7 +453,7 @@ def _move_files_for_record(rec_id):  # pragma: no cover
                                reply_to_address=current_app.config['ADMIN_EMAIL'])
 
 
-def _move_data_resource(resource, old_paths, new_path):  # pragma: no cover
+def _move_data_resource(resource, old_paths, new_path, is_sandbox=False):  # pragma: no cover
     errors = []
     log.debug("    Checking file %s" % resource.file_location)
 
@@ -480,8 +483,10 @@ def _move_data_resource(resource, old_paths, new_path):  # pragma: no cover
                               "Error was: %s"
                               % (resource.file_location, new_file_path, resource.id, str(e)))
 
-        elif not os.path.exists(new_file_path):
+        elif not os.path.exists(new_file_path) and not is_sandbox:
             # File does not exist in old or new locations - something has gone wrong
+            # If it's a sandbox record then it's not important, but for other records
+            # we'll flag an error.
             errors.append("File for for data resource id %s does not exist at "
                           "either old path (%s) or new path (%s)"
                           % (resource.id, resource.file_location, new_file_path))
