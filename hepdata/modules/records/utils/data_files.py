@@ -410,14 +410,19 @@ def _move_files_for_record(rec_id):  # pragma: no cover
                         errors.append("Unable to move file from %s to %s\n"
                                       "Error was: %s"
                                       % (full_path, new_file_path, str(e)))
+                else:
+                    errors.append("Unrecognized file %s. Will not move file."
+                                  % filename)
 
-        # Remove old directory (along with any unrecognized files that remain)
-        try:
-            shutil.rmtree(old_path)
-        except Exception as e:
-            errors.append("Unable to remove directory %s\n"
-                          "Error was: %s"
-                          % (old_path, str(e)))
+        # Remove directories, which should be empty
+        for dirpath, _, _ in os.walk(old_path, topdown=False):
+            log.debug("Removing directory %s" % dirpath)
+            try:
+                os.rmdir(dirpath)
+            except Exception as e:
+                errors.append("Unable to remove directory %s\n"
+                              "Error was: %s"
+                              % (dirpath, str(e)))
 
     # If there's a zip file from the migration, move that to the new dir too.
     if inspire_id is not None:
