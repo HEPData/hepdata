@@ -489,7 +489,7 @@ def _move_data_resource(resource, old_paths, new_path, is_sandbox=False):  # pra
             # File does not exist in old or new locations - something has gone wrong
             # If it's a sandbox record then it's not important, but for other records
             # we'll flag an error.
-            errors.append("File for for data resource id %s does not exist at "
+            errors.append("File for data resource id %s does not exist at "
                           "either old path (%s) or new path (%s)"
                           % (resource.id, resource.file_location, new_file_path))
 
