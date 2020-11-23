@@ -368,74 +368,80 @@ def _move_files_for_record(rec_id):  # pragma: no cover
     hep_submissions = HEPSubmission.query.filter_by(
                         publication_recid=rec_id
                         ).all()
+
     errors = []
 
-    # Need to check both rec_id (for newer submissions) and inspire_id
-    # (for migrated submissions)
-    old_paths = [get_old_data_path_for_record(rec_id)]
-    inspire_id = hep_submissions[0].inspire_id
-    if inspire_id is not None:
-        old_paths.append(get_old_data_path_for_record('ins%s' % inspire_id))
-        old_paths.append(get_old_data_path_for_record(inspire_id))
+    if hep_submissions:
+        # Need to check both rec_id (for newer submissions) and inspire_id
+        # (for migrated submissions)
+        old_paths = [get_old_data_path_for_record(rec_id)]
+        inspire_id = hep_submissions[0].inspire_id
+        if inspire_id is not None:
+            old_paths.append(get_old_data_path_for_record('ins%s' % inspire_id))
+            old_paths.append(get_old_data_path_for_record(inspire_id))
 
-    log.debug("Checking old paths %s" % old_paths)
+        log.debug("Checking old paths %s" % old_paths)
 
-    old_paths = [path for path in old_paths if os.path.isdir(path)]
+        old_paths = [path for path in old_paths if os.path.isdir(path)]
 
-    new_path = get_data_path_for_record(rec_id)
-    log.debug("Moving files from %s to %s" % (old_paths, new_path))
+        new_path = get_data_path_for_record(rec_id)
+        log.debug("Moving files from %s to %s" % (old_paths, new_path))
 
-    os.makedirs(new_path, exist_ok=True)
+        os.makedirs(new_path, exist_ok=True)
 
-    is_sandbox = hep_submissions[0].status == 'sandbox'
+        is_sandbox = hep_submissions[0].overall_status == 'sandbox'
 
-    # Find all data resources
-    resources = _find_all_current_dataresources(rec_id)
-    for resource in resources:
-        resource_errors = _move_data_resource(resource, old_paths, new_path,
-                                              is_sandbox=is_sandbox)
-        errors.extend(resource_errors)
+        # Find all data resources
+        resources = _find_all_current_dataresources(rec_id)
+        for resource in resources:
+            resource_errors = _move_data_resource(resource, old_paths, new_path,
+                                                  is_sandbox=is_sandbox)
+            errors.extend(resource_errors)
 
-    # Move rest of files in old_paths
-    for old_path in old_paths:
-        for dir_name, subdir_list, file_list in os.walk(old_path):
-            for filename in file_list:
-                full_path = os.path.join(dir_name, filename)
-                log.debug("Found remaining file: %s" % full_path)
-                sub_path = full_path.split(old_path + '/', 1)[1]
-                new_file_path = os.path.join(new_path, sub_path)
-                log.debug("Moving %s to %s" % (full_path, new_file_path))
+        # Move rest of files in old_paths
+        for old_path in old_paths:
+            for dir_name, subdir_list, file_list in os.walk(old_path):
+                for filename in file_list:
+                    full_path = os.path.join(dir_name, filename)
+                    log.debug("Found remaining file: %s" % full_path)
+                    sub_path = full_path.split(old_path + '/', 1)[1]
+                    new_file_path = os.path.join(new_path, sub_path)
+                    log.debug("Moving %s to %s" % (full_path, new_file_path))
+                    try:
+                        os.makedirs(os.path.dirname(new_file_path), exist_ok=True)
+                        shutil.move(full_path, new_file_path)
+                    except Exception as e:
+                        errors.append("Unable to move file from %s to %s\n"
+                                      "Error was: %s"
+                                      % (full_path, new_file_path, str(e)))
+
+            # Remove directories, which should be empty
+            for dirpath, _, _ in os.walk(old_path, topdown=False):
+                log.debug("Removing directory %s" % dirpath)
                 try:
-                    os.makedirs(os.path.dirname(new_file_path), exist_ok=True)
-                    shutil.move(full_path, new_file_path)
+                    os.rmdir(dirpath)
                 except Exception as e:
-                    errors.append("Unable to move file from %s to %s\n"
+                    errors.append("Unable to remove directory %s\n"
                                   "Error was: %s"
-                                  % (full_path, new_file_path, str(e)))
+                                  % (dirpath, str(e)))
 
-        # Remove directories, which should be empty
-        for dirpath, _, _ in os.walk(old_path, topdown=False):
-            log.debug("Removing directory %s" % dirpath)
-            try:
-                os.rmdir(dirpath)
-            except Exception as e:
-                errors.append("Unable to remove directory %s\n"
-                              "Error was: %s"
-                              % (dirpath, str(e)))
+        # If there's a zip file from the migration, move that to the new dir too.
+        if inspire_id is not None:
+            zip_name = f'ins{inspire_id}.zip'
+            old_zip_path = os.path.join(current_app.config['CFG_DATADIR'],
+                                        zip_name)
+            if os.path.isfile(old_zip_path):
+                try:
+                    new_zip_path = os.path.join(new_path, zip_name)
+                    shutil.move(old_zip_path, new_zip_path)
+                except Exception as e:
+                    errors.append("Unable to move archive file from %s to %s\n"
+                                  "Error was: %s"
+                                  % (old_zip_path, new_zip_path, str(e)))
 
-    # If there's a zip file from the migration, move that to the new dir too.
-    if inspire_id is not None:
-        zip_name = f'ins{inspire_id}.zip'
-        old_zip_path = os.path.join(current_app.config['CFG_DATADIR'],
-                                    zip_name)
-        if os.path.isfile(old_zip_path):
-            try:
-                new_zip_path = os.path.join(new_path, zip_name)
-                shutil.move(old_zip_path, new_zip_path)
-            except Exception as e:
-                errors.append("Unable to move archive file from %s to %s\n"
-                              "Error was: %s"
-                              % (old_zip_path, new_zip_path, str(e)))
+    else:
+        errors.append("Could not move files for record %s as no matching hepsubmission exists."
+                      % rec_id)
 
     # Send an email with details of errors
     if errors:
