@@ -174,10 +174,11 @@ def list_submission_titles(current_user):
     titles = []
     for hepsubmission in hepdata_submission_records:
         publication_record = get_record_by_id(int(hepsubmission.publication_recid))
-        titles.append({
-            'id': int(hepsubmission.publication_recid),
-            'title': publication_record['title']
-        })
+        if publication_record:
+            titles.append({
+                'id': int(hepsubmission.publication_recid),
+                'title': publication_record['title']
+            })
 
     return titles
 
