@@ -28,7 +28,7 @@ def test_recreate_index(admin_idx):
     admin_idx.recreate_index()
 
     index = Index(admin_idx.index)
-    assert (not index.exists())
+    assert (index.exists())
 
 
 def test_add_to_index(admin_idx):
