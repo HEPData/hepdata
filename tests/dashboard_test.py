@@ -171,11 +171,17 @@ def test_submissions_participant(app, load_submission):
             'inspire_id': '1487726'
         })
         hepsubmission = get_or_create_hepsubmission(record_information['recid'])
+        db.session.add(hepsubmission)
 
         user = User(email='test@test.com', password='hello1', active=True)
         db.session.add(user)
         db.session.commit()
 
+        # Check the user doesn't see the record before they are a participant
+        assert(get_submission_count(user) == 0)
+        assert(list_submission_titles(user) == [])
+
+        # Add the user as a participant
         participant = SubmissionParticipant(
             publication_recid=record_information['recid'],
             role="uploader",

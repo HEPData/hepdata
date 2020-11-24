@@ -204,7 +204,7 @@ def _prepare_submission_query(current_user):
             SubmissionParticipant.publication_recid
         )
 
-        query.filter(
+        query = query.filter(
             or_(HEPSubmission.coordinator == int(current_user.get_id()),
                 HEPSubmission.publication_recid.in_(inner_query))
         )
