@@ -49,7 +49,7 @@ def add_user_to_metadata(type, user_info, record_id, submissions):
 def create_record_for_dashboard(record_id, submissions, current_user, coordinator=None, user_role=None,
                                 status="todo"):
     if user_role is None:
-        user_role = ["coordinator"]
+        user_role = []
 
     publication_record = get_record_by_id(int(record_id))
 
