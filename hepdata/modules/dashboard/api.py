@@ -76,7 +76,10 @@ def create_record_for_dashboard(record_id, submissions, current_user, coordinato
                     'email': coordinator.email}
                 if int(current_user.get_id()) == coordinator.id:
                     submissions[record_id]["metadata"]["show_coord_view"] = True
-                    submissions[record_id]["metadata"]["role"].append("coordinator")
+                    if 'coordinator' not in submissions[record_id]["metadata"]["role"]:
+                        submissions[record_id]["metadata"]["role"].append("coordinator")
+                else:
+                    submissions[record_id]["metadata"]["show_coord_view"] = False
             else:
                 submissions[record_id]["metadata"]["coordinator"] = {
                     'name': 'No coordinator'}
