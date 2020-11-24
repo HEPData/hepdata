@@ -36,6 +36,6 @@ hepdata npm
 CWD=$(pwd)
 cd "${VIRTUAL_ENV}/var/hepdata-instance/static"
 npm install
-hepdata collect -v
+hepdata collect
 hepdata assets build
 cd "${CWD}"

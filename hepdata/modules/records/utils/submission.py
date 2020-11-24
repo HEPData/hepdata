@@ -325,17 +325,17 @@ def parse_additional_resources(basepath, recid, yaml_document):
 
         file_type = infer_file_type(reference["location"])
         contains_pattern, pattern = contains_accepted_url(reference['location'])
-        if ('http' in resource_location and 'hepdata' not in resource_location) or contains_pattern:
+        if ('http' in resource_location.lower() and 'hepdata' not in resource_location) or contains_pattern:
             if pattern:
                 file_type = pattern
             else:
                 file_type = 'html'
 
             # in case URLs do not have http added.
-            if 'http' not in resource_location:
+            if 'http' not in resource_location.lower():
                 resource_location = "http://" + resource_location
 
-        elif 'http' not in resource_location and 'www' not in resource_location and 'resource' not in resource_location:
+        elif 'http' not in resource_location.lower() and 'www' not in resource_location.lower() and 'resource' not in resource_location:
             # this is a file local to the submission.
             try:
                 resource_location = os.path.join(basepath, resource_location)

@@ -30,7 +30,7 @@ WORKDIR /usr/local/var/hepdata-instance/static
 
 RUN hepdata npm \
  && npm install \
- && hepdata collect -v \
+ && hepdata collect \
  && hepdata assets build
 
 RUN bash -c "echo $APP_ENVIRONMENT"

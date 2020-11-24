@@ -368,36 +368,40 @@ def _move_files_for_record(rec_id):  # pragma: no cover
     hep_submissions = HEPSubmission.query.filter_by(
                         publication_recid=rec_id
                         ).all()
+
     errors = []
 
-    # Need to check both rec_id (for newer submissions) and inspire_id
-    # (for migrated submissions)
-    old_paths = [get_old_data_path_for_record(rec_id)]
-    inspire_id = hep_submissions[0].inspire_id
-    if inspire_id is not None:
-        old_paths.append(get_old_data_path_for_record('ins%s' % inspire_id))
-        old_paths.append(get_old_data_path_for_record(inspire_id))
+    if hep_submissions:
+        # Need to check both rec_id (for newer submissions) and inspire_id
+        # (for migrated submissions)
+        old_paths = [get_old_data_path_for_record(rec_id)]
+        inspire_id = hep_submissions[0].inspire_id
+        if inspire_id is not None:
+            old_paths.append(get_old_data_path_for_record('ins%s' % inspire_id))
+            old_paths.append(get_old_data_path_for_record(inspire_id))
 
-    log.debug("Checking old paths %s" % old_paths)
+        log.debug("Checking old paths %s" % old_paths)
 
-    old_paths = [path for path in old_paths if os.path.isdir(path)]
+        old_paths = [path for path in old_paths if os.path.isdir(path)]
 
-    new_path = get_data_path_for_record(rec_id)
-    log.debug("Moving files from %s to %s" % (old_paths, new_path))
+        new_path = get_data_path_for_record(rec_id)
+        log.debug("Moving files from %s to %s" % (old_paths, new_path))
 
-    os.makedirs(new_path, exist_ok=True)
+        os.makedirs(new_path, exist_ok=True)
 
-    # Find all data resources
-    resources = _find_all_current_dataresources(rec_id)
-    for resource in resources:
-        resource_errors = _move_data_resource(resource, old_paths, new_path)
-        errors.extend(resource_errors)
+        is_sandbox = hep_submissions[0].overall_status == 'sandbox'
 
-    # Move rest of files in old_paths
-    for old_path in old_paths:
-        for dir_name, subdir_list, file_list in os.walk(old_path):
-            for filename in file_list:
-                if allowed_file(filename):
+        # Find all data resources
+        resources = _find_all_current_dataresources(rec_id)
+        for resource in resources:
+            resource_errors = _move_data_resource(resource, old_paths, new_path,
+                                                  is_sandbox=is_sandbox)
+            errors.extend(resource_errors)
+
+        # Move rest of files in old_paths
+        for old_path in old_paths:
+            for dir_name, subdir_list, file_list in os.walk(old_path):
+                for filename in file_list:
                     full_path = os.path.join(dir_name, filename)
                     log.debug("Found remaining file: %s" % full_path)
                     sub_path = full_path.split(old_path + '/', 1)[1]
@@ -411,27 +415,33 @@ def _move_files_for_record(rec_id):  # pragma: no cover
                                       "Error was: %s"
                                       % (full_path, new_file_path, str(e)))
 
-        # Remove old directory (along with any unrecognized files that remain)
-        try:
-            shutil.rmtree(old_path)
-        except Exception as e:
-            errors.append("Unable to remove directory %s\n"
-                          "Error was: %s"
-                          % (old_path, str(e)))
+            # Remove directories, which should be empty
+            for dirpath, _, _ in os.walk(old_path, topdown=False):
+                log.debug("Removing directory %s" % dirpath)
+                try:
+                    os.rmdir(dirpath)
+                except Exception as e:
+                    errors.append("Unable to remove directory %s\n"
+                                  "Error was: %s"
+                                  % (dirpath, str(e)))
 
-    # If there's a zip file from the migration, move that to the new dir too.
-    if inspire_id is not None:
-        zip_name = f'ins{inspire_id}.zip'
-        old_zip_path = os.path.join(current_app.config['CFG_DATADIR'],
-                                    zip_name)
-        if os.path.isfile(old_zip_path):
-            try:
-                new_zip_path = os.path.join(new_path, zip_name)
-                shutil.move(old_zip_path, new_zip_path)
-            except Exception as e:
-                errors.append("Unable to move archive file from %s to %s\n"
-                              "Error was: %s"
-                              % (old_zip_path, new_zip_path, str(e)))
+        # If there's a zip file from the migration, move that to the new dir too.
+        if inspire_id is not None:
+            zip_name = f'ins{inspire_id}.zip'
+            old_zip_path = os.path.join(current_app.config['CFG_DATADIR'],
+                                        zip_name)
+            if os.path.isfile(old_zip_path):
+                try:
+                    new_zip_path = os.path.join(new_path, zip_name)
+                    shutil.move(old_zip_path, new_zip_path)
+                except Exception as e:
+                    errors.append("Unable to move archive file from %s to %s\n"
+                                  "Error was: %s"
+                                  % (old_zip_path, new_zip_path, str(e)))
+
+    else:
+        errors.append("Could not move files for record %s as no matching hepsubmission exists."
+                      % rec_id)
 
     # Send an email with details of errors
     if errors:
@@ -445,7 +455,7 @@ def _move_files_for_record(rec_id):  # pragma: no cover
                                reply_to_address=current_app.config['ADMIN_EMAIL'])
 
 
-def _move_data_resource(resource, old_paths, new_path):  # pragma: no cover
+def _move_data_resource(resource, old_paths, new_path, is_sandbox=False):  # pragma: no cover
     errors = []
     log.debug("    Checking file %s" % resource.file_location)
 
@@ -475,9 +485,11 @@ def _move_data_resource(resource, old_paths, new_path):  # pragma: no cover
                               "Error was: %s"
                               % (resource.file_location, new_file_path, resource.id, str(e)))
 
-        elif not os.path.exists(new_file_path):
+        elif not os.path.exists(new_file_path) and not is_sandbox:
             # File does not exist in old or new locations - something has gone wrong
-            errors.append("File for for data resource id %s does not exist at "
+            # If it's a sandbox record then it's not important, but for other records
+            # we'll flag an error.
+            errors.append("File for data resource id %s does not exist at "
                           "either old path (%s) or new path (%s)"
                           % (resource.id, resource.file_location, new_file_path))
 
@@ -535,19 +547,17 @@ def clean_remaining_files(synchronous=True):  # pragma: no cover
                         for sub_entry in subdir_entries:
                             if not sub_entry.name.isdigit():
                                 unknown_files.append(sub_entry.path)
-                else:
-                    # Is it a deleted sandbox entry?
-                    if len(entry.name) == 10 and \
-                            entry.name.isdigit():
-                        # This is probably a deleted sandbox entry
-                        recognised = True
-                        rec_id = int(entry.name)
-                        submission_count = HEPSubmission.query.filter_by(publication_recid=rec_id).count()
-                        if submission_count == 0:
-                            log.debug("Deleting %s" %entry.path)
-                            shutil.rmtree(entry.path)
-                        else:
-                            log.warning("Sandbox entry %s is still in old file location" % entry.name)
+                elif entry.name.isdigit():
+                    # This is probably either a deleted sandbox entry or a hangover from
+                    # a migration from hepdata.cedar.ac.uk that was later deleted
+                    recognised = True
+                    rec_id = int(entry.name)
+                    submission_count = HEPSubmission.query.filter_by(publication_recid=rec_id).count()
+                    if submission_count == 0:
+                        log.debug("Deleting %s" % entry.path)
+                        shutil.rmtree(entry.path)
+                    else:
+                        log.warning("Record id %s is still in old file location" % entry.name)
 
             if not recognised:
                 unknown_files.append(entry.path)

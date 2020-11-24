@@ -264,7 +264,7 @@ def receive_data_resource_after_delete(mapper, connection, target):
                 log.debug('Deleting file %s' % target.file_location)
                 os.remove(target.file_location)
         else:
-            log.error("Could not remove file %s" % target.file_location)
+            log.warning("Could not remove file %s as it is not a valid file." % target.file_location)
 
 
 datareview_messages = db.Table('review_messages',

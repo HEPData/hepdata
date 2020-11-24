@@ -561,7 +561,7 @@ def process_resource(reference):
     """
     _location = '/record/resource/{0}?view=true'.format(reference.id)
 
-    if 'http' in reference.file_location:
+    if 'http' in reference.file_location.lower():
         _location = reference.file_location
 
     _reference_data = {'id': reference.id, 'file_type': reference.file_type,
@@ -592,7 +592,7 @@ def get_resource(resource_id):
 
         if view_mode:
             return send_file(resource_obj.file_location, as_attachment=True)
-        elif 'html' in resource_obj.file_location and 'http' not in resource_obj.file_location:
+        elif 'html' in resource_obj.file_location and 'http' not in resource_obj.file_location.lower():
             with open(resource_obj.file_location, 'r') as resource_file:
                 html = resource_file.read()
                 return html
