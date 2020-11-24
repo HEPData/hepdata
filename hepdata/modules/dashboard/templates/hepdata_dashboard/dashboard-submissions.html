@@ -36,10 +36,7 @@
                 <div class="col-md-7">
 
                     <p class="start-date">
-                        {% if submission.show_coord_view %}
-                            <span class="label label-info">Coordinator</span>
-                        {% endif %}
-                        {% for role in submission.role %}
+                        {% for role in submission.role|sort %}
                             <span class="label label-info">
                             <span class="fa fa-{% if role == 'coordinator' %}gavel {% elif role == 'reviewer' %}check{% else %}upload{% endif %}"
                                   style="padding-right: 5px;"></span>{{ role }}</span>

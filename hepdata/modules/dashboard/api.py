@@ -49,7 +49,7 @@ def add_user_to_metadata(type, user_info, record_id, submissions):
 def create_record_for_dashboard(record_id, submissions, current_user, coordinator=None, user_role=None,
                                 status="todo"):
     if user_role is None:
-        user_role = ["coordinator"]
+        user_role = []
 
     publication_record = get_record_by_id(int(record_id))
 
@@ -74,8 +74,12 @@ def create_record_for_dashboard(record_id, submissions, current_user, coordinato
                 submissions[record_id]["metadata"]["coordinator"] = {
                     'id': coordinator.id, 'name': coordinator.email,
                     'email': coordinator.email}
-                submissions[record_id]["metadata"][
-                    "show_coord_view"] = int(current_user.get_id()) == coordinator.id
+                if int(current_user.get_id()) == coordinator.id:
+                    submissions[record_id]["metadata"]["show_coord_view"] = True
+                    if 'coordinator' not in submissions[record_id]["metadata"]["role"]:
+                        submissions[record_id]["metadata"]["role"].append("coordinator")
+                else:
+                    submissions[record_id]["metadata"]["show_coord_view"] = False
             else:
                 submissions[record_id]["metadata"]["coordinator"] = {
                     'name': 'No coordinator'}
@@ -174,10 +178,11 @@ def list_submission_titles(current_user):
     titles = []
     for hepsubmission in hepdata_submission_records:
         publication_record = get_record_by_id(int(hepsubmission.publication_recid))
-        titles.append({
-            'id': int(hepsubmission.publication_recid),
-            'title': publication_record['title']
-        })
+        if publication_record:
+            titles.append({
+                'id': int(hepsubmission.publication_recid),
+                'title': publication_record['title']
+            })
 
     return titles
 
@@ -203,7 +208,7 @@ def _prepare_submission_query(current_user):
             SubmissionParticipant.publication_recid
         )
 
-        query.filter(
+        query = query.filter(
             or_(HEPSubmission.coordinator == int(current_user.get_id()),
                 HEPSubmission.publication_recid.in_(inner_query))
         )
