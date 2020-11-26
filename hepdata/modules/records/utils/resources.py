@@ -24,6 +24,7 @@
 import logging
 import os
 
+from hepdata.config import NGINX_TIMEOUT
 from hepdata.modules.records.utils.data_files import get_data_path_for_record
 
 logging.basicConfig()
@@ -48,7 +49,7 @@ def download_resource_file(recid, resource_path):
     if 'resource' in resource_path:
         url = base_url.format(resource_path)
 
-    response = urlopen(url)
+    response = urlopen(url, timeout=NGINX_TIMEOUT)
     contents = response.read()
     # save to tmp file
 

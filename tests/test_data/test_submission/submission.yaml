@@ -77,7 +77,6 @@ name: Table 2
 ---
 additional_resources:
 - {description: Image file, location: /resource/6150/figFigure8A.png}
-- {description: Thumbnail image file, location: /resource/6150/thumb_figFigure8A.png}
 data_file: Table3.yaml
 description: |
   Normalized ZZ fiducial cross section (multiplied by 10^6 for readability) in bins of the leading reconstructed dilepton pT for the 4 lepton channel.  The first systematic uncertainty is detector systematics, the second is background systematic uncertainties.
@@ -95,9 +94,6 @@ location: Data from Figure 8A
 name: Table 3
 
 ---
-additional_resources:
-- {description: Image file, location: /resource/6150/figFigure8B.png}
-- {description: Thumbnail image file, location: /resource/6150/thumb_figFigure8B.png}
 data_file: Table4.yaml
 description: |
   Normalized ZZ fiducial cross section (multiplied by 10^6 for readability) in bins of the dilepton pT for the 2l2nu channel.  The first systematic uncertainty is detector systematics, the second is background systematic uncertainties.
@@ -115,9 +111,6 @@ location: Data from Figure 8B
 name: Table 4
 
 ---
-additional_resources:
-- {description: Image file, location: /resource/6150/figFigure9A.png}
-- {description: Thumbnail image file, location: /resource/6150/thumb_figFigure9A.png}
 data_file: Table5.yaml
 description: |
   Normalized ZZ fiducial cross section (multiplied by 10^6 for readability) in bins of deltaPhi between the two leptons of the leading dileptons for the 4l channel.  The first systematic uncertainty is detector systematics, the second is background systematic uncertainties.
@@ -136,9 +129,6 @@ location: Data from Figure 9A
 name: Table 5
 
 ---
-additional_resources:
-- {description: Image file, location: /resource/6150/figFigure9B.png}
-- {description: Thumbnail image file, location: /resource/6150/thumb_figFigure9B.png}
 data_file: Table6.yaml
 description: |
   Normalized ZZ fiducial cross section (multiplied by 10^6 for readability) in bins of deltaPhi between the two leptons for the 2l2nu channel.  The first systematic uncertainty is detector systematics, the second is background systematic uncertainties.
@@ -156,9 +146,6 @@ location: Data from Figure 9B
 name: Table 6
 
 ---
-additional_resources:
-- {description: Image file, location: /resource/6150/figFigure10A.png}
-- {description: Thumbnail image file, location: /resource/6150/thumb_figFigure10A.png}
 data_file: Table7.yaml
 description: |
   Normalized ZZ fiducial cross section (multiplied by 10^6 for readability) in bins of the mass of the ZZ system for the 4l channel.  The first systematic uncertainty is detector systematics, the second is background systematic uncertainties.
@@ -176,9 +163,6 @@ location: Data from Figure 10A
 name: Table 7
 
 ---
-additional_resources:
-- {description: Image file, location: /resource/6150/figFigure10B.png}
-- {description: Thumbnail image file, location: /resource/6150/thumb_figFigure10B.png}
 data_file: Table8.yaml
 description: |
   Normalized ZZ fiducial cross section (multiplied by 10^6 for readability) in bins of the transverse mass of the ZZ system for the 2l2nu channel.  The first systematic uncertainty is detector systematics, the second is background systematic uncertainties.
@@ -194,4 +178,3 @@ keywords:
   values: [7000.0]
 location: Data from Figure 10B
 name: Table 8
-
