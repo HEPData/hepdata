@@ -255,6 +255,8 @@ var dashboard = (function () {
         $("#inspireDialog").modal();
       });
 
+      initialise_finalise_btn();
+
       dashboard.render_submission_stats();
 
       $('.pagination li a').click(function(event) {
@@ -353,7 +355,6 @@ var dashboard = (function () {
       MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
 
       initialise_list_filter();
-      initialise_finalise_btn();
       load_submissions();
       load_watched_records();
       load_permissions();
