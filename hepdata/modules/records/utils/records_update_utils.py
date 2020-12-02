@@ -12,6 +12,7 @@ from hepdata.modules.inspire_api.views import get_inspire_record_information
 from hepdata.ext.elasticsearch.api import index_record_ids, push_data_keywords
 from hepdata.modules.email.api import notify_publication_update
 from hepdata.resilient_requests import resilient_requests
+from hepdata.config import TESTING
 
 from celery import shared_task
 import logging
@@ -87,7 +88,8 @@ def update_record_info(inspire_id, send_email=False):
     if hep_submission.overall_status == 'finished':
         index_record_ids(record_ids)  # index for Elasticsearch
         push_data_keywords(pub_ids=[recid])
-        generate_dois_for_submission.delay(inspire_id=inspire_id)  # update metadata stored in DataCite
+        if not TESTING:
+            generate_dois_for_submission.delay(inspire_id=inspire_id)  # update metadata stored in DataCite
         if send_email:
             record_information = get_record_by_id(publication_recid)
             notify_publication_update(hep_submission, record_information)   # send email to all participants
