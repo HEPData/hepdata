@@ -91,7 +91,7 @@ def test_create_record_for_dashboard(app):
                 'metadata': {
                     'coordinator': {'name': 'No coordinator'},
                     'recid': record_information['recid'],
-                    'role': ['coordinator'],
+                    'role': [],
                     'start_date': hepsubmission.created,
                     'last_updated': hepsubmission.last_updated,
                     'title': u'My Journal Paper',
@@ -111,7 +111,7 @@ def test_create_record_for_dashboard(app):
         create_record_for_dashboard(record['recid'], test_submissions, user)
         assert(test_submissions == {
             record_information['recid']: {
-                "metadata": {"role": [['coordinator']]}
+                "metadata": {"role": [[]]}
             }
         })
 
@@ -151,7 +151,7 @@ def test_submissions_admin(app, load_submission):
                                 'name': u'test@hepdata.net',
                                 'id': 1},
                 'recid': str(record_information['recid']),
-                'role': ['coordinator'],
+                'role': [],
                 'show_coord_view': False,
                 'start_date': hepsubmission.created,
                 'last_updated': hepsubmission.last_updated,
@@ -171,11 +171,17 @@ def test_submissions_participant(app, load_submission):
             'inspire_id': '1487726'
         })
         hepsubmission = get_or_create_hepsubmission(record_information['recid'])
+        db.session.add(hepsubmission)
 
         user = User(email='test@test.com', password='hello1', active=True)
         db.session.add(user)
         db.session.commit()
 
+        # Check the user doesn't see the record before they are a participant
+        assert(get_submission_count(user) == 0)
+        assert(list_submission_titles(user) == [])
+
+        # Add the user as a participant
         participant = SubmissionParticipant(
             publication_recid=record_information['recid'],
             role="uploader",
