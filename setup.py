@@ -34,7 +34,7 @@ readme = open('README.rst').read()
 history = open('CHANGES.rst').read()
 
 tests_require = [
-    'pytest>=5.4.2',
+    'pytest>=6.0.2',
     'pytest-cov>=2.9.0',
     'pytest-flask>=1.0.0',
     'pytest-mock>=3.1.0',
