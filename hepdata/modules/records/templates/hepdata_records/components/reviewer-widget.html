@@ -62,9 +62,9 @@
 
 
         <div id="send" align="center">
-            <div class="btn btn-primary">
+            <button class="btn btn-primary" disabled="true">
                 <span class="fa fa-paper-plane"></span> Send Feedback
-            </div>
+            </button>
         </div>
         <div class="clear"></div>
     {% endif %}
@@ -88,6 +88,14 @@
             $(this).html('<span class="fa fa-comments"></span>').removeClass('table-hide').addClass('table-show');
 
         }
+    });
+
+    $(".input_box").on('change keyup paste', function(e) {
+      if(this.value) {
+        $("#send .btn-primary").prop('disabled', false);
+      } else {
+        $("#send .btn-primary").prop('disabled', true);
+      }
     });
 
     $("#send").click(function () {
@@ -124,9 +132,9 @@
                 $("#table-" + HEPDATA.current_table_id + "-messages").removeClass("hidden");
                 $(html).prependTo("#review_messages").slideDown("slow");
                 $(".input_box").val('');
+                $("#send .btn-primary").prop('disabled', true);
             }
         });
-
         return false;
     });
 
