@@ -24,7 +24,4 @@
 
 USE_NEW_INSPIRE_API = True
 
-if USE_NEW_INSPIRE_API is True:
-    from hepdata.modules.new_inspire_api.views import get_inspire_record_information, get_record_from_inspire, blueprint  # noqa
-else:
-    from hepdata.modules.old_inspire_api.views import get_inspire_record_information, get_record_from_inspire, blueprint  # noqa
+from hepdata.modules.new_inspire_api.views import get_inspire_record_information, get_record_from_inspire, blueprint  # noqa
