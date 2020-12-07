@@ -4,8 +4,8 @@ import json
 import pytest
 
 from flask import url_for
-from hepdata.modules.new_inspire_api.views import get_inspire_record_information
-from hepdata.modules.new_inspire_api.parser import expand_date
+from hepdata.modules.inspire_api.views import get_inspire_record_information
+from hepdata.modules.inspire_api.parser import expand_date
 from hepdata.modules.records.utils.common import decode_string
 
 
