@@ -178,7 +178,7 @@ def download_submission_with_recid(*args, **kwargs):
 
     :param recid: submissions recid
     :param version: version of submission to export. If absent, returns the latest.
-    :param file_format: yaml, csv, root, or yoda
+    :param file_format: yaml, csv, root, yoda or original
     :param rivet: Rivet analysis name to override default written in YODA export
     :return: download_submission
     """
@@ -212,7 +212,7 @@ def download_submission(submission, file_format, offline=False, force=False, riv
     for other formats.
 
     :param submission: HEPSubmission
-    :param file_format: yaml, csv, root, or yoda
+    :param file_format: yaml, csv, root, yoda or original
     :param offline: offline creation of the conversion when a record is finalised
     :param force: force recreation of the conversion
     :param rivet_analysis_name: Rivet analysis name to override default written in YODA export
@@ -292,7 +292,11 @@ def download_submission(submission, file_format, offline=False, force=False, riv
     data_filepath = find_submission_data_file_path(submission)
 
     try:
-        converted_file = convert_zip_archive(data_filepath, output_path, converter_options)
+        if file_format == 'original':
+            converted_file = data_filepath
+        else:
+            converted_file = convert_zip_archive(data_filepath, output_path, converter_options)
+
         if not offline:
             return send_file(converted_file, as_attachment=True)
         else:
