@@ -102,8 +102,8 @@ def update_records_info_since(date):
     """Update publication information from INSPIRE for all records updated *since* a certain date."""
     inspire_ids = get_inspire_records_updated_since(date)
     for inspire_id in inspire_ids:
-        status = update_record_info.delay(inspire_id)
-        log.info('Updated Inspire ID {} with status: {}'.format(inspire_id, status))
+        update_record_info.delay(inspire_id)
+        log.info('Sent task for Inspire ID {}'.format(inspire_id))
 
 
 @shared_task
@@ -111,8 +111,8 @@ def update_records_info_on(date):
     """Update publication information from INSPIRE for all records updated *on* a certain date."""
     inspire_ids = get_inspire_records_updated_on(date)
     for inspire_id in inspire_ids:
-        status = update_record_info.delay(inspire_id)
-        log.info('Updated Inspire ID {} with status: {}'.format(inspire_id, status))
+        update_record_info.delay(inspire_id)
+        log.info('Sent task for Inspire ID {}'.format(inspire_id))
 
 
 @shared_task
@@ -120,8 +120,8 @@ def update_all_records_info():
     """Update publication information from INSPIRE for *all* records."""
     inspire_ids = get_inspire_records_updated_since('1899-01-01')
     for inspire_id in inspire_ids:
-        status = update_record_info.delay(inspire_id)
-        log.info('Updated Inspire ID {} with status: {}'.format(inspire_id, status))
+        update_record_info.delay(inspire_id)
+        log.info('Sent task for Inspire ID {}'.format(inspire_id))
 
 
 def get_inspire_records_updated_since(date):
