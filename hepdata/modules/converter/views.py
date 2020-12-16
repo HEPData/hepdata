@@ -218,7 +218,6 @@ def download_submission(submission, file_format, offline=False, force=False, riv
     :param rivet_analysis_name: Rivet analysis name to override default written in YODA export
     :return: display_error or send_file depending on success of conversion
     """
-
     version = submission.version
 
     file_identifier = submission.publication_recid
@@ -236,8 +235,16 @@ def download_submission(submission, file_format, offline=False, force=False, riv
                         "Currently supported formats: " + str(CFG_SUPPORTED_FORMATS),
         )
 
-    output_file = 'HEPData-{0}-v{1}-{2}.tar.gz'.format(file_identifier, submission.version, file_format)
+    data_filepath = find_submission_data_file_path(submission)
 
+    if file_format == 'original':
+        if offline:
+            print("Nothing to do as original file already exists")
+            return
+        else:
+            return send_file(data_filepath, as_attachment=True)
+
+    output_file = 'HEPData-{0}-v{1}-{2}.tar.gz'.format(file_identifier, submission.version, file_format)
     converted_dir = get_converted_directory_path(submission.publication_recid)
     if not os.path.exists(converted_dir):
         os.makedirs(converted_dir)
@@ -289,13 +296,8 @@ def download_submission(submission, file_format, offline=False, force=False, riv
                     converter_options['rivet_analysis_name'] = '{0}_{1}_I{2}'.format(
                         ''.join(record['collaborations']).upper(), year, submission.inspire_id)
 
-    data_filepath = find_submission_data_file_path(submission)
-
     try:
-        if file_format == 'original':
-            converted_file = data_filepath
-        else:
-            converted_file = convert_zip_archive(data_filepath, output_path, converter_options)
+        converted_file = convert_zip_archive(data_filepath, output_path, converter_options)
 
         if not offline:
             return send_file(converted_file, as_attachment=True)
