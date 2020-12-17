@@ -24,6 +24,7 @@
 
 import logging
 import os
+import re
 import requests
 import shutil
 import socket
@@ -110,8 +111,17 @@ def import_record(inspire_id, base_url='https://hepdata.net'):
     file_save_directory = get_data_path_for_record(str(recid), time_stamp)
     if not os.path.exists(file_save_directory):
         os.makedirs(file_save_directory)
+
+    # Try getting file name from headers (but fall back to tmp file name)
+    filename = os.path.basename(tmp_file.name)
+    if 'content-disposition' in response.headers:
+        match = re.search("filename=(.+)", response.headers['content-disposition'])
+        if match:
+            filename = match.group(1)
+
     file_path = os.path.join(file_save_directory,
-                             os.path.basename(tmp_file.name))
+                             filename)
+    log.info("Moving file to %s" % file_path)
     shutil.move(tmp_file.name, file_path)
 
     # Create submission
