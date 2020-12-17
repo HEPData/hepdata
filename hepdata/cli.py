@@ -200,6 +200,11 @@ def import_records(inspireids, recreate_index, base_url):
     Usage: ``hepdata importer import-records -i 'ins1262703' -rc False``
     """
     from hepdata.ext.elasticsearch.api import recreate_index as reindex
+    if current_app.config.get('ENV') == 'production':
+        click.confirm('You are currently running in production mode on'
+                      ' %s. Are you sure you want to import records from %s?'
+                      % (current_app.config.get('SITE_URL'), base_url),
+                      abort=True)
 
     if recreate_index:
         reindex()
