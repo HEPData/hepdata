@@ -189,10 +189,13 @@ def importer():
 @click.option('--recreate_index', '-rc', default=False, type=bool,
               help='Whether or not to recreate the index before importing'
               '(defaults to False)')
-@click.option('--base-url', '-u', default="https://hepdata.net", type=str,
+@click.option('--update-existing', '-u', default=False, type=bool,
+              help='Whether to update records which already exist'
+              '(defaults to False)')
+@click.option('--base-url', '-b', default="https://hepdata.net", type=str,
               help='Base URL from which to get data (defaults to '
               'https://hepdata.net)')
-def import_records(inspireids, recreate_index, base_url):
+def import_records(inspireids, recreate_index, base_url, update_existing):
     """
     Populate the DB with records from HEPData.net (or another instance as
     specified by base_url)
@@ -210,7 +213,9 @@ def import_records(inspireids, recreate_index, base_url):
         reindex()
 
     files_to_load = parse_inspireids_from_string(inspireids)
-    importer_api.import_records(files_to_load, synchronous=True, base_url=base_url)
+    importer_api.import_records(files_to_load, synchronous=True,
+                                update_existing=update_existing,
+                                base_url=base_url)
 
 
 @cli.group()

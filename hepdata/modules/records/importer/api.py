@@ -47,18 +47,21 @@ logging.basicConfig()
 log = logging.getLogger(__name__)
 
 
-def import_records(inspire_ids, synchronous=True, base_url='https://hepdata.net'):
+def import_records(inspire_ids, synchronous=True, update_existing=False,
+                   base_url='https://hepdata.net'):
     """
     Import records from hepdata.net
-    :param base_url: override default base URL
-    :param synchronous: if should be run immediately
     :param inspire_ids: array of inspire ids to load (in the format insXXX).
+    :param synchronous: if should be run immediately
+    :param update_existing: whether to update records that already exist
+    :param base_url: override default base URL
     :return: None
     """
     for index, inspire_id in enumerate(inspire_ids):
         _cleaned_id = inspire_id.replace("ins", "")
         try:
-            import_record(_cleaned_id, base_url=base_url)
+            import_record(_cleaned_id, update_existing=update_existing,
+                          base_url=base_url)
         except socket.error as se:
             log.error("Socket error...")
             log.error(se)
@@ -67,7 +70,7 @@ def import_records(inspire_ids, synchronous=True, base_url='https://hepdata.net'
 
 
 @shared_task
-def import_record(inspire_id, base_url='https://hepdata.net'):
+def import_record(inspire_id, update_existing=False, base_url='https://hepdata.net'):
     migrator = Migrator(base_url)
 
     publication_information, status = migrator.retrieve_publication_information(inspire_id)
@@ -83,14 +86,18 @@ def import_record(inspire_id, base_url='https://hepdata.net'):
         recid = record_information['recid']
     else:
         log.info("The record with inspire id {0} already exists.".format(inspire_id))
-        log.info("Updating instead")
-        recid = current_submission.publication_recid
+        if update_existing:
+            log.info("Updating instead")
+            recid = current_submission.publication_recid
+        else:
+            log.info("Not updating as update_existing is False")
+            return False
 
     # Download file to temp dir
     url = "{0}/download/submission/ins{1}/original".format(base_url, inspire_id)
     # Use the next line to allow imports from HEPData.net (for records without
     # additional resources) before PR 289 is merged/released
-    # url = "{0}/download/submission/ins{1}/yaml".format(base_url, inspire_id)
+    url = "{0}/download/submission/ins{1}/yaml".format(base_url, inspire_id)
     log.info("Trying URL " + url)
     response = requests.get(url)
     if not response.ok:
