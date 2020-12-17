@@ -186,8 +186,9 @@ def importer():
 @with_appcontext
 @click.option('--inspireids', '-i', default=default_recids,
               help='A comma separated list of recids to load.')
-@click.option('--recreate_index', '-rc', default=True, type=bool,
-              help='Whether or not to recreate the index')
+@click.option('--recreate_index', '-rc', default=False, type=bool,
+              help='Whether or not to recreate the index before importing'
+              '(defaults to False)')
 @click.option('--base-url', '-u', default="https://hepdata.net", type=str,
               help='Base URL from which to get data (defaults to '
               'https://hepdata.net)')
