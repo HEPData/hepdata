@@ -36,6 +36,7 @@ from hepdata.modules.submission.api import get_latest_hepsubmission
 from .factory import create_app
 from hepdata.config import CFG_PUB_TYPE
 from hepdata.ext.elasticsearch.api import reindex_all, get_records_matching_field
+from hepdata.modules.records.importer import api as importer_api
 from hepdata.modules.records.utils import data_files
 from hepdata.modules.records.utils.submission import unload_submission
 from hepdata.modules.records.migrator.api import load_files, update_submissions, get_all_ids_in_current_system, \
@@ -174,6 +175,36 @@ def get_missing_records():
     print("Missing {} records.".format(len(missing_ids)))
     print(missing_ids)
     return missing_ids
+
+
+@cli.group()
+def importer():
+    """Import from HepData website to a local instance."""
+
+
+@importer.command()
+@with_appcontext
+@click.option('--inspireids', '-i', default=default_recids,
+              help='A comma separated list of recids to load.')
+@click.option('--recreate_index', '-rc', default=True, type=bool,
+              help='Whether or not to recreate the index')
+@click.option('--base-url', '-u', default="https://hepdata.net", type=str,
+              help='Base URL from which to get data (defaults to '
+              'https://hepdata.net)')
+def import_records(inspireids, recreate_index, base_url):
+    """
+    Populate the DB with records from HEPData.net (or another instance as
+    specified by base_url)
+
+    Usage: ``hepdata importer import-records -i 'ins1262703' -rc False``
+    """
+    from hepdata.ext.elasticsearch.api import recreate_index as reindex
+
+    if recreate_index:
+        reindex()
+
+    files_to_load = parse_inspireids_from_string(inspireids)
+    importer_api.import_records(files_to_load, synchronous=True, base_url=base_url)
 
 
 @cli.group()
