@@ -38,6 +38,7 @@ from invenio_db import db
 from hepdata.modules.dashboard.views import do_finalise
 from hepdata.modules.records.api import process_zip_archive
 from hepdata.modules.records.migrator.api import Migrator
+from hepdata.modules.records.utils.common import remove_file_extension
 from hepdata.modules.records.utils.data_files import get_data_path_for_record
 from hepdata.modules.records.utils.submission import get_or_create_hepsubmission
 from hepdata.modules.records.utils.workflow import create_record
@@ -140,10 +141,25 @@ def import_record(inspire_id, update_existing=False, base_url='https://hepdata.n
     # Then process the payload as for any other record
     errors = process_zip_archive(file_path, recid)
     if errors:
-        log.error("Could not process zip archive: ")
-        for error in errors:
-            log.error("    %s" % error)
-        return False
+        log.info("Errors processing archive. Re-trying with old schema.")
+        # Try again with old schema
+        # Need to clean up first to avoid errors (is this not done anyway?)
+        file_save_directory = os.path.dirname(file_path)
+        submission_path = os.path.join(file_save_directory, remove_file_extension(filename))
+        shutil.rmtree(submission_path)
+
+        errors = process_zip_archive(file_path, recid, old_submission_schema=True)
+
+        if errors:
+            log.error("Could not process zip archive: ")
+            for file, file_errors in errors.items():
+                log.error("    %s:" % file)
+                for error in file_errors:
+                    log.error("        %s" % error['message'])
+
+            return False
+
+    log.info("Finalising record %s" % recid)
 
     do_finalise(recid, force_finalise=True,
                 update=(current_submission is not None))

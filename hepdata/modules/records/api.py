@@ -454,7 +454,7 @@ def save_zip_file(file, id):
     return file_path
 
 
-def process_zip_archive(file_path, id):
+def process_zip_archive(file_path, id, old_submission_schema=False):
     (file_save_directory, filename) = os.path.split(file_path)
 
     if not filename.endswith('.oldhepdata'):
@@ -524,7 +524,8 @@ def process_zip_archive(file_path, id):
             from_oldhepdata = True
 
     return process_submission_directory(basepath, submission_file_path, id,
-                                        from_oldhepdata=from_oldhepdata)
+                                        from_oldhepdata=from_oldhepdata,
+                                        old_submission_schema=old_submission_schema)
 
 
 def check_and_convert_from_oldhepdata(input_directory, id, timestamp):
