@@ -1,0 +1,18 @@
+dependent_variables:
+- header: {name: POL(NAME=RECOIL)}
+  qualifiers:
+  - {name: RE, value: GAMMA P --> PI0 P}
+  - {name: SQRT(S), units: GeV, value: 1.383-1.481}
+  - {name: THETA, units: deg, value: '90.0'}
+  values:
+  - errors:
+    - {symerror: 0.12}
+    value: -0.3
+  - errors:
+    - {symerror: 0.06}
+    value: -0.59
+independent_variables:
+- header: {name: E, units: MEV}
+  values:
+  - {value: 550.0}
+  - {value: 700.0}

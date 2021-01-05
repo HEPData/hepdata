@@ -71,8 +71,6 @@ def get_submission_validator(old_schema):
     else:
         return SubmissionFileValidator()
 
-    return SubmissionFileValidator()
-
 
 def get_data_validator(old_hepdata):
     """

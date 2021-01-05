@@ -174,6 +174,39 @@ def test_create_submission(app, admin_idx):
         assert(not os.path.exists(directory))
 
 
+def test_old_submission_yaml(app, admin_idx):
+    """
+    Test we can validate against the old submission schema (for use when importing)
+    :return:
+    """
+
+    base_dir = os.path.dirname(os.path.realpath(__file__))
+
+    hepsubmission = HEPSubmission(publication_recid=12345,
+                                  overall_status='todo',
+                                  version=1)
+    db.session.add(hepsubmission)
+    db.session.commit()
+
+    directory = os.path.join(base_dir, 'test_data/test_v0_submission')
+
+    # This should fail against current schema
+    errors = process_submission_directory(directory,
+                                          os.path.join(directory, 'submission.yaml'),
+                                          12345)
+    assert('submission.yaml' in errors)
+    assert(len(errors['submission.yaml']) == 1)
+    assert(errors['submission.yaml'][0]['level'] == 'error')
+    assert(errors['submission.yaml'][0]['message'].decode().startswith("Invalid value (in GeV) for cmenergies: 1.383-1.481"))
+
+    # Use old schema - should now work
+    errors = process_submission_directory(directory,
+                                          os.path.join(directory, 'submission.yaml'),
+                                          12345,
+                                          old_submission_schema=True)
+    assert(errors == {})
+
+
 def test_invalid_submission_yaml(app, admin_idx):
     """
     Test the right thing happens when the submission.yaml is invalid
