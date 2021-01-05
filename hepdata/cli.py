@@ -213,7 +213,7 @@ def import_records(inspireids, recreate_index, base_url, update_existing):
         reindex()
 
     files_to_load = parse_inspireids_from_string(inspireids)
-    importer_api.import_records(files_to_load, synchronous=True,
+    importer_api.import_records(files_to_load, synchronous=False,
                                 update_existing=update_existing,
                                 base_url=base_url)
 

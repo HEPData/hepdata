@@ -54,21 +54,20 @@ def import_records(inspire_ids, synchronous=False, update_existing=False,
     """
     Import records from hepdata.net
     :param inspire_ids: array of inspire ids to load (in the format insXXX).
-    :param synchronous: if should be run immediately
+    :param synchronous: if should be run immediately rather than via celery
     :param update_existing: whether to update records that already exist
     :param base_url: override default base URL
     :return: None
     """
     for index, inspire_id in enumerate(inspire_ids):
         _cleaned_id = inspire_id.replace("ins", "")
-        try:
+        if synchronous:
             import_record(_cleaned_id, update_existing=update_existing,
-                          base_url=base_url)
-        except socket.error as se:
-            log.error("Socket error...")
-            log.error(se)
-        except Exception as e:
-            log.error("Failed to load {0}. {1} ".format(inspire_id, e))
+                              base_url=base_url)
+        else:
+            log.info("Sending import_record task to celery for id %s" %_cleaned_id)
+            import_record.delay(_cleaned_id, update_existing=update_existing,
+                                base_url=base_url)
 
 
 def get_inspire_ids(base_url='https://hepdata.net', last_updated=None, n_latest=None):
@@ -132,12 +131,16 @@ def import_record(inspire_id, update_existing=False, base_url='https://hepdata.n
     # additional resources) before PR 289 is merged/released
     url = "{0}/download/submission/ins{1}/yaml".format(base_url, inspire_id)
     log.info("Trying URL " + url)
-    response = requests.get(url)
-    if not response.ok:
-        log.error('Unable to retrieve download from {0}'.format(url))
-        return False
-    elif not response.headers['content-type'].startswith('application/'):
-        log.error('Did not receive zipped file in response from {0}'.format(url))
+    try:
+        response = requests.get(url)
+        if not response.ok:
+            log.error('Unable to retrieve download from {0}'.format(url))
+            return False
+        elif not response.headers['content-type'].startswith('application/'):
+            log.error('Did not receive zipped file in response from {0}'.format(url))
+            return False
+    except socket.error as se:
+        log.error("Socket error: %s" % se)
         return False
 
     # save to tmp file
@@ -175,7 +178,7 @@ def import_record(inspire_id, update_existing=False, base_url='https://hepdata.n
     if errors:
         log.info("Errors processing archive. Re-trying with old schema.")
         # Try again with old schema
-        # Need to clean up first to avoid errors (is this not done anyway?)
+        # Need to clean up first to avoid errors
         file_save_directory = os.path.dirname(file_path)
         submission_path = os.path.join(file_save_directory, remove_file_extension(filename))
         shutil.rmtree(submission_path)

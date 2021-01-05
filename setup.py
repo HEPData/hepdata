@@ -142,6 +142,7 @@ setup(
         ],
         'invenio_celery.tasks': [
             'hepdata_records = hepdata.modules.records.migrator.api',
+            'hepdata_importer = hepdata.modules.records.importer.api',
             'hepdata_doi = hepdata.modules.records.utils.doi_minter',
             'hepdata_mail = hepdata.modules.email.utils',
             'hepdata_conversion = hepdata.modules.converter.tasks',
