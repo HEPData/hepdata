@@ -178,7 +178,7 @@ def download_submission_with_recid(*args, **kwargs):
 
     :param recid: submissions recid
     :param version: version of submission to export. If absent, returns the latest.
-    :param file_format: yaml, csv, root, or yoda
+    :param file_format: yaml, csv, root, yoda or original
     :param rivet: Rivet analysis name to override default written in YODA export
     :return: download_submission
     """
@@ -212,13 +212,12 @@ def download_submission(submission, file_format, offline=False, force=False, riv
     for other formats.
 
     :param submission: HEPSubmission
-    :param file_format: yaml, csv, root, or yoda
+    :param file_format: yaml, csv, root, yoda or original
     :param offline: offline creation of the conversion when a record is finalised
     :param force: force recreation of the conversion
     :param rivet_analysis_name: Rivet analysis name to override default written in YODA export
     :return: display_error or send_file depending on success of conversion
     """
-
     version = submission.version
 
     file_identifier = submission.publication_recid
@@ -236,7 +235,21 @@ def download_submission(submission, file_format, offline=False, force=False, riv
                         "Currently supported formats: " + str(CFG_SUPPORTED_FORMATS),
         )
 
-    output_file = 'HEPData-{0}-v{1}-{2}.tar.gz'.format(file_identifier, submission.version, file_format)
+    data_filepath = find_submission_data_file_path(submission)
+
+    if file_format == 'original':
+        file_extension = os.path.splitext(data_filepath)[1]
+    else:
+        file_extension = '.tar.gz'
+
+    output_file = 'HEPData-{0}-v{1}-{2}{3}'.format(file_identifier, submission.version, file_format, file_extension)
+
+    if file_format == 'original':
+        if offline:
+            print("Nothing to do as original file already exists")
+            return
+        else:
+            return send_file(data_filepath, as_attachment=True, attachment_filename=output_file)
 
     converted_dir = get_converted_directory_path(submission.publication_recid)
     if not os.path.exists(converted_dir):
@@ -289,10 +302,9 @@ def download_submission(submission, file_format, offline=False, force=False, riv
                     converter_options['rivet_analysis_name'] = '{0}_{1}_I{2}'.format(
                         ''.join(record['collaborations']).upper(), year, submission.inspire_id)
 
-    data_filepath = find_submission_data_file_path(submission)
-
     try:
         converted_file = convert_zip_archive(data_filepath, output_path, converter_options)
+
         if not offline:
             return send_file(converted_file, as_attachment=True)
         else:
@@ -491,7 +503,7 @@ def download_datatable(datasubmission, file_format, *args, **kwargs):
 
     output_path = os.path.join(current_app.config['CFG_TMPDIR'], filename)
 
-    if file_format == 'yaml':
+    if file_format == 'yaml' or file_format == 'original':
         return send_file(
             dataresource.file_location,
             as_attachment=True,
