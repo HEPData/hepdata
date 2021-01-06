@@ -497,7 +497,7 @@ def download_datatable(datasubmission, file_format, *args, **kwargs):
 
     output_path = os.path.join(current_app.config['CFG_TMPDIR'], filename)
 
-    if file_format == 'yaml':
+    if file_format == 'yaml' or file_format == 'original':
         return send_file(
             dataresource.file_location,
             as_attachment=True,
