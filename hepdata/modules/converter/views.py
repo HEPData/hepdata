@@ -237,7 +237,12 @@ def download_submission(submission, file_format, offline=False, force=False, riv
 
     data_filepath = find_submission_data_file_path(submission)
 
-    output_file = 'HEPData-{0}-v{1}-{2}.tar.gz'.format(file_identifier, submission.version, file_format)
+    if file_format == 'original':
+        file_extension = os.path.splitext(data_filepath)[1]
+    else:
+        file_extension = '.tar.gz'
+
+    output_file = 'HEPData-{0}-v{1}-{2}{3}'.format(file_identifier, submission.version, file_format, file_extension)
 
     if file_format == 'original':
         if offline:
