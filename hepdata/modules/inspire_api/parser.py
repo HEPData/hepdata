@@ -71,7 +71,7 @@ def get_authors(metadata):
 
 
 def get_type(metadata):
-    """Get the type of the publication"""
+    """Get the type of the publication."""
     _type = deepcopy(parsed_content_defaults['type'])
     if 'document_type' in metadata.keys():
         _type = metadata['document_type']
@@ -218,9 +218,6 @@ def expand_date(value):
     so 2012-08 will be 2012-08-01
     and 2012 will be 2012-01-01.
     If nothing, we do nothing.
-
-    :param value:
-    :return:
     """
     if value == '':
         return value

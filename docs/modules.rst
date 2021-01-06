@@ -15,8 +15,6 @@ document how to use some of the major features within each package (where approp
    modules/editor
    modules/email
    modules/inspire_api
-   modules/new_inspire_api
-   modules/old_inspire_api
    modules/permissions
    modules/records
    modules/search
