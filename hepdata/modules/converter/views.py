@@ -237,14 +237,15 @@ def download_submission(submission, file_format, offline=False, force=False, riv
 
     data_filepath = find_submission_data_file_path(submission)
 
+    output_file = 'HEPData-{0}-v{1}-{2}.tar.gz'.format(file_identifier, submission.version, file_format)
+
     if file_format == 'original':
         if offline:
             print("Nothing to do as original file already exists")
             return
         else:
-            return send_file(data_filepath, as_attachment=True)
+            return send_file(data_filepath, as_attachment=True, attachment_filename=output_file)
 
-    output_file = 'HEPData-{0}-v{1}-{2}.tar.gz'.format(file_identifier, submission.version, file_format)
     converted_dir = get_converted_directory_path(submission.publication_recid)
     if not os.path.exists(converted_dir):
         os.makedirs(converted_dir)
