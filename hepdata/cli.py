@@ -197,8 +197,8 @@ def importer():
               'https://hepdata.net)')
 def import_records(inspireids, recreate_index, base_url, update_existing):
     """
-    Populate the DB with records from HEPData.net (or another instance as
-    specified by base_url)
+    Populate the DB with specific records from HEPData.net (or another
+    instance as specified by base_url)
 
     Usage: ``hepdata importer import-records -i 'ins1262703' -rc False``
     """
@@ -214,6 +214,35 @@ def import_records(inspireids, recreate_index, base_url, update_existing):
 
     files_to_load = parse_inspireids_from_string(inspireids)
     importer_api.import_records(files_to_load, synchronous=True,
+                                update_existing=update_existing,
+                                base_url=base_url)
+
+
+@importer.command()
+@with_appcontext
+@click.option('--start', '-s', type=int, default=None,
+              help='The start page from the total set of records.')
+@click.option('--end', '-e', default=None, type=int,
+              help='The end page from the total set of records.')
+@click.option('--update-existing', '-u', default=False, type=bool,
+              help='Whether to update records which already exist'
+              '(defaults to False)')
+@click.option('--base-url', '-b', default="https://hepdata.net", type=str,
+              help='Base URL from which to get data (defaults to '
+              'https://hepdata.net)')
+# @click.option('--date', '-d', type=str, default=None,
+#               help='Filter all records modified since some point in time, e.g. 20160705 for the 5th July 2016.')
+def bulk_import_records(start, end, base_url, update_existing):
+    """
+    Populate the DB with records from HEPData.net (or another instance as
+    specified by base_url)
+
+    Usage: ``hepdata importer bulk-import-records -s 1 -e 2``
+    """
+    inspire_ids = importer_api.get_inspire_ids(start, end)
+
+    print("Found {} inspire ids to load.".format(len(inspire_ids)))
+    importer_api.import_records(inspire_ids, synchronous=False,
                                 update_existing=update_existing,
                                 base_url=base_url)
 

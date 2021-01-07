@@ -70,6 +70,27 @@ def import_records(inspire_ids, synchronous=True, update_existing=False,
             log.error("Failed to load {0}. {1} ".format(inspire_id, e))
 
 
+def get_inspire_ids(start_page=0, end_page=10, base_url='https://hepdata.net'):
+    # TODO: filter by date
+    inspire_ids = []
+    for page in range(start_page, end_page):
+        url = base_url + '/search/?format=json&page=' + str(page)
+        try:
+            response = requests.get(url)
+            if not response.ok:
+                log.error('Unable to retrieve data from {0}. Aborting.'.format(url))
+                return False
+        except socket.error as se:
+            log.error("Socket error: %s" % se)
+            return False
+
+        results = response.json()
+        for result in results['results']:
+            inspire_ids.append(result['inspire_id'])
+
+    return inspire_ids
+
+
 @shared_task
 def import_record(inspire_id, update_existing=False, base_url='https://hepdata.net'):
     migrator = Migrator(base_url)
@@ -164,3 +185,4 @@ def import_record(inspire_id, update_existing=False, base_url='https://hepdata.n
     do_finalise(recid, force_finalise=True,
                 update=(current_submission is not None))
 
+    log.info("Imported record %s." % recid)
