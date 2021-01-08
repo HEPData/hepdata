@@ -45,7 +45,7 @@ HEPDATA.set_review_status = function (status, set_all_tables=false, onSuccess=nu
           HEPDATA.toggleApproveAllButton();
         } else {
           if (data.success) {
-            $("#approve-all-container .col-md-12").append('<p>Succeeded. Reloading record...</p>');
+            $("#approve-all-container .col-md-12 div p").html('All tables passed. Reloading in 1s...');
             setTimeout(function () { window.location.reload(true); }, 1000);
           } else {
             var closeButtonHtml = '<button type="button" class="btn btn-info" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">Close</span></button>';

@@ -46,7 +46,20 @@
         });
         var approve_all = function () {
           if ($('#confirmApproveAll').is(':checked')) {
-            $("#approve-all-container .col-md-12").html("<p>Approving all tables...</p>");
+            $("#approve-all-container .col-md-12").html('<div align="center"/>')
+            HEPDATA.render_loader(
+              "#approve-all-container .col-md-12 div",
+              [
+                {x: 26, y: 30, color: "#955BA5"},
+                {x: -60, y: 55, color: "#2C3E50"},
+                {x: 37, y: -10, color: "#955BA5"},
+                {x: -60, y: 10, color: "#955BA5"},
+                {x: -27, y: -30, color: "#955BA5"},
+                {x: 60, y: -55, color: "#2C3E50"}
+              ],
+              {"width": 100, "height": 100}
+            );
+            $("#approve-all-container .col-md-12 div").append("<p>Approving all tables...</p>");
             HEPDATA.set_review_status('passed', all_tables=true);
           } else {
             $('#confirmWarning').show();
