@@ -19,6 +19,12 @@
 
         {% endif %}
 
+        {% if (ctx.show_review_widget or ctx.is_submission_coordinator_or_admin) and ctx.status != 'finished' and ctx.version >= ctx.version_count %}
+            <button type="button" class="btn btn-danger btn-md" data-toggle="modal" style="width: 100%"
+                    id="approve-all-btn" data-target="#approveAllTables"><span
+                    class="fa fa-check-circle"></span> Approve All Tables
+            </button>
+        {% endif %}
 
         {% if ctx.status == 'finished' and (ctx.is_submission_coordinator_or_admin or ctx.show_upload_widget) %}
             <button type="button" class="btn btn-danger btn-md" data-toggle="modal" style="width: 100%"

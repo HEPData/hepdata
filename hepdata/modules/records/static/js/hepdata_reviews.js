@@ -3,39 +3,55 @@
  */
 
 
-HEPDATA.set_review_status = function (status) {
+HEPDATA.set_review_status = function (status, set_all_tables=false, onSuccess=null, onError=null) {
+  var data = {
+    "publication_recid": HEPDATA.current_record_id,
+    "status": status,
+    "version": HEPDATA.current_table_version
+  }
+  if (set_all_tables) {
+    data["all_tables"] = true
+  } else {
+    data["data_recid"] = HEPDATA.current_table_id
+  }
 
   $.ajax({
       type: "POST",
       url: "/record/data/review/status/",
       dataType: "json",
-      data: {
-        "publication_recid": HEPDATA.current_record_id,
-        "data_recid": HEPDATA.current_table_id,
-        "status": status,
-        "version": HEPDATA.current_table_version
-      },
+      data: data,
       cache: false,
       success: function (data) {
         var status = data.status;
-        for (var review_status in HEPDATA.review_classes) {
-          $("#reviewer-button").removeClass(review_status);
-        }
-        $("#reviewer-button").addClass(status);
+        if (status) {
+          for (var review_status in HEPDATA.review_classes) {
+            $("#reviewer-button").removeClass(review_status);
+          }
+          $("#reviewer-button").addClass(status);
 
-        $("#" + status + "-option").removeClass("deactivate");
-        $("#review-status span").each(function () {
-          if (this.id.indexOf(status) == -1)
-            $(this).addClass("deactivate");
-        });
+          $("#" + status + "-option").removeClass("deactivate");
+          $("#review-status span").each(function () {
+            if (this.id.indexOf(status) == -1)
+              $(this).addClass("deactivate");
+          });
 
-        for (var review_status in HEPDATA.review_classes) {
-          $("#" + HEPDATA.current_table_id + "-status").removeClass(review_status);
+          for (var review_status in HEPDATA.review_classes) {
+            $("#" + HEPDATA.current_table_id + "-status").removeClass(review_status);
+          }
+          $("#" + HEPDATA.current_table_id + "-status").addClass(status);
+          $("#" + HEPDATA.current_table_id + "-status #icon").removeClass();
+          $("#" + HEPDATA.current_table_id + "-status #icon").addClass("fa " + HEPDATA.review_classes[status].icon);
+          $("#" + HEPDATA.current_table_id + "-status .text").text(HEPDATA.review_classes[status].text);
+          HEPDATA.toggleApproveAllButton();
+        } else {
+          if (data.success) {
+            $("#approve-all-container .col-md-12").append('<p>Succeeded. Reloading record...</p>');
+            setTimeout(function () { window.location.reload(true); }, 1000);
+          } else {
+            var closeButtonHtml = '<button type="button" class="btn btn-info" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">Close</span></button>';
+            $("#approve-all-container .col-md-12").append('<p>Failed. Please try again later.</p>' + closeButtonHtml);
+          }
         }
-        $("#" + HEPDATA.current_table_id + "-status").addClass(status);
-        $("#" + HEPDATA.current_table_id + "-status #icon").removeClass();
-        $("#" + HEPDATA.current_table_id + "-status #icon").addClass("fa " + HEPDATA.review_classes[status].icon);
-        $("#" + HEPDATA.current_table_id + "-status .text").text(HEPDATA.review_classes[status].text);
       }
     }
   );
@@ -105,3 +121,14 @@ HEPDATA.load_review_messages = function (placement, record_id, table_id) {
     }
   );
 };
+
+HEPDATA.toggleApproveAllButton = function() {
+  var approveAllButton = $('#approve-all-btn');
+  if (approveAllButton) {
+    if($('.review-status.todo[id*="-status"],.review-status.attention[id*="-status"]').length) {
+      approveAllButton.show();
+    } else {
+      approveAllButton.hide();
+    }
+  }
+}
