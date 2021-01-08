@@ -36,7 +36,7 @@ invenio-userprofiles==1.0.0a9
 Jinja2==2.10.1
 jsmin==2.2.1
 jsonresolver==0.2.1         # Indirect via invenio-records ('Werkzeug' problem)
-lxml==4.4.2
+lxml==4.6.2
 msgpack==0.6.2
 psycopg2-binary==2.8.4
 python-dateutil==2.8.1
