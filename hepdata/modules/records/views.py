@@ -356,9 +356,8 @@ def set_data_review_status():
         for data_id in data_ids:
             record_sql = DataReview.query.filter_by(data_recid=data_id,
                                                     version=version)
-            try:
-                record = record_sql.first()
-            except NoResultFound:
+            record = record_sql.first()
+            if not record:
                 record = create_data_review(data_id, recid, version)
 
             record_sql.update({"status": status}, synchronize_session='fetch')
