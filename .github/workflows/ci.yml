@@ -137,6 +137,7 @@ jobs:
     - name: Run coveralls
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        COVERALLS_SERVICE_NAME: github
       run: |
         coveralls
 
