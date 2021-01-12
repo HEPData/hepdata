@@ -16,12 +16,13 @@
                     <div class="container-fluid" id="approve-all-container">
                         <div class="row-fluid">
                             <div class="col-md-12">
-                                <p>Are you sure you want to approve all tables? Please confirm that you have previously reviewed each table in the submission.</p>
-                                <div id="confirmWarning" class="alert alert-danger" style="display:none">Please confirm you have reviewed all tables.</div>
+                                <p>Are you sure you want to approve all tables?</p>
+                                <p>Please confirm that you have checked each table.</p>
+                                <div id="confirmWarning" class="alert alert-danger" style="display:none">Please confirm you have checked all tables.</div>
                                 <p>
                                   <input type="checkbox" id="confirmApproveAll" name="confirmApproveAll">
                                   <label for="confirmApproveAll">
-                                    I confirm that I have reviewed all {{ ctx.data_tables|length }} tables in this submission.
+                                    I confirm that I have checked all {{ ctx.data_tables|length }} tables in this submission.
                                   </label>
                                 </p>
                                 <div align="center">
