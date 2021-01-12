@@ -43,7 +43,9 @@ from hepdata.modules.records.utils.data_processing_utils import generate_table_s
 from hepdata.modules.records.utils.data_files import get_data_path_for_record
 from hepdata.modules.records.utils.users import get_coordinators_in_system, has_role
 from hepdata.modules.records.utils.workflow import update_record, create_record
-from hepdata.modules.submission.models import HEPSubmission
+from hepdata.modules.records.views import set_data_review_status
+from hepdata.modules.submission.models import HEPSubmission, DataReview, \
+    DataSubmission
 from hepdata.modules.submission.views import process_submission_payload
 from hepdata.modules.submission.api import get_latest_hepsubmission
 from tests.conftest import TEST_EMAIL
@@ -442,3 +444,65 @@ def test_update_record_info(app):
             assert update_record_info(inspire_id) == 'No update needed'  # check case where information already current
 
         unload_submission(submission.publication_recid)
+
+
+def test_set_review_status(app, load_default_data):
+    """Test we can set review status on one or all data records"""
+    # Set the status of a default record to "todo" so we can modify table
+    # review status
+    hepsubmission = get_latest_hepsubmission(publication_recid=1)
+    hepsubmission.overall_status = "todo"
+    db.session.add(hepsubmission)
+    db.session.commit()
+
+    data_reviews = DataReview.query.filter_by(publication_recid=1).all()
+    assert(len(data_reviews) == 0)
+
+    # Get data records
+    data_submissions = DataSubmission.query.filter_by(
+        publication_recid=hepsubmission.publication_recid).order_by(
+        DataSubmission.id.asc()).all()
+    assert(len(data_submissions) == 14)
+
+    # Log in
+    user = User.query.first()
+
+    # Try setting a single data submission to "attention"
+    params = {
+        'publication_recid': 1,
+        'status': 'attention',
+        'version': 1,
+        'data_recid': data_submissions[1].id
+    }
+
+    with app.test_request_context('/data/review/status/', data=params):
+        login_user(user)
+        result = set_data_review_status()
+        assert(result.json == {'recid': 1,
+                               'data_id': data_submissions[1].id,
+                               'status': 'attention'})
+        data_reviews = DataReview.query.filter_by(publication_recid=1).all()
+        assert(len(data_reviews) == 1)
+        assert(data_reviews[0].publication_recid == 1)
+        assert(data_reviews[0].data_recid == data_submissions[1].id)
+        assert(data_reviews[0].status == 'attention')
+
+    # Now try setting all data submissions to "passed"
+    params = {
+        'publication_recid': 1,
+        'status': 'passed',
+        'version': 1,
+        'all_tables': True
+    }
+
+    with app.test_request_context('/data/review/status/', data=params):
+        login_user(user)
+        result = set_data_review_status()
+        assert(result.json == {'recid': 1, 'success': True})
+        data_reviews = DataReview.query.filter_by(publication_recid=1) \
+            .order_by(DataReview.data_recid.asc()).all()
+        assert(len(data_reviews) == 14)
+        for i, data_review in enumerate(data_reviews):
+            assert(data_review.publication_recid == 1)
+            assert(data_review.data_recid == data_submissions[i].id)
+            assert(data_review.status == 'passed')

@@ -342,28 +342,39 @@ def get_coordinator_view(recid):
 @login_required
 def set_data_review_status():
     recid = int(request.form['publication_recid'])
-    data_id = int(request.form['data_recid'])
     status = request.form['status']
     version = int(request.form['version'])
+    all_tables = request.form.get('all_tables')
 
     if user_allowed_to_perform_action(recid):
+        if all_tables:
+            data_ids = db.session.query(DataSubmission.id) \
+                .filter_by(publication_recid=recid, version=version).distinct()
+        else:
+            data_ids = [int(request.form['data_recid'])]
 
-        record_sql = DataReview.query.filter_by(data_recid=data_id,
-                                                version=version)
-        try:
+        for data_id in data_ids:
+            record_sql = DataReview.query.filter_by(data_recid=data_id,
+                                                    version=version)
             record = record_sql.first()
-        except NoResultFound:
-            record = create_data_review(data_id, recid, version)
+            if not record:
+                record = create_data_review(data_id, recid, version)
 
-        record_sql.update({"status": status}, synchronize_session='fetch')
+            record_sql.update({"status": status}, synchronize_session='fetch')
+
         try:
             db.session.commit()
+            success = True
         except Exception:
             db.session.rollback()
+            success = False
 
-        return jsonify(
-            {"recid": record.publication_recid, "data_id": record.data_recid,
-             "status": record.status})
+        if all_tables:
+            return jsonify({"recid": recid, "success": success})
+        else:
+            return jsonify(
+                {"recid": record.publication_recid, "data_id": record.data_recid,
+                 "status": record.status})
 
     return jsonify(
         {"recid": recid, "data_id": data_id, 'message': 'You are not authorised to update the review status for '

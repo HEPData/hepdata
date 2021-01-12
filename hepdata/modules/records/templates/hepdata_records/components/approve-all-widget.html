@@ -1,0 +1,70 @@
+<!-- Modal -->
+{% if (ctx.show_review_widget or ctx.is_submission_coordinator_or_admin) and ctx.status != 'finished' and ctx.version >= ctx.version_count %}
+    <div class="modal fade" id="approveAllTables" tabindex="-1" role="dialog"
+         aria-labelledby="codeDialog" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"
+                            aria-label="Close"><span
+                            aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="codeDialogLabel">
+                        Approve All Tables</h4>
+                </div>
+
+                <div class="modal-body">
+                    <div class="container-fluid" id="approve-all-container">
+                        <div class="row-fluid">
+                            <div class="col-md-12">
+                                <p>Are you sure you want to approve all tables?</p>
+                                <p>Please confirm that you have checked each table.</p>
+                                <div id="confirmWarning" class="alert alert-danger" style="display:none">Please confirm you have checked all tables.</div>
+                                <p>
+                                  <input type="checkbox" id="confirmApproveAll" name="confirmApproveAll">
+                                  <label for="confirmApproveAll">
+                                    I confirm that I have checked all {{ ctx.data_tables|length }} tables in this submission.
+                                  </label>
+                                </p>
+                                <div align="center">
+                                    <button type="submit" class="btn btn-info btn-md" onclick="approve_all()">
+                                        Approve All Tables
+                                    </button>
+                                    <button type="button" class="btn" data-dismiss="modal"
+                                            aria-label="Close"><span
+                                            aria-hidden="true">Cancel</span></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+          HEPDATA.toggleApproveAllButton();
+        });
+        var approve_all = function () {
+          if ($('#confirmApproveAll').is(':checked')) {
+            $("#approve-all-container .col-md-12").html('<div align="center"/>')
+            HEPDATA.render_loader(
+              "#approve-all-container .col-md-12 div",
+              [
+                {x: 26, y: 30, color: "#955BA5"},
+                {x: -60, y: 55, color: "#2C3E50"},
+                {x: 37, y: -10, color: "#955BA5"},
+                {x: -60, y: 10, color: "#955BA5"},
+                {x: -27, y: -30, color: "#955BA5"},
+                {x: 60, y: -55, color: "#2C3E50"}
+              ],
+              {"width": 100, "height": 100}
+            );
+            $("#approve-all-container .col-md-12 div").append("<p>Approving all tables...</p>");
+            HEPDATA.set_review_status('passed', all_tables=true);
+          } else {
+            $('#confirmWarning').show();
+          }
+        }
+    </script>
+{% endif %}
