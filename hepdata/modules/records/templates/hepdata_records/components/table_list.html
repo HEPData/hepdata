@@ -26,7 +26,7 @@
             </button>
         {% endif %}
 
-        {% if ctx.status == 'finished' and (ctx.is_submission_coordinator_or_admin or ctx.show_upload_widget) %}
+        {% if ctx.status == 'finished' and (ctx.is_submission_coordinator_or_admin or ctx.show_upload_widget) and ctx.version >= ctx.version_count%}
             <button type="button" class="btn btn-danger btn-md" data-toggle="modal" style="width: 100%"
                     data-target="#uploadDialog"><span
                     class="fa fa-upload"></span> Revise Submission
