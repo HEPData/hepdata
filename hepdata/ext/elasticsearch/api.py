@@ -497,3 +497,12 @@ def get_count_for_collection(doc_type, index=None):
     :return: the number of records in that collection
     """
     return es.count(index=index, q='doc_type:'+doc_type)
+
+
+@default_index
+def get_all_ids(index=None):
+    search = Search(using=es, index=index) \
+        .filter("term", doc_type=CFG_PUB_TYPE) \
+        .source(fields=['inspire_id'])
+
+    return [int(h.inspire_id) for h in search.scan()]

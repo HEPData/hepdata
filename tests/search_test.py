@@ -388,3 +388,7 @@ def test_get_record(app, load_default_data, identifiers):
         assert (record[key] == identifiers[0][key])
 
     assert(es_api.get_record(9999999) is None)
+
+
+def test_get_all_ids(app, load_default_data, identifiers):
+    assert(sorted(es_api.get_all_ids()) == sorted([x["inspire_id"] for x in identifiers]))

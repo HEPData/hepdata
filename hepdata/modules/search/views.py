@@ -24,7 +24,7 @@ import sys
 from flask import Blueprint, request, render_template, jsonify
 from hepdata.config import CFG_DATA_KEYWORDS
 from hepdata.ext.elasticsearch.api import search as es_search, \
-    search_authors as es_search_authors
+    search_authors as es_search_authors, get_all_ids
 from hepdata.modules.records.utils.common import decode_string
 from hepdata.utils.session import get_session_item, set_session_item
 from hepdata.utils.url import modify_query
@@ -275,3 +275,8 @@ def search():
         ctx['modify_query'] = modify_query
 
         return render_template('hepdata_search/search_results.html', ctx=ctx)
+
+
+@blueprint.route('/allids', methods=['GET', 'POST'])
+def all_ids():
+    return jsonify(get_all_ids())
