@@ -277,8 +277,14 @@ def search():
         return render_template('hepdata_search/search_results.html', ctx=ctx)
 
 
-@blueprint.route('/allids', methods=['GET', 'POST'])
+@blueprint.route('/ids', methods=['GET', 'POST'])
 def all_ids():
+    """
+    Get IDs for all records (since a given date) as a JSON list.
+    Accepts query parameters:
+        inspire_ids: if set, return inspire IDs rather than HEPData record IDs
+        last_updated: return IDs updated since given date (in format YYYY-mm-dd)
+    """
     id_field = 'recid'
     if request.args.get('inspire_ids'):
         id_field = 'inspire_id'
