@@ -17,10 +17,10 @@
 # 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
 #
 """HEPData Search Views."""
-
+import datetime
 import json
-
 import sys
+
 from flask import Blueprint, request, render_template, jsonify
 from hepdata.config import CFG_DATA_KEYWORDS
 from hepdata.ext.elasticsearch.api import search as es_search, \
@@ -283,4 +283,17 @@ def all_ids():
     if request.args.get('inspire_ids'):
         id_field = 'inspire_id'
 
-    return jsonify(get_all_ids(id_field=id_field))
+    last_updated = None
+    last_updated_str = request.args.get('last_updated')
+    if last_updated_str:
+        try:
+            last_updated = datetime.datetime.strptime(last_updated_str,
+                                                      '%Y-%m-%d')
+        except ValueError:
+            return jsonify({
+                "error": "Unable to parse date from last_updated value %s. "
+                         "last_updated should be in format YYYY-mm-dd"
+                         % last_updated_str
+            }), 400
+
+    return jsonify(get_all_ids(id_field=id_field, last_updated=last_updated))

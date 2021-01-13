@@ -500,7 +500,7 @@ def get_count_for_collection(doc_type, index=None):
 
 
 @default_index
-def get_all_ids(index=None, id_field='recid'):
+def get_all_ids(index=None, id_field='recid', last_updated=None):
     """Get all record or inspire ids of publications in the search index
 
     :param index: name of index to use.
@@ -513,5 +513,8 @@ def get_all_ids(index=None, id_field='recid'):
     search = Search(using=es, index=index) \
         .filter("term", doc_type=CFG_PUB_TYPE) \
         .source(fields=[id_field])
+
+    if last_updated:
+        search = search.filter("range", **{'last_updated': {'gte': last_updated.isoformat()}})
 
     return [int(h[id_field]) for h in search.scan()]
