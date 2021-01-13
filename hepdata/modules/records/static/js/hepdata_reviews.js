@@ -3,7 +3,7 @@
  */
 
 
-HEPDATA.set_review_status = function (status, set_all_tables=false, onSuccess=null, onError=null) {
+HEPDATA.set_review_status = function (status, set_all_tables) {
   var data = {
     "publication_recid": HEPDATA.current_record_id,
     "status": status,
