@@ -391,4 +391,8 @@ def test_get_record(app, load_default_data, identifiers):
 
 
 def test_get_all_ids(app, load_default_data, identifiers):
-    assert(sorted(es_api.get_all_ids()) == sorted([x["inspire_id"] for x in identifiers]))
+    assert(sorted(es_api.get_all_ids()) == [1, 16])
+    assert(sorted(es_api.get_all_ids(id_field='recid')) == [1, 16])
+    assert(sorted(es_api.get_all_ids(id_field='inspire_id')) == sorted([x["inspire_id"] for x in identifiers]))
+    with pytest.raises(ValueError):
+        es_api.get_all_ids(id_field='authors')

@@ -500,9 +500,18 @@ def get_count_for_collection(doc_type, index=None):
 
 
 @default_index
-def get_all_ids(index=None):
+def get_all_ids(index=None, id_field='recid'):
+    """Get all record or inspire ids of publications in the search index
+
+    :param index: name of index to use.
+    :param id_field: elasticsearch field to return. Should be 'recid' or 'inspire_id'
+    :return: list of integer ids
+    """
+    if id_field not in ('recid', 'inspire_id'):
+        raise ValueError('Invalid ID field %s' % id_field)
+
     search = Search(using=es, index=index) \
         .filter("term", doc_type=CFG_PUB_TYPE) \
-        .source(fields=['inspire_id'])
+        .source(fields=[id_field])
 
-    return [int(h.inspire_id) for h in search.scan()]
+    return [int(h[id_field]) for h in search.scan()]

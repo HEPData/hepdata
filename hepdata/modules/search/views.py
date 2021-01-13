@@ -279,4 +279,8 @@ def search():
 
 @blueprint.route('/allids', methods=['GET', 'POST'])
 def all_ids():
-    return jsonify(get_all_ids())
+    id_field = 'recid'
+    if request.args.get('inspire_ids'):
+        id_field = 'inspire_id'
+
+    return jsonify(get_all_ids(id_field=id_field))
