@@ -220,31 +220,28 @@ def import_records(inspireids, recreate_index, base_url, update_existing):
 
 @importer.command()
 @with_appcontext
-@click.option('--start', '-s', type=int, default=None,
-              help='The start page from the total set of records.')
-@click.option('--end', '-e', default=None, type=int,
-              help='The end page from the total set of records.')
+@click.option('--date', '-d', type=click.DateTime(formats=['%Y-%m-%d']), default=None,
+              help='Filter all records modified since some point in time, '
+              'e.g. 2016-07-05 for the 5th July 2016.')
 @click.option('--update-existing', '-u', default=False, type=bool,
               help='Whether to update records which already exist'
               '(defaults to False)')
 @click.option('--base-url', '-b', default="https://hepdata.net", type=str,
               help='Base URL from which to get data (defaults to '
               'https://hepdata.net)')
-# @click.option('--date', '-d', type=str, default=None,
-#               help='Filter all records modified since some point in time, e.g. 20160705 for the 5th July 2016.')
-def bulk_import_records(start, end, base_url, update_existing):
+def bulk_import_records(base_url, update_existing, date):
     """
     Populate the DB with records from HEPData.net (or another instance as
     specified by base_url)
 
-    Usage: ``hepdata importer bulk-import-records -s 1 -e 2``
+    Usage: ``hepdata importer bulk-import-records -u -d 2020-01-01``
     """
-    inspire_ids = importer_api.get_inspire_ids(start, end)
-
-    print("Found {} inspire ids to load.".format(len(inspire_ids)))
-    importer_api.import_records(inspire_ids, synchronous=False,
-                                update_existing=update_existing,
-                                base_url=base_url)
+    inspire_ids = importer_api.get_inspire_ids(base_url=base_url, last_updated=date)
+    if inspire_ids is not False:
+        print("Found {} inspire ids to load.".format(len(inspire_ids)))
+        importer_api.import_records(inspire_ids, synchronous=False,
+                                    update_existing=update_existing,
+                                    base_url=base_url)
 
 
 @cli.group()

@@ -22,6 +22,7 @@
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
+from http.client import responses
 import logging
 import os
 import re
@@ -70,25 +71,30 @@ def import_records(inspire_ids, synchronous=True, update_existing=False,
             log.error("Failed to load {0}. {1} ".format(inspire_id, e))
 
 
-def get_inspire_ids(start_page=0, end_page=10, base_url='https://hepdata.net'):
-    # TODO: filter by date
-    inspire_ids = []
-    for page in range(start_page, end_page):
-        url = base_url + '/search/?format=json&page=' + str(page)
-        try:
-            response = requests.get(url)
-            if not response.ok:
-                log.error('Unable to retrieve data from {0}. Aborting.'.format(url))
-                return False
-        except socket.error as se:
-            log.error("Socket error: %s" % se)
+def get_inspire_ids(base_url='https://hepdata.net', last_updated=None):
+    url = base_url + '/search/ids?inspire_ids=true'
+    if last_updated:
+        url += '&last_updated=' + last_updated.strftime('%Y-%m-%d')
+
+    try:
+        response = requests.get(url)
+        if not response.ok:
+            log.error('Unable to retrieve data from {0}: {1} {2}'.format(
+                url, response.status_code, responses.get(response.status_code)
+                ))
+            log.error('Aborting.')
             return False
+    except socket.error as se:
+        log.error('Unable to retrieve data from {0}: '.format(url))
+        log.error("Socket error: {0}.".format(se))
+        log.error("Aborting.")
+        return False
 
-        results = response.json()
-        for result in results['results']:
-            inspire_ids.append(result['inspire_id'])
-
-    return inspire_ids
+    inspire_ids = response.json()
+    try:
+        return([str(x) for x in inspire_ids])
+    except TypeError:
+        log.error('Unexpected response from {0}: {1}'.format(url, inspire_ids))
 
 
 @shared_task
