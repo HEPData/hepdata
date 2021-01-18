@@ -24,8 +24,9 @@ import sys
 from flask import Blueprint, request, render_template, jsonify
 from hepdata.config import CFG_DATA_KEYWORDS
 from hepdata.ext.elasticsearch.api import search as es_search, \
-    search_authors as es_search_authors, get_all_ids
+    search_authors as es_search_authors, get_all_ids as es_get_all_ids
 from hepdata.modules.records.utils.common import decode_string
+from hepdata.modules.records.api import get_all_ids as db_get_all_ids
 from hepdata.utils.session import get_session_item, set_session_item
 from hepdata.utils.url import modify_query
 from .config import HEPDATA_CFG_MAX_RESULTS_PER_PAGE, HEPDATA_CFG_FACETS
@@ -277,7 +278,7 @@ def search():
         return render_template('hepdata_search/search_results.html', ctx=ctx)
 
 
-@blueprint.route('/ids', methods=['GET', 'POST'])
+@blueprint.route('/ids', methods=['GET'])
 def all_ids():
     """
     Get IDs for all records (since a given date) as a JSON list.
@@ -286,8 +287,10 @@ def all_ids():
         last_updated: return IDs updated since given date (in format YYYY-mm-dd)
     """
     id_field = 'recid'
-    if request.args.get('inspire_ids'):
+    if _get_bool_parameter(request, 'inspire_ids'):
         id_field = 'inspire_id'
+
+    sort_latest_first = request.args.get('sort_by') == 'latest'
 
     last_updated = None
     last_updated_str = request.args.get('last_updated')
@@ -302,4 +305,19 @@ def all_ids():
                          % last_updated_str
             }), 400
 
-    return jsonify(get_all_ids(id_field=id_field, last_updated=last_updated))
+    try:
+        if _get_bool_parameter(request, 'use_es'):
+            ids = es_get_all_ids(id_field=id_field, last_updated=last_updated, latest_first=sort_latest_first)
+        else:
+            ids = db_get_all_ids(id_field=id_field, last_updated=last_updated, latest_first=sort_latest_first)
+    except ValueError as e:
+        return jsonify({
+            "error": "Error getting ids: %s" % e
+        }), 400
+
+    return jsonify([x for x in ids])
+
+
+def _get_bool_parameter(request, name):
+    string_value = request.args.get(name, '').lower()
+    return string_value and string_value.lower() not in ['false', 'f']
