@@ -34,9 +34,10 @@ import datetime
 from flask_login import login_user
 from invenio_accounts.models import User
 from invenio_db import db
+import pytest
 from werkzeug.datastructures import FileStorage
 
-from hepdata.modules.records.api import process_payload, process_zip_archive, move_files
+from hepdata.modules.records.api import process_payload, process_zip_archive, move_files, get_all_ids
 from hepdata.modules.records.utils.submission import get_or_create_hepsubmission, process_submission_directory, do_finalise, unload_submission
 from hepdata.modules.records.utils.common import get_record_by_id, get_record_contents
 from hepdata.modules.records.utils.data_processing_utils import generate_table_structure
@@ -506,3 +507,31 @@ def test_set_review_status(app, load_default_data):
             assert(data_review.publication_recid == 1)
             assert(data_review.data_recid == data_submissions[i].id)
             assert(data_review.status == 'passed')
+
+
+def test_get_all_ids(app, load_default_data, identifiers):
+    expected_record_ids = [1, 16]
+    # Order is not guaranteed unless we use latest_first,
+    # so sort the results before checking
+    assert(sorted(get_all_ids()) == expected_record_ids)
+
+    # Check id_field works
+    assert(sorted(get_all_ids(id_field='recid')) == expected_record_ids)
+    assert(sorted(get_all_ids(id_field='inspire_id'))
+           == sorted([x["inspire_id"] for x in identifiers]))
+    with pytest.raises(ValueError):
+        get_all_ids(id_field='authors')
+
+    # Check last_updated works
+    # Default records were last updated on 2016-07-13 and 2013-12-17
+    date_2013_1 = datetime.datetime(year=2013, month=12, day=16)
+    assert(sorted(get_all_ids(last_updated=date_2013_1)) == expected_record_ids)
+    date_2013_2 = datetime.datetime(year=2013, month=12, day=17)
+    assert(sorted(get_all_ids(last_updated=date_2013_2)) == expected_record_ids)
+    date_2013_3 = datetime.datetime(year=2013, month=12, day=18)
+    assert(get_all_ids(last_updated=date_2013_3) == [1])
+    date_2020 = datetime.datetime(year=2020, month=1, day=1)
+    assert(get_all_ids(last_updated=date_2020) == [])
+
+    # Check sort by latest works
+    assert(get_all_ids(latest_first=True) == expected_record_ids)

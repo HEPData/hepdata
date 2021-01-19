@@ -393,11 +393,14 @@ def test_get_record(app, load_default_data, identifiers):
 
 def test_get_all_ids(app, load_default_data, identifiers):
     expected_record_ids = [1, 16]
+    # Order is not guaranteed by ES unless we use latest_first,
+    # so sort the results before checking
     assert(sorted(es_api.get_all_ids()) == expected_record_ids)
 
     # Check id_field works
     assert(sorted(es_api.get_all_ids(id_field='recid')) == expected_record_ids)
-    assert(sorted(es_api.get_all_ids(id_field='inspire_id')) == sorted([x["inspire_id"] for x in identifiers]))
+    assert(sorted(es_api.get_all_ids(id_field='inspire_id'))
+           == sorted([x["inspire_id"] for x in identifiers]))
     with pytest.raises(ValueError):
         es_api.get_all_ids(id_field='authors')
 
@@ -411,3 +414,6 @@ def test_get_all_ids(app, load_default_data, identifiers):
     assert(es_api.get_all_ids(last_updated=date_2013_3) == [1])
     date_2020 = datetime.datetime(year=2020, month=1, day=1)
     assert(es_api.get_all_ids(last_updated=date_2020) == [])
+
+    # Check sort by latest works - first record is newer than previous
+    assert(es_api.get_all_ids(latest_first=True) == expected_record_ids)
