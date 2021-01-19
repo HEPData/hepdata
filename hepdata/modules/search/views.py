@@ -281,10 +281,14 @@ def search():
 @blueprint.route('/ids', methods=['GET'])
 def all_ids():
     """
-    Get IDs for all records (since a given date) as a JSON list.
+    Get IDs for all records (since a given date) as a JSON list of integers.
+
     Accepts query parameters:
-        inspire_ids: if set, return inspire IDs rather than HEPData record IDs
-        last_updated: return IDs updated since given date (in format YYYY-mm-dd)
+
+    - ``inspire_ids``: if set to a truthy value, return inspire IDs rather than HEPData record IDs
+    - ``last_updated``: return IDs updated since given date (in format YYYY-mm-dd)
+    - ``sort_by``: if set to ``latest``, sort the results latest first
+    - ``use_es``: if set to a truthy values, use ElasticSearch rather than the database to return the ids
     """
     id_field = 'recid'
     if _get_bool_parameter(request, 'inspire_ids'):
