@@ -37,8 +37,6 @@ def convert_and_store(inspire_id, file_format, force):
     :param file_format:
     :param force:
     :return:
-    - this is a broken list
-    Because here is some text immediately below it
     """
     submission = get_latest_hepsubmission(inspire_id=inspire_id)
     if submission:
