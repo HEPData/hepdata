@@ -140,6 +140,9 @@ jobs:
         COVERALLS_SERVICE_NAME: github
       run: |
         coveralls
+    - name: Build docs
+      run: |
+        cd docs && make html SPHINXOPTS="-W"
 
   deploy:
     needs: test
