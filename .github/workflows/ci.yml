@@ -142,6 +142,7 @@ jobs:
         coveralls
     - name: Build docs
       run: |
+        python -m pip install -e .[docs]
         cd docs && make html SPHINXOPTS="-W"
 
   deploy:
