@@ -19,7 +19,7 @@
 
         {% endif %}
 
-        {% if (ctx.show_review_widget or ctx.is_submission_coordinator_or_admin) and ctx.status != 'finished' and ctx.version >= ctx.version_count %}
+        {% if ctx.mode != 'sandbox' and (ctx.show_review_widget or ctx.is_submission_coordinator_or_admin) and ctx.status != 'finished' and ctx.version >= ctx.version_count %}
             <button type="button" class="btn btn-danger btn-md" data-toggle="modal" style="width: 100%"
                     id="approve-all-btn" data-target="#approveAllTables"><span
                     class="fa fa-check-circle"></span> Approve All Tables
