@@ -39,7 +39,7 @@ from invenio_db import db
 
 from hepdata.modules.dashboard.views import do_finalise
 from hepdata.modules.records.api import process_zip_archive
-from hepdata.modules.records.migrator.api import Migrator
+from hepdata.modules.inspire_api.views import get_inspire_record_information
 from hepdata.modules.records.utils.common import remove_file_extension
 from hepdata.modules.records.utils.data_files import get_data_path_for_record
 from hepdata.modules.records.utils.submission import get_or_create_hepsubmission
@@ -63,16 +63,23 @@ def import_records(inspire_ids, synchronous=False, update_existing=False,
     for index, inspire_id in enumerate(inspire_ids):
         _cleaned_id = str(inspire_id).replace("ins", "")
         if synchronous:
-            import_record(_cleaned_id, update_existing=update_existing,
+            _import_record(_cleaned_id, update_existing=update_existing,
                           base_url=base_url)
         else:
             log.info("Sending import_record task to celery for id %s"
                      % _cleaned_id)
-            import_record.delay(_cleaned_id, update_existing=update_existing,
+            _import_record.delay(_cleaned_id, update_existing=update_existing,
                                 base_url=base_url)
 
 
 def get_inspire_ids(base_url='https://hepdata.net', last_updated=None, n_latest=None):
+    """
+    Get inspire IDs from hepdata.net
+    :param last_updated: get IDs of records updated on/after this date
+    :param n_latest: get the n most recently updated IDs
+    :param base_url: override default base URL
+    :return: list of integer IDs, or False in the case of errors
+    """
     url = base_url + '/search/ids?inspire_ids=true'
     if last_updated:
         url += '&last_updated=' + last_updated.strftime('%Y-%m-%d')
@@ -109,10 +116,8 @@ def get_inspire_ids(base_url='https://hepdata.net', last_updated=None, n_latest=
 
 
 @shared_task
-def import_record(inspire_id, update_existing=False, base_url='https://hepdata.net'):
-    migrator = Migrator(base_url)
-
-    publication_information, status = migrator.retrieve_publication_information(inspire_id)
+def _import_record(inspire_id, update_existing=False, base_url='https://hepdata.net'):
+    publication_information, status = get_inspire_record_information(inspire_id)
     if status != "success":
         log.error("Failed to retrieve publication information for " + inspire_id)
         return False
