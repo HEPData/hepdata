@@ -229,14 +229,20 @@ def import_records(inspireids, recreate_index, base_url, update_existing):
 @click.option('--base-url', '-b', default="https://hepdata.net", type=str,
               help='Base URL from which to get data (defaults to '
               'https://hepdata.net)')
-def bulk_import_records(base_url, update_existing, date):
+@click.option('--n-latest', '-n', default=None, type=int,
+              help='Get only the n most recently updated records')
+def bulk_import_records(base_url, update_existing, date, n_latest):
     """
     Populate the DB with records from HEPData.net (or another instance as
     specified by base_url)
 
     Usage: ``hepdata importer bulk-import-records -u -d 2020-01-01``
     """
-    inspire_ids = importer_api.get_inspire_ids(base_url=base_url, last_updated=date)
+    inspire_ids = importer_api.get_inspire_ids(
+        base_url=base_url,
+        last_updated=date,
+        n_latest=n_latest
+    )
     if inspire_ids is not False:
         print("Found {} inspire ids to load.".format(len(inspire_ids)))
         importer_api.import_records(inspire_ids, synchronous=False,

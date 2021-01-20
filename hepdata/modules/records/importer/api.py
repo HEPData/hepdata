@@ -49,7 +49,7 @@ logging.basicConfig()
 log = logging.getLogger(__name__)
 
 
-def import_records(inspire_ids, synchronous=True, update_existing=False,
+def import_records(inspire_ids, synchronous=False, update_existing=False,
                    base_url='https://hepdata.net'):
     """
     Import records from hepdata.net
@@ -71,10 +71,13 @@ def import_records(inspire_ids, synchronous=True, update_existing=False,
             log.error("Failed to load {0}. {1} ".format(inspire_id, e))
 
 
-def get_inspire_ids(base_url='https://hepdata.net', last_updated=None):
+def get_inspire_ids(base_url='https://hepdata.net', last_updated=None, n_latest=None):
     url = base_url + '/search/ids?inspire_ids=true'
     if last_updated:
         url += '&last_updated=' + last_updated.strftime('%Y-%m-%d')
+
+    if n_latest > 0:
+        url += '&sort_by=latest'
 
     try:
         response = requests.get(url)
@@ -92,6 +95,8 @@ def get_inspire_ids(base_url='https://hepdata.net', last_updated=None):
 
     inspire_ids = response.json()
     try:
+        if n_latest:
+            inspire_ids = inspire_ids[:n_latest]
         return([str(x) for x in inspire_ids])
     except TypeError:
         log.error('Unexpected response from {0}: {1}'.format(url, inspire_ids))
