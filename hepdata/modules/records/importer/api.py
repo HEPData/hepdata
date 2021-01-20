@@ -23,6 +23,7 @@
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
 from http.client import responses
+import json
 import logging
 import os
 import re
@@ -60,12 +61,13 @@ def import_records(inspire_ids, synchronous=False, update_existing=False,
     :return: None
     """
     for index, inspire_id in enumerate(inspire_ids):
-        _cleaned_id = inspire_id.replace("ins", "")
+        _cleaned_id = str(inspire_id).replace("ins", "")
         if synchronous:
             import_record(_cleaned_id, update_existing=update_existing,
-                              base_url=base_url)
+                          base_url=base_url)
         else:
-            log.info("Sending import_record task to celery for id %s" %_cleaned_id)
+            log.info("Sending import_record task to celery for id %s"
+                     % _cleaned_id)
             import_record.delay(_cleaned_id, update_existing=update_existing,
                                 base_url=base_url)
 
@@ -75,7 +77,7 @@ def get_inspire_ids(base_url='https://hepdata.net', last_updated=None, n_latest=
     if last_updated:
         url += '&last_updated=' + last_updated.strftime('%Y-%m-%d')
 
-    if n_latest > 0:
+    if n_latest and n_latest > 0:
         url += '&sort_by=latest'
 
     try:
@@ -92,13 +94,18 @@ def get_inspire_ids(base_url='https://hepdata.net', last_updated=None, n_latest=
         log.error("Aborting.")
         return False
 
-    inspire_ids = response.json()
     try:
+        inspire_ids = response.json()
         if n_latest:
             inspire_ids = inspire_ids[:n_latest]
-        return([str(x) for x in inspire_ids])
+        return([x for x in inspire_ids])
+    except json.decoder.JSONDecodeError:
+        log.error('Unexpected response from {0}: {1}'
+                  .format(url, response.text))
+        return False
     except TypeError:
         log.error('Unexpected response from {0}: {1}'.format(url, inspire_ids))
+        return False
 
 
 @shared_task
