@@ -377,8 +377,9 @@ def set_data_review_status():
                  "status": record.status})
 
     return jsonify(
-        {"recid": recid, "data_id": data_id, 'message': 'You are not authorised to update the review status for '
-                                                        'this data record.'})
+        {"recid": recid,
+         'message': 'You are not authorised to update the review status for '
+                    'this data record.'})
 
 
 @blueprint.route('/data/review/', methods=['GET', ])
