@@ -180,7 +180,7 @@ HEPDATA.table_renderer = {
   },
 
   update_reviewer_button: function (review_info) {
-    HEPDATA.set_review_status(review_info.review_flag);
+    HEPDATA.update_review_statuses(review_info.review_flag);
   },
 
   clean_data: function (value, remove_qualifier_uniqueness_attr) {
