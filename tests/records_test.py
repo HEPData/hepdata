@@ -513,12 +513,12 @@ def test_get_all_ids(app, load_default_data, identifiers):
     expected_record_ids = [1, 16]
     # Order is not guaranteed unless we use latest_first,
     # so sort the results before checking
-    assert(sorted(get_all_ids()) == expected_record_ids)
+    assert(get_all_ids() == expected_record_ids)
 
     # Check id_field works
-    assert(sorted(get_all_ids(id_field='recid')) == expected_record_ids)
-    assert(sorted(get_all_ids(id_field='inspire_id'))
-           == sorted([x["inspire_id"] for x in identifiers]))
+    assert(get_all_ids(id_field='recid') == expected_record_ids)
+    assert(get_all_ids(id_field='inspire_id')
+           == [x["inspire_id"] for x in identifiers])
     with pytest.raises(ValueError):
         get_all_ids(id_field='authors')
 
@@ -535,3 +535,5 @@ def test_get_all_ids(app, load_default_data, identifiers):
 
     # Check sort by latest works
     assert(get_all_ids(latest_first=True) == expected_record_ids)
+    assert(get_all_ids(id_field='inspire_id', latest_first=True)
+           == [x["inspire_id"] for x in identifiers])

@@ -518,6 +518,10 @@ def get_all_ids(index=None, id_field='recid', last_updated=None, latest_first=Fa
         search = search.filter("range", **{'last_updated': {'gte': last_updated.isoformat()}})
 
     if latest_first:
-        search = search.sort({'last_updated' : {'order' : 'desc'}}).params(preserve_order=True)
+        search = search.sort({'last_updated' : {'order' : 'desc'}})
+    else:
+        search = search.sort('recid')
 
-    return [h[id_field] for h in search.scan()]
+    search = search.params(preserve_order=True)
+
+    return [int(h[id_field]) for h in search.scan()]

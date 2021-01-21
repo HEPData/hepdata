@@ -743,7 +743,7 @@ def get_all_ids(index=None, id_field='recid', last_updated=None, latest_first=Fa
     """Get all record or inspire ids of publications in the search index
 
     :param index: name of index to use.
-    :param id_field: elasticsearch field to return. Should be 'recid' or 'inspire_id'
+    :param id_field: id type to return. Should be 'recid' or 'inspire_id'
     :return: list of integer ids
     """
     if id_field not in ('recid', 'inspire_id'):
@@ -767,8 +767,8 @@ def get_all_ids(index=None, id_field='recid', last_updated=None, latest_first=Fa
         seen = set()
         seen_add = seen.add
         return [
-            x[0] for x in query.all() if not (x[0] in seen or seen_add(x[0]))
+            int(x[0]) for x in query.all() if not (x[0] in seen or seen_add(x[0]))
         ]
     else:
-        query = query.distinct()
+        query = query.order_by(HEPSubmission.publication_recid).distinct()
         return [int(x[0]) for x in query.all()]
