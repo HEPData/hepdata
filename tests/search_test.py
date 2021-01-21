@@ -17,6 +17,7 @@
 # 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
 from elasticsearch.exceptions import NotFoundError
 from elasticsearch_dsl import Search
+import datetime
 import pytest
 
 from hepdata.ext.elasticsearch.config.es_config import default_sort_order_for_field, \
@@ -388,3 +389,31 @@ def test_get_record(app, load_default_data, identifiers):
         assert (record[key] == identifiers[0][key])
 
     assert(es_api.get_record(9999999) is None)
+
+
+def test_get_all_ids(app, load_default_data, identifiers):
+    expected_record_ids = [1, 16]
+    # Order is not guaranteed by ES unless we use latest_first,
+    # so sort the results before checking
+    assert(es_api.get_all_ids() == expected_record_ids)
+
+    # Check id_field works
+    assert(es_api.get_all_ids(id_field='recid') == expected_record_ids)
+    assert(es_api.get_all_ids(id_field='inspire_id')
+           == [x["inspire_id"] for x in identifiers])
+    with pytest.raises(ValueError):
+        es_api.get_all_ids(id_field='authors')
+
+    # Check last_updated works
+    # Default records were last updated on 2016-07-13 and 2013-12-17
+    date_2013_1 = datetime.datetime(year=2013, month=12, day=16)
+    assert(es_api.get_all_ids(last_updated=date_2013_1) == expected_record_ids)
+    date_2013_2 = datetime.datetime(year=2013, month=12, day=17)
+    assert(es_api.get_all_ids(last_updated=date_2013_2) == expected_record_ids)
+    date_2013_3 = datetime.datetime(year=2013, month=12, day=18)
+    assert(es_api.get_all_ids(last_updated=date_2013_3) == [1])
+    date_2020 = datetime.datetime(year=2020, month=1, day=1)
+    assert(es_api.get_all_ids(last_updated=date_2020) == [])
+
+    # Check sort by latest works - first record is newer than previous
+    assert(es_api.get_all_ids(latest_first=True) == expected_record_ids)

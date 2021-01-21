@@ -497,3 +497,31 @@ def get_count_for_collection(doc_type, index=None):
     :return: the number of records in that collection
     """
     return es.count(index=index, q='doc_type:'+doc_type)
+
+
+@default_index
+def get_all_ids(index=None, id_field='recid', last_updated=None, latest_first=False):
+    """Get all record or inspire ids of publications in the search index
+
+    :param index: name of index to use.
+    :param id_field: elasticsearch field to return. Should be 'recid' or 'inspire_id'
+    :return: list of integer ids
+    """
+    if id_field not in ('recid', 'inspire_id'):
+        raise ValueError('Invalid ID field %s' % id_field)
+
+    search = Search(using=es, index=index) \
+        .filter("term", doc_type=CFG_PUB_TYPE) \
+        .source(fields=[id_field])
+
+    if last_updated:
+        search = search.filter("range", **{'last_updated': {'gte': last_updated.isoformat()}})
+
+    if latest_first:
+        search = search.sort({'last_updated' : {'order' : 'desc'}})
+    else:
+        search = search.sort('recid')
+
+    search = search.params(preserve_order=True)
+
+    return [int(h[id_field]) for h in search.scan()]

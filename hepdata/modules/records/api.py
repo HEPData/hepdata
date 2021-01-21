@@ -737,3 +737,38 @@ def process_data_tables(ctx, data_record_query, first_data_id,
 
 def truncate_author_list(record, length=10):
     record['authors'] = record['authors'][:length]
+
+
+def get_all_ids(index=None, id_field='recid', last_updated=None, latest_first=False):
+    """Get all record or inspire ids of publications in the search index
+
+    :param index: name of index to use.
+    :param id_field: id type to return. Should be 'recid' or 'inspire_id'
+    :return: list of integer ids
+    """
+    if id_field not in ('recid', 'inspire_id'):
+        raise ValueError('Invalid ID field %s' % id_field)
+
+    db_col = HEPSubmission.publication_recid if id_field == 'recid' \
+        else HEPSubmission.inspire_id
+
+    # Get unique version
+    query = db.session.query(db_col) \
+        .filter(HEPSubmission.overall_status == 'finished')
+
+    if last_updated:
+        query = query.filter(HEPSubmission.last_updated >= last_updated)
+
+    if latest_first:
+        # Use a set to check for duplicates, as sorting by last_updated
+        # means distinct doesn't work (as it looks for distinct across both
+        # cols)
+        query = query.order_by(HEPSubmission.last_updated.desc())
+        seen = set()
+        seen_add = seen.add
+        return [
+            int(x[0]) for x in query.all() if not (x[0] in seen or seen_add(x[0]))
+        ]
+    else:
+        query = query.order_by(HEPSubmission.publication_recid).distinct()
+        return [int(x[0]) for x in query.all()]
