@@ -24,25 +24,7 @@ HEPDATA.set_review_status = function (status, set_all_tables) {
       success: function (data) {
         var status = data.status;
         if (status) {
-          for (var review_status in HEPDATA.review_classes) {
-            $("#reviewer-button").removeClass(review_status);
-          }
-          $("#reviewer-button").addClass(status);
-
-          $("#" + status + "-option").removeClass("deactivate");
-          $("#review-status span").each(function () {
-            if (this.id.indexOf(status) == -1)
-              $(this).addClass("deactivate");
-          });
-
-          for (var review_status in HEPDATA.review_classes) {
-            $("#" + HEPDATA.current_table_id + "-status").removeClass(review_status);
-          }
-          $("#" + HEPDATA.current_table_id + "-status").addClass(status);
-          $("#" + HEPDATA.current_table_id + "-status #icon").removeClass();
-          $("#" + HEPDATA.current_table_id + "-status #icon").addClass("fa " + HEPDATA.review_classes[status].icon);
-          $("#" + HEPDATA.current_table_id + "-status .text").text(HEPDATA.review_classes[status].text);
-          HEPDATA.toggleApproveAllButton();
+          HEPDATA.update_review_statuses(status)
         } else {
           if (data.success) {
             $("#approve-all-container .col-md-12 div p").html('All tables passed. Reloading in 1s...');
@@ -55,6 +37,28 @@ HEPDATA.set_review_status = function (status, set_all_tables) {
       }
     }
   );
+};
+
+HEPDATA.update_review_statuses = function(status) {
+  for (var review_status in HEPDATA.review_classes) {
+    $("#reviewer-button").removeClass(review_status);
+  }
+  $("#reviewer-button").addClass(status);
+
+  $("#" + status + "-option").removeClass("deactivate");
+  $("#review-status span").each(function () {
+    if (this.id.indexOf(status) == -1)
+      $(this).addClass("deactivate");
+  });
+
+  for (var review_status in HEPDATA.review_classes) {
+    $("#" + HEPDATA.current_table_id + "-status").removeClass(review_status);
+  }
+  $("#" + HEPDATA.current_table_id + "-status").addClass(status);
+  $("#" + HEPDATA.current_table_id + "-status #icon").removeClass();
+  $("#" + HEPDATA.current_table_id + "-status #icon").addClass("fa " + HEPDATA.review_classes[status].icon);
+  $("#" + HEPDATA.current_table_id + "-status .text").text(HEPDATA.review_classes[status].text);
+  HEPDATA.toggleApproveAllButton();
 };
 
 HEPDATA.load_all_review_messages = function (placement, record_id) {
