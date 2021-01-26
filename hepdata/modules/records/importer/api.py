@@ -64,12 +64,12 @@ def import_records(inspire_ids, synchronous=False, update_existing=False,
         _cleaned_id = str(inspire_id).replace("ins", "")
         if synchronous:
             _import_record(_cleaned_id, update_existing=update_existing,
-                          base_url=base_url)
+                           base_url=base_url)
         else:
             log.info("Sending import_record task to celery for id %s"
                      % _cleaned_id)
             _import_record.delay(_cleaned_id, update_existing=update_existing,
-                                base_url=base_url)
+                                 base_url=base_url)
 
 
 def get_inspire_ids(base_url='https://hepdata.net', last_updated=None, n_latest=None):
@@ -126,6 +126,7 @@ def _import_record(inspire_id, update_existing=False, base_url='https://hepdata.
 
     if not current_submission:
         log.info("The record with id {0} does not exist in the database, so we're loading it.".format(inspire_id))
+        publication_information["inspire_id"] = inspire_id
         record_information = create_record(publication_information)
         recid = record_information['recid']
     else:
@@ -139,16 +140,13 @@ def _import_record(inspire_id, update_existing=False, base_url='https://hepdata.
 
     # Download file to temp dir
     url = "{0}/download/submission/ins{1}/original".format(base_url, inspire_id)
-    # Use the next line to allow imports from HEPData.net (for records without
-    # additional resources) before PR 289 is merged/released
-    url = "{0}/download/submission/ins{1}/yaml".format(base_url, inspire_id)
     log.info("Trying URL " + url)
     try:
         response = requests.get(url)
         if not response.ok:
             log.error('Unable to retrieve download from {0}'.format(url))
             return False
-        elif not response.headers['content-type'].startswith('application/'):
+        elif not response.headers.get('content-type', '').startswith('application/'):
             log.error('Did not receive zipped file in response from {0}'.format(url))
             return False
     except socket.error as se:
@@ -208,7 +206,13 @@ def _import_record(inspire_id, update_existing=False, base_url='https://hepdata.
 
     log.info("Finalising record %s" % recid)
 
-    do_finalise(recid, force_finalise=True,
-                update=(current_submission is not None))
+    result_json = do_finalise(recid, force_finalise=True,
+                              update=(current_submission is not None))
+    result = json.loads(result_json)
 
-    log.info("Imported record %s." % recid)
+    if result and result['success']:
+        log.info("Imported record %s with %s submissions"
+                 % (recid, result['data_count']))
+        return True
+    else:
+        return False
