@@ -238,6 +238,12 @@ def bulk_import_records(base_url, update_existing, date, n_latest):
 
     Usage: ``hepdata importer bulk-import-records -u -d 2020-01-01``
     """
+    if current_app.config.get('ENV') == 'production':
+        click.confirm('You are currently running in production mode on'
+                      ' %s. Are you sure you want to import records from %s?'
+                      % (current_app.config.get('SITE_URL'), base_url),
+                      abort=True)
+
     inspire_ids = importer_api.get_inspire_ids(
         base_url=base_url,
         last_updated=date,
