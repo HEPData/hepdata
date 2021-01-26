@@ -400,7 +400,7 @@ def test_get_all_ids(app, load_default_data, identifiers):
     # Check id_field works
     assert(es_api.get_all_ids(id_field='recid') == expected_record_ids)
     assert(es_api.get_all_ids(id_field='inspire_id')
-           == [x["inspire_id"] for x in identifiers])
+           == [int(x["inspire_id"]) for x in identifiers])
     with pytest.raises(ValueError):
         es_api.get_all_ids(id_field='authors')
 
