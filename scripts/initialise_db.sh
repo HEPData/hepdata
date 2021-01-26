@@ -22,4 +22,4 @@ hepdata roles add $1 admin
 
 # now populate the database with some records. NOTE:
 # Celery needs to be running.
-hepdata migrator populate
+hepdata importer import-records
