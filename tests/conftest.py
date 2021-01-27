@@ -35,7 +35,6 @@ from hepdata.ext.elasticsearch.admin_view.api import AdminIndexer
 from hepdata.ext.elasticsearch.api import reindex_all
 from hepdata.factory import create_app
 from hepdata.modules.records.importer.api import import_records, _download_file
-from hepdata.modules.records.migrator.api import Migrator
 
 TEST_EMAIL = 'test@hepdata.net'
 TEST_PWD = 'hello1'
@@ -132,11 +131,6 @@ def import_default_data(app, identifiers):
 def client(app):
     with app.test_client() as client:
         yield client
-
-
-@pytest.fixture()
-def migrator():
-    return Migrator()
 
 
 @pytest.fixture()
