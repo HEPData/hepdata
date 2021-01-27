@@ -188,7 +188,8 @@ def _import_record(inspire_id, update_existing=False, base_url='https://hepdata.
     log.info("Finalising record %s" % recid)
 
     result_json = do_finalise(recid, force_finalise=True,
-                              update=(current_submission is not None))
+                              update=(current_submission is not None),
+                              convert=False)
     result = json.loads(result_json)
 
     if result and result['success']:
