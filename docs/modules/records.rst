@@ -11,7 +11,7 @@ contains the JavaScript code that renders the tables and plots in a web browser 
    hepdata.modules.records.api
    hepdata.modules.records.ext
    hepdata.modules.records.views
-   hepdata.modules.records.migrator.api
+   hepdata.modules.records.importer.api
    hepdata.modules.records.subscribers.api
    hepdata.modules.records.subscribers.models
    hepdata.modules.records.subscribers.rest
@@ -40,10 +40,10 @@ hepdata.modules.records.views
 
 .. automodule:: hepdata.modules.records.views
 
-hepdata.modules.records.migrator.api
+hepdata.modules.records.importer.api
 ------------------------------------
 
-.. automodule:: hepdata.modules.records.migrator.api
+.. automodule:: hepdata.modules.records.importer.api
 
 hepdata.modules.records.subscribers.api
 ---------------------------------------
