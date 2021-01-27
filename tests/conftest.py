@@ -25,6 +25,7 @@
 """HEPData Test Fixtures"""
 
 import os
+from unittest import mock
 
 from invenio_accounts.models import Role, User
 from invenio_db import db
@@ -33,7 +34,7 @@ import pytest
 from hepdata.ext.elasticsearch.admin_view.api import AdminIndexer
 from hepdata.ext.elasticsearch.api import reindex_all
 from hepdata.factory import create_app
-from hepdata.modules.records.importer.api import import_records
+from hepdata.modules.records.importer.api import import_records, _download_file
 from hepdata.modules.records.migrator.api import Migrator
 
 TEST_EMAIL = 'test@hepdata.net'
@@ -105,9 +106,26 @@ def admin_idx(app):
 
 @pytest.fixture()
 def load_default_data(app, identifiers):
+    import_default_data(app, identifiers)
+
+
+def import_default_data(app, identifiers):
     with app.app_context():
-        to_load = [x["hepdata_id"] for x in identifiers]
-        import_records(to_load, synchronous=True)
+        # Mock out the _download_file method in importer to avoid downloading the
+        # sample files multiple times during testing
+        def _test_download_file(base_url, inspire_id):
+            filename = 'HEPData-ins{0}-v1-original.zip'.format(inspire_id)
+            expected_file_name = os.path.join(app.config["CFG_TMPDIR"], filename)
+            if os.path.exists(expected_file_name):
+                print("Using existing file at %s" % expected_file_name)
+                return expected_file_name
+            else:
+                print("Reverting to normal _download_file method")
+                return _download_file(base_url, inspire_id)
+
+        with mock.patch('hepdata.modules.records.importer.api._download_file', wraps=_test_download_file):
+            to_load = [x["hepdata_id"] for x in identifiers]
+            import_records(to_load, synchronous=True)
 
 
 @pytest.fixture()

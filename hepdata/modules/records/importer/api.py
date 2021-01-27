@@ -41,7 +41,7 @@ from hepdata.modules.dashboard.views import do_finalise
 from hepdata.modules.records.api import process_zip_archive
 from hepdata.modules.inspire_api.views import get_inspire_record_information
 from hepdata.modules.records.utils.common import remove_file_extension
-from hepdata.modules.records.utils.data_files import get_data_path_for_record
+from hepdata.modules.records.utils.data_files import get_data_path_for_record, find_submission_data_file_path
 from hepdata.modules.records.utils.submission import get_or_create_hepsubmission
 from hepdata.modules.records.utils.workflow import create_record
 from hepdata.modules.submission.api import get_latest_hepsubmission
@@ -140,44 +140,23 @@ def _import_record(inspire_id, update_existing=False, base_url='https://hepdata.
             log.info("Not updating as update_existing is False")
             return False
 
-    # Download file to temp dir
-    url = "{0}/download/submission/ins{1}/original".format(base_url, inspire_id)
-    log.info("Trying URL " + url)
     try:
-        response = requests.get(url)
-        if not response.ok:
-            log.error('Unable to retrieve download from {0}'.format(url))
-            return False
-        elif not response.headers.get('content-type', '').startswith('application/'):
-            log.error('Did not receive zipped file in response from {0}'.format(url))
-            return False
-    except socket.error as se:
-        log.error("Socket error: %s" % se)
+        download_path = _download_file(base_url, inspire_id)
+    except ConnectionError as e:
+        log.error(e)
         return False
 
-    # save to tmp file
-    tmp_file = tempfile.NamedTemporaryFile(mode='wb+', suffix='.zip',
-                                           dir=current_app.config["CFG_TMPDIR"],
-                                           delete=False)
-    tmp_file.write(response.content)
-    tmp_file.close()
+    filename = os.path.basename(download_path)
 
     time_stamp = str(int(round(time.time())))
     file_save_directory = get_data_path_for_record(str(recid), time_stamp)
     if not os.path.exists(file_save_directory):
         os.makedirs(file_save_directory)
 
-    # Try getting file name from headers (but fall back to tmp file name)
-    filename = os.path.basename(tmp_file.name)
-    if 'content-disposition' in response.headers:
-        match = re.search("filename=(.+)", response.headers['content-disposition'])
-        if match:
-            filename = match.group(1)
-
     file_path = os.path.join(file_save_directory,
                              filename)
     log.info("Moving file to %s" % file_path)
-    shutil.move(tmp_file.name, file_path)
+    shutil.copy(download_path, file_path)
 
     # Create submission
     admin_user_id = 1
@@ -218,3 +197,39 @@ def _import_record(inspire_id, update_existing=False, base_url='https://hepdata.
         return True
     else:
         return False
+
+
+def _download_file(base_url, inspire_id):
+    # Download file to temp dir
+    url = "{0}/download/submission/ins{1}/original".format(base_url, inspire_id)
+    log.info("Trying URL " + url)
+    try:
+        response = requests.get(url)
+        if not response.ok:
+            raise ConnectionError('Unable to retrieve download from %s' % url)
+        elif not response.headers.get('content-type', '').startswith('application/'):
+            raise ConnectionError('Did not receive zipped file in response from %s' % url)
+    except socket.error as se:
+        raise ConnectionError("Socket error: %s" % se)
+
+    # Try getting file name from headers
+    download_path = None
+    tmp_file = None
+    if 'content-disposition' in response.headers:
+        match = re.search("filename=(.+)", response.headers['content-disposition'])
+        if match:
+            filename = match.group(1)
+            download_path = os.path.join(current_app.config["CFG_TMPDIR"], filename)
+            tmp_file = open(download_path, mode='wb+')
+
+    if not tmp_file:
+        tmp_file = tempfile.NamedTemporaryFile(mode='wb+', suffix='.zip',
+                                               dir=current_app.config["CFG_TMPDIR"],
+                                               delete=False)
+        download_path = tmp_file.name
+
+    log.info("Saving file to %s" % download_path)
+    tmp_file.write(response.content)
+    tmp_file.close()
+
+    return download_path
