@@ -67,7 +67,7 @@ CELERY_TASK_ROUTES = {
 
 CELERY_BEAT_SCHEDULE = {
     'update_analyses': {
-        'task': 'hepdata.modules.records.migrator.api.update_analyses',
+        'task': 'hepdata.modules.records.utils.analyses.update_analyses',
         'schedule': crontab(minute=0, hour=0),  # execute daily at midnight UTC
     },
     'update_from_inspire': {

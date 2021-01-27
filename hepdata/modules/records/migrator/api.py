@@ -78,57 +78,6 @@ class FailedSubmission(Exception):
 
 
 @shared_task
-def update_analyses():
-    endpoints = current_app.config["ANALYSES_ENDPOINTS"]
-    for analysis_endpoint in endpoints:
-
-        if "endpoint_url" in endpoints[analysis_endpoint]:
-
-            log.info("Updating analyses from {0}...".format(analysis_endpoint))
-
-            response = requests.get(endpoints[analysis_endpoint]["endpoint_url"])
-
-            if response:
-
-                analyses = response.json()
-
-                for record in analyses:
-                    submission = get_latest_hepsubmission(inspire_id=record, overall_status='finished')
-
-                    if submission:
-                        num_new_resources = 0
-
-                        for analysis in analyses[record]:
-                            _resource_url = endpoints[analysis_endpoint]["url_template"].format(analysis)
-                            if not is_resource_added_to_submission(submission.publication_recid, submission.version,
-                                                                   _resource_url):
-                                print('Adding {} analysis to ins{} with URL {}'
-                                      .format(analysis_endpoint, record, _resource_url))
-                                new_resource = DataResource(
-                                    file_location=_resource_url,
-                                    file_type=analysis_endpoint)
-
-                                submission.resources.append(new_resource)
-                                num_new_resources += 1
-
-                        if num_new_resources:
-
-                            try:
-                                db.session.add(submission)
-                                db.session.commit()
-                                index_record_ids([submission.publication_recid])
-                            except Exception as e:
-                                db.session.rollback()
-                                log.error(e)
-
-                    else:
-                        log.debug("An analysis is available in {0} but with no equivalent in HEPData (ins{1}).".format(
-                            analysis_endpoint, record))
-        else:
-            log.debug("No endpoint url configured for {0}".format(analysis_endpoint))
-
-
-@shared_task
 def update_submissions(inspire_ids_to_update, force=False, only_record_information=False, send_email=False):
     migrator = Migrator()
     for index, inspire_id in enumerate(inspire_ids_to_update):

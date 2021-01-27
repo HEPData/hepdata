@@ -142,7 +142,7 @@ setup(
             'hepdata_doibanner = hepdata.modules.doi_banner.views:blueprint'
         ],
         'invenio_celery.tasks': [
-            'hepdata_records = hepdata.modules.records.migrator.api',
+            'hepdata_analyses = hepdata.modules.records.utils.analyses',
             'hepdata_importer = hepdata.modules.records.importer.api',
             'hepdata_doi = hepdata.modules.records.utils.doi_minter',
             'hepdata_mail = hepdata.modules.email.utils',
