@@ -54,6 +54,7 @@ def import_records(inspire_ids, synchronous=False, update_existing=False,
                    base_url='https://hepdata.net'):
     """
     Import records from hepdata.net
+
     :param inspire_ids: array of inspire ids to load (in the format insXXX).
     :param synchronous: if should be run immediately rather than via celery
     :param update_existing: whether to update records that already exist
@@ -75,6 +76,7 @@ def import_records(inspire_ids, synchronous=False, update_existing=False,
 def get_inspire_ids(base_url='https://hepdata.net', last_updated=None, n_latest=None):
     """
     Get inspire IDs from hepdata.net
+
     :param last_updated: get IDs of records updated on/after this date
     :param n_latest: get the n most recently updated IDs
     :param base_url: override default base URL
