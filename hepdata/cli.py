@@ -156,39 +156,27 @@ def reindex(recreate, start, end, batch):
 
 @utils.command()
 @with_appcontext
-def find_duplicates_and_remove():
+@click.option('--base-url', '-b', default="https://hepdata.net", type=str,
+              help='Base URL from which to get data (defaults to '
+              'https://hepdata.net)')
+def find_duplicates_and_remove(base_url):
     """Will go through the application to find any duplicates then remove them."""
-    inspire_ids = get_all_ids_in_current_system(prepend_id_with="")
+    inspire_ids = importer_api.get_inspire_ids(
+        base_url=base_url
+    )
+    if inspire_ids is not False:
+        duplicates = []
+        for inspire_id in inspire_ids:
+            matches = get_records_matching_field('inspire_id', inspire_id,
+                                                 doc_type=CFG_PUB_TYPE)
+            if len(matches['hits']['hits']) > 1:
+                duplicates.append(matches['hits']['hits'][0]['_source']['recid'])
+        print('There are {} duplicates. Going to remove.'.format(len(duplicates)))
+        do_unload(duplicates)
 
-    duplicates = []
-    for inspire_id in inspire_ids:
-        matches = get_records_matching_field('inspire_id', inspire_id,
-                                             doc_type=CFG_PUB_TYPE)
-        if len(matches['hits']['hits']) > 1:
-            duplicates.append(matches['hits']['hits'][0]['_source']['recid'])
-    print('There are {} duplicates. Going to remove.'.format(len(duplicates)))
-    do_unload(duplicates)
-
-    # reindex submissions for dashboard view
-    admin_indexer = AdminIndexer()
-    admin_indexer.reindex(recreate=True)
-
-
-@utils.command()
-@with_appcontext
-@click.option('--inspireids', '-i', type=str,
-              help='Load specific INSPIRE IDs into the system.')
-@click.option('--tweet', '-t', default=False, type=bool,
-              help='Whether or not to send a tweet announcing the arrival of these records.')
-@click.option('--convert', '-c', default=False, type=bool,
-              help='Whether or not to create conversions for all loaded files to ROOT, YODA, and CSV.')
-@click.option('--base_url', '-url', default='http://hepdata.cedar.ac.uk/view/{0}/yaml', type=str,
-              help='Override default base URL of YAML format from old HepData site.')
-def load(inspireids, tweet, convert, base_url):
-    """Load records given their INSPIRE IDs into the database."""
-    processed_record_ids = parse_inspireids_from_string(inspireids)
-
-    load_files(processed_record_ids, send_tweet=tweet, convert=convert, base_url=base_url)
+        # reindex submissions for dashboard view
+        admin_indexer = AdminIndexer()
+        admin_indexer.reindex(recreate=True)
 
 
 def parse_inspireids_from_string(records_to_unload):
