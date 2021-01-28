@@ -194,38 +194,6 @@ def _find_all_current_dataresources(rec_id):
     return resources
 
 
-def move_inspire_data_files(inspire_output_location, recid):
-    """Moves output location based on inspire_id to new location based on
-    record id. For use by migrator where files are retrieved before a record
-    is created.
-    """
-    print("Moving inspire data files")
-    output_location = get_data_path_for_record(recid)
-    paths_to_delete = []
-
-    if os.path.isdir(output_location):
-        # move individual entries to new location
-        with os.scandir(inspire_output_location) as entries:
-            for entry in entries:
-                shutil.move(entry.path, os.path.join(output_location, entry.name))
-        # Delete parent dir
-        paths_to_delete.append(inspire_output_location)
-    else:
-        # Can just move whole directory
-        shutil.move(inspire_output_location, output_location)
-
-    paths_to_delete.append(os.path.dirname(inspire_output_location))
-
-    for path in paths_to_delete:
-        try:
-            os.rmdir(path)
-        except OSError:
-            pass
-
-    print("Returning %s" %output_location)
-    return output_location
-
-
 # Functions below relate to cli clean up and move data files functions
 # (see https://github.com/HEPData/hepdata/issues/139 and
 # https://github.com/HEPData/hepdata/issues/218) - we may be able to
