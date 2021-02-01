@@ -236,7 +236,7 @@ def bulk_import_records(base_url, update_existing, date, n_latest):
     Populate the DB with records from HEPData.net (or another instance as
     specified by base_url)
 
-    Usage: ``hepdata importer bulk-import-records -u -d 2020-01-01``
+    Usage: ``hepdata importer bulk-import-records -u true -d 2020-01-01``
     """
     if current_app.config.get('ENV') == 'production':
         click.confirm('You are currently running in production mode on'
