@@ -59,14 +59,17 @@ ACCEPTED_REMOTE_SCHEMAS = [
 CACHED_DATA_VALIDATOR = None
 
 
-def get_submission_validator():
+def get_submission_validator(old_schema):
     """
     Returns a SubmissionFileValidator object
 
+    :param old_schema: whether the schema version for the submission.yaml is 0.1.0
     :return: SubmissionFileValidator object
     """
-
-    return SubmissionFileValidator()
+    if old_schema:
+        return SubmissionFileValidator(schema_version='0.1.0')
+    else:
+        return SubmissionFileValidator()
 
 
 def get_data_validator(old_hepdata):

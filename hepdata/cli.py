@@ -36,6 +36,7 @@ from hepdata.modules.submission.api import get_latest_hepsubmission
 from .factory import create_app
 from hepdata.config import CFG_PUB_TYPE
 from hepdata.ext.elasticsearch.api import reindex_all, get_records_matching_field
+from hepdata.modules.records.importer import api as importer_api
 from hepdata.modules.records.utils import data_files
 from hepdata.modules.records.utils.submission import unload_submission
 from hepdata.modules.records.migrator.api import load_files, update_submissions, get_all_ids_in_current_system, \
@@ -174,6 +175,85 @@ def get_missing_records():
     print("Missing {} records.".format(len(missing_ids)))
     print(missing_ids)
     return missing_ids
+
+
+@cli.group()
+def importer():
+    """Import from HepData website to a local instance."""
+
+
+@importer.command()
+@with_appcontext
+@click.option('--inspireids', '-i', default=default_recids,
+              help='A comma separated list of recids to load.')
+@click.option('--recreate_index', '-rc', default=False, type=bool,
+              help='Whether or not to recreate the index before importing'
+              '(defaults to False)')
+@click.option('--update-existing', '-u', default=False, type=bool,
+              help='Whether to update records which already exist'
+              '(defaults to False)')
+@click.option('--base-url', '-b', default="https://hepdata.net", type=str,
+              help='Base URL from which to get data (defaults to '
+              'https://hepdata.net)')
+def import_records(inspireids, recreate_index, base_url, update_existing):
+    """
+    Populate the DB with specific records from HEPData.net (or another
+    instance as specified by base_url)
+
+    Usage: ``hepdata importer import-records -i 'ins1262703' -rc False``
+    """
+    from hepdata.ext.elasticsearch.api import recreate_index as reindex
+    if current_app.config.get('ENV') == 'production':
+        click.confirm('You are currently running in production mode on'
+                      ' %s. Are you sure you want to import records from %s?'
+                      % (current_app.config.get('SITE_URL'), base_url),
+                      abort=True)
+
+    if recreate_index:
+        reindex()
+
+    files_to_load = parse_inspireids_from_string(inspireids)
+    importer_api.import_records(files_to_load, synchronous=False,
+                                update_existing=update_existing,
+                                base_url=base_url)
+
+
+@importer.command()
+@with_appcontext
+@click.option('--date', '-d', type=click.DateTime(formats=['%Y-%m-%d']), default=None,
+              help='Filter all records modified since some point in time, '
+              'e.g. 2016-07-05 for the 5th July 2016.')
+@click.option('--update-existing', '-u', default=False, type=bool,
+              help='Whether to update records which already exist'
+              '(defaults to False)')
+@click.option('--base-url', '-b', default="https://hepdata.net", type=str,
+              help='Base URL from which to get data (defaults to '
+              'https://hepdata.net)')
+@click.option('--n-latest', '-n', default=None, type=int,
+              help='Get only the n most recently updated records')
+def bulk_import_records(base_url, update_existing, date, n_latest):
+    """
+    Populate the DB with records from HEPData.net (or another instance as
+    specified by base_url)
+
+    Usage: ``hepdata importer bulk-import-records -u true -d 2020-01-01``
+    """
+    if current_app.config.get('ENV') == 'production':
+        click.confirm('You are currently running in production mode on'
+                      ' %s. Are you sure you want to import records from %s?'
+                      % (current_app.config.get('SITE_URL'), base_url),
+                      abort=True)
+
+    inspire_ids = importer_api.get_inspire_ids(
+        base_url=base_url,
+        last_updated=date,
+        n_latest=n_latest
+    )
+    if inspire_ids is not False:
+        print("Found {} inspire ids to load.".format(len(inspire_ids)))
+        importer_api.import_records(inspire_ids, synchronous=False,
+                                    update_existing=update_existing,
+                                    base_url=base_url)
 
 
 @cli.group()

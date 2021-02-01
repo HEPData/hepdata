@@ -406,7 +406,9 @@ def _read_data_file(data_file_path):
     return data, ex
 
 
-def process_submission_directory(basepath, submission_file_path, recid, update=False, from_oldhepdata=False):
+def process_submission_directory(basepath, submission_file_path, recid,
+                                 update=False, from_oldhepdata=False,
+                                 old_submission_schema=False):
     """
     Goes through an entire submission directory and processes the
     files within to create DataSubmissions
@@ -416,7 +418,9 @@ def process_submission_directory(basepath, submission_file_path, recid, update=F
     :param submission_file_path:
     :param recid:
     :param update:
-    :param from_oldhepdata:
+    :param from_oldhepdata: whether to use old (v0) data schema
+    :param old_submission_schema: whether to use old (v0) submission schema
+        (should only be used when importing old records)
     :return:
     """
     added_file_names = []
@@ -438,7 +442,7 @@ def process_submission_directory(basepath, submission_file_path, recid, update=F
         ]}
         return errors
 
-    submission_file_validator = get_submission_validator()
+    submission_file_validator = get_submission_validator(old_submission_schema)
     is_valid_submission_file = submission_file_validator.validate(
         file_path=submission_file_path,
         data=submission_processed,

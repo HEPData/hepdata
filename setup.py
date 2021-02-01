@@ -39,6 +39,7 @@ tests_require = [
     'pytest-flask>=1.0.0',
     'pytest-mock>=3.1.0',
     'pytest-timeout>=1.4.2',
+    'requests-mock>=1.8.0',
     'selenium>=3.141.0'
 ]
 
@@ -142,6 +143,7 @@ setup(
         ],
         'invenio_celery.tasks': [
             'hepdata_records = hepdata.modules.records.migrator.api',
+            'hepdata_importer = hepdata.modules.records.importer.api',
             'hepdata_doi = hepdata.modules.records.utils.doi_minter',
             'hepdata_mail = hepdata.modules.email.utils',
             'hepdata_conversion = hepdata.modules.converter.tasks',

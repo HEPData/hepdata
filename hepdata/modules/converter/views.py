@@ -253,7 +253,7 @@ def download_submission(submission, file_format, offline=False, force=False, riv
 
     converted_dir = get_converted_directory_path(submission.publication_recid)
     if not os.path.exists(converted_dir):
-        os.makedirs(converted_dir)
+        os.makedirs(converted_dir, exist_ok=True)
 
     if file_format == 'yoda' and rivet_analysis_name:
         # Don't store in converted_dir since rivet_analysis_name might possibly change between calls.

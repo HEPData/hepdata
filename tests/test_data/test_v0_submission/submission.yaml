@@ -1,0 +1,22 @@
+comment: |
+  THE RECOIL PROTONS WERE SCATTERED IN CARBON AND DETECTED IN A COUNTER TELESCOPE IN COINCIDENCE WITH A GAMMA FROM PI0 DECAY. THE SIGN CONVENTION HAS BEEN CHANGED. NO SYTEMATIC ERRORS ARE GIVEN.
+dateupdated: 01/01/1970 00:00:00
+hepdata_doi: 10.17182/hepdata.21754.v1
+modifications:
+- {action: Encoded, date: 'null', who: PRS}
+record_ids:
+- {id: 944911, type: inspire}
+---
+data_file: Table1.yaml
+description: No description provided.
+keywords:
+- name: reactions
+  values: [GAMMA P --> PI0 P]
+- name: observables
+  values: [POL]
+- name: phrases
+  values: [Exclusive, Polarization, Photoproduction]
+- name: cmenergies
+  values: [1.383-1.481]
+name: Table 1
+table_doi: 10.17182/hepdata.21754.v1/t1
