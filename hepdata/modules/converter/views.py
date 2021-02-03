@@ -19,8 +19,10 @@
 
 """HEPData Converter Views."""
 
+import fileinput
 import logging
 import os
+import re
 import shutil
 import tempfile
 
@@ -36,7 +38,8 @@ from hepdata.modules.converter import convert_zip_archive
 from hepdata.modules.submission.api import get_latest_hepsubmission
 from hepdata.modules.submission.models import HEPSubmission, DataResource, DataSubmission
 from hepdata.utils.file_extractor import extract, get_file_in_directory
-from hepdata.modules.records.utils.common import get_record_contents
+from hepdata.modules.records.utils.common import get_record_contents, \
+    find_file_in_directory
 from hepdata.modules.records.utils.data_files import get_converted_directory_path, \
     find_submission_data_file_path, get_data_path_for_record
 
@@ -611,6 +614,16 @@ def create_original_with_resources(submission, data_filepath, output_path, offli
 
             # Unzip data_filepath into contents path
             shutil.unpack_archive(data_filepath, contents_path)
+
+            # Need to go through the submission file and update the paths so
+            # that all resources are at the top level. This should allow the
+            # zip to be re-uploaded or imported
+            submission_found = find_file_in_directory(contents_path, lambda x: x == "submission.yaml")
+            if submission_found:
+                with fileinput.FileInput(submission_found[1], inplace=True, backup='.bak') as file:
+                    p = re.compile(r'(\s+location: )\/resource\/.*\/([^\/]+)')
+                    for line in file:
+                        print(p.sub('\g<1>\g<2>', line), end='')
 
             # Zip up contents dir into a new file
             base, ext = os.path.splitext(output_path)
