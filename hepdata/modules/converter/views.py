@@ -245,7 +245,7 @@ def download_submission(submission, file_format, offline=False, force=False, riv
     if file_format == 'original':
         file_format_and_extension = os.path.splitext(data_filepath)[1]
     else:
-        file_format_and_extension = '-{0}.tgz'.format(file_format)
+        file_format_and_extension = '-{0}.tar.gz'.format(file_format)
 
     output_file = 'HEPData-{0}-v{1}{2}'.format(file_identifier, submission.version, file_format_and_extension)
 
@@ -620,7 +620,7 @@ def create_original_with_resources(submission, data_filepath, output_path, offli
             # zip to be re-uploaded or imported
             submission_found = find_file_in_directory(contents_path, lambda x: x == "submission.yaml")
             if submission_found:
-                with fileinput.FileInput(submission_found[1], inplace=True, backup='.bak') as file:
+                with fileinput.FileInput(submission_found[1], inplace=True) as file:
                     p = re.compile(r'(\s+location: )\/resource\/.*\/([^\/]+)')
                     for line in file:
                         print(p.sub('\g<1>\g<2>', line), end='')
