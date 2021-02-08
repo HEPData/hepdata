@@ -269,7 +269,7 @@ def download_submission(submission, file_format, offline=False, force=False, riv
                 return
 
     if file_format == 'original':
-        create_original_with_resources(submission, data_filepath, output_path, offline)
+        create_original_with_resources(submission, data_filepath, output_path)
         if not offline:
             return send_file(output_path, as_attachment=True)
         else:
@@ -600,9 +600,20 @@ def display_error(title='Unknown Error', description=''):
     )
 
 
-def create_original_with_resources(submission, data_filepath, output_path, offline):
-    filename = os.path.basename(data_filepath)
-    resource_location = os.path.join(get_data_path_for_record(str(submission.publication_recid)), 'resources')
+def create_original_with_resources(submission, data_filepath, output_path):
+    """Copy or create 'original' zip file, i.e. yaml files with resources. If
+    resources were imported from hepdata.cedar.ac.uk we create a new zip
+    in a format that could be re-uploaded as a submission.
+
+    :param type submission: HEPSubmission object
+    :param type data_filepath: Path to original file
+    :param type output_path: Path to output file (in converted dir)
+    :return: None
+    """
+    resource_location = os.path.join(
+        get_data_path_for_record(str(submission.publication_recid)),
+        'resources'
+    )
     if os.path.isdir(resource_location):
         # There is a resources directory from when this record was imported
         # from the old hepdata site. We need to create a new zip with the
@@ -618,12 +629,15 @@ def create_original_with_resources(submission, data_filepath, output_path, offli
             # Need to go through the submission file and update the paths so
             # that all resources are at the top level. This should allow the
             # zip to be re-uploaded or imported
-            submission_found = find_file_in_directory(contents_path, lambda x: x == "submission.yaml")
+            submission_found = find_file_in_directory(
+                contents_path,
+                lambda x: x == "submission.yaml"
+            )
             if submission_found:
                 with fileinput.FileInput(submission_found[1], inplace=True) as file:
                     p = re.compile(r'(\s+location: )\/resource\/.*\/([^\/]+)')
                     for line in file:
-                        print(p.sub('\g<1>\g<2>', line), end='')
+                        print(p.sub(r'\g<1>\g<2>', line), end='')
 
             # Zip up contents dir into a new file
             base, ext = os.path.splitext(output_path)
@@ -633,8 +647,6 @@ def create_original_with_resources(submission, data_filepath, output_path, offli
 
     else:
         shutil.copy2(data_filepath, output_path)
-        if not offline:
-            return send_file(data_filepath, as_attachment=True, attachment_filename=filename)
 
 
 def get_version_count(recid):
