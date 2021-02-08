@@ -185,7 +185,7 @@ HEPDATA.table_renderer = {
 
   clean_data: function (value, remove_qualifier_uniqueness_attr) {
 
-    if (remove_qualifier_uniqueness_attr) value = value.replace(/-\d+/, "");
+    if (remove_qualifier_uniqueness_attr) value = value.replace(/-\d+$/, "");
     if (value == ".") {
       value = ""
     }

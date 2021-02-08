@@ -21,9 +21,11 @@
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 import os.path
 import responses
+import zipfile
 
 from hepdata.config import CFG_CONVERTER_URL
 from hepdata.modules.converter.tasks import convert_and_store
+from hepdata.modules.records.migrator.api import Migrator
 
 def test_convert_and_store_invalid(app, capsys):
     with app.app_context():
@@ -48,17 +50,52 @@ def test_convert_and_store_valid_yaml(app, capsys, load_submission):
         captured_lines = capsys.readouterr().out.splitlines()
 
         assert(captured_lines[0] == "Creating yaml conversion for ins1487726")
+        print(captured_lines)
         assert(captured_lines[1].startswith("File for ins1487726 created successfully"))
         file_path = captured_lines[1].split()[-1]
         assert(file_path.endswith("HEPData-ins1487726-v1-yaml.tar.gz"))
         assert(os.path.isfile(file_path))
 
 
-def test_convert_and_store_invalid_original(app, capsys, load_submission):
+def test_convert_and_store_valid_original(app, capsys, load_submission):
     with app.app_context():
         capsys.readouterr()
         convert_and_store('1487726', 'original', True)
         captured_lines = capsys.readouterr().out.splitlines()
-
         assert(captured_lines[0] == "Creating original conversion for ins1487726")
-        assert(captured_lines[1] == "Nothing to do as original file already exists")
+        assert(captured_lines[1].startswith("File created at "))
+        file_path = captured_lines[1].split()[-1]
+        assert(file_path.endswith("HEPData-ins1487726-v1.zip"))
+        assert(os.path.isfile(file_path))
+
+
+def test_convert_and_store_valid_original_with_old_resources(app, capsys):
+    with app.app_context():
+        # Create submission with resources
+        Migrator().load_file('ins1299143')
+
+        capsys.readouterr()
+        convert_and_store('1299143', 'original', True)
+        captured_lines = capsys.readouterr().out.splitlines()
+        assert(captured_lines[0] == 'Creating original conversion for ins1299143')
+        assert(captured_lines[1].startswith("Creating archive at "))
+        file_path = captured_lines[1].split()[-1]
+        assert('/converted/' in file_path)
+        assert(file_path.endswith("HEPData-ins1299143-v1.zip"))
+        assert(captured_lines[2] == 'File created at %s' % file_path)
+
+        assert(os.path.isfile(file_path))
+        # Check contents of zip
+        with zipfile.ZipFile(file_path) as zip:
+            contents = zip.namelist()
+            assert(len(contents) == 99)
+            # Check for a sample of filenames from yaml and resources
+            for f in ['submission.yaml', 'Table_1.yaml', 'figFigure7a.png']:
+                assert(f in contents)
+
+            # Check submission file has been updated with new resource location
+            with zip.open('submission.yaml') as f:
+                for line in f.readlines():
+                    line_str = line.decode()
+                    if 'location' in line_str:
+                        assert('/resource/' not in line_str)
