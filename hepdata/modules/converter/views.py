@@ -19,8 +19,12 @@
 
 """HEPData Converter Views."""
 
+import fileinput
 import logging
 import os
+import re
+import shutil
+import tempfile
 
 from flask import Blueprint, send_file, render_template, \
     request, current_app, redirect, abort
@@ -34,9 +38,10 @@ from hepdata.modules.converter import convert_zip_archive
 from hepdata.modules.submission.api import get_latest_hepsubmission
 from hepdata.modules.submission.models import HEPSubmission, DataResource, DataSubmission
 from hepdata.utils.file_extractor import extract, get_file_in_directory
-from hepdata.modules.records.utils.common import get_record_contents
+from hepdata.modules.records.utils.common import get_record_contents, \
+    find_file_in_directory
 from hepdata.modules.records.utils.data_files import get_converted_directory_path, \
-    find_submission_data_file_path
+    find_submission_data_file_path, get_data_path_for_record
 
 
 from sqlalchemy.orm.exc import NoResultFound
@@ -238,18 +243,11 @@ def download_submission(submission, file_format, offline=False, force=False, riv
     data_filepath = find_submission_data_file_path(submission)
 
     if file_format == 'original':
-        file_extension = os.path.splitext(data_filepath)[1]
+        file_format_and_extension = os.path.splitext(data_filepath)[1]
     else:
-        file_extension = '.tar.gz'
+        file_format_and_extension = '-{0}.tar.gz'.format(file_format)
 
-    output_file = 'HEPData-{0}-v{1}-{2}{3}'.format(file_identifier, submission.version, file_format, file_extension)
-
-    if file_format == 'original':
-        if offline:
-            print("Nothing to do as original file already exists")
-            return
-        else:
-            return send_file(data_filepath, as_attachment=True, attachment_filename=output_file)
+    output_file = 'HEPData-{0}-v{1}{2}'.format(file_identifier, submission.version, file_format_and_extension)
 
     converted_dir = get_converted_directory_path(submission.publication_recid)
     if not os.path.exists(converted_dir):
@@ -269,6 +267,14 @@ def download_submission(submission, file_format, offline=False, force=False, riv
             else:
                 print('File already downloaded at {0}'.format(output_path))
                 return
+
+    if file_format == 'original':
+        create_original_with_resources(submission, data_filepath, output_path)
+        if not offline:
+            return send_file(output_path, as_attachment=True)
+        else:
+            print('File created at {0}'.format(output_path))
+            return
 
     converter_options = {
         'input_format': 'yaml',
@@ -592,6 +598,55 @@ def display_error(title='Unknown Error', description=''):
             }]
         }
     )
+
+
+def create_original_with_resources(submission, data_filepath, output_path):
+    """Copy or create 'original' zip file, i.e. yaml files with resources. If
+    resources were imported from hepdata.cedar.ac.uk we create a new zip
+    in a format that could be re-uploaded as a submission.
+
+    :param type submission: HEPSubmission object
+    :param type data_filepath: Path to original file
+    :param type output_path: Path to output file (in converted dir)
+    :return: None
+    """
+    resource_location = os.path.join(
+        get_data_path_for_record(str(submission.publication_recid)),
+        'resources'
+    )
+    if os.path.isdir(resource_location):
+        # There is a resources directory from when this record was imported
+        # from the old hepdata site. We need to create a new zip with the
+        # contents of data_filepath and resources
+        with tempfile.TemporaryDirectory() as tmpdir:
+            # Copy resources directory into 'contents' dir in temp directory
+            contents_path = os.path.join(tmpdir, 'contents')
+            shutil.copytree(resource_location, contents_path)
+
+            # Unzip data_filepath into contents path
+            shutil.unpack_archive(data_filepath, contents_path)
+
+            # Need to go through the submission file and update the paths so
+            # that all resources are at the top level. This should allow the
+            # zip to be re-uploaded or imported
+            submission_found = find_file_in_directory(
+                contents_path,
+                lambda x: x == "submission.yaml"
+            )
+            if submission_found:
+                with fileinput.FileInput(submission_found[1], inplace=True) as file:
+                    p = re.compile(r'(\s+location: )\/resource\/.*\/([^\/]+)')
+                    for line in file:
+                        print(p.sub(r'\g<1>\g<2>', line), end='')
+
+            # Zip up contents dir into a new file
+            base, ext = os.path.splitext(output_path)
+            zip_type = 'zip' if ext == '.zip' else 'gztar'
+            print("Creating archive at %s" % output_path)
+            shutil.make_archive(base, zip_type, contents_path)
+
+    else:
+        shutil.copy2(data_filepath, output_path)
 
 
 def get_version_count(recid):
