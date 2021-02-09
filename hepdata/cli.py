@@ -39,6 +39,7 @@ from hepdata.ext.elasticsearch.api import reindex_all, get_records_matching_fiel
 from hepdata.modules.records.importer import api as importer_api
 from hepdata.modules.records.utils import data_files
 from hepdata.modules.records.utils.analyses import update_analyses
+from hepdata.modules.records.utils.old_hepdata import mock_import_old_record
 from hepdata.modules.records.utils.submission import unload_submission
 from hepdata.utils.twitter import tweet
 from hepdata.modules.email.api import send_finalised_email
@@ -337,6 +338,32 @@ def get_data_path(record_id=None, inspire_id=None):
                % (record_id, data_files.get_data_path_for_record(record_id)))
     click.echo("Converted files for record %s are at:\t %s"
                % (record_id, data_files.get_converted_directory_path(record_id)))
+
+
+@utils.command()
+@with_appcontext
+def create_mock_migrated_record():
+    """
+    Populate the DB with a specific record which mimics a record migrated from
+    hepdata.cedar.ac.uk, inspire id 1299143
+
+    Usage: ``hepdata utils create-mock-migrated-record``
+    """
+    if current_app.config.get('ENV') == 'production':
+        click.confirm('You are currently running in production mode on'
+                      ' %s. Are you sure you want to add a mock migrated record?'
+                      % current_app.config.get('SITE_URL'),
+                      abort=True)
+
+    # Delete current record if it already exists
+    current_submission = get_latest_hepsubmission(inspire_id='1299143')
+    breakpoint()
+    if current_submission:
+        click.confirm('Inspire record 1299143 already exists. Do you want to recreate it?',
+                      abort=True)
+        unload_submission(current_submission.publication_recid)
+
+    mock_import_old_record()
 
 
 @cli.group()

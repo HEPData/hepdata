@@ -50,7 +50,6 @@ from hepdata.modules.records.utils.data_files import get_data_path_for_record, \
     cleanup_old_files, delete_all_files, delete_packaged_file
 from hepdata.modules.records.utils.doi_minter import reserve_dois_for_data_submissions, reserve_doi_for_hepsubmission, \
     generate_dois_for_submission
-from hepdata.modules.records.utils.resources import download_resource_file
 from hepdata.modules.records.utils.validators import get_data_validator, get_submission_validator
 from hepdata.utils.twitter import tweet
 from invenio_db import db
@@ -335,19 +334,26 @@ def parse_additional_resources(basepath, recid, yaml_document):
             if 'http' not in resource_location.lower():
                 resource_location = "http://" + resource_location
 
-        elif 'http' not in resource_location.lower() and 'www' not in resource_location.lower() and 'resource' not in resource_location:
-            # this is a file local to the submission.
-            try:
-                resource_location = os.path.join(basepath, resource_location)
-            except Exception as e:
-                raise e
-        else:
-            try:
-                resource_location = download_resource_file(recid, resource_location)
-                print('Downloaded resource location is {0}'.format(resource_location))
-            except URLError as url_error:
-                log.error("Unable to download {0}. The resource is unavailable.".format(resource_location))
-                resource_location = None
+        elif 'http' not in resource_location.lower() and 'www' not in resource_location.lower():
+            if resource_location.startswith('/resource'):
+                # This is an old file migrated from hepdata.cedar.ac.uk. We
+                # should only get here if using mock_import_old_record, in
+                # which case the resources should already be in the 'resources'
+                # directory
+                parent_dir = os.path.dirname(basepath)
+                resource_location = os.path.join(
+                    parent_dir,
+                    'resources',
+                    os.path.basename(resource_location)
+                )
+                if not os.path.exists(resource_location):
+                    raise ValueError("No such path %s" % resource_location)
+            else:
+                # this is a file local to the submission.
+                try:
+                    resource_location = os.path.join(basepath, resource_location)
+                except Exception as e:
+                    raise e
 
         if resource_location:
             new_reference = DataResource(

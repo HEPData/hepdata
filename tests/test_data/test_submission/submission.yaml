@@ -75,8 +75,6 @@ location: Data from Page 20 of preprint
 name: Table 2
 
 ---
-additional_resources:
-- {description: Image file, location: /resource/6150/figFigure8A.png}
 data_file: Table3.yaml
 description: |
   Normalized ZZ fiducial cross section (multiplied by 10^6 for readability) in bins of the leading reconstructed dilepton pT for the 4 lepton channel.  The first systematic uncertainty is detector systematics, the second is background systematic uncertainties.
