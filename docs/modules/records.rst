@@ -18,8 +18,8 @@ contains the JavaScript code that renders the tables and plots in a web browser 
    hepdata.modules.records.utils.common
    hepdata.modules.records.utils.data_processing_utils
    hepdata.modules.records.utils.doi_minter
+   hepdata.modules.records.utils.old_hepdata
    hepdata.modules.records.utils.records_update_utils
-   hepdata.modules.records.utils.resources
    hepdata.modules.records.utils.submission
    hepdata.modules.records.utils.users
    hepdata.modules.records.utils.workflow
@@ -75,15 +75,15 @@ hepdata.modules.records.utils.doi_minter
 
 .. automodule:: hepdata.modules.records.utils.doi_minter
 
+hepdata.modules.records.utils.old_hepdata
+-----------------------------------------
+
+.. automodule:: hepdata.modules.records.utils.old_hepdata
+
 hepdata.modules.records.utils.records_update_utils
 --------------------------------------------------
 
 .. automodule:: hepdata.modules.records.utils.records_update_utils
-
-hepdata.modules.records.utils.resources
----------------------------------------
-
-.. automodule:: hepdata.modules.records.utils.resources
 
 hepdata.modules.records.utils.submission
 ----------------------------------------
