@@ -41,8 +41,9 @@ from hepdata.modules.dashboard.views import do_finalise
 from hepdata.modules.records.api import process_zip_archive
 from hepdata.modules.inspire_api.views import get_inspire_record_information
 from hepdata.modules.records.utils.common import remove_file_extension
-from hepdata.modules.records.utils.data_files import get_data_path_for_record, find_submission_data_file_path
-from hepdata.modules.records.utils.submission import get_or_create_hepsubmission
+from hepdata.modules.records.utils.data_files import get_data_path_for_record
+from hepdata.modules.records.utils.submission import \
+    get_or_create_hepsubmission, cleanup_submission
 from hepdata.modules.records.utils.workflow import create_record
 from hepdata.modules.submission.api import get_latest_hepsubmission
 
@@ -170,6 +171,9 @@ def _import_record(inspire_id, update_existing=False, base_url='https://hepdata.
         log.info("Errors processing archive. Re-trying with old schema.")
         # Try again with old schema
         # Need to clean up first to avoid errors
+        # First delete tables
+        cleanup_submission(recid, 1, [])
+        # Next remove remaining files
         file_save_directory = os.path.dirname(file_path)
         submission_path = os.path.join(file_save_directory, remove_file_extension(filename))
         shutil.rmtree(submission_path)
