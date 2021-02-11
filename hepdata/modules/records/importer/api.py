@@ -63,7 +63,6 @@ def import_records(inspire_ids, synchronous=False, update_existing=False,
     :param send_email: whether to send emails on finalising submissions
     :return: None
     """
-    breakpoint()
     for index, inspire_id in enumerate(inspire_ids):
         _cleaned_id = str(inspire_id).replace("ins", "")
         if synchronous:
