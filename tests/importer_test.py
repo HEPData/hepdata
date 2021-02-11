@@ -199,8 +199,8 @@ def test_import_records(mocker):
     m = mocker.patch('hepdata.modules.records.importer.api._import_record')
     import_records(['ins12345', '67890'], synchronous=True)
     expected_args = [
-        call('12345', base_url='https://hepdata.net', update_existing=False),
-        call('67890', base_url='https://hepdata.net', update_existing=False),
+        call('12345', base_url='https://hepdata.net', update_existing=False, send_email=False),
+        call('67890', base_url='https://hepdata.net', update_existing=False, send_email=False),
     ]
     assert m.call_count == 2
     assert m.call_args_list == expected_args
@@ -209,4 +209,4 @@ def test_import_records(mocker):
     import_records(['ins54321'], base_url='https://localhost:5000',
                    update_existing=True, synchronous=True)
     m.assert_called_once_with('54321', base_url='https://localhost:5000',
-                              update_existing=True)
+                              update_existing=True, send_email=False)
