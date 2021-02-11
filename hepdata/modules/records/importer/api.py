@@ -52,7 +52,7 @@ log = logging.getLogger(__name__)
 
 
 def import_records(inspire_ids, synchronous=False, update_existing=False,
-                   base_url='https://hepdata.net'):
+                   base_url='https://hepdata.net', send_email=False):
     """
     Import records from hepdata.net
 
@@ -60,18 +60,20 @@ def import_records(inspire_ids, synchronous=False, update_existing=False,
     :param synchronous: if should be run immediately rather than via celery
     :param update_existing: whether to update records that already exist
     :param base_url: override default base URL
+    :param send_email: whether to send emails on finalising submissions
     :return: None
     """
+    breakpoint()
     for index, inspire_id in enumerate(inspire_ids):
         _cleaned_id = str(inspire_id).replace("ins", "")
         if synchronous:
             _import_record(_cleaned_id, update_existing=update_existing,
-                           base_url=base_url)
+                           base_url=base_url, send_email=send_email)
         else:
             log.info("Sending import_record task to celery for id %s"
                      % _cleaned_id)
             _import_record.delay(_cleaned_id, update_existing=update_existing,
-                                 base_url=base_url)
+                                 base_url=base_url, send_email=send_email)
 
 
 def get_inspire_ids(base_url='https://hepdata.net', last_updated=None, n_latest=None):
@@ -119,7 +121,7 @@ def get_inspire_ids(base_url='https://hepdata.net', last_updated=None, n_latest=
 
 
 @shared_task
-def _import_record(inspire_id, update_existing=False, base_url='https://hepdata.net'):
+def _import_record(inspire_id, update_existing=False, base_url='https://hepdata.net', send_email=False):
     publication_information, status = get_inspire_record_information(inspire_id)
     if status != "success":
         log.error("Failed to retrieve publication information for " + inspire_id)
@@ -193,7 +195,7 @@ def _import_record(inspire_id, update_existing=False, base_url='https://hepdata.
 
     result_json = do_finalise(recid, force_finalise=True,
                               update=(current_submission is not None),
-                              convert=False)
+                              convert=False, send_email=send_email)
     result = json.loads(result_json)
 
     if result and result['success']:

@@ -74,7 +74,9 @@ def importer():
 @click.option('--base-url', '-b', default="https://hepdata.net", type=str,
               help='Base URL from which to get data (defaults to '
               'https://hepdata.net)')
-def import_records(inspireids, recreate_index, base_url, update_existing):
+@click.option('--send-email', '-e', default=False, type=bool,
+              help='Whether or not to send emails on finalising submissions')
+def import_records(inspireids, recreate_index, base_url, update_existing, send_email):
     """
     Populate the DB with specific records from HEPData.net (or another
     instance as specified by base_url)
@@ -94,7 +96,7 @@ def import_records(inspireids, recreate_index, base_url, update_existing):
     files_to_load = parse_inspireids_from_string(inspireids)
     importer_api.import_records(files_to_load, synchronous=False,
                                 update_existing=update_existing,
-                                base_url=base_url)
+                                base_url=base_url, send_email=send_email)
 
 
 @importer.command()
@@ -110,7 +112,9 @@ def import_records(inspireids, recreate_index, base_url, update_existing):
               'https://hepdata.net)')
 @click.option('--n-latest', '-n', default=None, type=int,
               help='Get only the n most recently updated records')
-def bulk_import_records(base_url, update_existing, date, n_latest):
+@click.option('--send-email', '-e', default=False, type=bool,
+              help='Whether or not to send emails on finalising submissions')
+def bulk_import_records(base_url, update_existing, date, n_latest, send_email):
     """
     Populate the DB with records from HEPData.net (or another instance as
     specified by base_url)
@@ -132,7 +136,7 @@ def bulk_import_records(base_url, update_existing, date, n_latest):
         print("Found {} inspire ids to load.".format(len(inspire_ids)))
         importer_api.import_records(inspire_ids, synchronous=False,
                                     update_existing=update_existing,
-                                    base_url=base_url)
+                                    base_url=base_url, send_email=send_email)
 
 
 @cli.group()

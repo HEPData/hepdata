@@ -714,7 +714,8 @@ def unload_submission(record_id, version=1):
 
 
 def do_finalise(recid, publication_record=None, force_finalise=False,
-                commit_message=None, send_tweet=False, update=False, convert=True):
+                commit_message=None, send_tweet=False, update=False, convert=True,
+                send_email=True):
     """
         Creates record SIP for each data record with a link to the associated
         publication.
@@ -809,7 +810,8 @@ def do_finalise(recid, publication_record=None, force_finalise=False,
             except ConnectionTimeout as ct:
                 log.error('Unable to add ins{0} to admin index.\n{1}'.format(hep_submission.inspire_id, ct))
 
-            send_finalised_email(hep_submission)
+            if send_email:
+                send_finalised_email(hep_submission)
 
             if convert:
                 for file_format in ['yaml', 'csv', 'yoda', 'root']:
