@@ -34,13 +34,18 @@ from hepdata.modules.records.utils.workflow import create_record
 logging.basicConfig()
 log = logging.getLogger(__name__)
 
+mock_inspire_ids = ['753951', '1299143', '1320775']
 
-def mock_import_old_record():
+
+def mock_import_old_record(inspire_id=mock_inspire_ids[1]):
     """Creates a submission but mimics the old migrated paths. (See hepdata
     master branch at ccd691b for old migrator module.)
     """
+    if inspire_id not in mock_inspire_ids:
+        raise ValueError('Invalid inspire id %s. Accepted values are: %s'
+                         % (inspire_id, ', '.join(mock_inspire_ids)))
+
     # Use zipped test data for specific record(s)
-    inspire_id = '1299143'
     publication_information, status = get_inspire_record_information(inspire_id)
     publication_information["inspire_id"] = inspire_id
 
