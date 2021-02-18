@@ -43,7 +43,7 @@ from hepdata.modules.inspire_api.views import get_inspire_record_information
 from hepdata.modules.records.utils.common import remove_file_extension
 from hepdata.modules.records.utils.data_files import get_data_path_for_record
 from hepdata.modules.records.utils.submission import \
-    get_or_create_hepsubmission, cleanup_submission
+    get_or_create_hepsubmission, cleanup_submission, unload_submission
 from hepdata.modules.records.utils.workflow import create_record
 from hepdata.modules.submission.api import get_latest_hepsubmission
 
@@ -144,64 +144,66 @@ def _import_record(inspire_id, update_existing=False, base_url='https://hepdata.
 
     try:
         download_path = _download_file(base_url, inspire_id)
-    except ConnectionError as e:
-        log.error(e)
-        return False
 
-    filename = os.path.basename(download_path)
+        filename = os.path.basename(download_path)
 
-    time_stamp = str(int(round(time.time())))
-    file_save_directory = get_data_path_for_record(str(recid), time_stamp)
-    if not os.path.exists(file_save_directory):
-        os.makedirs(file_save_directory)
+        time_stamp = str(int(round(time.time())))
+        file_save_directory = get_data_path_for_record(str(recid), time_stamp)
+        if not os.path.exists(file_save_directory):
+            os.makedirs(file_save_directory)
 
-    file_path = os.path.join(file_save_directory,
-                             filename)
-    log.info("Moving file to %s" % file_path)
-    shutil.copy(download_path, file_path)
+        file_path = os.path.join(file_save_directory,
+                                 filename)
+        log.info("Moving file to %s" % file_path)
+        shutil.copy(download_path, file_path)
 
-    # Create submission
-    admin_user_id = 1
-    hepsubmission = get_or_create_hepsubmission(recid, admin_user_id)
-    db.session.add(hepsubmission)
-    db.session.commit()
+        # Create submission
+        admin_user_id = 1
+        hepsubmission = get_or_create_hepsubmission(recid, admin_user_id)
+        db.session.add(hepsubmission)
+        db.session.commit()
 
-    # Then process the payload as for any other record
-    errors = process_zip_archive(file_path, recid)
-    if errors:
-        log.info("Errors processing archive. Re-trying with old schema.")
-        # Try again with old schema
-        # Need to clean up first to avoid errors
-        # First delete tables
-        cleanup_submission(recid, 1, [])
-        # Next remove remaining files
-        file_save_directory = os.path.dirname(file_path)
-        submission_path = os.path.join(file_save_directory, remove_file_extension(filename))
-        shutil.rmtree(submission_path)
-
-        errors = process_zip_archive(file_path, recid, old_submission_schema=True)
-
+        # Then process the payload as for any other record
+        errors = process_zip_archive(file_path, recid)
         if errors:
-            log.error("Could not process zip archive: ")
-            for file, file_errors in errors.items():
-                log.error("    %s:" % file)
-                for error in file_errors:
-                    log.error("        %s" % error['message'])
+            log.info("Errors processing archive. Re-trying with old schema.")
+            # Try again with old schema
+            # Need to clean up first to avoid errors
+            # First delete tables
+            cleanup_submission(recid, 1, [])
+            # Next remove remaining files
+            file_save_directory = os.path.dirname(file_path)
+            submission_path = os.path.join(file_save_directory, remove_file_extension(filename))
+            shutil.rmtree(submission_path)
 
-            return False
+            errors = process_zip_archive(file_path, recid, old_submission_schema=True)
 
-    log.info("Finalising record %s" % recid)
+            if errors:
+                log.error("Could not process zip archive: ")
+                for file, file_errors in errors.items():
+                    log.error("    %s:" % file)
+                    for error in file_errors:
+                        log.error("        %s" % error['message'])
 
-    result_json = do_finalise(recid, force_finalise=True,
-                              update=(current_submission is not None),
-                              convert=False, send_email=send_email)
-    result = json.loads(result_json)
+                raise ValueError("Could not validate record.")
 
-    if result and result['success']:
-        log.info("Imported record %s with %s submissions"
-                 % (recid, result['data_count']))
-        return True
-    else:
+        log.info("Finalising record %s" % recid)
+
+        result_json = do_finalise(recid, force_finalise=True,
+                                  update=(current_submission is not None),
+                                  convert=False, send_email=send_email)
+        result = json.loads(result_json)
+
+        if result and result['success']:
+            log.info("Imported record %s with %s submissions"
+                     % (recid, result['data_count']))
+            return True
+        else:
+            raise ValueError("Failed to finalise record.")
+    except Exception as e:
+        # Unload record
+        unload_submission(recid)
+        log.error(e)
         return False
 
 
