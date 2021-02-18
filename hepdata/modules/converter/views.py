@@ -57,6 +57,8 @@ blueprint = Blueprint('converter', __name__,
                       template_folder='templates',
                       static_folder='static')
 
+FORMATS = ','.join(['json'] + CFG_SUPPORTED_FORMATS)
+
 
 @blueprint.route('/convert', methods=['GET', 'POST'])
 def convert_endpoint():
@@ -115,9 +117,9 @@ def convert_endpoint():
     return send_file(conversion_result, as_attachment=True)
 
 
-@blueprint.route('/submission/<inspire_id>/<file_format>')
-@blueprint.route('/submission/<inspire_id>/<int:version>/<file_format>')
-@blueprint.route('/submission/<inspire_id>/<int:version>/<file_format>/<rivet>')
+@blueprint.route(f'/submission/<inspire_id>/<any({FORMATS}):file_format>')
+@blueprint.route(f'/submission/<inspire_id>/<int:version>/<any({FORMATS}):file_format>')
+@blueprint.route('/submission/<inspire_id>/<int:version>/<any(yoda):file_format>/<rivet>')
 def download_submission_with_inspire_id(*args, **kwargs):
     """
     Gets the submission file and either serves it back directly from YAML, or converts it
@@ -128,7 +130,7 @@ def download_submission_with_inspire_id(*args, **kwargs):
 
     :param inspire_id: inspire id
     :param version: version of submission to export. If absent, returns the latest.
-    :param file_format: yaml, csv, root, or yoda
+    :param file_format: json, yaml, csv, root, yoda or original
     :param rivet: Rivet analysis name to override default written in YODA export
     :return: download_submission
     """
@@ -170,9 +172,9 @@ def download_submission_with_inspire_id(*args, **kwargs):
     return download_submission(submission, kwargs.pop('file_format'), rivet_analysis_name=kwargs.pop('rivet', ''))
 
 
-@blueprint.route('/submission/<int:recid>/<file_format>')
-@blueprint.route('/submission/<int:recid>/<int:version>/<file_format>')
-@blueprint.route('/submission/<int:recid>/<int:version>/<file_format>/<rivet>')
+@blueprint.route(f'/submission/<int:recid>/<any({FORMATS}):file_format>')
+@blueprint.route(f'/submission/<int:recid>/<int:version>/<any({FORMATS}):file_format>')
+@blueprint.route('/submission/<int:recid>/<int:version>/<any(yoda):file_format>/<rivet>')
 def download_submission_with_recid(*args, **kwargs):
     """
     Gets the submission file and either serves it back directly from YAML, or converts it
@@ -183,7 +185,7 @@ def download_submission_with_recid(*args, **kwargs):
 
     :param recid: submissions recid
     :param version: version of submission to export. If absent, returns the latest.
-    :param file_format: yaml, csv, root, yoda or original
+    :param file_format: json, yaml, csv, root, yoda or original
     :param rivet: Rivet analysis name to override default written in YODA export
     :return: download_submission
     """
@@ -217,7 +219,7 @@ def download_submission(submission, file_format, offline=False, force=False, riv
     for other formats.
 
     :param submission: HEPSubmission
-    :param file_format: yaml, csv, root, yoda or original
+    :param file_format: json, yaml, csv, root, yoda or original
     :param offline: offline creation of the conversion when a record is finalised
     :param force: force recreation of the conversion
     :param rivet_analysis_name: Rivet analysis name to override default written in YODA export
@@ -324,9 +326,9 @@ def download_submission(submission, file_format, offline=False, force=False, riv
             ))
 
 
-@blueprint.route('/table/<inspire_id>/<path:table_name>/<file_format>')
-@blueprint.route('/table/<inspire_id>/<path:table_name>/<int:version>/<file_format>')
-@blueprint.route('/table/<inspire_id>/<path:table_name>/<int:version>/<file_format>/<rivet>')
+@blueprint.route(f'/table/<inspire_id>/<path:table_name>/<any({FORMATS}):file_format>')
+@blueprint.route(f'/table/<inspire_id>/<path:table_name>/<int:version>/<any({FORMATS}):file_format>')
+@blueprint.route('/table/<inspire_id>/<path:table_name>/<int:version>/<any(yoda):file_format>/<rivet>')
 def download_data_table_by_inspire_id(*args, **kwargs):
     """
     Downloads the latest data file given the url ``/download/submission/ins1283842/Table 1/yaml`` or
@@ -400,9 +402,9 @@ def download_data_table_by_inspire_id(*args, **kwargs):
                               rivet_analysis_name=rivet)
 
 
-@blueprint.route('/table/<int:recid>/<path:table_name>/<file_format>')
-@blueprint.route('/table/<int:recid>/<path:table_name>/<int:version>/<file_format>')
-@blueprint.route('/table/<int:recid>/<path:table_name>/<int:version>/<file_format>/<rivet>')
+@blueprint.route(f'/table/<int:recid>/<path:table_name>/<any({FORMATS}):file_format>')
+@blueprint.route(f'/table/<int:recid>/<path:table_name>/<int:version>/<any({FORMATS}):file_format>')
+@blueprint.route('/table/<int:recid>/<path:table_name>/<int:version>/<any(yoda):file_format>/<rivet>')
 def download_data_table_by_recid(*args, **kwargs):
     """
     Record ID download.
@@ -464,7 +466,7 @@ def download_data_table_by_recid(*args, **kwargs):
                               rivet_analysis_name=rivet)
 
 
-@blueprint.route('/table/<int:data_id>/<file_format>')
+@blueprint.route(f'/table/<int:data_id>/<any({FORMATS}):file_format>')
 def download_datatable_by_dataid(data_id, file_format):
     """
     Download a particular data table in a given format.

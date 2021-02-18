@@ -517,10 +517,12 @@ def process_submission_directory(basepath, submission_file_path, recid,
                             name=yaml_document["name"],
                             description=yaml_document["description"],
                             version=hepsubmission.version)
+                        db.session.add(datasubmission)
                     else:
-                        datasubmission = existing_datasubmission_query.one()
-                        datasubmission.description = yaml_document["description"]
-                    db.session.add(datasubmission)
+                        error = {"level": "error",
+                                 "message": "Duplicate table with name '{}'.".format(yaml_document["name"])}
+                        errors.setdefault('submission.yaml', []).append(error)
+                        continue
 
                 except SQLAlchemyError as sqlex:
                     errors[yaml_document["data_file"]] = [{"level": "error", "message": str(sqlex)}]
