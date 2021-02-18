@@ -1,0 +1,124 @@
+independent_variables:
+- header: {name: '$p_T$'}
+  values:
+  - {low: 0.4, high: 1.0}
+  - {low: 1.0, high: 1.5}
+  - {low: 1.5, high: 2.0}
+  - {low: 2.0, high: 2.5}
+  - {low: 2.5, high: 3}
+  - {low: 3.0, high: 4}
+  - {low: 4.0, high: 5}
+  - {low: 5, high: 10}
+dependent_variables:
+- header: {name: 'RHS'}
+  qualifiers:
+  - {name: '$p_T$', value: '2.0$<p_{T}^{A}<$<3.0 GeV/c'}
+  values:
+  - value: 2.428
+    errors:
+    - {symerror: 0.1914, label: 'error'}
+  - value: 2.419
+    errors:
+    - {symerror: 0.135, label: 'error'}
+  - value: 2.752
+    errors:
+    - {symerror: 0.11325, label: 'error'}
+  - value: 2.673
+    errors:
+    - {symerror: 0.117, label: 'error'}
+  - value: 3.234
+    errors:
+    - {symerror: 0.22685, label: 'error'}
+  - value: 3.325
+    errors:
+    - {symerror: 0.2345, label: 'error'}
+  - value: 4.59
+    errors:
+    - {symerror: 0.6051, label: 'error'}
+  - value: 5.438
+    errors:
+    - {symerror: 0.29595, label: 'error'}
+- header: {name: 'RHS'}
+  qualifiers:
+  - {name: '$p_T$', value: '3.0$<p_{T}^{A}<$<4.0 GeV/c'}
+  values:
+  - value: 2.553
+    errors:
+    - {symerror: 0.17545, label: 'error'}
+  - value: 2.73
+    errors:
+    - {symerror: 0.1432, label: 'error'}
+  - value: 3.199
+    errors:
+    - {symerror: 0.24575, label: 'error'}
+  - value: 3.418
+    errors:
+    - {symerror: 0.30445, label: 'error'}
+  - value: 3.525
+    errors:
+    - {symerror: 0.41735, label: 'error'}
+  - value: 4.184
+    errors:
+    - {symerror: 0.4588, label: 'error'}
+  - value: 5.528
+    errors:
+    - {symerror: 1.01045, label: 'error'}
+  - value: 7.077
+    errors:
+    - {symerror: 0.64965, label: 'error'}
+- header: {name: 'RHS'}
+  qualifiers:
+  - {name: '$p_T$', value: '4.0$<p_{T}^{A}<$<5.0 GeV/c'}
+  values:
+  - value: 2.495
+    errors:
+    - {symerror: 0.225, label: 'error'}
+  - value: 3.464
+    errors:
+    - {symerror: 0.3675, label: 'error'}
+  - value: 3.109
+    errors:
+    - {symerror: 0.3395, label: 'error'}
+  - value: 3.835
+    errors:
+    - {symerror: 0.5242, label: 'error'}
+  - value: 6.726
+    errors:
+    - {symerror: 1.80065, label: 'error'}
+  - value: 5.528
+    errors:
+    - {symerror: 1.01045, label: 'error'}
+  - value: 5.579
+    errors:
+    - {symerror: 1.41155, label: 'error'}
+  - value: 9.191
+    errors:
+    - {symerror: 1.21955, label: 'error'}
+- header: {name: 'RHS'}
+  qualifiers:
+  - {name: '$p_T$', value: '5.0$<p_{T}^{A}<$<10.0 GeV/c'}
+  values:
+  - value: 3.073
+    errors:
+    - {symerror: 0.1408, label: 'error'}
+  - value: 3.884
+    errors:
+    - {symerror: 0.1908, label: 'error'}
+  - value: 4.915
+    errors:
+    - {symerror: 0.31155, label: 'error'}
+  - value: 5.372
+    errors:
+    - {symerror: 0.38835, label: 'error'}
+  - value: 5.525
+    errors:
+    - {symerror: 0.44795, label: 'error'}
+  - value: 7.077
+    errors:
+    - {symerror: 0.64965, label: 'error'}
+  - value: 9.191
+    errors:
+    - {symerror: 1.21955, label: 'error'}
+  - value: 11.159
+    errors:
+    - {symerror: 1.36035, label: 'error'}

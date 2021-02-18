@@ -249,3 +249,28 @@ def test_invalid_data_yaml(app, admin_idx):
     assert(len(errors['data1.yaml']) == 1)
     assert(errors['data1.yaml'][0]['level'] == 'error')
     assert(errors['data1.yaml'][0]['message'].startswith("There was a problem parsing the file"))
+
+
+def test_duplicate_table_names(app):
+    """
+    Test that an error is returned for a submission.yaml file with duplicate table names.
+    """
+
+    base_dir = os.path.dirname(os.path.realpath(__file__))
+
+    hepsubmission = HEPSubmission(publication_recid=12345,
+                                  overall_status='todo',
+                                  version=1)
+    db.session.add(hepsubmission)
+    db.session.commit()
+
+    directory = os.path.join(base_dir, 'test_data/test_duplicate_table_names')
+    errors = process_submission_directory(directory,
+                                       os.path.join(directory, 'submission.yaml'),
+                                       12345)
+
+    assert('submission.yaml' in errors)
+    assert(len(errors['submission.yaml']) == 2)
+    for error in errors['submission.yaml']:
+        assert(error['level'] == 'error')
+        assert(error['message'].startswith("Duplicate table with name"))
