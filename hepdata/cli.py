@@ -348,7 +348,9 @@ def get_data_path(record_id=None, inspire_id=None):
 @with_appcontext
 @click.option('--inspire-id', '-i', type=click.Choice(mock_inspire_ids),
               default='1299143', help='Inspire id to import')
-def create_mock_migrated_record(inspire_id):
+@click.option('--send-email', '-e', default=False, type=bool,
+              help='Whether or not to send emails on finalising submissions')
+def create_mock_migrated_record(inspire_id, send_email):
     """
     Populate the DB with a specific record which mimics a record migrated from
     hepdata.cedar.ac.uk. Accepts inspire ids 753951, 1299143, 1320775.
@@ -369,7 +371,7 @@ def create_mock_migrated_record(inspire_id):
                       abort=True)
         unload_submission(current_submission.publication_recid)
 
-    mock_import_old_record(inspire_id)
+    mock_import_old_record(inspire_id, send_email=send_email)
 
 
 @cli.group()

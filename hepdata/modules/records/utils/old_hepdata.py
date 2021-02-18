@@ -37,7 +37,7 @@ log = logging.getLogger(__name__)
 mock_inspire_ids = ['753951', '1299143', '1320775']
 
 
-def mock_import_old_record(inspire_id=mock_inspire_ids[1]):
+def mock_import_old_record(inspire_id=mock_inspire_ids[1], send_email=False):
     """Creates a submission but mimics the old migrated paths. (See hepdata
     master branch at ccd691b for old migrator module.)
     """
@@ -89,4 +89,4 @@ def mock_import_old_record(inspire_id=mock_inspire_ids[1]):
         return False
 
     do_finalise(record_information['recid'], publication_record=record_information,
-        force_finalise=True, convert=False)
+        force_finalise=True, convert=False, send_email=send_email)
