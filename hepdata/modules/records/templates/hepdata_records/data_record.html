@@ -149,17 +149,6 @@
                                 </a>
                               </li>
                             {% endif %}
-                            {% if ctx.coordinator == 1 and ctx.record.inspire_id %}
-                              <li>
-                                <a href="http://hepdata.cedar.ac.uk/view/ins{{ ctx.record.inspire_id }}"
-                                   itemprop="citation" itemscope
-                                   itemtype="http://schema.org/CreativeWork"
-                                   target="_blank"><span
-                                        class="link"><span class="link-type">HepData</span></span><span
-                                        class="hidden"
-                                        itemprop="url">http://hepdata.cedar.ac.uk/view/ins{{ ctx.record.inspire_id }}</span>
-                                </a></li>
-                            {% endif %}
 
                             {% if ctx.additional_resources %}
                                 <li>
