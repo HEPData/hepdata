@@ -41,7 +41,8 @@ from hepdata.modules.dashboard.views import do_finalise
 from hepdata.modules.records.api import process_zip_archive
 from hepdata.modules.inspire_api.views import get_inspire_record_information
 from hepdata.modules.records.utils.common import remove_file_extension
-from hepdata.modules.records.utils.data_files import get_data_path_for_record
+from hepdata.modules.records.utils.data_files import \
+    get_data_path_for_record, cleanup_old_files
 from hepdata.modules.records.utils.submission import \
     get_or_create_hepsubmission, cleanup_submission, unload_submission
 from hepdata.modules.records.utils.workflow import create_record
@@ -190,6 +191,9 @@ def _import_record(inspire_id, update_existing=False, base_url='https://hepdata.
                         log.error("        %s" % error['message'])
 
                 raise ValueError("Could not validate record.")
+
+        # Delete any previous upload folders
+        cleanup_old_files(hepsubmission)
 
         log.info("Finalising record %s" % recid)
 
