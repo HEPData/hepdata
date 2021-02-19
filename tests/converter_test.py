@@ -25,7 +25,8 @@ import zipfile
 
 from hepdata.config import CFG_CONVERTER_URL
 from hepdata.modules.converter.tasks import convert_and_store
-from hepdata.modules.records.migrator.api import Migrator
+from hepdata.modules.records.utils.old_hepdata import mock_import_old_record
+
 
 def test_convert_and_store_invalid(app, capsys):
     with app.app_context():
@@ -72,7 +73,7 @@ def test_convert_and_store_valid_original(app, capsys, load_submission):
 def test_convert_and_store_valid_original_with_old_resources(app, capsys):
     with app.app_context():
         # Create submission with resources
-        Migrator().load_file('ins1299143')
+        mock_import_old_record()
 
         capsys.readouterr()
         convert_and_store('1299143', 'original', True)

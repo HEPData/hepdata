@@ -41,8 +41,10 @@ from hepdata.modules.dashboard.views import do_finalise
 from hepdata.modules.records.api import process_zip_archive
 from hepdata.modules.inspire_api.views import get_inspire_record_information
 from hepdata.modules.records.utils.common import remove_file_extension
-from hepdata.modules.records.utils.data_files import get_data_path_for_record
-from hepdata.modules.records.utils.submission import get_or_create_hepsubmission
+from hepdata.modules.records.utils.data_files import \
+    get_data_path_for_record, cleanup_old_files
+from hepdata.modules.records.utils.submission import \
+    get_or_create_hepsubmission, cleanup_submission, unload_submission
 from hepdata.modules.records.utils.workflow import create_record
 from hepdata.modules.submission.api import get_latest_hepsubmission
 
@@ -51,7 +53,7 @@ log = logging.getLogger(__name__)
 
 
 def import_records(inspire_ids, synchronous=False, update_existing=False,
-                   base_url='https://hepdata.net'):
+                   base_url='https://hepdata.net', send_email=False):
     """
     Import records from hepdata.net
 
@@ -59,18 +61,19 @@ def import_records(inspire_ids, synchronous=False, update_existing=False,
     :param synchronous: if should be run immediately rather than via celery
     :param update_existing: whether to update records that already exist
     :param base_url: override default base URL
+    :param send_email: whether to send emails on finalising submissions
     :return: None
     """
     for index, inspire_id in enumerate(inspire_ids):
         _cleaned_id = str(inspire_id).replace("ins", "")
         if synchronous:
             _import_record(_cleaned_id, update_existing=update_existing,
-                           base_url=base_url)
+                           base_url=base_url, send_email=send_email)
         else:
             log.info("Sending import_record task to celery for id %s"
                      % _cleaned_id)
             _import_record.delay(_cleaned_id, update_existing=update_existing,
-                                 base_url=base_url)
+                                 base_url=base_url, send_email=send_email)
 
 
 def get_inspire_ids(base_url='https://hepdata.net', last_updated=None, n_latest=None):
@@ -118,7 +121,7 @@ def get_inspire_ids(base_url='https://hepdata.net', last_updated=None, n_latest=
 
 
 @shared_task
-def _import_record(inspire_id, update_existing=False, base_url='https://hepdata.net'):
+def _import_record(inspire_id, update_existing=False, base_url='https://hepdata.net', send_email=False):
     publication_information, status = get_inspire_record_information(inspire_id)
     if status != "success":
         log.error("Failed to retrieve publication information for " + inspire_id)
@@ -140,81 +143,109 @@ def _import_record(inspire_id, update_existing=False, base_url='https://hepdata.
             log.info("Not updating as update_existing is False")
             return False
 
+    try:
+        download_path = _download_file(base_url, inspire_id)
+
+        filename = os.path.basename(download_path)
+
+        time_stamp = str(int(round(time.time())))
+        file_save_directory = get_data_path_for_record(str(recid), time_stamp)
+        if not os.path.exists(file_save_directory):
+            os.makedirs(file_save_directory)
+
+        file_path = os.path.join(file_save_directory,
+                                 filename)
+        log.info("Moving file to %s" % file_path)
+        shutil.copy(download_path, file_path)
+
+        # Create submission
+        admin_user_id = 1
+        hepsubmission = get_or_create_hepsubmission(recid, admin_user_id)
+        db.session.add(hepsubmission)
+        db.session.commit()
+
+        # Then process the payload as for any other record
+        errors = process_zip_archive(file_path, recid)
+        if errors:
+            log.info("Errors processing archive. Re-trying with old schema.")
+            # Try again with old schema
+            # Need to clean up first to avoid errors
+            # First delete tables
+            cleanup_submission(recid, 1, [])
+            # Next remove remaining files
+            file_save_directory = os.path.dirname(file_path)
+            submission_path = os.path.join(file_save_directory,
+                                           remove_file_extension(filename))
+            shutil.rmtree(submission_path)
+
+            errors = process_zip_archive(file_path,
+                                         recid,
+                                         old_submission_schema=True,
+                                         old_data_schema=True)
+
+            if errors:
+                log.error("Could not process zip archive: ")
+                for file, file_errors in errors.items():
+                    log.error("    %s:" % file)
+                    for error in file_errors:
+                        log.error("        %s" % error['message'])
+
+                raise ValueError("Could not validate record.")
+
+        # Delete any previous upload folders
+        cleanup_old_files(hepsubmission)
+
+        log.info("Finalising record %s" % recid)
+
+        result_json = do_finalise(recid, force_finalise=True,
+                                  update=(current_submission is not None),
+                                  convert=False, send_email=send_email)
+        result = json.loads(result_json)
+
+        if result and result['success']:
+            log.info("Imported record %s with %s submissions"
+                     % (recid, result['data_count']))
+            return True
+        else:
+            raise ValueError("Failed to finalise record.")
+    except Exception as e:
+        # Unload record
+        unload_submission(recid)
+        log.error(e)
+        return False
+
+
+def _download_file(base_url, inspire_id):
     # Download file to temp dir
     url = "{0}/download/submission/ins{1}/original".format(base_url, inspire_id)
     log.info("Trying URL " + url)
     try:
         response = requests.get(url)
         if not response.ok:
-            log.error('Unable to retrieve download from {0}'.format(url))
-            return False
+            raise ConnectionError('Unable to retrieve download from %s' % url)
         elif not response.headers.get('content-type', '').startswith('application/'):
-            log.error('Did not receive zipped file in response from {0}'.format(url))
-            return False
+            raise ConnectionError('Did not receive zipped file in response from %s' % url)
     except socket.error as se:
-        log.error("Socket error: %s" % se)
-        return False
+        raise ConnectionError("Socket error: %s" % se)
 
-    # save to tmp file
-    tmp_file = tempfile.NamedTemporaryFile(mode='wb+', suffix='.zip',
-                                           dir=current_app.config["CFG_TMPDIR"],
-                                           delete=False)
-    tmp_file.write(response.content)
-    tmp_file.close()
-
-    time_stamp = str(int(round(time.time())))
-    file_save_directory = get_data_path_for_record(str(recid), time_stamp)
-    if not os.path.exists(file_save_directory):
-        os.makedirs(file_save_directory)
-
-    # Try getting file name from headers (but fall back to tmp file name)
-    filename = os.path.basename(tmp_file.name)
+    # Try getting file name from headers
+    download_path = None
+    tmp_file = None
     if 'content-disposition' in response.headers:
         match = re.search("filename=(.+)", response.headers['content-disposition'])
         if match:
             filename = match.group(1)
+            download_path = os.path.join(current_app.config["CFG_TMPDIR"], filename)
+            tmp_file = open(download_path, mode='wb+')
 
-    file_path = os.path.join(file_save_directory,
-                             filename)
-    log.info("Moving file to %s" % file_path)
-    shutil.move(tmp_file.name, file_path)
+    if not tmp_file:
+        tmp_file = tempfile.NamedTemporaryFile(mode='wb+', suffix='.zip',
+                                               dir=current_app.config["CFG_TMPDIR"],
+                                               delete=False)
+        download_path = tmp_file.name
 
-    # Create submission
-    admin_user_id = 1
-    hepsubmission = get_or_create_hepsubmission(recid, admin_user_id)
-    db.session.add(hepsubmission)
-    db.session.commit()
+    log.info("Saving file to %s" % download_path)
+    tmp_file.write(response.content)
+    tmp_file.close()
 
-    # Then process the payload as for any other record
-    errors = process_zip_archive(file_path, recid)
-    if errors:
-        log.info("Errors processing archive. Re-trying with old schema.")
-        # Try again with old schema
-        # Need to clean up first to avoid errors
-        file_save_directory = os.path.dirname(file_path)
-        submission_path = os.path.join(file_save_directory, remove_file_extension(filename))
-        shutil.rmtree(submission_path)
-
-        errors = process_zip_archive(file_path, recid, old_submission_schema=True)
-
-        if errors:
-            log.error("Could not process zip archive: ")
-            for file, file_errors in errors.items():
-                log.error("    %s:" % file)
-                for error in file_errors:
-                    log.error("        %s" % error['message'])
-
-            return False
-
-    log.info("Finalising record %s" % recid)
-
-    result_json = do_finalise(recid, force_finalise=True,
-                              update=(current_submission is not None))
-    result = json.loads(result_json)
-
-    if result and result['success']:
-        log.info("Imported record %s with %s submissions"
-                 % (recid, result['data_count']))
-        return True
-    else:
-        return False
+    return download_path

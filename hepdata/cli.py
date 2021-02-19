@@ -38,9 +38,9 @@ from hepdata.config import CFG_PUB_TYPE
 from hepdata.ext.elasticsearch.api import reindex_all, get_records_matching_field
 from hepdata.modules.records.importer import api as importer_api
 from hepdata.modules.records.utils import data_files
+from hepdata.modules.records.utils.analyses import update_analyses
+from hepdata.modules.records.utils.old_hepdata import mock_import_old_record, mock_inspire_ids
 from hepdata.modules.records.utils.submission import unload_submission
-from hepdata.modules.records.migrator.api import load_files, update_submissions, get_all_ids_in_current_system, \
-    add_or_update_records_since_date, update_analyses
 from hepdata.utils.twitter import tweet
 from hepdata.modules.email.api import send_finalised_email
 from hepdata.modules.records.utils.doi_minter import generate_dois_for_submission, generate_doi_for_table
@@ -54,127 +54,6 @@ from invenio_db import db
 cli = create_cli(create_app=create_app)
 
 default_recids = 'ins1283842,ins1245023,ins1311487'
-
-
-@cli.group()
-def migrator():
-    """Migrator from old HepData system to new HEPData system."""
-
-
-@migrator.command()
-@with_appcontext
-@click.option('--inspireids', '-i', default=default_recids,
-              help='A comma separated list of recids to load.')
-@click.option('--recreate_index', '-rc', default=True, type=bool,
-              help='Whether or not to recreate the index')
-@click.option('--tweet', '-t', default=False, type=bool,
-              help='Whether or not to send a tweet announcing the arrival of these records.')
-@click.option('--convert', '-c', default=False, type=bool,
-              help='Whether or not to create conversions for all loaded files to ROOT, YODA, and CSV.')
-def populate(inspireids, recreate_index, tweet, convert):
-    """
-    Populate the DB with records.
-
-    Usage: ``hepdata migrator populate -i 'ins1262703' -rc False -t False -c False``
-    """
-    from hepdata.ext.elasticsearch.api import recreate_index as reindex
-
-    if recreate_index:
-        reindex()
-
-    files_to_load = parse_inspireids_from_string(inspireids)
-    load_files(files_to_load, send_tweet=tweet, convert=convert)
-
-
-@migrator.command()
-@with_appcontext
-@click.option('--missing', '-m', is_flag=True,
-              help='This option will automatically find the inspire ids in the current '
-                   'hepdata but not in this version and migrate them.')
-@click.option('--start', '-s', type=int, default=None,
-              help='The start index from the total inspireids to load.')
-@click.option('--end', '-e', default=None, type=int,
-              help='The end index from the total inspireids to load.')
-@click.option('--date', '-d', type=str, default=None,
-              help='Filter all records modified since some point in time, e.g. 20160705 for the 5th July 2016.')
-def migrate(missing, start, end, date=None):
-    """Migrates all content from HEPData."""
-    print(missing)
-    if missing:
-        inspire_ids = get_missing_records()
-    else:
-        inspire_ids = get_all_ids_in_current_system(date)
-
-    print("Found {} inspire ids to load.".format(len(inspire_ids)))
-    if start is not None:
-        _slice = slice(int(start), end)
-        inspire_ids = inspire_ids[_slice]
-        print("Sliced, going to load {} records.".format(len(inspire_ids)))
-
-    print(inspire_ids)
-
-    load_files(inspire_ids)
-
-
-@migrator.command()
-@with_appcontext
-@click.option('--date', '-d', type=str, default=None, help='Date in the format YYYYddMM, e.g. 20160627.')
-@click.option('--tweet', '-t', default=False, type=bool,
-              help='Whether or not to send a tweet announcing the arrival of these records.')
-@click.option('--convert', '-c', default=False, type=bool,
-              help='Whether or not to create conversions for all loaded files to ROOT, YODA, and CSV.')
-def add_or_update(date, tweet, convert):
-    """
-    Provided a date, will find all records after that date and either load them if they don't exist in the system,
-    or update if they already exist.
-    """
-    add_or_update_records_since_date.delay(date, send_tweet=tweet, convert=convert)
-
-
-@migrator.command()
-@with_appcontext
-@click.option('--inspireids', '-i',
-              help='A comma-separated list of INSPIRE IDs to load.')
-@click.option('--force', '-f', default=False, type=bool,
-              help='Whether or not to force an update regardless of last_updated date.')
-@click.option('--update_record_info_only', '-ro', default=False, type=bool,
-              help='True if you just want to update the publication information.')
-@click.option('--email', '-e', default=False, type=bool,
-              help='True if you want to send an email after updating publication information.')
-def update(inspireids, force, update_record_info_only, email):
-    """
-    Given a list of INSPIRE IDs, can update the contents of the whole submission, or just the record information
-    via the ``update_record_info_only`` option.  By default, a record will only be updated if the last_updated date
-    is not more recent than the equivalent on the old site, but this behaviour can be overridden with ``--force``.
-
-    Usage: ``hepdata migrator update -i 'insXXX' -f True|False -ro True|False -e True|False``
-    """
-    records_to_update = parse_inspireids_from_string(inspireids)
-    update_submissions.delay(records_to_update, force, update_record_info_only, email)
-
-
-@migrator.command()
-@with_appcontext
-def find_missing_records():
-    """
-    Finds all records that are missing in the new system (compared to the legacy environment)
-    and returns the IDs as a list
-
-    :return: an array of missing IDs
-    """
-    return get_missing_records()
-
-
-def get_missing_records():
-    inspire_ids = get_all_ids_in_current_system(prepend_id_with="")
-    missing_ids = []
-    for inspire_id in inspire_ids:
-        if not record_exists(inspire_id=inspire_id):
-            missing_ids.append(inspire_id)
-
-    print("Missing {} records.".format(len(missing_ids)))
-    print(missing_ids)
-    return missing_ids
 
 
 @cli.group()
@@ -195,7 +74,9 @@ def importer():
 @click.option('--base-url', '-b', default="https://hepdata.net", type=str,
               help='Base URL from which to get data (defaults to '
               'https://hepdata.net)')
-def import_records(inspireids, recreate_index, base_url, update_existing):
+@click.option('--send-email', '-e', default=False, type=bool,
+              help='Whether or not to send emails on finalising submissions')
+def import_records(inspireids, recreate_index, base_url, update_existing, send_email):
     """
     Populate the DB with specific records from HEPData.net (or another
     instance as specified by base_url)
@@ -215,7 +96,7 @@ def import_records(inspireids, recreate_index, base_url, update_existing):
     files_to_load = parse_inspireids_from_string(inspireids)
     importer_api.import_records(files_to_load, synchronous=False,
                                 update_existing=update_existing,
-                                base_url=base_url)
+                                base_url=base_url, send_email=send_email)
 
 
 @importer.command()
@@ -231,7 +112,9 @@ def import_records(inspireids, recreate_index, base_url, update_existing):
               'https://hepdata.net)')
 @click.option('--n-latest', '-n', default=None, type=int,
               help='Get only the n most recently updated records')
-def bulk_import_records(base_url, update_existing, date, n_latest):
+@click.option('--send-email', '-e', default=False, type=bool,
+              help='Whether or not to send emails on finalising submissions')
+def bulk_import_records(base_url, update_existing, date, n_latest, send_email):
     """
     Populate the DB with records from HEPData.net (or another instance as
     specified by base_url)
@@ -253,7 +136,7 @@ def bulk_import_records(base_url, update_existing, date, n_latest):
         print("Found {} inspire ids to load.".format(len(inspire_ids)))
         importer_api.import_records(inspire_ids, synchronous=False,
                                     update_existing=update_existing,
-                                    base_url=base_url)
+                                    base_url=base_url, send_email=send_email)
 
 
 @cli.group()
@@ -278,39 +161,27 @@ def reindex(recreate, start, end, batch):
 
 @utils.command()
 @with_appcontext
-def find_duplicates_and_remove():
+@click.option('--base-url', '-b', default="https://hepdata.net", type=str,
+              help='Base URL from which to get data (defaults to '
+              'https://hepdata.net)')
+def find_duplicates_and_remove(base_url):
     """Will go through the application to find any duplicates then remove them."""
-    inspire_ids = get_all_ids_in_current_system(prepend_id_with="")
+    inspire_ids = importer_api.get_inspire_ids(
+        base_url=base_url
+    )
+    if inspire_ids is not False:
+        duplicates = []
+        for inspire_id in inspire_ids:
+            matches = get_records_matching_field('inspire_id', inspire_id,
+                                                 doc_type=CFG_PUB_TYPE)
+            if len(matches['hits']['hits']) > 1:
+                duplicates.append(matches['hits']['hits'][0]['_source']['recid'])
+        print('There are {} duplicates. Going to remove.'.format(len(duplicates)))
+        do_unload(duplicates)
 
-    duplicates = []
-    for inspire_id in inspire_ids:
-        matches = get_records_matching_field('inspire_id', inspire_id,
-                                             doc_type=CFG_PUB_TYPE)
-        if len(matches['hits']['hits']) > 1:
-            duplicates.append(matches['hits']['hits'][0]['_source']['recid'])
-    print('There are {} duplicates. Going to remove.'.format(len(duplicates)))
-    do_unload(duplicates)
-
-    # reindex submissions for dashboard view
-    admin_indexer = AdminIndexer()
-    admin_indexer.reindex(recreate=True)
-
-
-@utils.command()
-@with_appcontext
-@click.option('--inspireids', '-i', type=str,
-              help='Load specific INSPIRE IDs into the system.')
-@click.option('--tweet', '-t', default=False, type=bool,
-              help='Whether or not to send a tweet announcing the arrival of these records.')
-@click.option('--convert', '-c', default=False, type=bool,
-              help='Whether or not to create conversions for all loaded files to ROOT, YODA, and CSV.')
-@click.option('--base_url', '-url', default='http://hepdata.cedar.ac.uk/view/{0}/yaml', type=str,
-              help='Override default base URL of YAML format from old HepData site.')
-def load(inspireids, tweet, convert, base_url):
-    """Load records given their INSPIRE IDs into the database."""
-    processed_record_ids = parse_inspireids_from_string(inspireids)
-
-    load_files(processed_record_ids, send_tweet=tweet, convert=convert, base_url=base_url)
+        # reindex submissions for dashboard view
+        admin_indexer = AdminIndexer()
+        admin_indexer.reindex(recreate=True)
 
 
 def parse_inspireids_from_string(records_to_unload):
@@ -471,6 +342,36 @@ def get_data_path(record_id=None, inspire_id=None):
                % (record_id, data_files.get_data_path_for_record(record_id)))
     click.echo("Converted files for record %s are at:\t %s"
                % (record_id, data_files.get_converted_directory_path(record_id)))
+
+
+@utils.command()
+@with_appcontext
+@click.option('--inspire-id', '-i', type=click.Choice(mock_inspire_ids),
+              default='1299143', help='Inspire id to import')
+@click.option('--send-email', '-e', default=False, type=bool,
+              help='Whether or not to send emails on finalising submissions')
+def create_mock_migrated_record(inspire_id, send_email):
+    """
+    Populate the DB with a specific record which mimics a record migrated from
+    hepdata.cedar.ac.uk. Accepts inspire ids 753951, 1299143, 1320775.
+
+    Usage: ``hepdata utils create-mock-migrated-record``
+    """
+    if current_app.config.get('ENV') == 'production':
+        click.confirm('You are currently running in production mode on'
+                      ' %s. Are you sure you want to add a mock migrated record?'
+                      % current_app.config.get('SITE_URL'),
+                      abort=True)
+
+    # Delete current record if it already exists
+    current_submission = get_latest_hepsubmission(inspire_id=inspire_id)
+    if current_submission:
+        click.confirm('Inspire record %s already exists. Do you want to recreate it?'
+                      % inspire_id,
+                      abort=True)
+        unload_submission(current_submission.publication_recid)
+
+    mock_import_old_record(inspire_id, send_email=send_email)
 
 
 @cli.group()

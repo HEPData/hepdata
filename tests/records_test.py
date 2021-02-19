@@ -518,7 +518,7 @@ def test_get_all_ids(app, load_default_data, identifiers):
     # Check id_field works
     assert(get_all_ids(id_field='recid') == expected_record_ids)
     assert(get_all_ids(id_field='inspire_id')
-           == [x["inspire_id"] for x in identifiers])
+           == [int(x["inspire_id"]) for x in identifiers])
     with pytest.raises(ValueError):
         get_all_ids(id_field='authors')
 
@@ -536,4 +536,4 @@ def test_get_all_ids(app, load_default_data, identifiers):
     # Check sort by latest works
     assert(get_all_ids(latest_first=True) == expected_record_ids)
     assert(get_all_ids(id_field='inspire_id', latest_first=True)
-           == [x["inspire_id"] for x in identifiers])
+           == [int(x["inspire_id"]) for x in identifiers])

@@ -27,8 +27,8 @@ CLI Commands
 
 A command line interface (CLI) allows certain management commands to be run on the command line.
 
-.. click:: hepdata.cli:migrator
-   :prog: hepdata migrator
+.. click:: hepdata.cli:importer
+   :prog: hepdata importer
    :show-nested:
 
 .. click:: hepdata.cli:utils

@@ -197,17 +197,6 @@
                                   </li>
                                 {% endif %}
 
-                                {% if ctx.coordinator == 1 and ctx.record.inspire_id %}
-                                  <li>
-                                      <span itemprop="identifier" class="hidden">
-                                        http://hepdata.cedar.ac.uk/view/ins{{ ctx.record.inspire_id }}
-                                    </span>
-
-                                    <a href="http://hepdata.cedar.ac.uk/view/ins{{ ctx.record.inspire_id }}" target="_blank"><span
-                                            class="link"><span class="link-type">HepData</span></span>
-                                    </a></li>
-                                {% endif %}
-
                                 {% if ctx.additional_resources or (ctx.show_review_widget or ctx.show_upload_widget or ctx.is_submission_coordinator_or_admin) %}
                                     <li>
                                         <button id="show_all_resources" class="btn btn-primary btn-sm"

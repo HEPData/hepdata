@@ -47,8 +47,8 @@ from time import sleep
 from hepdata.config import CFG_TMPDIR, RUN_SELENIUM_LOCALLY
 from hepdata.ext.elasticsearch.api import reindex_all
 from hepdata.factory import create_app
-from hepdata.modules.records.migrator.api import load_files
-from tests.conftest import get_identifiers
+from hepdata.modules.records.importer.api import import_records
+from tests.conftest import get_identifiers, import_default_data
 
 
 @pytest.fixture(scope='session')
@@ -105,7 +105,7 @@ def app(request):
             db.session.add(user)
             db.session.commit()
 
-        load_default_data(app)
+        import_default_data(app, get_identifiers())
 
     def teardown():
         with app.app_context():
@@ -127,12 +127,6 @@ def test_identifiers(app):
 def search_tests(app):
     return [{"search_term": "collisions", "exp_collab_facet": "BELLE", "exp_hepdata_id": "ins1245023"},
             {"search_term": "leptons", "exp_collab_facet": "D0", "exp_hepdata_id": "ins1283842"}]
-
-
-def load_default_data(app):
-    with app.app_context():
-        to_load = [x["hepdata_id"] for x in get_identifiers()]
-        load_files(to_load, synchronous=True)
 
 
 def pytest_generate_tests(metafunc):

@@ -25,6 +25,7 @@
 """HEPData Test Fixtures"""
 
 import os
+from unittest import mock
 
 from invenio_accounts.models import Role, User
 from invenio_db import db
@@ -33,7 +34,7 @@ import pytest
 from hepdata.ext.elasticsearch.admin_view.api import AdminIndexer
 from hepdata.ext.elasticsearch.api import reindex_all
 from hepdata.factory import create_app
-from hepdata.modules.records.migrator.api import Migrator, load_files
+from hepdata.modules.records.importer.api import import_records, _download_file
 
 TEST_EMAIL = 'test@hepdata.net'
 TEST_PWD = 'hello1'
@@ -104,9 +105,26 @@ def admin_idx(app):
 
 @pytest.fixture()
 def load_default_data(app, identifiers):
+    import_default_data(app, identifiers)
+
+
+def import_default_data(app, identifiers):
     with app.app_context():
-        to_load = [x["hepdata_id"] for x in identifiers]
-        load_files(to_load, synchronous=True)
+        # Mock out the _download_file method in importer to avoid downloading the
+        # sample files multiple times during testing
+        def _test_download_file(base_url, inspire_id):
+            filename = 'HEPData-ins{0}-v1-original.zip'.format(inspire_id)
+            expected_file_name = os.path.join(app.config["CFG_TMPDIR"], filename)
+            if os.path.exists(expected_file_name):
+                print("Using existing file at %s" % expected_file_name)
+                return expected_file_name
+            else:
+                print("Reverting to normal _download_file method")
+                return _download_file(base_url, inspire_id)
+
+        with mock.patch('hepdata.modules.records.importer.api._download_file', wraps=_test_download_file):
+            to_load = [x["hepdata_id"] for x in identifiers]
+            import_records(to_load, synchronous=True)
 
 
 @pytest.fixture()
@@ -116,28 +134,23 @@ def client(app):
 
 
 @pytest.fixture()
-def migrator():
-    return Migrator()
-
-
-@pytest.fixture()
 def identifiers():
     return get_identifiers()
 
 def get_identifiers():
-    return [{"hepdata_id": "ins1283842", "inspire_id": 1283842,
+    return [{"hepdata_id": "ins1283842", "inspire_id": '1283842',
              "title": "Measurement of the forward-backward asymmetry "
                       "in the distribution of leptons in $t\\bar{t}$ "
                       "events in the lepton$+$jets channel",
              "data_tables": 14,
              "arxiv": "arXiv:1403.1294"},
 
-            {"hepdata_id": "ins1245023", "inspire_id": 1245023,
+            {"hepdata_id": "ins1245023", "inspire_id": '1245023',
              "title": "High-statistics study of $K^0_S$ pair production in two-photon collisions",
              "data_tables": 40,
              "arxiv": "arXiv:1307.7457"}
             ]
 
 @pytest.fixture()
-def load_submission(app, load_default_data, migrator):
-    migrator.load_file('ins1487726')
+def load_submission(app, load_default_data):
+    import_records(['ins1487726'], synchronous=True)

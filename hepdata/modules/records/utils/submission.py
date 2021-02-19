@@ -50,7 +50,6 @@ from hepdata.modules.records.utils.data_files import get_data_path_for_record, \
     cleanup_old_files, delete_all_files, delete_packaged_file
 from hepdata.modules.records.utils.doi_minter import reserve_dois_for_data_submissions, reserve_doi_for_hepsubmission, \
     generate_dois_for_submission
-from hepdata.modules.records.utils.resources import download_resource_file
 from hepdata.modules.records.utils.validators import get_data_validator, get_submission_validator
 from hepdata.utils.twitter import tweet
 from invenio_db import db
@@ -335,19 +334,26 @@ def parse_additional_resources(basepath, recid, yaml_document):
             if 'http' not in resource_location.lower():
                 resource_location = "http://" + resource_location
 
-        elif 'http' not in resource_location.lower() and 'www' not in resource_location.lower() and 'resource' not in resource_location:
-            # this is a file local to the submission.
-            try:
-                resource_location = os.path.join(basepath, resource_location)
-            except Exception as e:
-                raise e
-        else:
-            try:
-                resource_location = download_resource_file(recid, resource_location)
-                print('Downloaded resource location is {0}'.format(resource_location))
-            except URLError as url_error:
-                log.error("Unable to download {0}. The resource is unavailable.".format(resource_location))
-                resource_location = None
+        elif 'http' not in resource_location.lower() and 'www' not in resource_location.lower():
+            if resource_location.startswith('/resource'):
+                # This is an old file migrated from hepdata.cedar.ac.uk. We
+                # should only get here if using mock_import_old_record, in
+                # which case the resources should already be in the 'resources'
+                # directory
+                parent_dir = os.path.dirname(basepath)
+                resource_location = os.path.join(
+                    parent_dir,
+                    'resources',
+                    os.path.basename(resource_location)
+                )
+                if not os.path.exists(resource_location):
+                    raise ValueError("No such path %s" % resource_location)
+            else:
+                # this is a file local to the submission.
+                try:
+                    resource_location = os.path.join(basepath, resource_location)
+                except Exception as e:
+                    raise e
 
         if resource_location:
             new_reference = DataResource(
@@ -407,7 +413,7 @@ def _read_data_file(data_file_path):
 
 
 def process_submission_directory(basepath, submission_file_path, recid,
-                                 update=False, from_oldhepdata=False,
+                                 update=False, old_data_schema=False,
                                  old_submission_schema=False):
     """
     Goes through an entire submission directory and processes the
@@ -418,7 +424,7 @@ def process_submission_directory(basepath, submission_file_path, recid,
     :param submission_file_path:
     :param recid:
     :param update:
-    :param from_oldhepdata: whether to use old (v0) data schema
+    :param old_data_schema: whether to use old (v0) data schema
     :param old_submission_schema: whether to use old (v0) submission schema
         (should only be used when importing old records)
     :return:
@@ -461,7 +467,7 @@ def process_submission_directory(basepath, submission_file_path, recid,
 
         no_general_submission_info = True
 
-        data_file_validator = get_data_validator(from_oldhepdata)
+        data_file_validator = get_data_validator(old_data_schema)
 
         # Delete all data records associated with this submission.
         # Fixes problems with ordering where the table names are changed between uploads.
@@ -710,7 +716,8 @@ def unload_submission(record_id, version=1):
 
 
 def do_finalise(recid, publication_record=None, force_finalise=False,
-                commit_message=None, send_tweet=False, update=False, convert=True):
+                commit_message=None, send_tweet=False, update=False, convert=True,
+                send_email=True):
     """
         Creates record SIP for each data record with a link to the associated
         publication.
@@ -805,7 +812,8 @@ def do_finalise(recid, publication_record=None, force_finalise=False,
             except ConnectionTimeout as ct:
                 log.error('Unable to add ins{0} to admin index.\n{1}'.format(hep_submission.inspire_id, ct))
 
-            send_finalised_email(hep_submission)
+            if send_email:
+                send_finalised_email(hep_submission)
 
             if convert:
                 for file_format in ['yaml', 'csv', 'yoda', 'root']:

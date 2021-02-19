@@ -6,5 +6,6 @@ CFG_CONVERTER_URL = 'http://localhost:5500'
 CFG_TMPDIR = '~/tmp'
 CFG_DATADIR = '~/tmp'
 MAIL_SERVER = 'localhost'
+CELERY_BEAT_SCHEDULE = {}
 # RUN_SELENIUM_LOCALLY = True
 # RATELIMIT_ENABLED = False
