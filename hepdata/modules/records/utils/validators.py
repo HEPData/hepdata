@@ -72,18 +72,18 @@ def get_submission_validator(old_schema):
         return SubmissionFileValidator()
 
 
-def get_data_validator(old_hepdata):
+def get_data_validator(old_schema):
     """
     Returns a DataFileValidator object (with remote defined schemas loaded)
 
-    :param old_hepdata: whether the schema version for the submission.yaml is 0.1.0
+    :param old_hepdata: whether the schema version for the data file is 0.1.0
     :return: DataFileValidator object
     """
 
     global CACHED_DATA_VALIDATOR
 
     # Use for YAML files migrated from old HepData site
-    if old_hepdata:
+    if old_schema:
         data_validator = DataFileValidator(schema_version='0.1.0')
 
     elif CACHED_DATA_VALIDATOR:

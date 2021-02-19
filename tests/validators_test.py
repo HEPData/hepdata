@@ -39,7 +39,7 @@ def test_get_data_validator_initial():
     # Reset validator cache
     hepdata.modules.records.utils.validators.CACHED_DATA_VALIDATOR = None
 
-    data_validator = get_data_validator(old_hepdata=False)
+    data_validator = get_data_validator(old_schema=False)
 
     assert type(data_validator) == DataFileValidator
     assert hepdata.modules.records.utils.validators.CACHED_DATA_VALIDATOR is data_validator
@@ -54,11 +54,11 @@ def test_get_data_validator_cached():
     # Reset validator cache
     hepdata.modules.records.utils.validators.CACHED_DATA_VALIDATOR = None
 
-    initial_validator = get_data_validator(old_hepdata=False)
+    initial_validator = get_data_validator(old_schema=False)
 
     # Successive calls that should returned the cached validator
-    cached_validator_1 = get_data_validator(old_hepdata=False)
-    cached_validator_2 = get_data_validator(old_hepdata=False)
+    cached_validator_1 = get_data_validator(old_schema=False)
+    cached_validator_2 = get_data_validator(old_schema=False)
 
     assert cached_validator_1 is initial_validator
     assert cached_validator_2 is initial_validator

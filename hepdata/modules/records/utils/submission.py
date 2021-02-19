@@ -413,7 +413,7 @@ def _read_data_file(data_file_path):
 
 
 def process_submission_directory(basepath, submission_file_path, recid,
-                                 update=False, from_oldhepdata=False,
+                                 update=False, old_data_schema=False,
                                  old_submission_schema=False):
     """
     Goes through an entire submission directory and processes the
@@ -424,7 +424,7 @@ def process_submission_directory(basepath, submission_file_path, recid,
     :param submission_file_path:
     :param recid:
     :param update:
-    :param from_oldhepdata: whether to use old (v0) data schema
+    :param old_data_schema: whether to use old (v0) data schema
     :param old_submission_schema: whether to use old (v0) submission schema
         (should only be used when importing old records)
     :return:
@@ -467,7 +467,7 @@ def process_submission_directory(basepath, submission_file_path, recid,
 
         no_general_submission_info = True
 
-        data_file_validator = get_data_validator(from_oldhepdata)
+        data_file_validator = get_data_validator(old_data_schema)
 
         # Delete all data records associated with this submission.
         # Fixes problems with ordering where the table names are changed between uploads.

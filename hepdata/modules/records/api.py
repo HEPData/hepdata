@@ -454,7 +454,8 @@ def save_zip_file(file, id):
     return file_path
 
 
-def process_zip_archive(file_path, id, old_submission_schema=False):
+def process_zip_archive(file_path, id, old_submission_schema=False,
+                        old_data_schema=False):
     (file_save_directory, filename) = os.path.split(file_path)
 
     if not filename.endswith('.oldhepdata'):
@@ -470,7 +471,9 @@ def process_zip_archive(file_path, id, old_submission_schema=False):
                         "level": "error", "message": "{} is not a valid .gz file.".format(file_path)
                     }]
                 }
-            return process_zip_archive(file_path[:-3], id)
+            return process_zip_archive(file_path[:-3], id,
+                                       old_submission_schema=old_submission_schema,
+                                       old_data_schema=False)
         elif filename.endswith('.yaml'):
             # we split the singular yaml file and create a submission directory
             error, last_updated = split_files(file_path, submission_temp_path)
@@ -509,7 +512,6 @@ def process_zip_archive(file_path, id, old_submission_schema=False):
             }
 
         basepath, submission_file_path = submission_found
-        from_oldhepdata = False
 
     else:
         file_dir = os.path.dirname(file_save_directory)
@@ -521,10 +523,10 @@ def process_zip_archive(file_path, id, old_submission_schema=False):
             return result
         else:
             basepath, submission_file_path = result
-            from_oldhepdata = True
+            old_data_schema = True
 
     return process_submission_directory(basepath, submission_file_path, id,
-                                        from_oldhepdata=from_oldhepdata,
+                                        old_data_schema=old_data_schema,
                                         old_submission_schema=old_submission_schema)
 
 

@@ -173,10 +173,14 @@ def _import_record(inspire_id, update_existing=False, base_url='https://hepdata.
             cleanup_submission(recid, 1, [])
             # Next remove remaining files
             file_save_directory = os.path.dirname(file_path)
-            submission_path = os.path.join(file_save_directory, remove_file_extension(filename))
+            submission_path = os.path.join(file_save_directory,
+                                           remove_file_extension(filename))
             shutil.rmtree(submission_path)
 
-            errors = process_zip_archive(file_path, recid, old_submission_schema=True)
+            errors = process_zip_archive(file_path,
+                                         recid,
+                                         old_submission_schema=True,
+                                         old_data_schema=True)
 
             if errors:
                 log.error("Could not process zip archive: ")
