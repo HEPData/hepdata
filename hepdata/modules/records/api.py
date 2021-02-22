@@ -383,7 +383,7 @@ def process_payload(recid, file, redirect_url, synchronous=False):
                         " (or a .oldhepdata or single .yaml or .yaml.gz file)."}), 400
 
 
-@shared_task
+@shared_task(autoretry_for=(Exception,), retry_kwargs={'max_retries': 3})
 def process_saved_file(file_path, recid, userid, redirect_url, previous_status):
 
     hepsubmission = get_latest_hepsubmission(publication_recid=recid)
@@ -391,50 +391,90 @@ def process_saved_file(file_path, recid, userid, redirect_url, previous_status):
         log.error('Record {} is not in a processing state.'.format(recid))
         return
 
-    errors = process_zip_archive(file_path, recid)
+    updated_status = hepsubmission.overall_status
 
-    uploader = User.query.get(userid)
-    site_url = current_app.config.get('SITE_URL', 'https://www.hepdata.net')
+    try:
+        errors = process_zip_archive(file_path, recid)
 
-    submission_participant = SubmissionParticipant.query.filter_by(
-        publication_recid=recid, user_account=userid, role='uploader').first()
-    if submission_participant:
-        full_name = submission_participant.full_name
-    else:
-        full_name = uploader.email
+        uploader = User.query.get(userid)
+        site_url = current_app.config.get('SITE_URL', 'https://www.hepdata.net')
 
-    if errors:
-        cleanup_submission(recid, hepsubmission.version, [])  # delete all tables if errors
-        message_body = render_template('hepdata_theme/email/upload_errors.html',
-                                       name=full_name,
-                                       article=recid,
-                                       redirect_url=redirect_url.format(recid),
-                                       errors=errors,
-                                       site_url=site_url)
+        submission_participant = SubmissionParticipant.query.filter_by(
+            publication_recid=recid, user_account=userid, role='uploader').first()
+        if submission_participant:
+            full_name = submission_participant.full_name
+        else:
+            full_name = uploader.email
 
-        create_send_email_task(uploader.email,
-                               '[HEPData] Submission {0} upload failed'.format(recid),
-                               message_body)
-    else:
-        update_action_for_submission_participant(recid, userid, 'uploader')
-        message_body = render_template('hepdata_theme/email/upload_complete.html',
-                                       name=full_name,
-                                       article=recid,
-                                       link=redirect_url.format(recid),
-                                       site_url=site_url)
+        if errors:
+            cleanup_submission(recid, hepsubmission.version, [])  # delete all tables if errors
+            message_body = render_template('hepdata_theme/email/upload_errors.html',
+                                           name=full_name,
+                                           article=recid,
+                                           redirect_url=redirect_url.format(recid),
+                                           errors=errors,
+                                           site_url=site_url)
 
-        create_send_email_task(uploader.email,
-                               '[HEPData] Submission {0} upload succeeded'.format(recid),
-                               message_body)
+            create_send_email_task(uploader.email,
+                                   '[HEPData] Submission {0} upload failed'.format(recid),
+                                   message_body)
+        else:
+            update_action_for_submission_participant(recid, userid, 'uploader')
+            message_body = render_template('hepdata_theme/email/upload_complete.html',
+                                           name=full_name,
+                                           article=recid,
+                                           link=redirect_url.format(recid),
+                                           site_url=site_url)
 
-    # Reset the status of the submission back to the previous value.
-    hepsubmission.overall_status = previous_status
-    db.session.add(hepsubmission)
-    db.session.commit()
+            create_send_email_task(uploader.email,
+                                   '[HEPData] Submission {0} upload succeeded'.format(recid),
+                                   message_body)
 
-    # Delete any previous upload folders relating to non-final versions
-    # of this hepsubmission
-    cleanup_old_files(hepsubmission)
+        updated_status = previous_status
+
+        # Delete any previous upload folders relating to non-final versions
+        # of this hepsubmission
+        cleanup_old_files(hepsubmission)
+
+    except Exception as e:
+        # Reset the status and send error emails, unless we're working
+        # asynchronously and celery is about to retry
+        if not process_saved_file.request.id \
+                or process_saved_file.request.retries >= process_saved_file.max_retries:
+            updated_status = previous_status
+            try:
+                cleanup_submission(recid, hepsubmission.version, [])
+                errors = {
+                    "Unexpected error": [{
+                        "level": "error",
+                        "message": "An unexpected error occurred: {}".format(e)
+                    }]
+                }
+                uploader = User.query.get(userid)
+                site_url = current_app.config.get('SITE_URL', 'https://www.hepdata.net')
+                message_body = render_template('hepdata_theme/email/upload_errors.html',
+                                               name=uploader.email,
+                                               article=recid,
+                                               redirect_url=redirect_url.format(recid),
+                                               errors=errors,
+                                               site_url=site_url)
+
+                create_send_email_task(uploader.email,
+                                       '[HEPData] Submission {0} upload failed'.format(recid),
+                                       message_body)
+                log.error("Final attempt of process_saved_file for recid %s failed. Resetting to previous status." % recid)
+
+            except Exception as ex:
+                log.error("Exception while cleaning up: " % ex)
+
+        else:
+            log.debug("Celery will retry task, attempt %s" % process_saved_file.request.retries)
+            raise e
+    finally:
+        # Reset the status of the submission back to the previous value.
+        hepsubmission.overall_status = updated_status
+        db.session.add(hepsubmission)
+        db.session.commit()
 
 
 def save_zip_file(file, id):

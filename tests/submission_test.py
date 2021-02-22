@@ -30,7 +30,7 @@ from time import sleep
 from invenio_db import db
 
 from hepdata.ext.elasticsearch.api import get_records_matching_field
-from hepdata.modules.records.api import format_submission
+from hepdata.modules.records.api import format_submission, process_saved_file
 from hepdata.modules.records.utils.common import infer_file_type, contains_accepted_url, allowed_file, record_exists, \
     get_record_contents
 from hepdata.modules.records.utils.data_files import get_data_path_for_record
@@ -274,3 +274,28 @@ def test_duplicate_table_names(app):
     for error in errors['submission.yaml']:
         assert(error['level'] == 'error')
         assert(error['message'].startswith("Duplicate table with name"))
+
+
+def test_status_reset(app, mocker):
+    """
+    Test that the status is reset if something unexpected goes wrong
+    :return:
+    """
+
+    base_dir = os.path.dirname(os.path.realpath(__file__))
+    hepsubmission = HEPSubmission(publication_recid=12345,
+                                  overall_status='processing',
+                                  version=1)
+    db.session.add(hepsubmission)
+    db.session.commit()
+
+    assert(hepsubmission.overall_status == 'processing')
+
+    mocker.patch('hepdata.modules.records.api.process_zip_archive',
+                 side_effect=Exception("Something went wrong"))
+
+    zip_file = os.path.join(base_dir, 'test_data/TestHEPSubmission.zip')
+    process_saved_file(zip_file, 12345, 1, '', 'todo')
+
+    # After initial failure, overall_status should be reset to 'todo'
+    assert(hepsubmission.overall_status == 'todo')
