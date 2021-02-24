@@ -22,20 +22,29 @@
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
+import pytest
 import yaml
-try:
-    from yaml import CSafeLoader as Loader
-except ImportError:  # pragma: no cover
-    from yaml import SafeLoader as Loader  # pragma: no cover
 
 
-def test_parse_trailing_tab():
+def test_parse_trailing_tab_libyaml():
     """
-    Check that the PyYAML installation can parse a trailing tab character.
+    Check that PyYAML (with LibYAML) can parse a trailing tab character.
     Currently this is only possible with LibYAML, not with pure-Python PyYAML.
 
     :return:
     """
 
-    data = yaml.load('key: value\t', Loader=Loader)
+    data = yaml.load('key: value\t', Loader=yaml.CSafeLoader)
     assert data['key'] == 'value'
+
+
+def test_parse_trailing_tab_pyyaml():
+    """
+    Latest PyYAML v5.4.1 (pure Python) currently has a bug parsing a trailing tab character.
+    https://github.com/yaml/pyyaml/issues/306 and https://github.com/yaml/pyyaml/issues/450
+
+    :return:
+    """
+
+    with pytest.raises(yaml.scanner.ScannerError):
+        yaml.load('key: value\t', Loader=yaml.SafeLoader)
