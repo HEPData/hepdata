@@ -29,6 +29,7 @@ from shutil import rmtree
 
 from shutil import move
 
+from flask import current_app
 from hepdata_converter_ws_client import convert
 
 from hepdata.config import CFG_CONVERTER_URL, CFG_CONVERTER_TIMEOUT
@@ -95,7 +96,7 @@ def convert_oldhepdata_to_yaml(input_path, output_path):
 
 @contextlib.contextmanager
 def prepare_data_folder(input_archive, input_format):
-    input_root_dir = tempfile.mkdtemp()
+    input_root_dir = tempfile.mkdtemp(dir=current_app.config['CFG_TMPDIR'])
     try:
         with zipfile.ZipFile(input_archive, 'r') as zip_archive:
             zip_archive.extractall(path=input_root_dir)
