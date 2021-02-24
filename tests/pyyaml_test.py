@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # This file is part of HEPData.
-# Copyright (C) 2016 CERN.
+# Copyright (C) 2021 CERN.
 #
 # HEPData is free software; you can redistribute it
 # and/or modify it under the terms of the GNU General Public License as
@@ -22,10 +22,29 @@
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
-"""Version information for HEPData.
+import pytest
+import yaml
 
-This file is imported by ``HEPData.__init__``,
-and parsed by ``setup.py``.
-"""
 
-__version__ = "0.9.4dev20210224"
+def test_parse_trailing_tab_libyaml():
+    """
+    Check that PyYAML (with LibYAML) can parse a trailing tab character.
+    Currently this is only possible with LibYAML, not with pure-Python PyYAML.
+
+    :return:
+    """
+
+    data = yaml.load('key: value\t', Loader=yaml.CSafeLoader)
+    assert data['key'] == 'value'
+
+
+def test_parse_trailing_tab_pyyaml():
+    """
+    Latest PyYAML v5.4.1 (pure Python) currently has a bug parsing a trailing tab character.
+    https://github.com/yaml/pyyaml/issues/306 and https://github.com/yaml/pyyaml/issues/450
+
+    :return:
+    """
+
+    with pytest.raises(yaml.scanner.ScannerError):
+        yaml.load('key: value\t', Loader=yaml.SafeLoader)

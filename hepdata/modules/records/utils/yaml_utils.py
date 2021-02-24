@@ -30,10 +30,7 @@ from hepdata.modules.records.utils.common import zipdir
 from hepdata.modules.records.utils.data_processing_utils import str_presenter
 import shutil
 import yaml
-try:
-    from yaml import CSafeLoader as Loader, CSafeDumper as Dumper
-except ImportError: #pragma: no cover
-    from yaml import SafeLoader as Loader, SafeDumper as Dumper #pragma: no cover
+from yaml import CSafeLoader as Loader, CSafeDumper as Dumper
 import zipfile
 from datetime import datetime
 from dateutil.parser import parse
