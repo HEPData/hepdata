@@ -22,12 +22,14 @@
 
 """HEPData Converter."""
 
+import contextlib
 import tempfile
 import zipfile
 from shutil import rmtree
 
 from shutil import move
 
+from flask import current_app
 from hepdata_converter_ws_client import convert
 
 from hepdata.config import CFG_CONVERTER_URL, CFG_CONVERTER_TIMEOUT
@@ -43,30 +45,21 @@ def convert_zip_archive(input_archive, output_archive, options):
     :param options:
     :return: output_file
     """
-    input_root_dir = tempfile.mkdtemp()
-    with zipfile.ZipFile(input_archive, 'r') as zip_archive:
-        zip_archive.extractall(path=input_root_dir)
-
-    # Find the appropriate file/directory in the input archive
     input = options.get('input_format', 'yaml')
-    validation = find_file_in_directory(
-        input_root_dir,
-        lambda x: x == 'submission.yaml' if input == 'yaml' else x.endswith('.oldhepdata')
-    )
-    if not validation:
-        return None
+    with prepare_data_folder(input_archive, input) as validation:
+        if not validation:
+            return None
 
-    input_directory, input_file = validation
+        input_directory, input_file = validation
 
-    successful = convert(
-        CFG_CONVERTER_URL,
-        input_directory if input == 'yaml' else input_file,
-        output=output_archive,
-        options=options,
-        extract=False,
-        timeout=CFG_CONVERTER_TIMEOUT,
-    )
-    rmtree(input_root_dir)
+        successful = convert(
+            CFG_CONVERTER_URL,
+            input_directory if input == 'yaml' else input_file,
+            output=output_archive,
+            options=options,
+            extract=False,
+            timeout=CFG_CONVERTER_TIMEOUT,
+        )
 
     # Error occurred, the output is a HTML file
     if not successful:
@@ -99,3 +92,19 @@ def convert_oldhepdata_to_yaml(input_path, output_path):
     )
 
     return successful
+
+
+@contextlib.contextmanager
+def prepare_data_folder(input_archive, input_format):
+    input_root_dir = tempfile.mkdtemp(dir=current_app.config['CFG_TMPDIR'])
+    try:
+        with zipfile.ZipFile(input_archive, 'r') as zip_archive:
+            zip_archive.extractall(path=input_root_dir)
+
+        # Find the appropriate file/directory in the input archive
+        yield find_file_in_directory(
+            input_root_dir,
+            lambda x: x == 'submission.yaml' if input_format == 'yaml' else x.endswith('.oldhepdata')
+        )
+    finally:
+        rmtree(input_root_dir)

@@ -620,7 +620,7 @@ def create_original_with_resources(submission, data_filepath, output_path):
         # There is a resources directory from when this record was imported
         # from the old hepdata site. We need to create a new zip with the
         # contents of data_filepath and resources
-        with tempfile.TemporaryDirectory() as tmpdir:
+        with tempfile.TemporaryDirectory(dir=current_app.config['CFG_TMPDIR']) as tmpdir:
             # Copy resources directory into 'contents' dir in temp directory
             contents_path = os.path.join(tmpdir, 'contents')
             shutil.copytree(resource_location, contents_path)
