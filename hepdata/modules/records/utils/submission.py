@@ -61,19 +61,13 @@ import os
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.exc import SQLAlchemyError
 import yaml
-
-try:
-    from yaml import CSafeLoader as Loader
-except ImportError: #pragma: no cover
-    from yaml import SafeLoader as Loader #pragma: no cover
+from yaml import CSafeLoader as Loader
 
 def construct_yaml_str(self, node):
     # Override the default string handling function
     # to always return unicode objects
     return self.construct_scalar(node)
 Loader.add_constructor(u'tag:yaml.org,2002:str', construct_yaml_str)
-
-from urllib.error import URLError
 
 logging.basicConfig()
 log = logging.getLogger(__name__)

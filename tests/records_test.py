@@ -124,7 +124,7 @@ def test_has_role(app):
 def test_data_processing(app):
     base_dir = os.path.dirname(os.path.realpath(__file__))
 
-    data = yaml.safe_load(open(os.path.join(base_dir, 'test_data/data_table.yaml'), 'rt'))
+    data = yaml.load(open(os.path.join(base_dir, 'test_data/data_table.yaml'), 'rt'), Loader=yaml.CSafeLoader)
 
     assert ('independent_variables' in data)
     assert ('dependent_variables' in data)
