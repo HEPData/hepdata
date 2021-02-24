@@ -383,7 +383,7 @@ def process_payload(recid, file, redirect_url, synchronous=False):
                         " (or a .oldhepdata or single .yaml or .yaml.gz file)."}), 400
 
 
-@shared_task(autoretry_for=(Exception,), retry_kwargs={'max_retries': 3})
+@shared_task
 def process_saved_file(file_path, recid, userid, redirect_url, previous_status):
     try:
         hepsubmission = get_latest_hepsubmission(publication_recid=recid)

@@ -77,14 +77,7 @@ CELERY_BEAT_SCHEDULE = {
     },
 }
 
-class Annotator:
-    def annotate(self, task):
-        if task.acks_late:
-            # avoid failing tasks when worker gets killed
-            return {"reject_on_worker_lost": True}
-
-
-CELERY_TASK_ANNOTATIONS = [Annotator()]
+CELERY_TASK_ANNOTATIONS = {'*': {'acks_late': True, 'reject_on_worker_lost': True, 'autoretry_for': (Exception,)}}
 
 # Cache
 CACHE_KEY_PREFIX = "cache::"
