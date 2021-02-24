@@ -592,10 +592,11 @@ def process_submission_directory(basepath, submission_file_path, recid,
                                    % (data_size, current_app.config['UPLOAD_MAX_SIZE'])
                     }]
 
-            reserve_dois_for_data_submissions(publication_recid=recid, version=hepsubmission.version)
+            if len(errors) == 0:
+                reserve_dois_for_data_submissions(publication_recid=recid, version=hepsubmission.version)
 
-            admin_indexer = AdminIndexer()
-            admin_indexer.index_submission(hepsubmission)
+                admin_indexer = AdminIndexer()
+                admin_indexer.index_submission(hepsubmission)
 
     else:
 
