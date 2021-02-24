@@ -590,12 +590,12 @@ def process_submission_directory(basepath, submission_file_path, recid,
                     'hepdata_doi': f'10.17182/hepdata.{recid}.v{hepsubmission.version}',
                     'rivet_analysis_name': f'ATLAS_2020_I{dummy_inspire_id}'
                 }
-                data_size = get_data_size(data_filepath, options)
+                data_size = get_data_size(input_directory, options)
                 if data_size > current_app.config['UPLOAD_MAX_SIZE']:
                     errors["Archive"] = [{
                         "level": "error",
-                        "message": "Archive is too big for conversion to other formats. (%s bytes would be sent to converter.)"
-                                   % data_size
+                        "message": "Archive is too big for conversion to other formats. (%s bytes would be sent to converter; maximum size is %s.)"
+                                   % (data_size, current_app.config['UPLOAD_MAX_SIZE'])
                     }]
 
             reserve_dois_for_data_submissions(publication_recid=recid, version=hepsubmission.version)
