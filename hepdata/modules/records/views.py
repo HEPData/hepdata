@@ -34,10 +34,7 @@ from flask import Blueprint, send_file, abort, redirect
 from flask_security.utils import verify_password
 from sqlalchemy import or_, func
 import yaml
-try:
-    from yaml import CBaseLoader as Loader
-except ImportError:  # pragma: no cover
-    from yaml import BaseLoader as Loader  # pragma: no cover
+from yaml import CBaseLoader as Loader
 
 from hepdata.config import CFG_DATA_TYPE, CFG_PUB_TYPE, SITE_URL
 from hepdata.ext.elasticsearch.api import get_records_matching_field, get_count_for_collection, get_n_latest_records, \
