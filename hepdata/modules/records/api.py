@@ -385,15 +385,12 @@ def process_payload(recid, file, redirect_url, synchronous=False):
 
 @shared_task(autoretry_for=(Exception,), retry_kwargs={'max_retries': 3})
 def process_saved_file(file_path, recid, userid, redirect_url, previous_status):
-
-    hepsubmission = get_latest_hepsubmission(publication_recid=recid)
-    if hepsubmission.overall_status != 'processing' and hepsubmission.overall_status != 'sandbox_processing':
-        log.error('Record {} is not in a processing state.'.format(recid))
-        return
-
-    updated_status = hepsubmission.overall_status
-
     try:
+        hepsubmission = get_latest_hepsubmission(publication_recid=recid)
+        if hepsubmission.overall_status != 'processing' and hepsubmission.overall_status != 'sandbox_processing':
+            log.error('Record {} is not in a processing state.'.format(recid))
+            return
+
         errors = process_zip_archive(file_path, recid)
 
         uploader = User.query.get(userid)
@@ -430,7 +427,10 @@ def process_saved_file(file_path, recid, userid, redirect_url, previous_status):
                                    '[HEPData] Submission {0} upload succeeded'.format(recid),
                                    message_body)
 
-        updated_status = previous_status
+        # Reset the status of the submission back to the previous value.
+        hepsubmission.overall_status = previous_status
+        db.session.add(hepsubmission)
+        db.session.commit()
 
         # Delete any previous upload folders relating to non-final versions
         # of this hepsubmission
@@ -441,7 +441,6 @@ def process_saved_file(file_path, recid, userid, redirect_url, previous_status):
         # asynchronously and celery is about to retry
         if not process_saved_file.request.id \
                 or process_saved_file.request.retries >= process_saved_file.max_retries:
-            updated_status = previous_status
             try:
                 cleanup_submission(recid, hepsubmission.version, [])
                 errors = {
@@ -464,17 +463,17 @@ def process_saved_file(file_path, recid, userid, redirect_url, previous_status):
                                        message_body)
                 log.error("Final attempt of process_saved_file for recid %s failed. Resetting to previous status." % recid)
 
+                # Reset the status of the submission back to the previous value.
+                hepsubmission.overall_status = previous_status
+                db.session.add(hepsubmission)
+                db.session.commit()
+
             except Exception as ex:
                 log.error("Exception while cleaning up: " % ex)
 
         else:
             log.debug("Celery will retry task, attempt %s" % process_saved_file.request.retries)
             raise e
-    finally:
-        # Reset the status of the submission back to the previous value.
-        hepsubmission.overall_status = updated_status
-        db.session.add(hepsubmission)
-        db.session.commit()
 
 
 def save_zip_file(file, id):
