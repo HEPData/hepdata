@@ -469,7 +469,7 @@ def process_saved_file(file_path, recid, userid, redirect_url, previous_status):
                 db.session.commit()
 
             except Exception as ex:
-                log.error("Exception while cleaning up: " % ex)
+                log.error("Exception while cleaning up: %s" % ex)
 
         else:
             log.debug("Celery will retry task, attempt %s" % process_saved_file.request.retries)

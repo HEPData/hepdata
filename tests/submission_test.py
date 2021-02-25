@@ -22,6 +22,7 @@
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
+import logging
 import os
 import shutil
 import time
@@ -330,3 +331,35 @@ def test_status_reset(app, mocker):
 
     # After initial failure, overall_status should be reset to 'todo'
     assert(hepsubmission.overall_status == 'todo')
+
+
+def test_status_reset_error(app, mocker, caplog):
+    """
+    Test that an error is logged if something goes wrong in the status reset
+    :return:
+    """
+    caplog.set_level(logging.ERROR)
+    base_dir = os.path.dirname(os.path.realpath(__file__))
+    hepsubmission = HEPSubmission(publication_recid=12345,
+                                  overall_status='processing',
+                                  version=1)
+    db.session.add(hepsubmission)
+    db.session.commit()
+
+    assert(hepsubmission.overall_status == 'processing')
+
+    mocker.patch('hepdata.modules.records.api.process_zip_archive',
+                 side_effect=Exception("Something went wrong"))
+    mocker.patch('hepdata.modules.records.api.cleanup_submission',
+                 side_effect=Exception("Could not clean up the submission"))
+
+    zip_file = os.path.join(base_dir, 'test_data/TestHEPSubmission.zip')
+    process_saved_file(zip_file, 12345, 1, '', 'todo')
+
+    # After initial failure, overall_status has not been able to be reset
+    assert(hepsubmission.overall_status == 'processing')
+    assert(len(caplog.records) == 1)
+
+    assert(caplog.records[0].levelname == "ERROR")
+    assert(caplog.records[0].msg
+           == "Exception while cleaning up: Could not clean up the submission")
