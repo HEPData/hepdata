@@ -32,10 +32,12 @@ from elasticsearch import NotFoundError, ConnectionTimeout
 from flask import current_app
 from flask_celeryext import create_celery_app
 from flask_login import current_user
+from hepdata_converter_ws_client import get_data_size
 from hepdata.config import CFG_DATA_TYPE, CFG_PUB_TYPE
 from hepdata.ext.elasticsearch.admin_view.api import AdminIndexer
 from hepdata.ext.elasticsearch.api import get_records_matching_field, \
     delete_item_from_index, index_record_ids, push_data_keywords
+from hepdata.modules.converter import prepare_data_folder
 from hepdata.modules.converter.tasks import convert_and_store
 from hepdata.modules.email.api import send_finalised_email
 from hepdata.modules.permissions.models import SubmissionParticipant
@@ -47,7 +49,8 @@ from hepdata.modules.records.utils.common import \
     get_license, infer_file_type, encode_string, zipdir, get_record_by_id, contains_accepted_url
 from hepdata.modules.records.utils.common import get_or_create
 from hepdata.modules.records.utils.data_files import get_data_path_for_record, \
-    cleanup_old_files, delete_all_files, delete_packaged_file
+    cleanup_old_files, delete_all_files, delete_packaged_file, \
+    find_submission_data_file_path
 from hepdata.modules.records.utils.doi_minter import reserve_dois_for_data_submissions, reserve_doi_for_hepsubmission, \
     generate_dois_for_submission
 from hepdata.modules.records.utils.validators import get_data_validator, get_submission_validator
@@ -564,10 +567,36 @@ def process_submission_directory(basepath, submission_file_path, recid,
 
         if len(errors) is 0:
             errors = package_submission(basepath, recid, hepsubmission)
-            reserve_dois_for_data_submissions(publication_recid=recid, version=hepsubmission.version)
 
-            admin_indexer = AdminIndexer()
-            admin_indexer.index_submission(hepsubmission)
+            # Check the size of the upload to ensure it can be converted
+            data_filepath = find_submission_data_file_path(hepsubmission)
+            with prepare_data_folder(data_filepath, 'yaml') as filepaths:
+                input_directory, input_file = filepaths
+                # Create options that look like a worst-case (biggest)
+                # conversions (using yoda-like options as they include rivet
+                # analysis
+                dummy_inspire_id = hepsubmission.inspire_id or '0000000'
+                options = {
+                    'input_format': 'yaml',
+                    'output_format': 'yoda',
+                    'filename': f'HEPData-ins{dummy_inspire_id}-v{hepsubmission.version}-yoda',
+                    'validator_schema_version': '0.1.0',
+                    'hepdata_doi': f'10.17182/hepdata.{recid}.v{hepsubmission.version}',
+                    'rivet_analysis_name': f'ATLAS_2020_I{dummy_inspire_id}'
+                }
+                data_size = get_data_size(input_directory, options)
+                if data_size > current_app.config['UPLOAD_MAX_SIZE']:
+                    errors["Archive"] = [{
+                        "level": "error",
+                        "message": "Archive is too big for conversion to other formats. (%s bytes would be sent to converter; maximum size is %s.)"
+                                   % (data_size, current_app.config['UPLOAD_MAX_SIZE'])
+                    }]
+
+            if len(errors) == 0:
+                reserve_dois_for_data_submissions(publication_recid=recid, version=hepsubmission.version)
+
+                admin_indexer = AdminIndexer()
+                admin_indexer.index_submission(hepsubmission)
 
     else:
 

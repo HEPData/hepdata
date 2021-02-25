@@ -251,6 +251,37 @@ def test_invalid_data_yaml(app, admin_idx):
     assert(errors['data1.yaml'][0]['message'].startswith("There was a problem parsing the file"))
 
 
+def test_submission_too_big(app, mocker):
+    """
+    Test the right thing happens when the submission data is too big
+    :return:
+    """
+
+    base_dir = os.path.dirname(os.path.realpath(__file__))
+
+    hepsubmission = HEPSubmission(publication_recid=12345,
+                                  overall_status='todo',
+                                  version=1)
+    db.session.add(hepsubmission)
+    db.session.commit()
+
+    # Patch the app config to reduce the max upload size
+    mocker.patch.dict('flask.current_app.config',
+                      {'UPLOAD_MAX_SIZE': 1000})
+
+    test_directory = os.path.join(base_dir, 'test_data/test_submission')
+    errors = process_submission_directory(
+        test_directory,
+        os.path.join(test_directory, 'submission.yaml'),
+        12345
+    )
+
+    assert('Archive' in errors)
+    assert(len(errors['Archive']) == 1)
+    assert(errors['Archive'][0]['level'] == 'error')
+    assert(errors['Archive'][0]['message'].startswith("Archive is too big for conversion to other formats."))
+
+
 def test_duplicate_table_names(app):
     """
     Test that an error is returned for a submission.yaml file with duplicate table names.
