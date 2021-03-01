@@ -77,7 +77,14 @@ CELERY_BEAT_SCHEDULE = {
     },
 }
 
-CELERY_TASK_ANNOTATIONS = {'*': {'acks_late': True, 'reject_on_worker_lost': True, 'autoretry_for': (Exception,)}}
+CELERY_TASK_ANNOTATIONS = {
+    '*': {
+        'acks_late': True,
+        'reject_on_worker_lost': True,
+        'autoretry_for': (Exception,),
+        'default_retry_delay': 30
+    }
+}
 
 # Cache
 CACHE_KEY_PREFIX = "cache::"
