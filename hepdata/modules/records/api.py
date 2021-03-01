@@ -624,6 +624,7 @@ def check_and_convert_from_oldhepdata(input_directory, id, timestamp):
 def move_files(submission_temp_path, submission_path):
     print('Copying files from {} to {}'.format(submission_temp_path + '/.', submission_path))
     try:
+        shutil.rmtree(submission_path, ignore_errors=True)
         shutil.copytree(submission_temp_path, submission_path, symlinks=False)
     except shutil.Error as e:
         errors = []
