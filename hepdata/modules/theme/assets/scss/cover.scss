@@ -119,7 +119,7 @@ body.home-page {
 
 .hep_logo {
   display: inline-block;
-  background: url("/static/img/hepdata_logo.svg") no-repeat 0 5px;
+  background: url("../../static/img/hepdata_logo.svg") no-repeat 0 5px;
   width: 179px;
   height: 60px;
   background-size: 100%;
@@ -127,7 +127,7 @@ body.home-page {
 
 .hep_logo_big {
   display: inline-block;
-  background: url("/static/img/hepdata_logo.svg") no-repeat;
+  background: url("../../static/img/hepdata_logo.svg") no-repeat;
   width: 240px;
   height: 80px;
   background-size: 100%;
@@ -140,7 +140,7 @@ body.home-page {
   margin-left: -8px;
   border-radius: 3px 0 0 3px;
   color: $navy;
-  background: white url("/static/img/icons/search_icon.svg") no-repeat 5px 50%;
+  background: white url("../../static/img/icons/search_icon.svg") no-repeat 5px 50%;
   background-size: 13%;
   padding: 5px 6px 5px 25px;
 }
@@ -150,7 +150,7 @@ body.home-page {
     font-size: .9em;
     border: 1px solid white;
     color: $navy;
-    background: $lightgrey url("/static/img/icons/search_icon.svg") no-repeat 5px 50%;
+    background: $lightgrey url("../../static/img/icons/search_icon.svg") no-repeat 5px 50%;
     background-size: 8%;
     padding: 8px 9px 7px 25px;
   }
@@ -290,4 +290,3 @@ svg:not(:root) {
   }
 
 }
-

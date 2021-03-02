@@ -3,10 +3,7 @@
 
 {% block page_body %}
 
-    {%- assets "hepdata_info_page_css" %}
-        <link href="{{ ASSET_URL }}" rel="stylesheet">
-    {%- endassets %}
-
+    {{ webpack['hepdata-info.css'] }}
 
     <div id="about" class="row" style="margin: 0; padding: 9em 10% 1% 5%">
         <div class="section-header" style="width:135px; padding-bottom: 4em">

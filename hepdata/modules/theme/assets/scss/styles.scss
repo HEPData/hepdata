@@ -23,11 +23,11 @@
 @import "variables";
 
 // Setting the path to fonts files.
-$icon-font-path: "/static/node_modules/bootstrap-sass/assets/fonts/";
-$fa-font-path: "/static/node_modules/font-awesome/fonts";
+$icon-font-path: "~bootstrap-sass/assets/fonts/bootstrap/";
+$fa-font-path: "~font-awesome/fonts";
 
-@import "../node_modules/bootstrap-sass/assets/stylesheets/_bootstrap";
-@import "../node_modules/font-awesome/scss/font-awesome";
+@import "~bootstrap-sass/assets/stylesheets/_bootstrap";
+@import "~font-awesome/scss/font-awesome";
 
 @import "type";
 @import "utilities";

@@ -20,7 +20,7 @@ a {
 }
 
 .hep_logo {
-  background-image: url("/static/img/hepdata_logo_darkbg.svg") !important;
+  background-image: url("../../static/img/hepdata_logo_darkbg.svg") !important;
 }
 
 .navbar-default .navbar-toggle .icon-bar {
@@ -72,7 +72,7 @@ p {
 
   input {
     border: none;
-    background: $navy url(/static/img/icons/icon_filter.svg) 8px 10px no-repeat;
+    background: $navy url('../../static/img/icons/icon_filter.svg') 8px 10px no-repeat;
     background-size: 23px;
     padding: 10px 10px 10px 35px;
     width: 100%;
@@ -105,4 +105,3 @@ p {
     color: white;
   }
 }
-

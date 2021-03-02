@@ -394,7 +394,7 @@ body, html {
       }
 
       .tt-input {
-        background-image: url(/static/img/icons/icon_filter.svg);
+        background-image: url('../../static/img/icons/icon_filter.svg');
         background-position: 8px 10px;
         background-repeat: no-repeat;
         background-size: 23px;
@@ -479,14 +479,14 @@ body, html {
 
     .manage-review-menu {
       li.upl_rev.active:after {
-        content: url("/static/img/arrow_down.svg");
+        content: url("../../static/img/arrow_down.svg");
         position: absolute;
         left: 24%;
         top: 104px;
       }
 
       li.conv.active:after {
-        content: url("/static/img/arrow_down.svg");
+        content: url("../../static/img/arrow_down.svg");
         position: absolute;
         left: 74%;
         top: 104px;

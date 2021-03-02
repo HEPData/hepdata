@@ -104,14 +104,14 @@ body {
   font-size: 1em;
   border: 1px solid $navy-light;
   color: white;
-  background: $navy-light url("/static/img/icons/search_icon_white.svg") no-repeat 5px 50%;
+  background: $navy-light url("../../static/img/icons/search_icon_white.svg") no-repeat 5px 50%;
   padding: 7px 10px 7px 35px;
   background-size: 25px;
   width: 300px;
 }
 
 .author-search {
-  background: white url("/static/img/icons/search_icon.svg") no-repeat 5px 50%;
+  background: white url("../../static/img/icons/search_icon.svg") no-repeat 5px 50%;
   background-size: 20px;
   width: 100%;
   padding-left: 30px !important;

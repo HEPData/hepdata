@@ -1,5 +1,5 @@
 .home-top {
-  background: $purple url('/static/img/home_bg.svg') no-repeat bottom right;
+  background: $purple url('../../static/img/home_bg.svg') no-repeat bottom right;
   height: 35vh;
   border-bottom: 4px solid $purple-light;
   min-height: 300px;
@@ -24,7 +24,7 @@
 .hep_logo_home {
 
   display: inline-block;
-  background: url("/static/img/hepdata_logo_darkbg.svg") no-repeat 0 5px;
+  background: url("../../static/img/hepdata_logo_darkbg.svg") no-repeat 0 5px;
   background-size: 250px;
   width: 250px;
   height: 90px;

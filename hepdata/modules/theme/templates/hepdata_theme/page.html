@@ -34,9 +34,8 @@
 
     {%- block additional_meta %}
     {%- endblock additional_meta %}
-    {%- assets "hepdata_theme_css" %}
-        <link href="{{ ASSET_URL }}" rel="stylesheet">
-    {%- endassets %}
+
+    {{ webpack['hepdata-styles.css'] }}
 
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
 

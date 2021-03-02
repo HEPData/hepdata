@@ -453,7 +453,7 @@
   }
   input {
     border: none;
-    background: $lightgrey url('/static/img/icons/icon_filter.svg') no-repeat 4px 9px;
+    background: $lightgrey url('../../static/img/icons/icon_filter.svg') no-repeat 4px 9px;
     background-size: 20px;
     padding: 10px 11px 10px 26px;
     width: 100%;
@@ -835,7 +835,7 @@
   border: none;
   border-radius: 3px;
   box-shadow: none;
-  background: $navy-light url('/static/img/arrow_down_white.svg') no-repeat 98% center;
+  background: $navy-light url('../../static/img/arrow_down_white.svg') no-repeat 98% center;
   background-size: 15px;
 
   cursor: pointer;
@@ -1087,7 +1087,7 @@ g.node {
 
     input {
       border: none;
-      background: $darker-blue url(/static/img/icons/icon_filter.svg) 5px 6px no-repeat;
+      background: $darker-blue url('../../static/img/icons/icon_filter.svg') 5px 6px no-repeat;
       background-size: 21px;
       padding: 5px 5px 5px 31px;
       width: 100%;
@@ -1136,5 +1136,3 @@ g.node {
     }
   }
 }
-
-

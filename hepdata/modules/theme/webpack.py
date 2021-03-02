@@ -1,4 +1,5 @@
-{#
+# -*- coding: utf-8 -*-
+#
 # This file is part of HEPData.
 # Copyright (C) 2016 CERN.
 #
@@ -20,5 +21,26 @@
 # In applying this license, CERN does not
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
--#}
-<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+"""JS/CSS bundles for theme."""
+
+from flask_webpackext import WebpackBundle
+
+theme = WebpackBundle(
+    __name__,
+    'assets',
+    entry={
+        'hepdata-styles': './scss/styles.scss',
+        'hepdata-record': './scss/record.scss',
+        'hepdata-search': './scss/search.scss',
+        'hepdata-info': './scss/info-pages.scss',
+        'toastr': './node_modules/toastr/toastr.scss',
+        'bootstrap-filestyle': './js/lib/bootstrap-filestyle.min.js'
+    },
+    dependencies={
+        "bootstrap-sass": "~3.3.5",
+        "bootstrap": "~3.3.5",
+        "font-awesome": "~4.6.3",
+        "toastr": "~2.1.2"
+    }
+)
