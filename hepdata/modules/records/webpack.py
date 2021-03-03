@@ -22,31 +22,27 @@
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
-from invenio_assets import NpmBundle
+from flask_webpackext import WebpackBundle
 
-record_js = NpmBundle(
-    'js/hepdata_record_js.js',
-    filters='jsmin,uglifyjs',
-    output="gen/hepdata.record.%(version)s.js",
-)
-
-vis_js = NpmBundle(
-    'node_modules/d3/d3.min.js',
-    'node_modules/d3-tip/index.js',
-    'js/hepdata_common.js',
-    'js/hepdata_resources.js',
-    'js/hepdata_loaders.js',
-    'js/hepdata_reviews.js',
-    'js/hepdata_tables.js',
-    'js/hepdata_vis_common.js',
-    'js/hepdata_vis_heatmap.js',
-    'js/hepdata_vis_histogram.js',
-    'js/hepdata_vis_pie.js',
-    'js/hepdata_vis_status.js',
-    filters='jsmin,uglifyjs',
-    output="gen/hepdata.vis.%(version)s.js",
-    npm={
+record_js = WebpackBundle(
+    __name__,
+    'assets',
+    entry={
+        'hepdata-record-js': './js/hepdata_record_js.js',
+        'hepdata-common-js': './js/hepdata_common.js',
+        'hepdata-loaders-js': './js/hepdata_loaders.js',
+        # 'js/hepdata_reviews.js',
+        # 'js/hepdata_tables.js',
+        # 'js/hepdata_vis_common.js',
+        # 'js/hepdata_vis_heatmap.js',
+        # 'js/hepdata_vis_histogram.js',
+        # 'js/hepdata_vis_pie.js',
+        # 'js/hepdata_vis_status.js',
+    },
+    dependencies={
+        "clipboard": "~1.5.5",
         "d3": "~3.5.12",
-        "d3-tip": "~0.6.7"
+        "d3-tip": "~0.6.7",
+        "mathjax": "~2.7.0",
     }
 )

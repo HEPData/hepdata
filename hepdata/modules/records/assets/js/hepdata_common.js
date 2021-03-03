@@ -1,8 +1,9 @@
 /**
  * Created by eamonnmaguire on 16/03/2016.
  */
+import $ from 'jquery'
 
-HEPDATA = {};
+var HEPDATA = {};
 
 HEPDATA.interval = undefined;
 
@@ -198,7 +199,7 @@ HEPDATA.is_image = function (file_type) {
  */
 HEPDATA.map_file_type_to_property = function (file_type, property) {
 
-  file_type_lower = file_type.toLowerCase();
+  var file_type_lower = file_type.toLowerCase();
   var mapping = HEPDATA.file_type_to_details[file_type_lower];
   if (mapping) {
     return HEPDATA.file_type_to_details[file_type_lower][property];
@@ -228,3 +229,6 @@ HEPDATA.render_associated_files = function (associated_files, placement) {
     $(placement).append(html);
   }
 };
+
+window.HEPDATA = HEPDATA;
+export default HEPDATA;

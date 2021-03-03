@@ -1,3 +1,6 @@
+import $ from 'jquery'
+import d3 from 'd3'
+import HEPDATA from './hepdata_common.js'
 
 HEPDATA.render_loader = function (placement, events, options) {
 

@@ -1,3 +1,8 @@
+import $ from 'jquery'
+import Clipboard from 'clipboard'
+import MathJax from 'mathjax'
+import HEPDATA from './hepdata_common.js'
+
 var hepdata_record = (function () {
 
     var preserve_abstract_line_wrap = function () {
@@ -20,7 +25,7 @@ var hepdata_record = (function () {
         initialise_clipboard('.copy-btn');
       },
 
-      perform_upload_action: function (placement, form_name, colors, insertion_type) {
+      perform_upload_action: function (event, placement, form_name, colors, insertion_type) {
         if (event) {
           event.preventDefault();
         }
