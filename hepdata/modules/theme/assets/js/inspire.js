@@ -71,7 +71,7 @@ var inspire_ds = (function () {
 
             $("#inspire-result").addClass("well well-sm");
             $("#inspire-result").html(html);
-            MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
+            window.MathJax.typeset();
         }
     }
 })();
