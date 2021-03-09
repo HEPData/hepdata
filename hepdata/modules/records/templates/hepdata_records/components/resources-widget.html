@@ -117,24 +117,3 @@
         </div>
     </div>
 </div>
-
-<script type="text/javascript">
-
-    var update_action = function () {
-        var _analysis_type = $('#analysisType').val();
-        var _analysis_other = $('#analysisOther').val();
-        var _analysis_url = $('#analysisURL').val();
-
-        $("#other_container").toggleClass('hidden', _analysis_type !== 'other');
-
-        var _enable_button = ((_analysis_type !== 'other' || (_analysis_type === 'other' && _analysis_other !== ''))
-        && _analysis_url != '');
-
-        $("#addAnalysisBtn").prop('disabled', !_enable_button);
-    };
-
-    $(".form-control").on('change', update_action);
-    $(".form-control").on('keyup', update_action);
-
-</script>
-

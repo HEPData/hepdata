@@ -1,7 +1,12 @@
 /**
  * Created by eamonnmaguire on 16/03/2016.
  */
-
+import $ from 'jquery'
+import ClipboardJS from 'clipboard'
+import d3 from 'd3'
+import toastr from 'toastr'
+import HEPDATA from './hepdata_common.js'
+import './hepdata_reviews.js'
 
 HEPDATA.switch_table = function (listId, table_requested, table_name, status) {
   // clear the active class
@@ -39,7 +44,7 @@ HEPDATA.switch_table = function (listId, table_requested, table_name, status) {
   $("#direct_data_link").val(direct_link);
   $(".copy-btn").attr('data-clipboard-text', direct_link);
   if (HEPDATA.clipboard == undefined) {
-    HEPDATA.clipboard = new Clipboard('.copy-btn');
+    HEPDATA.clipboard = new ClipboardJS('.copy-btn');
     toastr.options.timeOut = 3000;
 
     HEPDATA.clipboard.on('success', function (e) {
@@ -134,7 +139,7 @@ HEPDATA.table_renderer = {
           });
           HEPDATA.table_renderer.attach_row_listener(table_placement, 'histogram');
         }
-        MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
+        window.MathJax.typeset();
         HEPDATA.table_renderer.update_reviewer_button(table_data.review);
 
         $("#hepdata_table_loader").addClass("hidden");
@@ -212,7 +217,7 @@ HEPDATA.table_renderer = {
         .enter().append('li').attr('class', 'chip');
 
       var individual_kw_link = individual_kw.append('a').attr('href', function (d) {
-        val = d.value.trim().replace(/\+/g, "%2B").replace(/\s/g, "+")
+        var val = d.value.trim().replace(/\+/g, "%2B").replace(/\s/g, "+")
         if (d.key == 'cmenergies') {
           val = val.replace(/-/g, "%2C")
         }

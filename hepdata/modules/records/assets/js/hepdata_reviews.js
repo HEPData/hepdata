@@ -1,7 +1,9 @@
 /**
  * Created by eamonnmaguire on 16/03/2016.
  */
-
+import $ from 'jquery'
+import d3 from 'd3'
+import HEPDATA from './hepdata_common.js'
 
 HEPDATA.set_review_status = function (status, set_all_tables) {
   var data = {

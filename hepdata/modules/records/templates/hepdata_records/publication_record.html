@@ -27,10 +27,7 @@
 {% endblock %}
 
 {%- block additional_assets %}
-    {%- assets "hepdata_record_css" %}
-        <link href="{{ ASSET_URL }}" rel="stylesheet">
-    {%- endassets %}
-
+    {{ webpack['hepdata-record.css'] }}
 {%- endblock additional_assets %}
 
 {% block page_description %}{{ ctx.record.title }}{% endblock %}
@@ -307,7 +304,7 @@
                                     <br/>
                                     <input type="submit" value="Upload and Process"
                                            class="btn btn-primary"
-                                           onclick="hepdata_record.perform_upload_action('#main-upload-area', 'upload-form', ['#955BA5', '#2C3E50'] , 'large_area'); return false;">
+                                           onclick="hepdata_record.perform_upload_action(event, '#main-upload-area', 'upload-form', ['#955BA5', '#2C3E50'] , 'large_area'); return false;">
                                 </form>
 
                             </div>
@@ -354,4 +351,3 @@
 {%- block javascript %}
     {% include 'hepdata_records/components/record-javascript.html' %}
 {%- endblock %}
-

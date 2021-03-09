@@ -1,3 +1,7 @@
+import $ from 'jquery'
+import d3 from 'd3'
+import HEPDATA from './hepdata_common.js'
+
 HEPDATA.visualization.histogram = {
 
   brush: undefined,

@@ -1,3 +1,9 @@
+import d3 from 'd3'
+import d3tip from 'd3-tip'
+import HEPDATA from './hepdata_common.js'
+
+d3.tip = d3tip;
+
 HEPDATA.visualization.submission_status = {
 
   options: {

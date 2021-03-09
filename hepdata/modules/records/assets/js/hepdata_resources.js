@@ -1,4 +1,9 @@
-var hepdata_resources = (function () {
+import $ from 'jquery'
+import 'bootstrap'
+import d3 from 'd3'
+import HEPDATA from './hepdata_common.js'
+
+HEPDATA.hepdata_resources = (function () {
   var ALL_RESOURCES = 'Common Resources';
   var resources = {};
   var initial_resource = ALL_RESOURCES;
@@ -55,7 +60,7 @@ var hepdata_resources = (function () {
       return "View Resource";
     });
 
-    MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
+    window.MathJax.typeset();
   };
 
   var create_modal_view = function (recid, version) {
@@ -98,6 +103,18 @@ var hepdata_resources = (function () {
     })
   };
 
+  var update_action = function () {
+      var _analysis_type = $('#analysisType').val();
+      var _analysis_other = $('#analysisOther').val();
+      var _analysis_url = $('#analysisURL').val();
+
+      $("#other_container").toggleClass('hidden', _analysis_type !== 'other');
+
+      var _enable_button = ((_analysis_type !== 'other' || (_analysis_type === 'other' && _analysis_other !== ''))
+      && _analysis_url != '');
+
+      $("#addAnalysisBtn").prop('disabled', !_enable_button);
+  };
 
   return {
     initialise: function (recid, version) {
@@ -111,8 +128,11 @@ var hepdata_resources = (function () {
         initial_resource = HEPDATA.current_table_name;
         create_modal_view(recid, version);
       });
-    },
 
+      $(".form-control").on('change', update_action);
+      $(".form-control").on('keyup', update_action);
+
+    },
 
     set_initial_resource: function (name) {
       initial_resource = name;

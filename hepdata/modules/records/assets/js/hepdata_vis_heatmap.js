@@ -1,3 +1,10 @@
+import $ from 'jquery'
+import d3 from 'd3'
+import d3tip from 'd3-tip'
+import HEPDATA from './hepdata_common.js'
+
+d3.tip = d3tip;
+
 HEPDATA.visualization.heatmap = {
 
   zoom: undefined,
@@ -188,7 +195,7 @@ HEPDATA.visualization.heatmap = {
     HEPDATA.visualization.heatmap.decimal_places = Math.min(HEPDATA.visualization.heatmap.decimal_places, Math.max(HEPDATA.count_decimals(scale.domain()[0]), HEPDATA.count_decimals(scale.domain()[1])));
     HEPDATA.visualization.heatmap.render_legend(placement, scale, HEPDATA.visualization.heatmap.options.colors);
 
-    MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
+    window.MathJax.typeset();
   },
 
   render_brushable_option: function (parent_node, options, function_call) {

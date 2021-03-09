@@ -23,9 +23,7 @@
 {%- extends "hepdata_theme/page.html" %}
 
 {%- block additional_assets %}
-    {%- assets "hepdata_record_css" %}
-        <link href="{{ ASSET_URL }}" rel="stylesheet">
-    {%- endassets %}
+    {{ webpack['hepdata-record.css'] }}
 {%- endblock additional_assets %}
 
 {%- set messages = get_flashed_messages(with_categories=true) -%}
@@ -108,7 +106,7 @@
 
                                       <input type="submit" value="Upload and Process"
                                              class="btn btn-primary"
-                                             onclick="hepdata_record.perform_upload_action('#sandbox-upload-area', 'sandbox-upload-form', ['#955BA5', '#2C3E50'], 'large_area')">
+                                             onclick="hepdata_record.perform_upload_action(event, '#sandbox-upload-area', 'sandbox-upload-form', ['#955BA5', '#2C3E50'], 'large_area')">
                                   </form>
                               </div>
 
@@ -249,7 +247,7 @@
     {% include 'hepdata_records/components/code-view-widget.html' %}
 
 {% endblock %}
-{%- block javascript %}
+{%- block additional_javascript %}
     {% include 'hepdata_records/components/record-javascript.html' %}
     <script type="text/javascript">
         $(".delete_button").on('click', function () {

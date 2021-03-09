@@ -1,3 +1,7 @@
+import $ from 'jquery'
+import d3 from 'd3'
+import HEPDATA from './hepdata_common.js'
+
 HEPDATA.visualization = {};
 
 HEPDATA.visualization.utils = {
@@ -7,8 +11,8 @@ HEPDATA.visualization.utils = {
       if (value.toString().toLowerCase().indexOf('e') == -1) {
         value = parseFloat(value).toFixed(round);
       } else {  // value given in scientific notation
-        mantissa = value.toString().toLowerCase().split('e')[0];
-        exponent = value.toString().toLowerCase().split('e')[1];
+        var mantissa = value.toString().toLowerCase().split('e')[0];
+        var exponent = value.toString().toLowerCase().split('e')[1];
         value = parseFloat(mantissa).toFixed(round).toString() + 'e' + exponent;
       }
     } catch (e) {
@@ -491,7 +495,7 @@ HEPDATA.legends = {
       });
     });
 
-    MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
+    window.MathJax.typeset();
   }
 
 };

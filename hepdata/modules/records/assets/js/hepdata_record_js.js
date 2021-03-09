@@ -1,9 +1,8 @@
 import $ from 'jquery'
-import Clipboard from 'clipboard'
-import MathJax from 'mathjax'
+import ClipboardJS from 'clipboard'
 import HEPDATA from './hepdata_common.js'
 
-var hepdata_record = (function () {
+HEPDATA.hepdata_record = (function () {
 
     var preserve_abstract_line_wrap = function () {
       var abstract_html = $(".record-abstract-content").html();
@@ -11,15 +10,13 @@ var hepdata_record = (function () {
     };
 
     var initialise_clipboard = function (selector) {
-      new Clipboard(selector);
+      new ClipboardJS(selector);
     };
 
     return {
       initialise: function () {
-        MathJax.Hub.Config({
-          tex2jax: {inlineMath: [['$', '$'], ['\\(', '\\)']]}
-        });
-        MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
+        //console.log(window.MathJax);
+        //window.MathJax.typeset();
 
         preserve_abstract_line_wrap();
         initialise_clipboard('.copy-btn');

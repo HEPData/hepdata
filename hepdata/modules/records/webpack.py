@@ -29,20 +29,22 @@ record_js = WebpackBundle(
     'assets',
     entry={
         'hepdata-record-js': './js/hepdata_record_js.js',
+        'hepdata-code-view-js': './js/hepdata_code_view.js',
         'hepdata-common-js': './js/hepdata_common.js',
         'hepdata-loaders-js': './js/hepdata_loaders.js',
-        # 'js/hepdata_reviews.js',
-        # 'js/hepdata_tables.js',
-        # 'js/hepdata_vis_common.js',
-        # 'js/hepdata_vis_heatmap.js',
-        # 'js/hepdata_vis_histogram.js',
-        # 'js/hepdata_vis_pie.js',
-        # 'js/hepdata_vis_status.js',
+        'hepdata-question-js': './js/hepdata_question.js',
+        'hepdata-resources-js': './js/hepdata_resources.js',
+        'hepdata-reviews-js': './js/hepdata_reviews.js',
+        'hepdata-tables-js': './js/hepdata_tables.js',
+        'hepdata-vis-common-js': './js/hepdata_vis_common.js',
+        'hepdata-vis-heatmap-js': './js/hepdata_vis_heatmap.js',
+        'hepdata-vis-histogram-js': './js/hepdata_vis_histogram.js',
+        'hepdata-vis-pie-js': './js/hepdata_vis_pie.js',
+        'hepdata-vis-status-js': './js/hepdata_vis_status.js',
     },
     dependencies={
         "clipboard": "~1.5.5",
         "d3": "~3.5.12",
-        "d3-tip": "~0.6.7",
-        "mathjax": "~2.7.0",
+        "d3-tip": "~0.6.7"
     }
 )
