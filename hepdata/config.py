@@ -24,6 +24,7 @@
 
 import copy
 import os
+import sys
 import tempfile
 from celery.schedules import crontab
 from datetime import timedelta
@@ -152,8 +153,9 @@ SEARCH_ELASTIC_HOSTS = [
 
 SEARCH_AUTOINDEX = []
 
-UPLOAD_MAX_SIZE = 52000000 # Upload limit in bytes
-NGINX_TIMEOUT = 298 # Client-side timeout in s (should be slightly smaller than server timeout)
+UPLOAD_MAX_SIZE = 52000000  # Upload limit in bytes
+CONVERT_MAX_SIZE = sys.maxsize  # Limit on payload sent to converter (checked at submission)
+CLIENT_TIMEOUT = 298  # Client-side timeout in s (should be slightly smaller than server timeout)
 
 CFG_PUB_TYPE = 'publication'
 CFG_DATA_TYPE = 'datatable'
@@ -162,7 +164,7 @@ CFG_DATA_KEYWORDS = ['observables', 'reactions', 'cmenergies', 'phrases']
 
 CFG_CONVERTER_URL = 'https://converter.hepdata.net'
 CFG_SUPPORTED_FORMATS = ['yaml', 'root', 'csv', 'yoda', 'original']
-CFG_CONVERTER_TIMEOUT = NGINX_TIMEOUT # timeout in seconds
+CFG_CONVERTER_TIMEOUT = CLIENT_TIMEOUT # timeout in seconds
 
 CFG_TMPDIR = tempfile.gettempdir()
 CFG_DATADIR = tempfile.gettempdir()

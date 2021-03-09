@@ -268,7 +268,7 @@ def test_submission_too_big(app, mocker):
 
     # Patch the app config to reduce the max upload size
     mocker.patch.dict('flask.current_app.config',
-                      {'UPLOAD_MAX_SIZE': 1000})
+                      {'CONVERT_MAX_SIZE': 1000})
 
     test_directory = os.path.join(base_dir, 'test_data/test_submission')
     errors = process_submission_directory(
