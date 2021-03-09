@@ -52,6 +52,7 @@ from hepdata.modules.submission.api import get_latest_hepsubmission
 from tests.conftest import TEST_EMAIL
 from hepdata.modules.records.utils.records_update_utils import get_inspire_records_updated_since, get_inspire_records_updated_on, update_record_info
 from hepdata.modules.inspire_api.views import get_inspire_record_information
+from hepdata.config import CFG_TMPDIR
 
 
 def test_record_creation(app):
@@ -357,7 +358,7 @@ def test_process_zip_archive_invalid(app):
     # Test uploading a zip containing broken symlinks
     base_dir = os.path.dirname(os.path.realpath(__file__))
     file_path = os.path.join(base_dir, 'test_data/submission_invalid_symlink.tgz')
-    tmp_path = tempfile.mkdtemp()
+    tmp_path = tempfile.mkdtemp(dir=CFG_TMPDIR)
     shutil.copy2(file_path, tmp_path)
     tmp_file_path = os.path.join(tmp_path, 'submission_invalid_symlink.tgz')
     errors = process_zip_archive(tmp_file_path, 1)
@@ -373,7 +374,7 @@ def test_process_zip_archive_invalid(app):
 
     # Test uploading an invalid tarfile (real example: user ran 'tar -czvf' then 'gzip')
     file_path = os.path.join(base_dir, 'test_data/submission_invalid_tarfile.tgz.gz')
-    tmp_path = tempfile.mkdtemp()
+    tmp_path = tempfile.mkdtemp(dir=CFG_TMPDIR)
     shutil.copy2(file_path, tmp_path)
     tmp_file_path = os.path.join(tmp_path, 'submission_invalid_tarfile.tgz.gz')
     errors = process_zip_archive(tmp_file_path, 1)
@@ -386,7 +387,7 @@ def test_process_zip_archive_invalid(app):
 
 
 def test_move_files_invalid_path():
-    errors = move_files('this_is_not_a_real_path', tempfile.mkdtemp())
+    errors = move_files('this_is_not_a_real_path', tempfile.mkdtemp(dir=CFG_TMPDIR))
     assert("Exceptions when copying files" in errors)
     assert(len(errors["Exceptions when copying files"]) == 1)
     assert(errors["Exceptions when copying files"][0].get("level") == "error")
@@ -423,7 +424,7 @@ def test_update_record_info(app):
         # Process the files to create DataSubmission tables in the DB.
         base_dir = os.path.dirname(os.path.realpath(__file__))
         directory = os.path.join(base_dir, 'test_data/test_submission')
-        tmp_path = os.path.join(tempfile.mkdtemp(), 'test_submission')
+        tmp_path = os.path.join(tempfile.mkdtemp(dir=CFG_TMPDIR), 'test_submission')
         shutil.copytree(directory, tmp_path)
         process_submission_directory(tmp_path, os.path.join(tmp_path, 'submission.yaml'),
                                      submission.publication_recid)
