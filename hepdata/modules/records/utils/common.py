@@ -140,21 +140,6 @@ def decode_string(string, type="utf-8"):
         return string
 
 
-def zipdir(path, ziph):
-    """
-    From `Stack Overflow
-    <http://stackoverflow.com/questions/1855095/how-to-create-a-zip-archive-of-a-directory?answertab=active#tab-top>`_.
-
-    :param path:
-    :param ziph:
-    :return:
-    """
-    # ziph is zipfile handle
-    for root, dirs, files in os.walk(path):
-        for file in files:
-            ziph.write(os.path.join(root, file))
-
-
 def get_license(license_obj):
     dict = {}
     for field in ["name", "url", "description"]:
