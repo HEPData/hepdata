@@ -157,7 +157,7 @@ setup(
             'hepdata_theme_css = hepdata.modules.theme.webpack:theme',
             # 'hepdata_info_page_css = hepdata.modules.theme.bundles:info_page_css',
             # 'hepdata_submission_js = hepdata.modules.submission.webpack:submission_js',
-            # 'hepdata_search_js = hepdata.modules.search.webpack:search_js',
+            'hepdata_search_js = hepdata.modules.search.webpack:search_js',
             'hepdata_record_js = hepdata.modules.records.webpack:record_js',
             # 'hepdata_vis_js = hepdata.modules.records.bundles:vis_js',
             # 'hepdata_dashboard_js = hepdata.modules.dashboard.bundles:dashboard_js',

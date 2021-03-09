@@ -16,13 +16,18 @@
 # along with HEPData; if not, write to the Free Software Foundation, Inc.,
 # 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
 #
-from invenio_assets import NpmBundle
+from flask_webpackext import WebpackBundle
 
-search_js = NpmBundle(
-    'node_modules/d3/d3.min.js',
-    'node_modules/d3-tip/index.js',
-    'js/lib/typeahead.bundle.min.js',
-    'js/search_utils.js',
-    filters='jsmin,uglifyjs',
-    output="gen/hepdata.search.%(version)s.js"
+search_js = WebpackBundle(
+    __name__,
+    'assets',
+    entry={
+        'hepdata-search-js': './js/hepdata_search.js',
+        'hepdata-search-facets-js': './js/hepdata_search_facets.js',
+    },
+    dependencies={
+        "d3": "~3.5.12",
+        "d3-tip": "~0.6.7",
+        "typeahead.js": "0.11.1"
+    }
 )

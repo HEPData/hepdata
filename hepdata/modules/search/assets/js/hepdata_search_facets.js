@@ -1,4 +1,14 @@
-var search_utils = (function () {
+import $ from 'jquery'
+import d3 from 'd3'
+import d3tip from 'd3-tip'
+import Bloodhound from 'typeahead.js'
+import Typeahead from 'typeahead.js'
+import HEPDATA from './hepdata_common.js'
+
+d3.tip = d3tip;
+$.typeahead = Typeahead;
+
+HEPDATA.hepdata_search_facets = (function () {
   var hist_svg, xScale, yScale, brush;
 
   var tip = d3.tip().attr('class', 'd3-tip').offset([-10, 0]).html(function (d) {
@@ -58,12 +68,13 @@ var search_utils = (function () {
       'stroke-width': 3
     });
 
+    var selected = [];
+
     var on_brushed = function () {
       var extent = brush.extent();
       d3.select('.brush-year.min').text(year_format(extent[0]));
       d3.select('.brush-year.max').text(year_format(extent[1]));
 
-      selected = [];
       d3.selectAll("g.bar").select("rect").style("fill", function (d) {
         d.selected = (d.year_as_date >= extent[0] && d.year_as_date <= extent[1]);
         if (d.selected) {
@@ -82,7 +93,6 @@ var search_utils = (function () {
       var start_year = (options.selection_range.min < min_x || options.selection_range.min > max_x) ? min_x : options.selection_range.min;
       var end_year = (options.selection_range.max > max_x || options.selection_range.max < min_x) ? max_x : options.selection_range.max;
 
-      console.log([start_year, end_year]);
       initial_extent = [parseDate(String(start_year)), parseDate(String(end_year))]
     }
 
@@ -207,7 +217,74 @@ var search_utils = (function () {
         });
 
       create_selector(placement, onselection)
-    }
+    },
 
+    authors: new Bloodhound({
+        datumTokenizer: Bloodhound.tokenizers.whitespace,
+        queryTokenizer: Bloodhound.tokenizers.whitespace,
+        remote: {
+            url: '/search/authors?q=%QUERY',
+            wildcard: '%QUERY',
+            transform: function (json) {
+                return $.map(json.results, function (author) {
+                    return author.full_name;
+                });
+            }
+        }
+    }),
+
+    updateQueryStringParameter: function(uri, key, value) {
+        var re = new RegExp("([?&])" + key + "=.*?(&|$)", "i");
+        var separator = uri.indexOf('?') !== -1 ? "&" : "?";
+        if (uri.match(re)) {
+            return uri.replace(re, '$1' + key + "=" + value + '$2');
+        }
+        else {
+            return uri + separator + key + "=" + value;
+        }
+    },
+
+    show_more_facets: function(facet_type, show_number) {
+        var facet_id = "#" + facet_type + "-facet";
+        var facets = $(facet_id + " li:not(:visible)");
+
+        if (show_number == -1) {
+            facets.slice(0).removeClass("hidden");
+            $(facet_id + " .facet-more").hide();
+            $(facet_id + " .facet-all").hide();
+
+        } else {
+            facets.slice(0, show_number).removeClass("hidden");
+            if (facets.length <= show_number) {
+                $(facet_id + " .facet-more").hide();
+                $(facet_id + " .facet-all").hide();
+            }
+        }
+        $(facet_id + " .facet-reset").show();
+    },
+
+    reset_facet: function(facet_type) {
+        var facet_id = "#" + facet_type + "-facet";
+        var facets = $(facet_id + " li");
+        facets.slice(5).addClass("hidden");
+        $(facet_id + " .facet-reset").hide();
+        $(facet_id + " .facet-more").show();
+        $(facet_id + " .facet-all").show();
+    }
   }
+
 })();
+
+$(document).ready(function(){
+  $('#author-suggest').typeahead(
+          {highlight: true},
+          {valueKey: 'symbol', source: HEPDATA.hepdata_search_facets.authors}
+  );
+
+  $('.typeahead').bind('typeahead:select', function (ev, suggestion) {
+      window.location.href = HEPDATA.hepdata_search_facets.updateQueryStringParameter(
+              window.location.href,
+              'author',
+              suggestion);
+  });
+});
