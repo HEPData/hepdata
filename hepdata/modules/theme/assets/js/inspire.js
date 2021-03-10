@@ -1,3 +1,5 @@
+import $ from 'jquery'
+
 var inspire_ds = (function () {
 
     return {
@@ -75,3 +77,5 @@ var inspire_ds = (function () {
         }
     }
 })();
+
+export default inspire_ds;

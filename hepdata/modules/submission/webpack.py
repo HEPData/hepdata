@@ -18,10 +18,13 @@
 #
 
 
-from invenio_assets import NpmBundle
+from flask_webpackext import WebpackBundle
 
-submission_js = NpmBundle(
-    'js/inspire.js',
-    filters='uglifyjs,jsmin',
-    output="gen/hepdata-inspire.%(version)s.js",
+submission_js = WebpackBundle(
+    __name__,
+    'assets',
+    entry={
+        'hepdata-submission-js': './js/hepdata_submission.js',
+        'hepdata-submission-reviewers-uploaders-js': './js/hepdata_submission_reviewers_uploaders.js'
+    }
 )
