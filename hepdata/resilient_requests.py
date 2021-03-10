@@ -6,9 +6,9 @@ import requests
 
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
-from hepdata.config import NGINX_TIMEOUT
+from hepdata.config import CLIENT_TIMEOUT
 
-DEFAULT_TIMEOUT = NGINX_TIMEOUT  # seconds
+DEFAULT_TIMEOUT = CLIENT_TIMEOUT  # seconds
 TOTAL_RETRIES = 8
 
 

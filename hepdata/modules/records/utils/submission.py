@@ -24,9 +24,9 @@
 
 import json
 import logging
-import zipfile
 from datetime import datetime
 from dateutil.parser import parse
+import shutil
 
 from elasticsearch import NotFoundError, ConnectionTimeout
 from flask import current_app
@@ -44,9 +44,9 @@ from hepdata.modules.permissions.models import SubmissionParticipant
 from hepdata.modules.records.utils.workflow import create_record
 from hepdata.modules.submission.api import get_latest_hepsubmission
 from hepdata.modules.submission.models import DataSubmission, DataReview, \
-    DataResource, License, Keyword, HEPSubmission, RecordVersionCommitMessage
+    DataResource, Keyword, HEPSubmission, RecordVersionCommitMessage
 from hepdata.modules.records.utils.common import \
-    get_license, infer_file_type, encode_string, zipdir, get_record_by_id, contains_accepted_url
+    get_license, infer_file_type, get_record_by_id, contains_accepted_url
 from hepdata.modules.records.utils.common import get_or_create
 from hepdata.modules.records.utils.data_files import get_data_path_for_record, \
     cleanup_old_files, delete_all_files, delete_packaged_file, \
@@ -585,11 +585,11 @@ def process_submission_directory(basepath, submission_file_path, recid,
                     'rivet_analysis_name': f'ATLAS_2020_I{dummy_inspire_id}'
                 }
                 data_size = get_data_size(input_directory, options)
-                if data_size > current_app.config['UPLOAD_MAX_SIZE']:
+                if data_size > current_app.config['CONVERT_MAX_SIZE']:
                     errors["Archive"] = [{
                         "level": "error",
                         "message": "Archive is too big for conversion to other formats. (%s bytes would be sent to converter; maximum size is %s.)"
-                                   % (data_size, current_app.config['UPLOAD_MAX_SIZE'])
+                                   % (data_size, current_app.config['CONVERT_MAX_SIZE'])
                     }]
 
             if len(errors) == 0:
@@ -634,15 +634,11 @@ def package_submission(basepath, recid, hep_submission_obj):
     if os.path.exists(zip_location):
         os.remove(zip_location)
 
-    zipf = zipfile.ZipFile(zip_location, 'w')
-    os.chdir(basepath)
     try:
-        zipdir(".", zipf)
+        shutil.make_archive(os.path.splitext(zip_location)[0], 'zip', basepath)
         return {}
     except Exception as e:
         return {zip_location: [{"level": "error", "message": str(e)}]}
-    finally:
-        zipf.close()
 
 
 def process_validation_errors_for_display(errors):

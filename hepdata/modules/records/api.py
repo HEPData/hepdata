@@ -26,7 +26,6 @@
 import os
 from collections import OrderedDict
 from functools import wraps
-import subprocess
 
 import time
 from celery import shared_task

@@ -26,7 +26,6 @@
 
 import os
 
-from hepdata.modules.records.utils.common import zipdir
 from hepdata.modules.records.utils.data_processing_utils import str_presenter
 import shutil
 import yaml
@@ -48,13 +47,10 @@ def write_submission_yaml_block(document, submission_yaml,
     submission_yaml.write("\n")
 
 
-def split_files(file_location, output_location,
-                archive_location=None):
+def split_files(file_location, output_location):
     """
     :param file_location: input yaml file location
     :param output_location: output directory path
-    :param archive_location: if present will create a zipped
-           representation of the split files
     """
     last_updated = datetime.utcnow()
     try:
@@ -102,18 +98,6 @@ def split_files(file_location, output_location,
                                                 submission_yaml,
                                                 type="record")
 
-        if archive_location:
-            if os.path.exists(archive_location):
-                os.remove(archive_location)
-
-            zipf = zipfile.ZipFile(archive_location, 'w')
-            os.chdir(output_location)
-            try:
-                zipdir(".", zipf)
-            except Exception as e:
-                return e, last_updated
-            finally:
-                zipf.close()
     except yaml.scanner.ScannerError as se:
         return se, last_updated
     except yaml.parser.ParserError as pe:
