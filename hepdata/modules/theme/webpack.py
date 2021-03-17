@@ -31,8 +31,10 @@ theme = WebpackBundle(
     'assets',
     entry={
         'hepdata-styles': './scss/styles.scss',
+        'hepdata-dashboard': './scss/dashboard.scss',
         'hepdata-record': './scss/record.scss',
         'hepdata-search': './scss/search.scss',
+        'hepdata-submission': './scss/submission.scss',
         'hepdata-info': './scss/info-pages.scss',
         'toastr': './node_modules/toastr/toastr.scss',
         'bootstrap-filestyle': './js/lib/bootstrap-filestyle.min.js',

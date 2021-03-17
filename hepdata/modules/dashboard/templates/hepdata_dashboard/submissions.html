@@ -2,9 +2,7 @@
 
 {% block dashboard_content %}
 
-    {%- assets "hepdata_submission_css" %}
-        <link href="{{ ASSET_URL }}" rel="stylesheet">
-    {%- endassets %}
+    {{ webpack['hepdata-submission.css'] }}
 
     <div class="container-fluid">
         <div class="row-fluid breadcrumb">
@@ -107,24 +105,6 @@
 
 {%- block javascript %}
 
+    {{ webpack['hepdata-dashboard-submissions-vis-js.js'] }}
 
-    <script type="text/javascript"
-            src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    {%- assets "hepdata_vis_js" %}
-        <script src="{{ ASSET_URL }}"></script>
-    {%- endassets %}
-
-    {%- assets "hepdata_submission_vis_js" %}
-        <script src="{{ ASSET_URL }}"></script>
-    {%- endassets %}
-
-
-
-    <script>
-
-        $(document).ready(function () {
-            submissions_vis.render('/dashboard/submissions/list', {});
-        });
-
-    </script>
 {% endblock %}

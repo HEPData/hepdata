@@ -1,6 +1,10 @@
 /**
  * Created by eamonnmaguire on 04/10/2016.
  */
+import $ from 'jquery'
+import crossfilter from 'crossfilter'
+import d3 from 'd3'
+import dc from 'dc'
 
 var submissions_vis = (function () {
 
@@ -60,7 +64,6 @@ var submissions_vis = (function () {
 
   var process_data = function (data) {
     data.forEach(function (d, i) {
-      console.log(d.collaboration);
       d.index = i;
 
       d.last_updated = parseDate(d.last_updated);
@@ -127,10 +130,6 @@ var submissions_vis = (function () {
   return {
     render: function (url, options) {
       d3.json(url, function (result) {
-
-        MathJax.Hub.Config({
-          tex2jax: {inlineMath: [['$', '$'], ['\\(', '\\)']]}
-        });
 
         var submission_data = result;
 
@@ -292,16 +291,13 @@ var submissions_vis = (function () {
         })
           .order(sortByDateAscending);
 
-        detailTable.on("redraw", function (chart) {
-          alert("filtered");
-          MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
-        });
-
-
         dc.renderAll();
       });
     }
   }
 
-
 })();
+
+$(document).ready(function () {
+    submissions_vis.render('/dashboard/submissions/list', {});
+});

@@ -1,4 +1,15 @@
-var dashboard = (function () {
+import $ from 'jquery'
+import d3 from 'd3'
+import bootstrap from 'bootstrap'
+import Typeahead from 'typeahead.js'
+import HEPDATA from './hepdata_common.js'
+import './hepdata_loaders.js'
+import './hepdata_vis_common.js'
+import './hepdata_vis_status.js'
+
+$.typeahead = Typeahead;
+
+HEPDATA.dashboard = (function () {
   var data = {};
 
   var initialise_finalise_btn = function () {
@@ -47,7 +58,7 @@ var dashboard = (function () {
       var controls = watch_item.append("div").attr("class", "col-md-1 controls");
       controls.append("button").attr("class", "btn btn-sm btn-danger")
         .attr("onclick", function (d) {
-          return "dashboard.unwatch('" + d.recid + "')";
+          return "HEPDATA.dashboard.unwatch('" + d.recid + "')";
         })
         .append("i").attr("class", "fa fa-eye-slash")
         .attr("title", "Unwatch Record")
@@ -131,15 +142,15 @@ var dashboard = (function () {
         return d.text;
       })
       .on('click', function (d) {
-        event.preventDefault();
+        d3.event.preventDefault();
         return update_pagination(this, d.page, total_results, items_per_page);
       });
   }
 
   var update_pagination = function(current_element, page, total_results, items_per_page) {
-    paginator = d3.select(current_element.parentElement.parentElement);
+    var paginator = d3.select(current_element.parentElement.parentElement);
     generate_permissions_paginator(paginator, page, total_results, items_per_page);
-    first_item = (page - 1) * items_per_page;
+    var first_item = (page - 1) * items_per_page;
 
     d3.select(paginator.node().parentElement.parentElement).selectAll(".row").each(function(data, i) {
       if (i < first_item || i >= first_item + items_per_page) {
@@ -256,8 +267,9 @@ var dashboard = (function () {
       });
 
       initialise_finalise_btn();
+      window.MathJax.typeset();
 
-      dashboard.render_submission_stats();
+      HEPDATA.dashboard.render_submission_stats();
 
       $('.pagination li a').click(function(event) {
         event.preventDefault();
@@ -348,12 +360,6 @@ var dashboard = (function () {
 
   return {
     initialise: function () {
-      MathJax.Hub.Config({
-        tex2jax: {inlineMath: [['$', '$'], ['\\(', '\\)']]}
-      });
-
-      MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
-
       initialise_list_filter();
       load_submissions();
       load_watched_records();
@@ -380,3 +386,7 @@ var dashboard = (function () {
     }
   }
 })();
+
+$(document).ready(function () {
+    HEPDATA.dashboard.initialise();
+});

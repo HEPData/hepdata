@@ -22,31 +22,22 @@
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
-from invenio_assets import NpmBundle
+from flask_webpackext import WebpackBundle
 
-dashboard_js = NpmBundle(
-    'js/dashboard.js',
-    'js/lib/typeahead.bundle.min.js',
-    filters='jsmin,uglifyjs',
-    output="gen/hepdata.dashboard.%(version)s.js"
-)
-submission_vis_js = NpmBundle(
-    'node_modules/crossfilter/crossfilter.min.js',
-    'node_modules/dc/dc.min.js',
-    'js/submissions_vis.js',
-    filters='jsmin,uglifyjs',
-    output="gen/hepdata.submissions-vis.%(version)s.js",
-    npm={
-        "dc": "1.7.5",
-        "crossfilter": "1.3.12"
-    }
-)
-
-submission_css = NpmBundle(
-    'node_modules/dc/dc.min.css',
-    filters='cleancss',
-    output='gen/hepdata.submission.%(version)s.css',
-    npm={
-        "dc": "1.7.5"
+dashboard_js = WebpackBundle(
+    __name__,
+    'assets',
+    entry={
+        'hepdata-dashboard-js': './js/hepdata_dashboard.js',
+        'hepdata-dashboard-inspire-js': './js/hepdata_dashboard_inspire.js',
+        'hepdata-dashboard-manage-scripts-js': './js/hepdata_dashboard_manage_scripts.js',
+        'hepdata-dashboard-submissions-vis-js': './js/hepdata_dashboard_submissions_vis.js'
+    },
+    dependencies={
+        "crossfilter": "1.3.12",
+        "d3": "~3.5.12",
+        "d3-tip": "~0.6.7",
+        "dc": "~2.0.0",
+        "typeahead.js": "0.11.1"
     }
 )
