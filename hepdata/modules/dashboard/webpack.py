@@ -28,6 +28,7 @@ dashboard_js = WebpackBundle(
     __name__,
     'assets',
     entry={
+        'dc': './node_modules/dc/dc.min.css',
         'hepdata-dashboard-js': './js/hepdata_dashboard.js',
         'hepdata-dashboard-inspire-js': './js/hepdata_dashboard_inspire.js',
         'hepdata-dashboard-manage-scripts-js': './js/hepdata_dashboard_manage_scripts.js',

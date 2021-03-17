@@ -46,7 +46,6 @@ $(document).ready(function() {
   });
 
   $(document).on('click', '.confirm-move-action', function () {
-      console.log('/permissions/manage/' + window.recid + '/' + window.data_person_type + '/' + window.action + '/' + window.userid);
       $.ajax({
           dataType: "json",
           url: '/permissions/manage/' + window.recid + '/' + window.data_person_type + '/' + window.action + '/' + window.userid,

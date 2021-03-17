@@ -277,10 +277,4 @@
 {%- block javascript %}
     {{ webpack['hepdata-dashboard-js.js'] }}
     {{ webpack['hepdata-dashboard-submissions-vis-js.js'] }}
-
-    {#
-    {%- assets "hepdata_bootstrap_js" %}
-        <script src="{{ ASSET_URL }}"></script>
-    {%- endassets %}
-    #}
 {% endblock %}
