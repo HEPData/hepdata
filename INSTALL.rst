@@ -106,15 +106,10 @@ An example file ``hepdata/config_local.local.py`` is provided, which can be copi
 JavaScript
 ----------
 
-Next, install Node JavaScript packages in global mode using ``sudo npm install -g`` and build assets.  Note that
-installing in local mode causes problems and it is necessary to run the install command outside your home directory.
+Next, build assets using webpack (via [invenio-assets](https://invenio-assets.readthedocs.io/en/latest/)).
 
 .. code-block:: console
 
-   (hepdata)$ cd /
-   (hepdata)$ sudo npm install -g clean-css@3.4.28 uglify-js requirejs
-   (hepdata)$ sudo npm install -g --unsafe-perm node-sass@4.14.1
-   (hepdata)$ cd ~/src/hepdata
    (hepdata)$ ./scripts/clean_assets.sh
 
 Celery
@@ -260,7 +255,7 @@ In another terminal, initialise the database:
 
 .. code-block:: console
 
-   $ docker-compose run web bash -c "mkdir -p /code/tmp; ./scripts/initialise_db.sh your@email.com password"
+   $ docker-compose exec web bash -c "mkdir -p /code/tmp; ./scripts/initialise_db.sh your@email.com password"
 
 Now open http://localhost:5000/ and HEPData should be up and running. (It may take a few minutes for Celery to process
 the sample records.)
@@ -269,7 +264,7 @@ To run the tests:
 
 .. code-block:: console
 
-   $ docker-compose run web bash -c "/usr/local/var/sc-4.5.4-linux/bin/sc -u $SAUCE_USERNAME -k $SAUCE_ACCESS_KEY -x https://eu-central-1.saucelabs.com/rest/v1 & ./run-tests.sh"
+   $ docker-compose exec web bash -c "/usr/local/var/sc-4.5.4-linux/bin/sc -u $SAUCE_USERNAME -k $SAUCE_ACCESS_KEY -x https://eu-central-1.saucelabs.com/rest/v1 & ./run-tests.sh"
 
 
 .. _docker-compose-tips:
@@ -306,13 +301,13 @@ Tips
 
   .. code-block:: console
 
-    $ docker-compose run <container_name> bash -c "<command>"
+    $ docker-compose exec <container_name> bash -c "<command>"
 
 * If you need to run several commands, run the following to get a bash shell on the container:
 
   .. code-block:: console
 
-     $ docker-compose run <container_name> bash
+     $ docker-compose exec <container_name> bash
 
 * If you switch between using ``docker-compose`` and individual services, you may get an error when running the tests about an import file mismatch. To resolve this, run:
 

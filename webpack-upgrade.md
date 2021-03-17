@@ -3,10 +3,7 @@ Ensure node version >=12.13 (check!)
 
 TODO:
  * Work out how to get latest invenio-db revisions from alembic
- * Finish migrating other modules (submission, dashboard, ...)
- * Get CI working
- * Check Docker image works (update installation steps)
- * Update INSTALL.rst
+ * Check whether we can upgrade invenio packages further
 
 Tips
 ----

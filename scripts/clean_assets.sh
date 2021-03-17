@@ -31,11 +31,6 @@ if [ ! -x "$(command -v hepdata)" ]; then
   exit 1
 fi
 
-rm -rf "${VIRTUAL_ENV}/var/hepdata-instance/static"
-hepdata npm
-CWD=$(pwd)
-cd "${VIRTUAL_ENV}/var/hepdata-instance/static"
-npm install
-hepdata collect
-hepdata assets build
-cd "${CWD}"
+hepdata webpack clean
+hepdata collect -v
+hepdata webpack buildall
