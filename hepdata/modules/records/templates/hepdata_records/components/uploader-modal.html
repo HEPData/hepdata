@@ -1,4 +1,5 @@
 <!-- Modal -->
+{{ webpack['bootstrap-filestyle-js.js'] }}
 {% if ctx.record %}
     <div class="modal fade" id="uploadDialog" tabindex="-1" role="dialog"
          aria-labelledby="codeDialog" aria-hidden="true">
@@ -40,7 +41,7 @@
                                 <br/>
                                 <input type="submit" value="Upload and Process"
                                        class="btn btn-primary btn-lg"
-                                       onclick="hepdata_record.perform_upload_action(event, '#upload-area', 'upload-form-modal')">
+                                       onclick="HEPDATA.hepdata_record.perform_upload_action(event, '#upload-area', 'upload-form-modal')">
                             </form>
                         </div>
                         <br/>

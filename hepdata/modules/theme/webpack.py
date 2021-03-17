@@ -37,7 +37,7 @@ theme = WebpackBundle(
         'hepdata-submission': './scss/submission.scss',
         'hepdata-info': './scss/info-pages.scss',
         'toastr': './node_modules/toastr/toastr.scss',
-        'bootstrap-filestyle': './js/lib/bootstrap-filestyle.min.js',
+        'bootstrap-filestyle-js': './js/lib/bootstrap-filestyle.min.js',
         'hepdata-home-js': './js/hepdata_home.js',
         'inspire-js': './js/inspire.js'
     },

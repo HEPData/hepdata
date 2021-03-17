@@ -15,9 +15,6 @@ HEPDATA.hepdata_record = (function () {
 
     return {
       initialise: function () {
-        //console.log(window.MathJax);
-        //window.MathJax.typeset();
-
         preserve_abstract_line_wrap();
         initialise_clipboard('.copy-btn');
       },

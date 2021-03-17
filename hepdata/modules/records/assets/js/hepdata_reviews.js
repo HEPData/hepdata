@@ -71,8 +71,7 @@ HEPDATA.load_all_review_messages = function (placement, record_id) {
     dataType: "json",
     cache: false,
     success: function (data) {
-      console.log(data);
-      $(placement).html('');
+    $(placement).html('');
       var message_count = 0;
       for (var table in data) {
         d3.select(placement).append('p').attr('class', 'table-name').text(table);
@@ -138,3 +137,74 @@ HEPDATA.toggleApproveAllButton = function() {
     }
   }
 }
+
+$(document).ready(function() {
+  $('.review-option').click(function () {
+      if ($(this).hasClass('table-show')) {
+          $(".review-option, .reviews-view").animate({
+              right: "+=300"
+          }, 400);
+          $(this).html('<span class="fa fa-chevron-right"></span>').removeClass('table-show').addClass('table-hide');
+      }
+      else {
+          $(".review-option, .reviews-view").animate({
+              right: "-=300"
+          }, 400);
+          $(this).html('<span class="fa fa-comments"></span>').removeClass('table-hide').addClass('table-show');
+
+      }
+  });
+
+  $(".input_box").on('change keyup paste', function(e) {
+    if(this.value) {
+      $("#send .btn-primary").prop('disabled', false);
+    } else {
+      $("#send .btn-primary").prop('disabled', true);
+    }
+  });
+
+  $("#send").click(function () {
+
+      var message = $(".input_box").val();
+
+      var DATA = {
+          'message': message,
+          'version': HEPDATA.current_table_version
+      };
+      $.ajax({
+          type: "POST",
+          dataType: "json",
+          url: "/record/data/review/message/" + HEPDATA.current_record_id + "/" + HEPDATA.current_table_id,
+          data: DATA,
+          cache: false,
+          success: function (data) {
+
+
+              if ($("#review_messages").text() == 'No messages yet...') {
+                  $("#review_messages").text('');
+              }
+
+              var message = data.message;
+              var date_time = data.post_time.split(" ");
+              var html = '<div class="message-item">' +
+                      '<div class="message-info">' +
+                      '<p class="message-time">' + date_time[0] + ' at ' + date_time[1] + ' UTC</p>' +
+                      '</div>' +
+                      '<div class="message-content">' +
+                      '<p class="reviewer">Sender:  ' + data.user + '</p>' + message + '</div>' +
+                      '</div>';
+
+              $("#table-" + HEPDATA.current_table_id + "-messages").removeClass("hidden");
+              $(html).prependTo("#review_messages").slideDown("slow");
+              $(".input_box").val('');
+              $("#send .btn-primary").prop('disabled', true);
+          }
+      });
+      return false;
+  });
+
+  $("#review-status span").click(function () {
+      HEPDATA.set_review_status(this.id.split("-")[0])
+  });
+
+});

@@ -76,7 +76,6 @@ HEPDATA.hepdata_resources = (function () {
         var resource_list = d3.select("#resource-filter ul");
         resource_list.html('');
 
-        console.log(data);
         data.submission_items.forEach(function(item) {
           resources[item.name] = item;
           var _li = resource_list.append('li')
