@@ -37,7 +37,11 @@ var submissions_vis = (function () {
   function getTopValues(map, count) {
 
     var tupleArray = [];
-    for (var key in map) tupleArray.push([key, map[key]]);
+    for (var key in map) {
+      if (typeof(map[key]) == "number") {
+        tupleArray.push([key, map[key]]);
+      }
+    }
     tupleArray.sort(function (a, b) {
       return b[1] - a[1];
     });
