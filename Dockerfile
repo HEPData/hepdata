@@ -6,14 +6,6 @@ RUN curl -sL https://deb.nodesource.com/setup_14.x | bash -
 RUN apt-get update
 RUN apt-get install -y nodejs
 
-RUN npm install -g \
-    clean-css@^3.4.24 \
-    requirejs \
-    uglify-js
-
-RUN npm install -g --unsafe-perm \
-    node-sass@4.14.1
-
 WORKDIR /code
 
 COPY . .
@@ -26,12 +18,12 @@ RUN pip install --no-cache-dir --upgrade pip && \
 RUN bash -c "set -x; [[ ${APP_ENVIRONMENT:-prod} = local-web ]] && \
   pip install -e .[all] || echo 'Not installing test or doc requirements on prod or worker build'"
 
-WORKDIR /usr/local/var/hepdata-instance/static
+RUN hepdata collect -v  && \
+  hepdata webpack create && \
+  # --unsafe needed because we are running as root
+  hepdata webpack install --unsafe && \
+  hepdata webpack build
 
-RUN hepdata npm \
- && npm install \
- && hepdata collect \
- && hepdata assets build
 
 RUN bash -c "echo $APP_ENVIRONMENT"
 
