@@ -155,16 +155,10 @@ setup(
         ],
         'invenio_assets.webpack': [
             'hepdata_theme_css = hepdata.modules.theme.webpack:theme',
-            # 'hepdata_info_page_css = hepdata.modules.theme.bundles:info_page_css',
             'hepdata_submission_js = hepdata.modules.submission.webpack:submission_js',
             'hepdata_search_js = hepdata.modules.search.webpack:search_js',
             'hepdata_record_js = hepdata.modules.records.webpack:record_js',
-            # 'hepdata_vis_js = hepdata.modules.records.bundles:vis_js',
             'hepdata_dashboard_js = hepdata.modules.dashboard.webpack:dashboard_js',
-            # 'hepdata_submission_vis_js = hepdata.modules.dashboard.bundles:submission_vis_js',
-            # 'hepdata_submission_css = hepdata.modules.dashboard.bundles:submission_css',
-            # 'hepdata_record_css = hepdata.modules.theme.bundles:record_css',
-            # 'hepdata_search_css = hepdata.modules.theme.bundles:search_css',
         ],
         'invenio_admin.views': [
             'hepdata_participant_view = hepdata.modules.permissions.admin:hep_participant_admin_view',
