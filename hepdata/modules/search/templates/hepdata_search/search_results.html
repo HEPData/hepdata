@@ -170,7 +170,6 @@
           var search_term = '{{ctx.q}}';
           var search_regex = '\\b({{ctx.q}})(?!(?:(?!<\/?[ha].*?>).)*<\/[ha].*?>)(?![^<>]*>)';
 
-    </script>
           if (search_term != "" && search_term.length > 2) {
               var regex = new RegExp(search_regex, "igm");
 
@@ -181,6 +180,7 @@
               })
           }
       });
+    </script>
 
 
 {% endblock %}

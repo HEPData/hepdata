@@ -210,7 +210,6 @@ HEPDATA.hepdata_search_facets = (function () {
           tip.hide(d);
         })
         .on('click', function (d) {
-          console.log('click!');
           update_brush_position(d.year_as_date, d.year_as_date);
           d3.select('.resize.e').style('display', 'inline');
 
