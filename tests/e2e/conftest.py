@@ -201,7 +201,13 @@ def env_browser(request):
     request.addfinalizer(finalizer)
 
     timeout_process.start()
-    return browser
+    yield browser
+
+    # Check browser logs before quitting
+    log = browser.get_log('browser')
+    assert len(log) == 0, \
+        "Errors in browser log:\n" + \
+        "\n".join([f"{line['level']}: {line['message']}" for line in log])
 
 
 def make_screenshot(driver, name):

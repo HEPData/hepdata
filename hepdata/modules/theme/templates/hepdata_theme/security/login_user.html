@@ -53,7 +53,6 @@
                             {{ form_errors(form) }}
                             {{ render_field(form.email, icon="fa fa-user", autofocus=True, errormsg=False) }}
                             {{ render_field(form.password, icon="fa fa-lock", errormsg=False) }}
-                            {{ form.csrf_token }}
                             <button type="submit"
                                     class="btn btn-primary btn-lg btn-block"><i
                                     class="fa fa-sign-in"></i> {{ _('Log In') }}

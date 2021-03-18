@@ -55,7 +55,9 @@ $(document).ready(function () {
               $("#latest_records").append(record_html_block);
           }
 
-          window.MathJax.typeset();
+          $(window).on('load', function() {
+            window.MathJax.typeset();
+          });
       }
   });
 
