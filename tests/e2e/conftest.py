@@ -33,6 +33,7 @@ import time
 from datetime import datetime
 
 import flask
+from flask_security.utils import hash_password
 import pytest
 from invenio_accounts.models import User, Role
 from invenio_db import db
@@ -93,7 +94,12 @@ def app(request):
 
         user_count = User.query.filter_by(email='test@hepdata.net').count()
         if user_count == 0:
-            user = User(email='test@hepdata.net', password='hello1', active=True)
+            user = User(
+                email='test@hepdata.net',
+                password=hash_password('hello1'),
+                active=True,
+                confirmed_at=datetime.now()
+            )
             admin_role = Role(name='admin')
             coordinator_role = Role(name='coordinator')
 
