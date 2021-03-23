@@ -1,0 +1,311 @@
+# Sample input file for new HepData submissions.
+# Annotated version of http://hepdata.cedar.ac.uk/view/ins1203852/input
+# See resulting HepData record at http://hepdata.cedar.ac.uk/view/ins1203852
+# Any text after # in a line is treated as a comment and will be ignored.
+# Keywords are indicated by an asterisk (*) at the start of a line.
+
+# Test data input at http://hepdata.cedar.ac.uk/input
+# by clicking on "Browse..." to select your input file, followed by
+# "Upload" and "Process", then click "Display" for the first 10 tables,
+# or "All" for the whole record.
+# See http://hepdata.cedar.ac.uk/submittingdata for further information.
+
+# Give surname (in capital letters) of first author of associated paper.
+*author: AAD
+
+# Give references ending in a colon followed by the year.
+# Omit the journal reference if the paper is not yet published.
+*reference: ARXIV:1211.6096 : 2012 # arXiv number
+*reference: CERN-PH-EP-2012-318 : 2012 # preprint number
+*reference: JHEP 1303,128 (2013) : 2013 # journal reference
+
+# Give web link to auxiliary information if available.
+# The line must also end with a colon followed by the year.
+*reference: http://atlas.web.cern.ch/Atlas/GROUPS/PHYSICS/PAPERS/STDM-2012-02/ : 2012
+
+# Give DOI of journal publication if available.
+*doi: 10.1007/JHEP03(2013)128
+
+# Give date and person who encoded the record
+# (could include collaboration, e-mail address etc.).
+# Please give the full name of the encoder and not
+# just their initials (with collaboration in brackets).
+*status: Encoded 27 FEB 2014 by Graeme Watt
+# Can add other entries if record is later modified.
+# The first word "Encoded" or "Modified" will be stored.
+*status: Modified 30 APR 2014 by Graeme Watt
+# If using the automated submission system, could add name
+# of Administrator as well as Encoder, e.g. "Checked by ...".
+# The *status information is printed at the bottom of each HTML record.
+
+# Give "Laboratory-Accelerator-Experiment" and Detector.
+*experiment: CERN-LHC-ATLAS
+*detector: ATLAS
+
+# SPIRES (http://www.slac.stanford.edu/spires/) record number.
+# Will not be allocated for new papers: superseded by INSPIRE.
+*spiresId: 9863591
+
+# INSPIRE (http://inspirehep.net/) record number.
+*inspireId: 1203852
+
+# CERN Document Server (http://cds.cern.ch/) record number.
+*cdsId: 1496097
+
+# Internal Durham record number (will be assigned after submission).
+*durhamId: 6150
+
+# Title of associated paper.
+*title: Measurement of ZZ production in pp collisions at sqrt(s) = 7 TeV and limits on anomalous ZZZ and ZZgamma couplings with the ATLAS detector
+
+# Comments describing the data as a whole.  Start with "Laboratory-Accelerator".
+# Remainder is a plain-text summary of the presented measurements.  This is
+# generally close to the paper abstract, but with more focus on the measurement.
+# For example, information on data interpretation and comparison to theory can
+# be removed (unless this information is to appear in the HepData record).
+# Additional information concerning the whole data set can appear here.
+# Line breaks are preserved in the HTML display.  A full stop is automatically
+# inserted at the end of the comment, so it should be omitted here.
+
+*comment: CERN-LHC.  Measurements of the cross section for ZZ production using the 4l and 2l2nu decay channels in proton-proton collisions at a centre-of-mass energy of 7 TeV with 4.6 fb^-1 of data collected in 2011.  The final states used are 4 electrons, 4 muons, 2 electrons and 2 muons, 2 electrons and missing transverse momentum, and 2 muons and missing transverse momentum (MET).
+
+The cross section values reported in the tables should be multiplied by a factor of 1.0141 to take into account the updated value of the integrated luminosity for the ATLAS 2011 data taking period.  The uncertainty on the global normalisation ("Lumi") remains at 1.8%.  See Eur.Phys.J. C73 (2013) 2518 for more details.
+
+The 4l channel fiducial region is defined as:
+- 4e, 4mu or 2e2mu
+- Ambiguities in pairing are resolved by choosing the combination that results in the smaller value of the sum |mll - mZ| for the two pairs, where mll is the mass of the dilepton system.
+- ptLepton > 7 GeV (at least one with ptLepton > 20 (25) GeV for muons (electrons))
+- |etaLepton| < 3.16
+- At least one lepton pair is required to have invariant mass between 66 and 116 GeV. If the second pair also satisfies this, the event is ZZ, otherwise if the second pair satisfies mll > 20 GeV it is ZZ*.
+- min(DeltaR(l,l)) > 0.2.
+
+The 2l2nu channel fiducial region is defined as:
+- 2e+MET or 2mu+MET
+- ptLepton > 20 GeV
+- |etaLepton| < 2.5
+- mll must be between 76 and 106 GeV
+- -MET*cos(phi_METZ)>75 GeV, where phi_METZ is the angle between the Z and the MET
+- |MET - pTZ| / pTZ < 0.4, where pTZ is the transverse momentum of the dilepton system
+- No events with a jet for which ptJet > 25 GeV and |etaJet| < 4.5
+- No events with a third lepton for which ptLepton > 10 GeV
+- min(DeltaR(l,l)) > 0.3
+
+
+# Note that much of the metadata above can be obtained by entering the
+# Inspire ID or arXiv number for the paper in the text box adjacent to
+# the "Get started" button.
+
+# Remainder of file provides information on each table.  All records should
+# have at least one table, even for single-number measurements where all
+# relevant information is given in the abstract.
+
+# Note that much of the HepData notation is historical and originates from
+# 1970s guidelines for use with the Berkeley Database Management System (BDMS):
+#   http://hepdata.cedar.ac.uk/resource/EncodingManual.pdf
+# You can look at existing HepData records to get some idea of the format.
+# LaTeX mathematical expressions are now supported via MathJax.
+
+# Use "*dataset:" to indicate the start of a table.
+*dataset:
+
+# Give location of relevant data in paper (e.g. "Figure 8A", "Table 3" etc.).
+*location: Page 17 of preprint
+
+# Comments on this particular table.  This is generally close to the caption of
+# the associated figure/table in the paper, but it should not refer to missing
+# information such as theoretical predictions (unless they are also given as
+# numbers in the table).  A full stop is automatically inserted at the end of
+# the dscomment, so it should be omitted here.
+*dscomment: The measured fiducial cross sections.  The first systematic uncertainty is the combined systematic uncertainty excluding luminosity, the second is the luminosity
+
+# The main process under study, used by the online search facility.
+# The *reackey can be omitted if there is not a specific process.
+# Multiple *reackey processes can be given on separate lines.
+# Do not attempt to give multiple processes on the same line.
+# Omit the decay products or give them on a separate line.
+*reackey: P P --> Z0 Z0 X
+# The reaction should always have an initial state and a final state
+# separated by "-->".  The right-hand side should usually have an "X" to
+# indicate an inclusive reaction (as opposed to exclusive where all
+# final-state particles are known, e.g. elastic proton scattering).
+
+# The particular type of measurement or observable, used by the online search.
+# Use "SIG" for a cross section, "DSIG/DPT" for a differential cross section,
+# "N" for number of events, etc.  See:  http://hepdata.cedar.ac.uk/browse
+# Avoid adding new values not already in the database, found by browsing 
+# or searching for "obs OBSKEY" on the main HepData webpage.  If in doubt,
+# just omit the *obskey statement completely.  The *obskey value must consist
+# of only a single word, but multiple values can be given on separate lines.
+*obskey: SIG
+
+# There are usually multiple lines beginning with "*qual:" giving the reaction
+# (as below), the centre-of-mass energy, and important kinematic cuts.
+# Here, the three columns of the table correspond to different final states.
+# Decay products of the final-state particles are indicated by angular brackets.
+*qual: RE : P P --> Z0 < LEPTON+ LEPTON- > Z0 < LEPTON+ LEPTON- > X : P P --> Z0 < LEPTON+ LEPTON- > Z0* < LEPTON+ LEPTON- > X : P P --> Z0 < LEPTON+ LEPTON- > Z0 < NU NUBAR > X
+
+# Headers for the x columns separated by colons ":" (only one in this case).
+*xheader: SQRT(S) IN GEV 
+
+# Headers for the y columns separated by ":" (here, header spans three columns).
+*yheader: SIG(fiducial) IN FB
+
+# The *xheader and *yheader should always be present and should describe the
+# quantities in the table.  Generally these will correspond to the labels of
+# the x and y axis of the corresponding plot in the paper.  Qualifiers (*qual)
+# are optional and can distinguish results given in different columns.  Always
+# try to give the units of any variable that appears in the qualifiers or
+# headers in the form "name IN units".  Each table should usually contain a
+# qualifier giving the centre-of-mass energy (unless it appears as the x
+# variable), e.g. "*qual: SQRT(S)/NUCLEON IN GEV : 7.7".
+
+# Specify number of columns separated by ":" (here, 1 "x" and 3 "y" columns).
+*data: x : y : y : y 
+
+# Now give the numerical values for the data, separating columns by a
+# semicolon (";") and also terminating each line by a semicolon (";").
+# Non-existent entries can be indicated by dashes "-".
+# Numerical values should be given with an appropriate and not excessive number
+# of significant figures (in general, a maximum of 4), avoiding giving more
+# decimal places for the errors than the central values.
+# After the central value, give the statistical uncertainties followed by the
+# (possibly multiple) systematic uncertainties in brackets as shown below.
+# A label can be given to distinguish multiple systematic uncertainties, as
+# shown below for the "lumi" case, by a colon after the number, then the label.
+# For asymmetric errors, always give the "plus" error before the "minus" error.
+# Note that "plus" and "minus" can refer to "up" and "down" variations of the
+# source of uncertainty, and do not necessarily match the sign of the resultant
+# uncertainty on the measurement (which can change sign along a distribution).
+
+ 7000; 25.4 +3.3,-3.0 (DSYS=+1.2,-1.0,DSYS=1.0:lumi); 29.8 +3.8,-3.5 (DSYS=+1.7,-1.5,DSYS=1.2:lumi); 12.7 +3.1,-2.9 (DSYS=1.7,DSYS=0.5:lumi);
+
+# Use "*dataend:" to indicate the end of a table (optional, can be omitted,
+# provided that "*E" is used at the end of the input file).
+*dataend:
+
+
+# Similarly for Table 2 ...
+*dataset:
+*location: Page 20 of preprint
+*dscomment: The measured total cross sections.  The first systematic uncertainty is the combined systematic uncertainty excluding luminosity, the second is the luminosity
+*reackey: P P --> Z0 Z0 X
+*obskey: SIG
+*qual: RE : P P --> Z0 Z0 X
+*yheader: SIG(total) IN FB
+*xheader: SQRT(S) IN GEV 
+*data: x : y 
+ 7000; 6.7 +- 0.7 (DSYS=+0.4,-0.3,DSYS=0.3:lumi);
+*dataend:
+
+
+# Similarly for Table 3 ...
+# Note units of GEV not GEV/C (i.e. C = 1) for transverse momentum PT.
+# The x values are given as the bin centre (not necessarily equal to midpoint)
+# followed by the lower and upper limits of the bin.  In the common case that
+# the bin centre is equal to the midpoint, then it can be omitted,
+# i.e. just " 0 TO 60;" instead of " 30 (BIN=0 TO 60);".  Note that the
+# formatter currently appends an unnecessary ".0" to some integers, as below.
+*dataset:
+*location: Figure 8A
+*dscomment: Normalized ZZ fiducial cross section (multiplied by 10^6 for readability) in bins of the leading reconstructed dilepton pT for the 4 lepton channel.  The first systematic uncertainty is detector systematics, the second is background systematic uncertainties
+*reackey: P P --> Z0 Z0 X
+*obskey: DSIG/DPT
+*qual: RE : P P --> Z0 < LEPTON+ LEPTON- > Z0 < LEPTON+ LEPTON- > X
+*qual: SQRT(S) IN GEV : 7000.0
+*yheader: 10**6 * 1/SIG(fiducial) * D(SIG(fiducial))/DPT IN GEV**-1
+*xheader: Leading dilepton PT IN GEV
+*data: x : y 
+ 0.0 TO 60.0; 7000 +- 1100.0 (DSYS=79.0:detector,DSYS=15.0:background);
+ 60.0 TO 100.0; 9800 +- 1600.0 (DSYS=75.0:detector,DSYS=15.0:background);
+ 100.0 TO 200.0; 1600 +- 490.0 (DSYS=41.0:detector,DSYS=2.0:background);
+ 200.0 TO 600.0; 80 +- 60.0 (DSYS=2.0:detector,DSYS=0.0:background);
+*dataend:
+
+# Similarly for Table 4 ...
+*dataset:
+*location: Figure 8B
+*dscomment: Normalized ZZ fiducial cross section (multiplied by 10^6 for readability) in bins of the dilepton pT for the 2l2nu channel.  The first systematic uncertainty is detector systematics, the second is background systematic uncertainties
+*reackey: P P --> Z0 Z0 X
+*obskey: DSIG/DPT
+*qual: RE : P P --> Z0 < LEPTON+ LEPTON- > Z0 < NU NUBAR > X
+*qual: SQRT(S) IN GEV : 7000.0
+*yheader: 10**6 * 1/SIG(fiducial) * D(SIG(fiducial))/DPT IN GEV**-1
+*xheader: Leading dilepton PT IN GEV 
+*data: x : y 
+ 50.0 TO 90.0; 9930 +- 3340.0 (DSYS=80.0:detector,DSYS=740.0:background);
+ 90.0 TO 130.0; 8280 +- 3210.0 (DSYS=200.0:detector,DSYS=260.0:background);
+ 130.0 TO 200.0; 3900 +- 1490.0 (DSYS=120.0:detector,DSYS=390.0:background);
+*dataend:
+
+# Similarly for Table 5 ...
+*dataset:
+*location: Figure 9A
+*dscomment: Normalized ZZ fiducial cross section (multiplied by 10^6 for readability) in bins of deltaPhi between the two leptons of the leading dileptons for the 4l channel.  The first systematic uncertainty is detector systematics, the second is background systematic uncertainties.
+UPDATE (30 APR 2014): extra significant digit added for first bin
+*reackey: P P --> Z0 Z0 X
+*obskey: DSIG/DPHI
+*qual: RE : P P --> Z0 < LEPTON+ LEPTON- > Z0 < LEPTON+ LEPTON- > X
+*qual: SQRT(S) IN GEV : 7000.0
+*yheader: 10**6 * 1/SIG(fiducial) * D(SIG(fiducial))/DDELTA(PHI(LEPTON+,LEPTON-))
+*xheader: Leading dilepton DELTA(PHI(LEPTON+,LEPTON-)) 
+*data: x : y 
+ 0.0 TO 0.5; 130000 +- 69000.0 (DSYS=6600.0:detector,DSYS=10.0:background);
+ 0.5 TO 1.0; 280000 +- 100000.0 (DSYS=9000.0:detector,DSYS=400.0:background);
+ 1.0 TO 1.7; 260000 +- 80000.0 (DSYS=10000.0:detector,DSYS=300.0:background);
+ 1.7 TO 3.14159; 420000 +- 50000.0 (DSYS=2000.0:detector,DSYS=300.0:background);
+*dataend:
+
+# Similarly for Table 6 ...
+*dataset:
+*location: Figure 9B
+*dscomment: Normalized ZZ fiducial cross section (multiplied by 10^6 for readability) in bins of deltaPhi between the two leptons for the 2l2nu channel.  The first systematic uncertainty is detector systematics, the second is background systematic uncertainties
+*reackey: P P --> Z0 Z0 X
+*obskey: DSIG/DPHI
+*qual: RE : P P --> Z0 < LEPTON+ LEPTON- > Z0 < NU NUBAR > X
+*qual: SQRT(S) IN GEV : 7000.0
+*yheader: 10**6 * 1/SIG(fiducial) * D(SIG(fiducial))/DDELTA(PHI(LEPTON+,LEPTON-))
+*xheader: Leading dilepton DELTA(PHI(LEPTON+,LEPTON-)) 
+*data: x : y 
+ 0.0 TO 0.5; 346000 +- 158000.0 (DSYS=4000.0:detector,DSYS=19000.0:background);
+ 0.5 TO 1.7; 569000 +- 91000.0 (DSYS=4000.0:detector,DSYS=71000.0:background);
+ 1.7 TO 3.14159; 100000 +- 70000.0 (DSYS=2000.0:detector,DSYS=58000.0:background);
+*dataend:
+
+# Similarly for Table 7 ...
+*dataset:
+*location: Figure 10A
+*dscomment: Normalized ZZ fiducial cross section (multiplied by 10^6 for readability) in bins of the mass of the ZZ system for the 4l channel.  The first systematic uncertainty is detector systematics, the second is background systematic uncertainties
+*reackey: P P --> Z0 Z0 X
+*obskey: DSIG/DM
+*qual: RE : P P --> Z0 < LEPTON+ LEPTON- > Z0 < LEPTON+ LEPTON- > X
+*qual: SQRT(S) IN GEV : 7000.0
+*yheader: 10**6 * 1/SIG(fiducial) * D(SIG(fiducial))/DM(ZZ)
+*xheader: M(ZZ) IN GEV 
+*data: x : y 
+ 0.0 TO 240.0; 2200 +- 300.0 (DSYS=40.0:detector,DSYS=2.0:background);
+ 240.0 TO 300.0; 4500 +- 1000.0 (DSYS=100.0:detector,DSYS=5.0:background);
+ 300.0 TO 400.0; 1000 +- 400.0 (DSYS=20.0:detector,DSYS=2.0:background);
+ 400.0 TO 800.0; 280 +- 100.0 (DSYS=10.0:detector,DSYS=1.0:background);
+*dataend:
+
+# Similarly for Table 8 ...
+*dataset:
+*location: Figure 10B
+*dscomment: Normalized ZZ fiducial cross section (multiplied by 10^6 for readability) in bins of the transverse mass of the ZZ system for the 2l2nu channel.  The first systematic uncertainty is detector systematics, the second is background systematic uncertainties
+*reackey: P P --> Z0 Z0 X
+*obskey: DSIG/DM
+*qual: RE : P P --> Z0 < LEPTON+ LEPTON- > Z0 < NU NUBAR > X
+*qual: SQRT(S) IN GEV : 7000.0
+*yheader: 10**6 * 1/SIG(fiducial) * D(SIG(fiducial))/DMT(ZZ)
+*xheader: MT(ZZ) IN GEV 
+*data: x : y 
+ 220.0 TO 250.0; 10500 +- 4400.0 (DSYS=300.0:detector,DSYS=1900.0:background);
+ 250.0 TO 300.0; 6320 +- 2630.0 (DSYS=230.0:detector,DSYS=280.0:background);
+ 300.0 TO 400.0; 3680 +- 1210.0 (DSYS=60.0:detector,DSYS=480.0:background);
+*dataend:
+
+
+# Use "*E" to denote the end of the input file (optional, can be omitted,
+# provided that "*dataend:" is used above).
+
+*E

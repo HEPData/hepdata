@@ -238,6 +238,7 @@
                 {% include 'hepdata_records/components/resources-widget.html' %}
             {% endif %}
 
+            {{ webpack['hepdata-record-js.js'] }}
             {% set delete_redirect_url = '/record/sandbox' %}
             {% include 'hepdata_dashboard/delete-widget.html' %}
 
