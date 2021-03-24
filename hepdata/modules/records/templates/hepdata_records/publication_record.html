@@ -22,6 +22,9 @@
 {#
 {% set title = title %}
 #}
+
+{%- set messages = get_flashed_messages(with_categories=true) -%}
+
 {% block title %}
     HEPData | {{ ctx.record.title }}
 {% endblock %}
@@ -108,6 +111,13 @@
             <!--top level publication information-->
 
             <div class="row" style="padding-top: 120px;">
+
+                {%- if messages %}
+                    {%- for category, message in messages %}
+                      <div align="center" style="margin:10px;margin-top:0;" class="alert alert-{{category}}">{{ message }}</div>
+                    {%- endfor %}
+                {%- endif %}
+
                 <div class="detailed-record-info col-lg-3 col-md-3">
 
                     <button class="btn btn-xs btn-link hide-publication-info"

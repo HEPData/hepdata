@@ -32,26 +32,14 @@ from hepdata.modules.submission.models import HEPSubmission
 from .conftest import e2e_assert, e2e_assert_url
 
 
-def test_create_submission(live_server, env_browser):
+def test_create_submission(live_server, logged_in_browser):
     """Create submission test"""
-    browser = env_browser
+    browser = logged_in_browser
     inspire_id = '1830840'
 
     # First confirm there are no submissions for our inspire id
     submissions = HEPSubmission.query.filter_by(inspire_id=inspire_id).all()
     assert len(submissions) == 0
-
-    # Log in
-    browser.get(flask.url_for('security.login', _external=True))
-    e2e_assert_url(browser, 'security.login')
-
-    login_form = browser.find_element_by_name('login_user_form')
-    login_form.find_element_by_name('email').send_keys('test@hepdata.net')
-    login_form.find_element_by_name('password').send_keys('hello1')
-    login_form.submit()
-
-    # Check we're back at the homepage
-    e2e_assert_url(browser, 'hepdata_theme.index')
 
     # Click "submit"
     submit_link = browser.find_element_by_link_text('Submit')
