@@ -5,6 +5,7 @@ Installation
  * :ref:`options-for-installing`
  * :ref:`running-services-locally`
  * :ref:`running-docker-compose`
+ * :ref:`development-tips`
 
 .. _options-for-installing:
 
@@ -106,7 +107,7 @@ An example file ``hepdata/config_local.local.py`` is provided, which can be copi
 JavaScript
 ----------
 
-Next, build assets using webpack (via [invenio-assets](https://invenio-assets.readthedocs.io/en/latest/)).
+Next, build assets using webpack (via `invenio-assets <https://invenio-assets.readthedocs.io/en/latest/>`_).
 
 .. code-block:: console
 
@@ -314,3 +315,65 @@ Tips
   .. code-block:: console
 
      $ find . -name '*.pyc' -delete
+
+
+.. _development-tips:
+
+****************
+Development Tips
+****************
+
+JavaScript changes
+==================
+
+The JavaScript and CSS are bundled using `Webpack <https://webpack.js.org>`_, via the following packages:
+
+ * `pywebpack <https://pywebpack.readthedocs.io/en/latest/>`_ provides a way to define Webpack bundles in python.
+ * `Flask-WebpackExt <https://flask-webpackext.readthedocs.io/en/latest/>`_ integrates `pywebpack` with Flask. It provides the `WebpackBundle` class used to define the entry points and contents of the Webpack packages, and the `{{ webpack`...] }}` template function used to inject javascript and css into a page.
+ * `Flask-WebpackExt <https://flask-webpackext.readthedocs.io/en/latest/>`_ integrates Webpack with Flask. It provides the `WebpackBundle` class used to define the entry points and contents of the Webpack packages, and the `{{ webpack[...] }}` template function used to inject javascript and css into a page.
+ * `invenio-assets <https://invenio-assets.readthedocs.io/en/latest/>`_ integrates Flask-WebpackExt with Invenio and provides a CLI command to collect the assets.
+
+Each module that require javascript has a ``webpack.py`` file which list the JavaScript files and their dependencies. Dependencies need to be imported at the top of each JavaScript file. To add a new JavaScript file:
+
+ 1. Create the file in ``<module>/assets/js``.
+ 2. Edit ``<module>/webpack.py`` and add an item to the ``entries`` dict, e.g.
+
+ .. code-block:: python
+
+    'hepdata-reviews-js': './js/hepdata_reviews.js',
+
+ 3. To include the file in another JavaScript file, use e.g.
+
+ .. code-block:: javascript
+
+    import HEPDATA from './hepdata_common.js' // Puts HEPDATA in the namespace
+    import './hepdata_reviews.js' // Adds functions to HEPDATA from hepdata_reviews
+
+ 4. To include the file in an HTML page, use the ``webpack`` function with the name from ``'entries'`` in ``bundle.py``, with a ``.js`` (or ``.css`` extension):
+ .. code-block:: html
+
+    {{ webpack['hepdata-reviews-js.js'] }}
+
+If you need to add a new bundle, it will need to be added to the ``'invenio_assets.webpack'`` entry in ``setup.py`` (and you will need to re-run ``pip install -e.[all] hepdata``).
+
+When making changes to the javascript you may find it helpful to build the javascript on-the-fly:
+
+.. code-block:: console
+
+   (hepdata)$ cd $HOME/.virtualenvs/hepdata/var/hepdata-instance/assets
+   (hepdata)$ npm start
+
+If you want to build all of the JavaScript, run:
+
+.. code-block:: console
+
+   (hepdata)$ hepdata webpack build
+
+If you have made a change to a ``webpack.py`` file, run:
+
+.. code-block:: console
+
+   (hepdata)$ hepdata webpack buildall
+
+Occasionally the Webpack build will complete but there will be errors higher up in the output. If the JavaScript file
+does not load in the page (e.g. you see a ``KeyError: not in manifest.json`` error), check the webpack build output.
