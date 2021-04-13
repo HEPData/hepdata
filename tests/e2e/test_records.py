@@ -73,7 +73,7 @@ def test_record_update(live_server, logged_in_browser):
     upload_dialog.find_element_by_css_selector('input[type=submit]').click()
 
     # Wait for page reload
-    WebDriverWait(browser, 10).until(
+    WebDriverWait(browser, 15).until(
         EC.staleness_of(upload_dialog)
     )
     alert = browser.find_element_by_class_name('alert-info')
@@ -219,7 +219,7 @@ def test_sandbox(live_server, logged_in_browser):
     browser.find_element_by_class_name('btn-primary').click()
 
     # Should redirect to record page with confirmation message
-    WebDriverWait(browser, 10).until(
+    WebDriverWait(browser, 15).until(
         EC.url_matches(f'{sandbox_url}/\\d+')
     )
     alert = browser.find_element_by_class_name('alert-info')
@@ -339,7 +339,7 @@ def _check_record_common(browser):
     upload.send_keys(os.path.abspath("tests/test_data/sample.oldhepdata"))
     upload_dialog.find_element_by_css_selector('input[type=submit]').click()
     # Wait for page reload
-    WebDriverWait(browser, 10).until(
+    WebDriverWait(browser, 15).until(
         EC.staleness_of(upload_dialog)
     )
     alert = browser.find_element_by_class_name('alert-info')
