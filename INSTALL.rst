@@ -329,7 +329,7 @@ JavaScript changes
 The JavaScript and CSS are bundled using `Webpack <https://webpack.js.org>`_, via the following packages:
 
  * `pywebpack <https://pywebpack.readthedocs.io/en/latest/>`_ provides a way to define Webpack bundles in python.
- * `Flask-WebpackExt <https://flask-webpackext.readthedocs.io/en/latest/>`_ integrates `pywebpack` with Flask. It provides the `WebpackBundle` class used to define the entry points and contents of the Webpack packages, and the `{{ webpack`...] }}` template function used to inject javascript and css into a page.
+ * `Flask-WebpackExt <https://flask-webpackext.readthedocs.io/en/latest/>`_ integrates `pywebpack` with Flask. It provides the `WebpackBundle` class used to define the entry points and contents of the Webpack packages, and the ``{{ webpack[...] }}`` template function used to inject javascript and css into a page.
  * `invenio-assets <https://invenio-assets.readthedocs.io/en/latest/>`_ integrates Flask-WebpackExt with Invenio and provides a CLI command to collect the assets.
 
 Each module that requires javascript has a ``webpack.py`` file which list the JavaScript files and their dependencies. Dependencies need to be imported at the top of each JavaScript file. To add a new JavaScript file:
