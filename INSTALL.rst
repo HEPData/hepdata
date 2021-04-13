@@ -330,10 +330,9 @@ The JavaScript and CSS are bundled using `Webpack <https://webpack.js.org>`_, vi
 
  * `pywebpack <https://pywebpack.readthedocs.io/en/latest/>`_ provides a way to define Webpack bundles in python.
  * `Flask-WebpackExt <https://flask-webpackext.readthedocs.io/en/latest/>`_ integrates `pywebpack` with Flask. It provides the `WebpackBundle` class used to define the entry points and contents of the Webpack packages, and the `{{ webpack`...] }}` template function used to inject javascript and css into a page.
- * `Flask-WebpackExt <https://flask-webpackext.readthedocs.io/en/latest/>`_ integrates Webpack with Flask. It provides the `WebpackBundle` class used to define the entry points and contents of the Webpack packages, and the `{{ webpack[...] }}` template function used to inject javascript and css into a page.
  * `invenio-assets <https://invenio-assets.readthedocs.io/en/latest/>`_ integrates Flask-WebpackExt with Invenio and provides a CLI command to collect the assets.
 
-Each module that require javascript has a ``webpack.py`` file which list the JavaScript files and their dependencies. Dependencies need to be imported at the top of each JavaScript file. To add a new JavaScript file:
+Each module that requires javascript has a ``webpack.py`` file which list the JavaScript files and their dependencies. Dependencies need to be imported at the top of each JavaScript file. To add a new JavaScript file:
 
  1. Create the file in ``<module>/assets/js``.
  2. Edit ``<module>/webpack.py`` and add an item to the ``entries`` dict, e.g.
@@ -349,7 +348,8 @@ Each module that require javascript has a ``webpack.py`` file which list the Jav
     import HEPDATA from './hepdata_common.js' // Puts HEPDATA in the namespace
     import './hepdata_reviews.js' // Adds functions to HEPDATA from hepdata_reviews
 
- 4. To include the file in an HTML page, use the ``webpack`` function with the name from ``'entries'`` in ``bundle.py``, with a ``.js`` (or ``.css`` extension):
+ 4. To include the file in an HTML page, use the ``webpack`` function with the name from ``'entries'`` in ``bundle.py``, with a ``.js`` extension. (Similarly, CSS files can be included using a ``.css`` extension.)
+
  .. code-block:: html
 
     {{ webpack['hepdata-reviews-js.js'] }}
