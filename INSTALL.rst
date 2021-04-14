@@ -323,7 +323,7 @@ Tips
 Development Tips
 ****************
 
-JavaScript changes
+JavaScript/Webpack
 ==================
 
 The JavaScript and CSS are bundled using `Webpack <https://webpack.js.org>`_, via the following packages:
@@ -377,3 +377,30 @@ If you have made a change to a ``webpack.py`` file, run:
 
 Occasionally the Webpack build will complete but there will be errors higher up in the output. If the JavaScript file
 does not load in the page (e.g. you see a ``KeyError: not in manifest.json`` error), check the webpack build output.
+
+npm dependency issues
+---------------------
+
+If you have issues with npm peer dependencies when running ``hepdata webpack buildall``, (e.g. an error message starting
+``ERESOLVE unable to resolve dependency tree`` and followed by ``Could not result dependency: peer ...``) then you will
+need to set the `legacy-peer-deps <https://docs.npmjs.com/cli/v7/using-npm/config#legacy-peer-deps>`_ flag for npm.
+There are two ways to do this:
+
+**Either:**
+
+Set the flag globally in your npm config (NB: this will affect other npm projects):
+
+.. code-block:: console
+
+   (hepdata)$ npm config set legacy-peer-deps true
+
+You will then be able to run ``hepdata webpack buildall``.
+
+**Or:**
+
+Run the webpack CLI ``install`` and ``build`` commands separately (rather than using ``buildall``) and pass ``--legacy-peer-deps`` to the npm install step:
+
+.. code-block:: console
+
+   (hepdata)$ hepdata webpack install --legacy-peer-deps
+   (hepdata)$ hepdata webpack build

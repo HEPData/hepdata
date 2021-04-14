@@ -33,4 +33,9 @@ fi
 
 hepdata webpack clean
 hepdata collect -v
-hepdata webpack buildall
+# Use separate webpack commands rather than buildall so we can pass
+# --legacy-peer-deps to npm install. Once invenio-assets is upgraded
+# to work with npm 7 this should no longer be necessary.
+hepdata webpack create
+hepdata webpack install --legacy-peer-deps
+hepdata webpack build
