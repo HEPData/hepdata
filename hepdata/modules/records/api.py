@@ -334,6 +334,25 @@ def render_record(recid, record, version, output_format, light_mode=False):
         abort(404)
 
 
+def has_upload_permissions(recid, user, is_sandbox=False):
+    if has_role(user, 'admin'):
+        return True
+
+    if is_sandbox:
+        hepsubmission_record = get_latest_hepsubmission(publication_recid=recid, overall_status='sandbox')
+        return hepsubmission_record is not None and hepsubmission_record.coordinator == user.id
+
+    participant = SubmissionParticipant.query.filter_by(user_account=user.id,
+        role='uploader', publication_recid=recid, status='primary').first()
+    if participant:
+        return True
+
+    coordinator_record = HEPSubmission.query.filter_by(
+        publication_recid=recid,
+        coordinator=user.get_id()).first()
+    return coordinator_record is not None
+
+
 def process_payload(recid, file, redirect_url, synchronous=False):
     """Process an uploaded file
 

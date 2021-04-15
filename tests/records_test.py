@@ -37,7 +37,8 @@ from invenio_db import db
 import pytest
 from werkzeug.datastructures import FileStorage
 
-from hepdata.modules.records.api import process_payload, process_zip_archive, move_files, get_all_ids
+from hepdata.modules.permissions.models import SubmissionParticipant
+from hepdata.modules.records.api import process_payload, process_zip_archive, move_files, get_all_ids, has_upload_permissions
 from hepdata.modules.records.utils.submission import get_or_create_hepsubmission, process_submission_directory, do_finalise, unload_submission
 from hepdata.modules.records.utils.common import get_record_by_id, get_record_contents
 from hepdata.modules.records.utils.data_processing_utils import generate_table_structure
@@ -352,6 +353,41 @@ def test_upload_invalid_file(app):
             'message': 'You must upload a .zip, .tar, .tar.gz or .tgz file'
             ' (or a .oldhepdata or single .yaml or .yaml.gz file).'
         })
+
+
+def test_has_upload_permissions(app):
+    # Test that a logged-in user cannot upload a file to a record for which
+    # they're not an uploader
+    with app.app_context():
+        base_dir = os.path.dirname(os.path.realpath(__file__))
+
+        # Create a user who is not admin and not associated with a record
+        user = User(email='testuser@hepdata.com', password='hello', active=True)
+        db.session.add(user)
+        db.session.commit()
+        login_user(user)
+
+        recid = '12345'
+        hepsubmission = get_or_create_hepsubmission(recid, 1)
+
+        assert not has_upload_permissions(recid, user)
+
+        # Add the user as an uploader but not primary - should not be allowed
+        submission_participant = SubmissionParticipant(
+            user_account=user.id, publication_recid=recid,
+            email=user.email, role='uploader')
+        hepsubmission.participants.append(submission_participant)
+        db.session.add(hepsubmission)
+        db.session.commit()
+
+        assert not has_upload_permissions(recid, user)
+
+        # Make the participant primary uploader - should now work
+        submission_participant.status = 'primary'
+        db.session.add(submission_participant)
+        db.session.commit()
+
+        assert has_upload_permissions(recid, user)
 
 
 def test_process_zip_archive_invalid(app):
