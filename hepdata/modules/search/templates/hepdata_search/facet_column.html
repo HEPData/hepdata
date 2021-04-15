@@ -52,17 +52,17 @@
                 {% if facet.vals|length > facet.max_values %}
                     <div class="facet-options">
                         <a class="facet-option facet-reset" style="display: none"
-                           onclick="reset_facet('{{ facet.type }}')">
+                           onclick="HEPDATA.hepdata_search_facets.reset_facet('{{ facet.type }}')">
                             Reset
                         </a>
 
                         <a class="facet-option facet-all"
-                           onclick="show_more_facets('{{ facet.type }}', -1)">
+                           onclick="HEPDATA.hepdata_search_facets.show_more_facets('{{ facet.type }}', -1)">
                             Show All
                         </a>
 
                         <a class="facet-option facet-more"
-                           onclick="show_more_facets('{{ facet.type }}', 5)">
+                           onclick="HEPDATA.hepdata_search_facets.show_more_facets('{{ facet.type }}', 5)">
                             Next 5
                         </a>
                     </div>
@@ -73,66 +73,10 @@
     {% endfor %}
 </div>
 
-{%- assets "hepdata_search_js" %}
-    <script src="{{ ASSET_URL }}"></script>
-{%- endassets %}
-
+{{ webpack['hepdata-search-js.js'] }}
+{{ webpack['hepdata-search-facets-js.js'] }}
 
 <script type="text/javascript">
-    var authors = new Bloodhound({
-        datumTokenizer: Bloodhound.tokenizers.whitespace,
-        queryTokenizer: Bloodhound.tokenizers.whitespace,
-        remote: {
-            url: '/search/authors?q=%QUERY',
-            wildcard: '%QUERY',
-            transform: function (json) {
-                return $.map(json.results, function (author) {
-                    return author.full_name;
-                });
-            }
-        }
-    });
-
-    $('#author-suggest').typeahead(
-            {highlight: true},
-            {valueKey: 'symbol', source: authors}
-    );
-
-    function updateQueryStringParameter(uri, key, value) {
-        var re = new RegExp("([?&])" + key + "=.*?(&|$)", "i");
-        var separator = uri.indexOf('?') !== -1 ? "&" : "?";
-        if (uri.match(re)) {
-            return uri.replace(re, '$1' + key + "=" + value + '$2');
-        }
-        else {
-            return uri + separator + key + "=" + value;
-        }
-    }
-
-    $('.typeahead').bind('typeahead:select', function (ev, suggestion) {
-        window.location.href = updateQueryStringParameter(window.location.href,
-                'author',
-                suggestion);
-    });
-
-    function show_more_facets(facet_type, show_number) {
-        var facet_id = "#" + facet_type + "-facet";
-        var facets = $(facet_id + " li:not(:visible)");
-
-        if (show_number == -1) {
-            facets.slice(0).removeClass("hidden");
-            $(facet_id + " .facet-more").hide();
-            $(facet_id + " .facet-all").hide();
-
-        } else {
-            facets.slice(0, show_number).removeClass("hidden");
-            if (facets.size() <= show_number) {
-                $(facet_id + " .facet-more").hide();
-                $(facet_id + " .facet-all").hide();
-            }
-        }
-        $(facet_id + " .facet-reset").show();
-    }
 
     // due to the added complexity of showing all year values, we need to pass state to the visualization
     // component to tell it what the current selection was
@@ -141,23 +85,13 @@
         selection_range = {'min':{{ ctx.min_year }}, 'max':{{ ctx.max_year }}};
     {% endif %}
 
-    console.log(selection_range);
-
-    search_utils.render_histogram('#year_hist', {{ ctx.year_facet|safe }}, {
+    HEPDATA.hepdata_search_facets.render_histogram('#year_hist', {{ ctx.year_facet|safe }}, {
         width: 210,
         height: 70,
         selection_range: selection_range
     }, function (data) {
         var date_str = data.join([separator = ',']);
-        window.location.href = updateQueryStringParameter(window.location.href, 'date', date_str)
+        window.location.href = HEPDATA.hepdata_search_facets.updateQueryStringParameter(window.location.href, 'date', date_str)
     });
 
-    function reset_facet(facet_type) {
-        var facet_id = "#" + facet_type + "-facet";
-        var facets = $(facet_id + " li");
-        facets.slice(5).addClass("hidden");
-        $(facet_id + " .facet-reset").hide();
-        $(facet_id + " .facet-more").show();
-        $(facet_id + " .facet-all").show();
-    }
 </script>

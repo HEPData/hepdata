@@ -31,11 +31,11 @@ if [ ! -x "$(command -v hepdata)" ]; then
   exit 1
 fi
 
-rm -rf "${VIRTUAL_ENV}/var/hepdata-instance/static"
-hepdata npm
-CWD=$(pwd)
-cd "${VIRTUAL_ENV}/var/hepdata-instance/static"
-npm install
-hepdata collect
-hepdata assets build
-cd "${CWD}"
+hepdata webpack clean
+hepdata collect -v
+# Use separate webpack commands rather than buildall so we can pass
+# --legacy-peer-deps to npm install. Once invenio-assets is upgraded
+# to work with npm 7 this should no longer be necessary.
+hepdata webpack create
+hepdata webpack install --legacy-peer-deps
+hepdata webpack build

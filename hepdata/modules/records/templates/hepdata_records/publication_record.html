@@ -22,15 +22,16 @@
 {#
 {% set title = title %}
 #}
+
+{%- set messages = get_flashed_messages(with_categories=true) -%}
+
 {% block title %}
     HEPData | {{ ctx.record.title }}
 {% endblock %}
 
 {%- block additional_assets %}
-    {%- assets "hepdata_record_css" %}
-        <link href="{{ ASSET_URL }}" rel="stylesheet">
-    {%- endassets %}
-
+    {{ webpack['hepdata-record.css'] }}
+    {{ webpack['toastr.css'] }}
 {%- endblock additional_assets %}
 
 {% block page_description %}{{ ctx.record.title }}{% endblock %}
@@ -110,6 +111,13 @@
             <!--top level publication information-->
 
             <div class="row" style="padding-top: 120px;">
+
+                {%- if messages %}
+                    {%- for category, message in messages %}
+                      <div align="center" style="margin:10px;margin-top:0;" class="alert alert-{{category}}">{{ message }}</div>
+                    {%- endfor %}
+                {%- endif %}
+
                 <div class="detailed-record-info col-lg-3 col-md-3">
 
                     <button class="btn btn-xs btn-link hide-publication-info"
@@ -307,7 +315,7 @@
                                     <br/>
                                     <input type="submit" value="Upload and Process"
                                            class="btn btn-primary"
-                                           onclick="hepdata_record.perform_upload_action('#main-upload-area', 'upload-form', ['#955BA5', '#2C3E50'] , 'large_area'); return false;">
+                                           onclick="HEPDATA.hepdata_record.perform_upload_action(event, '#main-upload-area', 'upload-form', ['#955BA5', '#2C3E50'] , 'large_area'); return false;">
                                 </form>
 
                             </div>
@@ -354,4 +362,3 @@
 {%- block javascript %}
     {% include 'hepdata_records/components/record-javascript.html' %}
 {%- endblock %}
-

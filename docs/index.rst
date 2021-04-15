@@ -39,6 +39,7 @@ It should not be required for normal HEPData users or data submitters.
    :maxdepth: 1
 
    installation
+   development
    cli
 
 API Reference
@@ -73,28 +74,3 @@ interested.
    license
    authors
    branding
-
-Other HEPData Repositories
---------------------------
-
-This web application with repository
-`HEPData/hepdata <https://github.com/HEPData/hepdata>`_ depends on some
-other packages that can be found under the `@HEPData
-<https://github.com/HEPData>`_ organization on GitHub.  These additional
-repositories are necessary for
-`validation <https://github.com/HEPData/hepdata-validator>`_,
-`conversion <https://github.com/HEPData/hepdata-converter>`_,
-and to provide the converter as a
-`web service <https://github.com/HEPData/hepdata-converter-ws>`_ with a
-`client wrapper <https://github.com/HEPData/hepdata-converter-ws-client>`_.
-Further repositories build Docker images with the `converter
-dependencies <https://github.com/HEPData/hepdata-converter-docker>`_ and
-run the `converter web service
-<https://github.com/HEPData/hepdata-converter-ws-docker>`_.  See `here
-<https://github.com/HEPData/hepdata/wiki/Deployment#hepdata-converter>`_
-for more details on how to deploy the conversion software in production.
-The relation between these different packages is summarised in the
-following diagram:
-
-.. image:: HEPData-modules-3-2.png
-   :alt: Other Repositories

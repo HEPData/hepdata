@@ -19,6 +19,7 @@ hepdata users create $1 --password $2 -a
 # Finally, add the roles to the user
 hepdata roles add $1 coordinator
 hepdata roles add $1 admin
+hepdata access allow admin-access user $1
 
 # now populate the database with some records. NOTE:
 # Celery needs to be running.

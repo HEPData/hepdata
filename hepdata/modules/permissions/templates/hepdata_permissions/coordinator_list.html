@@ -2,9 +2,7 @@
 
 {% block page_body %}
 
-    {%- assets "hepdata_info_page_css" %}
-        <link href="{{ ASSET_URL }}" rel="stylesheet">
-    {%- endassets %}
+    {{ webpack['hepdata-info.css'] }}
 
     <div class="row" style="margin: 0; padding: 6em 10% 1% 5%">
 
@@ -55,16 +53,6 @@
 
 {%- block javascript %}
 
-
-
-    {%- assets "hepdata_vis_js" %}
-        <script src="{{ ASSET_URL }}"></script>
-    {%- endassets %}
-
-    {%- assets "hepdata_bootstrap_js" %}
-        <script src="{{ ASSET_URL }}"></script>
-    {%- endassets %}
-
+    {{ webpack['hepdata-common-js.js'] }}
 
 {% endblock %}
-

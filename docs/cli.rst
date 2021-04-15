@@ -21,11 +21,14 @@
     waive the privileges and immunities granted to it by virtue of its status
     as an Intergovernmental Organization or submit itself to any jurisdiction.
 
+.. _cli:
 
 CLI Commands
 ============
 
-A command line interface (CLI) allows certain management commands to be run on the command line.
+The command line interface (CLI) allows certain management commands to be run on the command line. In addition to the
+commands below, you can also invoke `invenio <https://invenio-cli.readthedocs.io/en/latest/api.html>`_ and
+`flask <https://flask.palletsprojects.com/en/1.1.x/cli/>`_ CLI commands using the `hepdata` binary.
 
 .. click:: hepdata.cli:importer
    :prog: hepdata importer

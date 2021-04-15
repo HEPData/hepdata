@@ -33,6 +33,7 @@ import time
 from datetime import datetime
 
 import flask
+from flask_security.utils import hash_password
 import pytest
 from invenio_accounts.models import User, Role
 from invenio_db import db
@@ -93,7 +94,12 @@ def app(request):
 
         user_count = User.query.filter_by(email='test@hepdata.net').count()
         if user_count == 0:
-            user = User(email='test@hepdata.net', password='hello1', active=True)
+            user = User(
+                email='test@hepdata.net',
+                password=hash_password('hello1'),
+                active=True,
+                confirmed_at=datetime.now()
+            )
             admin_role = Role(name='admin')
             coordinator_role = Role(name='coordinator')
 
@@ -177,7 +183,8 @@ def env_browser(request):
         'name': request.node.name,
         'username': sauce_username,
         'accessKey': sauce_access_key,
-        'tunnelIdentifier': os.environ.get('GITHUB_RUN_ID', '')
+        'tunnelIdentifier': os.environ.get('GITHUB_RUN_ID', ''),
+        'screenResolution': '1280x1024'
     }
 
     if not RUN_SELENIUM_LOCALLY:
@@ -187,7 +194,7 @@ def env_browser(request):
         # Run tests locally instead of on Sauce Labs (requires local chromedriver installation).
         browser = getattr(webdriver, request.param)()
 
-    browser.set_window_size(1004,632)
+    browser.set_window_size(1280,1024)
 
     # Go to homepage and click cookie accept button so cookie bar is out of the way
     browser.get(flask.url_for('hepdata_theme.index', _external=True))
@@ -201,7 +208,30 @@ def env_browser(request):
     request.addfinalizer(finalizer)
 
     timeout_process.start()
-    return browser
+    yield browser
+
+    # Check browser logs before quitting
+    log = browser.get_log('browser')
+    assert len(log) == 0, \
+        "Errors in browser log:\n" + \
+        "\n".join([f"{line['level']}: {line['message']}" for line in log])
+
+
+@pytest.fixture()
+def logged_in_browser(env_browser):
+    # Log in
+    env_browser.get(flask.url_for('security.login', _external=True))
+    e2e_assert_url(env_browser, 'security.login')
+
+    login_form = env_browser.find_element_by_name('login_user_form')
+    login_form.find_element_by_name('email').send_keys('test@hepdata.net')
+    login_form.find_element_by_name('password').send_keys('hello1')
+    login_form.submit()
+
+    # Check we're back at the homepage
+    e2e_assert_url(env_browser, 'hepdata_theme.index')
+
+    return env_browser
 
 
 def make_screenshot(driver, name):

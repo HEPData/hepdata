@@ -34,11 +34,10 @@
 
     {%- block additional_meta %}
     {%- endblock additional_meta %}
-    {%- assets "hepdata_theme_css" %}
-        <link href="{{ ASSET_URL }}" rel="stylesheet">
-    {%- endassets %}
 
-    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+    {{ webpack['hepdata-styles.css'] }}
+
+    {% include "hepdata_theme/javascript.html" %}
 
     {%- block additional_assets %}
     {%- endblock additional_assets %}
@@ -76,7 +75,6 @@
 {%- endblock page_footer %}
 
 {%- block javascript %}
-    {% include "hepdata_theme/javascript.html" %}
     {%- block additional_javascript %}
     {%- endblock additional_javascript %}
 {%- endblock javascript %}

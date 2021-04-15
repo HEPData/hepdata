@@ -45,6 +45,7 @@ SQLALCHEMY_ENGINE_OPTIONS = {
     'echo': False,
     'pool_recycle': 7200
 }
+DB_VERSIONING = False # See https://github.com/inveniosoftware/invenio-records/issues/250
 
 # Default language and timezone
 BABEL_DEFAULT_LANGUAGE = 'en'

@@ -55,6 +55,13 @@ def test_search_from_home(live_server, env_browser, search_tests):
     results = browser.find_elements_by_class_name('search-result-item')
     assert(len(results) == 2)
 
+    # Check "More" link works
+    table_list = results[0].find_elements_by_css_selector('.data-brief:not(.hidden)')
+    assert len(table_list) == 3
+    results[0].find_element_by_class_name('data-more').click()
+    table_list = results[0].find_elements_by_css_selector('.data-brief:not(.hidden)')
+    assert len(table_list) == 6
+
     # Check facet filtering for each facet
     facets = [
         {'class_prefix': 'collaboration', 'exp_filter_count': 2, 'exp_first_result_count': 1},

@@ -4,15 +4,7 @@
 {%- set messages = get_flashed_messages(with_categories=true) -%}
 
 {%- block additional_assets %}
-    {%- assets "hepdata_theme_css" %}
-        <link href="{{ ASSET_URL }}" rel="stylesheet">
-    {%- endassets %}
-
-    {%- assets "hepdata_info_page_css" %}
-        <link href="{{ ASSET_URL }}" rel="stylesheet">
-    {%- endassets %}
-
-
+    {{ webpack['hepdata-info.css'] }}
 {%- endblock additional_assets %}
 
 
@@ -283,27 +275,6 @@
 {% endblock %}
 
 {%- block javascript %}
-
-
-    <script type="text/javascript"
-            src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    {%- assets "hepdata_vis_js" %}
-        <script src="{{ ASSET_URL }}"></script>
-    {%- endassets %}
-
-    {%- assets "hepdata_dashboard_js" %}
-        <script src="{{ ASSET_URL }}"></script>
-    {%- endassets %}
-
-    {%- assets "hepdata_bootstrap_js" %}
-        <script src="{{ ASSET_URL }}"></script>
-    {%- endassets %}
-
-    <script>
-
-        $(document).ready(function () {
-            dashboard.initialise();
-        });
-
-    </script>
+    {{ webpack['hepdata-dashboard-js.js'] }}
+    {{ webpack['hepdata-dashboard-submissions-vis-js.js'] }}
 {% endblock %}

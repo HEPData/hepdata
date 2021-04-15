@@ -11,9 +11,7 @@
             display: none;
         }
     </style>
-    {%- assets "hepdata_search_css" %}
-        <link href="{{ ASSET_URL }}" rel="stylesheet">
-    {%- endassets %}
+    {{ webpack['hepdata-search.css'] }}
 
 {%- endblock additional_assets %}
 
@@ -134,7 +132,7 @@
 
                                 {% if record.data|length > max_datatables %}
                                     <a class="data-more"
-                                       onclick="show_more_datatables({{ pub_index }},{{ show_records_number }})">
+                                       onclick="HEPDATA.search.show_more_datatables({{ pub_index }},{{ show_records_number }})">
                                         More…
                                     </a>
                                 {% endif %}
@@ -163,47 +161,26 @@
 {% endblock %}
 
 {% block javascript %}
-    <script type="text/javascript"
-            src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
-
-    {%- assets "hepdata_bootstrap_js" %}
-        <script src="{{ ASSET_URL }}"></script>
-    {%- endassets %}
+    {{ webpack['hepdata-search-js.js'] }}
 
     <script type="text/javascript">
-        function show_more_datatables(publication, show_number) {
-            var tables = $("#publication-" + publication
-                    + " .data-brief:not(:visible)");
 
-            tables.slice(0, show_number).removeClass("hidden");
+      $(document).ready(function () {
+          var search_term = '{{ctx.q}}';
+          var search_regex = '\\b({{ctx.q}})(?!(?:(?!<\/?[ha].*?>).)*<\/[ha].*?>)(?![^<>]*>)';
 
-            if (tables.size() <= show_number) {
-                $("#publication-" + publication + " .data-more").hide();
-            }
-        }
+          if (search_term != "" && search_term.length > 2) {
+              var regex = new RegExp(search_regex, "igm");
 
-        $(document).ready(function () {
-            MathJax.Hub.Config({
-                tex2jax: {inlineMath: [['$', '$'], ['\\(', '\\)']]}
-            });
-            MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
-            var search_term = '{{ctx.q}}';
-            var search_regex = '\\b({{ctx.q}})(?!(?:(?!<\/?[ha].*?>).)*<\/[ha].*?>)(?![^<>]*>)';
-
-            if (search_term != "" && search_term.length > 2) {
-                var regex = new RegExp(search_regex, "igm");
-
-                $(".record-brief, .data-brief").each(function () {
-                    var current_html = $(this).html();
-                    var replaced = current_html.replace(regex, '<span class="highlight">{{ctx.q}}</span>');
-                    $(this).html(replaced);
-                })
-            }
-
-        });
+              $(".record-brief, .data-brief").each(function () {
+                  var current_html = $(this).html();
+                  var replaced = current_html.replace(regex, '<span class="highlight">{{ctx.q}}</span>');
+                  $(this).html(replaced);
+              })
+          }
+      });
     </script>
-
 
 
 {% endblock %}

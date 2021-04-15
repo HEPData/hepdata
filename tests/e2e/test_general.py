@@ -86,13 +86,21 @@ def test_home(live_server, env_browser, identifiers):
 
 
 def test_general_pages(live_server, env_browser):
-    """E2E user registration and login test."""
+    """Test general pages can be loaded without errors"""
     browser = env_browser
-    # 1. Go to user registration page
+
     browser.get(flask.url_for('hepdata_theme.about', _external=True))
     assert (flask.url_for('hepdata_theme.about', _external=True) in
             browser.current_url)
 
     browser.get(flask.url_for('hepdata_theme.submission_help', _external=True))
     assert (flask.url_for('hepdata_theme.submission_help', _external=True) in
+            browser.current_url)
+
+    browser.get(flask.url_for('hepdata_theme.terms', _external=True))
+    assert (flask.url_for('hepdata_theme.terms', _external=True) in
+            browser.current_url)
+
+    browser.get(flask.url_for('hepdata_theme.cookie_policy', _external=True))
+    assert (flask.url_for('hepdata_theme.cookie_policy', _external=True) in
             browser.current_url)

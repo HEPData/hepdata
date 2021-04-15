@@ -80,10 +80,6 @@ jobs:
       uses: actions/setup-node@v1
       with:
         node-version: '12'
-    - name: Get static file path
-      run: |
-        export PYTHON_SYS_PREFIX=`python -c "import sys; print(sys.prefix)"`
-        echo "HEPDATA_STATIC_PATH=${PYTHON_SYS_PREFIX}/var/hepdata-instance/static/" >> $GITHUB_ENV
     - name: Cache pip modules
       uses: actions/cache@v2
       env:
@@ -115,13 +111,10 @@ jobs:
         hepdata utils reindex -rc True
     - name: Setup npm and build assets
       run: |
-        npm update && npm install --silent -g node-sass@4.14.1 clean-css@3.4.28 uglify-js requirejs
-        hepdata npm
-        cd $HEPDATA_STATIC_PATH
-        npm install
-        hepdata collect
-        hepdata assets build
-        cd -
+        hepdata collect -v
+        hepdata webpack create
+        hepdata webpack install
+        hepdata webpack build
         cp hepdata/config_local.gh.py hepdata/config_local.py
     - name: Setup Sauce Connect
       uses: saucelabs/sauce-connect-action@v1
