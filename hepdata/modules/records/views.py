@@ -45,7 +45,7 @@ from hepdata.modules.inspire_api.views import get_inspire_record_information
 from hepdata.modules.records.api import request, determine_user_privileges, render_template, format_submission, \
     render_record, current_user, db, jsonify, get_user_from_id, get_record_contents, extract_journal_info, \
     user_allowed_to_perform_action, NoResultFound, OrderedDict, query_messages_for_data_review, returns_json, \
-    process_payload
+    process_payload, has_upload_permissions
 from hepdata.modules.submission.models import HEPSubmission, DataSubmission, \
     DataResource, DataReview, Message, Question
 from hepdata.modules.records.utils.common import get_record_by_id, \
@@ -665,6 +665,12 @@ def cli_upload():
     recid = request.form['recid'] if 'recid' in request.form.keys() else None
     invitation_cookie = request.form['invitation_cookie'] if 'invitation_cookie' in request.form.keys() else None
 
+    # Check the user has upload permissions for this record
+    if not has_upload_permissions(recid, user, is_sandbox):
+        return jsonify({
+            "message": "Email {} does not correspond to a confirmed uploader for this record.".format(str(user_email))
+        }), 403
+
     if is_sandbox is True:
         if recid is None:
             return consume_sandbox_payload()  # '/sandbox/consume'
@@ -673,8 +679,6 @@ def cli_upload():
             hepsubmission_record = get_latest_hepsubmission(publication_recid=recid, overall_status='sandbox')
             if hepsubmission_record is None:
                 return jsonify({"message": "Sandbox record {} not found.".format(str(recid))}), 404
-            elif hepsubmission_record.coordinator != user.id:
-                return jsonify({"message": "Attempted to modify sandbox record of another user."}), 403
             else:
                 return update_sandbox_payload(recid)  # '/sandbox/<int:recid>/consume'
     elif is_sandbox is False:
@@ -684,9 +688,7 @@ def cli_upload():
             return jsonify({"message": "Record {} not found.".format(str(recid))}), 404
         # check user is allowed to upload to this record and supplies the correct invitation cookie
         participant = SubmissionParticipant.query.filter_by(user_account=user.id, role='uploader', publication_recid=recid, status='primary').first()
-        if participant is None:
-            return jsonify({"message": "Email {} does not correspond to a confirmed uploader for this record.".format(str(user_email))}), 404
-        elif str(participant.invitation_cookie) != invitation_cookie:
+        if participant and str(participant.invitation_cookie) != invitation_cookie:
             return jsonify({"message": "Invitation cookie did not match."}), 403
         return consume_data_payload(recid)  # '/<int:recid>/consume'
 
@@ -704,6 +706,11 @@ def consume_data_payload(recid):
     """
 
     if request.method == 'POST':
+        if not has_upload_permissions(recid, current_user):
+            return jsonify({
+                "message": "Current user does not correspond to a confirmed uploader for this record."
+                }), 403
+
         file = request.files['hep_archive']
         redirect_url = request.url_root + "record/{}"
         return process_payload(recid, file, redirect_url)
@@ -799,6 +806,11 @@ def update_sandbox_payload(recid):
 
     if request.method == 'GET':
         return redirect('/record/sandbox/' + str(recid))
+
+    if not has_upload_permissions(recid, current_user, is_sandbox=True):
+        return jsonify({
+            "message": "Current user does not correspond to a confirmed uploader for this record."
+            }), 403
 
     file = request.files['hep_archive']
     redirect_url = request.url_root + "record/sandbox/{}"
