@@ -370,6 +370,13 @@ def process_payload(recid, file, redirect_url, synchronous=False):
 
     if file and (allowed_file(file.filename)):
         file_path = save_zip_file(file, recid)
+        file_size = os.path.getsize(file_path)
+        UPLOAD_MAX_SIZE = current_app.config.get('UPLOAD_MAX_SIZE', 52000000)
+        if file_size > UPLOAD_MAX_SIZE:
+            return jsonify({"message":
+                "{} too large ({} bytes > {} bytes)".format(
+                    file.filename, file_size, UPLOAD_MAX_SIZE)}), 413
+
         hepsubmission = get_latest_hepsubmission(publication_recid=recid)
 
         if hepsubmission.overall_status == 'finished':
