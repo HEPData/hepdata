@@ -1136,3 +1136,94 @@ g.node {
     }
   }
 }
+
+#revise-submission-container {
+
+  .manage-uploaders, .manage-reviewers {
+    background-color: $lightgrey;
+    width: 50%;
+    padding: 5px;
+    float: left;
+    display: inline-block;
+    margin-bottom: 10px;
+
+    h4 {
+      color: $purple;
+    }
+  }
+
+  .manage-uploaders {
+    border-top-left-radius: 3px;
+    border-bottom-left-radius: 3px;
+  }
+
+  .manage-reviewers {
+    border-top-right-radius: 3px;
+    border-bottom-right-radius: 3px;
+  }
+
+  .reviewer, .uploader {
+    font-size: .8em;
+  }
+
+  .primary {
+    padding: 7px;
+    background-color: white;
+    min-height: 45px;
+    border-radius: 3px;
+  }
+
+  .reserve {
+    padding: 7px;
+  }
+
+  .reviewer .info, .uploader .info {
+    width: 50%;
+    float: left;
+  }
+
+  .reserve-header {
+    font-size: .9em;
+    font-weight: bolder;
+  }
+
+  .manage-reviewers .reserve-header {
+    color: $purple;
+  }
+
+  p.no-entries {
+    text-align: center;
+    color: $concrete;
+    font-size: .8em;
+  }
+}
+
+.notify-uploader {
+
+  margin-left: 10px;
+  margin-bottom: 10px;
+
+  textarea {
+    display: block;
+    width: 95%;
+    margin-left: 20px;
+    margin-bottom: 10px;
+    border-color: $grey;
+    border-radius: 3px;
+  }
+
+  input[type="radio"] {
+    vertical-align: top;
+  }
+
+  label {
+    max-width: 90%;
+    padding-left: 5px;
+
+    &.optional {
+      font-weight: normal;
+      padding-left: 20px;
+    }
+  }
+
+}

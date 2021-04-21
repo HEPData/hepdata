@@ -38,12 +38,13 @@ from sqlalchemy.orm.exc import NoResultFound
 from werkzeug.utils import secure_filename
 
 from hepdata.modules.converter import convert_oldhepdata_to_yaml
+from hepdata.modules.email.api import send_cookie_email
 from hepdata.modules.email.utils import create_send_email_task
 from hepdata.modules.permissions.api import user_allowed_to_perform_action
 from hepdata.modules.permissions.models import SubmissionParticipant
 from hepdata.modules.records.subscribers.api import is_current_user_subscribed_to_record
 from hepdata.modules.records.utils.common import decode_string, find_file_in_directory, allowed_file, \
-    remove_file_extension, truncate_string, get_record_contents
+    remove_file_extension, truncate_string, get_record_contents, get_record_by_id
 from hepdata.modules.records.utils.data_processing_utils import process_ctx
 from hepdata.modules.records.utils.data_files import get_data_path_for_record, cleanup_old_files
 from hepdata.modules.records.utils.submission import process_submission_directory, create_data_review, cleanup_submission
@@ -347,10 +348,44 @@ def has_upload_permissions(recid, user, is_sandbox=False):
     if participant:
         return True
 
+def has_coordinator_permissions(recid, user, is_sandbox=False):
+    if has_role(user, 'admin'):
+        return True
+
     coordinator_record = HEPSubmission.query.filter_by(
         publication_recid=recid,
         coordinator=user.get_id()).first()
     return coordinator_record is not None
+
+
+def create_new_version(recid, user, redirect_url, notify_uploader=True, uploader_message=None):
+    hepsubmission = get_latest_hepsubmission(publication_recid=recid)
+
+    if hepsubmission.overall_status == 'finished':
+        # Reopen the submission to allow for revisions,
+        # by creating a new HEPSubmission object.
+        _rev_hepsubmission = HEPSubmission(publication_recid=recid,
+                                           overall_status='todo',
+                                           inspire_id=hepsubmission.inspire_id,
+                                           coordinator=hepsubmission.coordinator,
+                                           version=hepsubmission.version + 1)
+        db.session.add(_rev_hepsubmission)
+        db.session.commit()
+
+        if notify_uploader:
+            uploader = SubmissionParticipant.query.filter_by(
+                role='uploader', publication_recid=recid, status='primary'
+                ).first()
+            if uploader:
+                record_information = get_record_by_id(recid)
+                send_cookie_email(uploader,
+                                  record_information,
+                                  message=uploader_message,
+                                  version=_rev_hepsubmission.version)
+
+        return jsonify({'success': True, 'version': _rev_hepsubmission.version})
+    else:
+        return jsonify({"message": "Rec id %s is not finished so cannot create a new version"}), 400
 
 
 def process_payload(recid, file, redirect_url, synchronous=False):

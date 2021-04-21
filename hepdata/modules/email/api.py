@@ -185,15 +185,21 @@ def notify_subscribers(hepsubmission, record):
 
 
 def send_cookie_email(submission_participant,
-                      record_information, message=None):
+                      record_information, message=None, version=1):
+    invite_token = None
+    if not submission_participant.user_account:
+        invite_token = submission_participant.invitation_cookie
+
     message_body = render_template(
         'hepdata_theme/email/invite.html',
         name=submission_participant.full_name,
         role=submission_participant.role,
         title=record_information['title'],
         site_url=current_app.config.get('SITE_URL', 'https://www.hepdata.net'),
-        invite_token=submission_participant.invitation_cookie,
+        invite_token=invite_token,
+        status=submission_participant.status,
         recid=submission_participant.publication_recid,
+        version=version,
         email=submission_participant.email,
         message=message)
 

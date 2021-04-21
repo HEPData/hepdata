@@ -299,6 +299,11 @@
 
                 <!--if there is data, we show it. If not, we show the upload screen if the logged in user is an uploader-->
                 {% if ctx.show_upload_area %}
+
+                    <div class="col-lg-2 col-md-2">
+                        {% include 'hepdata_records/components/version-widget.html' %}
+                    </div>
+
                     <div class="col-md-9">
                         <div class="upload-area" id="main-upload-area">
                             <div class="upload-form" align="center">
@@ -355,6 +360,7 @@
     {% endif %}
     {% include 'hepdata_records/components/notify-reviewer-widget.html' %}
     {% include 'hepdata_records/components/approve-all-widget.html' %}
+    {% include 'hepdata_records/components/revise-submission-widget.html' %}
 
 
 {% endblock %}
