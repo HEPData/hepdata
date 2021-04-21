@@ -155,6 +155,7 @@ SEARCH_ELASTIC_HOSTS = [
 SEARCH_AUTOINDEX = []
 
 UPLOAD_MAX_SIZE = 52000000  # Upload limit in bytes
+MAX_CONTENT_LENGTH = UPLOAD_MAX_SIZE  # Flask: don’t read more than this many bytes from the incoming request data
 CONVERT_MAX_SIZE = sys.maxsize  # Limit on payload sent to converter (checked at submission)
 CLIENT_TIMEOUT = 298  # Client-side timeout in s (should be slightly smaller than server timeout)
 
