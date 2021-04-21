@@ -355,6 +355,27 @@ def test_upload_invalid_file(app):
         })
 
 
+def test_upload_max_size(app):
+    # Test uploading a file with size greater than UPLOAD_MAX_SIZE
+    app.config.update({'UPLOAD_MAX_SIZE': 1000000})
+    with app.app_context():
+        user = User.query.first()
+        login_user(user)
+
+        recid = '12345'
+        get_or_create_hepsubmission(recid, 1)
+
+        base_dir = os.path.dirname(os.path.realpath(__file__))
+        with open(os.path.join(base_dir, 'test_data/TestHEPSubmission.zip'), "rb") as stream:
+            test_file = FileStorage(stream=stream, filename="TestHEPSubmission.zip")
+            response, code = process_payload(recid, test_file, '/test_redirect_url', synchronous=True)
+
+        assert(code == 413)
+        assert(response.json == {
+            'message': 'TestHEPSubmission.zip too large (1818265 bytes > 1000000 bytes)'
+        })
+
+
 def test_has_upload_permissions(app):
     # Test that a logged-in user cannot upload a file to a record for which
     # they're not an uploader
