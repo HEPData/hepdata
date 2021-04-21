@@ -16,6 +16,7 @@
 
         HEPDATA.upload_max_size = {{ config['UPLOAD_MAX_SIZE']|default(52000000) }};
         HEPDATA.upload_timeout = {{ config['NGINX_TIMEOUT']|default(298) }};
+        HEPDATA.show_review = {{ 'true' if ctx.show_review_widget or ctx.show_upload_widget else 'false'}};
 
         HEPDATA.hepdata_record.initialise();
         HEPDATA.hepdata_resources.initialise({{ ctx.recid|default(0) }}, {{ ctx.version|default(0) }});
