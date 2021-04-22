@@ -140,7 +140,9 @@ HEPDATA.table_renderer = {
           HEPDATA.table_renderer.attach_row_listener(table_placement, 'histogram');
         }
         window.MathJax.typeset();
-        HEPDATA.table_renderer.update_reviewer_button(table_data.review);
+        if (HEPDATA.show_review) {
+          HEPDATA.table_renderer.update_reviewer_button(table_data.review);
+        }
 
         $("#hepdata_table_loader").addClass("hidden");
         $("#hepdata_table_content").removeClass("hidden");
