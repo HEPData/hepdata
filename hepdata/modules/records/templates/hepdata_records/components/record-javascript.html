@@ -51,8 +51,10 @@
 
             // If table_to_show is an integer, replace with table name.
             if (table_to_show.match(/^\d+$/)) {
-              {% for table in ctx.data_tables if table_to_show == table.id %}
-                  table_name = table.name;  // avoids using jQuery
+              {% for table in ctx.data_tables %}
+                if (table_to_show == {{ table.id }}) {
+                  table_name = "{{ table.name }}";  // avoids using jQuery
+                }
               {% endfor %}
               if (!table_name) {
                 table_name = $('#' + table_to_show + " h4").text();  // fallback using jQuery
@@ -66,6 +68,13 @@
             if (!table_to_show.match(/^\d+$/)) {
 
               table_name = table_to_show;
+
+              // If table_to_show is the processed table name, replace the table name with the original.
+              {% for table in ctx.data_tables %}
+                if (table_to_show == "{{ table.processed_name }}") {
+                  table_name = "{{ table.name }}";  // original table name including spaces
+                }
+              {% endfor %}
 
               // Remove whitespace from table name and escape special characters.
               table_to_show = table_to_show.replace(/\s/g, "");
