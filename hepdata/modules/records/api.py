@@ -183,11 +183,29 @@ def format_tables(ctx, data_record_query, data_table, recid):
         ctx, data_record_query, first_data_id, data_table)
     assign_or_create_review_status(data_table_metadata, recid, ctx["version"])
     ctx['watched'] = is_current_user_subscribed_to_record(recid)
-    ctx['table_to_show'] = first_data_id
+    ctx['table_id_to_show'] = first_data_id
+    ctx['table_name_to_show'] = ''
+    ctx['data_tables'] = list(data_table_metadata.values())
     if 'table' in request.args:
         if request.args['table']:
-            ctx['table_to_show'] = request.args['table']
-    ctx['data_tables'] = list(data_table_metadata.values())
+            ctx['table_name_to_show'] = request.args['table']
+            # Check for table name in list of data tables.
+            matching_tables = list(filter(
+                lambda data_table: data_table['name'] == ctx['table_name_to_show'],
+                ctx['data_tables']))
+            if not matching_tables:
+                # Check for processed table name in list of data tables.
+                matching_tables = list(filter(
+                    lambda data_table: data_table['processed_name'] == ctx['table_name_to_show'],
+                    ctx['data_tables']))
+            if matching_tables:
+                # Set table ID and name to the first matching table.
+                ctx['table_id_to_show'] = matching_tables[0]['id']
+                ctx['table_name_to_show'] = matching_tables[0]['name']
+            elif ctx['data_tables']:
+                # Otherwise just set the table ID and name to the first table.
+                ctx['table_id_to_show'] = ctx['data_tables'][0]['id']
+                ctx['table_name_to_show'] = ctx['data_tables'][0]['name']
 
 
 def get_commit_message(ctx, recid):
