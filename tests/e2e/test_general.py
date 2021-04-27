@@ -28,6 +28,9 @@ import zipfile
 import io
 
 from selenium.webdriver.common.action_chains import ActionChains
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.wait import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 from functools import reduce
 
 
@@ -83,6 +86,47 @@ def test_home(live_server, env_browser, identifiers):
         zipfile.ZipFile(io.BytesIO(response.content))
     except zipfile.BadZipFile:
         assert False, "File is not a valid zip file"
+    # Close download dropdown by clicking again
+    browser.find_element_by_id('dLabel').click()
+
+    # Check switching tables works as expected
+    new_table = browser.find_elements_by_css_selector('#table-list li h4')[2]
+    assert(new_table.text == "Table 3")
+    new_table.click()
+    _check_table_links(browser, "Table 3", "Table3")
+
+    # Get link to table from table page
+    table_link = browser.find_element_by_css_selector('#data_link_container button') \
+        .get_attribute('data-clipboard-text')
+    assert(table_link.endswith('Table3'))
+    _check_table_links(browser, "Table 3", "Table3", url=table_link)
+
+    # Check a link to an invalid table
+    invalid_table_link = table_link.replace('Table3', 'NotARealTable')
+    _check_table_links(browser, "Table 1", "Table1", url=invalid_table_link)
+
+
+def _check_table_links(browser, table_full_name, table_short_name, url=None):
+    if url:
+        # Replace port in url (5555 used for unit testing is set in pytest.ini not config
+        url = url.replace('5000', '5555')
+        # Check link works
+        browser.get(url)
+
+    # Wait until new table is loaded
+    WebDriverWait(browser, 10).until(
+        EC.text_to_be_present_in_element((By.ID, 'table_name'), table_full_name)
+    )
+    # Check download YAML link for table
+    yaml_link = browser.find_element_by_id('download_yaml_data') \
+        .get_attribute('href')
+    assert(yaml_link.endswith(f'/{table_short_name}/1/yaml'))
+    # Download yaml using requests and check we get expected filename
+    filename_table = table_full_name.replace(' ', '_')
+    response = requests.get(yaml_link)
+    assert(response.status_code == 200)
+    assert(response.headers['Content-Disposition']
+           == f'attachment; filename=HEPData-ins1283842-v1-{filename_table}.yaml')
 
 
 def test_general_pages(live_server, env_browser):
