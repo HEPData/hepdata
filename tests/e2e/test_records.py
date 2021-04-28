@@ -73,8 +73,8 @@ def test_record_update(live_server, logged_in_browser):
     WebDriverWait(browser, 10).until(
         EC.visibility_of(revise_success)
     )
-    assert revise_success.find_element_by_tag_name('p').text == \
-        "Version 2 created.\nThis window will close in 5 seconds and load the dashboard page."
+    assert revise_success.find_element_by_tag_name('p').text \
+        .startswith("Version 2 created.\nThis window will close in ")
 
     # Refresh record page (to avoid waiting)
     browser.get(record_url)
