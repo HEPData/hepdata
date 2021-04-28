@@ -61,8 +61,6 @@ def add_data_table_urls(doc):
     for format in FORMATS:
 
         _cleaned_table_name = doc['title'].replace('%', '%25').replace('\\', '%5C')
-        if re.match('^Table \d+$', _cleaned_table_name):
-            _cleaned_table_name = _cleaned_table_name.replace('Table ', 'Table')
 
         doc['access_urls']['links'][format] = '{0}/download/table/ins{1}/{2}/{3}'.format(
             current_app.config.get('SITE_URL', 'https://www.hepdata.net'),

@@ -188,7 +188,7 @@ def test_record_update(live_server, logged_in_browser):
     assert 'Submission deleted' in \
         delete_widget.find_element_by_css_selector('#delete-success p').text
 
-    # Should now only be 1 verion of our submission
+    # Should now only be 1 version of our submission
     submissions = HEPSubmission.query \
         .filter_by(inspire_id=inspire_id).all()
     assert len(submissions) == 1
