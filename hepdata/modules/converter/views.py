@@ -434,23 +434,15 @@ def download_data_table_by_recid(*args, **kwargs):
         datasubmission = DataSubmission.query.filter_by(publication_recid=recid, version=version, name=table_name).one()
     except NoResultFound:
         try:
-            # Try again with '$' signs removed from table name.
-            datasubmission = DataSubmission.query.filter(
-                DataSubmission.publication_recid == recid,
-                DataSubmission.version == version,
-                func.replace(DataSubmission.name, '$', '') == table_name
-            ).one()
-        except NoResultFound:
             if ' ' not in table_name:
                 # Allow spaces in table_name to be omitted from URL.
-                try:
-                    datasubmission = DataSubmission.query.filter(
-                        DataSubmission.publication_recid == recid,
-                        DataSubmission.version == version,
-                        func.replace(DataSubmission.name, ' ', '') == table_name
-                    ).one()
-                except NoResultFound:
-                    pass
+                datasubmission = DataSubmission.query.filter(
+                    DataSubmission.publication_recid == recid,
+                    DataSubmission.version == version,
+                    func.replace(DataSubmission.name, ' ', '') == table_name
+                ).one()
+        except NoResultFound:
+            pass
 
     if not datasubmission:
         return display_error(
