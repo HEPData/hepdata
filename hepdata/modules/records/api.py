@@ -184,8 +184,13 @@ def format_tables(ctx, data_record_query, data_table, recid):
     assign_or_create_review_status(data_table_metadata, recid, ctx["version"])
     ctx['watched'] = is_current_user_subscribed_to_record(recid)
     ctx['data_tables'] = list(data_table_metadata.values())
-    ctx['table_id_to_show'] = ctx['data_tables'][0]['id']
-    ctx['table_name_to_show'] = ctx['data_tables'][0]['name']
+    ctx['table_id_to_show'] = first_data_id
+    ctx['table_name_to_show'] = ''
+    matching_tables = list(filter(
+        lambda data_table: data_table['id'] == first_data_id,
+        ctx['data_tables']))
+    if matching_tables:
+        ctx['table_name_to_show'] = matching_tables[0]['name']
     if 'table' in request.args:
         if request.args['table']:
             table_from_args = request.args['table']
