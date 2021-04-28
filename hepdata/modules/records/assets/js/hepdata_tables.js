@@ -27,13 +27,7 @@ HEPDATA.switch_table = function (listId, table_requested, table_name, status) {
     {"width": 200, "height": 200}
   );
 
-  // Pass the table name from record-javascript.html or table_list.html before it gets mangled by MathJax.
   var encoded_name = encodeURIComponent(table_name);
-  /*if (!_name) {
-    console.log("No name provided.")
-    // Only use jQuery when called from table_details.html where '$' symbols are stripped from table names.
-    _name = $('[value="' + table_requested + '"]').text();  //
-  }*/
 
   var _recid = HEPDATA.current_inspire_id && status == 'finished' ? 'ins' + HEPDATA.current_inspire_id : HEPDATA.current_record_id;
   var direct_link = HEPDATA.site_url + '/record/' + _recid
