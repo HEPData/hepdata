@@ -34,6 +34,10 @@ from selenium.webdriver.support import expected_conditions as EC
 from functools import reduce
 from tests.conftest import import_default_data
 
+from hepdata.ext.elasticsearch.api import reindex_all
+from hepdata.modules.submission.api import get_latest_hepsubmission
+from hepdata.modules.records.utils.submission import unload_submission
+
 
 def test_home(live_server, env_browser, identifiers):
     """E2E home test to check record counts and latest submissions."""
@@ -125,6 +129,11 @@ def test_tables(app, live_server, env_browser):
     # Check a link to an invalid table
     invalid_table_link = table_link.replace('Figure%208%20panel%20(c)', 'NotARealTable')
     _check_table_links(browser, "Figure 8 panel (a)", "Figure%208%20panel%20(a)", url=invalid_table_link)
+
+    # Delete record and reindex so added record doesn't affect other tests
+    submission = get_latest_hepsubmission(inspire_id='1206352')
+    unload_submission(submission.publication_recid)
+    reindex_all(recreate=True)
 
 
 def _check_table_links(browser, table_full_name, table_short_name, url=None):
