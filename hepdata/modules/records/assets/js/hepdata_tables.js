@@ -33,9 +33,6 @@ HEPDATA.switch_table = function (listId, table_requested, table_name, status) {
     // Only use jQuery when called from table_details.html where '$' symbols are stripped from table names.
     _name = $('[value="' + table_requested + '"]').text();  //
   }
-  if (_name.match(/^Table \d+$/)) {
-    _name = _name.replace("Table ", "Table");
-  }
 
   var _recid = HEPDATA.current_inspire_id && status == 'finished' ? 'ins' + HEPDATA.current_inspire_id : HEPDATA.current_record_id;
   var direct_link = HEPDATA.site_url + '/record/' + _recid

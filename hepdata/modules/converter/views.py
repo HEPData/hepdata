@@ -383,10 +383,13 @@ def download_data_table_by_inspire_id(*args, **kwargs):
             ).one()
         except NoResultFound:
             if ' ' not in table_name:
-                # Allow space in table_name to be omitted from URL.
-                table_name = table_name.replace('Table', 'Table ')
+                # Allow spaces in table_name to be omitted from URL.
                 try:
-                    datasubmission = DataSubmission.query.filter_by(publication_inspire_id=inspire_id, version=version, name=table_name).one()
+                    datasubmission = DataSubmission.query.filter(
+                        DataSubmission.publication_inspire_id == inspire_id,
+                        DataSubmission.version == version,
+                        func.replace(DataSubmission.name, ' ', '') == table_name
+                    ).one()
                 except NoResultFound:
                     pass
 
@@ -447,10 +450,13 @@ def download_data_table_by_recid(*args, **kwargs):
             ).one()
         except NoResultFound:
             if ' ' not in table_name:
-                # Allow space in table_name to be omitted from URL.
-                table_name = table_name.replace('Table', 'Table ')
+                # Allow spaces in table_name to be omitted from URL.
                 try:
-                    datasubmission = DataSubmission.query.filter_by(publication_recid=recid, version=version,name=table_name).one()
+                    datasubmission = DataSubmission.query.filter(
+                        DataSubmission.publication_recid == recid,
+                        DataSubmission.version == version,
+                        func.replace(DataSubmission.name, ' ', '') == table_name
+                    ).one()
                 except NoResultFound:
                     pass
 
