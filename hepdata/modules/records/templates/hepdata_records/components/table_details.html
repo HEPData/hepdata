@@ -6,11 +6,11 @@
     {% endif %}
 
     <div class="nice-dropdown" id="table-selector">
-        <select style="width: 100%" onchange="HEPDATA.switch_table('#table-list',$(this).val(),'','{{ctx.status}}')">
+        <select style="width: 100%" onchange="HEPDATA.switch_table('#table-list',$(this).val(),$(this).find('option:selected').attr('name'),'{{ctx.status}}')">
             {% for table in ctx.data_tables %}
-                <option value="{{ table.id }}"
+                <option value="{{ table.id }}" name="{{ table.name }}"
                 {% if ctx.table_id_to_show == table.id %}selected{% endif %}
-                >{{ table.name | replace('$','') }}</option>
+                >{{ table.name }}</option>
             {% endfor %}
         </select>
     </div>
