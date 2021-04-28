@@ -118,17 +118,21 @@ def test_tables(app, live_server, env_browser):
     new_table = browser.find_elements_by_css_selector('#table-list li h4')[2]
     assert(new_table.text == "Figure 8 panel (c)")
     new_table.click()
-    _check_table_links(browser, "Figure 8 panel (c)", "Figure%208%20panel%20(c)")
+    _check_table_links(browser, "Figure 8 panel (c)")
 
     # Get link to table from table page
     table_link = browser.find_element_by_css_selector('#data_link_container button') \
         .get_attribute('data-clipboard-text')
     assert(table_link.endswith('table=Figure%208%20panel%20(c)'))
-    _check_table_links(browser, "Figure 8 panel (c)", "Figure%208%20panel%20(c)", url=table_link)
+    _check_table_links(browser, "Figure 8 panel (c)", url=table_link)
+
+    # Check a link to a table name with spaces removed
+    short_table_link = table_link.replace('%20', '')
+    _check_table_links(browser, "Figure 8 panel (c)", url=short_table_link)
 
     # Check a link to an invalid table
     invalid_table_link = table_link.replace('Figure%208%20panel%20(c)', 'NotARealTable')
-    _check_table_links(browser, "Figure 8 panel (a)", "Figure%208%20panel%20(a)", url=invalid_table_link)
+    _check_table_links(browser, "Figure 8 panel (a)", url=invalid_table_link)
 
     # Delete record and reindex so added record doesn't affect other tests
     submission = get_latest_hepsubmission(inspire_id='1206352')
@@ -136,7 +140,7 @@ def test_tables(app, live_server, env_browser):
     reindex_all(recreate=True)
 
 
-def _check_table_links(browser, table_full_name, table_short_name, url=None):
+def _check_table_links(browser, table_full_name, url=None):
     if url:
         # Replace port in url (5555 used for unit testing is set in pytest.ini not config
         url = url.replace('5000', '5555')
@@ -150,7 +154,7 @@ def _check_table_links(browser, table_full_name, table_short_name, url=None):
     # Check download YAML link for table
     yaml_link = browser.find_element_by_id('download_yaml_data') \
         .get_attribute('href')
-    assert(yaml_link.endswith(f'/{table_short_name}/1/yaml'))
+    assert(yaml_link.endswith(f'/{table_full_name.replace(" ", "%20")}/1/yaml'))
     # Download yaml using requests and check we get expected filename
     filename_table = table_full_name.replace(' ', '_')
     response = requests.get(yaml_link)
