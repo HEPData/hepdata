@@ -27,6 +27,7 @@ from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 
+from hepdata.modules.submission.api import get_submission_participants_for_record
 from hepdata.modules.submission.models import HEPSubmission
 
 from .conftest import e2e_assert, e2e_assert_url
@@ -116,7 +117,10 @@ def test_create_submission(live_server, logged_in_browser):
     assert len(submissions) == 1
     assert submissions[0].overall_status == 'todo'
     assert submissions[0].version == 1
-    participants = sorted(submissions[0].participants, key=lambda p: p.role)
+    participants = sorted(
+        get_submission_participants_for_record(submissions[0].publication_recid),
+        key=lambda p: p.role
+    )
     assert participants[0].role == "reviewer"
     assert participants[0].email == "rr@hepdata.net"
     assert participants[0].status == "primary"

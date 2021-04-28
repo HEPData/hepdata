@@ -36,6 +36,7 @@ from hepdata.modules.records.utils.common import infer_file_type, contains_accep
     get_record_contents
 from hepdata.modules.records.utils.data_files import get_data_path_for_record
 from hepdata.modules.records.utils.submission import process_submission_directory, do_finalise, unload_submission
+from hepdata.modules.submission.api import get_submission_participants_for_record
 from hepdata.modules.submission.models import DataSubmission, HEPSubmission
 from hepdata.modules.submission.views import process_submission_payload
 
@@ -133,7 +134,8 @@ def test_create_submission(app, admin_idx):
             publication_recid=hepdata_submission.publication_recid).count()
         assert (data_submissions == 8)
         assert (len(hepdata_submission.resources) == 4)
-        assert (len(hepdata_submission.participants) == 4)
+        participants = get_submission_participants_for_record(hepdata_submission.publication_recid)
+        assert (len(participants) == 4)
 
         do_finalise(hepdata_submission.publication_recid, force_finalise=True, convert=False)
 

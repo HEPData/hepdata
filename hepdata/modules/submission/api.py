@@ -58,8 +58,20 @@ def get_latest_hepsubmission(*args, **kwargs):
     return last
 
 
-def get_submission_participants_for_record(publication_recid):
-    submission_participants = SubmissionParticipant.query.filter_by(
-        publication_recid=publication_recid, status="primary").all()
+def get_submission_participants_for_record(publication_recid, **kwargs):
+    """Gets the participants for a given publication record id
 
+    :param int publication_recid: publication_recid of a submission.
+    :param type **kwargs: Additional filter parameters to pass to `filter_by`.
+    :return: List of participants relating to that record
+    :rtype: [SubmissionParticipant]
+    """
+    return SubmissionParticipant.query.filter_by(
+            publication_recid=publication_recid,
+            **kwargs
+    ).all()
+
+
+def get_primary_submission_participants_for_record(publication_recid):
+    submission_participants = get_submission_participants_for_record(publication_recid, status="primary")
     return submission_participants

@@ -103,7 +103,7 @@ def add_participant(recid):
         new_record = SubmissionParticipant(publication_recid=recid,
                                            full_name=full_name,
                                            email=email, role=participant_type)
-        submission_record.participants.append(new_record)
+        db.session.add(new_record)
         db.session.commit()
         return json.dumps(
             {"success": True, "recid": recid,

@@ -384,7 +384,6 @@ def parse_modifications(hepsubmission, recid, submission_info_document):
             participant = SubmissionParticipant(
                 publication_recid=recid, full_name=modification["who"],
                 role=modification["action"], action_date=date)
-            hepsubmission.participants.append(participant)
             db.session.add(participant)
 
 

@@ -48,7 +48,7 @@ from hepdata.modules.records.utils.common import decode_string, find_file_in_dir
 from hepdata.modules.records.utils.data_processing_utils import process_ctx
 from hepdata.modules.records.utils.data_files import get_data_path_for_record, cleanup_old_files
 from hepdata.modules.records.utils.submission import process_submission_directory, create_data_review, cleanup_submission
-from hepdata.modules.submission.api import get_latest_hepsubmission
+from hepdata.modules.submission.api import get_latest_hepsubmission, get_submission_participants_for_record
 from hepdata.modules.records.utils.users import get_coordinators_in_system, has_role
 from hepdata.modules.records.utils.workflow import update_action_for_submission_participant
 from hepdata.modules.records.utils.yaml_utils import split_files
@@ -777,8 +777,7 @@ def determine_user_privileges(recid, ctx):
 
     if current_user.is_authenticated:
         user_id = current_user.get_id()
-        participant_records = SubmissionParticipant.query.filter_by(
-            user_account=user_id, publication_recid=recid).all()
+        participant_records = get_submission_participants_for_record(recid, user_account=user_id)
 
         for participant_record in participant_records:
             if participant_record is not None:

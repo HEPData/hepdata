@@ -397,7 +397,7 @@ def test_has_upload_permissions(app):
         submission_participant = SubmissionParticipant(
             user_account=user.id, publication_recid=recid,
             email=user.email, role='uploader')
-        hepsubmission.participants.append(submission_participant)
+        db.session.add(submission_participant)
         db.session.add(hepsubmission)
         db.session.commit()
 
