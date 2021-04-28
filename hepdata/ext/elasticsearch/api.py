@@ -142,7 +142,7 @@ def search(query,
     if query:
         data_search = data_search.query(QueryString(query=query))
 
-    data_search = data_search[0:size*50]
+    data_search = data_search[0:size*100]
     data_result = data_search.execute().to_dict()
 
     merged_results = merge_results(pub_result, data_result)
