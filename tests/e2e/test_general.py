@@ -102,42 +102,44 @@ def test_tables(app, live_server, env_browser):
     # Import record with non-default table names
     import_default_data(app, [{'hepdata_id': 'ins1206352'}])
 
-    browser.get(flask.url_for('hepdata_theme.index', _external=True))
-    assert (flask.url_for('hepdata_theme.index', _external=True) in
-            browser.current_url)
+    try:
+        browser.get(flask.url_for('hepdata_theme.index', _external=True))
+        assert (flask.url_for('hepdata_theme.index', _external=True) in
+                browser.current_url)
 
-    latest_item = browser.find_element_by_css_selector('.latest-record .title')
-    actions = ActionChains(browser)
-    actions.move_to_element(latest_item).perform()
-    latest_item.click()
+        latest_item = browser.find_element_by_css_selector('.latest-record .title')
+        actions = ActionChains(browser)
+        actions.move_to_element(latest_item).perform()
+        latest_item.click()
 
-    # Check current table name
-    assert(browser.find_element_by_id('table_name').text == 'Figure 8 panel (a)')
+        # Check current table name
+        assert(browser.find_element_by_id('table_name').text == 'Figure 8 panel (a)')
 
-    # Check switching tables works as expected
-    new_table = browser.find_elements_by_css_selector('#table-list li h4')[2]
-    assert(new_table.text == "Figure 8 panel (c)")
-    new_table.click()
-    _check_table_links(browser, "Figure 8 panel (c)")
+        # Check switching tables works as expected
+        new_table = browser.find_elements_by_css_selector('#table-list li h4')[2]
+        assert(new_table.text == "Figure 8 panel (c)")
+        new_table.click()
+        _check_table_links(browser, "Figure 8 panel (c)")
 
-    # Get link to table from table page
-    table_link = browser.find_element_by_css_selector('#data_link_container button') \
-        .get_attribute('data-clipboard-text')
-    assert(table_link.endswith('table=Figure%208%20panel%20(c)'))
-    _check_table_links(browser, "Figure 8 panel (c)", url=table_link)
+        # Get link to table from table page
+        table_link = browser.find_element_by_css_selector('#data_link_container button') \
+            .get_attribute('data-clipboard-text')
+        assert(table_link.endswith('table=Figure%208%20panel%20(c)'))
+        _check_table_links(browser, "Figure 8 panel (c)", url=table_link)
 
-    # Check a link to a table name with spaces removed
-    short_table_link = table_link.replace('%20', '')
-    _check_table_links(browser, "Figure 8 panel (c)", url=short_table_link)
+        # Check a link to a table name with spaces removed
+        short_table_link = table_link.replace('%20', '')
+        _check_table_links(browser, "Figure 8 panel (c)", url=short_table_link)
 
-    # Check a link to an invalid table
-    invalid_table_link = table_link.replace('Figure%208%20panel%20(c)', 'NotARealTable')
-    _check_table_links(browser, "Figure 8 panel (a)", url=invalid_table_link)
+        # Check a link to an invalid table
+        invalid_table_link = table_link.replace('Figure%208%20panel%20(c)', 'NotARealTable')
+        _check_table_links(browser, "Figure 8 panel (a)", url=invalid_table_link)
 
-    # Delete record and reindex so added record doesn't affect other tests
-    submission = get_latest_hepsubmission(inspire_id='1206352')
-    unload_submission(submission.publication_recid)
-    reindex_all(recreate=True)
+    finally:
+        # Delete record and reindex so added record doesn't affect other tests
+        submission = get_latest_hepsubmission(inspire_id='1206352')
+        unload_submission(submission.publication_recid)
+        reindex_all(recreate=True)
 
 
 def _check_table_links(browser, table_full_name, url=None):
