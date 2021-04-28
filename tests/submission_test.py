@@ -31,6 +31,7 @@ from time import sleep
 from invenio_db import db
 
 from hepdata.ext.elasticsearch.api import get_records_matching_field
+from hepdata.modules.permissions.models import SubmissionParticipant
 from hepdata.modules.records.api import format_submission, process_saved_file
 from hepdata.modules.records.utils.common import infer_file_type, contains_accepted_url, allowed_file, record_exists, \
     get_record_contents
@@ -167,6 +168,10 @@ def test_create_submission(app, admin_idx):
             publication_recid=hepdata_submission.publication_recid).count()
 
         assert (data_submissions == 0)
+
+        participant_count = SubmissionParticipant.query.filter_by(
+            publication_recid=hepdata_submission.publication_recid).count()
+        assert(participant_count == 0)
 
         sleep(2)
 
