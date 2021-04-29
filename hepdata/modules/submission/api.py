@@ -62,9 +62,9 @@ def get_submission_participants_for_record(publication_recid, **kwargs):
     """Gets the participants for a given publication record id
 
     :param int publication_recid: publication_recid of a submission.
-    :param type **kwargs: Additional filter parameters to pass to `filter_by`.
+    :param ``**kwargs``: Additional filter parameters to pass to `filter_by`.
     :return: List of participants relating to that record
-    :rtype: [SubmissionParticipant]
+    :rtype: list[SubmissionParticipant]
     """
     return SubmissionParticipant.query.filter_by(
             publication_recid=publication_recid,
