@@ -709,10 +709,9 @@ def revise_submission(recid):
     if not has_coordinator_permissions(recid, current_user):
         return jsonify({"message": "Current user is not a coordinator for this record."}), 403
 
-    redirect_url = request.url_root + "record/{}"
     notify_uploader = request.values['notify-uploader'] == 'true'
     uploader_message = request.values['notify-uploader-message']
-    return create_new_version(recid, current_user, redirect_url, notify_uploader, uploader_message)
+    return create_new_version(recid, current_user, notify_uploader, uploader_message)
 
 
 @blueprint.route('/<int:recid>/consume', methods=['GET', 'POST'])

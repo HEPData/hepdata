@@ -358,7 +358,7 @@ def has_coordinator_permissions(recid, user, is_sandbox=False):
     return coordinator_record is not None
 
 
-def create_new_version(recid, user, redirect_url, notify_uploader=True, uploader_message=None):
+def create_new_version(recid, user, notify_uploader=True, uploader_message=None):
     hepsubmission = get_latest_hepsubmission(publication_recid=recid)
 
     if hepsubmission.overall_status == 'finished':
@@ -385,7 +385,7 @@ def create_new_version(recid, user, redirect_url, notify_uploader=True, uploader
 
         return jsonify({'success': True, 'version': _rev_hepsubmission.version})
     else:
-        return jsonify({"message": "Rec id %s is not finished so cannot create a new version"}), 400
+        return jsonify({"message": f"Rec id {recid} is not finished so cannot create a new version"}), 400
 
 
 def process_payload(recid, file, redirect_url, synchronous=False):

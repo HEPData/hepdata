@@ -35,10 +35,12 @@ from flask_login import login_user
 from invenio_accounts.models import User
 from invenio_db import db
 import pytest
+from pytest_mock import mocker
 from werkzeug.datastructures import FileStorage
 
 from hepdata.modules.permissions.models import SubmissionParticipant
-from hepdata.modules.records.api import process_payload, process_zip_archive, move_files, get_all_ids, has_upload_permissions
+from hepdata.modules.records.api import process_payload, process_zip_archive, \
+    move_files, get_all_ids, has_upload_permissions, create_new_version
 from hepdata.modules.records.utils.submission import get_or_create_hepsubmission, process_submission_directory, do_finalise, unload_submission
 from hepdata.modules.records.utils.common import get_record_by_id, get_record_contents
 from hepdata.modules.records.utils.data_processing_utils import generate_table_structure
@@ -595,3 +597,47 @@ def test_get_all_ids(app, load_default_data, identifiers):
     assert(get_all_ids(latest_first=True) == expected_record_ids)
     assert(get_all_ids(id_field='inspire_id', latest_first=True)
            == [int(x["inspire_id"]) for x in identifiers])
+
+
+def test_create_new_version(app, load_default_data, identifiers, mocker):
+    hepsubmission = get_latest_hepsubmission(publication_recid=1)
+    assert hepsubmission.version == 1
+
+    # Add an uploader
+    uploader = SubmissionParticipant(
+        publication_recid=1,
+        email='test@hepdata.net',
+        role='uploader',
+        status='primary')
+    db.session.add(uploader)
+    db.session.commit()
+
+    user = User.query.first()
+
+    # Mock `send_cookie_email` method
+    send_cookie_mock = mocker.patch('hepdata.modules.records.api.send_cookie_email')
+
+    # Create new version of valid finished record
+    result = create_new_version(1, user, uploader_message="Hello!")
+    assert result.status_code == 200
+    assert result.json == {'success': True, 'version': 2}
+
+    # get_latest_hepsubmission should now return version 2
+    hepsubmission = get_latest_hepsubmission(publication_recid=1)
+    assert hepsubmission.version == 2
+    assert hepsubmission.overall_status == 'todo'
+
+    # Should have attempted to send uploader email
+    send_cookie_mock.assert_called_with(
+        uploader,
+        get_record_by_id(1),
+        message="Hello!",
+        version=2
+    )
+
+    # Try creating a new version - should not work as status of most recent is 'todo'
+    result, status_code = create_new_version(1, user)
+    assert status_code == 400
+    assert result.json == {
+        'message': 'Rec id 1 is not finished so cannot create a new version'
+    }
