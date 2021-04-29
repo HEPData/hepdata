@@ -91,24 +91,7 @@
                 <span itemprop="url"
                       class="hidden">{{ ctx.site_url }}/record/{{ ctx.record.recid }}</span>
 
-                    <div class="record-authors">
-                        {% for author in ctx.record.authors %}
-                            <a href="/search?author={{ author.full_name }}"
-                               itemprop="author" itemscope
-                               itemtype="http://schema.org/Person">{{ author.full_name }} <span
-                                    itemprop="affiliation"
-                                    itemtype="http://schema.org/Organization"
-                                    itemscope class="hidden"><span
-                                    itemprop="name">{{ author.affiliation }}</span></span>
-                            </a>{% if loop.index < ctx.record.authors|length %},
-                        {% endif %}
-                        {% endfor %}
-                    </div>
-                    <div class="record-journal">
-                        {% set record = ctx.record %}
-                        {% include "hepdata_records/components/journal_info.html" %}
-                    </div>
-
+                    <br/>
                     {% if ctx.record.collaborations %}
                       <div class="collaborations">
                         <span class="collaboration-group">
@@ -122,7 +105,24 @@
                       </div>
                     {% endif %}
 
-                    <div class="clearfix"></div>
+                    <div class="record-authors">
+                        {% for author in ctx.record.summary_authors %}
+                            <a href="/search?author={{ author.full_name }}"
+                               itemprop="author" itemscope
+                               itemtype="http://schema.org/Person">{{ author.full_name }} <span
+                                    itemprop="affiliation"
+                                    itemtype="http://schema.org/Organization"
+                                    itemscope class="hidden"><span
+                                    itemprop="name">{{ author.affiliation }}</span></span>
+                            </a>{% if loop.index < ctx.record.summary_authors|length %},
+                        {% endif %}
+                        {% endfor %}
+                    </div>
+                    <div class="record-journal">
+                        {% set record = ctx.record %}
+                        {% include "hepdata_records/components/journal_info.html" %}
+                    </div>
+
                     <br/>
 
                     <div class="record-links">
