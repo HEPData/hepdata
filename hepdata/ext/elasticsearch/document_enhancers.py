@@ -84,6 +84,7 @@ def add_shortened_authors(doc):
     doc["summary_authors"] = []
     if doc['authors']:
         doc["summary_authors"] = doc["authors"][:10]
+        doc["first_author"] = doc["authors"][0]
 
 
 def add_analyses(doc):
