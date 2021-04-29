@@ -287,8 +287,6 @@ def process_ctx(ctx, light_mode=False):
                     _recid = ctx['recid']
 
                 _cleaned_table_name = data_table['name'].replace('%', '%25').replace('\\', '%5C')
-                if re.match('^Table \d+$', _cleaned_table_name):
-                    _cleaned_table_name = _cleaned_table_name.replace('Table ', 'Table')
 
                 data_table['data'] = {
                     'json': '{0}/download/table/{1}/{2}/json'.format(

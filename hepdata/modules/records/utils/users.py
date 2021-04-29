@@ -28,13 +28,12 @@ def get_coordinators_in_system():
     """
     Utility function to get all coordinator users in the database.
 
-    :return: list of coordinator ids, nicknames, and emails.
+    :return: list of coordinator ids and emails.
     """
 
-    coordinators = User.query.filter(User.roles.any(name='coordinator')).all()
+    coordinators = User.query.filter(User.roles.any(name='coordinator')).order_by(User.email).all()
 
-    to_return = [{'id': coordinator.id, 'nickname': coordinator.email,
-                  'email': coordinator.email} for coordinator in coordinators]
+    to_return = [{'id': coordinator.id, 'email': coordinator.email} for coordinator in coordinators]
 
     return to_return
 

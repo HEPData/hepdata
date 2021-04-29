@@ -46,55 +46,17 @@
             HEPDATA.site_url = "{{ ctx.site_url }}";
             HEPDATA.current_record_id = {{ctx.recid | safe}};
             HEPDATA.current_table_version = {{ctx.version | safe}};
-            var table_to_show = "{{ctx.table_to_show | replace("\\","\\\\")}}";  // escape backslashes
-            var table_name = undefined;
 
-            // If table_to_show is an integer, replace with table name.
-            if (table_to_show.match(/^\d+$/)) {
-              {% for table in ctx.data_tables if table_to_show == table.id %}
-                  table_name = table.name;  // avoids using jQuery
-              {% endfor %}
-              if (!table_name) {
-                table_name = $('#' + table_to_show + " h4").text();  // fallback using jQuery
-              }
-              if (table_name) {
-                table_to_show = table_name;
-              }
-            }
-
-            // If table_to_show is the table name, replace with table id.
-            if (!table_to_show.match(/^\d+$/)) {
-
-              table_name = table_to_show;
-
-              // Remove whitespace from table name and escape special characters.
-              table_to_show = table_to_show.replace(/\s/g, "");
-              table_to_show = CSS.escape(table_to_show);
-
-              // Find table_id from table name.
-              var table_id = undefined;
-              if (table_to_show) {
-                table_id = $("." + table_to_show).attr("id");
-              }
-
-              if (table_id == undefined) {
-                // Just return first table.
-                table_to_show = {{ ctx.data_tables[0].id }};
-                table_name = "{{ ctx.data_tables[0].name | replace("\\","\\\\") }}";
-              } else {
-                table_to_show = table_id;
-              }
-
-            }
-
+            var table_id_to_show = {{ ctx.table_id_to_show | safe }};
+            var table_name_to_show = "{{ ctx.table_name_to_show | replace("\\","\\\\") }}";  // escape backslashes
             var status = "{{ ctx.status }}";
 
             // Pass table name before it gets mangled by MathJax if it contains LaTeX encoding.
-            HEPDATA.switch_table('#table-list', table_to_show, table_name, status);
+            HEPDATA.switch_table('#table-list', table_id_to_show, table_name_to_show, status);
 
             if (window.location.href.indexOf("table=") > -1) {
                 $('#table-list').animate({
-                    scrollTop: $("#" + table_to_show).offset().top
+                    scrollTop: $("#" + table_id_to_show).offset().top
                 }, 2000);
             }
         {%else %}

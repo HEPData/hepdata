@@ -165,7 +165,6 @@
                             {% endfor %}
                         </div>
 
-
                         <div class="record-journal">
                             {% set record = ctx.record %}
                             {% include "hepdata_records/components/journal_info.html" %}
@@ -187,7 +186,7 @@
                                     <li>
                                         <a href="https://doi.org/{{ ctx.record.doi }}"
                                            target="_blank"><span class="link">
-                                          <span class="link-value">Journal<span class="hidden" itemprop="identifier">https://doi.org/{{ ctx.record.doi }}</span></span></a>
+                                          <span class="link-value">Journal<span class="hidden" itemprop="identifier">https://doi.org/{{ ctx.record.doi }}</span></span></span></a>
                                     </li>
                                 {% endif %}
                                 {% if ctx.record.inspire_id %}
