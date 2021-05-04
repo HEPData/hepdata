@@ -495,7 +495,9 @@ HEPDATA.legends = {
       });
     });
 
-    window.MathJax.typeset();
+    $(window).on('load', function() {
+      window.MathJax.typeset();
+    });
   }
 
 };
