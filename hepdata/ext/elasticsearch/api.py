@@ -39,6 +39,7 @@ from invenio_db import db
 import logging
 
 from invenio_search import current_search_client as es, RecordsSearch
+from hepdata.modules.search.config import ELASTICSEARCH_MAX_RESULT_WINDOW, LIMIT_MAX_RESULTS_PER_PAGE
 
 
 __all__ = ['search', 'index_record_ids', 'index_record_dict', 'fetch_record',
@@ -142,7 +143,8 @@ def search(query,
     if query:
         data_search = data_search.query(QueryString(query=query))
 
-    data_search = data_search[0:size*100]
+    data_search_size = size * ELASTICSEARCH_MAX_RESULT_WINDOW // LIMIT_MAX_RESULTS_PER_PAGE
+    data_search = data_search[0:data_search_size]
     data_result = data_search.execute().to_dict()
 
     merged_results = merge_results(pub_result, data_result)
