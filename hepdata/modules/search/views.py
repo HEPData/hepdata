@@ -120,7 +120,7 @@ def check_date(args):
 
 def check_cmenergies(args):
     """
-    Get the cmenergues query parameter from the URL and convert to floats
+    Get the cmenergies query parameter from the URL and convert to floats
     """
     cmenergies = args.get('cmenergies', None)
     if cmenergies:
