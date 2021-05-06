@@ -9,7 +9,7 @@ elasticsearch-dsl==7.1.0
 email-validator==1.1.0
 Flask==1.1.1
 Flask-CeleryExt==0.3.4
-Flask-Cors==3.0.2
+Flask-Cors==3.0.9
 Flask-Login==0.3.2
 gevent==1.4.0
 gunicorn==19.5.0
