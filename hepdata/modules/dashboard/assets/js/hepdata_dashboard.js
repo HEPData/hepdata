@@ -267,7 +267,9 @@ HEPDATA.dashboard = (function () {
       });
 
       initialise_finalise_btn();
-      window.MathJax.typeset();
+      $(window).on('load', function() {
+        window.MathJax.typeset();
+      });
 
       HEPDATA.dashboard.render_submission_stats();
 

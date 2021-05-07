@@ -20,7 +20,7 @@ from elasticsearch_dsl import Search
 import datetime
 import pytest
 
-from hepdata.ext.elasticsearch.config.es_config import default_sort_order_for_field, \
+from hepdata.ext.elasticsearch.config.es_config import \
     add_default_aggregations, sort_fields_mapping
 from hepdata.ext.elasticsearch import api as es_api
 from hepdata.ext.elasticsearch.process_results import merge_results, match_tables_to_papers, \
@@ -29,6 +29,10 @@ from hepdata.ext.elasticsearch.query_builder import QueryBuilder, HEPDataQueryPa
 from hepdata.ext.elasticsearch.utils import flip_sort_order, parse_and_format_date, prepare_author_for_indexing, \
     calculate_sort_order, push_keywords
 from invenio_search import current_search_client as es
+
+from hepdata.modules.search.config import LIMIT_MAX_RESULTS_PER_PAGE, \
+    HEPDATA_CFG_MAX_RESULTS_PER_PAGE
+from hepdata.modules.search.views import check_max_results
 
 def test_query_builder_add_aggregations():
     s = Search()
@@ -417,3 +421,19 @@ def test_get_all_ids(app, load_default_data, identifiers):
 
     # Check sort by latest works - first record is newer than previous
     assert(es_api.get_all_ids(latest_first=True) == expected_record_ids)
+
+
+@pytest.mark.parametrize("input_size, output_size",
+    [
+        (None, HEPDATA_CFG_MAX_RESULTS_PER_PAGE),
+        (0, HEPDATA_CFG_MAX_RESULTS_PER_PAGE),
+        (HEPDATA_CFG_MAX_RESULTS_PER_PAGE, HEPDATA_CFG_MAX_RESULTS_PER_PAGE),
+        (LIMIT_MAX_RESULTS_PER_PAGE, LIMIT_MAX_RESULTS_PER_PAGE),
+        (LIMIT_MAX_RESULTS_PER_PAGE + 1, LIMIT_MAX_RESULTS_PER_PAGE),
+        ('all', HEPDATA_CFG_MAX_RESULTS_PER_PAGE)
+    ]
+)
+def test_check_max_results(input_size, output_size):
+    args = {'size': input_size} if input_size is not None else {}
+    check_max_results(args)
+    assert args['size'] == output_size

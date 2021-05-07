@@ -195,7 +195,9 @@ HEPDATA.visualization.heatmap = {
     HEPDATA.visualization.heatmap.decimal_places = Math.min(HEPDATA.visualization.heatmap.decimal_places, Math.max(HEPDATA.count_decimals(scale.domain()[0]), HEPDATA.count_decimals(scale.domain()[1])));
     HEPDATA.visualization.heatmap.render_legend(placement, scale, HEPDATA.visualization.heatmap.options.colors);
 
-    window.MathJax.typeset();
+    $(window).on('load', function() {
+      window.MathJax.typeset();
+    });
   },
 
   render_brushable_option: function (parent_node, options, function_call) {
