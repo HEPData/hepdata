@@ -140,6 +140,18 @@ def test_query_parser():
     assert (parsed_query_string3 == "data_keywords.observables:ASYM "
                                     "AND unknown_field:hello")
 
+    _test_query4 = 'reactions:P P --> LQ LQ X AND doi:10.1007/s100520000432'
+    parsed_query_string4 = HEPDataQueryParser.parse_query(_test_query4)
+
+    assert (parsed_query_string4 == 'data_keywords.reactions:"P P --> LQ LQ X"'
+                                    ' AND doi:"10.1007/s100520000432"')
+
+    _test_query5 = 'P P --> LQ LQ X'
+    parsed_query_string5 = HEPDataQueryParser.parse_query(_test_query5)
+
+    assert (parsed_query_string5 == '"P P --> LQ LQ X"')
+
+
 
 def test_search(app, load_default_data, identifiers):
     """
