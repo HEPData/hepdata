@@ -52,13 +52,19 @@
         </div>
 
         <div class="search-results container-fluid">
-            {% include "hepdata_search/display_results_options.html" %}
+            {% if not no_results %}
+              {% include "hepdata_search/display_results_options.html" %}
+            {% endif %}
             <div class="row-fluid">
                 {% if not no_results %}
                     {% include "hepdata_search/facet_column.html" %}
                 {% endif %}
                 <div class="col-md-10" style="padding-bottom: 3em;">
-                    {% if no_results %}
+                    {% if ctx.error %}
+                    <p>Unable to search for <b>{{ctx.q}}</b>: {{ctx.error}}</p>
+                    <p>Please see <a data-toggle="modal"
+                       data-target="#searchHelpWidget">Advanced Search</a> for details of correct search syntax.<p>
+                    {% elif no_results %}
                     <p>No results found. Please edit your search and try again.</p>
                     {% endif %}
                     {% if ctx.pages and not no_results %}

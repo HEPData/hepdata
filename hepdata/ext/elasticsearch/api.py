@@ -23,7 +23,7 @@ import re
 from celery import shared_task
 from dateutil.parser import parse
 from flask import current_app
-from elasticsearch.exceptions import TransportError
+from elasticsearch.exceptions import TransportError, RequestError
 from elasticsearch_dsl import Search
 from elasticsearch_dsl.query import QueryString, Q
 from invenio_pidstore.models import RecordIdentifier
@@ -128,27 +128,35 @@ def search(query,
 
     search = search.source(includes=include, excludes=exclude)
     search = search[offset:offset+size]
-    pub_result = search.execute().to_dict()
 
-    parent_filter = {
-        "terms": {
-                    "_id": [hit["_id"] for hit in pub_result['hits']['hits']]
+    try:
+        pub_result = search.execute().to_dict()
+
+        parent_filter = {
+            "terms": {
+                        "_id": [hit["_id"] for hit in pub_result['hits']['hits']]
+            }
         }
-    }
 
-    data_search = RecordsSearch(using=es, index=index)
-    data_search = data_search.query('has_parent',
-                                    parent_type="parent_publication",
-                                    query=parent_filter)
-    if query:
-        data_search = data_search.query(QueryString(query=query))
+        data_search = RecordsSearch(using=es, index=index)
+        data_search = data_search.query('has_parent',
+                                        parent_type="parent_publication",
+                                        query=parent_filter)
+        if query:
+            data_search = data_search.query(QueryString(query=query))
 
-    data_search_size = size * ELASTICSEARCH_MAX_RESULT_WINDOW // LIMIT_MAX_RESULTS_PER_PAGE
-    data_search = data_search[0:data_search_size]
-    data_result = data_search.execute().to_dict()
+        data_search_size = size * ELASTICSEARCH_MAX_RESULT_WINDOW // LIMIT_MAX_RESULTS_PER_PAGE
+        data_search = data_search[0:data_search_size]
+        data_result = data_search.execute().to_dict()
 
-    merged_results = merge_results(pub_result, data_result)
-    return map_result(merged_results, filters)
+        merged_results = merge_results(pub_result, data_result)
+        return map_result(merged_results, filters)
+    except RequestError as e:
+        if e.error == 'search_phase_execution_exception':
+            reason = e.info['error']['root_cause'][0]['reason']
+        else:
+            reason = e.error
+        return { 'error': reason }
 
 
 @author_index
