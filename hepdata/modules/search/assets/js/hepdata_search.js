@@ -1,4 +1,5 @@
 import $ from 'jquery'
+import 'bootstrap'
 import HEPDATA from './hepdata_common.js'
 
 HEPDATA.search = {
