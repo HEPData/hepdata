@@ -159,6 +159,7 @@ def search(query,
             reason = e.info['error']['root_cause'][0]['reason']
         # Otherwise we hide the details from the user
         else:
+            log.error(f'An unexpected error occurred when searching: {e}')
             reason = f'An unexpected error occurred: {e.error}'
         return { 'error': reason }
 

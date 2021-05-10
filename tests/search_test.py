@@ -396,8 +396,8 @@ def test_reindex_all(app, load_default_data, identifiers):
     es.indices.delete(index=index)
 
     # Check we can't search
-    with pytest.raises(NotFoundError, match=r"no such index "):
-        es_api.search('', index=index)
+    results = es_api.search('', index=index)
+    assert results == {'error': 'An unexpected error occurred: index_not_found_exception'}
 
     # Reindex, recreating the index
     es_api.reindex_all(index=index, recreate=True, synchronous=True)
