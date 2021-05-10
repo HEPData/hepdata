@@ -196,6 +196,14 @@ def test_search(app, load_default_data, identifiers):
     for author in expected:
         assert(author in results)
 
+    # Test a search query that ES can't parse
+    results = es_api.search('/', index=index)
+    assert results == {'error': 'Failed to parse query [/]'}
+
+    # Test a search query to an invalid index
+    results = es_api.search('hello', index='thisisnotanindex')
+    assert results == {'error': 'An unexpected error occurred: index_not_found_exception'}
+
 
 def test_merge_results():
     pub_result = {

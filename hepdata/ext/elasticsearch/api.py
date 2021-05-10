@@ -23,7 +23,7 @@ import re
 from celery import shared_task
 from dateutil.parser import parse
 from flask import current_app
-from elasticsearch.exceptions import TransportError, RequestError
+from elasticsearch.exceptions import TransportError
 from elasticsearch_dsl import Search
 from elasticsearch_dsl.query import QueryString, Q
 from invenio_pidstore.models import RecordIdentifier
@@ -151,11 +151,15 @@ def search(query,
 
         merged_results = merge_results(pub_result, data_result)
         return map_result(merged_results, filters)
-    except RequestError as e:
-        if e.error == 'search_phase_execution_exception':
+    except TransportError as e:
+        # For search phase execution exceptions we pass the reason as it's
+        # likely to be user error (e.g. invalid search query)
+        if e.error == 'search_phase_execution_exception' and e.info \
+                and "error" in e.info and isinstance(e.info['error'], dict):
             reason = e.info['error']['root_cause'][0]['reason']
+        # Otherwise we hide the details from the user
         else:
-            reason = e.error
+            reason = f'An unexpected error occurred: {e.error}'
         return { 'error': reason }
 
 
