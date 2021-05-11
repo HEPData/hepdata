@@ -308,6 +308,8 @@ def push_data_keywords(pub_ids=None, index=None):
                    query={'match': {'recid': pub_id}}) \
             .filter("term", doc_type=CFG_DATA_TYPE) \
             .source(includes=['keywords'])
+
+        search = search[0:LIMIT_MAX_RESULTS_PER_PAGE]
         tables = search.execute()
 
         keywords = [d.keywords for d in tables.hits]
