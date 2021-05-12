@@ -312,25 +312,50 @@ def push_data_keywords(pub_ids=None, index=None):
         search = search[0:LIMIT_MAX_RESULTS_PER_PAGE]
         tables = search.execute()
 
-        keywords = [d.keywords for d in tables.hits]
+        all_keywords = defaultdict(list)
 
-        # Flatten the list
-        keywords = [i for inner in keywords for i in inner]
+        # Add data keywords to each table as well as to all_keywords
+        for data_table in tables.hits:
+            # Aggregate
+            agg_keywords = defaultdict(list)
+            for kw in data_table.keywords:
+                agg_keywords[kw['name']].append(kw['value'])
 
-        # Aggregate
-        agg_keywords = defaultdict(list)
-        for kw in keywords:
-            agg_keywords[kw['name']].append(kw['value'])
+            # Remove duplicates
+            for k, v in agg_keywords.items():
+                agg_keywords[k] = list(set(v))
+
+            agg_keywords = process_cmenergies(agg_keywords)
+
+            # Add to full list
+            for k, v in agg_keywords.items():
+                all_keywords[k].extend(v)
+
+            body = {
+                "doc": {
+                    'data_keywords': dict(agg_keywords)
+                }
+            }
+
+            try:
+                es.update(index=index, id=data_table.meta.id, body=body, retry_on_conflict=3)
+            except Exception as e:
+                log.error(e)
 
         # Remove duplicates
-        for k, v in agg_keywords.items():
-            agg_keywords[k] = list(set(v))
-
-        agg_keywords = process_cmenergies(agg_keywords)
+        for k, v in all_keywords.items():
+            if k == 'cmenergies':
+                new_value = []
+                for val in v:
+                    if val not in new_value:
+                        new_value.append(val)
+            else:
+                new_value = list(set(v))
+            all_keywords[k] = new_value
 
         body = {
             "doc": {
-                'data_keywords': dict(agg_keywords)
+                'data_keywords': dict(all_keywords)
             }
         }
 
