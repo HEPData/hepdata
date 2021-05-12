@@ -307,43 +307,21 @@ def push_data_keywords(pub_ids=None, index=None):
                    parent_type="parent_publication",
                    query={'match': {'recid': pub_id}}) \
             .filter("term", doc_type=CFG_DATA_TYPE) \
-            .source(includes=['keywords'])
+            .source(includes=['data_keywords'])
 
         search = search[0:LIMIT_MAX_RESULTS_PER_PAGE]
         tables = search.execute()
 
         all_keywords = defaultdict(list)
 
-        # Add data keywords to each table as well as to all_keywords
+        # Get keywords for all data tables
         for data_table in tables.hits:
-            # Aggregate
-            agg_keywords = defaultdict(list)
-            for kw in data_table.keywords:
-                agg_keywords[kw['name']].append(kw['value'])
-
-            # Remove duplicates
-            for k, v in agg_keywords.items():
-                agg_keywords[k] = list(set(v))
-
-            agg_keywords = process_cmenergies(agg_keywords)
-
-            # Add to full list
-            for k, v in agg_keywords.items():
+            for k, v in data_table.data_keywords.to_dict().items():
                 all_keywords[k].extend(v)
-
-            body = {
-                "doc": {
-                    'data_keywords': dict(agg_keywords)
-                }
-            }
-
-            try:
-                es.update(index=index, id=data_table.meta.id, body=body, retry_on_conflict=3)
-            except Exception as e:
-                log.error(e)
 
         # Remove duplicates
         for k, v in all_keywords.items():
+            # cmenergies values are dicts so we can't just use set
             if k == 'cmenergies':
                 new_value = []
                 for val in v:
@@ -363,28 +341,6 @@ def push_data_keywords(pub_ids=None, index=None):
             es.update(index=index, id=pub_id, body=body, retry_on_conflict=3)
         except Exception as e:
             log.error(e)
-
-
-def process_cmenergies(keywords):
-    cmenergies = []
-    if keywords['cmenergies']:
-        for cmenergy in keywords['cmenergies']:
-            cmenergy = cmenergy.strip(" gevGEV")
-            try:
-                cmenergy_val = float(cmenergy)
-                cmenergies.append({"gte": cmenergy_val, "lte": cmenergy_val})
-            except ValueError:
-                m = re.match(r'^(-?\d+(?:\.\d+)?)[ \-+andAND]+(-?\d+(?:\.\d+)?)$', cmenergy)
-                if m:
-                    cmenergy_range = [float(m.group(1)), float(m.group(2))]
-                    cmenergy_range.sort()
-                    cmenergies.append({"gte": cmenergy_range[0], "lte": cmenergy_range[1]})
-                else:
-                    log.warning("Invalid value for cmenergies: %s" % cmenergy)
-
-        keywords['cmenergies'] = cmenergies
-
-    return keywords
 
 
 @default_index
