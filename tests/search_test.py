@@ -23,6 +23,7 @@ import pytest
 from hepdata.ext.elasticsearch.config.es_config import \
     add_default_aggregations, sort_fields_mapping
 from hepdata.ext.elasticsearch import api as es_api
+from hepdata.ext.elasticsearch.document_enhancers import process_cmenergies
 from hepdata.ext.elasticsearch.process_results import merge_results, match_tables_to_papers, \
     get_basic_record_information, is_datatable
 from hepdata.ext.elasticsearch.query_builder import QueryBuilder, HEPDataQueryParser
@@ -314,7 +315,7 @@ def test_process_cmenergies():
         ]
     }
 
-    results = es_api.process_cmenergies(test_keywords)
+    results = process_cmenergies(test_keywords)
     assert(len(results['cmenergies']) == len(expected['cmenergies']))
 
     for cmenergy in expected['cmenergies']:
