@@ -140,6 +140,18 @@ def test_query_parser():
     assert (parsed_query_string3 == "data_keywords.observables:ASYM "
                                     "AND unknown_field:hello")
 
+    _test_query4 = 'reactions:P P --> LQ LQ X AND doi:10.1007/s100520000432'
+    parsed_query_string4 = HEPDataQueryParser.parse_query(_test_query4)
+
+    assert (parsed_query_string4 == 'data_keywords.reactions:"P P --> LQ LQ X"'
+                                    ' AND doi:"10.1007/s100520000432"')
+
+    _test_query5 = 'P P --> LQ LQ X'
+    parsed_query_string5 = HEPDataQueryParser.parse_query(_test_query5)
+
+    assert (parsed_query_string5 == '"P P --> LQ LQ X"')
+
+
 
 def test_search(app, load_default_data, identifiers):
     """
@@ -183,6 +195,14 @@ def test_search(app, load_default_data, identifiers):
     assert(len(results) == len(expected))
     for author in expected:
         assert(author in results)
+
+    # Test a search query that ES can't parse
+    results = es_api.search('/', index=index)
+    assert results == {'error': 'Failed to parse query [/]'}
+
+    # Test a search query to an invalid index
+    results = es_api.search('hello', index='thisisnotanindex')
+    assert results == {'error': 'An unexpected error occurred: index_not_found_exception'}
 
 
 def test_merge_results():
@@ -376,8 +396,8 @@ def test_reindex_all(app, load_default_data, identifiers):
     es.indices.delete(index=index)
 
     # Check we can't search
-    with pytest.raises(NotFoundError, match=r"no such index "):
-        es_api.search('', index=index)
+    results = es_api.search('', index=index)
+    assert results == {'error': 'An unexpected error occurred: index_not_found_exception'}
 
     # Reindex, recreating the index
     es_api.reindex_all(index=index, recreate=True, synchronous=True)

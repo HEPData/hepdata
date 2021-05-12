@@ -47,10 +47,10 @@ class HEPDataQueryParser(object):
         # would translate to data_keywords.observables:ASYM
         mapping = {
             "keys": {
-                "observables": "data_keywords.observables:{0}",
-                "cmenergies": "data_keywords.cmenergies:{0}",
-                "phrases": "data_keywords.phrases:{0}",
-                "reactions": "data_keywords.reactions:{0}"
+                "observables": "data_keywords.observables",
+                "cmenergies": "data_keywords.cmenergies",
+                "phrases": "data_keywords.phrases",
+                "reactions": "data_keywords.reactions"
             }
         }
 
@@ -59,11 +59,23 @@ class HEPDataQueryParser(object):
         for query_part in re.split("AND|OR", query_string):
             query_part = query_part.strip()
             if ':' in query_part:
-                try:
-                    _key_value = query_part.split(':')
-                    _key = mapping['keys'][_key_value[0]].format(_key_value[1])
-                    new_query_string = new_query_string.replace(query_part, "{0}".format(_key))
-                except KeyError:
-                    continue
+                _key, _value = query_part.split(':')
+                _key = mapping['keys'].get(_key, _key)
+                _value = HEPDataQueryParser._quote_phrase(_value)
+                new_query_string = new_query_string.replace(query_part, f"{_key}:{_value}")
+            else:
+                new_query_string = new_query_string.replace(
+                    query_part, HEPDataQueryParser()._quote_phrase(query_part)
+                )
 
         return new_query_string
+
+    @staticmethod
+    def _quote_phrase(phrase):
+        # Match phrases containing a reaction (including "-->") or a doi (word
+        # chars with / in the middle) and quote them
+        pattern = re.compile("(.*-->.*|[\w\.]+\/[\w\.]+)")
+
+        if '"' not in phrase and pattern.fullmatch(phrase):
+            return f'"{phrase}"'
+        return phrase

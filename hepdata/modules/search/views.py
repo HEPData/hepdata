@@ -244,21 +244,29 @@ def search():
                              sort_order=query_params['sorting_order'],
                              offset=query_params['offset'])
 
-    total_pages = calculate_total_pages(query_result, query_params['size'])
-
-    if query_params['current_page'] > total_pages:
-        query_params['current_page'] = total_pages
-
-    facets = filter_facets(query_result['facets'], query_result['total'])
-    facets = sort_facets(facets)
-
-    year_facet = process_year_facet(request, facets)
-
     if ('format' in request.args and request.args['format'] == 'json') \
-        or 'json' in request.headers.get('accept', ''):
+            or 'json' in request.headers.get('accept', ''):
         query_result['hits'] = {'total': query_result['total']}
         return jsonify(query_result)
+
+    if 'error' in query_result:
+        ctx = {
+            'q': query_params['q'],
+            'error': query_result['error'],
+            'results': [],
+            'filters': {}
+        }
     else:
+        total_pages = calculate_total_pages(query_result, query_params['size'])
+
+        if query_params['current_page'] > total_pages:
+            query_params['current_page'] = total_pages
+
+        facets = filter_facets(query_result['facets'], query_result['total'])
+        facets = sort_facets(facets)
+
+        year_facet = process_year_facet(request, facets)
+
         ctx = {
             'results': query_result['results'],
             'total_hits': query_result['total'],
@@ -270,6 +278,7 @@ def search():
                       'total': total_pages,
                       'endpoint': '.search'},
             'filters': dict(query_params['filters']),
+            'error': None
         }
 
         if query_params['min_date'] is not sys.maxsize:
@@ -278,7 +287,7 @@ def search():
 
         ctx['modify_query'] = modify_query
 
-        return render_template('hepdata_search/search_results.html', ctx=ctx)
+    return render_template('hepdata_search/search_results.html', ctx=ctx)
 
 
 @blueprint.route('/ids', methods=['GET'])
