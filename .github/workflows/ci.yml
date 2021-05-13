@@ -31,6 +31,10 @@ on:
   release:
     types: [ published ]
 
+concurrency:
+  group: ${{github.event_name}}-${{ github.head_ref }}
+  cancel-in-progress: true
+
 jobs:
 
   test:
@@ -71,6 +75,10 @@ jobs:
         - "9200:9200"
 
     steps:
+    - name: Dump GitHub context
+      env:
+        GITHUB_CONTEXT: ${{ toJson(github) }}
+      run: echo "$GITHUB_CONTEXT"
     - uses: actions/checkout@v2
     - name: Set up Python 3.6
       uses: actions/setup-python@v2
