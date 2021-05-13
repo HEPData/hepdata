@@ -124,6 +124,10 @@ def test_search_from_home(live_server, env_browser, search_tests):
             assert(collab_facets.text.startswith(search_config['exp_collab_facet']))
             assert(collab_facets.text.endswith('1'))
 
+            # Check the first result has the expected number of data tables
+            data_table_count_span = browser.find_element_by_css_selector('.search-result-item .record-brief div:nth-child(3) span')
+            assert(data_table_count_span.text == str(search_config['exp_table_count']))
+
             # Click on the link to the publication details
             selector = ".{0} .record-header a".format(search_config['exp_hepdata_id'])
 
