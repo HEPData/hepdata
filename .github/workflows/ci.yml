@@ -32,7 +32,7 @@ on:
     types: [ published ]
 
 concurrency:
-  group: ${{github.event_name}}-${{ github.head_ref }}
+  group: ${{github.event_name}}-${{ github.head_ref || github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -78,7 +78,10 @@ jobs:
     - name: Dump GitHub context
       env:
         GITHUB_CONTEXT: ${{ toJson(github) }}
-      run: echo "$GITHUB_CONTEXT"
+        GROUP_NAME: ${{github.event_name}}-${{ github.head_ref || github.ref }}
+      run: |
+        echo "$GITHUB_CONTEXT"
+        echo "$GROUP_NAME"
     - uses: actions/checkout@v2
     - name: Set up Python 3.6
       uses: actions/setup-python@v2
