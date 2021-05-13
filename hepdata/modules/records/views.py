@@ -435,6 +435,7 @@ def add_data_review_messsage(publication_recid, data_recid):
     trace = []
     message = request.form.get('message', '')
     version = request.form['version']
+    send_email = request.form.get('send_email', 'false').lower() == 'true'
     userid = current_user.get_id()
 
     try:
@@ -458,8 +459,11 @@ def add_data_review_messsage(publication_recid, data_recid):
 
         update_action_for_submission_participant(publication_recid, userid,
                                                  'reviewer')
-        send_new_review_message_email(data_review_record, data_review_message,
-                                      current_user_obj)
+        if send_email:
+            # FIXME: need to add previous messages
+            # Add flag to Message to say whether it has been emailed?
+            send_new_review_message_email(data_review_record, data_review_message,
+                                          current_user_obj)
 
         return json.dumps(
             {"publication_recid": data_review_record.publication_recid,

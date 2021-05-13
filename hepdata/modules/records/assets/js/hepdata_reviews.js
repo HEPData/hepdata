@@ -163,13 +163,15 @@ $(document).ready(function() {
     }
   });
 
-  $("#send").click(function () {
+  $("#save_and_email,#save_no_email").click(function () {
 
       var message = $(".input_box").val();
+      var send_email = this.id == 'save_and_email';
 
       var DATA = {
           'message': message,
-          'version': HEPDATA.current_table_version
+          'version': HEPDATA.current_table_version,
+          'send_email': send_email
       };
       $.ajax({
           type: "POST",
