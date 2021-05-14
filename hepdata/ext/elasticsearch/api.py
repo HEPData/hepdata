@@ -128,27 +128,40 @@ def search(query,
 
     search = search.source(includes=include, excludes=exclude)
     search = search[offset:offset+size]
-    pub_result = search.execute().to_dict()
 
-    parent_filter = {
-        "terms": {
-                    "_id": [hit["_id"] for hit in pub_result['hits']['hits']]
+    try:
+        pub_result = search.execute().to_dict()
+
+        parent_filter = {
+            "terms": {
+                        "_id": [hit["_id"] for hit in pub_result['hits']['hits']]
+            }
         }
-    }
 
-    data_search = RecordsSearch(using=es, index=index)
-    data_search = data_search.query('has_parent',
-                                    parent_type="parent_publication",
-                                    query=parent_filter)
-    if query:
-        data_search = data_search.query(QueryString(query=query))
+        data_search = RecordsSearch(using=es, index=index)
+        data_search = data_search.query('has_parent',
+                                        parent_type="parent_publication",
+                                        query=parent_filter)
+        if query:
+            data_search = data_search.query(QueryString(query=query))
 
-    data_search_size = size * ELASTICSEARCH_MAX_RESULT_WINDOW // LIMIT_MAX_RESULTS_PER_PAGE
-    data_search = data_search[0:data_search_size]
-    data_result = data_search.execute().to_dict()
+        data_search_size = size * ELASTICSEARCH_MAX_RESULT_WINDOW // LIMIT_MAX_RESULTS_PER_PAGE
+        data_search = data_search[0:data_search_size]
+        data_result = data_search.execute().to_dict()
 
-    merged_results = merge_results(pub_result, data_result)
-    return map_result(merged_results, filters)
+        merged_results = merge_results(pub_result, data_result)
+        return map_result(merged_results, filters)
+    except TransportError as e:
+        # For search phase execution exceptions we pass the reason as it's
+        # likely to be user error (e.g. invalid search query)
+        if e.error == 'search_phase_execution_exception' and e.info \
+                and "error" in e.info and isinstance(e.info['error'], dict):
+            reason = e.info['error']['root_cause'][0]['reason']
+        # Otherwise we hide the details from the user
+        else:
+            log.error(f'An unexpected error occurred when searching: {e}')
+            reason = f'An unexpected error occurred: {e.error}'
+        return { 'error': reason }
 
 
 @author_index
@@ -295,6 +308,8 @@ def push_data_keywords(pub_ids=None, index=None):
                    query={'match': {'recid': pub_id}}) \
             .filter("term", doc_type=CFG_DATA_TYPE) \
             .source(includes=['keywords'])
+
+        search = search[0:LIMIT_MAX_RESULTS_PER_PAGE]
         tables = search.execute()
 
         keywords = [d.keywords for d in tables.hits]
