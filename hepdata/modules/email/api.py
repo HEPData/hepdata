@@ -33,9 +33,11 @@ from flask import render_template
 
 from hepdata.modules.submission.api import get_latest_hepsubmission, \
     get_primary_submission_participants_for_record, get_submission_participants_for_record
-from hepdata.modules.submission.models import DataSubmission
+from hepdata.modules.submission.models import DataSubmission, DataReview
 from hepdata.utils.users import get_user_from_id
 from invenio_accounts.models import User
+from invenio_db import db
+from sqlalchemy import and_
 
 logging.basicConfig()
 log = logging.getLogger(__name__)
@@ -84,47 +86,85 @@ def send_new_review_message_email(review, message, user):
     )
 
 
-class NoReviewersException(Exception):
+class NoParticipantsException(Exception):
     pass
 
 
-def send_new_upload_email(recid, user, message=None):
+def send_notification_email(recid, version, user, reviewers_notified, message=None, show_detail=True):
     """
     :param recid:
     :param user: user object
+    :param reviewers_notified: whether reviewers have already been notified about this upload
+    :param show_detail: whether to show the status and messages for each data table
     :param message:
     :return:
     """
 
     submission_participants = get_submission_participants_for_record(
-        recid, status="primary", role="reviewer")
+        recid, roles=['uploader', 'reviewer'], status='primary'
+    )
 
     if len(submission_participants) == 0:
-        raise NoReviewersException()
+        raise NoParticipantsException()
 
     site_url = current_app.config.get('SITE_URL', 'https://www.hepdata.net')
 
     record = get_record_by_id(recid)
+
+    tables = []
+    if show_detail:
+        data_submissions = DataSubmission.query.filter_by(
+            publication_recid=recid,
+            version=version
+        )
+
+        for data_submission in data_submissions:
+            table_data = {
+                'name': data_submission.name,
+                'status': 'todo'
+            }
+            review = DataReview.query.filter_by(
+                publication_recid=recid, data_recid=data_submission.id, version=version
+            ).first()
+            if review:
+                table_data['status'] = review.status
+                table_data['messages'] = []
+                for m in review.messages:
+                    table_data['messages'].append({
+                        'user': get_user_from_id(m.user).email,
+                        'date': m.creation_date.strftime("%Y-%m-%d at %H:%M UTC"),
+                        'message': m.message
+                    })
+
+            tables.append(table_data)
 
     for participant in submission_participants:
         invite_token = None
         if not participant.user_account:
             invite_token = participant.invitation_cookie
 
-        message_body = render_template('hepdata_theme/email/upload.html',
+        message_body = render_template('hepdata_theme/email/submission_status.html',
                                        name=participant.full_name,
                                        actor=user.email,
                                        article=recid,
                                        message=message,
                                        invite_token=invite_token,
                                        role=participant.role,
+                                       show_detail=show_detail,
+                                       data_tables=tables,
+                                       reviewers_notified=reviewers_notified,
                                        title=record['title'],
                                        site_url=site_url,
                                        link=site_url + "/record/{0}"
                                        .format(recid))
 
+        if participant.role == 'uploader' and not reviewers_notified:
+            message_subject = '[HEPData] Submission {0} has a new upload available for you to review'.format(recid)
+        else:
+            message_subject = '[HEPData] Notification about submission {0}'.format(recid)
+
         create_send_email_task(participant.email,
-                               '[HEPData] Submission {0} has a new upload available for you to review'.format(recid),
+                               message_subject,
                                message_body)
 
 

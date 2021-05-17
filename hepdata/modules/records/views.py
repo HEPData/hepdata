@@ -39,7 +39,7 @@ from yaml import CBaseLoader as Loader
 from hepdata.config import CFG_DATA_TYPE, CFG_PUB_TYPE, SITE_URL
 from hepdata.ext.elasticsearch.api import get_records_matching_field, get_count_for_collection, get_n_latest_records, \
     index_record_ids
-from hepdata.modules.email.api import send_new_upload_email, send_new_review_message_email, NoReviewersException, \
+from hepdata.modules.email.api import send_notification_email, send_new_review_message_email, NoParticipantsException, \
     send_question_email
 from hepdata.modules.inspire_api.views import get_inspire_record_information
 from hepdata.modules.records.api import request, determine_user_privileges, render_template, format_submission, \
@@ -147,21 +147,25 @@ def submit_question(recid):
 
 @blueprint.route('/<int:recid>/<int:version>/notify', methods=['POST'], strict_slashes=True)
 @login_required
-def notify_reviewers(recid, version):
+def notify_participants(recid, version):
     message = request.form['message']
+    show_detail = request.form.get('show_detail', 'false').lower() == 'true'
 
     submission = HEPSubmission.query.filter_by(publication_recid=recid, version=version).first()
     try:
         current_user_obj = get_user_from_id(current_user.get_id())
-        send_new_upload_email(recid, current_user_obj, message=message)
+        send_notification_email(
+            recid, version, current_user_obj, submission.reviewers_notified,
+            message=message, show_detail=show_detail
+        )
 
         submission.reviewers_notified = True
         db.session.add(submission)
         db.session.commit()
 
         return jsonify({"status": "success"})
-    except NoReviewersException:
-        return jsonify({"status": "error", "message": "There are no reviewers for this submission."})
+    except NoParticipantsException:
+        return jsonify({"status": "error", "message": "There are no uploaders or reviewers for this submission."})
     except Exception as e:
         db.session.rollback()
         return jsonify({"status": "error", "message": e.__str__()})
@@ -460,8 +464,6 @@ def add_data_review_messsage(publication_recid, data_recid):
         update_action_for_submission_participant(publication_recid, userid,
                                                  'reviewer')
         if send_email:
-            # FIXME: need to add previous messages
-            # Add flag to Message to say whether it has been emailed?
             send_new_review_message_email(data_review_record, data_review_message,
                                           current_user_obj)
 

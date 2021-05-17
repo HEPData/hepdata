@@ -130,8 +130,10 @@ def format_submission(recid, record, version, version_count, hepdata_submission,
             ctx['show_upload_widget'] = True
             ctx['show_review_widget'] = False
 
-        ctx['reviewer_count'] = SubmissionParticipant.query.filter_by(
-            publication_recid=recid, status="primary", role="reviewer").count()
+        ctx['participant_count'] = SubmissionParticipant.query \
+            .filter_by(publication_recid=recid, status="primary") \
+            .filter(SubmissionParticipant.role.in_(["reviewer", "uploader"])) \
+            .count()
         ctx['reviewers_notified'] = hepdata_submission.reviewers_notified
 
         ctx['record']['last_updated'] = hepdata_submission.last_updated

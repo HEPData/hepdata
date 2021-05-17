@@ -1,0 +1,86 @@
+{% extends 'hepdata_theme/email/email_container.html' %}
+{% block email_type %}
+    {% if invite_token %}
+        Invitation to be {{ role }} for a HEPData Record {{ article }}
+    {% elif reviewers_notified %}
+        Notification for Record {{ article }}
+    {% else %}
+        New Data Upload for Record {{ article }}
+    {% endif %}
+{% endblock %}
+
+{% block email_content %}
+
+    <p>Hi {{ name }},</p>
+
+    {% if invite_token %}
+        <p>You have been added as {{ role }} for a HEPData record. You can only review the article once you access the link below <strong>after logging in to HEPData</strong></p>
+        <p><a href="{{ site_url }}/permissions/assign/{{ invite_token }}" style="padding-left: 20px;">{{ site_url }}/permissions/assign/{{ invite_token }}</a></p>
+    {% endif %}
+
+    {% if not reviewers_notified %}
+        <p><a href="{{ link }}" style="color: #9b59b6">{{ title }}</a> has a new upload from <b>{{ actor }}</b>. </p>
+    {% elif not invite_token %}
+        <p>
+            <b>{{ actor }}</b>
+            {% if message %}
+              has sent you a message about
+            {% elif show_detail %}
+              would like to notify you of the status of
+            {% else %}
+              would like you to look at
+            {% endif %}
+            record <a href="{{ link }}" style="color: #9b59b6">{{ title }}</a>.
+        </p>
+    {% endif %}
+
+    {% if message %}
+        <p style="font-weight: bolder">Message:</p>
+        <p style="padding-left: 20px; font-weight: lighter; white-space: pre-wrap;">{{ message }}</p>
+    {% endif %}
+
+    {% if show_detail %}
+      <table style="width:100%">
+          <tr style="background: #ECF0F1">
+              <th style="padding:5px;text-align:left">Table name</th>
+              <th style="padding:5px;text-align:left">Status</th>
+              <th style="padding:5px;text-align:left">Messages</th>
+          </tr>
+        {% for table in data_tables %}
+          <tr style="vertical-align:top;{% if loop.index % 2 == 0 %};background: #ECF0F1{% endif %}">
+            <td><p style="margin:5px;">{{ table.name }}</p></td>
+            <td>
+              <p style="margin:5px;">
+              {% if table.status == 'todo' %}
+                Todo
+              {% elif table.status == 'attention' %}
+                Attention required
+              {% elif table.status == 'passed' %}
+                Passed
+              {% else %}
+                {{ table.status }}
+              {% endif %}
+              </p>
+            </td>
+            <td>
+              {% for message_data in table.messages %}
+                <div style="font-size:90%">
+                  <p style="font-weight:bold;margin:5px">{{ message_data.user }} said on {{ message_data.date }}:</p>
+                  <p style="margin:5px 5px 10px 15px;">
+                    {{ message_data.message }}
+                  </p>
+                </div>
+              {% endfor %}
+            </td>
+          </tr>
+        {% endfor %}
+      </table>
+    {% endif %}
+
+    <p>You can view the record <a href="{{ link }}" style="color: #9b59b6">here</a>.
+    </p>
+
+    <p>
+        The <a href="{{ site_url }}" style="color: #9b59b6">HEPData</a> team
+    </p>
+{% endblock %}
