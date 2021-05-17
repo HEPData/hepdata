@@ -153,8 +153,8 @@ def utils():
               help='Starting recid for the index operation.')
 @click.option('--end', '-e', type=int, default=-1,
               help='End recid for the index operation.')
-@click.option('--batch', '-b', type=int, default=50,
-              help='Number of records to index at a time.')
+@click.option('--batch', '-b', type=int, default=5,
+              help='Number of submissions to index at a time.')
 def reindex(recreate, start, end, batch):
     reindex_all(recreate=recreate, start=start, end=end, batch=batch)
 

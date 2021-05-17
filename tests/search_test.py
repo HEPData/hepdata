@@ -19,6 +19,7 @@ from elasticsearch.exceptions import NotFoundError
 from elasticsearch_dsl import Search
 import datetime
 import pytest
+from unittest.mock import call
 
 from hepdata.ext.elasticsearch.config.es_config import \
     add_default_aggregations, sort_fields_mapping
@@ -391,7 +392,7 @@ def test_is_datatable():
     assert (not is_datatable({"_source": {"doc_type": "publication"}}))
 
 
-def test_reindex_all(app, load_default_data, identifiers):
+def test_reindex_all(app, load_default_data, identifiers, mocker):
     index = app.config.get('ELASTICSEARCH_INDEX')
     # Delete the default index
     es.indices.delete(index=index)
@@ -406,6 +407,57 @@ def test_reindex_all(app, load_default_data, identifiers):
     # Search should work again
     results = es_api.search('', index=index)
     assert(results['total'] == len(identifiers))
+
+    # Test other params using mocking
+    m = mocker.patch('hepdata.ext.elasticsearch.api.reindex_batch')
+
+    # Start and end at publication_recid 1, batch size 1:
+    # should call reindex_batch twice with submission ids [1] then [2]
+    es_api.reindex_all(index=index, start=1, batch=1, synchronous=True)
+    m.assert_has_calls([
+        call([1], index),
+        call([2], index)
+    ])
+    m.reset_mock()
+
+    # Start and end at publication_recid 1:
+    # should call reindex_batch with submission ids [1]
+    es_api.reindex_all(index=index, start=1, end=1, synchronous=True)
+    m.assert_called_once_with([1], index)
+    m.reset_mock()
+
+    # Start at publication_recid 16, end at 100:
+    # should call with submission ids [2]
+    es_api.reindex_all(index=index, start=16, end=100, synchronous=True)
+    m.assert_called_once_with([2], index)
+    m.reset_mock()
+
+    # Start at publication_recid 16, end at 1, batch size 10:
+    # should fix max/min order and call with submission ids [1, 2]
+    es_api.reindex_all(index=index, start=16, end=1, batch=10, synchronous=True)
+    m.assert_called_once_with([1, 2], index)
+
+
+def test_reindex_batch(app, load_default_data, mocker):
+    index = app.config.get('ELASTICSEARCH_INDEX')
+
+    # Mock methods called so we can check they're called with correct parameters
+    mock_index_record_ids = mocker.patch('hepdata.ext.elasticsearch.api.index_record_ids')
+    mock_push_data_keywords = mocker.patch('hepdata.ext.elasticsearch.api.push_data_keywords')
+
+    # Reindex submission id 1 (pub_recid=1, with data submissions 2-15)
+    mock_index_record_ids.return_value = {'publication': [1], 'datatable': list(range(2,16))}
+    es_api.reindex_batch([1], index)
+    mock_index_record_ids.assert_called_once_with(list(range(1, 16)), index=index)
+    mock_push_data_keywords.assert_called_once_with(pub_ids=[1])
+    mock_index_record_ids.reset_mock()
+    mock_push_data_keywords.reset_mock()
+
+    # Reindex submission id 2 (pub_recid=16, data submissions 17-56)
+    mock_index_record_ids.return_value = {'publication': [16], 'datatable': list(range(17,56))}
+    es_api.reindex_batch([2], index)
+    mock_index_record_ids.assert_called_once_with(list(range(16, 57)), index=index)
+    mock_push_data_keywords.assert_called_once_with(pub_ids=[16])
 
 
 def test_get_record(app, load_default_data, identifiers):

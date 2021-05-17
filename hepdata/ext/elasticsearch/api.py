@@ -39,6 +39,7 @@ from invenio_db import db
 import logging
 
 from invenio_search import current_search_client as es, RecordsSearch
+from hepdata.modules.submission.models import HEPSubmission, DataSubmission
 from hepdata.modules.search.config import ELASTICSEARCH_MAX_RESULT_WINDOW, LIMIT_MAX_RESULTS_PER_PAGE
 
 
@@ -176,43 +177,60 @@ def search_authors(name, size=20, author_index=None):
 
 @default_index
 @author_index
-def reindex_all(index=None, author_index=None, recreate=False, batch=50, start=-1, end=-1, synchronous=False):
+def reindex_all(index=None, author_index=None, recreate=False, batch=5, start=-1, end=-1, synchronous=False):
     """ Recreate the index and add all the records from the db to ES. """
-
     if recreate:
         recreate_index(index=index)
         recreate_index(index=author_index)
 
-    qry = db.session.query(func.max(RecordIdentifier.recid).label("max_recid"),
-                           func.min(RecordIdentifier.recid).label("min_recid"),
+    qry = db.session.query(func.max(HEPSubmission.id).label("max_id"),
+                           func.min(HEPSubmission.id).label("min_id"),
                            )
     res = qry.one()
-    min_recid = res.min_recid
-    max_recid = res.max_recid
+    min_id = res.min_id
+    max_id = res.max_id
 
-    if max_recid and min_recid:
-
+    if max_id and min_id:
         if start != -1:
-            min_recid = max(start, min_recid)
+            start_result = db.session.query(HEPSubmission.id).filter(HEPSubmission.publication_recid == start).first()
+            if start_result:
+                min_id = max(start_result[0], min_id)
         if end != -1:
-            max_recid = min(end, max_recid)
-        print('min_recid = {}'.format(min_recid))
-        print('max_recid = {}'.format(max_recid))
+            end_result = db.session.query(HEPSubmission.id).filter(HEPSubmission.publication_recid == end).first()
+            if end_result:
+                max_id = min(end_result[0], max_id)
 
-        count = min_recid
-        while count <= max_recid:
-            rec_ids = list(range(count, min(count + batch, max_recid + 1)))
+        # Publiction recids passed in may not match order of id field
+        # Swap max and min if they aren't as expected
+        if max_id < min_id:
+            actual_max = min_id
+            min_id = max_id
+            max_id = actual_max
+
+        print('min hepsubmission id = {}'.format(min_id))
+        print('max hepsubmission id = {}'.format(max_id))
+
+        count = min_id
+        while count <= max_id:
+            ids = list(range(count, min(count + batch, max_id + 1)))
             if synchronous:
-                reindex_batch(rec_ids, index)
+                reindex_batch(ids, index)
             else:
-                print('Sending batch of IDs {0} to {1} to celery'.format(rec_ids[0], rec_ids[-1]))
-                reindex_batch.delay(rec_ids, index)
+                print('Sending batch of IDs {0} to {1} to celery'.format(ids[0], ids[-1]))
+                reindex_batch.delay(ids, index)
             count += batch
 
 
 @shared_task
-def reindex_batch(rec_ids, index):
-    log.info('Indexing record IDs {0} to {1}'.format(rec_ids[0], rec_ids[-1]))
+def reindex_batch(hepsubmission_record_ids, index):
+    log.info('Indexing records for hepsubmission IDs {0} to {1}'.format(hepsubmission_record_ids[0], hepsubmission_record_ids[-1]))
+    ids = db.session.query(HEPSubmission.publication_recid, DataSubmission.associated_recid) \
+        .join(HEPSubmission, HEPSubmission.publication_recid == DataSubmission.publication_recid) \
+        .filter(HEPSubmission.id.in_(hepsubmission_record_ids)) \
+        .all()
+    # ids is a list of (publication_recid, data_associated_recid) - need to flatten and remove duplicates
+    rec_ids = list(set([id for result in ids for id in result]))
+
     indexed_publications = []
     indexed_result = index_record_ids(rec_ids, index=index)
     indexed_publications += indexed_result[CFG_PUB_TYPE]
@@ -294,6 +312,7 @@ def delete_item_from_index(id, index, doc_type, parent=None):
 def push_data_keywords(pub_ids=None, index=None):
     """ Go through all the publications and their datatables and move data
      keywords from tables to their parent publications. """
+    log.info("Pushing data keywords for publication rec ids: %s", pub_ids)
     if not pub_ids:
         search = Search(using=es, index=index) \
             .filter("term", doc_type=CFG_PUB_TYPE) \
