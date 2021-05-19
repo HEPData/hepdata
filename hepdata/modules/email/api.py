@@ -190,6 +190,11 @@ def send_cookie_email(submission_participant,
     if not submission_participant.user_account:
         invite_token = submission_participant.invitation_cookie
 
+    hepsubmission = get_latest_hepsubmission(
+        publication_recid=record_information['recid']
+    )
+    coordinator = User.query.get(hepsubmission.coordinator)
+
     message_body = render_template(
         'hepdata_theme/email/invite.html',
         name=submission_participant.full_name,
@@ -201,6 +206,7 @@ def send_cookie_email(submission_participant,
         recid=submission_participant.publication_recid,
         version=version,
         email=submission_participant.email,
+        coordinator_email=coordinator.email,
         message=message)
 
     create_send_email_task(submission_participant.email,
