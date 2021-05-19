@@ -463,7 +463,7 @@ def test_get_updated_records_since_date(app):
 
 
 def test_get_updated_records_on_date(app):
-    assert(set(get_inspire_records_updated_on("2020-06-29")) == set(['1650066', '756925']))
+    assert(get_inspire_records_updated_on("2020-06-29") == ['1650066'])
 
 
 def test_update_record_info(app):
