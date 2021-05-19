@@ -1139,12 +1139,16 @@ g.node {
 
 #revise-submission-container {
 
+  .manage-participants {
+    width: 100%;
+    display: table;
+  }
+
   .manage-uploaders, .manage-reviewers {
     background-color: $lightgrey;
     width: 50%;
     padding: 5px;
-    float: left;
-    display: inline-block;
+    display: table-cell;
     margin-bottom: 10px;
 
     h4 {

@@ -109,28 +109,34 @@ HEPDATA.hepdata_record = (function () {
             processData: false,
             cache: true,
             success: function (data) {
-              function create_section_contents(placement, array, type, additional_class) {
-                  // reset html
-                  $(placement).html('');
-                  if (array.length > 0) {
-                      for (var val_idx in array) {
-                          var html_block = '<div class="' + type + ' ' + additional_class + '">';
-                          html_block += '<div class="info">' + array[val_idx]['full_name'] + '<br/><span class="review-email">' + array[val_idx]['email'] + '</span></div>';
-                          html_block += '<div class="clearfix"></div>';
+              if (data['primary-reviewers'].length > 0 || data['primary-uploaders'].length > 0 ||
+                  data['reserve-reviewers'].length > 0 || data['reserve-uploaders'].length > 0 ) {
+                function create_section_contents(placement, array, type, additional_class) {
+                    // reset html
+                    $(placement).html('');
+                    if (array.length > 0) {
+                        for (var val_idx in array) {
+                            var html_block = '<div class="' + type + ' ' + additional_class + '">';
+                            html_block += '<div class="info">' + array[val_idx]['full_name'] + '<br/><span class="review-email">' + array[val_idx]['email'] + '</span></div>';
+                            html_block += '<div class="clearfix"></div>';
 
-                          $(placement).append(html_block)
-                      }
-                  } else {
-                      $(placement).html('<p class="no-entries">No ' + additional_class + ' ' + type + '</p>');
-                  }
-              }
+                            $(placement).append(html_block)
+                        }
+                    } else {
+                        $(placement).html('<p class="no-entries">No ' + additional_class + ' ' + type + '</p>');
+                    }
+                }
 
-              create_section_contents("#primary-reviewer", data['primary-reviewers'], 'reviewer', 'primary');
-              create_section_contents("#primary-uploader", data['primary-uploaders'], 'uploader', 'primary');
-              create_section_contents("#reserve-reviewer", data['reserve-reviewers'], 'reviewer', 'reserve');
-              create_section_contents("#reserve-uploader", data['reserve-uploaders'], 'uploader', 'reserve');
-              if (data['primary-uploaders'].length > 0) {
-                $("#notify-uploader-name").text('(' + data['primary-uploaders'][0]['full_name'] + ')')
+                create_section_contents("#primary-reviewer", data['primary-reviewers'], 'reviewer', 'primary');
+                create_section_contents("#primary-uploader", data['primary-uploaders'], 'uploader', 'primary');
+                create_section_contents("#reserve-reviewer", data['reserve-reviewers'], 'reviewer', 'reserve');
+                create_section_contents("#reserve-uploader", data['reserve-uploaders'], 'uploader', 'reserve');
+                if (data['primary-uploaders'].length > 0) {
+                  $("#notify-uploader-name").text('(' + data['primary-uploaders'][0]['full_name'] + ')')
+                }
+              } else {
+                $("#revise-submission-with-uploaders-reviewers").hide();
+                $("#revise-submission-no-uploaders-reviewers").show();
               }
             }
         });

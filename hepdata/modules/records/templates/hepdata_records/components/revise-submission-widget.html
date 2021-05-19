@@ -23,58 +23,69 @@
                                   The previous version will still be available.
                                 </p>
 
-                                <p>
-                                  Current uploaders and reviewers are listed below. You may change the uploaders and reviewers
-                                  via the dashboard after the new version is created.
-                                <p>
+                                <div id="revise-submission-with-uploaders-reviewers">
+                                  <p>
+                                    Current uploaders and reviewers are listed below. You may change the uploaders and reviewers
+                                    via the dashboard after the new version is created.
+                                  <p>
 
-                                <div class="manage-uploaders">
-                                    <h4>Uploaders</h4>
+                                  <div class="manage-participants">
+                                    <div class="manage-uploaders">
+                                        <h4>Uploaders</h4>
 
-                                    <div id="primary-uploader"></div>
-                                    <div class="clearfix"></div>
-                                    <br/>
+                                        <div id="primary-uploader"></div>
+                                        <div class="clearfix"></div>
+                                        <br/>
 
-                                    <p class="reserve-header">Reserve Uploaders</p>
+                                        <p class="reserve-header">Reserve Uploaders</p>
 
-                                    <div id="reserve-uploader"></div>
+                                        <div id="reserve-uploader"></div>
+                                    </div>
+
+                                    <div class="manage-reviewers">
+                                        <h4>Reviewers</h4>
+
+                                        <div id="primary-reviewer"></div>
+                                        <div class="clearfix"></div>
+                                        <br/>
+
+                                        <p class="reserve-header">Reserve Reviewers</p>
+
+                                        <div id="reserve-reviewer"></div>
+                                    </div>
+                                  </div>
+
+                                  <p>
+                                    You can choose whether to send a message to the primary uploader now.
+                                  <p>
+
+                                  <div class="notify-uploader">
+                                    <form name="notify-uploader-form">
+                                    <div>
+                                      <input type="radio" id="notify-uploader-true" name="notify-uploader" value="true"
+                                        checked="checked" onchange="$('#notify-uploader-message,#notify-uploader-message-label').toggle();">
+                                      <label for="notify-uploader-true">
+                                        Send the primary uploader <span id="notify-uploader-name"></span> an email inviting them to upload a new version.
+                                      </label>
+                                      <label id="notify-uploader-message-label" for="notify-uploader-message" class="optional">
+                                        Optional additional message:
+                                      </label>
+                                      <textarea id="notify-uploader-message" name="notify-uploader-message" rows="5"></textarea>
+                                    </div>
+                                    <div>
+                                      <input type="radio" id="notify-uploader-false" name="notify-uploader" value="false"
+                                         onchange="$('#notify-uploader-message,#notify-uploader-message-label').toggle()">
+                                      <label for="notify-uploader-false">Do not send a message. (The uploader can be changed in the dashboard later.)</label><br>
+                                    </div>
+                                    </form>
+                                  </div>
                                 </div>
 
-                                <div class="manage-reviewers">
-                                    <h4>Reviewers</h4>
-
-                                    <div id="primary-reviewer"></div>
-                                    <div class="clearfix"></div>
-                                    <br/>
-
-                                    <p class="reserve-header">Reserve Reviewers</p>
-
-                                    <div id="reserve-reviewer"></div>
-                                </div>
-
-                                <p>
-                                  You can choose whether to send a message to the primary uploader now.
-                                <p>
-
-                                <div class="notify-uploader">
-                                  <form name="notify-uploader-form">
-                                  <div>
-                                    <input type="radio" id="notify-uploader-true" name="notify-uploader" value="true"
-                                      checked="checked" onchange="$('#notify-uploader-message,#notify-uploader-message-label').toggle();">
-                                    <label for="notify-uploader-true">
-                                      Send the primary uploader <span id="notify-uploader-name"></span> an email inviting them to upload a new version.
-                                    </label>
-                                    <label id="notify-uploader-message-label" for="notify-uploader-message" class="optional">
-                                      Optional additional message:
-                                    </label>
-                                    <textarea id="notify-uploader-message" name="notify-uploader-message" rows="5"></textarea>
-                                  </div>
-                                  <div>
-                                    <input type="radio" id="notify-uploader-false" name="notify-uploader" value="false"
-                                       onchange="$('#notify-uploader-message,#notify-uploader-message-label').toggle()">
-                                    <label for="notify-uploader-false">Do not send a message. (The uploader can be changed in the dashboard later.)</label><br>
-                                  </div>
-                                  </form>
+                                <div id="revise-submission-no-uploaders-reviewers" style="display:none">
+                                  <p>
+                                    There are currently no uploaders or reviewers for this record. You may add new participants
+                                    via the dashboard after the new version is created.
+                                  <p>
                                 </div>
 
                                 <div align="center">
