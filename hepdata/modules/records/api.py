@@ -392,10 +392,10 @@ def create_new_version(recid, user, notify_uploader=True, uploader_message=None)
         db.session.commit()
 
         if notify_uploader:
-            uploader = SubmissionParticipant.query.filter_by(
+            uploaders = SubmissionParticipant.query.filter_by(
                 role='uploader', publication_recid=recid, status='primary'
-                ).first()
-            if uploader:
+                )
+            for uploader in uploaders:
                 record_information = get_record_by_id(recid)
                 send_cookie_email(uploader,
                                   record_information,

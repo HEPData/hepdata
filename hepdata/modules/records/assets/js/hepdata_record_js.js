@@ -109,8 +109,7 @@ HEPDATA.hepdata_record = (function () {
             processData: false,
             cache: true,
             success: function (data) {
-              if (data['primary-reviewers'].length > 0 || data['primary-uploaders'].length > 0 ||
-                  data['reserve-reviewers'].length > 0 || data['reserve-uploaders'].length > 0 ) {
+              if (data['primary-uploaders'].length > 0) {
                 function create_section_contents(placement, array, type, additional_class) {
                     // reset html
                     $(placement).html('');

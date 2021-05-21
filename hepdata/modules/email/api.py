@@ -186,9 +186,6 @@ def notify_subscribers(hepsubmission, record):
 
 def send_cookie_email(submission_participant,
                       record_information, message=None, version=1):
-    invite_token = None
-    if not submission_participant.user_account:
-        invite_token = submission_participant.invitation_cookie
 
     hepsubmission = get_latest_hepsubmission(
         publication_recid=record_information['recid']
@@ -201,7 +198,8 @@ def send_cookie_email(submission_participant,
         role=submission_participant.role,
         title=record_information['title'],
         site_url=current_app.config.get('SITE_URL', 'https://www.hepdata.net'),
-        invite_token=invite_token,
+        user_account=submission_participant.user_account,
+        invite_token=submission_participant.invitation_cookie,
         status=submission_participant.status,
         recid=submission_participant.publication_recid,
         version=version,
@@ -210,8 +208,9 @@ def send_cookie_email(submission_participant,
         message=message)
 
     create_send_email_task(submission_participant.email,
-                           "[HEPData] Invitation to be a {0} of record {1} in HEPData".format(
-                               submission_participant.role,
+                           "[HEPData] Invitation to be {0} {1} of record {2} in HEPData".format(
+                               "an" if submission_participant.role == "uploader" else "a",
+                               submission_participant.role.capitalize(),
                                submission_participant.publication_recid), message_body)
 
 

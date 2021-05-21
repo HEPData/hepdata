@@ -19,14 +19,14 @@
                                 <p><strong>This submission is already finished.</strong></p>
                                 <p>
                                   Clicking <b>Revise Submission</b> will create version {{ ctx.version + 1 }} of this submission.
-                                  The uploader will need to upload new files, and the submission will require re-approval.
+                                  The Uploader will need to upload new files, and the submission will require re-approval.
                                   The previous version will still be available.
                                 </p>
 
                                 <div id="revise-submission-with-uploaders-reviewers">
                                   <p>
-                                    Current uploaders and reviewers are listed below. You may change the uploaders and reviewers
-                                    via the dashboard after the new version is created.
+                                    Current Uploaders and Reviewers are listed below. You may change the Uploaders and Reviewers
+                                    via the Dashboard after the new version is created.
                                   <p>
 
                                   <div class="manage-participants">
@@ -56,7 +56,7 @@
                                   </div>
 
                                   <p>
-                                    You can choose whether to send a message to the primary uploader now.
+                                    You can choose whether to send a message to the primary Uploaders now.
                                   <p>
 
                                   <div class="notify-uploader">
@@ -65,7 +65,7 @@
                                       <input type="radio" id="notify-uploader-true" name="notify-uploader" value="true"
                                         checked="checked" onchange="$('#notify-uploader-message,#notify-uploader-message-label').toggle();">
                                       <label for="notify-uploader-true">
-                                        Send the primary uploader <span id="notify-uploader-name"></span> an email inviting them to upload a new version.
+                                        Send the primary Uploaders an email inviting them to upload a new version.
                                       </label>
                                       <label id="notify-uploader-message-label" for="notify-uploader-message" class="optional">
                                         Optional additional message:
@@ -75,7 +75,7 @@
                                     <div>
                                       <input type="radio" id="notify-uploader-false" name="notify-uploader" value="false"
                                          onchange="$('#notify-uploader-message,#notify-uploader-message-label').toggle()">
-                                      <label for="notify-uploader-false">Do not send a message. (The uploader can be changed in the dashboard later.)</label><br>
+                                      <label for="notify-uploader-false">Do not send a message. (The Uploader can be changed in the dashboard later.)</label><br>
                                     </div>
                                     </form>
                                   </div>
@@ -83,8 +83,8 @@
 
                                 <div id="revise-submission-no-uploaders-reviewers" style="display:none">
                                   <p>
-                                    There are currently no uploaders or reviewers for this record. You may add new participants
-                                    via the dashboard after the new version is created.
+                                    There are currently no primary Uploaders for this record. You may add new participants
+                                    from the Dashboard after the new version is created.
                                   <p>
                                 </div>
 
@@ -108,7 +108,7 @@
                                         <br/>
                                         This window will close in <span id="revise-timer"
                                                                         style="color: #4FBA6F;">5</span>
-                                        seconds and load the dashboard page.
+                                        seconds and load the Dashboard page.
                                     </p>
                                 </div>
                             </div>

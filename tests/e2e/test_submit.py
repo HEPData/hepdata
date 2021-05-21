@@ -76,7 +76,7 @@ def test_create_submission(live_server, logged_in_browser):
 
     # Check for reviewer/uploader form
     reviewers_uploaders_title = browser.find_element_by_css_selector('#reviewers_uploaders h4')
-    assert "Please Specify the uploaders and reviewers for this submission" \
+    assert "Please specify the Uploader and Reviewer for this submission" \
         in reviewers_uploaders_title.text
 
     # Fill in uploader/reviewer and submit
