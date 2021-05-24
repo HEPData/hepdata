@@ -31,11 +31,13 @@ from time import sleep
 from invenio_db import db
 
 from hepdata.ext.elasticsearch.api import get_records_matching_field
+from hepdata.modules.permissions.models import SubmissionParticipant
 from hepdata.modules.records.api import format_submission, process_saved_file
 from hepdata.modules.records.utils.common import infer_file_type, contains_accepted_url, allowed_file, record_exists, \
     get_record_contents
 from hepdata.modules.records.utils.data_files import get_data_path_for_record
 from hepdata.modules.records.utils.submission import process_submission_directory, do_finalise, unload_submission
+from hepdata.modules.submission.api import get_latest_hepsubmission, get_submission_participants_for_record
 from hepdata.modules.submission.models import DataSubmission, HEPSubmission
 from hepdata.modules.submission.views import process_submission_payload
 
@@ -90,6 +92,58 @@ def test_file_extension_pattern():
         assert (file_group["exp_result"] == extension)
 
 
+def test_get_submission_participants(app, load_default_data, identifiers):
+    hepsubmission = get_latest_hepsubmission(inspire_id=identifiers[0]["inspire_id"])
+
+    # Should initially be 1 participant, imported from the submission yaml doc
+    participants = get_submission_participants_for_record(hepsubmission.publication_recid)
+    assert len(participants) == 1
+    assert participants[0].publication_recid == hepsubmission.publication_recid
+    assert participants[0].email is None
+    assert participants[0].user_account is None
+    assert participants[0].full_name == "Stephen Webster"
+    assert participants[0].status == "reserve"
+    assert participants[0].role == "Encoded"
+
+    # Add a participant
+    new_participant = SubmissionParticipant(
+        publication_recid=hepsubmission.publication_recid,
+        email="test@hepdata.net",
+        full_name="Test User",
+        status="primary",
+        role="uploader"
+    )
+    db.session.add(new_participant)
+    db.session.commit()
+
+    # Get participants again
+    participants = get_submission_participants_for_record(hepsubmission.publication_recid)
+    assert len(participants) == 2
+    assert participants[0].publication_recid == hepsubmission.publication_recid
+    assert participants[0].email is None
+    assert participants[0].user_account is None
+    assert participants[0].full_name == "Stephen Webster"
+    assert participants[0].status == "reserve"
+    assert participants[0].role == "Encoded"
+    assert participants[1].publication_recid == hepsubmission.publication_recid
+    assert participants[1].email == "test@hepdata.net"
+    assert participants[1].user_account is None
+    assert participants[1].full_name == "Test User"
+    assert participants[1].status == "primary"
+    assert participants[1].role == "uploader"
+
+    # Get participants with additional filter
+    participants = get_submission_participants_for_record(
+        hepsubmission.publication_recid, status="primary")
+    assert len(participants) == 1
+    assert participants[0].publication_recid == hepsubmission.publication_recid
+    assert participants[0].email == "test@hepdata.net"
+    assert participants[0].user_account is None
+    assert participants[0].full_name == "Test User"
+    assert participants[0].status == "primary"
+    assert participants[0].role == "uploader"
+
+
 def test_create_submission(app, admin_idx):
     """
     Test the whole submission pipeline in loading a file, ensuring the HEPSubmission object is created,
@@ -133,7 +187,8 @@ def test_create_submission(app, admin_idx):
             publication_recid=hepdata_submission.publication_recid).count()
         assert (data_submissions == 8)
         assert (len(hepdata_submission.resources) == 4)
-        assert (len(hepdata_submission.participants) == 4)
+        participants = get_submission_participants_for_record(hepdata_submission.publication_recid)
+        assert (len(participants) == 4)
 
         do_finalise(hepdata_submission.publication_recid, force_finalise=True, convert=False)
 
@@ -165,6 +220,10 @@ def test_create_submission(app, admin_idx):
             publication_recid=hepdata_submission.publication_recid).count()
 
         assert (data_submissions == 0)
+
+        participant_count = SubmissionParticipant.query.filter_by(
+            publication_recid=hepdata_submission.publication_recid).count()
+        assert(participant_count == 0)
 
         sleep(2)
 

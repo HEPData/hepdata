@@ -100,6 +100,95 @@ HEPDATA.hepdata_record = (function () {
             }
         });
 
+      },
+
+      load_revise_submission: function() {
+        $.ajax({
+            dataType: "json",
+            url: '/record/coordinator/view/' + HEPDATA.current_record_id,
+            processData: false,
+            cache: true,
+            success: function (data) {
+              if (data['primary-uploaders'].length > 0) {
+                function create_section_contents(placement, array, type, additional_class) {
+                    // reset html
+                    $(placement).html('');
+                    if (array.length > 0) {
+                        for (var val_idx in array) {
+                            var html_block = '<div class="' + type + ' ' + additional_class + '">';
+                            html_block += '<div class="info">' + array[val_idx]['full_name'] + '<br/><span class="review-email">' + array[val_idx]['email'] + '</span></div>';
+                            html_block += '<div class="clearfix"></div>';
+
+                            $(placement).append(html_block)
+                        }
+                    } else {
+                        $(placement).html('<p class="no-entries">No ' + additional_class + ' ' + type + '</p>');
+                    }
+                }
+
+                create_section_contents("#primary-reviewer", data['primary-reviewers'], 'reviewer', 'primary');
+                create_section_contents("#primary-uploader", data['primary-uploaders'], 'uploader', 'primary');
+                create_section_contents("#reserve-reviewer", data['reserve-reviewers'], 'reviewer', 'reserve');
+                create_section_contents("#reserve-uploader", data['reserve-uploaders'], 'uploader', 'reserve');
+                if (data['primary-uploaders'].length > 0) {
+                  $("#notify-uploader-name").text('(' + data['primary-uploaders'][0]['full_name'] + ')')
+                }
+              } else {
+                $("#revise-submission-with-uploaders-reviewers").hide();
+                $("#revise-submission-no-uploaders-reviewers").show();
+              }
+            }
+        });
+      },
+
+      revise_submission: function(redirect_url) {
+        var form = document.forms['notify-uploader-form'];
+        var data = $(form).serialize();
+
+        $("#revise-submission-container .col-md-12").html('<div align="center"/>');
+        HEPDATA.render_loader(
+          "#revise-submission-container .col-md-12 div",
+          [
+            {x: 26, y: 30, color: "#955BA5"},
+            {x: -60, y: 55, color: "#2C3E50"},
+            {x: 37, y: -10, color: "#955BA5"},
+            {x: -60, y: 10, color: "#955BA5"},
+            {x: -27, y: -30, color: "#955BA5"},
+            {x: 60, y: -55, color: "#2C3E50"}
+          ],
+          {"width": 100, "height": 100}
+        );
+        $("#revise-submission-container .col-md-12 div").append("<p>Creating new version...</p>");
+
+        $.ajax({
+            type: "POST",
+            url: "/record/" + HEPDATA.current_record_id + "/revise-submission",
+            data: data,
+            cache: false,
+            success: function (data) {
+              if (data.success) {
+                $("#new-version-number").html(data.version);
+                $("#revise-confirm").hide();
+                $("#revise-success").removeClass('hidden');
+
+                var count = 5;
+                setInterval(function () {
+                  count -= 1;
+                  $("#revise-timer").text(count);
+                  if (count == 0) {
+                    $("#reviseSubmission").modal('hide');
+                  }
+                }, 1000);
+                setTimeout(function () {
+                  window.location = redirect_url;
+                }, 5500);
+              } else {
+                var closeButtonHtml = '<button type="button" class="btn btn-info" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">Close</span></button>';
+                $("#revise-submission-container .col-md-12").append('<p>Failed. Please try again later.</p>' + closeButtonHtml);
+              }
+            }
+          }
+        );
       }
     }
   }

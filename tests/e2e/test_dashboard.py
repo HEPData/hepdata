@@ -55,7 +55,6 @@ def test_dashboard(live_server, logged_in_browser):
                                                    role='uploader',
                                                    user_account=1,
                                                    publication_recid=record_information["recid"])
-        hepsubmission.participants.append(participant_record)
         db.session.add(hepsubmission)
         db.session.add(participant_record)
 

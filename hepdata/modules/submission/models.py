@@ -35,14 +35,6 @@ from datetime import datetime
 logging.basicConfig()
 log = logging.getLogger(__name__)
 
-submission_participant_link = db.Table(
-    'submission_participant_link',
-    db.Column('rec_id', db.Integer,
-              db.ForeignKey('hepsubmission.id')),
-
-    db.Column('participant_id', db.Integer,
-              db.ForeignKey('submissionparticipant.id')))
-
 data_reference_link = db.Table(
     'data_resource_link',
     db.Column('submission_id', db.Integer,
@@ -97,9 +89,6 @@ class HEPSubmission(db.Model):
     # coordinators are already logged in to submit records,
     # so we know their User id.
     coordinator = db.Column(db.Integer, db.ForeignKey(User.id))
-    participants = db.relationship("SubmissionParticipant",
-                                   secondary="submission_participant_link",
-                                   cascade="all,delete")
 
     # when this flag is set to 'ready', all data records will have an
     # invenio record created for them.

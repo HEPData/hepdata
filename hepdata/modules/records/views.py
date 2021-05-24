@@ -45,7 +45,8 @@ from hepdata.modules.inspire_api.views import get_inspire_record_information
 from hepdata.modules.records.api import request, determine_user_privileges, render_template, format_submission, \
     render_record, current_user, db, jsonify, get_user_from_id, get_record_contents, extract_journal_info, \
     user_allowed_to_perform_action, NoResultFound, OrderedDict, query_messages_for_data_review, returns_json, \
-    process_payload, has_upload_permissions
+    process_payload, has_upload_permissions, has_coordinator_permissions, create_new_version
+from hepdata.modules.submission.api import get_submission_participants_for_record
 from hepdata.modules.submission.models import HEPSubmission, DataSubmission, \
     DataResource, DataReview, Message, Question
 from hepdata.modules.records.utils.common import get_record_by_id, \
@@ -321,7 +322,8 @@ def get_coordinator_view(recid):
     participants = {"reviewer": {"reserve": [], "primary": []},
                     "uploader": {"reserve": [], "primary": []}}
 
-    for participant in hepsubmission_record.participants:
+    record_participants = get_submission_participants_for_record(recid)
+    for participant in record_participants:
         if participant.role in participants:
             participants[participant.role][participant.status].append(
                 {"full_name": participant.full_name, "email": participant.email,
@@ -691,6 +693,25 @@ def cli_upload():
         if participant and str(participant.invitation_cookie) != invitation_cookie:
             return jsonify({"message": "Invitation cookie did not match."}), 403
         return consume_data_payload(recid)  # '/<int:recid>/consume'
+
+
+@blueprint.route('/<int:recid>/revise-submission', methods=['POST'])
+@login_required
+def revise_submission(recid):
+    """
+    This method creates a new version of a submission.
+
+    :param recid: record id to attach the data to
+    :return: For POST requests, returns JSONResponse either containing 'url'
+             (for success cases) or 'message' (for error cases, which will
+             give a 400 error). For GET requests, redirects to the record.
+    """
+    if not has_coordinator_permissions(recid, current_user):
+        return jsonify({"message": "Current user is not a coordinator for this record."}), 403
+
+    notify_uploader = request.values['notify-uploader'] == 'true'
+    uploader_message = request.values['notify-uploader-message']
+    return create_new_version(recid, current_user, notify_uploader, uploader_message)
 
 
 @blueprint.route('/<int:recid>/consume', methods=['GET', 'POST'])

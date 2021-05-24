@@ -30,7 +30,7 @@ from sqlalchemy import and_, or_, func
 
 from hepdata.modules.permissions.models import SubmissionParticipant
 from hepdata.modules.records.utils.common import get_record_by_id, decode_string
-from hepdata.modules.submission.api import get_latest_hepsubmission
+from hepdata.modules.submission.api import get_latest_hepsubmission, get_submission_participants_for_record
 from hepdata.modules.records.utils.users import has_role
 from hepdata.modules.submission.models import HEPSubmission, DataReview
 from hepdata.utils.users import get_user_from_id
@@ -132,13 +132,16 @@ def prepare_submissions(current_user, items_per_page=25, current_page=1, record_
 
             coordinator = User.query.get(hepdata_submission.coordinator)
 
-            if hepdata_submission.participants:
+            participants = get_submission_participants_for_record(
+                hepdata_submission.publication_recid,
+                user_account=current_user.id
+            )
+
+            if participants:
                 current_user_roles = []
 
-                for participant in hepdata_submission.participants:
-
-                    if int(current_user.get_id()) == participant.user_account:
-                        current_user_roles.append(participant.role)
+                for participant in participants:
+                    current_user_roles.append(participant.role)
 
                 create_record_for_dashboard(
                     str(hepdata_submission.publication_recid), submissions,

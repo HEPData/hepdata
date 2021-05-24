@@ -31,6 +31,7 @@ from elasticsearch_dsl.connections import connections
 from flask import current_app
 
 from hepdata.modules.records.utils.common import get_record_contents
+from hepdata.modules.submission.api import get_submission_participants_for_record
 from hepdata.modules.submission.models import HEPSubmission, DataSubmission
 
 logging.basicConfig()
@@ -148,7 +149,7 @@ class AdminIndexer:
     def index_submission(self, submission):
         participants = []
 
-        for sub_participant in submission.participants:
+        for sub_participant in get_submission_participants_for_record(submission.publication_recid):
             participants.append({'full_name': sub_participant.full_name, 'role': sub_participant.role})
 
         record_information = get_record_contents(submission.publication_recid,
