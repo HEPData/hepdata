@@ -1,0 +1,121 @@
+<!-- Modal -->
+{% if ctx.status == 'finished' and ctx.is_submission_coordinator_or_admin and ctx.version >= ctx.version_count%}
+    <div class="modal fade" id="reviseSubmission" tabindex="-1" role="dialog"
+         aria-labelledby="codeDialog" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"
+                            aria-label="Close"><span
+                            aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="codeDialogLabel">
+                        Revise Submission</h4>
+                </div>
+
+                <div class="modal-body">
+                    <div class="container-fluid" id="revise-submission-container">
+                        <div class="row-fluid">
+                            <div class="col-md-12" id="revise-confirm">
+                                <p><strong>This submission is already finished.</strong></p>
+                                <p>
+                                  Clicking <b>Revise Submission</b> will create version {{ ctx.version + 1 }} of this submission.
+                                  The Uploader will need to upload new files, and the submission will require re-approval.
+                                  The previous version will still be available.
+                                </p>
+
+                                <div id="revise-submission-with-uploaders-reviewers">
+                                  <p>
+                                    Current Uploaders and Reviewers are listed below. You may change the Uploaders and Reviewers
+                                    via the Dashboard after the new version is created.
+                                  <p>
+
+                                  <div class="manage-participants">
+                                    <div class="manage-uploaders">
+                                        <h4>Uploaders</h4>
+
+                                        <div id="primary-uploader"></div>
+                                        <div class="clearfix"></div>
+                                        <br/>
+
+                                        <p class="reserve-header">Reserve Uploaders</p>
+
+                                        <div id="reserve-uploader"></div>
+                                    </div>
+
+                                    <div class="manage-reviewers">
+                                        <h4>Reviewers</h4>
+
+                                        <div id="primary-reviewer"></div>
+                                        <div class="clearfix"></div>
+                                        <br/>
+
+                                        <p class="reserve-header">Reserve Reviewers</p>
+
+                                        <div id="reserve-reviewer"></div>
+                                    </div>
+                                  </div>
+
+                                  <p>
+                                    You can choose whether to send a message to the primary Uploaders now.
+                                  <p>
+
+                                  <div class="notify-uploader">
+                                    <form name="notify-uploader-form">
+                                    <div>
+                                      <input type="radio" id="notify-uploader-true" name="notify-uploader" value="true"
+                                        checked="checked" onchange="$('#notify-uploader-message,#notify-uploader-message-label').toggle();">
+                                      <label for="notify-uploader-true">
+                                        Send the primary Uploaders an email inviting them to upload a new version.
+                                      </label>
+                                      <label id="notify-uploader-message-label" for="notify-uploader-message" class="optional">
+                                        Optional additional message:
+                                      </label>
+                                      <textarea id="notify-uploader-message" name="notify-uploader-message" rows="5"></textarea>
+                                    </div>
+                                    <div>
+                                      <input type="radio" id="notify-uploader-false" name="notify-uploader" value="false"
+                                         onchange="$('#notify-uploader-message,#notify-uploader-message-label').toggle()">
+                                      <label for="notify-uploader-false">Do not send a message. (The Uploader can be changed in the dashboard later.)</label><br>
+                                    </div>
+                                    </form>
+                                  </div>
+                                </div>
+
+                                <div id="revise-submission-no-uploaders-reviewers" style="display:none">
+                                  <p>
+                                    There are currently no primary Uploaders for this record. You may add new participants
+                                    from the Dashboard after the new version is created.
+                                  <p>
+                                </div>
+
+                                <div align="center">
+                                    <button type="submit" class="btn btn-info btn-md" onclick="HEPDATA.hepdata_record.revise_submission('/dashboard')">
+                                        Revise Submission
+                                    </button>
+                                    <button type="button" class="btn" data-dismiss="modal"
+                                            aria-label="Close"><span
+                                            aria-hidden="true">Cancel</span></button>
+                                </div>
+                            </div>
+                            <div align="center" class="hidden" id="revise-success"
+                                 style="padding: 40px">
+                                <div style="font-weight: bolder">
+                                    <span class="fa fa-check"
+                                          style="font-size: 3em; color: #4FBA6F;"></span><br/>
+
+                                    <p>
+                                        Version <span id="new-version-number"></span> created.
+                                        <br/>
+                                        This window will close in <span id="revise-timer"
+                                                                        style="color: #4FBA6F;">5</span>
+                                        seconds and load the Dashboard page.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endif %}

@@ -27,12 +27,12 @@ from flask import current_app
 from flask_login import current_user
 
 from hepdata.modules.email.utils import create_send_email_task
-from hepdata.modules.permissions.models import SubmissionParticipant
 from hepdata.modules.records.subscribers.api import get_users_subscribed_to_record
 from hepdata.modules.records.utils.common import get_record_by_id
 from flask import render_template
 
-from hepdata.modules.submission.api import get_latest_hepsubmission, get_submission_participants_for_record
+from hepdata.modules.submission.api import get_latest_hepsubmission, \
+    get_primary_submission_participants_for_record, get_submission_participants_for_record
 from hepdata.modules.submission.models import DataSubmission
 from hepdata.utils.users import get_user_from_id
 from invenio_accounts.models import User
@@ -51,7 +51,7 @@ def send_new_review_message_email(review, message, user):
     :param user:
     :return:
     """
-    submission_participants = get_submission_participants_for_record(review.publication_recid)
+    submission_participants = get_primary_submission_participants_for_record(review.publication_recid)
 
     table_information = DataSubmission.query.filter_by(id=review.data_recid).one()
 
@@ -96,10 +96,10 @@ def send_new_upload_email(recid, user, message=None):
     :return:
     """
 
-    submission_participants = SubmissionParticipant.query.filter_by(
-        publication_recid=recid, status="primary", role="reviewer")
+    submission_participants = get_submission_participants_for_record(
+        recid, status="primary", role="reviewer")
 
-    if submission_participants.count() == 0:
+    if len(submission_participants) == 0:
         raise NoReviewersException()
 
     site_url = current_app.config.get('SITE_URL', 'https://www.hepdata.net')
@@ -142,7 +142,7 @@ def notify_participants(hepsubmission, record):
     coordinator = User.query.get(hepsubmission.coordinator)
     if coordinator.id > 1:
         destinations.append(coordinator.email)
-    submission_participants = get_submission_participants_for_record(hepsubmission.publication_recid)
+    submission_participants = get_primary_submission_participants_for_record(hepsubmission.publication_recid)
     for participant in submission_participants:
         destinations.append(participant.email)
     if not destinations:
@@ -185,21 +185,32 @@ def notify_subscribers(hepsubmission, record):
 
 
 def send_cookie_email(submission_participant,
-                      record_information, message=None):
+                      record_information, message=None, version=1):
+
+    hepsubmission = get_latest_hepsubmission(
+        publication_recid=record_information['recid']
+    )
+    coordinator = User.query.get(hepsubmission.coordinator)
+
     message_body = render_template(
         'hepdata_theme/email/invite.html',
         name=submission_participant.full_name,
         role=submission_participant.role,
         title=record_information['title'],
         site_url=current_app.config.get('SITE_URL', 'https://www.hepdata.net'),
+        user_account=submission_participant.user_account,
         invite_token=submission_participant.invitation_cookie,
+        status=submission_participant.status,
         recid=submission_participant.publication_recid,
+        version=version,
         email=submission_participant.email,
+        coordinator_email=coordinator.email,
         message=message)
 
     create_send_email_task(submission_participant.email,
-                           "[HEPData] Invitation to be a {0} of record {1} in HEPData".format(
-                               submission_participant.role,
+                           "[HEPData] Invitation to be {0} {1} of record {2} in HEPData".format(
+                               "an" if submission_participant.role == "uploader" else "a",
+                               submission_participant.role.capitalize(),
                                submission_participant.publication_recid), message_body)
 
 
@@ -207,7 +218,7 @@ def send_question_email(question):
     reply_to = current_user.email
 
     submission = get_latest_hepsubmission(publication_recid=question.publication_recid)
-    submission_participants = get_submission_participants_for_record(question.publication_recid)
+    submission_participants = get_primary_submission_participants_for_record(question.publication_recid)
 
     if submission:
         destinations = [current_app.config['ADMIN_EMAIL']]
@@ -270,7 +281,7 @@ def notify_publication_update(hepsubmission, record):
     coordinator = User.query.get(hepsubmission.coordinator)
     if coordinator.id > 1:
         destinations.append(coordinator.email)
-    submission_participants = get_submission_participants_for_record(hepsubmission.publication_recid)
+    submission_participants = get_primary_submission_participants_for_record(hepsubmission.publication_recid)
     for participant in submission_participants:
         destinations.append(participant.email)
     if not destinations:
