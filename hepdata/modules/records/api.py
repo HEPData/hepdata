@@ -395,8 +395,8 @@ def create_new_version(recid, user, notify_uploader=True, uploader_message=None)
             uploaders = SubmissionParticipant.query.filter_by(
                 role='uploader', publication_recid=recid, status='primary'
                 )
+            record_information = get_record_by_id(recid)
             for uploader in uploaders:
-                record_information = get_record_by_id(recid)
                 send_cookie_email(uploader,
                                   record_information,
                                   message=uploader_message,
