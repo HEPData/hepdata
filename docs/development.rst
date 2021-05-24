@@ -158,9 +158,11 @@ you should use the `QA version of the portal <https://application-portal-qa.web.
 in setting that up - but see below for partial instructions.)
 
 1. (QA only) Set up the CERN proxy following their `instructions <https://security.web.cern.ch/recommendations/en/ssh_browsing.shtml>`_.
+
 2. Sign in to the `CERN Application Portal <https://application-portal.web.cern.ch>`_ (or the `CERN QA Application Portal <https://application-portal-qa.web.cern.ch>`_).
+
 3. Click "Add an Application" and fill in the form:
-    - Application Identifier: hepdata-local
+    - Application Identifier: hepdata-local (example, must be globally unique)
     - Name: HEPData local installation
     - Home Page: https://hepdata.local (this doesn't affect the workings of the SSO but localhost is not allowed)
     - Description: Local installation of HEPData
@@ -170,7 +172,8 @@ in setting that up - but see below for partial instructions.)
     - Select "OpenID Connect (OIDC)"
     - Redirect URI: https://localhost:5000/oauth/authorized/cern_openid/
     - Leave other boxes unchecked, submit and confirm.
-5. You will be shown the Client ID and Client Secret. Copy these into `config_local.py`:
+
+5. You will be shown the Client ID and Client Secret. Copy these into ``config_local.py``:
 
    .. code-block:: python
 
@@ -180,15 +183,16 @@ in setting that up - but see below for partial instructions.)
        )
 
 6. Go to "Roles". Add a new Role:
-   - Role Identifier: cern_user
-   - Role Name: CERN user
-   - Description: CERN user
-   - Check "This role is required to access my application"
-   - Check "This role applies to all authenticated users"
-   - Leave the minimum level of assurance as it is.
+    - Role Identifier: cern_user
+    - Role Name: CERN user
+    - Description: CERN user
+    - Check "This role is required to access my application"
+    - Check "This role applies to all authenticated users"
+    - Leave the minimum level of assurance as it is.
 
 7. If there is a default role, edit it and uncheck both "This role is required to access my application" and "This role applies to all authenticated users".
-8. (QA only) Add the following settings to `config_local.py`:
+
+8. (QA only) Add the following settings to ``config_local.py``:
 
     .. code-block:: python
 
@@ -207,4 +211,5 @@ in setting that up - but see below for partial instructions.)
       (hepdata)$ hepdata run --debugger --reload --cert=adhoc
 
 10. Go to https://localhost:5000. You will see a warning that the connection is not private but choose "Advanced" and "Proceed to localhost (unsafe)" (or the equivalent in your browser).
+
 11. Click "Sign in" and "Log in with CERN" and hopefully it will work as expected.
