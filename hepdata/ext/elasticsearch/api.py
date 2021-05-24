@@ -27,7 +27,8 @@ from elasticsearch.exceptions import TransportError
 from elasticsearch_dsl import Search
 from elasticsearch_dsl.query import QueryString, Q
 from invenio_pidstore.models import RecordIdentifier
-from sqlalchemy import func
+from sqlalchemy import func, and_
+
 
 from hepdata.ext.elasticsearch.document_enhancers import enhance_data_document, enhance_publication_document
 from .config.es_config import sort_fields_mapping, add_default_aggregations
@@ -39,6 +40,7 @@ from invenio_db import db
 import logging
 
 from invenio_search import current_search_client as es, RecordsSearch
+from hepdata.modules.submission.api import get_latest_hepsubmission
 from hepdata.modules.submission.models import HEPSubmission, DataSubmission
 from hepdata.modules.search.config import ELASTICSEARCH_MAX_RESULT_WINDOW, LIMIT_MAX_RESULTS_PER_PAGE
 
@@ -192,15 +194,15 @@ def reindex_all(index=None, author_index=None, recreate=False, batch=5, start=-1
 
     if max_id and min_id:
         if start != -1:
-            start_result = db.session.query(HEPSubmission.id).filter(HEPSubmission.publication_recid == start).first()
-            if start_result:
-                min_id = max(start_result[0], min_id)
+            start_submission = get_latest_hepsubmission(publication_recid=start)
+            if start_submission:
+                min_id = max(start_submission.id, min_id)
         if end != -1:
-            end_result = db.session.query(HEPSubmission.id).filter(HEPSubmission.publication_recid == end).first()
-            if end_result:
-                max_id = min(end_result[0], max_id)
+            end_submission = get_latest_hepsubmission(publication_recid=end)
+            if end_submission:
+                max_id = min(end_submission.id, max_id)
 
-        # Publiction recids passed in may not match order of id field
+        # Publication recids passed in may not match order of id field
         # Swap max and min if they aren't as expected
         if max_id < min_id:
             actual_max = min_id
@@ -225,11 +227,15 @@ def reindex_all(index=None, author_index=None, recreate=False, batch=5, start=-1
 def reindex_batch(hepsubmission_record_ids, index):
     log.info('Indexing records for hepsubmission IDs {0} to {1}'.format(hepsubmission_record_ids[0], hepsubmission_record_ids[-1]))
     ids = db.session.query(HEPSubmission.publication_recid, DataSubmission.associated_recid) \
-        .join(HEPSubmission, HEPSubmission.publication_recid == DataSubmission.publication_recid) \
-        .filter(HEPSubmission.id.in_(hepsubmission_record_ids)) \
+        .join(DataSubmission,
+              and_(HEPSubmission.publication_recid == DataSubmission.publication_recid,
+                   HEPSubmission.version == DataSubmission.version),
+              isouter=True) \
+        .filter(HEPSubmission.id.in_(hepsubmission_record_ids), HEPSubmission.overall_status == 'finished') \
         .all()
+
     # ids is a list of (publication_recid, data_associated_recid) - need to flatten and remove duplicates
-    rec_ids = list(set([id for result in ids for id in result]))
+    rec_ids = list(set([id for result in ids for id in result if id is not None]))
 
     indexed_publications = []
     indexed_result = index_record_ids(rec_ids, index=index)

@@ -30,6 +30,7 @@ from hepdata.ext.elasticsearch.process_results import merge_results, match_table
 from hepdata.ext.elasticsearch.query_builder import QueryBuilder, HEPDataQueryParser
 from hepdata.ext.elasticsearch.utils import flip_sort_order, parse_and_format_date, prepare_author_for_indexing, \
     calculate_sort_order, push_keywords
+from hepdata.modules.records.importer.api import import_records
 from invenio_search import current_search_client as es
 
 from hepdata.modules.search.config import LIMIT_MAX_RESULTS_PER_PAGE, \
@@ -408,15 +409,25 @@ def test_reindex_all(app, load_default_data, identifiers, mocker):
     results = es_api.search('', index=index)
     assert(results['total'] == len(identifiers))
 
+    # Test indexing record with no data tables
+    results = es_api.search('electroweak', index=index)
+    assert(results['total'] == 0)
+    # Import inspire id 1478981 which has no data tables
+    import_records(['1478981'], synchronous=True)
+    es_api.reindex_all(index=index, synchronous=True)
+    results = es_api.search('electroweak', index=index)
+    assert(results['total'] == 1)
+    assert(results['results'][0]['data'] == [])
+
     # Test other params using mocking
     m = mocker.patch('hepdata.ext.elasticsearch.api.reindex_batch')
 
-    # Start and end at publication_recid 1, batch size 1:
+    # Start and end at publication_recid 1, batch size 2:
     # should call reindex_batch twice with submission ids [1] then [2]
-    es_api.reindex_all(index=index, start=1, batch=1, synchronous=True)
+    es_api.reindex_all(index=index, start=1, batch=2, synchronous=True)
     m.assert_has_calls([
-        call([1], index),
-        call([2], index)
+        call([1, 2], index),
+        call([3], index)
     ])
     m.reset_mock()
 
@@ -427,9 +438,9 @@ def test_reindex_all(app, load_default_data, identifiers, mocker):
     m.reset_mock()
 
     # Start at publication_recid 16, end at 100:
-    # should call with submission ids [2]
+    # should call with submission ids [2, 3]
     es_api.reindex_all(index=index, start=16, end=100, synchronous=True)
-    m.assert_called_once_with([2], index)
+    m.assert_called_once_with([2, 3], index)
     m.reset_mock()
 
     # Start at publication_recid 16, end at 1, batch size 10:
