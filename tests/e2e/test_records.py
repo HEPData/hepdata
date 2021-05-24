@@ -51,33 +51,33 @@ def test_record_update(live_server, logged_in_browser):
     assert len(submissions) == 1
     assert submissions[0].version == 1
 
-
     # Go to existing (default) record and create a new version
-    browser.get(flask.url_for(
+    record_url = flask.url_for(
         'hepdata_records.get_metadata_by_alternative_id',
-        recid=f'ins{inspire_id}', _external=True))
+        recid=f'ins{inspire_id}', _external=True)
+    browser.get(record_url)
     browser.find_element_by_css_selector(
-        "button.btn-danger[data-target='#uploadDialog']").click()
-    upload_dialog = browser.find_element_by_id('uploadDialog')
+        "button.btn-danger[data-target='#reviseSubmission']").click()
+    revise_submission_dialog = browser.find_element_by_id('reviseSubmission')
     WebDriverWait(browser, 10).until(
-        EC.visibility_of(upload_dialog)
+        EC.visibility_of(revise_submission_dialog)
     )
+
     # Check for warning about a new version
-    assert "Uploading a new file will create a new version" in \
-        upload_dialog.find_element_by_class_name('alert-warning').text
+    assert "This submission is already finished." in \
+        revise_submission_dialog.find_element_by_id('revise-confirm').text
 
-    # Upload a new file
-    upload = upload_dialog.find_element_by_id('file_upload_field')
-    ActionChains(browser).move_to_element(upload).perform()
-    upload.send_keys(os.path.abspath("tests/test_data/TestHEPSubmission.zip"))
-    upload_dialog.find_element_by_css_selector('input[type=submit]').click()
-
-    # Wait for page reload
-    WebDriverWait(browser, 15).until(
-        EC.staleness_of(upload_dialog)
+    # Click "Revise Submission" button and wait for response
+    revise_submission_dialog.find_element_by_css_selector("#revise-confirm button[type='submit']").click()
+    revise_success = browser.find_element_by_id('revise-success')
+    WebDriverWait(browser, 10).until(
+        EC.visibility_of(revise_success)
     )
-    alert = browser.find_element_by_class_name('alert-info')
-    assert alert.text == "File saved. You will receive an email when the file has been processed."
+    assert revise_success.find_element_by_tag_name('p').text \
+        .startswith("Version 2 created.\nThis window will close in ")
+
+    # Refresh record page (to avoid waiting)
+    browser.get(record_url)
 
     # Should now be 2 versions of our submission
     submissions = HEPSubmission.query \
@@ -88,6 +88,19 @@ def test_record_update(live_server, logged_in_browser):
     assert submissions[0].overall_status == 'finished'
     assert submissions[1].version == 2
     assert submissions[1].overall_status == 'todo'
+
+    # Upload a new file
+    upload = browser.find_element_by_id('root_file_upload')
+    ActionChains(browser).move_to_element(upload).perform()
+    upload.send_keys(os.path.abspath("tests/test_data/TestHEPSubmission.zip"))
+    browser.find_element_by_css_selector('form[name=upload-form] input[type=submit]').click()
+
+    # Wait for page reload
+    WebDriverWait(browser, 15).until(
+        EC.staleness_of(upload)
+    )
+    alert = browser.find_element_by_class_name('alert-info')
+    assert alert.text == "File saved. You will receive an email when the file has been processed."
 
     # Run common checks
     _check_record_common(browser)

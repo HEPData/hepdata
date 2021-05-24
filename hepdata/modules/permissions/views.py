@@ -76,7 +76,8 @@ def promote_or_demote_participant(recid, action, demote_or_promote,
 
         # now send the email telling the user of their new status!
         if status == 'primary':
-            send_cookie_email(participant, record)
+            hepsubmission = get_latest_hepsubmission(publication_recid=recid)
+            send_cookie_email(participant, record, version=hepsubmission.version)
 
         return json.dumps({"success": True, "recid": recid})
     except Exception as e:
@@ -102,7 +103,7 @@ def add_participant(recid):
         new_record = SubmissionParticipant(publication_recid=recid,
                                            full_name=full_name,
                                            email=email, role=participant_type)
-        submission_record.participants.append(new_record)
+        db.session.add(new_record)
         db.session.commit()
         return json.dumps(
             {"success": True, "recid": recid,

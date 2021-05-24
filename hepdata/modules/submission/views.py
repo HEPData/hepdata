@@ -103,13 +103,13 @@ def process_submission_payload(*args, **kwargs):
         reviewer_details.get('name'),
         reviewer_details.get('email'), 'reviewer', 'primary',
         record_information['recid'])
-    hepsubmission.participants.append(reviewer)
+    db.session.add(reviewer)
 
     uploader_details = kwargs.get('uploader')
     uploader = create_participant_record(uploader_details.get('name'), uploader_details.get('email'),
                                          'uploader', 'primary',
                                          record_information['recid'])
-    hepsubmission.participants.append(uploader)
+    db.session.add(uploader)
 
     db.session.commit()
 

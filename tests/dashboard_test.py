@@ -189,7 +189,6 @@ def test_submissions_participant(app, load_submission):
             status='primary',
             user_account=user.id)
         db.session.add(participant)
-        hepsubmission.participants.append(participant)
         db.session.add(hepsubmission)
         db.session.commit()
 
