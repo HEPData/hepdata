@@ -30,7 +30,7 @@ from celery.schedules import crontab
 from datetime import timedelta
 
 from invenio_oauthclient.contrib.orcid import REMOTE_APP as ORCID_REMOTE_APP
-from invenio_oauthclient.contrib import cern
+from invenio_oauthclient.contrib import cern_openid
 
 
 def _(x):
@@ -265,22 +265,21 @@ ORCID_APP_CREDENTIALS = dict(
     consumer_secret="CHANGE_ME",
 )
 
-CERN_APP_CREDENTIALS = dict(
+CERN_APP_OPENID_CREDENTIALS = dict(
     consumer_key="CHANGE_ME",
     consumer_secret="CHANGE_ME",
 )
 
-CERN_REMOTE_APP = copy.deepcopy(cern.REMOTE_APP)
-CERN_REMOTE_APP["params"].update({
-    'request_token_params': {
-        "scope": "Email Groups",
-    }
-})
+CERN_REMOTE_APP = copy.deepcopy(cern_openid.REMOTE_REST_APP)
 
 #: Definition of OAuth client applications.
+OAUTHCLIENT_REST_REMOTE_APPS = dict(
+   cern_openid=CERN_REMOTE_APP,
+)
+
 OAUTHCLIENT_REMOTE_APPS = dict(
     orcid=ORCID_REMOTE_APP,
-    cern=CERN_REMOTE_APP
+    cern_openid=CERN_REMOTE_APP
 )
 
 ADMIN_APPNAME = "HEPData"
