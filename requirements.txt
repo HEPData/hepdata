@@ -46,4 +46,3 @@ SQLAlchemy-Utils==0.35.0
 timestring==1.6.4
 twitter==1.15.0
 unicodeit==0.7.0
-Werkzeug==1.0.1
