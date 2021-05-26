@@ -38,7 +38,7 @@
                 {%- block form_outer %}
                     <div class="social-signup">
                         <a href="{{url_for('invenio_oauthclient.login', remote_app='orcid')}}" class="btn btn-default btn-lg btn-block"><img src="{{ url_for('static', filename='img/orcid.svg')}}" height="18px"> {{_('Log in with ORCID')}}</a>
-                        <a href="{{url_for('invenio_oauthclient.login', remote_app='cern')}}" class="btn btn-default btn-lg btn-block"><img src="{{ url_for('static', filename='img/cern.svg')}}" height="26px"> {{_('Log in with CERN')}}</a>
+                        <a href="{{url_for('invenio_oauthclient.login', remote_app='cern_openid')}}" class="btn btn-default btn-lg btn-block"><img src="{{ url_for('static', filename='img/cern.svg')}}" height="26px"> {{_('Log in with CERN')}}</a>
                         <h3 align="center">&mdash; OR &mdash;</h3>
                     </div>
                     {%- with form = login_user_form %}
