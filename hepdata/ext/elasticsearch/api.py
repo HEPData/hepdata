@@ -28,6 +28,7 @@ from elasticsearch_dsl import Search
 from elasticsearch_dsl.query import QueryString, Q
 from invenio_pidstore.models import RecordIdentifier
 from sqlalchemy import func, and_
+from sqlalchemy.orm import aliased
 
 
 from hepdata.ext.elasticsearch.document_enhancers import enhance_data_document, enhance_publication_document
@@ -185,21 +186,33 @@ def reindex_all(index=None, author_index=None, recreate=False, batch=5, start=-1
         recreate_index(index=index)
         recreate_index(index=author_index)
 
-    qry = db.session.query(func.max(HEPSubmission.id).label("max_id"),
-                           func.min(HEPSubmission.id).label("min_id"),
-                           )
-    res = qry.one()
-    min_id = res.min_id
-    max_id = res.max_id
+    # Get all finished HEPSubmission ids with max version numbers
+    # by doing a left outer join of hepsubmission with itself
+    h1 = aliased(HEPSubmission)
+    h2 = aliased(HEPSubmission)
 
-    if max_id and min_id:
+    qry = db.session.query(h1.id) \
+            .join(h2,
+                  and_(h1.publication_recid == h2.publication_recid,
+                       h1.version < h2.version),
+                  isouter=True) \
+            .filter(h2.publication_recid == None, h1.overall_status == 'finished') \
+            .order_by(h1.id)
+
+    res = qry.all()
+    ids = [x[0] for x in res]
+
+    if ids:
+        min_id = ids[0]
+        max_id = ids[-1]
+
         if start != -1:
             start_submission = get_latest_hepsubmission(publication_recid=start)
-            if start_submission:
+            if start_submission and start_submission.id in ids:
                 min_id = max(start_submission.id, min_id)
         if end != -1:
             end_submission = get_latest_hepsubmission(publication_recid=end)
-            if end_submission:
+            if end_submission and end_submission.id in ids:
                 max_id = min(end_submission.id, max_id)
 
         # Publication recids passed in may not match order of id field
@@ -212,14 +225,15 @@ def reindex_all(index=None, author_index=None, recreate=False, batch=5, start=-1
         print('min hepsubmission id = {}'.format(min_id))
         print('max hepsubmission id = {}'.format(max_id))
 
-        count = min_id
-        while count <= max_id:
-            ids = list(range(count, min(count + batch, max_id + 1)))
+        count = ids.index(min_id)
+        max_index = ids.index(max_id)
+        while count <= max_index:
+            batch_ids = ids[count:min(count + batch, max_index + 1)]
             if synchronous:
-                reindex_batch(ids, index)
+                reindex_batch(batch_ids, index)
             else:
-                print('Sending batch of IDs {0} to {1} to celery'.format(ids[0], ids[-1]))
-                reindex_batch.delay(ids, index)
+                print('Sending batch of IDs {0} to {1} to celery'.format(batch_ids[0], batch_ids[-1]))
+                reindex_batch.delay(batch_ids, index)
             count += batch
 
 

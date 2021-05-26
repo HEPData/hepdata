@@ -19,6 +19,7 @@ from elasticsearch.exceptions import NotFoundError
 from elasticsearch_dsl import Search
 import datetime
 import pytest
+from invenio_db import db
 from unittest.mock import call
 
 from hepdata.ext.elasticsearch.config.es_config import \
@@ -31,6 +32,7 @@ from hepdata.ext.elasticsearch.query_builder import QueryBuilder, HEPDataQueryPa
 from hepdata.ext.elasticsearch.utils import flip_sort_order, parse_and_format_date, prepare_author_for_indexing, \
     calculate_sort_order, push_keywords
 from hepdata.modules.records.importer.api import import_records
+from hepdata.modules.submission.models import HEPSubmission
 from invenio_search import current_search_client as es
 
 from hepdata.modules.search.config import LIMIT_MAX_RESULTS_PER_PAGE, \
@@ -447,6 +449,17 @@ def test_reindex_all(app, load_default_data, identifiers, mocker):
     # should fix max/min order and call with submission ids [1, 2]
     es_api.reindex_all(index=index, start=16, end=1, batch=10, synchronous=True)
     m.assert_called_once_with([1, 2], index)
+    m.reset_mock()
+
+    # Create a new version for ins1478981
+    new_submission = HEPSubmission(publication_recid=57, inspire_id='1478981', version=2, overall_status='finished')
+    db.session.add(new_submission)
+    db.session.commit()
+    # New id should be 4
+    assert(new_submission.id == 4)
+    # Reindex should now index id 4 but not 3
+    es_api.reindex_all(index=index, synchronous=True)
+    m.assert_called_once_with([1, 2, 4], index)
 
 
 def test_reindex_batch(app, load_default_data, mocker):
