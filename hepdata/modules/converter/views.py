@@ -289,26 +289,10 @@ def download_submission(submission, file_format, offline=False, force=False, riv
         converter_options['hepdata_doi'] = '{0}.v{1}'.format(submission.doi, version)
 
     if file_format == 'yoda':
+        if not rivet_analysis_name:
+            rivet_analysis_name = guess_rivet_analysis_name(submission)
         if rivet_analysis_name:
             converter_options['rivet_analysis_name'] = rivet_analysis_name
-        elif submission.inspire_id:
-            record = get_record_contents(submission.publication_recid,
-                                         submission.overall_status)
-            if record:
-                # Check if this record has a Rivet analysis, then extract the Rivet analysis name from the URL.
-                if 'analyses' in record:
-                    for analysis in record['analyses']:
-                        if analysis['type'] == 'rivet':
-                            converter_options['rivet_analysis_name'] = analysis['analysis'].split('/')[-1]
-                # Otherwise guess the Rivet analysis name using the collaboration name,
-                # the creation year of the INSPIRE record, and the INSPIRE ID.
-                if 'rivet_analysis_name' not in converter_options:
-                    try:
-                        year = parse(record['creation_date']).year
-                    except:
-                        year = record['year']  # publication year
-                    converter_options['rivet_analysis_name'] = '{0}_{1}_I{2}'.format(
-                        ''.join(record['collaborations']).upper(), year, submission.inspire_id)
 
     try:
         converted_file = convert_zip_archive(data_filepath, output_path, converter_options)
@@ -524,26 +508,10 @@ def download_datatable(datasubmission, file_format, *args, **kwargs):
 
     if file_format == 'yoda':
         rivet_analysis_name = kwargs.pop('rivet_analysis_name', '')
+        if not rivet_analysis_name:
+            rivet_analysis_name = guess_rivet_analysis_name(hepsubmission)
         if rivet_analysis_name:
             options['rivet_analysis_name'] = rivet_analysis_name
-        elif datasubmission.publication_inspire_id:
-            record = get_record_contents(datasubmission.publication_recid,
-                                         hepsubmission.overall_status)
-            if record:
-                # Check if this record has a Rivet analysis, then extract the Rivet analysis name from the URL.
-                if 'analyses' in record:
-                    for analysis in record['analyses']:
-                        if analysis['type'] == 'rivet':
-                            options['rivet_analysis_name'] = analysis['analysis'].split('/')[-1]
-                # Otherwise guess the Rivet analysis name using the collaboration name,
-                # the creation year of the INSPIRE record, and the INSPIRE ID.
-                if 'rivet_analysis_name' not in options:
-                    try:
-                        year = parse(record['creation_date']).year
-                    except:
-                        year = record['year']  # publication year
-                    options['rivet_analysis_name'] = '{0}_{1}_I{2}'.format(
-                        ''.join(record['collaborations']).upper(), year, datasubmission.publication_inspire_id)
 
     try:
         successful = convert(
@@ -664,3 +632,34 @@ def get_version_count(recid):
         version_count = version_count_all if user_allowed_to_perform_action(recid) else version_count_finished
 
     return version_count, version_count_all
+
+
+def guess_rivet_analysis_name(submission):
+    """
+    Try to guess the Rivet analysis name.
+
+    :param submission: HEPSubmission object
+    :return: guessed Rivet analysis name
+    """
+    rivet_analysis_name = ''
+
+    # Check if this submission has a Rivet analysis as additional resources,
+    # then extract the Rivet analysis name from the URL.
+    for resource in submission.resources:
+        if resource.file_type == 'rivet':
+            rivet_analysis_name = resource.file_location.split('/')[-1]
+
+    if not rivet_analysis_name:
+        # Otherwise guess the Rivet analysis name using the collaboration name,
+        # the creation year of the INSPIRE record, and the INSPIRE ID.
+        record = get_record_contents(submission.publication_recid,
+                                     submission.overall_status)
+        if record and 'inspire_id' in record:
+            try:
+                year = parse(record['creation_date']).year
+            except:
+                year = record['year']  # publication year
+            rivet_analysis_name = '{0}_{1}_I{2}'.format(''.join(
+                record['collaborations']).upper(), year, record['inspire_id'])
+
+    return rivet_analysis_name
