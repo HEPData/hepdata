@@ -32,7 +32,7 @@ from hepdata.ext.elasticsearch.query_builder import QueryBuilder, HEPDataQueryPa
 from hepdata.ext.elasticsearch.utils import flip_sort_order, parse_and_format_date, prepare_author_for_indexing, \
     calculate_sort_order, push_keywords
 from hepdata.modules.records.importer.api import import_records
-from hepdata.modules.submission.models import HEPSubmission
+from hepdata.modules.submission.models import HEPSubmission, DataSubmission
 from invenio_search import current_search_client as es
 
 from hepdata.modules.search.config import LIMIT_MAX_RESULTS_PER_PAGE, \
@@ -482,6 +482,99 @@ def test_reindex_batch(app, load_default_data, mocker):
     es_api.reindex_batch([2], index)
     mock_index_record_ids.assert_called_once_with(list(range(16, 57)), index=index)
     mock_push_data_keywords.assert_called_once_with(pub_ids=[16])
+
+
+def test_cleanup_index_all(app, load_default_data, identifiers, mocker):
+    index = app.config.get('ELASTICSEARCH_INDEX')
+
+    m = mocker.patch('hepdata.ext.elasticsearch.api.cleanup_index_batch')
+    es_api.cleanup_index_all(index=index, synchronous=True)
+    m.assert_called_once_with([], index)
+    m.reset_mock()
+
+    # Create a new version for ins1283842
+    new_submission = HEPSubmission(publication_recid=1, inspire_id=identifiers[0]["inspire_id"], version=2, overall_status='finished')
+    db.session.add(new_submission)
+    db.session.commit()
+    # New id should be 3
+    assert(new_submission.id == 3)
+
+    # Cleanup should now clean up id 1
+    es_api.cleanup_index_all(index=index, synchronous=True)
+    m.assert_called_once_with([1], index)
+    m.reset_mock()
+
+    # Create more new versions
+    new_submission1 = HEPSubmission(publication_recid=1, inspire_id=identifiers[0]["inspire_id"], version=3, overall_status='finished')
+    db.session.add(new_submission1)
+    new_submission2 = HEPSubmission(publication_recid=1, inspire_id=identifiers[0]["inspire_id"], version=4, overall_status='todo')
+    db.session.add(new_submission2)
+    new_submission3 = HEPSubmission(publication_recid=16, inspire_id=identifiers[1]["inspire_id"], version=2, overall_status='finished')
+    db.session.add(new_submission3)
+    db.session.commit()
+    assert(new_submission1.id == 4)
+    assert(new_submission2.id == 5)
+    assert(new_submission3.id == 6)
+
+    # Cleanup should now clean up ids 1, 2 and 3 (ie versions lower than the highest finished version)
+    es_api.cleanup_index_all(index=index, synchronous=True)
+    m.assert_called_once_with([1, 2, 3], index)
+    m.reset_mock()
+
+    # Check batch size works
+    es_api.cleanup_index_all(index=index, batch=2, synchronous=True)
+    m.assert_has_calls([
+        call([1, 2], index),
+        call([3], index)
+    ])
+
+
+def test_cleanup_index_batch(app, load_default_data, identifiers, mocker):
+    index = app.config.get('ELASTICSEARCH_INDEX')
+
+    def _create_new_versions(version, expected_range):
+        # Create new HEPSubmission and DataSubmissions for ins1283842
+        new_hep_submission = HEPSubmission(
+            publication_recid=1, inspire_id=identifiers[0]["inspire_id"],
+            version=version, overall_status='finished'
+        )
+        db.session.add(new_hep_submission)
+        db.session.commit()
+        new_data_submissions = []
+        for i in range(5):
+            new_data_submission = DataSubmission(
+                publication_recid=1,
+                associated_recid=1,
+                version=version
+            )
+            db.session.add(new_data_submission)
+            new_data_submissions.append(new_data_submission)
+        db.session.commit()
+        assert [x.id for x in new_data_submissions] == expected_range
+        # return new_hep_submission, new_data_submissions
+
+    _create_new_versions(2, list(range(55, 60)))
+
+    # Mock methods called so we can check they're called with correct parameters
+    from invenio_search import RecordsSearch
+    mock_records_search = mocker.patch.object(RecordsSearch, 'filter')
+
+    # Reindex submission id 1 (pub_recid=1)
+    # New version means the original data submissions (2-16) are
+    # superceded so can be cleaned up
+    es_api.cleanup_index_batch([1], index)
+    assert mock_records_search.has_calls([
+        call('terms', _id=list(range(2,16)))
+    ])
+    mock_records_search.reset_mock()
+
+    # Create more new versions
+    _create_new_versions(3, list(range(60, 65)))
+    es_api.cleanup_index_batch([1], index)
+    assert mock_records_search.has_calls([
+        call('terms', _id=list(range(2,16)) + list(range(55, 60)))
+    ])
+    mock_records_search.reset_mock()
 
 
 def test_get_record(app, load_default_data, identifiers):
