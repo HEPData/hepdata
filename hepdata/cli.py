@@ -162,8 +162,9 @@ def reindex(recreate, start, end, batch):
 @utils.command()
 @with_appcontext
 @click.option('--batch', '-b', type=int, default=5,
-              help='Number of submissions to cleanup at a time.')
+              help='Number of hepsubmission entries to cleanup at a time.')
 def cleanup_index(batch):
+    """Clean up old datasubmission entries from elasticsearch"""
     cleanup_index_all(batch=batch)
 
 
