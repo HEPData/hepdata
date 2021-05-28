@@ -75,8 +75,11 @@ class HEPSubmission(db.Model):
     """
     __tablename__ = "hepsubmission"
 
+    # id is a unique id for each version of a submission
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
 
+    # publication_recid remains the same for each version of a submission
+    # and is used as the document id in elasticsearch and as the record id
     publication_recid = db.Column(db.Integer)
     inspire_id = db.Column(db.String(128))
 
@@ -130,6 +133,7 @@ class DataSubmission(db.Model):
     """
     __tablename__ = "datasubmission"
 
+    # id is a unique id for each datasubmission and version
     id = db.Column(db.Integer, primary_key=True, nullable=False,
                    autoincrement=True)
 
