@@ -131,8 +131,15 @@ def test_identifiers(app):
 
 @pytest.fixture()
 def search_tests(app):
-    return [{"search_term": "collisions", "exp_collab_facet": "BELLE", "exp_hepdata_id": "ins1245023"},
-            {"search_term": "leptons", "exp_collab_facet": "D0", "exp_hepdata_id": "ins1283842"}]
+    return [{"search_term": "collisions", "exp_collab_facet": "BELLE",
+             "exp_hepdata_id": "ins1245023", "exp_table_count": 0},
+            {"search_term": "leptons", "exp_collab_facet": "D0",
+             "exp_hepdata_id": "ins1283842", "exp_table_count": 0},
+            {"search_term": "reactions:PBAR P --> LEPTON JETS X",
+             "exp_collab_facet": "D0", "exp_hepdata_id": "ins1283842",
+             "exp_table_count": 3},
+            {"search_term": "observables:SIG", "exp_collab_facet": "BELLE",
+             "exp_hepdata_id": "ins1245023", "exp_table_count": 1}]
 
 
 def pytest_generate_tests(metafunc):

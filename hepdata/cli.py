@@ -35,7 +35,7 @@ from hepdata.modules.submission.models import HEPSubmission
 from hepdata.modules.submission.api import get_latest_hepsubmission
 from .factory import create_app
 from hepdata.config import CFG_PUB_TYPE
-from hepdata.ext.elasticsearch.api import reindex_all, get_records_matching_field
+from hepdata.ext.elasticsearch.api import reindex_all, get_records_matching_field, cleanup_index_all
 from hepdata.modules.records.importer import api as importer_api
 from hepdata.modules.records.utils import data_files
 from hepdata.modules.records.utils.analyses import update_analyses
@@ -153,10 +153,19 @@ def utils():
               help='Starting recid for the index operation.')
 @click.option('--end', '-e', type=int, default=-1,
               help='End recid for the index operation.')
-@click.option('--batch', '-b', type=int, default=50,
-              help='Number of records to index at a time.')
+@click.option('--batch', '-b', type=int, default=5,
+              help='Number of submissions to index at a time.')
 def reindex(recreate, start, end, batch):
     reindex_all(recreate=recreate, start=start, end=end, batch=batch)
+
+
+@utils.command()
+@with_appcontext
+@click.option('--batch', '-b', type=int, default=5,
+              help='Number of hepsubmission entries to cleanup at a time.')
+def cleanup_index(batch):
+    """Clean up old datasubmission entries from elasticsearch"""
+    cleanup_index_all(batch=batch)
 
 
 @utils.command()

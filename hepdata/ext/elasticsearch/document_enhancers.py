@@ -25,6 +25,7 @@
 import re
 import datetime
 import logging
+from collections import defaultdict
 from dateutil.parser import parse
 from flask import current_app
 
@@ -102,6 +103,42 @@ def add_analyses(doc):
                 doc["analyses"].append({'type': reference.file_type, 'analysis': reference.file_location})
 
 
+def add_data_keywords(doc):
+    # Aggregate
+    agg_keywords = defaultdict(list)
+    for kw in doc["keywords"]:
+        agg_keywords[kw['name']].append(kw['value'])
+
+    # Remove duplicates
+    for k, v in agg_keywords.items():
+        agg_keywords[k] = list(set(v))
+
+    agg_keywords = process_cmenergies(agg_keywords)
+    doc['data_keywords'] = dict(agg_keywords)
+
+
+def process_cmenergies(keywords):
+    cmenergies = []
+    if keywords['cmenergies']:
+        for cmenergy in keywords['cmenergies']:
+            cmenergy = cmenergy.strip(" gevGEV")
+            try:
+                cmenergy_val = float(cmenergy)
+                cmenergies.append({"gte": cmenergy_val, "lte": cmenergy_val})
+            except ValueError:
+                m = re.match(r'^(-?\d+(?:\.\d+)?)[ \-+andAND]+(-?\d+(?:\.\d+)?)$', cmenergy)
+                if m:
+                    cmenergy_range = [float(m.group(1)), float(m.group(2))]
+                    cmenergy_range.sort()
+                    cmenergies.append({"gte": cmenergy_range[0], "lte": cmenergy_range[1]})
+                else:
+                    log.warning("Invalid value for cmenergies: %s" % cmenergy)
+
+        keywords['cmenergies'] = cmenergies
+
+    return keywords
+
+
 def get_last_submission_event(recid):
     submission_participant = SubmissionParticipant.query.filter_by(
         publication_recid=recid).order_by('action_date').first()
@@ -134,6 +171,7 @@ def enhance_data_document(doc):
     add_doc_type(doc, CFG_DATA_TYPE)
     add_data_table_urls(doc)
     add_parent_publication(doc)
+    add_data_keywords(doc)
 
 
 def enhance_publication_document(doc):

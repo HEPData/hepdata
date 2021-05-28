@@ -27,7 +27,9 @@ from elasticsearch.exceptions import TransportError
 from elasticsearch_dsl import Search
 from elasticsearch_dsl.query import QueryString, Q
 from invenio_pidstore.models import RecordIdentifier
-from sqlalchemy import func
+from sqlalchemy import func, and_, distinct
+from sqlalchemy.orm import aliased
+
 
 from hepdata.ext.elasticsearch.document_enhancers import enhance_data_document, enhance_publication_document
 from .config.es_config import sort_fields_mapping, add_default_aggregations
@@ -39,6 +41,8 @@ from invenio_db import db
 import logging
 
 from invenio_search import current_search_client as es, RecordsSearch
+from hepdata.modules.submission.api import get_latest_hepsubmission
+from hepdata.modules.submission.models import HEPSubmission, DataSubmission
 from hepdata.modules.search.config import ELASTICSEARCH_MAX_RESULT_WINDOW, LIMIT_MAX_RESULTS_PER_PAGE
 
 
@@ -176,49 +180,140 @@ def search_authors(name, size=20, author_index=None):
 
 @default_index
 @author_index
-def reindex_all(index=None, author_index=None, recreate=False, batch=50, start=-1, end=-1, synchronous=False):
+def reindex_all(index=None, author_index=None, recreate=False, batch=5, start=-1, end=-1, synchronous=False):
     """ Recreate the index and add all the records from the db to ES. """
-
     if recreate:
         recreate_index(index=index)
         recreate_index(index=author_index)
 
-    qry = db.session.query(func.max(RecordIdentifier.recid).label("max_recid"),
-                           func.min(RecordIdentifier.recid).label("min_recid"),
-                           )
-    res = qry.one()
-    min_recid = res.min_recid
-    max_recid = res.max_recid
+    # Get all finished HEPSubmission ids with max version numbers
+    # by doing a left outer join of hepsubmission with itself
+    h1 = aliased(HEPSubmission)
+    h2 = aliased(HEPSubmission)
 
-    if max_recid and min_recid:
+    qry = db.session.query(h1.id) \
+            .join(h2,
+                  and_(h1.publication_recid == h2.publication_recid,
+                       h1.version < h2.version),
+                  isouter=True) \
+            .filter(h2.publication_recid == None, h1.overall_status == 'finished') \
+            .order_by(h1.id)
+
+    res = qry.all()
+    ids = [x[0] for x in res]
+
+    if ids:
+        min_id = ids[0]
+        max_id = ids[-1]
 
         if start != -1:
-            min_recid = max(start, min_recid)
+            start_submission = get_latest_hepsubmission(publication_recid=start)
+            if start_submission and start_submission.id in ids:
+                min_id = max(start_submission.id, min_id)
         if end != -1:
-            max_recid = min(end, max_recid)
-        print('min_recid = {}'.format(min_recid))
-        print('max_recid = {}'.format(max_recid))
+            end_submission = get_latest_hepsubmission(publication_recid=end)
+            if end_submission and end_submission.id in ids:
+                max_id = min(end_submission.id, max_id)
 
-        count = min_recid
-        while count <= max_recid:
-            rec_ids = list(range(count, min(count + batch, max_recid + 1)))
+        # Publication recids passed in may not match order of id field
+        # Swap max and min if they aren't as expected
+        if max_id < min_id:
+            actual_max = min_id
+            min_id = max_id
+            max_id = actual_max
+
+        print('min hepsubmission id = {}'.format(min_id))
+        print('max hepsubmission id = {}'.format(max_id))
+
+        count = ids.index(min_id)
+        max_index = ids.index(max_id)
+        while count <= max_index:
+            batch_ids = ids[count:min(count + batch, max_index + 1)]
             if synchronous:
-                reindex_batch(rec_ids, index)
+                reindex_batch(batch_ids, index)
             else:
-                print('Sending batch of IDs {0} to {1} to celery'.format(rec_ids[0], rec_ids[-1]))
-                reindex_batch.delay(rec_ids, index)
+                print('Sending batch of IDs {0} to {1} to celery'.format(batch_ids[0], batch_ids[-1]))
+                reindex_batch.delay(batch_ids, index)
             count += batch
 
 
 @shared_task
-def reindex_batch(rec_ids, index):
-    log.info('Indexing record IDs {0} to {1}'.format(rec_ids[0], rec_ids[-1]))
+def reindex_batch(hepsubmission_record_ids, index):
+    log.info('Indexing records for hepsubmission IDs {0} to {1}'.format(hepsubmission_record_ids[0], hepsubmission_record_ids[-1]))
+    ids = db.session.query(HEPSubmission.publication_recid, DataSubmission.associated_recid) \
+        .join(DataSubmission,
+              and_(HEPSubmission.publication_recid == DataSubmission.publication_recid,
+                   HEPSubmission.version == DataSubmission.version),
+              isouter=True) \
+        .filter(HEPSubmission.id.in_(hepsubmission_record_ids), HEPSubmission.overall_status == 'finished') \
+        .all()
+
+    # ids is a list of (publication_recid, data_associated_recid) - need to flatten and remove duplicates
+    rec_ids = list(set([id for result in ids for id in result if id is not None]))
+
     indexed_publications = []
     indexed_result = index_record_ids(rec_ids, index=index)
     indexed_publications += indexed_result[CFG_PUB_TYPE]
 
     log.info('Finished indexing, now pushing data keywords\n######')
     push_data_keywords(pub_ids=indexed_publications)
+
+
+@default_index
+def cleanup_index_all(index=None, batch=5, synchronous=True):
+    # Find entries in elasticsearch which are from previous versions of submissions and remove
+    # Get all finished HEPSubmission ids with version numbers less than the max
+    # finished version by doing a left outer join of hepsubmission with itself
+    h1 = aliased(HEPSubmission)
+    h2 = aliased(HEPSubmission)
+
+    qry = db.session.query(distinct(h1.id)) \
+        .join(h2,
+              and_(h1.publication_recid == h2.publication_recid,
+                   h1.version < h2.version,
+                   h2.overall_status == 'finished'),
+              isouter=True) \
+        .filter(h2.id != None) \
+        .order_by(h1.id)
+    res = qry.all()
+    ids = [x[0] for x in res]
+
+    count = 0
+    while count <= len(ids):
+        batch_ids = ids[count:min(count + batch, len(ids) + 1)]
+        if synchronous:
+            cleanup_index_batch(batch_ids, index)
+        else:
+            print('Sending batch of IDs {0} to {1} to celery'.format(batch_ids[0], batch_ids[-1]))
+            cleanup_index_batch.delay(batch_ids, index)
+        count += batch
+
+
+@shared_task
+def cleanup_index_batch(hepsubmission_record_ids, index):
+    log.info('Cleaning up index for data records for hepsubmission IDs {0} to {1}'.format(hepsubmission_record_ids[0], hepsubmission_record_ids[-1]))
+    # Find all datasubmission entries matching the given hepsubmission ids,
+    # where the version is not the highest version present (i.e. there is not
+    # a v2 record with the same associated_recid)
+    d1 = aliased(DataSubmission)
+    d2 = aliased(DataSubmission)
+    qry = db.session.query(d1.associated_recid) \
+        .join(HEPSubmission,
+              and_(HEPSubmission.publication_recid == d1.publication_recid,
+                   HEPSubmission.version == d1.version),
+              isouter=True) \
+        .join(d2,
+              and_(d1.associated_recid == d2.associated_recid,
+                   d1.version < d2.version),
+              isouter=True) \
+        .filter(HEPSubmission.id.in_(hepsubmission_record_ids), d2.id == None) \
+        .order_by(d1.id)
+    res = qry.all()
+
+    ids = [x[0] for x in res]
+    log.info(f'Deleting entries from index with ids {ids}')
+    s = RecordsSearch(index=index).filter('terms', _id=ids)
+    s.delete()
 
 
 @default_index
@@ -294,6 +389,7 @@ def delete_item_from_index(id, index, doc_type, parent=None):
 def push_data_keywords(pub_ids=None, index=None):
     """ Go through all the publications and their datatables and move data
      keywords from tables to their parent publications. """
+    log.info("Pushing data keywords for publication rec ids: %s", pub_ids)
     if not pub_ids:
         search = Search(using=es, index=index) \
             .filter("term", doc_type=CFG_PUB_TYPE) \
@@ -307,30 +403,33 @@ def push_data_keywords(pub_ids=None, index=None):
                    parent_type="parent_publication",
                    query={'match': {'recid': pub_id}}) \
             .filter("term", doc_type=CFG_DATA_TYPE) \
-            .source(includes=['keywords'])
+            .source(includes=['data_keywords'])
 
         search = search[0:LIMIT_MAX_RESULTS_PER_PAGE]
         tables = search.execute()
 
-        keywords = [d.keywords for d in tables.hits]
+        all_keywords = defaultdict(list)
 
-        # Flatten the list
-        keywords = [i for inner in keywords for i in inner]
-
-        # Aggregate
-        agg_keywords = defaultdict(list)
-        for kw in keywords:
-            agg_keywords[kw['name']].append(kw['value'])
+        # Get keywords for all data tables
+        for data_table in tables.hits:
+            for k, v in data_table.data_keywords.to_dict().items():
+                all_keywords[k].extend(v)
 
         # Remove duplicates
-        for k, v in agg_keywords.items():
-            agg_keywords[k] = list(set(v))
-
-        agg_keywords = process_cmenergies(agg_keywords)
+        for k, v in all_keywords.items():
+            # cmenergies values are dicts so we can't just use set
+            if k == 'cmenergies':
+                new_value = []
+                for val in v:
+                    if val not in new_value:
+                        new_value.append(val)
+            else:
+                new_value = list(set(v))
+            all_keywords[k] = new_value
 
         body = {
             "doc": {
-                'data_keywords': dict(agg_keywords)
+                'data_keywords': dict(all_keywords)
             }
         }
 
@@ -338,28 +437,6 @@ def push_data_keywords(pub_ids=None, index=None):
             es.update(index=index, id=pub_id, body=body, retry_on_conflict=3)
         except Exception as e:
             log.error(e)
-
-
-def process_cmenergies(keywords):
-    cmenergies = []
-    if keywords['cmenergies']:
-        for cmenergy in keywords['cmenergies']:
-            cmenergy = cmenergy.strip(" gevGEV")
-            try:
-                cmenergy_val = float(cmenergy)
-                cmenergies.append({"gte": cmenergy_val, "lte": cmenergy_val})
-            except ValueError:
-                m = re.match(r'^(-?\d+(?:\.\d+)?)[ \-+andAND]+(-?\d+(?:\.\d+)?)$', cmenergy)
-                if m:
-                    cmenergy_range = [float(m.group(1)), float(m.group(2))]
-                    cmenergy_range.sort()
-                    cmenergies.append({"gte": cmenergy_range[0], "lte": cmenergy_range[1]})
-                else:
-                    log.warning("Invalid value for cmenergies: %s" % cmenergy)
-
-        keywords['cmenergies'] = cmenergies
-
-    return keywords
 
 
 @default_index
