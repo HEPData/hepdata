@@ -413,8 +413,9 @@ def push_data_keywords(pub_ids=None, index=None):
 
         # Get keywords for all data tables
         for data_table in tables.hits:
-            for k, v in data_table.data_keywords.to_dict().items():
-                all_keywords[k].extend(v)
+            if hasattr(data_table, 'data_keywords'):
+                for k, v in data_table.data_keywords.to_dict().items():
+                    all_keywords[k].extend(v)
 
         # Remove duplicates
         for k, v in all_keywords.items():
