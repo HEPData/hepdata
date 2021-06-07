@@ -260,7 +260,7 @@ def reindex_batch(hepsubmission_record_ids, index):
 
 
 @default_index
-def cleanup_index_all(index=None, batch=5, synchronous=True):
+def cleanup_index_all(index=None, batch=5, synchronous=False):
     # Find entries in elasticsearch which are from previous versions of submissions and remove
     # Get all finished HEPSubmission ids with version numbers less than the max
     # finished version by doing a left outer join of hepsubmission with itself
@@ -279,8 +279,8 @@ def cleanup_index_all(index=None, batch=5, synchronous=True):
     ids = [x[0] for x in res]
 
     count = 0
-    while count <= len(ids):
-        batch_ids = ids[count:min(count + batch, len(ids) + 1)]
+    while count < len(ids):
+        batch_ids = ids[count:min(count + batch, len(ids))]
         if synchronous:
             cleanup_index_batch(batch_ids, index)
         else:
@@ -311,9 +311,10 @@ def cleanup_index_batch(hepsubmission_record_ids, index):
     res = qry.all()
 
     ids = [x[0] for x in res]
-    log.info(f'Deleting entries from index with ids {ids}')
-    s = RecordsSearch(index=index).filter('terms', _id=ids)
-    s.delete()
+    if ids:
+        log.info(f'Deleting entries from index with ids {ids}')
+        s = RecordsSearch(index=index).filter('terms', _id=ids)
+        s.delete()
 
 
 @default_index

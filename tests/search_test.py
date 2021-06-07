@@ -488,8 +488,10 @@ def test_cleanup_index_all(app, load_default_data, identifiers, mocker):
     index = app.config.get('ELASTICSEARCH_INDEX')
 
     m = mocker.patch('hepdata.ext.elasticsearch.api.cleanup_index_batch')
+
+    # Should be no calls made at first as there is only one version of all submissions
     es_api.cleanup_index_all(index=index, synchronous=True)
-    m.assert_called_once_with([], index)
+    m.assert_not_called()
     m.reset_mock()
 
     # Create a new version for ins1283842
@@ -527,6 +529,14 @@ def test_cleanup_index_all(app, load_default_data, identifiers, mocker):
         call([1, 2], index),
         call([3], index)
     ])
+    m.reset_mock()
+
+    es_api.cleanup_index_all(index=index, batch=1, synchronous=True)
+    m.assert_has_calls([
+        call([1], index),
+        call([2], index),
+        call([3], index)
+    ])
 
 
 def test_cleanup_index_batch(app, load_default_data, identifiers, mocker):
@@ -551,7 +561,6 @@ def test_cleanup_index_batch(app, load_default_data, identifiers, mocker):
             new_data_submissions.append(new_data_submission)
         db.session.commit()
         assert [x.id for x in new_data_submissions] == expected_range
-        # return new_hep_submission, new_data_submissions
 
     _create_new_versions(2, list(range(55, 60)))
 
@@ -575,6 +584,11 @@ def test_cleanup_index_batch(app, load_default_data, identifiers, mocker):
         call('terms', _id=list(range(2,16)) + list(range(55, 60)))
     ])
     mock_records_search.reset_mock()
+
+    # Clean up with id 17, for which there are no old versions
+    # - should mean that filter is not called.
+    es_api.cleanup_index_batch([17], index)
+    mock_records_search.assert_not_called()
 
 
 def test_get_record(app, load_default_data, identifiers):
