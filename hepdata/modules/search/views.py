@@ -29,7 +29,7 @@ from hepdata.modules.records.utils.common import decode_string
 from hepdata.modules.records.api import get_all_ids as db_get_all_ids
 from hepdata.utils.session import get_session_item, set_session_item
 from hepdata.utils.url import modify_query
-from .config import HEPDATA_CFG_MAX_RESULTS_PER_PAGE, HEPDATA_CFG_FACETS
+from .config import HEPDATA_CFG_DEFAULT_RESULTS_PER_PAGE, HEPDATA_CFG_FACETS
 from .config import LIMIT_MAX_RESULTS_PER_PAGE
 
 blueprint = Blueprint('es_search',
@@ -72,14 +72,14 @@ def check_max_results(args):
     Get the size query parameter from the URL and if it doesn't exist
     assign a default value.
     """
-    max_results = args.get('size', HEPDATA_CFG_MAX_RESULTS_PER_PAGE)
+    max_results = args.get('size', HEPDATA_CFG_DEFAULT_RESULTS_PER_PAGE)
     try:
         max_results = int(max_results)
     except ValueError:
-        max_results = HEPDATA_CFG_MAX_RESULTS_PER_PAGE
+        max_results = HEPDATA_CFG_DEFAULT_RESULTS_PER_PAGE
 
     if max_results < 1:
-        max_results = HEPDATA_CFG_MAX_RESULTS_PER_PAGE
+        max_results = HEPDATA_CFG_DEFAULT_RESULTS_PER_PAGE
     elif max_results > LIMIT_MAX_RESULTS_PER_PAGE:
         max_results = LIMIT_MAX_RESULTS_PER_PAGE
 

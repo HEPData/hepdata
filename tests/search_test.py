@@ -36,7 +36,7 @@ from hepdata.modules.submission.models import HEPSubmission, DataSubmission
 from invenio_search import current_search_client as es
 
 from hepdata.modules.search.config import LIMIT_MAX_RESULTS_PER_PAGE, \
-    HEPDATA_CFG_MAX_RESULTS_PER_PAGE
+    HEPDATA_CFG_DEFAULT_RESULTS_PER_PAGE
 from hepdata.modules.search.views import check_max_results
 
 def test_query_builder_add_aggregations():
@@ -629,12 +629,12 @@ def test_get_all_ids(app, load_default_data, identifiers):
 
 @pytest.mark.parametrize("input_size, output_size",
     [
-        (None, HEPDATA_CFG_MAX_RESULTS_PER_PAGE),
-        (0, HEPDATA_CFG_MAX_RESULTS_PER_PAGE),
-        (HEPDATA_CFG_MAX_RESULTS_PER_PAGE, HEPDATA_CFG_MAX_RESULTS_PER_PAGE),
+        (None, HEPDATA_CFG_DEFAULT_RESULTS_PER_PAGE),
+        (0, HEPDATA_CFG_DEFAULT_RESULTS_PER_PAGE),
+        (HEPDATA_CFG_DEFAULT_RESULTS_PER_PAGE, HEPDATA_CFG_DEFAULT_RESULTS_PER_PAGE),
         (LIMIT_MAX_RESULTS_PER_PAGE, LIMIT_MAX_RESULTS_PER_PAGE),
         (LIMIT_MAX_RESULTS_PER_PAGE + 1, LIMIT_MAX_RESULTS_PER_PAGE),
-        ('all', HEPDATA_CFG_MAX_RESULTS_PER_PAGE)
+        ('all', HEPDATA_CFG_DEFAULT_RESULTS_PER_PAGE)
     ]
 )
 def test_check_max_results(input_size, output_size):
