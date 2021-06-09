@@ -25,7 +25,7 @@ from unittest.mock import call
 from hepdata.ext.elasticsearch.config.es_config import \
     add_default_aggregations, sort_fields_mapping
 from hepdata.ext.elasticsearch import api as es_api
-from hepdata.ext.elasticsearch.document_enhancers import process_cmenergies
+from hepdata.ext.elasticsearch.document_enhancers import add_data_keywords, process_cmenergies
 from hepdata.ext.elasticsearch.process_results import merge_results, match_tables_to_papers, \
     get_basic_record_information, is_datatable
 from hepdata.ext.elasticsearch.query_builder import QueryBuilder, HEPDataQueryParser
@@ -286,6 +286,32 @@ def test_push_keywords():
         push_keywords([])
     except ValueError as ve:
         assert (ve)
+
+
+def test_add_data_keywords():
+    # Check that only valid keywords are added to data_keywords
+    original_keywords = [
+        {'name': 'reactions', 'value': 'PBAR P --> LEPTON JETS X', 'synonyms': ''},
+        {'name': 'observables', 'value': 'ASYM', 'synonyms': ''},
+        {'name': 'phrases', 'value': 'Inclusive', 'synonyms': ''},
+        {'name': 'phrases', 'value': 'Asymmetry Measurement', 'synonyms': ''},
+        {'name': 'phrases', 'value': 'Jet Production', 'synonyms': ''},
+        {'name': 'cmenergies', 'value': '1960.0', 'synonyms': ''},
+        {'name': 'NOTAREALKEYWORD', 'value': 'banana', 'synonyms': ''}
+    ]
+    doc = {
+        'keywords': original_keywords
+    }
+    add_data_keywords(doc)
+    assert doc['keywords'] == original_keywords
+    assert 'data_keywords' in doc
+    assert len(doc['data_keywords']) == 4
+    assert doc['data_keywords']['reactions'] == ['PBAR P --> LEPTON JETS X']
+    assert doc['data_keywords']['observables'] == ['ASYM']
+    assert set(doc['data_keywords']['phrases']) == \
+        set(['Asymmetry Measurement', 'Inclusive', 'Jet Production'])
+    assert doc['data_keywords']['cmenergies'] == [{'gte': 1960.0, 'lte': 1960.0}]
+    assert 'NOTAREALKEYWORD' not in doc['data_keywords']
 
 
 def test_process_cmenergies():
