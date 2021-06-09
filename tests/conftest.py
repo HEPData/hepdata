@@ -114,6 +114,7 @@ def import_default_data(app, identifiers):
         # sample files multiple times during testing
         def _test_download_file(base_url, inspire_id):
             filename = 'HEPData-ins{0}-v1-original.zip'.format(inspire_id)
+            print(f'Looking for file {filename} in {app.config["CFG_TMPDIR"]}')
             expected_file_name = os.path.join(app.config["CFG_TMPDIR"], filename)
             if os.path.exists(expected_file_name):
                 print("Using existing file at %s" % expected_file_name)
