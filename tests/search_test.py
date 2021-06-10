@@ -25,7 +25,7 @@ from unittest.mock import call
 from hepdata.ext.elasticsearch.config.es_config import \
     add_default_aggregations, sort_fields_mapping
 from hepdata.ext.elasticsearch import api as es_api
-from hepdata.ext.elasticsearch.document_enhancers import process_cmenergies
+from hepdata.ext.elasticsearch.document_enhancers import add_data_keywords, process_cmenergies
 from hepdata.ext.elasticsearch.process_results import merge_results, match_tables_to_papers, \
     get_basic_record_information, is_datatable
 from hepdata.ext.elasticsearch.query_builder import QueryBuilder, HEPDataQueryParser
@@ -36,7 +36,7 @@ from hepdata.modules.submission.models import HEPSubmission, DataSubmission
 from invenio_search import current_search_client as es
 
 from hepdata.modules.search.config import LIMIT_MAX_RESULTS_PER_PAGE, \
-    HEPDATA_CFG_MAX_RESULTS_PER_PAGE
+    HEPDATA_CFG_DEFAULT_RESULTS_PER_PAGE
 from hepdata.modules.search.views import check_max_results
 
 def test_query_builder_add_aggregations():
@@ -288,6 +288,32 @@ def test_push_keywords():
         assert (ve)
 
 
+def test_add_data_keywords():
+    # Check that only valid keywords are added to data_keywords
+    original_keywords = [
+        {'name': 'reactions', 'value': 'PBAR P --> LEPTON JETS X', 'synonyms': ''},
+        {'name': 'observables', 'value': 'ASYM', 'synonyms': ''},
+        {'name': 'phrases', 'value': 'Inclusive', 'synonyms': ''},
+        {'name': 'phrases', 'value': 'Asymmetry Measurement', 'synonyms': ''},
+        {'name': 'phrases', 'value': 'Jet Production', 'synonyms': ''},
+        {'name': 'cmenergies', 'value': '1960.0', 'synonyms': ''},
+        {'name': 'NOTAREALKEYWORD', 'value': 'banana', 'synonyms': ''}
+    ]
+    doc = {
+        'keywords': original_keywords
+    }
+    add_data_keywords(doc)
+    assert doc['keywords'] == original_keywords
+    assert 'data_keywords' in doc
+    assert len(doc['data_keywords']) == 4
+    assert doc['data_keywords']['reactions'] == ['PBAR P --> LEPTON JETS X']
+    assert doc['data_keywords']['observables'] == ['ASYM']
+    assert set(doc['data_keywords']['phrases']) == \
+        set(['Asymmetry Measurement', 'Inclusive', 'Jet Production'])
+    assert doc['data_keywords']['cmenergies'] == [{'gte': 1960.0, 'lte': 1960.0}]
+    assert 'NOTAREALKEYWORD' not in doc['data_keywords']
+
+
 def test_process_cmenergies():
     test_keywords = {
         "cmenergies": [
@@ -488,8 +514,10 @@ def test_cleanup_index_all(app, load_default_data, identifiers, mocker):
     index = app.config.get('ELASTICSEARCH_INDEX')
 
     m = mocker.patch('hepdata.ext.elasticsearch.api.cleanup_index_batch')
+
+    # Should be no calls made at first as there is only one version of all submissions
     es_api.cleanup_index_all(index=index, synchronous=True)
-    m.assert_called_once_with([], index)
+    m.assert_not_called()
     m.reset_mock()
 
     # Create a new version for ins1283842
@@ -527,6 +555,14 @@ def test_cleanup_index_all(app, load_default_data, identifiers, mocker):
         call([1, 2], index),
         call([3], index)
     ])
+    m.reset_mock()
+
+    es_api.cleanup_index_all(index=index, batch=1, synchronous=True)
+    m.assert_has_calls([
+        call([1], index),
+        call([2], index),
+        call([3], index)
+    ])
 
 
 def test_cleanup_index_batch(app, load_default_data, identifiers, mocker):
@@ -551,7 +587,6 @@ def test_cleanup_index_batch(app, load_default_data, identifiers, mocker):
             new_data_submissions.append(new_data_submission)
         db.session.commit()
         assert [x.id for x in new_data_submissions] == expected_range
-        # return new_hep_submission, new_data_submissions
 
     _create_new_versions(2, list(range(55, 60)))
 
@@ -575,6 +610,11 @@ def test_cleanup_index_batch(app, load_default_data, identifiers, mocker):
         call('terms', _id=list(range(2,16)) + list(range(55, 60)))
     ])
     mock_records_search.reset_mock()
+
+    # Clean up with id 17, for which there are no old versions
+    # - should mean that filter is not called.
+    es_api.cleanup_index_batch([17], index)
+    mock_records_search.assert_not_called()
 
 
 def test_get_record(app, load_default_data, identifiers):
@@ -615,12 +655,12 @@ def test_get_all_ids(app, load_default_data, identifiers):
 
 @pytest.mark.parametrize("input_size, output_size",
     [
-        (None, HEPDATA_CFG_MAX_RESULTS_PER_PAGE),
-        (0, HEPDATA_CFG_MAX_RESULTS_PER_PAGE),
-        (HEPDATA_CFG_MAX_RESULTS_PER_PAGE, HEPDATA_CFG_MAX_RESULTS_PER_PAGE),
+        (None, HEPDATA_CFG_DEFAULT_RESULTS_PER_PAGE),
+        (0, HEPDATA_CFG_DEFAULT_RESULTS_PER_PAGE),
+        (HEPDATA_CFG_DEFAULT_RESULTS_PER_PAGE, HEPDATA_CFG_DEFAULT_RESULTS_PER_PAGE),
         (LIMIT_MAX_RESULTS_PER_PAGE, LIMIT_MAX_RESULTS_PER_PAGE),
         (LIMIT_MAX_RESULTS_PER_PAGE + 1, LIMIT_MAX_RESULTS_PER_PAGE),
-        ('all', HEPDATA_CFG_MAX_RESULTS_PER_PAGE)
+        ('all', HEPDATA_CFG_DEFAULT_RESULTS_PER_PAGE)
     ]
 )
 def test_check_max_results(input_size, output_size):

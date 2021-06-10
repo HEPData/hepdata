@@ -20,7 +20,7 @@
 ELASTICSEARCH_MAX_RESULT_WINDOW = 10000  # default Elasticsearch value
 LIMIT_MAX_RESULTS_PER_PAGE = 100  # maximum value of 'size' parameter
 
-HEPDATA_CFG_MAX_RESULTS_PER_PAGE = 25
+HEPDATA_CFG_DEFAULT_RESULTS_PER_PAGE = 10
 HEPDATA_CFG_FACETS = ['author',
                       'collaboration',
                       'date',
