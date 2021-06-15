@@ -143,6 +143,18 @@ def test_get_submission_participants(app, load_default_data, identifiers):
     assert participants[0].status == "primary"
     assert participants[0].role == "uploader"
 
+    # Get participants with multiple roles
+    participants = get_submission_participants_for_record(
+        hepsubmission.publication_recid, roles=['uploader', 'Encoded'])
+    assert len(participants) == 2
+    participants = get_submission_participants_for_record(
+        hepsubmission.publication_recid, roles=['uploader'])
+    assert len(participants) == 1
+    assert participants[0].full_name == "Test User"
+    participants = get_submission_participants_for_record(
+        hepsubmission.publication_recid, roles=['reviewer'])
+    assert len(participants) == 0
+
 
 def test_create_submission(app, admin_idx):
     """
