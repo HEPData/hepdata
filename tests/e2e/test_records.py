@@ -167,6 +167,9 @@ def test_record_update(live_server, logged_in_browser):
         )
     assert "passed" in table2_status.get_attribute('class')
 
+    # Check "Notify Coordinator" is hidden
+    assert not browser.find_element_by_id('notify-coordinator-btn').is_displayed()
+
     # Click "Approve All"
     browser.find_element_by_id('approve-all-btn').click()
     approve_all_modal = browser.find_element_by_id('approveAllTables')
@@ -185,6 +188,11 @@ def test_record_update(live_server, logged_in_browser):
         .find_elements_by_class_name('review-status')
     for element in review_statuses:
         assert "passed" in element.get_attribute('class')
+
+    # Check that "Approve all" button is not visible and "Notify Coordinator"
+    # is now visible
+    assert not browser.find_element_by_id('approve-all-btn').is_displayed()
+    assert browser.find_element_by_id('notify-coordinator-btn').is_displayed()
 
     # Delete the new version
     # Open admin slider
