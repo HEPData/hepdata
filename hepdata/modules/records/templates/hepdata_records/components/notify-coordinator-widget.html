@@ -1,0 +1,73 @@
+<!-- Modal -->
+{% if ctx.record %}
+    <div class="modal fade" id="notifyCoordinator" tabindex="-1" role="dialog"
+         aria-labelledby="codeDialog" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"
+                            aria-label="Close"><span
+                            aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="codeDialogLabel">
+                        Notify coordinator</h4>
+                </div>
+
+                <div class="modal-body">
+                    <div class="container-fluid" id="coordinator-notify-container">
+
+                        <div class="row-fluid">
+                            <div class="col-md-12">
+                                <p>
+                                    Clicking <b>Notify Coordinator</b> will email the coordinator of this submission
+                                    to inform them that all tables have been approved.
+                                </p>
+                                <div>
+                                  <label for="message">Additional Message to Coordinator? (optional)</label>
+                                  <textarea id="coordinator_msg" name="message" class="form-control"
+                                            placeholder="This is ready to be finalised. Here are some comments..."></textarea>
+                                </div>
+                                <br/>
+                                <div align="center">
+                                    <button type="submit" class="btn btn-warning btn-md" onclick="send_coordinator_message()">
+                                        Notify Coordinator
+                                    </button>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                    <div id="coordinator-notification-sent" style="display:none">
+                        <h4>Emails sent.</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        var send_coordinator_message = function () {
+            $.post(
+                '/record/{{ ctx.recid |safe }}/{{ ctx.version |safe }}/notify-coordinator',
+                {
+                    message: $("#coordinator_msg").val()
+                }
+            ).done(function (data) {
+                $("#coordinator-notify-container").hide();
+                $("#coordinator-notification-sent").show()
+                setTimeout(function () {
+                    $("#notifyCoordinator").modal('hide');
+                    setTimeout(function() {
+                      $("#coordinator-notify-container").show();
+                      $("#coordinator-notification-sent").hide();
+                      $("#coordinator_msg").val('');
+                    }, 1000)
+                }, 1000)
+            })
+            .fail(function (data) {
+                alert(data.status + ": " + data.message);
+            });
+
+        }
+    </script>
+
+{% endif %}

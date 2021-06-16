@@ -1,0 +1,23 @@
+{% extends 'hepdata_theme/email/email_container.html' %}
+{% block email_type %}
+Record {{ article }} ready to be finalised
+{% endblock %}
+
+
+{% block email_content %}
+
+    Dear {{ name }},
+
+    <p>{{ actor }} has approved all tables of version {{ version }} of <a href="{{ link }}" style="color: #9b59b6">{{ title }}</a>.</p>
+
+    {% if message %}
+        <p style="font-weight: bolder">Message:</p>
+        <p style="padding-left: 20px; font-weight: lighter; white-space: pre-wrap;">{{ message }}</p>
+    {% endif %}
+
+    <p>The submission is now ready to be finalised, which can be done from your <a href="{{ dashboard_link }}">HEPData dashboard</a>.</p>
+
+    <p>
+    The <a href="{{ site_url }}" style="color: #9b59b6">HEPData</a> team
+    </p>
+{% endblock %}

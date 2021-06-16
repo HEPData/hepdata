@@ -25,6 +25,7 @@ import logging
 
 from flask import current_app
 from flask_login import current_user
+from invenio_userprofiles import UserProfile
 
 from hepdata.modules.email.utils import create_send_email_task
 from hepdata.modules.records.subscribers.api import get_users_subscribed_to_record
@@ -166,6 +167,45 @@ def send_notification_email(recid, version, user, reviewers_notified, message=No
         create_send_email_task(participant.email,
                                message_subject,
                                message_body)
+
+
+def send_coordinator_notification_email(recid, version, user, message=None):
+    """
+    :param recid:
+    :param user: user object
+    :param message: message to send
+    :return:
+    """
+
+    hepsubmission = get_latest_hepsubmission(publication_recid=recid)
+    coordinator = get_user_from_id(hepsubmission.coordinator)
+
+    if not coordinator:
+        raise NoParticipantsException()
+
+    site_url = current_app.config.get('SITE_URL', 'https://www.hepdata.net')
+
+    record = get_record_by_id(recid)
+
+    name = coordinator.email
+    coordinator_profile = UserProfile.get_by_userid(hepsubmission.coordinator)
+    if coordinator_profile:
+        name = coordinator_profile.full_name
+
+    message_body = render_template('hepdata_theme/email/passed_review.html',
+                                   name=name,
+                                   actor=user.email,
+                                   article=recid,
+                                   message=message,
+                                   title=record['title'],
+                                   site_url=site_url,
+                                   link=site_url + "/record/{0}",
+                                   dashboard_link= site_url + "/dashboard"
+                                   .format(recid))
+
+    create_send_email_task(coordinator.email,
+                           '[HEPData] Submission {0} is ready to be finalised'.format(recid),
+                           message_body)
 
 
 def send_finalised_email(hepsubmission):
