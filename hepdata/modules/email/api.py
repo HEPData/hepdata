@@ -199,9 +199,9 @@ def send_coordinator_notification_email(recid, version, user, message=None):
                                    message=message,
                                    title=record['title'],
                                    site_url=site_url,
-                                   link=site_url + "/record/{0}",
-                                   dashboard_link= site_url + "/dashboard"
-                                   .format(recid))
+                                   link=site_url + "/record/{0}".format(recid),
+                                   dashboard_link=site_url + "/dashboard"
+                                   )
 
     create_send_email_task(coordinator.email,
                            '[HEPData] Submission {0} is ready to be finalised'.format(recid),
