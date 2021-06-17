@@ -1,0 +1,28 @@
+{% extends 'hepdata_theme/email/email_container.html' %}
+{% block email_type %}
+Record {{ article }} has been created
+{% endblock %}
+
+
+{% block email_content %}
+
+    Dear all,
+
+    <p>A new submission <a href="{{ link }}" style="color: #9b59b6">{{ title }}</a> has been created by {{ actor }}.</p>
+
+    {% if uploader %}
+      <p>Uploader: {{ uploader.full_name }} ({{ uploader.email }})</p>
+    {% endif %}
+
+    {% if reviewer %}
+      <p>Reviewer: {{ reviewer.full_name }} ({{ reviewer.email }})</p>
+    {% endif %}
+
+    <p>
+    Thank you for contributing to HEPData!
+    </p>
+
+    <p>
+    The <a href="{{ site_url }}" style="color: #9b59b6">HEPData</a> team
+    </p>
+{% endblock %}

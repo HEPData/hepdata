@@ -381,3 +381,31 @@ def notify_publication_update(hepsubmission, record):
                            '[HEPData] Record ins{0} has updated publication information from INSPIRE'
                            .format(hepsubmission.inspire_id),
                            message_body)
+
+
+def notify_submission_created(hepsubmission, record, coordinator_id, uploader, reviewer):
+    coordinator = get_user_from_id(coordinator_id)
+
+    if not coordinator:
+        return
+
+    site_url = current_app.config.get('SITE_URL', 'https://www.hepdata.net')
+
+    name = coordinator.email
+    coordinator_profile = UserProfile.get_by_userid(coordinator_id)
+    if coordinator_profile:
+        name = coordinator_profile.full_name
+
+    message_body = render_template('hepdata_theme/email/created.html',
+                                   name=name,
+                                   actor=coordinator.email,
+                                   uploader=uploader,
+                                   reviewer=reviewer,
+                                   article=record['recid'],
+                                   title=record['title'],
+                                   site_url=site_url,
+                                   link=site_url + "/record/{0}".format(record['recid']))
+
+    create_send_email_task(coordinator.email,
+                           '[HEPData] Submission {0} has been created'.format(record['recid']),
+                           message_body)
