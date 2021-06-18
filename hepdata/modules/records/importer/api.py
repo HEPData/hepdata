@@ -47,6 +47,8 @@ from hepdata.modules.records.utils.submission import \
     get_or_create_hepsubmission, cleanup_submission, unload_submission
 from hepdata.modules.records.utils.workflow import create_record
 from hepdata.modules.submission.api import get_latest_hepsubmission
+from hepdata.resilient_requests import resilient_requests
+
 
 logging.basicConfig()
 log = logging.getLogger(__name__)
@@ -93,7 +95,7 @@ def get_inspire_ids(base_url='https://hepdata.net', last_updated=None, n_latest=
         url += '&sort_by=latest'
 
     try:
-        response = requests.get(url)
+        response = resilient_requests('get', url)
         if not response.ok:
             log.error('Unable to retrieve data from {0}: {1} {2}'.format(
                 url, response.status_code, responses.get(response.status_code)
