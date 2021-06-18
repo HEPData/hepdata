@@ -478,14 +478,43 @@ def test_reindex_all(app, load_default_data, identifiers, mocker):
     m.reset_mock()
 
     # Create a new version for ins1478981
-    new_submission = HEPSubmission(publication_recid=57, inspire_id='1478981', version=2, overall_status='finished')
+    new_submission = HEPSubmission(publication_recid=57, inspire_id='1478981', version=2, overall_status='todo')
     db.session.add(new_submission)
     db.session.commit()
     # New id should be 4
     assert(new_submission.id == 4)
-    # Reindex should now index id 4 but not 3
+    # Reindex should still index submission 3 as 4 is not finished
+    es_api.reindex_all(index=index, synchronous=True)
+    m.assert_called_once_with([1, 2, 3], index)
+    m.reset_mock()
+
+    # Update submission to have status finished
+    new_submission.overall_status='finished'
+    db.session.add(new_submission)
+    db.session.commit()
+    # Reindex should now index 4 instead of 3
     es_api.reindex_all(index=index, synchronous=True)
     m.assert_called_once_with([1, 2, 4], index)
+    m.reset_mock()
+
+    # Create a further new version for ins1478981
+    new_submission2 = HEPSubmission(publication_recid=57, inspire_id='1478981', version=3, overall_status='todo')
+    db.session.add(new_submission2)
+    db.session.commit()
+    # New id should be 5
+    assert(new_submission2.id == 5)
+    # Reindex should still index submission 4 as 5 is not finished
+    es_api.reindex_all(index=index, synchronous=True)
+    m.assert_called_once_with([1, 2, 4], index)
+    m.reset_mock()
+
+    # Update submission to have status finished
+    new_submission2.overall_status='finished'
+    db.session.add(new_submission2)
+    db.session.commit()
+    # Reindex should now index 5 instead of 4
+    es_api.reindex_all(index=index, synchronous=True)
+    m.assert_called_once_with([1, 2, 5], index)
 
 
 def test_reindex_batch(app, load_default_data, mocker):

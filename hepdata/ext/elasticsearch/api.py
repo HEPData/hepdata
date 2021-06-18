@@ -191,10 +191,12 @@ def reindex_all(index=None, author_index=None, recreate=False, batch=5, start=-1
     h1 = aliased(HEPSubmission)
     h2 = aliased(HEPSubmission)
 
+    # We need to compare finished versions on both sides of the join
     qry = db.session.query(h1.id) \
             .join(h2,
                   and_(h1.publication_recid == h2.publication_recid,
-                       h1.version < h2.version),
+                       h1.version < h2.version,
+                       h2.overall_status == 'finished'),
                   isouter=True) \
             .filter(h2.publication_recid == None, h1.overall_status == 'finished') \
             .order_by(h1.id)
