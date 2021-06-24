@@ -124,7 +124,7 @@ jobs:
         hepdata webpack build
         cp hepdata/config_local.gh.py hepdata/config_local.py
     - name: Setup Sauce Connect
-      uses: alisonrclarke/sauce-connect-action@v1.1
+      uses: saucelabs/sauce-connect-action@main
       with:
         username: ${{ secrets.SAUCE_USERNAME }}
         accessKey: ${{ secrets.SAUCE_ACCESS_KEY }}
