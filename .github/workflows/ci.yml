@@ -150,8 +150,8 @@ jobs:
         cd docs && make html SPHINXOPTS="-W"
     - uses: actions/upload-artifact@v2
       with:
-        name: ${{ env.SAUCE_CONNECT_DIR_IN_HOST }}
-        path: /opt/sauce-connect-action/sauce-connect.log
+        name: sauce-connect-log
+        path: ${{ env.SAUCE_CONNECT_DIR_IN_HOST }}/sauce-connect.log
 
   deploy:
     needs: test
