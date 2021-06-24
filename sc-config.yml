@@ -1,0 +1,4 @@
+# Config file for use by SauceLabs Sauce Connect in CI
+logfile: "sauce-connect-log.txt"
+verbose: 1
+rest-url: "https://eu-central-1.saucelabs.com/rest/v1"

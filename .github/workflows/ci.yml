@@ -128,9 +128,9 @@ jobs:
       with:
         username: ${{ secrets.SAUCE_USERNAME }}
         accessKey: ${{ secrets.SAUCE_ACCESS_KEY }}
-        restUrl: https://eu-central-1.saucelabs.com/rest/v1
         tunnelIdentifier: ${{ github.run_id }}
         scVersion: 4.6.5
+        configFile: sc-config.yml
     - name: Run tests
       env:
         SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
@@ -147,6 +147,10 @@ jobs:
       run: |
         python -m pip install -e .[docs]
         cd docs && make html SPHINXOPTS="-W"
+    - uses: actions/upload-artifact@v2
+      with:
+        name: sauce-connect-log
+        path: sauce-connect-log.txt
 
   deploy:
     needs: test
