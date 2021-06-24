@@ -124,7 +124,7 @@ jobs:
         hepdata webpack build
         cp hepdata/config_local.gh.py hepdata/config_local.py
     - name: Setup Sauce Connect
-      uses: saucelabs/sauce-connect-action@v1
+      uses: alisonrclarke/sauce-connect-action@v1.1
       with:
         username: ${{ secrets.SAUCE_USERNAME }}
         accessKey: ${{ secrets.SAUCE_ACCESS_KEY }}
@@ -150,7 +150,7 @@ jobs:
         cd docs && make html SPHINXOPTS="-W"
     - uses: actions/upload-artifact@v2
       with:
-        name: sauce-connect-log
+        name: ${{ env.SAUCE_CONNECT_DIR_IN_HOST }}
         path: /opt/sauce-connect-action/sauce-connect.log
 
   deploy:
