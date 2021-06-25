@@ -149,6 +149,7 @@ jobs:
         python -m pip install -e .[docs]
         cd docs && make html SPHINXOPTS="-W"
     - uses: actions/upload-artifact@v2
+      if: ${{ failure() }}
       with:
         name: sauce-connect-log
         path: ${{ env.SAUCE_CONNECT_DIR_IN_HOST }}/sauce-connect.log
