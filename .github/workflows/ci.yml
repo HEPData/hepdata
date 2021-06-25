@@ -124,12 +124,14 @@ jobs:
         hepdata webpack build
         cp hepdata/config_local.gh.py hepdata/config_local.py
     - name: Setup Sauce Connect
-      uses: saucelabs/sauce-connect-action@v1
+      uses: saucelabs/sauce-connect-action@main
       with:
         username: ${{ secrets.SAUCE_USERNAME }}
         accessKey: ${{ secrets.SAUCE_ACCESS_KEY }}
         restUrl: https://eu-central-1.saucelabs.com/rest/v1
         tunnelIdentifier: ${{ github.run_id }}
+        scVersion: 4.6.5
+        verbose: true
     - name: Run tests
       env:
         SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
@@ -146,6 +148,11 @@ jobs:
       run: |
         python -m pip install -e .[docs]
         cd docs && make html SPHINXOPTS="-W"
+    - uses: actions/upload-artifact@v2
+      if: ${{ failure() }}
+      with:
+        name: sauce-connect-log
+        path: ${{ env.SAUCE_CONNECT_DIR_IN_HOST }}/sauce-connect.log
 
   deploy:
     needs: test
