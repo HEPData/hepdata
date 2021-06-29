@@ -21,7 +21,7 @@ logging.basicConfig()
 log = logging.getLogger(__name__)
 
 
-RECORDS_PER_PAGE = 10
+RECORDS_PER_PAGE = 1000
 
 
 @shared_task
@@ -184,6 +184,6 @@ def _get_url(page, specified_time, on_or_since):
 
     size = RECORDS_PER_PAGE
     url = ('https://inspirehep.net/api/literature?sort=mostrecent&size={}&page={}&fields=control_number'.format(size, page) +
-           '&q=external_system_identifiers.schema%3AHEPData%20and%20legacy_version%3A{}%2'.format(specified_time.strftime("%Y%m%d")) +
-           ('A' if on_or_since == 'on' else 'B'))
+           '&q=external_system_identifiers.schema%3AHEPData%20and%20du%3A{}'.format(specified_time.strftime("%Y-%m-%d")) +
+           ('' if on_or_since == 'on' else '%2B'))
     return url
