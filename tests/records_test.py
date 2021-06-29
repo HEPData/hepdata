@@ -36,6 +36,7 @@ from invenio_accounts.models import User
 from invenio_db import db
 import pytest
 from werkzeug.datastructures import FileStorage
+import requests_mock
 
 from hepdata.modules.permissions.models import SubmissionParticipant
 from hepdata.modules.records.api import process_payload, process_zip_archive, \
@@ -53,7 +54,8 @@ from hepdata.modules.submission.models import HEPSubmission, DataReview, \
 from hepdata.modules.submission.views import process_submission_payload
 from hepdata.modules.submission.api import get_latest_hepsubmission
 from tests.conftest import TEST_EMAIL
-from hepdata.modules.records.utils.records_update_utils import get_inspire_records_updated_since, get_inspire_records_updated_on, update_record_info
+from hepdata.modules.records.utils.records_update_utils import get_inspire_records_updated_since, \
+    get_inspire_records_updated_on, update_record_info, RECORDS_PER_PAGE
 from hepdata.modules.inspire_api.views import get_inspire_record_information
 from hepdata.config import CFG_TMPDIR
 
@@ -501,7 +503,16 @@ def test_get_updated_records_since_date(app):
 
 
 def test_get_updated_records_on_date(app):
-    assert(type(get_inspire_records_updated_on("2021-06-27")) == list)
+    test_date = '2021-06-29'
+    mock_url = 'https://inspirehep.net/api/literature?sort=mostrecent'
+    mock_url += '&size={0}&page=1&fields=control_number'.format(RECORDS_PER_PAGE)
+    mock_url += '&q=external_system_identifiers.schema%3AHEPData%20and%20du%3A{}'.format(test_date)
+    mock_json = {'hits': {'total': 2, 'hits': [{'id': '1234567'}, {'id': '890123'}]}}
+    # Use requests_mock to mock the response from inspirehep.net.
+    with requests_mock.Mocker(real_http=True) as mock:
+        mock.get(mock_url, json=mock_json, complete_qs=True)
+        ids = get_inspire_records_updated_on(test_date)
+    assert ids == ['1234567', '890123']
 
 
 def test_update_record_info(app):
