@@ -24,6 +24,7 @@
 
 """HEPData CLI module."""
 
+import os
 import click
 from flask import current_app
 from flask.cli import with_appcontext
@@ -522,3 +523,19 @@ def cli_update_records_info_on(date):
 def cli_update_all_records_info():
     """Update publication information from INSPIRE for *all* records."""
     update_all_records_info()
+
+
+@cli.group()
+def fix():
+    """Scripts for temporary fixes. Commands should be in modules within the fixes directory."""
+
+
+# Add commands from files in fixes directory
+fixes_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'fixes')
+for filename in os.listdir(fixes_path):
+    if filename.endswith('.py') and filename != '__init__.py':
+        module_name = filename[:-3]
+        ns = {}
+        with open(os.path.join(fixes_path, filename)) as f:
+            code = compile(f.read(), filename, 'exec')
+            eval(code, ns, ns)
