@@ -21,6 +21,7 @@ def create_missing_datasubmission_records():
         .filter(
             DataSubmission.associated_recid == None,
             DataSubmission.publication_inspire_id == None,
+            DataSubmission.version == HEPSubmission.version,
             HEPSubmission.overall_status == 'finished')
     missing_submissions = missing_submissions.all()
 
