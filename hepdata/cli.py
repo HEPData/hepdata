@@ -527,7 +527,10 @@ def cli_update_all_records_info():
 
 @cli.group()
 def fix():
-    """Scripts for temporary fixes. Commands should be in modules within the fixes directory."""
+    """Group of commands for temporary fixes, e.g. to fix issues from old migrated files, or previous bugs.
+
+    To add a new ``fix`` command, create a new module in the ``fixes`` directory with a method annotated with ``@fix.command()``.
+    """
 
 
 # Add commands from files in fixes directory
