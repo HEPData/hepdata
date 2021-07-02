@@ -53,3 +53,6 @@ commands below, you can also invoke `invenio <https://invenio-cli.readthedocs.io
 .. click:: hepdata.cli:inspire
    :prog: hepdata inspire
    :show-nested:
+
+.. click:: hepdata.cli:fix
+   :prog: hepdata fix

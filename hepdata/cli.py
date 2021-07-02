@@ -24,6 +24,7 @@
 
 """HEPData CLI module."""
 
+import os
 import click
 from flask import current_app
 from flask.cli import with_appcontext
@@ -35,7 +36,7 @@ from hepdata.modules.submission.models import HEPSubmission
 from hepdata.modules.submission.api import get_latest_hepsubmission
 from .factory import create_app
 from hepdata.config import CFG_PUB_TYPE
-from hepdata.ext.elasticsearch.api import reindex_all, get_records_matching_field, cleanup_index_all
+from hepdata.ext.elasticsearch.api import reindex_all, get_records_matching_field
 from hepdata.modules.records.importer import api as importer_api
 from hepdata.modules.records.utils import data_files
 from hepdata.modules.records.utils.analyses import update_analyses
@@ -157,15 +158,6 @@ def utils():
               help='Number of submissions to index at a time.')
 def reindex(recreate, start, end, batch):
     reindex_all(recreate=recreate, start=start, end=end, batch=batch)
-
-
-@utils.command()
-@with_appcontext
-@click.option('--batch', '-b', type=int, default=5,
-              help='Number of hepsubmission entries to cleanup at a time.')
-def cleanup_index(batch):
-    """Clean up old datasubmission entries from elasticsearch"""
-    cleanup_index_all(batch=batch)
 
 
 @utils.command()
@@ -522,3 +514,22 @@ def cli_update_records_info_on(date):
 def cli_update_all_records_info():
     """Update publication information from INSPIRE for *all* records."""
     update_all_records_info()
+
+
+@cli.group()
+def fix():
+    """Group of commands for temporary fixes, e.g. to fix issues from old migrated files, or previous bugs.
+
+    To add a new ``fix`` command, create a new module in the ``fixes`` directory with a method annotated with ``@fix.command()``.
+    """
+
+
+# Add commands from files in fixes directory
+fixes_path = os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), 'fixes')
+for filename in os.listdir(fixes_path):
+    if filename.endswith('.py') and filename != '__init__.py':
+        module_name = filename[:-3]
+        ns = {}
+        with open(os.path.join(fixes_path, filename)) as f:
+            code = compile(f.read(), filename, 'exec')
+            eval(code, ns, ns)
