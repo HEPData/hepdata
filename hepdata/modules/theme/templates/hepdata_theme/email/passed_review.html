@@ -8,7 +8,10 @@ Record {{ article }} ready to be finalised
 
     Dear {{ name }},
 
-    <p>{{ actor }} has approved all tables of version {{ version }} of <a href="{{ link }}" style="color: #9b59b6">{{ title }}</a>.</p>
+    <p>
+      {{ actor }} has approved all tables of version {{ version }} of
+      <a href="{{ link }}" style="color: #9b59b6">{{ title }}</a>{% if collaboration %} for {{collaboration}}{% endif %}.
+    </p>
 
     {% if message %}
         <p style="font-weight: bolder">Message:</p>

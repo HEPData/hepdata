@@ -32,6 +32,7 @@ from hepdata.modules.records.subscribers.api import get_users_subscribed_to_reco
 from hepdata.modules.records.utils.common import get_record_by_id
 from flask import render_template
 
+from hepdata.modules.permissions.models import CoordinatorRequest
 from hepdata.modules.submission.api import get_latest_hepsubmission, \
     get_primary_submission_participants_for_record, get_submission_participants_for_record
 from hepdata.modules.submission.models import DataSubmission, DataReview
@@ -159,7 +160,7 @@ def send_notification_email(recid, version, user, reviewers_notified, message=No
                                        link=site_url + "/record/{0}"
                                        .format(recid))
 
-        if participant.role == 'uploader' and not reviewers_notified:
+        if participant.role == 'reviewer' and not reviewers_notified:
             message_subject = '[HEPData] Submission {0} has a new upload available for you to review'.format(recid)
         else:
             message_subject = '[HEPData] Notification about submission {0}'.format(recid)
@@ -192,10 +193,14 @@ def send_coordinator_notification_email(recid, version, user, message=None):
     if coordinator_profile:
         name = coordinator_profile.full_name
 
+    collaboration = _get_collaboration(hepsubmission.coordinator)
+
     message_body = render_template('hepdata_theme/email/passed_review.html',
                                    name=name,
                                    actor=user.email,
+                                   collaboration=collaboration,
                                    article=recid,
+                                   version=version,
                                    message=message,
                                    title=record['title'],
                                    site_url=site_url,
@@ -383,7 +388,7 @@ def notify_publication_update(hepsubmission, record):
                            message_body)
 
 
-def notify_submission_created(hepsubmission, record, coordinator_id, uploader, reviewer):
+def notify_submission_created(record, coordinator_id, uploader, reviewer):
     coordinator = get_user_from_id(coordinator_id)
 
     if not coordinator:
@@ -396,9 +401,12 @@ def notify_submission_created(hepsubmission, record, coordinator_id, uploader, r
     if coordinator_profile:
         name = coordinator_profile.full_name
 
+    collaboration = _get_collaboration(coordinator_id)
+
     message_body = render_template('hepdata_theme/email/created.html',
                                    name=name,
                                    actor=coordinator.email,
+                                   collaboration=collaboration,
                                    uploader=uploader,
                                    reviewer=reviewer,
                                    article=record['recid'],
@@ -409,3 +417,13 @@ def notify_submission_created(hepsubmission, record, coordinator_id, uploader, r
     create_send_email_task(coordinator.email,
                            '[HEPData] Submission {0} has been created'.format(record['recid']),
                            message_body)
+
+
+def _get_collaboration(coordinator_id):
+    coordinator_request = CoordinatorRequest.query.filter_by(
+        user=coordinator_id).first()
+    if coordinator_request:
+        collaboration = coordinator_request.collaboration
+    else:
+        collaboration = None
+    return collaboration

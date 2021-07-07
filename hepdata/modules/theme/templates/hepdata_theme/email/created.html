@@ -6,9 +6,12 @@ Record {{ article }} has been created
 
 {% block email_content %}
 
-    Dear all,
+    Dear {{ name }},
 
-    <p>A new submission <a href="{{ link }}" style="color: #9b59b6">{{ title }}</a> has been created by {{ actor }}.</p>
+    <p>
+      A new submission <a href="{{ link }}" style="color: #9b59b6">{{ title }}</a> has been created
+      by {{ actor }}{% if collaboration %} for {{collaboration}}{% endif %}.
+    </p>
 
     {% if uploader %}
       <p>Uploader: {{ uploader.full_name }} ({{ uploader.email }})</p>

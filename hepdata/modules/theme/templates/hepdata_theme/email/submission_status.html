@@ -14,7 +14,7 @@
     <p>Hi {{ name }},</p>
 
     {% if invite_token %}
-        <p>You have been added as {{ role }} for a HEPData record. You can only review the article once you access the link below <strong>after logging in to HEPData</strong></p>
+        <p>You have been added as {{ role }} for a HEPData record. You can only view the article once you access the link below <strong>after logging in to HEPData</strong></p>
         <p><a href="{{ site_url }}/permissions/assign/{{ invite_token }}" style="padding-left: 20px;">{{ site_url }}/permissions/assign/{{ invite_token }}</a></p>
     {% endif %}
 
