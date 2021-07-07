@@ -176,18 +176,12 @@ def notify_participants(recid, version):
 def notify_coordinator(recid, version):
     message = request.form['message']
 
-    submission = HEPSubmission.query.filter_by(publication_recid=recid, version=version).first()
     try:
         current_user_obj = get_user_from_id(current_user.get_id())
         send_coordinator_notification_email(
             recid, version, current_user_obj,
             message=message
         )
-
-        submission.reviewers_notified = True
-        db.session.add(submission)
-        db.session.commit()
-
         return jsonify({"status": "success"})
     except Exception as e:
         db.session.rollback()
