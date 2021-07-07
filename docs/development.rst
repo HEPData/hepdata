@@ -213,3 +213,38 @@ in setting that up - but see below for partial instructions.)
 10. Go to https://localhost:5000. You will see a warning that the connection is not private but choose "Advanced" and "Proceed to localhost (unsafe)" (or the equivalent in your browser).
 
 11. Click "Sign in" and "Log in with CERN" and hopefully it will work as expected.
+
+
+Adding CLI commands
+===================
+The :ref:`HEPData CLI <cli>` uses `click <https://click.palletsprojects.com/en/8.0.x/>`_ to define commands and
+command groups. You can turn a function in ``cli.py`` into a new command by annotating it with ``@<group>.command()``
+where ``<group>`` is the relevant command group, e.g. ``utils``.
+
+You can call your new command via:
+
+.. code-block:: console
+
+   (hepdata)$ hepdata <group> <your-function-name-with-hyphens-not-underscores>
+
+e.g. a method called ``my_fabulous_command`` annotated with ``@utils.command()`` could be called via:
+
+.. code-block:: console
+
+   (hepdata)$ hepdata utils my-fabulous-command
+
+The `click docs <https://click.palletsprojects.com/en/8.0.x/>`_ give details of how to parse command-line arguments.
+
+
+Fixing existing data
+--------------------
+
+Sometimes we need to make changes to data on HEPData.net, to fix issues caused by migrations or by previous
+bugs, which are too complex to achieve with SQL or with simple python commands. The :ref:`HEPData CLI <cli>` has a
+``fix`` group to be used in this situation, which uses code in the ``fixes`` directory, separate from the main HEPData
+code.
+
+To create a new ``fix`` command:
+
+1. Create a new module file in ``fixes`` with an appropriate name.
+2. Create a function to apply your fix, and annotate it with ``@fix.command()``.
