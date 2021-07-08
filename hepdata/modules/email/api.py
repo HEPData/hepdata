@@ -25,17 +25,21 @@ import logging
 
 from flask import current_app
 from flask_login import current_user
+from invenio_userprofiles import UserProfile
 
 from hepdata.modules.email.utils import create_send_email_task
 from hepdata.modules.records.subscribers.api import get_users_subscribed_to_record
 from hepdata.modules.records.utils.common import get_record_by_id
 from flask import render_template
 
+from hepdata.modules.permissions.models import CoordinatorRequest
 from hepdata.modules.submission.api import get_latest_hepsubmission, \
     get_primary_submission_participants_for_record, get_submission_participants_for_record
-from hepdata.modules.submission.models import DataSubmission
+from hepdata.modules.submission.models import DataSubmission, DataReview
 from hepdata.utils.users import get_user_from_id
 from invenio_accounts.models import User
+from invenio_db import db
+from sqlalchemy import and_
 
 logging.basicConfig()
 log = logging.getLogger(__name__)
@@ -84,48 +88,129 @@ def send_new_review_message_email(review, message, user):
     )
 
 
-class NoReviewersException(Exception):
+class NoParticipantsException(Exception):
     pass
 
 
-def send_new_upload_email(recid, user, message=None):
+def send_notification_email(recid, version, user, reviewers_notified, message=None, show_detail=True):
     """
     :param recid:
     :param user: user object
+    :param reviewers_notified: whether reviewers have already been notified about this upload
+    :param show_detail: whether to show the status and messages for each data table
     :param message:
     :return:
     """
 
     submission_participants = get_submission_participants_for_record(
-        recid, status="primary", role="reviewer")
+        recid, roles=['uploader', 'reviewer'], status='primary'
+    )
 
     if len(submission_participants) == 0:
-        raise NoReviewersException()
+        raise NoParticipantsException()
 
     site_url = current_app.config.get('SITE_URL', 'https://www.hepdata.net')
 
     record = get_record_by_id(recid)
+
+    tables = []
+    if show_detail:
+        data_submissions = DataSubmission.query.filter_by(
+            publication_recid=recid,
+            version=version
+        )
+
+        for data_submission in data_submissions:
+            table_data = {
+                'name': data_submission.name,
+                'status': 'todo'
+            }
+            review = DataReview.query.filter_by(
+                publication_recid=recid, data_recid=data_submission.id, version=version
+            ).first()
+            if review:
+                table_data['status'] = review.status
+                table_data['messages'] = []
+                for m in review.messages:
+                    table_data['messages'].append({
+                        'user': get_user_from_id(m.user).email,
+                        'date': m.creation_date.strftime("%Y-%m-%d at %H:%M UTC"),
+                        'message': m.message
+                    })
+
+            tables.append(table_data)
 
     for participant in submission_participants:
         invite_token = None
         if not participant.user_account:
             invite_token = participant.invitation_cookie
 
-        message_body = render_template('hepdata_theme/email/upload.html',
+        message_body = render_template('hepdata_theme/email/submission_status.html',
                                        name=participant.full_name,
                                        actor=user.email,
                                        article=recid,
                                        message=message,
                                        invite_token=invite_token,
                                        role=participant.role,
+                                       show_detail=show_detail,
+                                       data_tables=tables,
+                                       reviewers_notified=reviewers_notified,
                                        title=record['title'],
                                        site_url=site_url,
                                        link=site_url + "/record/{0}"
                                        .format(recid))
 
+        if participant.role == 'reviewer' and not reviewers_notified:
+            message_subject = '[HEPData] Submission {0} has a new upload available for you to review'.format(recid)
+        else:
+            message_subject = '[HEPData] Notification about submission {0}'.format(recid)
+
         create_send_email_task(participant.email,
-                               '[HEPData] Submission {0} has a new upload available for you to review'.format(recid),
+                               message_subject,
                                message_body)
+
+
+def send_coordinator_notification_email(recid, version, user, message=None):
+    """
+    :param recid:
+    :param user: user object
+    :param message: message to send
+    :return:
+    """
+
+    hepsubmission = get_latest_hepsubmission(publication_recid=recid)
+    coordinator = get_user_from_id(hepsubmission.coordinator)
+
+    if not coordinator:
+        raise NoParticipantsException()
+
+    site_url = current_app.config.get('SITE_URL', 'https://www.hepdata.net')
+
+    record = get_record_by_id(recid)
+
+    name = coordinator.email
+    coordinator_profile = UserProfile.get_by_userid(hepsubmission.coordinator)
+    if coordinator_profile:
+        name = coordinator_profile.full_name
+
+    collaboration = _get_collaboration(hepsubmission.coordinator)
+
+    message_body = render_template('hepdata_theme/email/passed_review.html',
+                                   name=name,
+                                   actor=user.email,
+                                   collaboration=collaboration,
+                                   article=recid,
+                                   version=version,
+                                   message=message,
+                                   title=record['title'],
+                                   site_url=site_url,
+                                   link=site_url + "/record/{0}".format(recid),
+                                   dashboard_link=site_url + "/dashboard"
+                                   )
+
+    create_send_email_task(coordinator.email,
+                           '[HEPData] Submission {0} is ready to be finalised'.format(recid),
+                           message_body)
 
 
 def send_finalised_email(hepsubmission):
@@ -191,6 +276,7 @@ def send_cookie_email(submission_participant,
         publication_recid=record_information['recid']
     )
     coordinator = User.query.get(hepsubmission.coordinator)
+    collaboration = _get_collaboration(hepsubmission.coordinator)
 
     message_body = render_template(
         'hepdata_theme/email/invite.html',
@@ -205,6 +291,7 @@ def send_cookie_email(submission_participant,
         version=version,
         email=submission_participant.email,
         coordinator_email=coordinator.email,
+        collaboration=collaboration,
         message=message)
 
     create_send_email_task(submission_participant.email,
@@ -301,3 +388,44 @@ def notify_publication_update(hepsubmission, record):
                            '[HEPData] Record ins{0} has updated publication information from INSPIRE'
                            .format(hepsubmission.inspire_id),
                            message_body)
+
+
+def notify_submission_created(record, coordinator_id, uploader, reviewer):
+    coordinator = get_user_from_id(coordinator_id)
+
+    if not coordinator:
+        return
+
+    site_url = current_app.config.get('SITE_URL', 'https://www.hepdata.net')
+
+    name = coordinator.email
+    coordinator_profile = UserProfile.get_by_userid(coordinator_id)
+    if coordinator_profile:
+        name = coordinator_profile.full_name
+
+    collaboration = _get_collaboration(coordinator_id)
+
+    message_body = render_template('hepdata_theme/email/created.html',
+                                   name=name,
+                                   actor=coordinator.email,
+                                   collaboration=collaboration,
+                                   uploader=uploader,
+                                   reviewer=reviewer,
+                                   article=record['recid'],
+                                   title=record['title'],
+                                   site_url=site_url,
+                                   link=site_url + "/record/{0}".format(record['recid']))
+
+    create_send_email_task(coordinator.email,
+                           '[HEPData] Submission {0} has been created'.format(record['recid']),
+                           message_body)
+
+
+def _get_collaboration(coordinator_id):
+    coordinator_request = CoordinatorRequest.query.filter_by(
+        user=coordinator_id, approved=True).first()
+    if coordinator_request:
+        collaboration = coordinator_request.collaboration
+    else:
+        collaboration = None
+    return collaboration

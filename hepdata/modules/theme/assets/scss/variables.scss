@@ -67,9 +67,10 @@ $brand-font-weight: 400;
 $brand-primary: $purple;// lighten($color2, 4%);
 $brand-info: $purple-light;
 
+$btn-success-bg: $green;
+$btn-warning-bg: $orange;
+$btn-danger-bg: $red;
+
 .text-muted {
   color: #95a5a6;
 }
-
-
-

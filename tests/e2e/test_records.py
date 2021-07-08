@@ -120,13 +120,19 @@ def test_record_update(live_server, logged_in_browser):
         EC.visibility_of(reviews_view)
     )
     reviews_view.find_element_by_id('attention-option').click()
+    if "attention" not in table1_status.get_attribute('class'):
+        WebDriverWait(browser, 10).until(
+            EC.visibility_of_element_located(
+                (By.CSS_SELECTOR, f"span[id='{table1_id}-status'][class*='attention']")
+            )
+        )
     assert "attention" in table1_status.get_attribute('class')
 
     # Send a message
     message_box = reviews_view.find_element_by_id('message')
     ActionChains(browser).move_to_element(message_box).perform()
     message_box.send_keys("This needs to change!")
-    reviews_view.find_element_by_id('send').click()
+    reviews_view.find_element_by_id('save_no_email').click()
     # Wait until message appears
     message = WebDriverWait(browser, 10).until(
         EC.visibility_of_element_located(
@@ -153,7 +159,16 @@ def test_record_update(live_server, logged_in_browser):
         EC.visibility_of(reviews_view)
     )
     reviews_view.find_element_by_id('passed-option').click()
+    if "passed" not in table2_status.get_attribute('class'):
+        WebDriverWait(browser, 10).until(
+            EC.visibility_of_element_located(
+                (By.CSS_SELECTOR, f"span[id='{table2_id}-status'][class*='passed']")
+            )
+        )
     assert "passed" in table2_status.get_attribute('class')
+
+    # Check "Notify Coordinator" is hidden
+    assert not browser.find_element_by_id('notify-coordinator-btn').is_displayed()
 
     # Click "Approve All"
     browser.find_element_by_id('approve-all-btn').click()
@@ -173,6 +188,11 @@ def test_record_update(live_server, logged_in_browser):
         .find_elements_by_class_name('review-status')
     for element in review_statuses:
         assert "passed" in element.get_attribute('class')
+
+    # Check that "Approve all" button is not visible and "Notify Coordinator"
+    # is now visible
+    assert not browser.find_element_by_id('approve-all-btn').is_displayed()
+    assert browser.find_element_by_id('notify-coordinator-btn').is_displayed()
 
     # Delete the new version
     # Open admin slider

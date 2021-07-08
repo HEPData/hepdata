@@ -60,7 +60,7 @@ HEPDATA.update_review_statuses = function(status) {
   $("#" + HEPDATA.current_table_id + "-status #icon").removeClass();
   $("#" + HEPDATA.current_table_id + "-status #icon").addClass("fa " + HEPDATA.review_classes[status].icon);
   $("#" + HEPDATA.current_table_id + "-status .text").text(HEPDATA.review_classes[status].text);
-  HEPDATA.toggleApproveAllButton();
+  HEPDATA.toggleReviewerButtons();
 };
 
 HEPDATA.load_all_review_messages = function (placement, record_id) {
@@ -127,14 +127,15 @@ HEPDATA.load_review_messages = function (placement, record_id, table_id) {
   );
 };
 
-HEPDATA.toggleApproveAllButton = function() {
+HEPDATA.toggleReviewerButtons = function() {
   var approveAllButton = $('#approve-all-btn');
-  if (approveAllButton) {
-    if($('.review-status.todo[id*="-status"],.review-status.attention[id*="-status"]').length) {
-      approveAllButton.show();
-    } else {
-      approveAllButton.hide();
-    }
+  var notifyCoordinatorButton = $('#notify-coordinator-btn');
+  if($('.review-status.todo[id*="-status"],.review-status.attention[id*="-status"]').length) {
+    approveAllButton.show();
+    notifyCoordinatorButton.hide();
+  } else {
+    approveAllButton.hide();
+    notifyCoordinatorButton.show();
   }
 }
 
@@ -163,13 +164,15 @@ $(document).ready(function() {
     }
   });
 
-  $("#send").click(function () {
+  $("#save_and_email,#save_no_email").click(function () {
 
       var message = $(".input_box").val();
+      var send_email = this.id == 'save_and_email';
 
       var DATA = {
           'message': message,
-          'version': HEPDATA.current_table_version
+          'version': HEPDATA.current_table_version,
+          'send_email': send_email
       };
       $.ajax({
           type: "POST",

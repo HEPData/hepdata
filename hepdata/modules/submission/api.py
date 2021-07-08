@@ -58,7 +58,7 @@ def get_latest_hepsubmission(*args, **kwargs):
     return last
 
 
-def get_submission_participants_for_record(publication_recid, **kwargs):
+def get_submission_participants_for_record(publication_recid, roles=None, **kwargs):
     """Gets the participants for a given publication record id
 
     :param int publication_recid: publication_recid of a submission.
@@ -66,10 +66,15 @@ def get_submission_participants_for_record(publication_recid, **kwargs):
     :return: List of participants relating to that record
     :rtype: list[SubmissionParticipant]
     """
-    return SubmissionParticipant.query.filter_by(
+    query = SubmissionParticipant.query.filter_by(
             publication_recid=publication_recid,
             **kwargs
-    ).all()
+    )
+
+    if roles:
+        query = query.filter(SubmissionParticipant.role.in_(roles))
+
+    return query.all()
 
 
 def get_primary_submission_participants_for_record(publication_recid):

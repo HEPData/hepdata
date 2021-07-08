@@ -1,25 +1,28 @@
 <div id="table-list-section" class="col-lg-2 col-md-2">
     <div align="center">
 
-        {% if ctx.show_upload_widget and ctx.status != 'finished' %}
+        {% if (ctx.show_upload_widget or ctx.show_review_widget) and ctx.status != 'finished' and ctx.mode != 'sandbox' %}
+            <button type="button" class="btn btn-warning btn-md" data-toggle="modal" style="width: 100%"
+                    id="notify-participants-btn" data-target="#notifyParticipants"><span
+                    class="fa fa-bell"></span> Notify Participants
+            </button>
+        {% endif %}
 
-            {% if not ctx.reviewers_notified and ctx.mode != 'sandbox' %}
-                <button type="button" class="btn btn-warning btn-md" data-toggle="modal" style="width: 100%"
-                        id="notify-reviewer-btn" data-target="#notifyReviewer"><span
-                        class="fa fa-bell"></span> Notify Reviewer
-                </button>
-            {% endif %}
-
-            {% if ctx.is_submission_coordinator_or_admin or ctx.mode != 'sandbox' %}
+        {% if ctx.show_upload_widget and ctx.status != 'finished' and (ctx.is_submission_coordinator_or_admin or ctx.mode != 'sandbox') %}
                 <button type="button" class="btn btn-success btn-md" data-toggle="modal" style="width: 100%"
                         data-target="#uploadDialog"><span
                         class="fa fa-upload"></span> Upload New Files
                 </button>
-            {% endif %}
-
         {% endif %}
 
         {% if ctx.mode != 'sandbox' and (ctx.show_review_widget or ctx.is_submission_coordinator_or_admin) and ctx.status != 'finished' and ctx.version >= ctx.version_count %}
+            {% if ctx.show_review_widget or ctx.is_admin %}
+                <button type="button" class="btn btn-success btn-md" data-toggle="modal" style="width: 100%"
+                        id="notify-coordinator-btn" data-target="#notifyCoordinator"><span
+                        class="fa fa-bell"></span> Notify Coordinator
+                </button>
+            {% endif %}
+
             <button type="button" class="btn btn-danger btn-md" data-toggle="modal" style="width: 100%"
                     id="approve-all-btn" data-target="#approveAllTables"><span
                     class="fa fa-check-circle"></span> Approve All Tables
