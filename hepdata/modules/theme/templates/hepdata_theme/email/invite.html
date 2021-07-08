@@ -9,7 +9,8 @@
     Hi {{ name }},
 
     <p>
-        You have been requested by {{ coordinator_email }} to be a{% if role == 'uploader' %}n{% endif %}
+        You have been requested by {{ coordinator_email }}{% if collaboration %} for {{ collaboration }}{% endif %}
+        to be a{% if role == 'uploader' %}n{% endif %}
         {{ role | capitalize }} of version {{ version }} of a record in
         <a href="{{ site_url }}" style="color: #9b59b6">HEPData.net</a>
 {% if title %}

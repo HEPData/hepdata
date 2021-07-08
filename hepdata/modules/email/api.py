@@ -276,6 +276,7 @@ def send_cookie_email(submission_participant,
         publication_recid=record_information['recid']
     )
     coordinator = User.query.get(hepsubmission.coordinator)
+    collaboration = _get_collaboration(hepsubmission.coordinator)
 
     message_body = render_template(
         'hepdata_theme/email/invite.html',
@@ -290,6 +291,7 @@ def send_cookie_email(submission_participant,
         version=version,
         email=submission_participant.email,
         coordinator_email=coordinator.email,
+        collaboration=collaboration,
         message=message)
 
     create_send_email_task(submission_participant.email,
@@ -421,7 +423,7 @@ def notify_submission_created(record, coordinator_id, uploader, reviewer):
 
 def _get_collaboration(coordinator_id):
     coordinator_request = CoordinatorRequest.query.filter_by(
-        user=coordinator_id).first()
+        user=coordinator_id, approved=True).first()
     if coordinator_request:
         collaboration = coordinator_request.collaboration
     else:
