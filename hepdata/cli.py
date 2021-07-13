@@ -525,8 +525,7 @@ def fix():
     directory (in the same directory as the ``hepdata`` package) with a method
     annotated with ``@fix.command()``.
 
-    Existing fixes are only available when ``hepdata`` is installed from
-    source rather than via pypi.
+    To see the list of available fix commands, use: ``hepdata fix --help``
     """
 
 
