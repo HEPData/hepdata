@@ -530,7 +530,7 @@ def fix():
 
 
 # Add commands from files in fixes directory if it exists
-# (i.e. if installed from source rather than pypi)
+# (i.e. if installed with pip -e)
 fixes_path = os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), 'fixes')
 if os.path.isdir(fixes_path):
     for filename in os.listdir(fixes_path):
