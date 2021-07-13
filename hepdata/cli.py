@@ -518,18 +518,26 @@ def cli_update_all_records_info():
 
 @cli.group()
 def fix():
-    """Group of commands for temporary fixes, e.g. to fix issues from old migrated files, or previous bugs.
+    """Group of commands for temporary fixes, e.g. to fix issues from old
+    migrated files, or previous bugs.
 
-    To add a new ``fix`` command, create a new module in the ``fixes`` directory with a method annotated with ``@fix.command()``.
+    To add a new ``fix`` command, create a new module in the ``fixes``
+    directory (in the same directory as the ``hepdata`` package) with a method
+    annotated with ``@fix.command()``.
+
+    Existing fixes are only available when ``hepdata`` is installed from
+    source rather than via pypi.
     """
 
 
-# Add commands from files in fixes directory
+# Add commands from files in fixes directory if it exists
+# (i.e. if installed from source rather than pypi)
 fixes_path = os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), 'fixes')
-for filename in os.listdir(fixes_path):
-    if filename.endswith('.py') and filename != '__init__.py':
-        module_name = filename[:-3]
-        ns = {}
-        with open(os.path.join(fixes_path, filename)) as f:
-            code = compile(f.read(), filename, 'exec')
-            eval(code, ns, ns)
+if os.path.isdir(fixes_path):
+    for filename in os.listdir(fixes_path):
+        if filename.endswith('.py') and filename != '__init__.py':
+            module_name = filename[:-3]
+            ns = {}
+            with open(os.path.join(fixes_path, filename)) as f:
+                code = compile(f.read(), filename, 'exec')
+                eval(code, ns, ns)
