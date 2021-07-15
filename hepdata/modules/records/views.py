@@ -634,11 +634,11 @@ def get_resource(resource_id):
             contents = ''
             if resource_obj.file_type.lower() not in IMAGE_TYPES:
                 print("Resource is at: " + resource_obj.file_location)
-                with open(resource_obj.file_location, 'r') as resource_file:
-                    contents = resource_file.read()
-                    # Don't return file contents if they contain a null byte.
-                    if '\0' in contents:
-                        contents = 'Binary'
+                try:
+                    with open(resource_obj.file_location, 'r', encoding='utf-8') as resource_file:
+                        contents = resource_file.read()
+                except UnicodeDecodeError:
+                    contents = 'Binary'
 
             return jsonify(
                 {"location": '/record/resource/{0}?view=true'.format(resource_obj.id), 'type': resource_obj.file_type,
