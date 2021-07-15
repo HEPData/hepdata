@@ -25,6 +25,7 @@ from unittest.mock import call
 from hepdata.ext.elasticsearch.config.es_config import \
     add_default_aggregations, sort_fields_mapping
 from hepdata.ext.elasticsearch import api as es_api
+from hepdata.ext.elasticsearch.config.es_config import get_filter_field
 from hepdata.ext.elasticsearch.document_enhancers import add_data_keywords, process_cmenergies
 from hepdata.ext.elasticsearch.process_results import merge_results, match_tables_to_papers, \
     get_basic_record_information, is_datatable
@@ -114,6 +115,15 @@ def test_query_builder_add_filters():
         s = QueryBuilder.add_filters(s, [
             ("not_a_filter", "test_invalid_filter")
         ])
+
+
+def test_get_filter_field_cmenergies():
+    assert(get_filter_field('cmenergies', [1.0, 2.0])
+           == ("range", "data_keywords.cmenergies", {'gte': 1.0, 'lt': 2.0}))
+    assert(get_filter_field('cmenergies', [1.0])
+           == ("range", "data_keywords.cmenergies", {'gte': 1.0, 'lte': 1.0}))
+    assert(get_filter_field('cmenergies', [2.0, 1.0])
+           == ("range", "data_keywords.cmenergies", {'gte': 1.0, 'lt': 2.0}))
 
 
 def test_sort_fields_mapping():

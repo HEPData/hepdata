@@ -71,6 +71,9 @@ def get_filter_field(name, value):
         filter_type = "range"
         field = "data_keywords.cmenergies"
 
+        # Ensure values are in the right order
+        value.sort()
+
         val_dict = { "gte": value[0] }
         if len(value) > 1:
             key = "lt" if value[1] > value[0] else "lte"
