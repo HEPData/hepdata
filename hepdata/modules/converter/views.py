@@ -654,7 +654,7 @@ def guess_rivet_analysis_name(submission):
         # the creation year of the INSPIRE record, and the INSPIRE ID.
         record = get_record_contents(submission.publication_recid,
                                      submission.overall_status)
-        if record and 'inspire_id' in record:
+        if record and 'inspire_id' in record and record['inspire_id']:
             try:
                 year = parse(record['creation_date']).year
             except:
