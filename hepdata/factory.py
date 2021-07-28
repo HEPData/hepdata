@@ -53,12 +53,23 @@ create_api = create_app_factory(
 )
 
 
-create_app = create_app_factory(
-    'hepdata',
-    config_loader=conf_loader,
-    extension_entry_points=['invenio_base.apps'],
-    blueprint_entry_points=['invenio_base.blueprints'],
-    wsgi_factory=create_wsgi_factory({'/api': create_api}),
-    instance_path=instance_path,
-    static_folder=static_folder,
-)
+def create_app(*args, **kwargs):
+    factory = create_app_factory(
+        'hepdata',
+        config_loader=conf_loader,
+        extension_entry_points=['invenio_base.apps'],
+        blueprint_entry_points=['invenio_base.blueprints'],
+        wsgi_factory=create_wsgi_factory({'/api': create_api}),
+        instance_path=instance_path,
+        static_folder=static_folder,
+    )
+    app = factory()
+
+    security = app.extensions['security']
+
+    @security.send_mail_task
+    def send_hepdata_mail(msg):
+        from hepdata.modules.email.utils import send_flask_message_email
+        send_flask_message_email(msg)
+
+    return app

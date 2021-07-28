@@ -30,6 +30,7 @@ from smtplib import SMTP, SMTPRecipientsRefused
 from celery import shared_task
 from flask import current_app
 from flask_celeryext import create_celery_app
+from flask_mail import Mail
 
 
 def create_send_email_task(destination, subject, message, reply_to_address=None):
@@ -78,6 +79,13 @@ def send_email(destination, subject, message, reply_to_address=None):
     except Exception as e:
         print('Exception occurred.')
         raise e
+
+
+def send_flask_message_email(message):
+    """
+    Creates a task to send an email from a flask_mail.Message instance
+    """
+    create_send_email_task(','.join(message.recipients), message.subject, message.html)
 
 
 def send_error_mail(exception):
