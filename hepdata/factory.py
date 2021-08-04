@@ -65,11 +65,17 @@ def create_app(*args, **kwargs):
     )
     app = factory()
 
+    # Customise flask-security emails
     security = app.extensions['security']
 
     @security.send_mail_task
     def send_hepdata_mail(msg):
         from hepdata.modules.email.utils import send_flask_message_email
         send_flask_message_email(msg)
+
+    @security.mail_context_processor
+    def security_mail_processor():
+        site_url = app.config.get('SITE_URL', 'https://www.hepdata.net')
+        return dict(site_url=site_url)
 
     return app

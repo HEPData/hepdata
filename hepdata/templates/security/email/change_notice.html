@@ -1,0 +1,16 @@
+{% extends 'hepdata_theme/email/email_container.html' %}
+{% block email_type %}
+    Your password has been changed.
+{% endblock %}
+
+{% block email_content %}
+
+<p>Your password for <a href="{{ site_url }}" style="color: #9b59b6">HEPData.net</a> has been changed.</p>
+
+{% if security.recoverable %}
+<p>If you did not change your password, <a href="{{ url_for_security('forgot_password', _external=True) }}" style="color: #9b59b6">click here to reset it</a>.</p>
+{% endif %}
+
+<p>If you did not request this email from <a href="{{ site_url }}" style="color: #9b59b6">HEPData.net</a>, please delete this email and <b>do not</b> click on any links.</p>
+
+{% endblock %}

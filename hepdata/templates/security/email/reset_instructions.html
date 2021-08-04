@@ -1,0 +1,14 @@
+{% extends 'hepdata_theme/email/email_container.html' %}
+{% block email_type %}
+    Reset your password
+{% endblock %}
+
+{% block email_content %}
+
+<p>You requested a password reset on <a href="{{ site_url }}" style="color: #9b59b6">HEPData.net</a></p>
+
+<p><a href="{{ reset_link }}" style="color: #9b59b6">Click here to reset your password</a></p>
+
+<p>If you did not request this email from <a href="{{ site_url }}" style="color: #9b59b6">HEPData.net</a>, please delete this email and <b>do not</b> click on any links.</p>
+
+{% endblock %}

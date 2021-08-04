@@ -1,0 +1,15 @@
+{% extends 'hepdata_theme/email/email_container.html' %}
+{% block email_type %}
+    Confirm your email address
+{% endblock %}
+
+
+{% block email_content %}
+
+<p>Please confirm your email address for your <a href="{{ site_url }}" style="color: #9b59b6">HEPData.net</a> account through the link below:</p>
+
+<p><a href="{{ confirmation_link }}" style="color: #9b59b6">Confirm my account</a></p>
+
+<p>If you did not request this email from <a href="{{ site_url }}" style="color: #9b59b6">HEPData.net</a>, please delete this email and <b>do not</b> click on any links.</p>
+
+{% endblock %}
