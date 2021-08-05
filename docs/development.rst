@@ -215,6 +215,24 @@ in setting that up - but see below for partial instructions.)
 11. Click "Sign in" and "Log in with CERN" and hopefully it will work as expected.
 
 
+reCAPTCHA: Local development
+============================
+To use reCAPTCHA on your local ``register_user`` form, go to the `reCAPTCHA admin console <https://www.google.com/recaptcha/admin/>`_
+(you will need a Google account) and add a new site with the following settings:
+
+ - Label: **hepdata-local** (or another name of your choice)
+ - reCAPTCHA type: choose **reCAPTCHA v2** and then **"I'm not a robot" Checkbox**
+ - Domains: **localhost**
+
+You will then be shown your reCAPTCHA keys, which you should set in ``config_local.py``:
+
+.. code-block:: python
+
+   RECAPTCHA_PUBLIC_KEY = "<Site Key>"
+   RECAPTCHA_PRIVATE_KEY = "<Secret Key>"
+
+The reCAPTCHA should now be visible on the signup form.
+
 Adding CLI commands
 ===================
 The :ref:`HEPData CLI <cli>` uses `click <https://click.palletsprojects.com/en/8.0.x/>`_ to define commands and

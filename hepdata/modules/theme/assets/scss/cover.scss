@@ -276,6 +276,10 @@ svg:not(:root) {
   width: 100%;
 }
 
+#recaptcha {
+  display: inline-block;
+}
+
 @media (max-width: 600px) {
   #latest_records_section, #latest_records, #beta_alert {
     display: none;
