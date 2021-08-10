@@ -80,13 +80,13 @@ def mock_import_old_record(inspire_id=mock_inspire_ids[1], send_email=False):
     errors = process_submission_directory(yaml_path,
                                           os.path.join(yaml_path, "submission.yaml"),
                                           record_information["recid"],
-                                          old_submission_schema=True,
-                                          old_data_schema=True)
+                                          old_schema=True)
 
     if errors:
-        log.error("Submission failed for {0}.".format(record_information["recid"]),
-            errors,
-            record_information["recid"])
+        log.error("Submission failed for {0}: {1}".format(
+            record_information["recid"],
+            errors
+        ))
         return False
 
     do_finalise(record_information['recid'], publication_record=record_information,

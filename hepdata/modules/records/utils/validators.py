@@ -26,6 +26,7 @@ import logging
 import os
 
 from hepdata_validator.data_file_validator import DataFileValidator
+from hepdata_validator.full_submission_validator import FullSubmissionValidator
 from hepdata_validator.schema_downloader import HTTPSchemaDownloader
 from hepdata_validator.schema_resolver import JsonSchemaResolver
 from hepdata_validator.submission_file_validator import SubmissionFileValidator
@@ -57,6 +58,19 @@ ACCEPTED_REMOTE_SCHEMAS = [
 # Define a global DataFileValidator object so that
 # custom schemas are only loaded once
 CACHED_DATA_VALIDATOR = None
+
+
+def get_full_submission_validator(old_schema):
+    """
+    Returns a FullSubmissionValidator object
+
+    :param old_schema: whether the schema version for the submission.yaml is 0.1.0
+    :return: SubmissionFileValidator object
+    """
+    if old_schema:
+        return FullSubmissionValidator(schema_version='0.1.0')
+    else:
+        return FullSubmissionValidator()
 
 
 def get_submission_validator(old_schema):

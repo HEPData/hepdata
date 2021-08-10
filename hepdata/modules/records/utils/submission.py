@@ -53,7 +53,7 @@ from hepdata.modules.records.utils.data_files import get_data_path_for_record, \
     find_submission_data_file_path
 from hepdata.modules.records.utils.doi_minter import reserve_dois_for_data_submissions, reserve_doi_for_hepsubmission, \
     generate_dois_for_submission
-from hepdata.modules.records.utils.validators import get_data_validator, get_submission_validator
+from hepdata.modules.records.utils.validators import get_data_validator, get_submission_validator, get_full_submission_validator
 from hepdata.utils.twitter import tweet
 from invenio_db import db
 from invenio_pidstore.errors import PIDDoesNotExistError
@@ -409,8 +409,7 @@ def _read_data_file(data_file_path):
 
 
 def process_submission_directory(basepath, submission_file_path, recid,
-                                 update=False, old_data_schema=False,
-                                 old_submission_schema=False):
+                                 update=False, old_schema=False):
     """
     Goes through an entire submission directory and processes the
     files within to create DataSubmissions
@@ -420,37 +419,17 @@ def process_submission_directory(basepath, submission_file_path, recid,
     :param submission_file_path:
     :param recid:
     :param update:
-    :param old_data_schema: whether to use old (v0) data schema
-    :param old_submission_schema: whether to use old (v0) submission schema
+    :param old_schema: whether to use old (v0) submission and data schemas
         (should only be used when importing old records)
     :return:
     """
     added_file_names = []
     errors = {}
 
-    if submission_file_path is None:
-        # return an error
-        errors = {"submission.yaml": [
-            {"level": "error", "message": "No submission.yaml file found in submission."}
-        ]}
-        return errors
+    full_submission_validator = get_full_submission_validator(old_schema)
+    is_valid = full_submission_validator.validate(directory=basepath)
 
-    try:
-        with open(submission_file_path, 'r') as submission_file:
-            submission_processed = list(yaml.load_all(submission_file, Loader=Loader))
-    except Exception as ex:
-        errors = {"submission.yaml": [
-            {"level": "error", "message": "There was a problem parsing the file.\n" + str(ex)}
-        ]}
-        return errors
-
-    submission_file_validator = get_submission_validator(old_submission_schema)
-    is_valid_submission_file = submission_file_validator.validate(
-        file_path=submission_file_path,
-        data=submission_processed,
-    )
-
-    if is_valid_submission_file:
+    if is_valid:
 
         # process file, extracting contents, and linking
         # the data record with the parent publication
@@ -463,7 +442,7 @@ def process_submission_directory(basepath, submission_file_path, recid,
 
         no_general_submission_info = True
 
-        data_file_validator = get_data_validator(old_data_schema)
+        # data_file_validator = get_data_validator(old_data_schema)
 
         # Delete all data records associated with this submission.
         # Fixes problems with ordering where the table names are changed between uploads.
@@ -471,34 +450,17 @@ def process_submission_directory(basepath, submission_file_path, recid,
         # Side effect that reviews will be deleted between uploads.
         cleanup_submission(recid, hepsubmission.version, added_file_names)
 
-        for yaml_document_index, yaml_document in enumerate(submission_processed):
+        for yaml_document_index, yaml_document in enumerate(full_submission_validator.submission_docs):
             if not yaml_document:
                 continue
-
-            # Check for presence of local files given as additional_resources.
-            if 'additional_resources' in yaml_document:
-                for resource in yaml_document['additional_resources']:
-                    location = os.path.join(basepath, resource['location'])
-                    if not resource['location'].startswith(('http', '/resource/')):
-                        if not os.path.isfile(location):
-                            errors[resource['location']] = [{"level": "error", "message":
-                                "Missing 'additional_resources' file from uploaded archive."}]
-                        elif '/' in resource['location']:
-                            errors[resource['location']] = [{"level": "error", "message":
-                                "Location of 'additional_resources' file should not contain '/'."}]
 
             if not yaml_document_index and 'name' not in yaml_document:
 
                 no_general_submission_info = False
                 process_general_submission_info(basepath, yaml_document, recid)
 
-            elif not all(k in yaml_document for k in ('name', 'description', 'keywords', 'data_file')):
-
-                errors["submission.yaml"] = [{"level": "error", "message": "YAML document with index {} ".format(
-                    yaml_document_index) + "missing one or more required keys (name, description, keywords, data_file)."}]
-
             else:
-
+                # FIXME: do we need to keep this check? submission_file_validator now checks for duplicates?
                 existing_datasubmission_query = DataSubmission.query \
                     .filter_by(name=yaml_document["name"],
                                publication_recid=recid,
@@ -527,31 +489,13 @@ def process_submission_directory(basepath, submission_file_path, recid,
 
                 main_file_path = os.path.join(basepath, yaml_document["data_file"])
 
-                data, ex = _read_data_file(main_file_path)
-
-                if not data or data is None or ex is not None:
-
-                    errors[yaml_document["data_file"]] = \
-                        [{"level": "error", "message": "There was a problem parsing the file.\n" + str(ex)}]
-
-                elif '/' in yaml_document["data_file"]:
-
-                    errors[yaml_document["data_file"]] = \
-                        [{"level": "error", "message": "Name of data_file should not contain '/'.\n"}]
-
-                else:
-                    schema_type = yaml_document.get('data_schema')  # Optional
-                    if data_file_validator.validate(file_path=main_file_path, file_type=schema_type, data=data):
-                        try:
-                            process_data_file(recid, hepsubmission.version, basepath, yaml_document,
-                                          datasubmission, main_file_path)
-                        except SQLAlchemyError as sqlex:
-                            errors[yaml_document["data_file"]] = [{"level": "error", "message":
-                                "There was a problem processing the file.\n" + str(sqlex)}]
-                            db.session.rollback()
-                    else:
-                        errors.update(process_validation_errors_for_display(data_file_validator.get_messages()))
-                        data_file_validator.clear_messages()
+                try:
+                    process_data_file(recid, hepsubmission.version, basepath, yaml_document,
+                                  datasubmission, main_file_path)
+                except SQLAlchemyError as sqlex:
+                    errors[yaml_document["data_file"]] = [{"level": "error", "message":
+                        "There was a problem processing the file.\n" + str(sqlex)}]
+                    db.session.rollback()
 
         if no_general_submission_info:
             hepsubmission.last_updated = datetime.utcnow()
@@ -599,8 +543,8 @@ def process_submission_directory(basepath, submission_file_path, recid,
 
     else:
 
-        errors = process_validation_errors_for_display(submission_file_validator.get_messages())
-        submission_file_validator.clear_messages()
+        errors = process_validation_errors_for_display(full_submission_validator.get_messages())
+        full_submission_validator.clear_all()
 
     # we return all the errors collectively.
     # This makes more sense that returning errors as
@@ -645,14 +589,21 @@ def process_validation_errors_for_display(errors):
 
     for file in errors:
         if "/" in file:
-            file_name = file.rsplit("/", 1)[1]
+            dir, file_name = file.rsplit("/", 1)
         else:
+            dir = None
             file_name = file
+
+        # TODO: also remove dir from message
 
         processed_errors[file_name] = []
         for error in errors[file]:
+            message = error.message
+            if dir is not None:
+                message = error.message.replace(dir+'/', '')
+
             processed_errors[file_name].append(
-                {"level": error.level, "message": error.message.encode("utf-8")}
+                {"level": error.level, "message": message}
             )
     return processed_errors
 

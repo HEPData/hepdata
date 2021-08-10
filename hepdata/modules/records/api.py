@@ -574,8 +574,7 @@ def save_zip_file(file, id):
     return file_path
 
 
-def process_zip_archive(file_path, id, old_submission_schema=False,
-                        old_data_schema=False):
+def process_zip_archive(file_path, id, old_schema=False):
     (file_save_directory, filename) = os.path.split(file_path)
 
     if not filename.endswith('.oldhepdata'):
@@ -592,8 +591,7 @@ def process_zip_archive(file_path, id, old_submission_schema=False,
                     }]
                 }
             return process_zip_archive(file_path[:-3], id,
-                                       old_submission_schema=old_submission_schema,
-                                       old_data_schema=False)
+                                       old_schema=False)
         elif filename.endswith('.yaml'):
             # we split the singular yaml file and create a submission directory
             error, last_updated = split_files(file_path, submission_temp_path)
@@ -643,11 +641,9 @@ def process_zip_archive(file_path, id, old_submission_schema=False,
             return result
         else:
             basepath, submission_file_path = result
-            old_data_schema = True
 
     return process_submission_directory(basepath, submission_file_path, id,
-                                        old_data_schema=old_data_schema,
-                                        old_submission_schema=old_submission_schema)
+                                        old_schema=old_schema)
 
 
 def check_and_convert_from_oldhepdata(input_directory, id, timestamp):

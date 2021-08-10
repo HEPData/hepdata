@@ -267,9 +267,13 @@ def test_old_submission_yaml(app, admin_idx):
                                           os.path.join(directory, 'submission.yaml'),
                                           12345)
     assert('submission.yaml' in errors)
-    assert(len(errors['submission.yaml']) == 1)
+    assert(len(errors['submission.yaml']) == 2)
     assert(errors['submission.yaml'][0]['level'] == 'error')
-    assert(errors['submission.yaml'][0]['message'].decode().startswith(
+    assert(errors['submission.yaml'][0]['message'].startswith(
+        "submission.yaml is invalid HEPData YAML"
+    ))
+    assert(errors['submission.yaml'][1]['level'] == 'error')
+    assert(errors['submission.yaml'][1]['message'].startswith(
         "Invalid value (in GeV) for cmenergies: '1.383-1.481'"
     ))
 
@@ -277,7 +281,7 @@ def test_old_submission_yaml(app, admin_idx):
     errors = process_submission_directory(directory,
                                           os.path.join(directory, 'submission.yaml'),
                                           12345,
-                                          old_submission_schema=True)
+                                          old_schema=True)
     assert(errors == {})
 
 
@@ -373,17 +377,20 @@ def test_duplicate_table_names(app):
     errors = process_submission_directory(directory,
                                        os.path.join(directory, 'submission.yaml'),
                                        12345)
+    print(errors)
 
     assert('submission.yaml' in errors)
-    assert(len(errors['submission.yaml']) == 4)
+    assert(len(errors['submission.yaml']) == 5)
     assert(errors['submission.yaml'][0]['level'] == 'error')
-    assert(errors['submission.yaml'][0]['message'].decode().startswith("Duplicate table name"))
+    assert(errors['submission.yaml'][0]['message'].startswith("submission.yaml is invalid HEPData YAML"))
     assert(errors['submission.yaml'][1]['level'] == 'error')
-    assert(errors['submission.yaml'][1]['message'].decode().startswith("Duplicate table name"))
+    assert(errors['submission.yaml'][1]['message'].startswith("Duplicate table name"))
     assert(errors['submission.yaml'][2]['level'] == 'error')
-    assert(errors['submission.yaml'][2]['message'].decode().startswith("Duplicate table data_file"))
+    assert(errors['submission.yaml'][2]['message'].startswith("Duplicate table name"))
     assert(errors['submission.yaml'][3]['level'] == 'error')
-    assert(errors['submission.yaml'][3]['message'].decode().startswith("Duplicate table data_file"))
+    assert(errors['submission.yaml'][3]['message'].startswith("Duplicate table data_file"))
+    assert(errors['submission.yaml'][4]['level'] == 'error')
+    assert(errors['submission.yaml'][4]['message'].startswith("Duplicate table data_file"))
 
 
 def test_status_reset(app, mocker):
