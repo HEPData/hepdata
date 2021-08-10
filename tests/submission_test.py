@@ -269,7 +269,9 @@ def test_old_submission_yaml(app, admin_idx):
     assert('submission.yaml' in errors)
     assert(len(errors['submission.yaml']) == 1)
     assert(errors['submission.yaml'][0]['level'] == 'error')
-    assert(errors['submission.yaml'][0]['message'].decode().startswith("Invalid value (in GeV) for cmenergies: 1.383-1.481"))
+    assert(errors['submission.yaml'][0]['message'].decode().startswith(
+        "Invalid value (in GeV) for cmenergies: '1.383-1.481'"
+    ))
 
     # Use old schema - should now work
     errors = process_submission_directory(directory,
@@ -373,10 +375,15 @@ def test_duplicate_table_names(app):
                                        12345)
 
     assert('submission.yaml' in errors)
-    assert(len(errors['submission.yaml']) == 2)
-    for error in errors['submission.yaml']:
-        assert(error['level'] == 'error')
-        assert(error['message'].startswith("Duplicate table with name"))
+    assert(len(errors['submission.yaml']) == 4)
+    assert(errors['submission.yaml'][0]['level'] == 'error')
+    assert(errors['submission.yaml'][0]['message'].decode().startswith("Duplicate table name"))
+    assert(errors['submission.yaml'][1]['level'] == 'error')
+    assert(errors['submission.yaml'][1]['message'].decode().startswith("Duplicate table name"))
+    assert(errors['submission.yaml'][2]['level'] == 'error')
+    assert(errors['submission.yaml'][2]['message'].decode().startswith("Duplicate table data_file"))
+    assert(errors['submission.yaml'][3]['level'] == 'error')
+    assert(errors['submission.yaml'][3]['message'].decode().startswith("Duplicate table data_file"))
 
 
 def test_status_reset(app, mocker):
