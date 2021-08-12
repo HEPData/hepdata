@@ -38,10 +38,9 @@
         {% for file, file_errors in errors.items() %}
             <p style="color: #3B5169; font-weight: bolder; font-size: 1.2em;">{{ file }}</p>
             {% for error in file_errors %}
-                <!-- FIXME: add in line breaks to error messages -->
-                <div style="background-color:#ECF0F1;min-height:40px;margin:3px;border-radius:0 4px 4px 0;">
+                <div style="background-color:#ECF0F1;min-height:40px;margin:3px;border-radius:0 4px 4px 0;display:flex;">
                     <div style="background-color:#C03A2B;padding:10px;width:10%;border-radius:4px 0 0 4px;color: #fff;float:left!important;">{{ error.level }}</div>
-                    <div style="padding:10px;width:75%;text-align:left;color: #3B5169;float:right!important;">{{ error.message|safe }}</div>
+                    <div style="padding:10px;width:75%;text-align:left;color: #3B5169;float:right!important;white-space:pre-wrap;">{{ error.message|safe }}</div>
                     <div style="clear:both;"></div>
                 </div>
             {% endfor %}
