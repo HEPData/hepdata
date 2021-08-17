@@ -23,42 +23,42 @@
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
 import pytest
+
+from hepdata_validator.full_submission_validator import FullSubmissionValidator
+
 import hepdata.modules.records.utils.validators
-
-from hepdata.modules.records.utils.validators import DataFileValidator
-from hepdata.modules.records.utils.validators import get_data_validator
-from hepdata.modules.records.utils.validators import load_remote_schemas
+from hepdata.modules.records.utils.validators import get_full_submission_validator
 
 
-def test_get_data_validator_initial():
+def test_get_validator_initial():
     """
-    Checks that a DataValidator object is returned
+    Checks that a FullSubmissionValidator object is returned
     and populated to the global cached of the `validators` modules
     """
 
     # Reset validator cache
-    hepdata.modules.records.utils.validators.CACHED_DATA_VALIDATOR = None
+    hepdata.modules.records.utils.validators.CACHED_FULL_VALIDATOR = None
 
-    data_validator = get_data_validator(old_schema=False)
+    validator = get_full_submission_validator(use_old_schema=False)
 
-    assert type(data_validator) == DataFileValidator
-    assert hepdata.modules.records.utils.validators.CACHED_DATA_VALIDATOR is data_validator
+    assert type(validator) == FullSubmissionValidator
+    assert hepdata.modules.records.utils.validators.CACHED_FULL_VALIDATOR is validator
 
 
-def test_get_data_validator_cached():
+def test_get_validator_cached():
     """
-    Checks that once a DataValidator object has been cached,
+    Checks that once a FullSubmissionValidator object has been cached,
     the same object is returned on successive calls
     """
 
     # Reset validator cache
-    hepdata.modules.records.utils.validators.CACHED_DATA_VALIDATOR = None
+    hepdata.modules.records.utils.validators.CACHED_FULL_VALIDATOR = None
 
-    initial_validator = get_data_validator(old_schema=False)
+    initial_validator = get_full_submission_validator(use_old_schema=False)
 
     # Successive calls that should returned the cached validator
-    cached_validator_1 = get_data_validator(old_schema=False)
-    cached_validator_2 = get_data_validator(old_schema=False)
+    cached_validator_1 = get_full_submission_validator(use_old_schema=False)
+    cached_validator_2 = get_full_submission_validator(use_old_schema=False)
 
     assert cached_validator_1 is initial_validator
     assert cached_validator_2 is initial_validator
@@ -68,7 +68,12 @@ def test_load_remote_schemas_valid():
     """
     Checks that loading of remote schemas when there is
     a valid response from the remote server
+    N.B. This is now testing functionality from hepdata-validator,
+    but leaving it in to prove backwards-compatibility
     """
+
+    # Reset validator cache
+    hepdata.modules.records.utils.validators.CACHED_FULL_VALIDATOR = None
 
     # Set up a valid list of validation schemas
     hepdata.modules.records.utils.validators.ACCEPTED_REMOTE_SCHEMAS = [
@@ -80,11 +85,10 @@ def test_load_remote_schemas_valid():
 
     schema_name = 'https://scikit-hep.org/pyhf/schemas/1.0.0/model.json'
 
-    data_validator = DataFileValidator()
-    load_remote_schemas(data_validator)
+    validator = get_full_submission_validator()
 
-    assert data_validator.custom_data_schemas != {}
-    assert data_validator.custom_data_schemas[schema_name] is not None
+    assert validator._data_file_validator.custom_data_schemas != {}
+    assert validator._data_file_validator.custom_data_schemas[schema_name] is not None
 
 
 def test_load_remote_schemas_invalid():
@@ -92,6 +96,9 @@ def test_load_remote_schemas_invalid():
     Checks that loading of remote schemas when there is
     an invalid response from the remote server
     """
+
+    # Reset validator cache
+    hepdata.modules.records.utils.validators.CACHED_FULL_VALIDATOR = None
 
     # Set up a valid list of validation schemas
     hepdata.modules.records.utils.validators.ACCEPTED_REMOTE_SCHEMAS = [
@@ -101,7 +108,5 @@ def test_load_remote_schemas_invalid():
         },
     ]
 
-    data_validator = DataFileValidator()
-
     with pytest.raises(FileNotFoundError):
-        load_remote_schemas(data_validator)
+        get_full_submission_validator()

@@ -23,13 +23,8 @@
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
 import logging
-import os
 
-from hepdata_validator.data_file_validator import DataFileValidator
 from hepdata_validator.full_submission_validator import FullSubmissionValidator
-from hepdata_validator.schema_downloader import HTTPSchemaDownloader
-from hepdata_validator.schema_resolver import JsonSchemaResolver
-from hepdata_validator.submission_file_validator import SubmissionFileValidator
 
 logging.basicConfig()
 log = logging.getLogger(__name__)
@@ -55,83 +50,36 @@ ACCEPTED_REMOTE_SCHEMAS = [
 ]
 
 
-# Define a global DataFileValidator object so that
+# Define a global FullSubmissionValidator object so that
 # custom schemas are only loaded once
-CACHED_DATA_VALIDATOR = None
+CACHED_FULL_VALIDATOR = None
 
 
-def get_full_submission_validator(old_schema):
+def get_full_submission_validator(use_old_schema=False):
     """
     Returns a FullSubmissionValidator object
 
     :param old_schema: whether the schema version for the submission.yaml is 0.1.0
     :return: SubmissionFileValidator object
     """
-    if old_schema:
-        return FullSubmissionValidator(schema_version='0.1.0')
-    else:
-        return FullSubmissionValidator()
 
-
-def get_submission_validator(old_schema):
-    """
-    Returns a SubmissionFileValidator object
-
-    :param old_schema: whether the schema version for the submission.yaml is 0.1.0
-    :return: SubmissionFileValidator object
-    """
-    if old_schema:
-        return SubmissionFileValidator(schema_version='0.1.0')
-    else:
-        return SubmissionFileValidator()
-
-
-def get_data_validator(old_schema):
-    """
-    Returns a DataFileValidator object (with remote defined schemas loaded)
-
-    :param old_hepdata: whether the schema version for the data file is 0.1.0
-    :return: DataFileValidator object
-    """
-
-    global CACHED_DATA_VALIDATOR
+    global CACHED_FULL_VALIDATOR
 
     # Use for YAML files migrated from old HepData site
-    if old_schema:
-        data_validator = DataFileValidator(schema_version='0.1.0')
+    if use_old_schema:
+        return FullSubmissionValidator(schema_version='0.1.0', autoload_remote_schemas=False)
 
-    elif CACHED_DATA_VALIDATOR:
-        data_validator = CACHED_DATA_VALIDATOR
+    elif CACHED_FULL_VALIDATOR:
+        validator = CACHED_FULL_VALIDATOR
 
     else:
-        data_validator = DataFileValidator()
-        load_remote_schemas(data_validator)
-        CACHED_DATA_VALIDATOR = data_validator
+        validator = FullSubmissionValidator(autoload_remote_schemas=False)
+        for org_schemas in ACCEPTED_REMOTE_SCHEMAS:
+            schema_url = org_schemas['base_url']
+            schema_names = org_schemas['schemas']
+            for name in schema_names:
+                validator.load_remote_schema(base_url=schema_url, schema_name=name)
 
-    return data_validator
+        CACHED_FULL_VALIDATOR = validator
 
-
-def load_remote_schemas(data_validator):
-    """
-    Loads all the remotely-defined schemas in-place
-
-    :param data_validator: DataFileValidator object to load schemas into
-    :return: None
-    """
-
-    for org_schemas in ACCEPTED_REMOTE_SCHEMAS:
-        schema_url = org_schemas['base_url']
-        schema_names = org_schemas['schemas']
-
-        resolver = JsonSchemaResolver(schema_url)
-        downloader = HTTPSchemaDownloader(resolver, schema_url)
-
-        # Retrieve and save the remote schema in the local path
-        for name in schema_names:
-            schema_type = downloader.get_schema_type(name)
-            schema_spec = downloader.get_schema_spec(name)
-            downloader.save_locally(name, schema_spec)
-
-            # Load the custom schema as a custom type
-            local_path = os.path.join(downloader.schemas_path, name)
-            data_validator.load_custom_schema(schema_type, local_path)
+    return validator
