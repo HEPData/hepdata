@@ -85,7 +85,12 @@ def send_flask_message_email(message):
     """
     Creates a task to send an email from a flask_mail.Message instance
     """
-    create_send_email_task(','.join(message.recipients), message.subject, message.html)
+    create_send_email_task(
+        ','.join(message.recipients),
+        message.subject,
+        message.html,
+        reply_to_address=current_app.config['SECURITY_EMAIL_SENDER']
+    )
 
 
 def send_error_mail(exception):
