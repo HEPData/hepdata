@@ -458,27 +458,15 @@ def process_submission_directory(basepath, submission_file_path, recid,
                 process_general_submission_info(basepath, yaml_document, recid)
 
             else:
-                # FIXME: do we need to keep this check? submission_file_validator now checks for duplicates?
-                existing_datasubmission_query = DataSubmission.query \
-                    .filter_by(name=yaml_document["name"],
-                               publication_recid=recid,
-                               version=hepsubmission.version)
-
                 added_file_names.append(yaml_document["name"])
 
                 try:
-                    if existing_datasubmission_query.count() == 0:
-                        datasubmission = DataSubmission(
-                            publication_recid=recid,
-                            name=yaml_document["name"],
-                            description=yaml_document["description"],
-                            version=hepsubmission.version)
-                        db.session.add(datasubmission)
-                    else:
-                        error = {"level": "error",
-                                 "message": "Duplicate table with name '{}'.".format(yaml_document["name"])}
-                        errors.setdefault('submission.yaml', []).append(error)
-                        continue
+                    datasubmission = DataSubmission(
+                        publication_recid=recid,
+                        name=yaml_document["name"],
+                        description=yaml_document["description"],
+                        version=hepsubmission.version)
+                    db.session.add(datasubmission)
 
                 except SQLAlchemyError as sqlex:
                     errors[yaml_document["data_file"]] = [{"level": "error", "message": str(sqlex)}]
