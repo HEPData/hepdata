@@ -29,6 +29,7 @@ import re
 from flask import Blueprint, render_template, current_app, redirect, request
 from hepdata_validator import LATEST_SCHEMA_VERSION, RAW_SCHEMAS_URL
 
+from hepdata.modules.email.utils import send_flask_message_email
 from hepdata.version import __version__
 
 blueprint = Blueprint(
@@ -38,6 +39,23 @@ blueprint = Blueprint(
     template_folder='templates',
     static_folder='static',
 )
+
+
+@blueprint.record_once
+def init(state):
+    """Init app."""
+    app = state.app
+    # Customise flask-security emails
+    security = app.extensions['security']
+
+    @security.send_mail_task
+    def send_hepdata_mail(msg):
+        send_flask_message_email(msg)
+
+    @security.mail_context_processor
+    def security_mail_processor():
+        site_url = app.config.get('SITE_URL', 'https://www.hepdata.net')
+        return dict(site_url=site_url)
 
 
 @blueprint.route('/')

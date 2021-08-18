@@ -1,0 +1,19 @@
+{% extends 'hepdata_theme/email/email_container.html' %}
+{% block email_type %}
+    Welcome to HEPData.net
+{% endblock %}
+
+
+{% block email_content %}
+
+<p>Welcome to <a href="{{ site_url }}" style="color: #9b59b6">HEPData.net</a>, {{ user.email }}!</p>
+
+{% if security.confirmable %}
+  <p>You can confirm your email through the link below:</p>
+
+  <p><a href="{{ confirmation_link }}" style="color: #9b59b6">Confirm my account</a></p>
+{% endif %}
+
+<p>If you did not request this email from <a href="{{ site_url }}" style="color: #9b59b6">HEPData.net</a>, please delete this email and <b>do not</b> click on any links.</p>
+
+{% endblock %}
