@@ -266,3 +266,66 @@ To create a new ``fix`` command:
 
 1. Create a new module file in ``fixes`` with an appropriate name.
 2. Create a function to apply your fix, and annotate it with ``@fix.command()``.
+
+
+Testing
+=======
+
+The automated tests do not cover all scenarios, so manual testing should be done of your local instance. Below are some
+suggestions of manual tests to carry out if you have been working on a given part of the codebase.
+
+Note that this section is a work in progress and the suggested tests are not exhaustive - please consider adding further
+tests to this section!
+
+Submission uploads
+------------------
+
+There are some sample submission files in docs/manual_test_files:
+
+ * :download:`TestHEPSubmission.zip <manual_test_files/TestHEPSubmission.zip>`
+ * :download:`sample.oldhepdata <manual_test_files/sample.oldhepdata>`
+ * :download:`TestHEPSubmission_invalid.zip <manual_test_files/TestHEPSubmission_invalid.zip>`
+ * :download:`TestRemoteSubmission.zip <manual_test_files/TestRemoteSubmission.zip>`
+
+Test steps:
+
+1. Log in as administrator.
+
+2. Create a new submission (using any values).
+
+3. Upload **TestHEPSubmission.zip**
+
+   * Should succeed
+   * Should display 8 tables
+
+4. Click **Upload new version** and upload **sample.oldhepdata**
+
+   * Should succeed
+   * Should show 7 tables
+
+5. Click **Upload new version** and upload **TestHEPSubmission.zip** again.
+
+   * Should succeed
+   * Should show 8 tables
+
+6. Click **Upload new version** and upload **TestHEPSubmission_Invalid.zip**.
+
+   * Should fail
+   * No tables should be shown in UI
+   * Error email should give the following errors in submission.yaml:
+
+      * submission.yaml is invalid HEPData YAML.
+      * None is not of type 'string' in 'data_license.name' (expected: {'type': 'string', 'maxLength': 256})
+
+7. Click **Upload new version** and upload **TestRemoteSubmission.zip**.
+
+   * Should fail
+   * No tables should be shown in UI
+   * Error email should give the following errors in submission.yaml:
+
+      * Autoloading of remote schema https://scikit-hep.org/pyhf/schemas/1.0.0/workspace.json is not allowed.
+
+8. Click **Upload new version** and upload **TestHEPSubmission.zip** again.
+
+   * Should succeed
+   * Should show 8 tables
