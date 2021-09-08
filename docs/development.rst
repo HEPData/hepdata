@@ -286,6 +286,9 @@ There are some sample submission files in docs/manual_test_files:
  * :download:`sample.oldhepdata <manual_test_files/sample.oldhepdata>`
  * :download:`TestHEPSubmission_invalid.zip <manual_test_files/TestHEPSubmission_invalid.zip>`
  * :download:`TestRemoteSubmission.zip <manual_test_files/TestRemoteSubmission.zip>`
+ * :download:`single_file_submission.yaml.gz <manual_test_files/single_file_submission.yaml.gz>`
+ * :download:`single_file_submission_invalid.yaml.gz <manual_test_files/single_file_submission_invalid.yaml.gz>`
+ * :download:`single_file_submission_invalid_yaml.yaml.gz <manual_test_files/single_file_submission_invalid_yaml.yaml.gz>`
 
 Test steps:
 
@@ -298,26 +301,47 @@ Test steps:
    * Should succeed
    * Should display 8 tables
 
-4. Click **Upload new version** and upload **sample.oldhepdata**
+4. Click **Upload new files** and upload **sample.oldhepdata**
 
    * Should succeed
    * Should show 7 tables
 
-5. Click **Upload new version** and upload **TestHEPSubmission.zip** again.
+5. Click **Upload new files** and upload **single_file_submission.yaml.gz**.
+
+  * Should succeed
+  * Should show 5 tables
+
+6. Click **Upload new files** and upload **TestHEPSubmission.zip** again.
 
    * Should succeed
    * Should show 8 tables
 
-6. Click **Upload new version** and upload **TestHEPSubmission_Invalid.zip**.
+7. Click **Upload new files** and upload **TestHEPSubmission_invalid.zip**.
 
    * Should fail
    * No tables should be shown in UI
-   * Error email should give the following errors in submission.yaml:
+   * Error email should give the following errors:
 
-      * submission.yaml is invalid HEPData YAML.
-      * None is not of type 'string' in 'data_license.name' (expected: {'type': 'string', 'maxLength': 256})
+      * submission.yaml:
 
-7. Click **Upload new version** and upload **TestRemoteSubmission.zip**.
+         * Name of data_file 'mydirectory/data2.yaml' should not contain '/'.
+         * Location of 'additional_resources' file '../TestHEPSubmission/figFigure8B.png' should not contain '/'.
+         * Missing 'additional_resources' file 'figFigure9A.png'.
+
+      * data3.yaml
+
+         * Missing data_file 'data3.yaml'.
+
+      * data8.yaml
+
+         * There was a problem parsing the file: while parsing a block mapping in "data8.yaml", line 1, column 1 did not find expected key in "data8.yaml", line 9, column 3
+
+      * figFigure8B.png
+
+         * figFigure8B.png is not referenced in the submission.
+
+
+8. Upload **TestRemoteSubmission.zip**.
 
    * Should fail
    * No tables should be shown in UI
@@ -325,7 +349,23 @@ Test steps:
 
       * Autoloading of remote schema https://scikit-hep.org/pyhf/schemas/1.0.0/workspace.json is not allowed.
 
-8. Click **Upload new version** and upload **TestHEPSubmission.zip** again.
+9. Upload **single_file_submission_invalid.yaml.gz**.
+
+   * Should fail
+   * No tables should be shown in UI
+   * Error email should give the following errors in 'Archive File Extractor':
+
+      * single_file_submission_invalid.yaml.gz is not a valid .gz file.
+
+10. Upload **single_file_submission_invalid_yaml.yaml.gz**.
+
+   * Should fail
+   * No tables should be shown in UI
+   * Error email should give the following errors in 'Single YAML file splitter':
+
+      * while parsing a flow mapping in "single_file_submission_invalid_yaml.yaml", line 7, column 11 did not find expected ',' or '}' in "single_file_submission_invalid_yaml.yaml", line 8, column 3
+
+10. Click **Upload new version** and upload **TestHEPSubmission.zip** again.
 
    * Should succeed
    * Should show 8 tables

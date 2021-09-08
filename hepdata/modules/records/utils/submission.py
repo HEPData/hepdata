@@ -577,21 +577,20 @@ def process_validation_errors_for_display(errors):
         if "/" in file:
             dir, file_name = file.rsplit("/", 1)
         else:
-            dir = None
             file_name = file
-
-        # TODO: also remove dir from message
 
         processed_errors[file_name] = []
         for error in errors[file]:
-            message = error.message
-            if dir is not None:
-                message = error.message.replace(dir+'/', '')
+            message = clean_error_message_for_display(error.message, dir)
 
             processed_errors[file_name].append(
                 {"level": error.level, "message": message}
             )
     return processed_errors
+
+
+def clean_error_message_for_display(error_message, dir):
+    return error_message.replace(dir+'/', '')
 
 
 def get_or_create_hepsubmission(recid, coordinator=1, status="todo"):
