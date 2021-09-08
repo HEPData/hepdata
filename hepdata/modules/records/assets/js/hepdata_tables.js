@@ -131,7 +131,12 @@ HEPDATA.table_renderer = {
           });
           HEPDATA.table_renderer.attach_row_listener(table_placement, 'histogram');
         }
-        window.MathJax.typeset();
+        try {
+          window.MathJax.typeset();
+        } catch (error) {
+          // Do nothing
+        }
+
         if (HEPDATA.show_review) {
           HEPDATA.table_renderer.update_reviewer_button(table_data.review);
         }
