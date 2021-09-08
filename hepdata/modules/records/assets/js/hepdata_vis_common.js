@@ -495,9 +495,7 @@ HEPDATA.legends = {
       });
     });
 
-    $(window).on('load', function() {
-      window.MathJax.typeset();
-    });
+    HEPDATA.typeset([d3.select(legend_placement).node()]);
   }
 
 };

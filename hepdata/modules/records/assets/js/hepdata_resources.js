@@ -60,7 +60,7 @@ HEPDATA.hepdata_resources = (function () {
       return "View Resource";
     });
 
-    window.MathJax.typeset();
+    HEPDATA.typeset([d3.select("#resourceModal").node()]);
   };
 
   var create_modal_view = function (recid, version) {

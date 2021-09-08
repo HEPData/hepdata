@@ -242,6 +242,8 @@ HEPDATA.dashboard = (function () {
         }
       );
 
+      HEPDATA.typeset([d3.select("#permissions").node()]);
+
     });
   };
 
@@ -267,9 +269,7 @@ HEPDATA.dashboard = (function () {
       });
 
       initialise_finalise_btn();
-      $(window).on('load', function() {
-        window.MathJax.typeset();
-      });
+      HEPDATA.typeset($('#submissions-wrapper').get());
 
       HEPDATA.dashboard.render_submission_stats();
 

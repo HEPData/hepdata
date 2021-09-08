@@ -72,7 +72,7 @@
                         for (var resource in data) {
                             if (data[resource]['file_type'] == 'html') {
                                 $("#hepdata_table_detail").load('/record/resource/' + data[resource]['id'], function () {
-                                    window.MathJax.typeset();
+                                    HEPDATA.typeset($("#hepdata_table_detail").get());
                                 });
                             }
                         }

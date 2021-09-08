@@ -1,5 +1,6 @@
 import $ from 'jquery'
 import inspire_ds from './inspire.js'
+import HEPDATA from './hepdata_common.js'
 
 $(document).ready(function () {
   var inspire = false;
@@ -122,9 +123,7 @@ $(document).ready(function () {
 
   $("#people_continue_btn").on('click', function () {
       toggle_div("#reviewers_uploaders", default_options, 'hide', function () {
-          toggle_div("#uploader_message", default_options, 'show', function () {
-              window.MathJax.typeset();
-          })
+          toggle_div("#uploader_message", default_options, 'show');
       });
   });
 
@@ -141,7 +140,7 @@ $(document).ready(function () {
           change_breadcrumbs("#progress-people", "#progress-submit");
           toggle_div("#check", default_options, 'show', function () {
               $("#publication_title").text(inspire ? publication_data.query.title : $("#paper_title").val());
-              window.MathJax.typeset();
+              HEPDATA.typeset($("#publication_title").get());
           })
       });
   });
@@ -192,7 +191,7 @@ $(document).ready(function () {
       }
 
       $("#inspire-result").html(html);
-      window.MathJax.typeset();
+      HEPDATA.typeset($("#inspire-result").get());
   };
 
   $("#submit_btn").on('click', function () {
