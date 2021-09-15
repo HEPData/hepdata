@@ -1,4 +1,5 @@
 import $ from 'jquery'
+import HEPDATA from './hepdata_common.js'
 
 var inspire_ds = (function () {
 
@@ -73,7 +74,7 @@ var inspire_ds = (function () {
 
             $("#inspire-result").addClass("well well-sm");
             $("#inspire-result").html(html);
-            window.MathJax.typeset();
+            HEPDATA.typeset($("#inspire-result").get());
         }
     }
 })();

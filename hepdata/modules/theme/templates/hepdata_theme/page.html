@@ -37,8 +37,7 @@
 
     {{ webpack['hepdata-styles.css'] }}
     {{ webpack['hepdata-page-js.js'] }}
-
-    {% include "hepdata_theme/javascript.html" %}
+    {{ webpack['hepdata-mathjax-js.js'] }}
 
     {%- block additional_assets %}
     {%- endblock additional_assets %}
