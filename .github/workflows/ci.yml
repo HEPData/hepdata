@@ -132,6 +132,10 @@ jobs:
         tunnelIdentifier: ${{ github.run_id }}
         scVersion: 4.7.0
         verbose: true
+    - name: Setup tmate session
+      uses: mxschmitt/action-tmate@v3
+      with:
+        limit-access-to-actor: true
     - name: Run tests
       env:
         SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
