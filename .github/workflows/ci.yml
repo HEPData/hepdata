@@ -133,6 +133,9 @@ jobs:
         scVersion: 4.7.0
         verbose: true
     - name: Setup tmate session
+      env:
+        SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
+        SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY }}
       uses: mxschmitt/action-tmate@v3
       with:
         limit-access-to-actor: true
