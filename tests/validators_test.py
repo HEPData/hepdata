@@ -23,6 +23,7 @@
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
 import pytest
+import requests_mock
 
 from hepdata_validator.full_submission_validator import FullSubmissionValidator
 
@@ -108,5 +109,10 @@ def test_load_remote_schemas_invalid():
         },
     ]
 
-    with pytest.raises(FileNotFoundError):
-        get_full_submission_validator()
+    # Use requests_mock to ensure requests gives a 404
+    with requests_mock.Mocker() as m:
+        m.register_uri('GET', 'https://random-org.com/project/schemas/1.0.0/not-found.json', text='Not Found', status_code=404)
+        with pytest.raises(FileNotFoundError):
+            get_full_submission_validator()
+
+        assert m.called
