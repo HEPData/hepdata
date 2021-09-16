@@ -131,18 +131,14 @@ HEPDATA.table_renderer = {
           });
           HEPDATA.table_renderer.attach_row_listener(table_placement, 'histogram');
         }
-        try {
-          window.MathJax.typeset();
-        } catch (error) {
-          // Do nothing
-        }
-
         if (HEPDATA.show_review) {
           HEPDATA.table_renderer.update_reviewer_button(table_data.review);
         }
 
         $("#hepdata_table_loader").addClass("hidden");
         $("#hepdata_table_content").removeClass("hidden");
+
+        HEPDATA.typeset($("#hepdata_table_content").get());
       },
       error: function (data, error) {
         console.error(error);

@@ -1,5 +1,6 @@
 import $ from 'jquery'
 import 'bootstrap'
+import HEPDATA from './hepdata_common.js'
 
 $(document).ready(function () {
   $.ajax({
@@ -56,9 +57,7 @@ $(document).ready(function () {
               $("#latest_records").append(record_html_block);
           }
 
-          $(window).on('load', function() {
-            window.MathJax.typeset();
-          });
+          HEPDATA.typeset($("#latest_records").get());
       }
   });
 

@@ -31,7 +31,7 @@ invenio-search==1.4.1
 invenio-theme==1.3.8
 invenio-userprofiles==1.2.1
 Jinja2==2.11.3
-jsmin==2.2.1
+git+https://github.com/serenecloud/jsmin@6467320#egg=jsmin
 lxml==4.6.3
 msgpack==0.6.2
 psycopg2-binary==2.8.4
