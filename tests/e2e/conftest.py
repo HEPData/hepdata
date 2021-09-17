@@ -191,7 +191,8 @@ def env_browser(request):
         'username': sauce_username,
         'accessKey': sauce_access_key,
         'tunnelIdentifier': os.environ.get('GITHUB_RUN_ID', ''),
-        'screenResolution': '1280x1024'
+        'screenResolution': '1280x1024',
+        'extendedDebugging': True
     }
 
     if not RUN_SELENIUM_LOCALLY:
