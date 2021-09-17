@@ -134,7 +134,7 @@ jobs:
         verbose: true
     - name: Run unit tests
       run: |
-        py.test -vv tests -k 'not tests/e2e'
+        py.test -vv tests/*_test.py
     - name: Run e2e tests
       env:
         SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
