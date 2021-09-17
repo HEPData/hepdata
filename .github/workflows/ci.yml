@@ -132,12 +132,15 @@ jobs:
         tunnelIdentifier: ${{ github.run_id }}
         scVersion: 4.7.0
         verbose: true
-    - name: Run tests
+    - name: Run unit tests
+      run: |
+        py.test -vv tests -k 'not tests/e2e'
+    - name: Run e2e tests
       env:
         SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
         SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY }}
       run: |
-        if [[ -z ${{ secrets.SAUCE_USERNAME }} || -z ${{ secrets.SAUCE_ACCESS_KEY}} ]]; then py.test -vv tests -k 'not tests/e2e'; else py.test -vv tests; fi
+        if [[ -n ${{ secrets.SAUCE_USERNAME }} && -n ${{ secrets.SAUCE_ACCESS_KEY}} ]]; then py.test -vv tests/e2e; fi
     - name: Run coveralls
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
