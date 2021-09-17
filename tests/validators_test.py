@@ -76,6 +76,8 @@ def test_load_remote_schemas_valid():
     # Reset validator cache
     hepdata.modules.records.utils.validators.CACHED_FULL_VALIDATOR = None
 
+    accepted_schemas = hepdata.modules.records.utils.validators.ACCEPTED_REMOTE_SCHEMAS
+
     # Set up a valid list of validation schemas
     hepdata.modules.records.utils.validators.ACCEPTED_REMOTE_SCHEMAS = [
         {
@@ -91,6 +93,10 @@ def test_load_remote_schemas_valid():
     assert validator._data_file_validator.custom_data_schemas != {}
     assert validator._data_file_validator.custom_data_schemas[schema_name] is not None
 
+    # Reset ACCEPTED_REMOTE_SCHEMAS and CACHED_FULL_VALIDATOR
+    hepdata.modules.records.utils.validators.ACCEPTED_REMOTE_SCHEMAS = accepted_schemas
+    hepdata.modules.records.utils.validators.CACHED_FULL_VALIDATOR = None
+
 
 def test_load_remote_schemas_invalid():
     """
@@ -100,6 +106,8 @@ def test_load_remote_schemas_invalid():
 
     # Reset validator cache
     hepdata.modules.records.utils.validators.CACHED_FULL_VALIDATOR = None
+
+    accepted_schemas = hepdata.modules.records.utils.validators.ACCEPTED_REMOTE_SCHEMAS
 
     # Set up a valid list of validation schemas
     hepdata.modules.records.utils.validators.ACCEPTED_REMOTE_SCHEMAS = [
@@ -116,3 +124,7 @@ def test_load_remote_schemas_invalid():
             get_full_submission_validator()
 
         assert m.called
+
+    # Reset ACCEPTED_REMOTE_SCHEMAS and CACHED_FULL_VALIDATOR
+    hepdata.modules.records.utils.validators.ACCEPTED_REMOTE_SCHEMAS = accepted_schemas
+    hepdata.modules.records.utils.validators.CACHED_FULL_VALIDATOR = None
