@@ -620,9 +620,13 @@ def process_zip_archive(file_path, id, old_schema=False):
                 unzipped_path = None
 
             if not unzipped_path:
+                message = clean_error_message_for_display(
+                    "{} is not a valid zip or tar archive file.".format(file_path),
+                    file_save_directory
+                )
                 return {
                     "Archive file extractor": [{
-                        "level": "error", "message": "{} is not a valid zip or tar archive file.".format(file_path)
+                        "level": "error", "message": message
                     }]
                 }
 
