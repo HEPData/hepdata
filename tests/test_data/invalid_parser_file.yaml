@@ -1,0 +1,20 @@
+---
+independent_variables:
+  - header: {name: SQRT(S), units: GEV}
+    values:
+      - value: 7000
+dependent_variables:
+  - header: {name: SIG(total), units: FB}
+    qualifiers:
+      - {name: RE, value: P P --> Z0 Z0 X # note missing final "}"
+    values:
+      - value: 6.7
+        errors:
+          - {symerror: 0.45, label: stat}
+          - {asymerror: {plus: 0.4, minus: -0.3}, label: sys}
+          - {symerror: 0.34, label: "sys,lumi"}
+      - value: 5.7
+        errors:
+          - {symerror: 0.4, label: stat}
+          - {asymerror: {plus: 0.42, minus: 0.31}, label: sys}
+          - {symerror: 0.4, label: "sys,lumi"}

@@ -479,7 +479,32 @@ def test_process_zip_archive_invalid(app):
     assert (len(errors["Archive file extractor"]) == 1)
     assert (errors["Archive file extractor"][0].get("level") == "error")
     assert (errors["Archive file extractor"][0].get("message")
-            == "{} is not a valid zip or tar archive file.".format(tmp_file_path))
+            == "submission_invalid_tarfile.tgz.gz is not a valid zip or tar archive file.")
+    shutil.rmtree(tmp_path)
+
+    # Test uploading a file that is not in any of the given formats
+    file_path = os.path.join(base_dir, 'test_data/notazip.yaml.gz')
+    tmp_path = tempfile.mkdtemp(dir=CFG_TMPDIR)
+    shutil.copy2(file_path, tmp_path)
+    tmp_file_path = os.path.join(tmp_path, 'notazip.yaml.gz')
+    errors = process_zip_archive(tmp_file_path, 1)
+    assert ("Archive file extractor" in errors)
+    assert (len(errors["Archive file extractor"]) == 1)
+    assert (errors["Archive file extractor"][0].get("level") == "error")
+    assert (errors["Archive file extractor"][0].get("message")
+            == "notazip.yaml.gz is not a valid .gz file.")
+    shutil.rmtree(tmp_path)
+
+    # Test uploading an invalid yaml file
+    file_path = os.path.join(base_dir, 'test_data/invalid_parser_file.yaml')
+    tmp_path = tempfile.mkdtemp(dir=CFG_TMPDIR)
+    shutil.copy2(file_path, tmp_path)
+    tmp_file_path = os.path.join(tmp_path, 'invalid_parser_file.yaml')
+    errors = process_zip_archive(tmp_file_path, 1)
+    assert ("Single YAML file splitter" in errors)
+    assert (len(errors["Single YAML file splitter"]) == 1)
+    assert (errors["Single YAML file splitter"][0].get("level") == "error")
+    assert ("did not find expected ',' or '}'" in errors["Single YAML file splitter"][0].get("message"))
     shutil.rmtree(tmp_path)
 
 
