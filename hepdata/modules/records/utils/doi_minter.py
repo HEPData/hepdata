@@ -97,13 +97,14 @@ def generate_dois_for_submission(*args, **kwargs):
 
         publication_info = get_record_by_id(hep_submission.publication_recid)
 
-        create_container_doi(hep_submission, data_submissions, publication_info, site_url)
+        create_container_doi.delay(hep_submission.id, [d.id for d in data_submissions], publication_info, site_url)
 
         for data_submission in data_submissions:
-            create_data_doi(hep_submission, data_submission, publication_info, site_url)
+            create_data_doi.delay(hep_submission.id, data_submission.id, publication_info, site_url)
 
 
-def create_container_doi(hep_submission, data_submissions, publication_info, site_url):
+@shared_task
+def create_container_doi(hep_submission_id, data_submission_ids, publication_info, site_url):
     """
     Creates the payload to wrap the whole submission.
 
@@ -112,6 +113,10 @@ def create_container_doi(hep_submission, data_submissions, publication_info, sit
     :param publication_info:
     :return:
     """
+    hep_submission = db.session.query(HEPSubmission).get(hep_submission_id)
+    data_submissions = db.session.query(DataSubmission).filter(
+        DataSubmission.id.in_(data_submission_ids)
+    ).all()
 
     if hep_submission.doi is None:
         reserve_doi_for_hepsubmission(hep_submission)
@@ -141,7 +146,8 @@ def create_container_doi(hep_submission, data_submissions, publication_info, sit
         publication_info['inspire_id'], hep_submission.version), version_xml, publication_info['uuid'])
 
 
-def create_data_doi(hep_submission, data_submission, publication_info, site_url):
+@shared_task
+def create_data_doi(hep_submission_id, data_submission_id, publication_info, site_url):
     """
     Generate DOI record for a data record.
 
@@ -149,6 +155,8 @@ def create_data_doi(hep_submission, data_submission, publication_info, site_url)
     :param version:
     :return:
     """
+    hep_submission = db.session.query(HEPSubmission).get(hep_submission_id)
+    data_submission = db.session.query(DataSubmission).get(data_submission_id)
 
     data_file = DataResource.query.filter_by(id=data_submission.data_file).first()
 
@@ -228,6 +236,7 @@ def create_doi(doi):
     :return: DataCiteProvider
     """
     if current_app.config.get('NO_DOI_MINTING', False):
+        log.info(f"Would create DOI {doi}")
         return None
 
     try:
@@ -248,6 +257,7 @@ def register_doi(doi, url, xml, uuid):
     :return:
     """
     if current_app.config.get('NO_DOI_MINTING', False) or not doi:
+        log.info(f"Would mint DOI {doi}")
         return None
 
     log.info('{0} - {1}'.format(doi, url))
