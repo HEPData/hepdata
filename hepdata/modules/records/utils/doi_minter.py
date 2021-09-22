@@ -99,8 +99,11 @@ def generate_dois_for_submission(*args, **kwargs):
 
         create_container_doi.delay(hep_submission.id, [d.id for d in data_submissions], publication_info, site_url)
 
-        for data_submission in data_submissions:
-            create_data_doi.delay(hep_submission.id, data_submission.id, publication_info, site_url)
+        for i, data_submission in enumerate(data_submissions):
+            create_data_doi.apply_async(
+                args=[hep_submission.id, data_submission.id, publication_info, site_url],
+                countdown=i
+            )
 
 
 @shared_task
