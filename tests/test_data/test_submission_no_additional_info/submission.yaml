@@ -1,0 +1,14 @@
+name: "Figure 7, p + p collisions"
+description: 'RHS versus $p^b_T$ for p + p collisions for four trigger selections. '
+keywords:
+  - {name: reactions, values: [P P --> CHARGED X]}
+  - {name: cmenergies, values: [200.0]}
+  - {name: phrases, values: [ppg083, correlations]}
+data_file: rhs1_pp.yaml
+---
+name: "Figure 7, Au + Au collisions"
+description: 'RHS versus $p^b_T$ for Au + Au collisions for four trigger selections. '
+keywords:
+  - {name: reactions, values: [AU AU --> CHARGED X]}
+  - {name: cmenergies, values: [200.0]}
+data_file: rhs1_auau.yaml

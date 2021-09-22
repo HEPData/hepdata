@@ -285,6 +285,32 @@ def test_old_submission_yaml(app, admin_idx):
     assert(errors == {})
 
 
+def test_submission_no_additional_info(app):
+    """
+    Test we can submit a submission with no additional info in submission.yaml
+    """
+
+    base_dir = os.path.dirname(os.path.realpath(__file__))
+
+    hepsubmission = HEPSubmission(publication_recid=12345,
+                                  overall_status='todo',
+                                  version=1)
+    db.session.add(hepsubmission)
+    db.session.commit()
+    previous_last_updated = hepsubmission.last_updated
+
+    directory = os.path.join(base_dir, 'test_data/test_submission_no_additional_info')
+    errors = process_submission_directory(
+        directory,
+        os.path.join(directory, 'submission.yaml'),
+        12345
+    )
+
+    assert(errors == {})
+    # last_updated should have been updated (by a few milliseconds)
+    assert hepsubmission.last_updated > previous_last_updated
+
+
 def test_invalid_submission_yaml(app, admin_idx):
     """
     Test the right thing happens when the submission.yaml is invalid
@@ -377,7 +403,6 @@ def test_duplicate_table_names(app):
     errors = process_submission_directory(directory,
                                        os.path.join(directory, 'submission.yaml'),
                                        12345)
-    print(errors)
 
     assert('submission.yaml' in errors)
     assert(len(errors['submission.yaml']) == 5)
