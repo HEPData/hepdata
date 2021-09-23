@@ -61,7 +61,7 @@ def generate_doi_for_table(doi):
 
     if hep_submission:
         publication_info = get_record_by_id(hep_submission.publication_recid)
-        create_data_doi(hep_submission, data_submission, publication_info, site_url)
+        create_data_doi(hep_submission.id, data_submission.id, publication_info, site_url)
     else:
         print('Finished submission with INSPIRE ID {} and version {} not found in database'.format(
             data_submission.publication_inspire_id, data_submission.version)
@@ -123,7 +123,7 @@ def create_container_doi(hep_submission_id, data_submission_ids, publication_inf
 
     if hep_submission.doi is None:
         reserve_doi_for_hepsubmission(hep_submission)
-        reserve_dois_for_data_submissions(data_submissions)
+        reserve_dois_for_data_submissions(data_submissions=data_submissions)
 
     version_doi = hep_submission.doi + ".v{0}".format(hep_submission.version)
 
