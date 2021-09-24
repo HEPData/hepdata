@@ -130,7 +130,7 @@ jobs:
         accessKey: ${{ secrets.SAUCE_ACCESS_KEY }}
         restUrl: https://eu-central-1.saucelabs.com/rest/v1
         tunnelIdentifier: ${{ github.run_id }}
-        scVersion: 4.6.5
+        scVersion: 4.7.0
         verbose: true
     - name: Run tests
       env:

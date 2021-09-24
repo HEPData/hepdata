@@ -47,7 +47,8 @@ from hepdata.modules.records.utils.common import decode_string, find_file_in_dir
     remove_file_extension, truncate_string, get_record_contents, get_record_by_id
 from hepdata.modules.records.utils.data_processing_utils import process_ctx
 from hepdata.modules.records.utils.data_files import get_data_path_for_record, cleanup_old_files
-from hepdata.modules.records.utils.submission import process_submission_directory, create_data_review, cleanup_submission
+from hepdata.modules.records.utils.submission import process_submission_directory, \
+    create_data_review, cleanup_submission, clean_error_message_for_display
 from hepdata.modules.submission.api import get_latest_hepsubmission, get_submission_participants_for_record
 from hepdata.modules.records.utils.users import get_coordinators_in_system, has_role
 from hepdata.modules.records.utils.workflow import update_action_for_submission_participant
@@ -574,8 +575,7 @@ def save_zip_file(file, id):
     return file_path
 
 
-def process_zip_archive(file_path, id, old_submission_schema=False,
-                        old_data_schema=False):
+def process_zip_archive(file_path, id, old_schema=False):
     (file_save_directory, filename) = os.path.split(file_path)
 
     if not filename.endswith('.oldhepdata'):
@@ -586,22 +586,30 @@ def process_zip_archive(file_path, id, old_submission_schema=False,
         if filename.endswith('.yaml.gz'):
             print('Extracting: {} to {}'.format(file_path, file_path[:-3]))
             if not extract(file_path, file_path[:-3]):
+                message = clean_error_message_for_display(
+                    "{} is not a valid .gz file.".format(file_path),
+                    file_save_directory
+                )
                 return {
                     "Archive file extractor": [{
-                        "level": "error", "message": "{} is not a valid .gz file.".format(file_path)
+                        "level": "error",
+                        "message": message
                     }]
                 }
             return process_zip_archive(file_path[:-3], id,
-                                       old_submission_schema=old_submission_schema,
-                                       old_data_schema=False)
+                                       old_schema=False)
         elif filename.endswith('.yaml'):
             # we split the singular yaml file and create a submission directory
             error, last_updated = split_files(file_path, submission_temp_path)
             if error:
+                message = clean_error_message_for_display(
+                    str(error),
+                    file_save_directory
+                )
                 return {
                     "Single YAML file splitter": [{
                         "level": "error",
-                        "message": str(error)
+                        "message": message
                     }]
                 }
         else:
@@ -612,9 +620,13 @@ def process_zip_archive(file_path, id, old_submission_schema=False,
                 unzipped_path = None
 
             if not unzipped_path:
+                message = clean_error_message_for_display(
+                    "{} is not a valid zip or tar archive file.".format(file_path),
+                    file_save_directory
+                )
                 return {
                     "Archive file extractor": [{
-                        "level": "error", "message": "{} is not a valid zip or tar archive file.".format(file_path)
+                        "level": "error", "message": message
                     }]
                 }
 
@@ -643,11 +655,9 @@ def process_zip_archive(file_path, id, old_submission_schema=False,
             return result
         else:
             basepath, submission_file_path = result
-            old_data_schema = True
 
     return process_submission_directory(basepath, submission_file_path, id,
-                                        old_data_schema=old_data_schema,
-                                        old_submission_schema=old_submission_schema)
+                                        old_schema=old_schema)
 
 
 def check_and_convert_from_oldhepdata(input_directory, id, timestamp):
