@@ -687,7 +687,13 @@ def cli_upload():
     str_sandbox = request.form['sandbox']
     is_sandbox = False if str_sandbox == 'False' else True if str_sandbox == 'True' else None
 
+    # check that recid is an integer if provided
     recid = request.form['recid'] if 'recid' in request.form.keys() else None
+    if recid and not recid.isdigit():
+        return jsonify({
+            "message": "recid {} should be an integer (HEPData ID not INSPIRE ID).".format(str(recid))
+        }), 400
+
     invitation_cookie = request.form['invitation_cookie'] if 'invitation_cookie' in request.form.keys() else None
 
     # Check the user has upload permissions for this record
