@@ -305,14 +305,15 @@ def get_table_details(recid, data_recid, version):
             if key not in tmp_assoc_files:
                 tmp_assoc_files[key] = {}
 
-            if "thumb_" in alt_location and associated_data_file.file_type.lower() in IMAGE_TYPES:
-                tmp_assoc_files[key]['preview_location'] = '/record/resource/{0}?view=true'.format(
-                    associated_data_file.id)
-            else:
-                tmp_assoc_files[key].update({'description': associated_data_file.file_description,
-                                             'type': associated_data_file.file_type,
-                                             'id': associated_data_file.id,
-                                             'alt_location': alt_location})
+            if not alt_location.lower().startswith('http'):
+                if "thumb_" in alt_location and associated_data_file.file_type.lower() in IMAGE_TYPES:
+                    tmp_assoc_files[key]['preview_location'] = '/record/resource/{0}?view=true'.format(
+                        associated_data_file.id)
+                else:
+                    tmp_assoc_files[key].update({'description': associated_data_file.file_description,
+                                                 'type': associated_data_file.file_type,
+                                                 'id': associated_data_file.id,
+                                                 'alt_location': alt_location})
 
         # add associated files to the table contents
         table_contents['associated_files'] = list(tmp_assoc_files.values())
