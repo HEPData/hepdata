@@ -111,10 +111,21 @@ def test_generate_doi_for_table(mock_data_cite_provider, identifiers, capsys):
     mock_data_cite_provider.get().register.assert_called()
 
     # Invalid doi
-    doi = 'thisisnotadoi'
+    capsys.readouterr()
+    invalid_doi = 'thisisnotadoi'
+    generate_doi_for_table(invalid_doi)
+    out, err = capsys.readouterr()
+    assert out.strip() == "Table DOI thisisnotadoi not found in database"
+
+    # Table without finished submission
+    hep_submission = get_or_create_hepsubmission(1)
+    hep_submission.overall_status = 'todo'
+    db.session.add(hep_submission)
+    db.session.commit()
+
     generate_doi_for_table(doi)
     out, err = capsys.readouterr()
-    assert 'Table DOI thisisnotadoi not found in database'
+    assert out.strip() == f"Finished submission with INSPIRE ID {identifiers[0]['inspire_id']} and version 1 not found in database"
 
 
 def test_generate_dois_for_submission(mock_data_cite_provider, identifiers):

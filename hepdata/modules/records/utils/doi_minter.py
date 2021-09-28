@@ -57,7 +57,7 @@ def generate_doi_for_table(doi):
 
     hep_submission = HEPSubmission.query.filter_by(
         inspire_id=data_submission.publication_inspire_id, version=data_submission.version, overall_status='finished'
-    ).one()
+    ).first()
 
     if hep_submission:
         publication_info = get_record_by_id(hep_submission.publication_recid)
@@ -235,7 +235,7 @@ def create_doi(doi):
     :param doi: Creates a DOI using the data provider. If it already exists, we return back the existing provider.
     :return: DataCiteProvider
     """
-    if current_app.config.get('NO_DOI_MINTING', False):
+    if current_app.config.get('NO_DOI_MINTING', False): # pragma: no cover
         log.info(f"Would create DOI {doi}")
         return None
 
@@ -256,7 +256,7 @@ def register_doi(doi, url, xml, uuid):
     :param recid:
     :return:
     """
-    if current_app.config.get('NO_DOI_MINTING', False) or not doi:
+    if current_app.config.get('NO_DOI_MINTING', False) or not doi: # pragma: no cover
         log.info(f"Would mint DOI {doi}")
         return None
 
