@@ -103,7 +103,7 @@ def generate_dois_for_submission(*args, **kwargs):
             create_data_doi.delay(hep_submission.id, data_submission.id, publication_info, site_url)
 
 
-@shared_task(max_retries=6, default_retry_delay=10 * 60, rate_limit='20/m')
+@shared_task(max_retries=6, default_retry_delay=10 * 60, rate_limit='100/m')
 def create_container_doi(hep_submission_id, data_submission_ids, publication_info, site_url):
     """
     Creates the payload to wrap the whole submission.
@@ -146,7 +146,7 @@ def create_container_doi(hep_submission_id, data_submission_ids, publication_inf
         publication_info['inspire_id'], hep_submission.version), version_xml, publication_info['uuid'])
 
 
-@shared_task(max_retries=6, default_retry_delay=10 * 60, rate_limit='20/m')
+@shared_task(max_retries=6, default_retry_delay=10 * 60, rate_limit='500/m')
 def create_data_doi(hep_submission_id, data_submission_id, publication_info, site_url):
     """
     Generate DOI record for a data record.

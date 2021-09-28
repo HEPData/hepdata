@@ -65,6 +65,8 @@ CELERY_TASK_CREATE_MISSING_QUEUES = True
 CELERY_TASK_ROUTES = {
     'hepdata.modules.email.utils.send_email': {'queue': 'priority'},
     'hepdata.modules.records.api.process_saved_file': {'queue': 'priority'},
+    'hepdata.modules.records.utils.doi_minter.create_container_doi': {'queue': 'datacite'},
+    'hepdata.modules.records.utils.doi_minter.create_data_doi': {'queue': 'datacite'},
 }
 
 CELERY_BEAT_SCHEDULE = {
