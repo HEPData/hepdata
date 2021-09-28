@@ -267,16 +267,48 @@ def test_old_submission_yaml(app, admin_idx):
                                           os.path.join(directory, 'submission.yaml'),
                                           12345)
     assert('submission.yaml' in errors)
-    assert(len(errors['submission.yaml']) == 1)
+    assert(len(errors['submission.yaml']) == 2)
     assert(errors['submission.yaml'][0]['level'] == 'error')
-    assert(errors['submission.yaml'][0]['message'].decode().startswith("Invalid value (in GeV) for cmenergies: 1.383-1.481"))
+    assert(errors['submission.yaml'][0]['message'].startswith(
+        "submission.yaml is invalid HEPData YAML"
+    ))
+    assert(errors['submission.yaml'][1]['level'] == 'error')
+    assert(errors['submission.yaml'][1]['message'].startswith(
+        "Invalid value (in GeV) for cmenergies: '1.383-1.481'"
+    ))
 
     # Use old schema - should now work
     errors = process_submission_directory(directory,
                                           os.path.join(directory, 'submission.yaml'),
                                           12345,
-                                          old_submission_schema=True)
+                                          old_schema=True)
     assert(errors == {})
+
+
+def test_submission_no_additional_info(app):
+    """
+    Test we can submit a submission with no additional info in submission.yaml
+    """
+
+    base_dir = os.path.dirname(os.path.realpath(__file__))
+
+    hepsubmission = HEPSubmission(publication_recid=12345,
+                                  overall_status='todo',
+                                  version=1)
+    db.session.add(hepsubmission)
+    db.session.commit()
+    previous_last_updated = hepsubmission.last_updated
+
+    directory = os.path.join(base_dir, 'test_data/test_submission_no_additional_info')
+    errors = process_submission_directory(
+        directory,
+        os.path.join(directory, 'submission.yaml'),
+        12345
+    )
+
+    assert(errors == {})
+    # last_updated should have been updated (by a few milliseconds)
+    assert hepsubmission.last_updated > previous_last_updated
 
 
 def test_invalid_submission_yaml(app, admin_idx):
@@ -373,10 +405,17 @@ def test_duplicate_table_names(app):
                                        12345)
 
     assert('submission.yaml' in errors)
-    assert(len(errors['submission.yaml']) == 2)
-    for error in errors['submission.yaml']:
-        assert(error['level'] == 'error')
-        assert(error['message'].startswith("Duplicate table with name"))
+    assert(len(errors['submission.yaml']) == 5)
+    assert(errors['submission.yaml'][0]['level'] == 'error')
+    assert(errors['submission.yaml'][0]['message'].startswith("submission.yaml is invalid HEPData YAML"))
+    assert(errors['submission.yaml'][1]['level'] == 'error')
+    assert(errors['submission.yaml'][1]['message'].startswith("Duplicate table name"))
+    assert(errors['submission.yaml'][2]['level'] == 'error')
+    assert(errors['submission.yaml'][2]['message'].startswith("Duplicate table name"))
+    assert(errors['submission.yaml'][3]['level'] == 'error')
+    assert(errors['submission.yaml'][3]['message'].startswith("Duplicate table data_file"))
+    assert(errors['submission.yaml'][4]['level'] == 'error')
+    assert(errors['submission.yaml'][4]['message'].startswith("Duplicate table data_file"))
 
 
 def test_status_reset(app, mocker):

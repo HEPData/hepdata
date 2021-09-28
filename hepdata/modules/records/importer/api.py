@@ -182,8 +182,7 @@ def _import_record(inspire_id, update_existing=False, base_url='https://hepdata.
 
             errors = process_zip_archive(file_path,
                                          recid,
-                                         old_submission_schema=True,
-                                         old_data_schema=True)
+                                         old_schema=True)
 
             if errors:
                 log.error("Could not process zip archive: ")

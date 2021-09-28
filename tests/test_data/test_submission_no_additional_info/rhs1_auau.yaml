@@ -1,0 +1,188 @@
+independent_variables:
+- header: {name: '$p_T$'}
+  values:
+  - {low: 0.4, high: 1.0}
+  - {low: 1.0, high: 1.5}
+  - {low: 1.5, high: 2.0}
+  - {low: 2.0, high: 2.5}
+  - {low: 2.5, high: 3}
+  - {low: 3.0, high: 4}
+  - {low: 4.0, high: 5}
+  - {low: 5, high: 10}
+dependent_variables:
+- header: {name: 'RHS'}
+  qualifiers:
+  - {name: '$p_T$', value: '2.0$<p_{T}^{A}<$<3.0 GeV/c'}
+  values:
+  - value: 0.965
+    errors:
+    - {symerror: 0.008, label: 'stat'}
+    - {symerror: 0.2234, label: 'v2error'}
+    - {symerror: 0.00387, label: 'zyamerr'}
+  - value: 0.722
+    errors:
+    - {symerror: 0.008, label: 'stat'}
+    - {symerror: 0.19075, label: 'v2error'}
+    - {symerror: 0.02033, label: 'zyamerr'}
+  - value: 0.628
+    errors:
+    - {symerror: 0.01, label: 'stat'}
+    - {symerror: 0.1864, label: 'v2error'}
+    - {symerror: 0.022335, label: 'zyamerr'}
+  - value: 0.531
+    errors:
+    - {symerror: 0.016, label: 'stat'}
+    - {symerror: 0.1882, label: 'v2error'}
+    - {symerror: 0.030035, label: 'zyamerr'}
+  - value: 0.395
+    errors:
+    - {symerror: 0.027, label: 'stat'}
+    - {symerror: 0.20315, label: 'v2error'}
+    - {symerror: 0.067335, label: 'zyamerr'}
+  - value: 0.402
+    errors:
+    - {symerror: 0.044, label: 'stat'}
+    - {symerror: 0.19475, label: 'v2error'}
+    - {symerror: 0.058765, label: 'zyamerr'}
+  - value: 0.581
+    errors:
+    - {symerror: 0.19, label: 'stat'}
+    - {symerror: 0.28115, label: 'v2error'}
+    - {symerror: 0.097535, label: 'zyamerr'}
+  - value: 0.638
+    errors:
+    - {symerror: 0.213, label: 'stat'}
+    - {symerror: 0.11255, label: 'v2error'}
+    - {symerror: 0.09217, label: 'zyamerr'}
+- header: {name: 'RHS'}
+  qualifiers:
+  - {name: '$p_T$', value: '3.0$<p_{T}^{A}<$<4.0 GeV/c'}
+  values:
+  - value: 1.003
+    errors:
+    - {symerror: 0.021, label: 'stat'}
+    - {symerror: 0.17855, label: 'v2error'}
+    - {symerror: 0.000395, label: 'zyamerr'}
+  - value: 0.711
+    errors:
+    - {symerror: 0.023, label: 'stat'}
+    - {symerror: 0.1748, label: 'v2error'}
+    - {symerror: 0.027895, label: 'zyamerr'}
+  - value: 0.55
+    errors:
+    - {symerror: 0.028, label: 'stat'}
+    - {symerror: 0.17565, label: 'v2error'}
+    - {symerror: 0.030045, label: 'zyamerr'}
+  - value: 0.384
+    errors:
+    - {symerror: 0.046, label: 'stat'}
+    - {symerror: 0.2014, label: 'v2error'}
+    - {symerror: 0.065785, label: 'zyamerr'}
+  - value: 0.467
+    errors:
+    - {symerror: 0.088, label: 'stat'}
+    - {symerror: 0.2038, label: 'v2error'}
+    - {symerror: 0.08712, label: 'zyamerr'}
+  - value: 0.531
+    errors:
+    - {symerror: 0.122, label: 'stat'}
+    - {symerror: 0.1755, label: 'v2error'}
+    - {symerror: 0.069015, label: 'zyamerr'}
+  - value: 2.145
+    errors:
+    - {symerror: 1.271, label: 'stat'}
+    - {symerror: 0.1908, label: 'v2error'}
+    - {symerror: 1.5886, label: 'zyamerr'}
+  - value: 2.488
+    errors:
+    - {symerror: 1.216, label: 'stat'}
+    - {symerror: 0.0452, label: 'v2error'}
+    - {symerror: 1.472275, label: 'zyamerr'}
+- header: {name: 'RHS'}
+  qualifiers:
+  - {name: '$p_T$', value: '4.0$<p_{T}^{A}<$<5.0 GeV/c'}
+  values:
+  - value: 1.069
+    errors:
+    - {symerror: 0.057, label: 'stat'}
+    - {symerror: 0.1604, label: 'v2error'}
+    - {symerror: 0.00464, label: 'zyamerr'}
+  - value: 0.971
+    errors:
+    - {symerror: 0.087, label: 'stat'}
+    - {symerror: 0.1911, label: 'v2error'}
+    - {symerror: 0.00266, label: 'zyamerr'}
+  - value: 0.822
+    errors:
+    - {symerror: 0.112, label: 'stat'}
+    - {symerror: 0.18455, label: 'v2error'}
+    - {symerror: 0.02135, label: 'zyamerr'}
+  - value: 0.52
+    errors:
+    - {symerror: 0.179, label: 'stat'}
+    - {symerror: 0.2148, label: 'v2error'}
+    - {symerror: 0.112555, label: 'zyamerr'}
+  - value: 0.443
+    errors:
+    - {symerror: 0.286, label: 'stat'}
+    - {symerror: 0.2399, label: 'v2error'}
+    - {symerror: 0.22582, label: 'zyamerr'}
+  - value: 2.145
+    errors:
+    - {symerror: 1.271, label: 'stat'}
+    - {symerror: 0.1908, label: 'v2error'}
+    - {symerror: 1.5886, label: 'zyamerr'}
+  - value: 1.344
+    errors:
+    - {symerror: 0.565, label: 'stat'}
+    - {symerror: 0.0581, label: 'v2error'}
+    - {symerror: 0.184875, label: 'zyamerr'}
+  - value: 2.489
+    errors:
+    - {symerror: 0.972, label: 'stat'}
+    - {symerror: 0.00815, label: 'v2error'}
+    - {symerror: 1.304205, label: 'zyamerr'}
+- header: {name: 'RHS'}
+  qualifiers:
+  - {name: '$p_T$', value: '5.0$<p_{T}^{A}<$<10.0 GeV/c'}
+  values:
+  - value: 1.339
+    errors:
+    - {symerror: 0.165, label: 'stat'}
+    - {symerror: 0.17095, label: 'v2error'}
+    - {symerror: 0.04469, label: 'zyamerr'}
+  - value: 0.917
+    errors:
+    - {symerror: 0.162, label: 'stat'}
+    - {symerror: 0.1419, label: 'v2error'}
+    - {symerror: 0.0168, label: 'zyamerr'}
+  - value: 0.645
+    errors:
+    - {symerror: 0.219, label: 'stat'}
+    - {symerror: 0.1825, label: 'v2error'}
+    - {symerror: 0.093705, label: 'zyamerr'}
+  - value: 0.649
+    errors:
+    - {symerror: 0.289, label: 'stat'}
+    - {symerror: 0.15305, label: 'v2error'}
+    - {symerror: 0.127325, label: 'zyamerr'}
+  - value: 0.62
+    errors:
+    - {symerror: 0.283, label: 'stat'}
+    - {symerror: 0.0831, label: 'v2error'}
+    - {symerror: 0.13497, label: 'zyamerr'}
+  - value: 2.488
+    errors:
+    - {symerror: 1.216, label: 'stat'}
+    - {symerror: 0.0452, label: 'v2error'}
+    - {symerror: 1.472275, label: 'zyamerr'}
+  - value: 2.489
+    errors:
+    - {symerror: 0.972, label: 'stat'}
+    - {symerror: 0.00815, label: 'v2error'}
+    - {symerror: 1.304205, label: 'zyamerr'}
+  - value: 2.761
+    errors:
+    - {symerror: 1.015, label: 'stat'}
+    - {symerror: 0.00385, label: 'v2error'}
+    - {symerror: 1.658075, label: 'zyamerr'}

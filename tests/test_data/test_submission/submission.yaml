@@ -90,6 +90,9 @@ keywords:
   values: [7000.0]
 location: Data from Figure 8A
 name: Table 3
+additional_resources:
+- {description: Image file, location: figFigure8A.png}
+- {description: Thumbnail image file, location: thumb_figFigure8A.png}
 
 ---
 data_file: Table4.yaml
@@ -107,6 +110,9 @@ keywords:
   values: [7000.0]
 location: Data from Figure 8B
 name: Table 4
+additional_resources:
+- {description: Image file, location: figFigure8B.png}
+- {description: Thumbnail image file, location: thumb_figFigure8B.png}
 
 ---
 data_file: Table5.yaml
@@ -125,6 +131,9 @@ keywords:
   values: [7000.0]
 location: Data from Figure 9A
 name: Table 5
+additional_resources:
+- {description: Image file, location: figFigure9A.png}
+- {description: Thumbnail image file, location: thumb_figFigure9A.png}
 
 ---
 data_file: Table6.yaml
@@ -142,6 +151,9 @@ keywords:
   values: [7000.0]
 location: Data from Figure 9B
 name: Table 6
+additional_resources:
+- {description: Image file, location: figFigure9B.png}
+- {description: Thumbnail image file, location: thumb_figFigure9B.png}
 
 ---
 data_file: Table7.yaml
@@ -159,6 +171,9 @@ keywords:
   values: [7000.0]
 location: Data from Figure 10A
 name: Table 7
+additional_resources:
+- {description: Image file, location: figFigure10A.png}
+- {description: Thumbnail image file, location: thumb_figFigure10A.png}
 
 ---
 data_file: Table8.yaml
@@ -176,3 +191,6 @@ keywords:
   values: [7000.0]
 location: Data from Figure 10B
 name: Table 8
+additional_resources:
+- {description: Image file, location: figFigure10B.png}
+- {description: Thumbnail image file, location: thumb_figFigure10B.png}

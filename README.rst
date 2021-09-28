@@ -14,9 +14,9 @@ HEPData
    :target: https://github.com/HEPData/hepdata/blob/master/LICENSE
    :alt: License
 
-.. image:: https://img.shields.io/github/release/hepdata/hepdata.svg?maxAge=259200
-   :target: https://github.com/HEPData/hepdata/releases
-   :alt: GitHub Releases
+.. image:: https://img.shields.io/docker/image-size/hepdata/hepdata/latest
+   :target: https://hub.docker.com/r/hepdata/hepdata/tags
+   :alt: Docker Image Size
 
 .. image:: https://img.shields.io/github/issues/hepdata/hepdata.svg?maxAge=2592000
    :target: https://github.com/HEPData/hepdata/issues

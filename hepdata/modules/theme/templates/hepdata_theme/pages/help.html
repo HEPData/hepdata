@@ -14,19 +14,21 @@
         </div>
         <div class="col-md-6">
             <p>Submissions are handled by <a href="/permissions/coordinators" target="_blank"
-                                             style="text-decoration: underline">Coordinators</a> for a paper or
-                project.  These Coordinators assign an Uploader and a Reviewer to each submission after clicking the
+                                             style="text-decoration: underline">Coordinators</a> for an experiment or a physics group within
+                an experiment.  These Coordinators assign an Uploader and a Reviewer to each submission after clicking the
                 "Submit" button when they are logged in.</p>
 
             <p>An email is sent to the designated Uploader with a link which gives the privileges to upload
                 a data submission.  Once the Uploader thinks their submission is ready for review, they should
-                click the "Notify Reviewer" button.</p>
+                click the "Notify Participants" button.</p>
 
             <p>An email is then sent to the designated Reviewer with a link which
                 assigns the appropriate privileges.  The Reviewer needs to mark each table as having "Passed" review
-                before the Coordinator can "Finalise" the submission from
-                their <a href="/dashboard" target="_blank" style="text-decoration: underline">Dashboard</a>.
-                The entire submission will then be published and made searchable in HEPData.</p>
+                before clicking the "Notify Coordinator" button.  The Coordinator can then "Finalise" the submission
+                from their <a href="/dashboard" target="_blank" style="text-decoration: underline">Dashboard</a> if an
+                <a href="https://inspirehep.net" target="_blank" style="text-decoration: underline">INSPIRE</a> record
+                for the publication has been attached.  The entire submission will then be published and made
+                searchable in HEPData.</p>
 
             <p>All current submissions are available for a Coordinator, Reviewer, or Uploader to see in their
                 <a href="/dashboard" target="_blank" style="text-decoration: underline">Dashboard</a>.</p>
@@ -58,7 +60,7 @@
                 <p>The main documentation for the HEPData YAML submission format is linked below,
                   together with a third-party library that might be useful in preparing your submission.
                   You can also easily obtain the YAML format of any existing HEPData record by clicking
-                  “Download All” then “YAML”.</p><br/>
+                  "Download All" then "YAML" or "YAML with resource files".</p><br/>
 
                 <a href="https://hepdata-submission.readthedocs.io" class="btn btn-primary" target="_blank">
                     Submission Documentation</a>
@@ -69,7 +71,7 @@
 
                 <p>The GitHub repositories linked below provide more details on the submission format and some examples,
                     together with tools to convert from the old HepData input format to the new HEPData YAML format and
-                    to validate the HEPData YAML format.  These conversion and validation tools are automatically
+                    to validate the HEPData YAML format offline.  These conversion and validation tools are automatically
                     invoked from the web interface when an Uploader uploads their submission files.</p><br/>
 
                 <a href="https://github.com/HEPData/hepdata-submission" class="btn btn-primary" target="_blank">
@@ -83,8 +85,8 @@
 
                 <br/><br/><br/><br/>
 
-                <p>The link below gives more documentation on the submission process and also provides some C++ code
-                to convert .txt files to .yaml files.</p><br/>
+                <p>The link below gives more older documentation on the submission process and also provides some C++
+                code to convert .txt files to .yaml files.</p><br/>
                 <a href="https://doi.org/10.5281/zenodo.197109">
                     <img src="https://zenodo.org/badge/DOI/10.5281/zenodo.197109.svg" alt="DOI"></a>
 
@@ -122,7 +124,9 @@
                 <br/>
 
                 <p>After all data tables have passed review, the Reviewer should contact the Coordinator to
-                  finalise the record.</p>
+                  finalise the record.  This can be done by clicking the "Notify Coordinator" button that appears
+                  after all tables have "Passed" review.
+                </p>
 
             </div>
         </div>

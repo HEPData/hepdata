@@ -266,3 +266,106 @@ To create a new ``fix`` command:
 
 1. Create a new module file in ``fixes`` with an appropriate name.
 2. Create a function to apply your fix, and annotate it with ``@fix.command()``.
+
+
+Testing
+=======
+
+The automated tests do not cover all scenarios, so manual testing should be done of your local instance. Below are some
+suggestions of manual tests to carry out if you have been working on a given part of the codebase.
+
+Note that this section is a work in progress and the suggested tests are not exhaustive - please consider adding further
+tests to this section!
+
+Submission uploads
+------------------
+
+There are some sample submission files in docs/manual_test_files:
+
+ * :download:`TestHEPSubmission.zip <manual_test_files/TestHEPSubmission.zip>`
+ * :download:`sample.oldhepdata <manual_test_files/sample.oldhepdata>`
+ * :download:`TestHEPSubmission_invalid.zip <manual_test_files/TestHEPSubmission_invalid.zip>`
+ * :download:`TestRemoteSubmission.zip <manual_test_files/TestRemoteSubmission.zip>`
+ * :download:`single_file_submission.yaml.gz <manual_test_files/single_file_submission.yaml.gz>`
+ * :download:`single_file_submission_invalid.yaml.gz <manual_test_files/single_file_submission_invalid.yaml.gz>`
+ * :download:`single_file_submission_invalid_yaml.yaml.gz <manual_test_files/single_file_submission_invalid_yaml.yaml.gz>`
+
+Test steps:
+
+1. Log in as administrator.
+
+2. Create a new submission (using any values).
+
+3. Upload **TestHEPSubmission.zip**
+
+   * Should succeed
+   * Should display 8 tables
+
+4. Click **Upload new files** and upload **sample.oldhepdata**
+
+   * Should succeed
+   * Should show 7 tables
+
+5. Click **Upload new files** and upload **single_file_submission.yaml.gz**.
+
+  * Should succeed
+  * Should show 5 tables
+
+6. Click **Upload new files** and upload **TestHEPSubmission.zip** again.
+
+   * Should succeed
+   * Should show 8 tables
+
+7. Click **Upload new files** and upload **TestHEPSubmission_invalid.zip**.
+
+   * Should fail
+   * No tables should be shown in UI
+   * Error email should give the following errors:
+
+      * submission.yaml:
+
+         * Name of data_file 'mydirectory/data2.yaml' should not contain '/'.
+         * Location of 'additional_resources' file '../TestHEPSubmission/figFigure8B.png' should not contain '/'.
+         * Missing 'additional_resources' file 'figFigure9A.png'.
+
+      * data3.yaml
+
+         * Missing data_file 'data3.yaml'.
+
+      * data8.yaml
+
+         * There was a problem parsing the file: while parsing a block mapping in "data8.yaml", line 1, column 1 did not find expected key in "data8.yaml", line 9, column 3
+
+      * figFigure8B.png
+
+         * figFigure8B.png is not referenced in the submission.
+
+
+8. Upload **TestRemoteSubmission.zip**.
+
+   * Should fail
+   * No tables should be shown in UI
+   * Error email should give the following errors in submission.yaml:
+
+      * Autoloading of remote schema https://scikit-hep.org/pyhf/schemas/1.0.0/workspace.json is not allowed.
+
+9. Upload **single_file_submission_invalid.yaml.gz**.
+
+   * Should fail
+   * No tables should be shown in UI
+   * Error email should give the following errors in 'Archive File Extractor':
+
+      * single_file_submission_invalid.yaml.gz is not a valid .gz file.
+
+10. Upload **single_file_submission_invalid_yaml.yaml.gz**.
+
+   * Should fail
+   * No tables should be shown in UI
+   * Error email should give the following errors in 'Single YAML file splitter':
+
+      * while parsing a flow mapping in "single_file_submission_invalid_yaml.yaml", line 7, column 11 did not find expected ',' or '}' in "single_file_submission_invalid_yaml.yaml", line 8, column 3
+
+10. Click **Upload new version** and upload **TestHEPSubmission.zip** again.
+
+   * Should succeed
+   * Should show 8 tables
