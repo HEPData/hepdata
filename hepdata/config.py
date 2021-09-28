@@ -81,13 +81,24 @@ CELERY_BEAT_SCHEDULE = {
     },
 }
 
+# Number of workers running the datacite queue
+# If changed in local file, also update CELERY_TASK_ANNOTATIONS
+DATACITE_QUEUE_WORKERS = 1
+
 CELERY_TASK_ANNOTATIONS = {
     '*': {
         'acks_late': True,
         'reject_on_worker_lost': True,
         'autoretry_for': (Exception,),
         'default_retry_delay': 30
-    }
+    },
+    'hepdata.modules.records.utils.doi_minter.create_container_doi': {
+        'rate_limit': f"{100 / DATACITE_QUEUE_WORKERS}/m"
+    },
+    'hepdata.modules.records.utils.doi_minter.create_data_doi': {
+        'rate_limit': f"{500 / DATACITE_QUEUE_WORKERS}/m"
+    },
+
 }
 
 # Cache
