@@ -2,10 +2,13 @@ import logging
 from unittest.mock import call
 
 from datacite.errors import DataCiteUnauthorizedError, DataCiteError
+from flask import render_template
 from invenio_db import db
 from invenio_pidstore.errors import PIDInvalidAction, PIDDoesNotExistError
+import lxml
 import pytest
 
+from hepdata.modules.records.utils.common import get_record_by_id
 from hepdata.modules.records.utils.doi_minter import create_doi, register_doi, \
     generate_doi_for_table, generate_dois_for_submission
 from hepdata.modules.records.utils.submission import get_or_create_hepsubmission
@@ -193,3 +196,48 @@ def test_generate_dois_for_submission(mock_data_cite_provider, identifiers):
     # Should also have same number of get and register calls
     assert mock_data_cite_provider.get.call_count == 3
     assert mock_data_cite_provider.get().register.call_count == 3
+
+
+def test_xml_validates(app, identifiers):
+    # Test that the XML produced validates against the datacite schema
+    hep_submission = get_or_create_hepsubmission(1)
+    data_submissions = DataSubmission.query.filter_by(
+        publication_inspire_id=hep_submission.inspire_id,
+        version=hep_submission.version) \
+        .order_by(DataSubmission.id.asc()).all()
+    publication_info = get_record_by_id(hep_submission.publication_recid)
+    site_url = app.config.get('SITE_URL', 'https://www.hepdata.net')
+
+    # Load schema
+    datacite_schema = schema = lxml.etree.XMLSchema(file = 'http://schema.datacite.org/meta/kernel-4.4/metadata.xsd')
+
+    base_xml = render_template('hepdata_records/formats/datacite/datacite_container_submission.xml',
+                               doi=hep_submission.doi,
+                               overall_submission=hep_submission,
+                               data_submissions=data_submissions,
+                               publication_info=publication_info,
+                               site_url=site_url)
+    base_doc = lxml.etree.fromstring(base_xml)
+    datacite_schema.assertValid(base_doc)
+
+    version_xml = render_template('hepdata_records/formats/datacite/datacite_container_submission.xml',
+                                  doi=f"{hep_submission.doi}.v1",
+                                  overall_submission=hep_submission,
+                                  data_submissions=data_submissions,
+                                  publication_info=publication_info,
+                                  site_url=site_url)
+    version_doc = lxml.etree.fromstring(version_xml)
+    datacite_schema.assertValid(version_doc)
+
+    for data_submission in data_submissions:
+        data_xml = render_template('hepdata_records/formats/datacite/datacite_data_record.xml',
+                                   doi=data_submission.doi,
+                                   table_name=data_submission.name,
+                                   table_description=data_submission.description,
+                                   overall_submission=hep_submission,
+                                   data_submission=data_submission,
+                                   license=license,
+                                   publication_info=publication_info,
+                                   site_url=site_url)
+        data_doc = lxml.etree.fromstring(data_xml)
+        datacite_schema.assertValid(data_doc)
