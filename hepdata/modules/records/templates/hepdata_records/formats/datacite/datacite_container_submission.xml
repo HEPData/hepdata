@@ -2,10 +2,16 @@
           xsi:schemaLocation="http://datacite.org/schema/kernel-4 https://schema.datacite.org/meta/kernel-4.4/metadata.xsd">
     <identifier identifierType="DOI">{{ doi }}</identifier>
     <creators>
-        {% if publication_info.authors %}
+        {% if publication_info.collaborations %}
+            {% for collaboration in publication_info.collaborations %}
+                <creator>
+                    <creatorName nameType="Organizational">{{ collaboration }}</creatorName>
+                </creator>
+            {% endfor %}
+        {% elif publication_info.authors %}
             {% for author in publication_info.authors %}
                 <creator>
-                    <creatorName>{{ author.full_name }}</creatorName>
+                    <creatorName nameType="Personal">{{ author.full_name }}</creatorName>
                     <affiliation>{{ author.affiliation }}</affiliation>
                 </creator>
             {% endfor %}

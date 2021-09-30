@@ -112,6 +112,10 @@ def test_generate_doi_for_table(mock_data_cite_provider, identifiers, capsys):
     generate_doi_for_table(doi)
     mock_data_cite_provider.get.assert_called_with(doi, 'doi')
     mock_data_cite_provider.get().register.assert_called()
+    assert mock_data_cite_provider.get().register.call_args[0][0] == \
+        'http://localhost:5000/record/ins1283842?version=1&table=Table 1'
+    assert '<creatorName nameType="Organizational">D0</creatorName>' in \
+        mock_data_cite_provider.get().register.call_args[0][1]
 
     # Invalid doi
     capsys.readouterr()
@@ -144,8 +148,13 @@ def test_generate_dois_for_submission(mock_data_cite_provider, identifiers):
     for i in range(identifiers[0]['data_tables']):
         assert call(f'10.17182/hepdata.1.v1/t{i+1}', 'doi') in get_call_args
 
-    # get.register is called with the same dois (but with xml which we won't check)
+    # get.register is called with the same dois
     assert mock_data_cite_provider.get().register.call_count == total_calls
+    # Check first calls (for submission) have collaboration info in XML
+    assert '<creatorName nameType="Organizational">D0</creatorName>' in \
+        mock_data_cite_provider.get().register.call_args_list[0][0][1]
+    assert '<creatorName nameType="Organizational">D0</creatorName>' in \
+        mock_data_cite_provider.get().register.call_args_list[1][0][1]
 
     # Call again, passing publication_recids
     mock_data_cite_provider.reset_mock()
