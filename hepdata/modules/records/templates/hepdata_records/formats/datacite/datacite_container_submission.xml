@@ -51,21 +51,6 @@
             {{ site_url }}/record/{{ publication_info.recid }}
         </alternateIdentifier>
 
-        <alternateIdentifier alternateIdentifierType="ROOTDownload">
-            {{ site_url }}/download/submission/{{ publication_info.recid }}/root
-        </alternateIdentifier>
-
-        <alternateIdentifier alternateIdentifierType="YAMLDownload">
-            {{ site_url }}/download/submission/{{ publication_info.recid }}/yaml
-        </alternateIdentifier>
-
-        <alternateIdentifier alternateIdentifierType="CSVDownload">
-            {{ site_url }}/download/submission/{{ publication_info.recid }}/csv
-        </alternateIdentifier>
-
-        <alternateIdentifier alternateIdentifierType="YODADownload">
-            {{ site_url }}/download/submission/{{ publication_info.recid }}/yoda
-        </alternateIdentifier>
     </alternateIdentifiers>
 
     <relatedIdentifiers>
@@ -76,13 +61,13 @@
         {% endif %}
 
         {% if publication_info.doi %}
-            <relatedIdentifier relatedIdentifierType="DOI" relationType="IsSupplementTo">
+            <relatedIdentifier relatedIdentifierType="DOI" resourceTypeGeneral="JournalArticle" relationType="IsSupplementTo">
                 {{ publication_info.doi }}
             </relatedIdentifier>
         {% endif %}
 
         {% for submission in data_submissions %}
-            <relatedIdentifier relatedIdentifierType="DOI" relationType="IsSupplementedBy">
+            <relatedIdentifier relatedIdentifierType="DOI" resourceTypeGeneral="Dataset" relationType="IsSupplementedBy">
                 {{ submission.doi }}
             </relatedIdentifier>
         {% endfor %}
