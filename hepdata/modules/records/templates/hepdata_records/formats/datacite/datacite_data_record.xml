@@ -5,7 +5,7 @@
         {% if publication_info.collaborations %}
             {% for collaboration in publication_info.collaborations %}
                 <creator>
-                    <creatorName nameType="Organizational">{{ collaboration }}</creatorName>
+                    <creatorName nameType="Organizational">{{ collaboration }} Collaboration</creatorName>
                 </creator>
             {% endfor %}
         {% elif publication_info.authors %}
