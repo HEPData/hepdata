@@ -10,7 +10,8 @@ import pytest
 
 from hepdata.modules.records.utils.common import get_record_by_id
 from hepdata.modules.records.utils.doi_minter import create_doi, register_doi, \
-    generate_doi_for_table, generate_dois_for_submission
+    generate_doi_for_table, generate_dois_for_submission, \
+    reserve_dois_for_data_submissions, reserve_doi_for_hepsubmission
 from hepdata.modules.records.utils.submission import get_or_create_hepsubmission
 from hepdata.modules.records.utils.workflow import create_record
 from hepdata.modules.submission.models import DataSubmission
@@ -104,6 +105,51 @@ def test_register_doi(mock_data_cite_provider, caplog):
         call('http://localhost:5000', '<xml>')
     ])
 
+
+def test_reserve_doi_for_hepsubmission(mock_data_cite_provider, identifiers):
+    # Unset DOI on submission, and set version to 0 (to make sure it's bumped
+    # to 1 in the DOI)
+    hep_submission = get_or_create_hepsubmission(1)
+    hep_submission.doi = None
+    hep_submission.version = 0
+    db.session.add(hep_submission)
+    db.session.commit()
+
+    # Check appropriate DOI has been created
+    reserve_doi_for_hepsubmission(hep_submission)
+    base_doi = '10.17182/hepdata.1'
+    version_doi = '10.17182/hepdata.1.v1'
+    mock_data_cite_provider.create.call_args == [
+        call(base_doi),
+        call(version_doi)
+    ]
+    # Check that doi has been updated on submission
+    assert hep_submission.doi == base_doi
+
+
+def test_reserve_dois_for_data_submissions(mock_data_cite_provider, identifiers):
+    # Unset DOIs on data submissions
+    data_submissions = DataSubmission.query.filter_by(
+        publication_inspire_id=identifiers[0]['inspire_id'],
+        version=1) \
+        .order_by(DataSubmission.id.asc()).all()
+
+    for data_submission in data_submissions:
+        data_submission.doi = None
+        db.session.add(data_submission)
+
+    db.session.commit()
+
+    # Check appropriate DOIs are reserved
+    reserve_dois_for_data_submissions(publication_recid=1)
+    assert mock_data_cite_provider.create.call_count == identifiers[0]['data_tables']
+    create_call_args = mock_data_cite_provider.create.call_args_list
+
+    # Check doi has been created on datacite, and also set in the DB
+    for i in range(identifiers[0]['data_tables']):
+        doi = f'10.17182/hepdata.1.v1/t{i+1}'
+        assert call(doi) in create_call_args
+        assert data_submissions[i].doi == doi
 
 
 def test_generate_doi_for_table(mock_data_cite_provider, identifiers, capsys):
