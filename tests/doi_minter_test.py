@@ -4,6 +4,7 @@ from unittest.mock import call
 from datacite.errors import DataCiteUnauthorizedError, DataCiteError
 from flask import render_template
 from invenio_db import db
+from invenio_pidstore.models import PersistentIdentifier
 from invenio_pidstore.errors import PIDInvalidAction, PIDDoesNotExistError
 import lxml
 import pytest
@@ -64,16 +65,32 @@ def test_create_doi(mock_data_cite_provider, caplog):
 def test_register_doi(mock_data_cite_provider, caplog):
     caplog.set_level(logging.ERROR)
 
-    register_doi('my.test.doi', 'http://localhost:5000', '<xml>', 'uuid')
+    register_doi('my.test.doi', 'http://localhost:5000', '<xml>', 'notarealuuid')
     mock_data_cite_provider.assert_has_calls([
         call.get('my.test.doi', 'doi'),
         call.get().register('http://localhost:5000', '<xml>')
     ])
 
+    # Create a PidstoreIdentifier object with the doi, then try again - should
+    # update pidstore obj with new uuid
+    pidstore_obj = PersistentIdentifier.create(pid_type='doi', pid_value='my.test.doi')
+    db.session.add(pidstore_obj)
+    db.session.commit()
+    assert pidstore_obj.object_uuid is None
+
+    publication_info = get_record_by_id(1)
+    mock_data_cite_provider.reset_mock()
+    register_doi('my.test.doi', 'http://localhost:5000', '<xml>', publication_info['uuid'])
+    mock_data_cite_provider.assert_has_calls([
+        call.get('my.test.doi', 'doi'),
+        call.get().register('http://localhost:5000', '<xml>')
+    ])
+    assert str(pidstore_obj.object_uuid) == publication_info['uuid']
+
     # Invalid PID exception should call create before continuing
     mock_data_cite_provider.reset_mock()
     mock_data_cite_provider.get.side_effect = PIDDoesNotExistError('mytype', 'myvalue')
-    register_doi('my.test.doi', 'http://localhost:5000', '<xml>', 'uuid')
+    register_doi('my.test.doi', 'http://localhost:5000', '<xml>', publication_info['uuid'])
     mock_data_cite_provider.assert_has_calls([
         call.get('my.test.doi', 'doi'),
         call.create('my.test.doi'),
@@ -84,7 +101,7 @@ def test_register_doi(mock_data_cite_provider, caplog):
     mock_data_cite_provider.reset_mock()
     mock_data_cite_provider.get.side_effect = None
     mock_data_cite_provider.get().register.side_effect = DataCiteUnauthorizedError()
-    register_doi('my.test.doi', 'http://localhost:5000', '<xml>', 'uuid')
+    register_doi('my.test.doi', 'http://localhost:5000', '<xml>', publication_info['uuid'])
     assert len(caplog.records) == 1
     assert caplog.records[0].levelname == "ERROR"
     assert caplog.records[0].msg == \
@@ -93,13 +110,13 @@ def test_register_doi(mock_data_cite_provider, caplog):
     # PIDInvalidAction should cause retry via update method
     mock_data_cite_provider.reset_mock()
     mock_data_cite_provider.get().register.side_effect = PIDInvalidAction()
-    register_doi('my.test.doi', 'http://localhost:5000', '<xml>', 'uuid')
+    register_doi('my.test.doi', 'http://localhost:5000', '<xml>', publication_info['uuid'])
     mock_data_cite_provider.get().update.assert_called_once_with('http://localhost:5000', '<xml>')
 
     # DataCiteError should cause retry via register method
     mock_data_cite_provider.reset_mock()
     mock_data_cite_provider.get().register.side_effect = DataCiteError()
-    register_doi('my.test.doi', 'http://localhost:5000', '<xml>', 'uuid')
+    register_doi('my.test.doi', 'http://localhost:5000', '<xml>', publication_info['uuid'])
     mock_data_cite_provider.get().register.assert_has_calls([
         call('http://localhost:5000', '<xml>'),
         call('http://localhost:5000', '<xml>')
@@ -141,6 +158,9 @@ def test_reserve_dois_for_data_submissions(mock_data_cite_provider, identifiers)
         data_submission.doi = None
         db.session.add(data_submission)
 
+    # Set version to 0 for first submission - should still use v1 in the DOI
+    data_submissions[0].version = 0
+
     db.session.commit()
 
     # Check appropriate DOIs are reserved
@@ -156,6 +176,11 @@ def test_reserve_dois_for_data_submissions(mock_data_cite_provider, identifiers)
 
     # Check that no calls were made to the DataCiteProvider's API
     mock_data_cite_provider.api.assert_not_called()
+
+    # Test passing invalid arguments raises a KeyError
+    with pytest.raises(KeyError) as excinfo:
+        reserve_dois_for_data_submissions()
+    assert 'No inspire_id or data_submissions parameter provided' in str(excinfo.value)
 
 
 def test_generate_doi_for_table(mock_data_cite_provider, identifiers, capsys):
