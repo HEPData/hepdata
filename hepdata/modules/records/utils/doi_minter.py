@@ -97,6 +97,10 @@ def generate_dois_for_submission(*args, **kwargs):
 
         publication_info = get_record_by_id(hep_submission.publication_recid)
 
+        if hep_submission.doi is None:
+            reserve_doi_for_hepsubmission(hep_submission)
+            reserve_dois_for_data_submissions(data_submissions=data_submissions)
+
         create_container_doi.delay(hep_submission.id, [d.id for d in data_submissions], publication_info, site_url)
 
         for data_submission in data_submissions:
@@ -117,10 +121,6 @@ def create_container_doi(hep_submission_id, data_submission_ids, publication_inf
     data_submissions = db.session.query(DataSubmission).filter(
         DataSubmission.id.in_(data_submission_ids)
     ).all()
-
-    if hep_submission.doi is None:
-        reserve_doi_for_hepsubmission(hep_submission)
-        reserve_dois_for_data_submissions(data_submissions=data_submissions)
 
     version_doi = hep_submission.doi + ".v{0}".format(hep_submission.version)
 

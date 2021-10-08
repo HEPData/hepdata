@@ -126,6 +126,9 @@ def test_reserve_doi_for_hepsubmission(mock_data_cite_provider, identifiers):
     # Check that doi has been updated on submission
     assert hep_submission.doi == base_doi
 
+    # Check that no calls were made to the DataCiteProvider's API
+    mock_data_cite_provider.api.assert_not_called()
+
 
 def test_reserve_dois_for_data_submissions(mock_data_cite_provider, identifiers):
     # Unset DOIs on data submissions
@@ -150,6 +153,9 @@ def test_reserve_dois_for_data_submissions(mock_data_cite_provider, identifiers)
         doi = f'10.17182/hepdata.1.v1/t{i+1}'
         assert call(doi) in create_call_args
         assert data_submissions[i].doi == doi
+
+    # Check that no calls were made to the DataCiteProvider's API
+    mock_data_cite_provider.api.assert_not_called()
 
 
 def test_generate_doi_for_table(mock_data_cite_provider, identifiers, capsys):
