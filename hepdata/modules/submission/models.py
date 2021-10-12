@@ -240,6 +240,7 @@ class DataResource(db.Model):
 
     created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow,
                         index=True)
+    doi = db.Column(db.String(128), nullable=True)
 
 
 @event.listens_for(DataResource, 'after_delete')

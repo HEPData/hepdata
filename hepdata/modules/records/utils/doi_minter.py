@@ -19,6 +19,8 @@
 # In applying this license, CERN does not
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
+import os
+
 from celery import shared_task
 from datacite.errors import DataCiteUnauthorizedError, DataCiteBadRequestError, DataCiteError
 from flask import render_template, current_app
@@ -95,31 +97,46 @@ def generate_dois_for_submission(*args, **kwargs):
                                                           version=hep_submission.version).order_by(
             DataSubmission.id.asc())
 
+        file_resources = _get_submission_file_resources(
+            hep_submission.publication_recid, hep_submission.version,
+            hep_submission)
+
         publication_info = get_record_by_id(hep_submission.publication_recid)
 
         if hep_submission.doi is None:
             reserve_doi_for_hepsubmission(hep_submission)
             reserve_dois_for_data_submissions(data_submissions=data_submissions)
+            reserve_dois_for_resources(publication_recid=hep_submission.publication_recid,
+                                       version=hep_submission.version,
+                                       resources=file_resources)
 
-        create_container_doi.delay(hep_submission.id, [d.id for d in data_submissions], publication_info, site_url)
+        create_container_doi.delay(hep_submission.id, [d.id for d in data_submissions],
+            [r.id for r in file_resources], publication_info, site_url)
 
         for data_submission in data_submissions:
             create_data_doi.delay(hep_submission.id, data_submission.id, publication_info, site_url)
 
+        for resource in file_resources:
+            create_resource_doi.delay(hep_submission.id, resource.id, publication_info, site_url)
+
 
 @shared_task(max_retries=6, default_retry_delay=10 * 60)
-def create_container_doi(hep_submission_id, data_submission_ids, publication_info, site_url):
+def create_container_doi(hep_submission_id, data_submission_ids, resource_ids, publication_info, site_url):
     """
     Creates the payload to wrap the whole submission.
 
     :param hep_submission:
     :param data_submissions:
+    :param resource_ids:
     :param publication_info:
     :return:
     """
     hep_submission = db.session.query(HEPSubmission).get(hep_submission_id)
     data_submissions = db.session.query(DataSubmission).filter(
         DataSubmission.id.in_(data_submission_ids)
+    ).all()
+    resources = db.session.query(DataResource).filter(
+        DataResource.id.in_(resource_ids)
     ).all()
 
     version_doi = hep_submission.doi + ".v{0}".format(hep_submission.version)
@@ -180,6 +197,41 @@ def create_data_doi(hep_submission_id, data_submission_id, publication_info, sit
                  xml, publication_info['uuid'])
 
 
+@shared_task(max_retries=6, default_retry_delay=10 * 60)
+def create_resource_doi(hep_submission_id, resource_id, publication_info, site_url):
+    """
+    Generate DOI record for a data resource
+
+    :param resource_id:
+    :param version:
+    :return:
+    """
+    hep_submission = db.session.query(HEPSubmission).get(hep_submission_id)
+    resource = db.session.query(DataResource).get(resource_id)
+
+    license = None
+    if resource.file_license:
+        license = License.query.filter_by(id=resource.file_license).first()
+
+    xml = render_template(
+        'hepdata_records/formats/datacite/datacite_resource.xml',
+        resource=resource,
+        doi=resource.doi,
+        overall_submission=hep_submission,
+        filename=os.path.basename(resource.file_location),
+        license=license,
+        publication_info=publication_info,
+        site_url=site_url
+    )
+
+    register_doi(
+        resource.doi,
+        site_url + '/record/resource/{0}?view=true'.format(resource.id),
+        xml,
+        publication_info['uuid']
+    )
+
+
 def reserve_doi_for_hepsubmission(hepsubmission, update=False):
     base_doi = "{0}/hepdata.{1}".format(
         current_app.config.get('DOI_PREFIX'), hepsubmission.publication_recid)
@@ -226,6 +278,32 @@ def reserve_dois_for_data_submissions(*args, **kwargs):
             create_doi(doi_value)
             data_submission.doi = doi_value
             db.session.add(data_submission)
+
+    db.session.commit()
+
+
+def reserve_dois_for_resources(publication_recid, version, resources=None):
+    """
+    Reserves a DOI for a data submission and saves to the datasubmission object.
+
+    :param resources: list of DataResource objects
+    :return:
+    """
+    if not resources:
+        resources = _get_submission_file_resources(publication_recid, version)
+
+    for index, resource in enumerate(resources):
+        # using the index of the sorted resources should do a good job of maintaining the order of the tables.
+        if version == 0:
+            version += 1
+
+        doi_value = "{0}/hepdata.{1}.v{2}/r{3}".format(
+            current_app.config.get('DOI_PREFIX'), publication_recid, version, (index + 1))
+
+        if resource.doi is None:
+            create_doi(doi_value)
+            resource.doi = doi_value
+            db.session.add(resource)
 
     db.session.commit()
 
@@ -295,3 +373,21 @@ def register_doi(doi, url, xml, uuid):
                 log.error('Error updating {0} for URL {1}\n\n{2}'.format(doi, url, dce))
         except DataCiteError as dce:
             log.error('Error registering {0} for URL {1}\n\n{2}'.format(doi, url, dce))
+
+
+def _get_submission_file_resources(recid, version, submission=None):
+    """
+    Gets a list of resources for a publication, relevant to all data records.
+
+    :param recid:
+    :param version:
+    :return: list of DataResource objects
+    """
+    if submission is None:
+        submission = HEPSubmission.query.filter_by(publication_recid=recid, version=version).first()
+
+    file_resources = [
+        r for r in submission.resources if not r.file_location.lower().startswith('http')
+    ]
+    file_resources.sort(key=id)
+    return file_resources
