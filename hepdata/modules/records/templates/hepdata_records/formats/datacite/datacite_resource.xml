@@ -32,7 +32,7 @@
     <publisher>HEPData</publisher>
     <publicationYear>{{ overall_submission.last_updated.year }}</publicationYear>
     <language>eng</language>
-    <resourceType resourceTypeGeneral="Other">{{ resource.file_type }}</resourceType>
+    <resourceType resourceTypeGeneral="Other">{{ resource.file_type }} file</resourceType>
     <version>{{ overall_submission.version }}</version>
     <descriptions>
         <description descriptionType="Abstract">
