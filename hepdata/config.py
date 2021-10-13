@@ -65,6 +65,8 @@ CELERY_TASK_CREATE_MISSING_QUEUES = True
 CELERY_TASK_ROUTES = {
     'hepdata.modules.email.utils.send_email': {'queue': 'priority'},
     'hepdata.modules.records.api.process_saved_file': {'queue': 'priority'},
+    'hepdata.modules.records.utils.doi_minter.create_container_doi': {'queue': 'datacite'},
+    'hepdata.modules.records.utils.doi_minter.create_data_doi': {'queue': 'datacite'},
 }
 
 CELERY_BEAT_SCHEDULE = {
@@ -79,13 +81,24 @@ CELERY_BEAT_SCHEDULE = {
     },
 }
 
+# Number of workers running the datacite queue
+# If changed in local file, also update CELERY_TASK_ANNOTATIONS
+DATACITE_QUEUE_WORKERS = 1
+
 CELERY_TASK_ANNOTATIONS = {
     '*': {
         'acks_late': True,
         'reject_on_worker_lost': True,
         'autoretry_for': (Exception,),
         'default_retry_delay': 30
-    }
+    },
+    'hepdata.modules.records.utils.doi_minter.create_container_doi': {
+        'rate_limit': f"{100 / DATACITE_QUEUE_WORKERS}/m"
+    },
+    'hepdata.modules.records.utils.doi_minter.create_data_doi': {
+        'rate_limit': f"{500 / DATACITE_QUEUE_WORKERS}/m"
+    },
+
 }
 
 # Cache
@@ -215,7 +228,6 @@ DEBUG_TB_INTERCEPT_REDIRECTS = False
 # http://datacite.readthedocs.org/en/latest/
 
 HEPDATA_DOI_PREFIX = "10.17182"
-TEST_DOI_PREFIX = "10.5072"
 SITE_URL = "https://www.hepdata.net"
 
 DOI_PREFIX = HEPDATA_DOI_PREFIX
@@ -223,7 +235,6 @@ DOI_PREFIX = HEPDATA_DOI_PREFIX
 PIDSTORE_DATACITE_USERNAME = "CERN.HEPDATA"
 PIDSTORE_DATACITE_PASSWORD = ""
 PIDSTORE_DATACITE_TESTMODE = False
-PIDSTORE_DATACITE_URL = "https://mds.datacite.org"
 
 TESTING = False  # switch off email using TESTING = True
 NO_DOI_MINTING = False  # switch off DOI minting using NO_DOI_MINTING = True

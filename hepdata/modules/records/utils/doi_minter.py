@@ -57,11 +57,11 @@ def generate_doi_for_table(doi):
 
     hep_submission = HEPSubmission.query.filter_by(
         inspire_id=data_submission.publication_inspire_id, version=data_submission.version, overall_status='finished'
-    ).one()
+    ).first()
 
     if hep_submission:
         publication_info = get_record_by_id(hep_submission.publication_recid)
-        create_data_doi(hep_submission, data_submission, publication_info, site_url)
+        create_data_doi(hep_submission.id, data_submission.id, publication_info, site_url)
     else:
         print('Finished submission with INSPIRE ID {} and version {} not found in database'.format(
             data_submission.publication_inspire_id, data_submission.version)
@@ -97,13 +97,18 @@ def generate_dois_for_submission(*args, **kwargs):
 
         publication_info = get_record_by_id(hep_submission.publication_recid)
 
-        create_container_doi(hep_submission, data_submissions, publication_info, site_url)
+        if hep_submission.doi is None:
+            reserve_doi_for_hepsubmission(hep_submission)
+            reserve_dois_for_data_submissions(data_submissions=data_submissions)
+
+        create_container_doi.delay(hep_submission.id, [d.id for d in data_submissions], publication_info, site_url)
 
         for data_submission in data_submissions:
-            create_data_doi(hep_submission, data_submission, publication_info, site_url)
+            create_data_doi.delay(hep_submission.id, data_submission.id, publication_info, site_url)
 
 
-def create_container_doi(hep_submission, data_submissions, publication_info, site_url):
+@shared_task(max_retries=6, default_retry_delay=10 * 60)
+def create_container_doi(hep_submission_id, data_submission_ids, publication_info, site_url):
     """
     Creates the payload to wrap the whole submission.
 
@@ -112,10 +117,10 @@ def create_container_doi(hep_submission, data_submissions, publication_info, sit
     :param publication_info:
     :return:
     """
-
-    if hep_submission.doi is None:
-        reserve_doi_for_hepsubmission(hep_submission)
-        reserve_dois_for_data_submissions(data_submissions)
+    hep_submission = db.session.query(HEPSubmission).get(hep_submission_id)
+    data_submissions = db.session.query(DataSubmission).filter(
+        DataSubmission.id.in_(data_submission_ids)
+    ).all()
 
     version_doi = hep_submission.doi + ".v{0}".format(hep_submission.version)
 
@@ -141,7 +146,8 @@ def create_container_doi(hep_submission, data_submissions, publication_info, sit
         publication_info['inspire_id'], hep_submission.version), version_xml, publication_info['uuid'])
 
 
-def create_data_doi(hep_submission, data_submission, publication_info, site_url):
+@shared_task(max_retries=6, default_retry_delay=10 * 60)
+def create_data_doi(hep_submission_id, data_submission_id, publication_info, site_url):
     """
     Generate DOI record for a data record.
 
@@ -149,6 +155,8 @@ def create_data_doi(hep_submission, data_submission, publication_info, site_url)
     :param version:
     :return:
     """
+    hep_submission = db.session.query(HEPSubmission).get(hep_submission_id)
+    data_submission = db.session.query(DataSubmission).get(data_submission_id)
 
     data_file = DataResource.query.filter_by(id=data_submission.data_file).first()
 
@@ -227,7 +235,8 @@ def create_doi(doi):
     :param doi: Creates a DOI using the data provider. If it already exists, we return back the existing provider.
     :return: DataCiteProvider
     """
-    if current_app.config.get('NO_DOI_MINTING', False):
+    if current_app.config.get('NO_DOI_MINTING', False): # pragma: no cover
+        log.info(f"Would create DOI {doi}")
         return None
 
     try:
@@ -247,7 +256,8 @@ def register_doi(doi, url, xml, uuid):
     :param recid:
     :return:
     """
-    if current_app.config.get('NO_DOI_MINTING', False) or not doi:
+    if current_app.config.get('NO_DOI_MINTING', False) or not doi: # pragma: no cover
+        log.info(f"Would mint DOI {doi}")
         return None
 
     log.info('{0} - {1}'.format(doi, url))

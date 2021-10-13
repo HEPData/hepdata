@@ -1,8 +1,14 @@
-<resource xmlns="http://datacite.org/schema/kernel-3" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-          xsi:schemaLocation="http://datacite.org/schema/kernel-3 http://schema.datacite.org/meta/kernel-3/metadata.xsd">
+<resource xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://datacite.org/schema/kernel-4"
+          xsi:schemaLocation="http://datacite.org/schema/kernel-4 https://schema.datacite.org/meta/kernel-4.4/metadata.xsd">
     <identifier identifierType="DOI">{{ doi }}</identifier>
     <creators>
-        {% if publication_info.authors %}
+        {% if publication_info.collaborations %}
+            {% for collaboration in publication_info.collaborations %}
+                <creator>
+                    <creatorName nameType="Organizational">{{ collaboration }} Collaboration</creatorName>
+                </creator>
+            {% endfor %}
+        {% elif publication_info.authors %}
             {% for author in publication_info.authors %}
                 <creator>
                     <creatorName>{{ author.full_name }}</creatorName>
@@ -35,11 +41,11 @@
     <version>{{ data_submission.version }}</version>
     <descriptions>
         <description descriptionType="Abstract">
-            {{ overall_submission.data_abstract }}
+            {{ table_description }}
         </description>
 
         <description descriptionType="Other">
-            {{ table_description }}
+            {{ overall_submission.data_abstract }}
         </description>
     </descriptions>
 
@@ -60,21 +66,6 @@
             {{ site_url }}/record/{{ data_submission.publication_recid }}
         </alternateIdentifier>
 
-        <alternateIdentifier alternateIdentifierType="ROOTDownload">
-            {{ site_url }}/download/table/{{ data_submission.id }}/root
-        </alternateIdentifier>
-
-        <alternateIdentifier alternateIdentifierType="YAMLDownload">
-            {{ site_url }}/download/table/{{ data_submission.id }}/yaml
-        </alternateIdentifier>
-
-        <alternateIdentifier alternateIdentifierType="CSVDownload">
-            {{ site_url }}/download/table/{{ data_submission.id }}/csv
-        </alternateIdentifier>
-
-        <alternateIdentifier alternateIdentifierType="YODADownload">
-            {{ site_url }}/download/table/{{ data_submission.id }}/yoda
-        </alternateIdentifier>
     </alternateIdentifiers>
 
 
@@ -86,12 +77,12 @@
         {% endif %}
 
         {% if publication_info.doi %}
-            <relatedIdentifier relatedIdentifierType="DOI" relationType="IsSupplementTo">
+            <relatedIdentifier relatedIdentifierType="DOI" resourceTypeGeneral="JournalArticle" relationType="IsSupplementTo">
                 {{ publication_info.doi }}
             </relatedIdentifier>
         {% endif %}
 
-        <relatedIdentifier relatedIdentifierType="DOI" relationType="IsPartOf">
+        <relatedIdentifier relatedIdentifierType="DOI" resourceTypeGeneral="Collection" relationType="IsPartOf">
             {{ overall_submission.doi }}
         </relatedIdentifier>
 

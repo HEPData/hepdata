@@ -8,7 +8,6 @@ omit = *hepdata/wsgi.py
        *hepdata/utils/twitter.py
        *hepdata/utils/unicodeit.py
        *hepdata/config*
-       *hepdata/modules/records/utils/doi_minter.py
        *hepdata/modules/records/utils/resources.py
        *hepdata/modules/converter/__init__.py
        *hepdata/modules/permissions/*
