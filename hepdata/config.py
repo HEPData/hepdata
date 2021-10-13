@@ -228,7 +228,6 @@ DEBUG_TB_INTERCEPT_REDIRECTS = False
 # http://datacite.readthedocs.org/en/latest/
 
 HEPDATA_DOI_PREFIX = "10.17182"
-TEST_DOI_PREFIX = "10.5072"
 SITE_URL = "https://www.hepdata.net"
 
 DOI_PREFIX = HEPDATA_DOI_PREFIX
@@ -236,7 +235,6 @@ DOI_PREFIX = HEPDATA_DOI_PREFIX
 PIDSTORE_DATACITE_USERNAME = "CERN.HEPDATA"
 PIDSTORE_DATACITE_PASSWORD = ""
 PIDSTORE_DATACITE_TESTMODE = False
-PIDSTORE_DATACITE_URL = "https://mds.datacite.org"
 
 TESTING = False  # switch off email using TESTING = True
 NO_DOI_MINTING = False  # switch off DOI minting using NO_DOI_MINTING = True
