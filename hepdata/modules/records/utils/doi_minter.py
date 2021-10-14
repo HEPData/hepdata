@@ -226,7 +226,7 @@ def create_resource_doi(hep_submission_id, resource_id, publication_info, site_u
 
     register_doi(
         resource.doi,
-        site_url + '/record/resource/{0}?view=true'.format(resource.id),
+        site_url + '/record/resource/{0}?landing_page=true'.format(resource.id),
         xml,
         publication_info['uuid']
     )
