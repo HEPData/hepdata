@@ -256,8 +256,6 @@ def format_resource(resource, contents):
     else:
         ctx['display_type'] = 'code'
 
-    breakpoint()
-
     return ctx
 
 
