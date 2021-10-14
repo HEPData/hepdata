@@ -44,7 +44,7 @@ from hepdata.modules.permissions.api import user_allowed_to_perform_action
 from hepdata.modules.permissions.models import SubmissionParticipant
 from hepdata.modules.records.subscribers.api import is_current_user_subscribed_to_record
 from hepdata.modules.records.utils.common import decode_string, find_file_in_directory, allowed_file, \
-    remove_file_extension, truncate_string, get_record_contents, get_record_by_id
+    remove_file_extension, truncate_string, get_record_contents, get_record_by_id, IMAGE_TYPES
 from hepdata.modules.records.utils.data_processing_utils import process_ctx
 from hepdata.modules.records.utils.data_files import get_data_path_for_record, cleanup_old_files
 from hepdata.modules.records.utils.submission import process_submission_directory, \
@@ -213,6 +213,54 @@ def format_tables(ctx, data_record_query, data_table, recid):
                 ctx['table_name_to_show'] = matching_tables[0]['name']
 
 
+def format_resource(resource, contents):
+    """
+    Gets info about a resource ready to be displayed on the resource's
+    landing page
+
+    :param resource: DataResource object to be displayed
+    :param contents: Resource file contents
+
+    :return: context dictionary ready for the template
+    """
+    # Ensure context for publication/submission is complete (cf data table, check it works for sandbox)
+    # Consider whether landing page should work for resources relating to data tables
+
+    hepsubmission = HEPSubmission.query.filter(HEPSubmission.resources.any(id=resource.id)).first()
+    if not hepsubmission:
+        datasubmission = DataSubmission.query.filter(DataSubmission.resources.any(id=resource.id)).first()
+        if datasubmission:
+            hepsubmission = HEPSubmission.query.filter_by(
+                publication_recid=datasubmission.publication_recid,
+                version=datasubmission.version
+            ).first()
+        if not hepsubmission:
+            # Look for DataSubmission mapping to this resource
+            raise ValueError("Unable to find publication for resource %d. (Is it a data file?)", resource.id)
+
+    record = get_record_by_id(hepsubmission.publication_recid)
+    ctx = format_submission(hepsubmission.publication_recid, record,
+                            hepsubmission.version, 1, hepsubmission)
+    ctx['is_resource'] = True
+    ctx['resource'] = resource
+    ctx['contents'] = contents
+    ctx['resource_url'] = request.url
+    ctx['related_publication_id'] = hepsubmission.publication_recid
+
+    if resource.file_type in IMAGE_TYPES:
+        ctx['display_type'] = 'image'
+    elif resource.file_location.lower().startswith('http'):
+        ctx['display_type'] = 'link'
+    elif contents == 'Binary':
+        ctx['display_type'] = 'binary'
+    else:
+        ctx['display_type'] = 'code'
+
+    breakpoint()
+
+    return ctx
+
+
 def get_commit_message(ctx, recid):
     """
     Returns a commit message for the current version if present.
@@ -342,7 +390,7 @@ def render_record(recid, record, version, output_format, light_mode=False):
             ctx['table_name'] = record['title']
 
             if output_format == 'html':
-                return render_template('hepdata_records/data_record.html', ctx=ctx)
+                return render_template('hepdata_records/related_record.html', ctx=ctx)
             elif output_format == 'yoda' and 'rivet' in request.args:
                 return redirect('/download/table/{0}/{1}/{2}/{3}/{4}'.format(
                     publication_recid, ctx['table_name'].replace('%', '%25').replace('\\', '%5C'), hepdata_submission.version, output_format,

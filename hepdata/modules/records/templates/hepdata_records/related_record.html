@@ -49,7 +49,7 @@
                         </li>
                     </a>
 
-                    <a href="/record/ins{{ ctx.record.inspire_id }}">
+                    <a href="/record/{% if ctx.record.inspire_id %}ins{{ ctx.record.inspire_id }}{% else %}{% if ctx.status == 'sandbox' %}sandbox/{% endif %}{{ ctx.related_publication_id }}{% endif %}">
                         <li class="active bg-purple-2"><span
                                 class="fa fa-list"></span> View all Publication
                             Data
@@ -215,19 +215,23 @@
 
 
             <!--if there is data, we show it. If not, we show the upload screen if the logged in user is an uploader-->
-
-            {% if ctx.data_tables|length == 0 %}
-
-                <div id="hepdata_table_detail" align="center">
-                    <div id="hepdata-loading"
-                         style="width: 200px; height: 200px; margin: 0 auto; margin-top: 5em"></div>
-                    <h4 style="color: #894B9D">No data has been uploaded
-                        for this submission.</h4>
-                </div>
+            {% if ctx.is_resource %}
+              {% set resource_details_class="col-lg-9 col-md-9" %}
+              {% include 'hepdata_records/components/resource_details.html' %}
             {% else %}
-                {% set table_details_class="col-lg-9 col-md-9" %}
-                {% include 'hepdata_records/components/table_details.html' %}
+                {% if ctx.data_tables|length == 0 %}
 
+                    <div id="hepdata_table_detail" align="center">
+                        <div id="hepdata-loading"
+                             style="width: 200px; height: 200px; margin: 0 auto; margin-top: 5em"></div>
+                        <h4 style="color: #894B9D">No data has been uploaded
+                            for this submission.</h4>
+                    </div>
+                {% else %}
+                    {% set table_details_class="col-lg-9 col-md-9" %}
+                    {% include 'hepdata_records/components/table_details.html' %}
+
+                {% endif %}
             {% endif %}
 
         </div>

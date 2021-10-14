@@ -45,7 +45,7 @@ from hepdata.modules.inspire_api.views import get_inspire_record_information
 from hepdata.modules.records.api import request, determine_user_privileges, render_template, format_submission, \
     render_record, current_user, db, jsonify, get_user_from_id, get_record_contents, extract_journal_info, \
     user_allowed_to_perform_action, NoResultFound, OrderedDict, query_messages_for_data_review, returns_json, \
-    process_payload, has_upload_permissions, has_coordinator_permissions, create_new_version
+    process_payload, has_upload_permissions, has_coordinator_permissions, create_new_version, format_resource
 from hepdata.modules.submission.api import get_submission_participants_for_record
 from hepdata.modules.submission.models import HEPSubmission, DataSubmission, \
     DataResource, DataReview, Message, Question
@@ -619,12 +619,11 @@ def get_resource(resource_id):
     :return: json dictionary containing any HTML files to show.
     """
 
-    resource = DataResource.query.filter_by(id=resource_id)
+    resource_obj = DataResource.query.filter_by(id=resource_id).first()
     view_mode = bool(request.args.get('view', False))
+    landing_page = bool(request.args.get('landing_page', False))
 
-    if resource.count() > 0:
-        resource_obj = resource.first()
-
+    if resource_obj:
         if view_mode:
             return send_file(resource_obj.file_location, as_attachment=True)
         elif 'html' in resource_obj.file_location and 'http' not in resource_obj.file_location.lower():
@@ -633,7 +632,7 @@ def get_resource(resource_id):
                 return html
         else:
             contents = ''
-            if resource_obj.file_type.lower() not in IMAGE_TYPES:
+            if resource_obj.file_type.lower() not in IMAGE_TYPES and 'http' not in resource_obj.file_location.lower():
                 print("Resource is at: " + resource_obj.file_location)
                 try:
                     with open(resource_obj.file_location, 'r', encoding='utf-8') as resource_file:
@@ -641,9 +640,19 @@ def get_resource(resource_id):
                 except UnicodeDecodeError:
                     contents = 'Binary'
 
-            return jsonify(
-                {"location": '/record/resource/{0}?view=true'.format(resource_obj.id), 'type': resource_obj.file_type,
-                 'description': resource_obj.file_description, 'file_contents': decode_string(contents)})
+            if landing_page:
+                try:
+                    ctx = format_resource(resource_obj, contents)
+                except ValueError as e:
+                    log.error(str(e))
+                    return abort(404)
+
+                return render_template('hepdata_records/related_record.html', ctx=ctx)
+
+            else:
+                return jsonify(
+                    {"location": '/record/resource/{0}?view=true'.format(resource_obj.id), 'type': resource_obj.file_type,
+                     'description': resource_obj.file_description, 'file_contents': decode_string(contents)})
 
     else:
         log.error("Unable to find resource %d.", resource_id)

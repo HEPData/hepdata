@@ -2,6 +2,8 @@
  * Created by eamonnmaguire on 16/03/2016.
  */
 import $ from 'jquery'
+import ClipboardJS from 'clipboard'
+import toastr from 'toastr'
 
 var HEPDATA = {};
 
@@ -228,6 +230,25 @@ HEPDATA.render_associated_files = function (associated_files, placement) {
     $(placement).append(html);
   }
 };
+
+HEPDATA.setup_clipboard = function () {
+  if (HEPDATA.clipboard == undefined) {
+    HEPDATA.clipboard = new ClipboardJS('.copy-btn');
+    toastr.options.timeOut = 3000;
+
+    HEPDATA.clipboard.on('success', function (e) {
+      toastr.success($(".copy-btn").attr('data-clipboard-text') + ' copied to clipboard.')
+    });
+
+    HEPDATA.clipboard.on('error', function (e) {
+      if (navigator.userAgent.indexOf("Safari") > -1) {
+        toastr.success('Press &#8984; + C to finalise copy');
+      } else {
+        toastr.error('There was a problem copying the link.');
+      }
+    })
+  }
+}
 
 window.HEPDATA = HEPDATA;
 export default HEPDATA;

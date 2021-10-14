@@ -961,7 +961,7 @@ g.node {
   background-color: $purple !important;
 }
 
-#table_doi {
+#table_doi, #resource_doi {
   font-size: .55em;
   color: $navy !important;
 
@@ -970,6 +970,18 @@ g.node {
   border-radius: 4px;
   margin-left: 5px;
   margin-top: 4px;
+}
+
+#resourceLandingPage {
+  .resource-details {
+
+    margin-top: 10px;
+
+    textarea, img {
+      height: 60vh;
+      margin-bottom: 5px;
+    }
+  }
 }
 
 #figures {
