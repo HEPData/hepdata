@@ -44,6 +44,13 @@ HEPDATA.hepdata_resources = (function () {
       return d['file_description'];
     });
 
+    resource_item.append("p")
+      .attr('display', function(d){
+        return d['doi'] == null ? 'none' : 'block';
+      }).html(function (d) {
+        return d['doi'] == null ? '' : '<a href="https://doi.org/' + d['doi'] + '" class="resource-doi">' + d['doi'] + '</a>';
+      });
+
     resource_item.append("a")
       .attr('target', '_new')
       .attr("class", "btn btn-primary btn-sm")

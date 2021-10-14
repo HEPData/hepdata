@@ -1082,6 +1082,15 @@ g.node {
       i {
         font-size: 2em;
       }
+
+      .resource-doi {
+        background-color: $lightgrey;
+        padding: 4px;
+        border-radius: 4px;
+        font-size: smaller;
+        font-weight: bolder;
+      }
+
     }
   }
 

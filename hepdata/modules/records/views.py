@@ -601,7 +601,7 @@ def process_resource(reference):
 
     _reference_data = {'id': reference.id, 'file_type': reference.file_type,
                        'file_description': reference.file_description,
-                       'location': _location}
+                       'location': _location, 'doi': reference.doi}
 
     if reference.file_type.lower() in IMAGE_TYPES:
         _reference_data['preview_location'] = _location
