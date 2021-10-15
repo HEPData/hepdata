@@ -778,6 +778,40 @@
   display: none;
 }
 
+.citation-panel {
+  background-color: $lightgrey;
+  padding: 15px;
+  font-size: .9em;
+
+  .well {
+    background-color: white;
+  }
+
+  select {
+    border-color: lightgrey;
+    padding: 3px;
+    border-radius: 4px;
+    margin: 0 5px;
+  }
+
+  textarea {
+    width: 100%;
+    height: 100px;
+    font-family: monospace;
+    white-space: pre-wrap;
+    border: 1px solid #e3e3e3;
+    border-radius: 4px;
+    padding: 10px;
+    margin-bottom: 15px;
+    resize: none;
+  }
+
+  h4 {
+    font-size: 14px;
+    font-weight: bold;
+  }
+}
+
 @media (max-width: 1000px) {
 
   .navbar-nav {
@@ -959,6 +993,7 @@ g.node {
 
 .toast-success {
   background-color: $purple !important;
+  z-index: 100;
 }
 
 #table_doi, #resource_doi {

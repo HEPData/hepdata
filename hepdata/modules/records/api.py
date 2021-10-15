@@ -158,6 +158,14 @@ def format_submission(recid, record, version, version_count, hepdata_submission,
                 ctx["version_count"] -= 1
 
         ctx['additional_resources'] = submission_has_resources(hepdata_submission)
+        ctx['resources_with_doi'] = []
+        for resource in hepdata_submission.resources:
+            if resource.doi:
+                ctx['resources_with_doi'].append({
+                    'filename': os.path.basename(resource.file_location),
+                    'description': resource.file_description,
+                    'doi': resource.doi
+                })
 
         # query for a related data submission
         data_record_query = DataSubmission.query.filter_by(
