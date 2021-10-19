@@ -82,7 +82,7 @@
         {%endif %}
 
         // Add metadata as json-ld from datacite
-        {% if ctx.record.hepdata_doi %}
+        {% if ctx.record and ctx.record.hepdata_doi and not config['TESTING'] %}
             var identifier = "https://doi.org/{{ ctx.record.hepdata_doi }}";
             var doi = new URL(identifier);
             var url;
