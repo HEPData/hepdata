@@ -81,6 +81,37 @@
             {% endif %}
         {%endif %}
 
+        // Add metadata as json-ld from datacite
+        {% if ctx.record.hepdata_doi %}
+            var identifier = "https://doi.org/{{ ctx.record.hepdata_doi }}";
+            var doi = new URL(identifier);
+            var url;
+            var headers = {};
+            {% if config['ENV'] == 'development' %}
+              // If working in dev mode, try to get json-ld from api.test.datacite.org
+              url = "https://api.test.datacite.org/dois/{{ ctx.record.hepdata_doi }}";
+              headers['Accept'] = "application/vnd.schemaorg.ld+json";
+            {% else %}
+              url = "https://data.crosscite.org";
+              url += '/application/vnd.schemaorg.ld+json/' + doi.pathname;
+            {% endif %}
+
+            $.ajax({
+              url: url,
+              dataType: 'text', // don't convert JSON to Javascript object
+              headers: headers,
+              success: function(data) {
+                $('<script>')
+                   .attr('type', 'application/ld+json')
+                   .text(data)
+                   .appendTo('head');
+              },
+              error: function (error) {
+                console.log(error.responseJSON);
+              }
+            });
+        {% endif %}
+
     });
 
     $('.hide-publication-info').click(function () {
@@ -127,5 +158,7 @@
     });
 
     HEPDATA.setup_clipboard();
+
+
 
 </script>
