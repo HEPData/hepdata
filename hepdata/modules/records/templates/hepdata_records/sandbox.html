@@ -181,8 +181,6 @@
                 class="fa fa-chevron-right"></span></span>
 
                     <div>
-                <span itemprop="url"
-                      class="hidden">{{ ctx.site_url }}/record/sandbox/{{ ctx.recid }}</span>
                         <br/>
 
                         <div class="record-links">
@@ -196,23 +194,11 @@
                                 {% endif %}
                             </ul>
                         </div>
-                        {% if ctx.record.publication_info %}
-                            <div class="publication-details">
-                        <span itemprop="publisher" itemscope
-                              typeof="http://schema.org/Organization"><span
-                                itemprop="name">{{ ctx.record.publication_info.journal_title }}</span> </span>,
-                                Volume {{ ctx.record.publication_info.journal_volume }},
-                                pages
-                                <span itemprop="pagination">{{ ctx.record.publication_info.page_artid }}</span>, <span
-                                    itemprop="copyrightYear"
-                                    typeof="http://schema.org/Number">{{ ctx.record.publication_info.year }}</span>
-                            </div>
-                        {% endif %}
                     </div>
 
                     <div class="clearfix"></div>
 
-                    <div class="record-abstract" itemprop="description">
+                    <div class="record-abstract">
                         <strong>Abstract {% if ctx.record.data_abstract %}(data
                             abstract){% endif %}</strong><br/>
 
