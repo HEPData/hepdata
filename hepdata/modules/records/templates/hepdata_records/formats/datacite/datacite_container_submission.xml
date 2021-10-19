@@ -35,41 +35,29 @@
     <resourceType resourceTypeGeneral="Collection">Collection</resourceType>
     <version>{{ overall_submission.version }}</version>
     <descriptions>
-        <description descriptionType="Abstract">
-            {{ overall_submission.data_abstract }}
-        </description>
+        <description descriptionType="Abstract">{{ overall_submission.data_abstract }}</description>
     </descriptions>
 
 
     <alternateIdentifiers>
 
-        <alternateIdentifier alternateIdentifierType="HEPDataRecord">
-            {{ site_url }}/record/ins{{ publication_info.inspire_id }}
-        </alternateIdentifier>
+        <alternateIdentifier alternateIdentifierType="HEPDataRecord">{{ site_url }}/record/ins{{ publication_info.inspire_id }}</alternateIdentifier>
 
-        <alternateIdentifier alternateIdentifierType="HEPDataRecordAlt">
-            {{ site_url }}/record/{{ publication_info.recid }}
-        </alternateIdentifier>
+        <alternateIdentifier alternateIdentifierType="HEPDataRecordAlt">{{ site_url }}/record/{{ publication_info.recid }}</alternateIdentifier>
 
     </alternateIdentifiers>
 
     <relatedIdentifiers>
         {% if publication_info.inspire_id %}
-            <relatedIdentifier relatedIdentifierType="URL" relationType="IsSupplementTo">
-                https://inspirehep.net/literature/{{ publication_info.inspire_id }}
-            </relatedIdentifier>
+            <relatedIdentifier relatedIdentifierType="URL" relationType="IsSupplementTo">https://inspirehep.net/literature/{{ publication_info.inspire_id }}</relatedIdentifier>
         {% endif %}
 
         {% if publication_info.doi %}
-            <relatedIdentifier relatedIdentifierType="DOI" resourceTypeGeneral="JournalArticle" relationType="IsSupplementTo">
-                {{ publication_info.doi }}
-            </relatedIdentifier>
+            <relatedIdentifier relatedIdentifierType="DOI" resourceTypeGeneral="JournalArticle" relationType="IsSupplementTo">{{ publication_info.doi }}</relatedIdentifier>
         {% endif %}
 
         {% for submission in data_submissions %}
-            <relatedIdentifier relatedIdentifierType="DOI" resourceTypeGeneral="Dataset" relationType="IsSupplementedBy">
-                {{ submission.doi }}
-            </relatedIdentifier>
+            <relatedIdentifier relatedIdentifierType="DOI" resourceTypeGeneral="Dataset" relationType="HasPart">{{ submission.doi }}</relatedIdentifier>
         {% endfor %}
     </relatedIdentifiers>
 </resource>
