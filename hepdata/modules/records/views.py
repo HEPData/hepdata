@@ -26,6 +26,7 @@
 
 import logging
 import json
+import mimetypes
 import time
 from dateutil import parser
 from invenio_accounts.models import User
@@ -622,6 +623,15 @@ def get_resource(resource_id):
     resource_obj = DataResource.query.filter_by(id=resource_id).first()
     view_mode = bool(request.args.get('view', False))
     landing_page = bool(request.args.get('landing_page', False))
+
+    if landing_page:
+        # Check the Accept header: if it matches the file's mimetype then send the file back instead
+        request_mimetypes = request.accept_mimetypes
+        file_mimetype = mimetypes.guess_type(resource_obj.file_location)
+        if request_mimetypes.quality(file_mimetype[0]) >= 1:
+            # Accept header matches the file type, so download file instead
+            view_mode = True
+            landing_page = False
 
     if resource_obj:
         if view_mode:
