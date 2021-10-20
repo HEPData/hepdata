@@ -38,7 +38,7 @@
       <p>{{ctx.resource.file_description}}</p>
 
       {% if ctx.display_type == 'image' %}
-        <div><img src="/record/resource/{{ctx.resource.id}}?view=true"></div>
+        <div><img src="{{ctx.content_url}}"></div>
       {% elif ctx.display_type == 'link' %}
         <p><a href="{{ ctx.resource.file_location }}">{{ ctx.resource.file_location }}</a></p>
       {% elif ctx.display_type == 'code' %}
@@ -46,7 +46,7 @@
       {% endif %}
 
       {% if ctx.display_type != 'link' %}
-        <p><a target="_new" class="btn btn-primary" href="/record/resource/{{ctx.resource.id}}?view=true"><i class="fa fa-download"></i> Download</a></p>
+        <p><a target="_new" class="btn btn-primary" href="{{ctx.content_url}}"><i class="fa fa-download"></i> Download</a></p>
       {% endif %}
   </div>
 

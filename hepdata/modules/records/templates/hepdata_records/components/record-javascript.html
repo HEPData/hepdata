@@ -98,12 +98,15 @@
 
             $.ajax({
               url: url,
-              dataType: 'text', // don't convert JSON to Javascript object
+              dataType: 'json',
               headers: headers,
               success: function(data) {
+                {% if ctx.content_url %}
+                  data['contentUrl'] = '{{ ctx.content_url }}';
+                {% endif %}
                 $('<script>')
                    .attr('type', 'application/ld+json')
-                   .text(data)
+                   .text(JSON.stringify(data))
                    .appendTo('head');
               },
               error: function (error) {

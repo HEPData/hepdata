@@ -253,6 +253,7 @@ def format_resource(resource, contents):
     ctx['resource'] = resource
     ctx['contents'] = contents
     ctx['resource_url'] = request.url
+    ctx['content_url'] = request.base_url + '?view=true'
     ctx['related_publication_id'] = hepsubmission.publication_recid
 
     if resource.file_type in IMAGE_TYPES:
