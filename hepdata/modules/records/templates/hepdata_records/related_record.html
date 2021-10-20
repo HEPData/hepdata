@@ -26,6 +26,13 @@
     HEPData | {{ ctx.record.title }}
 {% endblock %}
 
+{%- block json_ld %}
+   {% if ctx.json_ld %}
+       <script type="application/ld+json">
+         {{ ctx.json_ld|tojson }}
+       </script>
+   {% endif %}
+{%- endblock json_ld %}
 
 {%- block additional_assets %}
 

@@ -652,7 +652,7 @@ def get_resource(resource_id):
 
             if landing_page:
                 try:
-                    ctx = format_resource(resource_obj, contents)
+                    ctx = format_resource(resource_obj, contents, request.base_url + '?view=true')
                 except ValueError as e:
                     log.error(str(e))
                     return abort(404)

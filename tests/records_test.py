@@ -25,6 +25,7 @@
 from io import open, StringIO
 import os
 import re
+import requests
 from time import sleep
 import yaml
 import shutil
@@ -41,7 +42,7 @@ import requests_mock
 from hepdata.modules.permissions.models import SubmissionParticipant
 from hepdata.modules.records.api import process_payload, process_zip_archive, \
     move_files, get_all_ids, has_upload_permissions, \
-    has_coordinator_permissions, create_new_version
+    has_coordinator_permissions, create_new_version, get_json_ld
 from hepdata.modules.records.utils.submission import get_or_create_hepsubmission, process_submission_directory, do_finalise, unload_submission
 from hepdata.modules.records.utils.common import get_record_by_id, get_record_contents
 from hepdata.modules.records.utils.data_processing_utils import generate_table_structure
@@ -713,3 +714,57 @@ def test_create_new_version(app, load_default_data, identifiers, mocker):
     assert result.json == {
         'message': 'Rec id 1 is not finished so cannot create a new version'
     }
+
+
+def test_get_json_ld(app):
+    doi = 'my.test.hepdata.doi'
+    dummy_json = {'a': 1, 'b': 2}
+    # Use requests_mock to mock the response from datacite
+    with requests_mock.Mocker() as m:
+        m.get(f'https://api.test.datacite.org/dois/{doi}', json=dummy_json)
+        data = get_json_ld(doi)
+        assert data == dummy_json
+
+        m.get(f'https://api.test.datacite.org/dois/{doi}', json=dummy_json)
+        data = get_json_ld(doi, content_url='https://my.test.hepdata.url')
+        assert data == {'a': 1, 'b': 2, 'contentUrl': 'https://my.test.hepdata.url'}
+
+        m.get(f'https://api.test.datacite.org/dois/{doi}', json=dummy_json)
+        data = get_json_ld(doi, download_table_id=12345)
+        site_url = app.config.get('SITE_URL', 'https://www.hepdata.net')
+        assert data == {
+            'a': 1,
+            'b': 2,
+            'distribution': [
+                {
+                    '@type': 'DataDownload',
+                    'contentUrl': f'{site_url}/download/table/12345/root',
+                    'description': 'ROOT file',
+                    'encodingFormat': 'https://root.cern'
+                },
+                {
+                    '@type': 'DataDownload',
+                    'contentUrl': f'{site_url}/download/table/12345/yaml',
+                    'description': 'YAML file',
+                    'encodingFormat': 'https://yaml.org'
+                },
+                {
+                    '@type': 'DataDownload',
+                    'contentUrl': f'{site_url}/download/table/12345/csv',
+                    'description': 'CSV file',
+                    'encodingFormat': 'text/csv'
+                },
+                {
+                    '@type': 'DataDownload',
+                    'contentUrl': f'{site_url}/download/table/12345/yoda',
+                    'description': 'YODA file',
+                    'encodingFormat': 'https://yoda.hepforge.org'
+                }
+            ]
+        }
+
+        # Check a connection error just returns None
+        m.get(f'https://api.test.datacite.org/dois/{doi}',
+              exc=requests.exceptions.ConnectTimeout)
+        data = get_json_ld(doi)
+        assert data is None

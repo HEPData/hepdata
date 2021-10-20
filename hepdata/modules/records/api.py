@@ -26,8 +26,10 @@
 import os
 from collections import OrderedDict
 from functools import wraps
-
+import json
+import requests
 import time
+
 from celery import shared_task
 from flask import redirect, request, render_template, jsonify, current_app, Response, abort, flash
 from flask_login import current_user
@@ -221,7 +223,7 @@ def format_tables(ctx, data_record_query, data_table, recid):
                 ctx['table_name_to_show'] = matching_tables[0]['name']
 
 
-def format_resource(resource, contents):
+def format_resource(resource, contents, content_url):
     """
     Gets info about a resource ready to be displayed on the resource's
     landing page
@@ -253,9 +255,10 @@ def format_resource(resource, contents):
     ctx['resource'] = resource
     ctx['contents'] = contents
     ctx['resource_url'] = request.url
-    ctx['content_url'] = request.base_url + '?view=true'
     ctx['related_publication_id'] = hepsubmission.publication_recid
-    ctx['metadata_doi'] = resource.doi
+    if resource.doi and hepsubmission.overall_status == 'finished':
+        ctx['json_ld'] = get_json_ld(resource.doi,
+                                     content_url=request.base_url + '?view=true')
 
     if resource.file_type in IMAGE_TYPES:
         ctx['display_type'] = 'image'
@@ -267,6 +270,55 @@ def format_resource(resource, contents):
         ctx['display_type'] = 'code'
 
     return ctx
+
+
+def get_json_ld(doi, content_url=None, download_table_id=None):
+    """Get the JSON-LD metadata from DataCite for this DOI, amending as necessary.
+
+    :param type doi: DOI for which to get metadata
+    :param type content_url: if set, adds URL as `contentUrl`
+    :param type download_table_id: if set, adds download links for this table as `distribution`/`DataDownload`
+    :return: JSON-LD as python dict
+    :rtype: dict, or None if DOI is not registered or metadata cannot be retrieved
+    """
+    headers = {}
+    if current_app.config.get('ENV') == 'development' or current_app.config.get('TESTING'):
+        # If working in dev mode, try to get json-ld from api.test.datacite.org
+        url = f"https://api.test.datacite.org/dois/{doi}"
+        headers['Accept'] = "application/vnd.schemaorg.ld+json"
+    else:
+        url = f"https://data.crosscite.org/application/vnd.schemaorg.ld+json/{doi}"
+
+    try:
+        r = requests.get(url, headers=headers)
+        r.raise_for_status()
+        data = r.json()
+
+        if content_url:
+            data['contentUrl'] = content_url
+
+        if download_table_id:
+            data_downloads = []
+            download_types = {
+                'root': 'https://root.cern',
+                'yaml': 'https://yaml.org',
+                'csv': 'text/csv',
+                'yoda': 'https://yoda.hepforge.org'
+            }
+            site_url = current_app.config.get('SITE_URL', 'https://www.hepdata.net')
+            for download_type, format in download_types.items():
+                data_downloads.append({
+                  "@type": "DataDownload",
+                  "contentUrl": f"{site_url}/download/table/{download_table_id}/{download_type}",
+                  "description": download_type.upper() + " file",
+                  "encodingFormat": format
+                })
+                data['distribution'] = data_downloads
+
+        return data
+    except Exception as e:
+        log.error(e)
+        return None
 
 
 def get_commit_message(ctx, recid):
@@ -360,7 +412,8 @@ def render_record(recid, record, version, output_format, light_mode=False):
             increment(recid)
 
             if output_format == 'html':
-                ctx['metadata_doi'] = record.get('hepdata_doi')
+                if hepdata_submission.overall_status == 'finished':
+                    ctx['json_ld'] = get_json_ld(record.get('hepdata_doi'))
                 return render_template('hepdata_records/publication_record.html', ctx=ctx)
             elif 'table' not in request.args:
                 if output_format == 'json':
@@ -398,9 +451,8 @@ def render_record(recid, record, version, output_format, light_mode=False):
             ctx['related_publication_id'] = publication_recid
             ctx['table_name'] = record['title']
 
-            if output_format == 'html':
-                ctx['related_record'] = True
-                ctx['metadata_doi'] = record.get('doi')
+            if output_format == 'html' and hepdata_submission.overall_status == 'finished':
+                ctx['json_ld'] = get_json_ld(record.get('doi'), download_table_id=ctx['table_id_to_show'])
                 return render_template('hepdata_records/related_record.html', ctx=ctx)
             elif output_format == 'yoda' and 'rivet' in request.args:
                 return redirect('/download/table/{0}/{1}/{2}/{3}/{4}'.format(
