@@ -82,14 +82,14 @@
         {%endif %}
 
         // Add metadata as json-ld from datacite
-        {% if ctx.record and ctx.record.hepdata_doi and not config['TESTING'] %}
-            var identifier = "https://doi.org/{{ ctx.record.hepdata_doi }}";
+        {% if ctx.metadata_doi and not config['TESTING'] %}
+            var identifier = "https://doi.org/{{ ctx.metadata_doi }}";
             var doi = new URL(identifier);
             var url;
             var headers = {};
             {% if config['ENV'] == 'development' %}
               // If working in dev mode, try to get json-ld from api.test.datacite.org
-              url = "https://api.test.datacite.org/dois/{{ ctx.record.hepdata_doi }}";
+              url = "https://api.test.datacite.org/dois/{{ ctx.metadata_doi }}";
               headers['Accept'] = "application/vnd.schemaorg.ld+json";
             {% else %}
               url = "https://data.crosscite.org";
@@ -104,6 +104,26 @@
                 {% if ctx.content_url %}
                   data['contentUrl'] = '{{ ctx.content_url }}';
                 {% endif %}
+
+                {% if ctx.related_record %}
+                  var data_downloads = [];
+                  const download_types = {
+                    'root': 'https://root.cern',
+                    'yaml': 'https://yaml.org',
+                    'csv': 'text/csv',
+                    'yoda': 'https://yoda.hepforge.org'
+                  };
+                  for (const download_type in download_types) {
+                    data_downloads.push({
+                      "@type": "DataDownload",
+                      "contentUrl": "{{ ctx.site_url }}/download/table/{{ ctx.table_id_to_show }}/" + download_type,
+                      "description": download_type.toUpperCase() + " file",
+                      "encodingFormat": download_types[download_type]
+                    });
+                  }
+                  data['distribution'] = data_downloads;
+                {% endif %}
+
                 $('<script>')
                    .attr('type', 'application/ld+json')
                    .text(JSON.stringify(data))

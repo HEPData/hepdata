@@ -255,6 +255,7 @@ def format_resource(resource, contents):
     ctx['resource_url'] = request.url
     ctx['content_url'] = request.base_url + '?view=true'
     ctx['related_publication_id'] = hepsubmission.publication_recid
+    ctx['metadata_doi'] = resource.doi
 
     if resource.file_type in IMAGE_TYPES:
         ctx['display_type'] = 'image'
@@ -359,6 +360,7 @@ def render_record(recid, record, version, output_format, light_mode=False):
             increment(recid)
 
             if output_format == 'html':
+                ctx['metadata_doi'] = record.get('hepdata_doi')
                 return render_template('hepdata_records/publication_record.html', ctx=ctx)
             elif 'table' not in request.args:
                 if output_format == 'json':
@@ -397,6 +399,8 @@ def render_record(recid, record, version, output_format, light_mode=False):
             ctx['table_name'] = record['title']
 
             if output_format == 'html':
+                ctx['related_record'] = True
+                ctx['metadata_doi'] = record.get('doi')
                 return render_template('hepdata_records/related_record.html', ctx=ctx)
             elif output_format == 'yoda' and 'rivet' in request.args:
                 return redirect('/download/table/{0}/{1}/{2}/{3}/{4}'.format(
