@@ -192,7 +192,7 @@ def test_generate_doi_for_table(mock_data_cite_provider, identifiers, capsys):
     mock_data_cite_provider.get.assert_called_with(doi, 'doi')
     mock_data_cite_provider.get().register.assert_called()
     assert mock_data_cite_provider.get().register.call_args[0][0] == \
-        'http://localhost:5000/record/ins1283842?version=1&table=Table 1'
+        'http://localhost:5000/record/2'
     assert '<creatorName nameType="Organizational">D0 Collaboration</creatorName>' in \
         mock_data_cite_provider.get().register.call_args[0][1]
 
