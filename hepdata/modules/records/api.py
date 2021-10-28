@@ -257,8 +257,12 @@ def format_resource(resource, contents, content_url):
     ctx['resource_url'] = request.url
     ctx['related_publication_id'] = hepsubmission.publication_recid
     if resource.doi and hepsubmission.overall_status == 'finished':
-        ctx['json_ld'] = get_json_ld(resource.doi,
-                                     content_url=request.base_url + '?view=true')
+        ctx['json_ld'] = get_json_ld(
+            resource.doi,
+            content_url=request.base_url + '?view=true',
+            parent_name=ctx['record']['title'],
+            parent_description=(ctx['record'].get('data_abstract') or ctx['record'].get('abstract'))
+        )
 
     if resource.file_type in IMAGE_TYPES:
         ctx['display_type'] = 'image'
@@ -272,7 +276,9 @@ def format_resource(resource, contents, content_url):
     return ctx
 
 
-def get_json_ld(doi, content_url=None, download_table_id=None):
+def get_json_ld(doi, content_url=None, download_table_id=None,
+                parent_name=None, parent_description=None, data_tables=None,
+                data_abstract=None):
     """Get the JSON-LD metadata from DataCite for this DOI, amending as necessary.
 
     :param type doi: DOI for which to get metadata
@@ -314,6 +320,33 @@ def get_json_ld(doi, content_url=None, download_table_id=None):
                   "encodingFormat": format
                 })
                 data['distribution'] = data_downloads
+
+        # Google demands that the data catalog has a url or name
+        if 'includedInDataCatalog' in data and '@id' in data['includedInDataCatalog']:
+            data['includedInDataCatalog']['url'] = f"https://doi.org/{data['includedInDataCatalog']['@id']}"
+
+        # Google wants isPartOf to be a dataset not a collection
+        if 'isPartOf' in data:
+            data['isPartOf']['@type'] = 'Dataset'
+            if parent_name:
+                data['isPartOf']['name'] = parent_name
+            if parent_description:
+                data['isPartOf']['description'] = parent_description
+            if '@id' in data['isPartOf']:
+                data['isPartOf']['url'] = data['isPartOf']['@id']
+
+        if data_tables and 'hasPart' in data:
+            # Submission container. Mark it as Dataset for Google, and add table details
+            data['@type'] = 'Dataset'
+            data_table_dict = { data_table['doi']: data_table for data_table in data_tables}
+            for data_table_json in data['hasPart']:
+                doi = data_table_json['@id'].replace('https://doi.org/', '')
+                if doi in data_table_dict:
+                    data_table_json['name'] = data_table_dict[doi]['name']
+                    data_table_json['description'] = data_table_dict[doi]['description']
+
+        if data_abstract and 'description' not in data:
+            data['description'] = data_abstract
 
         return data
     except Exception as e:
@@ -413,7 +446,11 @@ def render_record(recid, record, version, output_format, light_mode=False):
 
             if output_format == 'html':
                 if hepdata_submission.overall_status == 'finished':
-                    ctx['json_ld'] = get_json_ld(record.get('hepdata_doi'))
+                    ctx['json_ld'] = get_json_ld(
+                        record.get('hepdata_doi'),
+                        data_tables=ctx['data_tables'],
+                        data_abstract=(ctx['record'].get('data_abstract') or ctx['record'].get('abstract'))
+                    )
                 return render_template('hepdata_records/publication_record.html', ctx=ctx)
             elif 'table' not in request.args:
                 if output_format == 'json':
@@ -452,7 +489,12 @@ def render_record(recid, record, version, output_format, light_mode=False):
             ctx['table_name'] = record['title']
 
             if output_format == 'html' and hepdata_submission.overall_status == 'finished':
-                ctx['json_ld'] = get_json_ld(record.get('doi'), download_table_id=ctx['table_id_to_show'])
+                ctx['json_ld'] = get_json_ld(
+                    record.get('doi'),
+                    download_table_id=ctx['table_id_to_show'],
+                    parent_name=publication_record.get('title'),
+                    parent_description=publication_record.get('data_abstract')
+                )
                 return render_template('hepdata_records/related_record.html', ctx=ctx)
             elif output_format == 'yoda' and 'rivet' in request.args:
                 return redirect('/download/table/{0}/{1}/{2}/{3}/{4}'.format(

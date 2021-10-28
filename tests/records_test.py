@@ -763,6 +763,70 @@ def test_get_json_ld(app):
             ]
         }
 
+        # Add isPartOf and includedInDataCatalog; check parent name and
+        # descriptions are added and URLs added
+        dummy_json['isPartOf'] = { '@id': 'https://doi.org/my.parent.doi' }
+        dummy_json['includedInDataCatalog'] = { '@id': 'my.parent.doi' }
+        m.get(f'https://api.test.datacite.org/dois/{doi}', json=dummy_json)
+        data = get_json_ld(doi, parent_name='My HEPData submission',
+                           parent_description="It's amazing")
+        assert data == {
+            'a': 1,
+            'b': 2,
+            'isPartOf': {
+                '@id': 'https://doi.org/my.parent.doi',
+                '@type': 'Dataset',
+                'name': 'My HEPData submission',
+                'description': "It's amazing",
+                'url': 'https://doi.org/my.parent.doi'
+            },
+            'includedInDataCatalog': {
+                '@id': 'my.parent.doi',
+                'url': 'https://doi.org/my.parent.doi'
+            }
+        }
+
+        # Reset dummy_json and add hasPart with data tables
+        del dummy_json['isPartOf']
+        del dummy_json['includedInDataCatalog']
+        dummy_json['hasPart'] = [
+            {'@id': 'https://doi.org/table1.doi'},
+            {'@id': 'https://doi.org/table2.doi'}
+        ]
+        data_tables = [
+            {
+                'doi': 'table1.doi',
+                'name': 'Table 1',
+                'description': 'Description of Table 1'
+            },
+            {
+                'doi': 'table2.doi',
+                'name': 'Table 2',
+                'description': 'Description of Table 2'
+            }
+        ]
+        m.get(f'https://api.test.datacite.org/dois/{doi}', json=dummy_json)
+        data = get_json_ld(doi, data_tables=data_tables, data_abstract="Publication description")
+        assert data == {
+            'a': 1,
+            'b': 2,
+            '@type': 'Dataset',
+            'description': 'Publication description',
+            'hasPart': [
+                {
+                    '@id': 'https://doi.org/table1.doi',
+                    'name': 'Table 1',
+                    'description': 'Description of Table 1'
+                },
+                {
+                    '@id': 'https://doi.org/table2.doi',
+                    'name': 'Table 2',
+                    'description': 'Description of Table 2'
+                }
+            ]
+        }
+
+
         # Check a connection error just returns None
         m.get(f'https://api.test.datacite.org/dois/{doi}',
               exc=requests.exceptions.ConnectTimeout)
