@@ -49,11 +49,12 @@ def update_record_info(inspire_id, send_email=False):
 
         # Also need to update publication information for data records.
         data_submissions = DataSubmission.query.filter_by(
-            publication_recid=publication_recid, version=hep_submission.version
+            publication_recid=publication_recid,
         ).order_by(DataSubmission.id.asc())
         record_ids = [publication_recid]  # list of record IDs
         for data_submission in data_submissions:
-            record_ids.append(data_submission.associated_recid)
+            if data_submission.associated_recid:
+                record_ids.append(data_submission.associated_recid)
 
         same_information = {}
         for index, recid in enumerate(record_ids):
@@ -85,7 +86,7 @@ def update_record_info(inspire_id, send_email=False):
         log.warning("Failed to retrieve publication information for Inspire record {0}".format(inspire_id))
         return 'Invalid Inspire ID'
 
-    if hep_submission.overall_status == 'finished':
+    if hep_submission.overall_status == 'finished' or hep_submission.version > 1:
         index_record_ids(record_ids)  # index for Elasticsearch
         push_data_keywords(pub_ids=[recid])
         if not TESTING:
