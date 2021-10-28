@@ -943,7 +943,7 @@ def add_resource(type, identifier, version):
                 except:
                     log.error('Failed to reindex {0}'.format(recid))
 
-                if inspire_id:
+                if inspire_id and type == 'submission' and submission.overall_status == 'finished':
                     return redirect('/record/ins{0}'.format(inspire_id))
                 else:
                     return redirect('/record/{0}'.format(recid))
