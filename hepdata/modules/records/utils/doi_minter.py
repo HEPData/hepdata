@@ -105,7 +105,11 @@ def generate_dois_for_submission(*args, **kwargs):
 
         if hep_submission.doi is None:
             reserve_doi_for_hepsubmission(hep_submission)
+
+        if any(d.doi is None for d in data_submissions):
             reserve_dois_for_data_submissions(data_submissions=data_submissions)
+
+        if any(r.doi is None for r in file_resources):
             reserve_dois_for_resources(publication_recid=hep_submission.publication_recid,
                                        version=hep_submission.version,
                                        resources=file_resources)

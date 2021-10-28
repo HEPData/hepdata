@@ -14,7 +14,8 @@ from hepdata.modules.records.importer.api import import_records
 from hepdata.modules.records.utils.common import get_record_by_id
 from hepdata.modules.records.utils.doi_minter import create_doi, register_doi, \
     generate_doi_for_table, generate_dois_for_submission, \
-    reserve_dois_for_data_submissions, reserve_doi_for_hepsubmission
+    reserve_dois_for_data_submissions, reserve_doi_for_hepsubmission, \
+    _get_submission_file_resources
 from hepdata.modules.records.utils.submission import get_or_create_hepsubmission
 from hepdata.modules.records.utils.workflow import create_record
 from hepdata.modules.submission.models import DataSubmission, HEPSubmission, License
@@ -254,9 +255,22 @@ def test_generate_dois_for_submission(mock_data_cite_provider, identifiers):
     import_records(['ins1748602'], synchronous=True)
     hep_submission = get_or_create_hepsubmission(57)
 
-    # Reset doi so we can check generate_dois...
+    # Reset dois so we can check generate_dois...
     hep_submission.doi = None
     db.session.add(hep_submission)
+
+    for data_submission in DataSubmission.query.filter_by(
+            publication_inspire_id=hep_submission.inspire_id,
+            version=hep_submission.version).all():
+        data_submission.doi = None
+        db.session.add(data_submission)
+
+    for resource in _get_submission_file_resources(
+            hep_submission.publication_recid, hep_submission.version,
+            hep_submission):
+        resource.doi = None
+        db.session.add(resource)
+
     db.session.commit()
 
     mock_data_cite_provider.reset_mock()
