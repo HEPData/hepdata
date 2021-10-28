@@ -56,12 +56,14 @@
                     <h4><a href="/record/{{ submission.recid }}"
                            target="_blank">{{ submission.title }}</a>
 
-                        {% if submission.requires_inspire_id and submission.submission_status=='todo' %}
-                            <button class="btn btn-primary btn-xs inspire-btn"
-                                    id="inspire-btn-{{ submission.recid }}"
-                                    data-recid="{{ submission.recid }}">
-                                Attach INSPIRE Record
-                            </button>
+                        {% if ctx.user_is_admin or submission.show_coord_view %}
+                          {% if submission.requires_inspire_id and submission.submission_status=='todo' %}
+                              <button class="btn btn-primary btn-xs inspire-btn"
+                                      id="inspire-btn-{{ submission.recid }}"
+                                      data-recid="{{ submission.recid }}">
+                                  Attach INSPIRE Record
+                              </button>
+                          {% endif %}
                         {% endif %}
                     </h4>
                 </div>

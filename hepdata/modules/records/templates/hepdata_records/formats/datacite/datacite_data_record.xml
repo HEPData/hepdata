@@ -26,8 +26,7 @@
         <date dateType="Updated">{{ overall_submission.last_updated }}</date>
     </dates>
     <titles>
-        <title>{{ table_name }}</title>
-        <title xml:lang="en-us" titleType="Subtitle">{{ publication_info.title }}</title>
+        <title>"{{ table_name }}" of "{{ publication_info.title }}"</title>
     </titles>
     <publisher>HEPData</publisher>
     <publicationYear>{{ overall_submission.last_updated.year }}</publicationYear>
