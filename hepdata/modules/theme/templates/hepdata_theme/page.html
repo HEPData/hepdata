@@ -29,6 +29,10 @@
   {%- block json_ld %}
   {%- endblock json_ld %}
 
+  {% if config['SITE_URL'] not in ['https://hepdata.net', 'https://www.hepdata.net'] %}
+    <meta name="robots" content="noindex">
+  {% endif %}
+
 {% endblock header %}
 
 {%- block css %}
