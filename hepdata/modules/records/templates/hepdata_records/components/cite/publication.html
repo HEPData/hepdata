@@ -11,7 +11,7 @@
             {{ ctx.record.year }}){% endif %}
     {% endfor %}
 {% endif %}
-<p>{{ ctx.record.title }}. {{ ctx.record.journal_info|trim }}.</p>
+<p>{{ ctx.record.title }}. {% if ctx.record.journal_info %}{{ ctx.record.journal_info|trim }}.{% endif %}</p>
 {% if ctx.record.doi %}
   <p><strong>https://doi.org/{{ ctx.record.doi }}</strong></p>
 {% endif %}

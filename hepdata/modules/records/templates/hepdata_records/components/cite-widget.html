@@ -21,6 +21,18 @@
 
                         <div class="tab-content">
 
+                            {% if ctx.record.hepdata_doi != 'None' %}
+                              {% if ctx.version_count > 1 %}
+                                {% set hepdata_doi = ctx.record.hepdata_doi.rsplit('.', 1)[0] %}
+                              {% else %}
+                                {% set hepdata_doi = ctx.record.hepdata_doi %}
+                              {% endif %}
+                              {% set key = hepdata_doi.split('/', 1)[1] %}
+                            {% else %}
+                              {% set key = 'hepdata.' + ctx['recid']|string %}
+                              {% set hepdata_doi = '10.17182/' + key %}
+                            {% endif %}
+
                             <div role="tabpanel" class="tab-pane in active" id="html">
                                 <div class="citation-panel">
                                     <p>When using this data, please cite the original publication:</p>
@@ -39,17 +51,17 @@
                                                 {% if loop.index > 1 %}&{% endif %}
                                                   {{ collaboration }}{% endfor %}
                                               Collaboration{% if ctx.record.collaborations|length > 1 %}s{% endif %}
-                                            ({{ ctx.record.year }}).
+                                            ({{ ctx.record.last_updated.year }}).
                                         {% else %}
                                             {% for author in ctx.record.summary_authors %}
                                                 {{ author.full_name }}
                                                 {% if loop.index < ctx.record.summary_authors|length %},
                                                 {% else %} (
-                                                    {{ ctx.record.year }}){% endif %}
+                                                    {{ ctx.record.last_updated.year }}){% endif %}
                                             {% endfor %}
                                         {% endif %}
                                         <p>{{ ctx.record.title }}. HEPData (collection).</p>
-                                        <p><strong>https://doi.org/{{ ctx.record.hepdata_doi }}</strong></p>
+                                        <p><strong>https://doi.org/{{ hepdata_doi }}</strong></p>
                                     </div>
 
                                     <p>or, if you prefer, a specific version of the <img
@@ -62,60 +74,62 @@
                                                 {% if loop.index > 1 %}&{% endif %}
                                                   {{ collaboration }}{% endfor %}
                                               Collaboration{% if ctx.record.collaborations|length > 1 %}s{% endif %}
-                                            ({{ ctx.record.year }}).
+                                            ({{ ctx.record.last_updated.year }}).
                                         {% else %}
                                             {% for author in ctx.record.summary_authors %}
                                                 {{ author.full_name }}
                                                 {% if loop.index < ctx.record.summary_authors|length %},
                                                 {% else %} (
-                                                    {{ ctx.record.year }}){% endif %}
+                                                    {{ ctx.record.last_updated.year }}){% endif %}
                                             {% endfor %}
                                         {% endif %}
-                                      <p>{{ ctx.record.title }} (Version {{ ctx.record.version }}). HEPData (collection).</p>
-                                        <p><strong>https://doi.org/{{ ctx.record.hepdata_doi }}.v{{ ctx.record.version }}</strong></p>
+                                      <p>{{ ctx.record.title }} (Version {{ ctx.version }}). HEPData (collection).</p>
+                                        <p><strong>https://doi.org/{{ hepdata_doi }}.v{{ ctx.version }}</strong></p>
                                     </div>
 
-                                    <p>
-                                      You can also cite the {{ ctx.data_tables|length }} data
-                                      table{% if ctx.data_tables|length > 1 %}s{% endif %}
-                                      {% if ctx.resources_with_doi %}
-                                        or the {{ ctx.resources_with_doi|length }} additional
-                                        resource{% if ctx.resources_with_doi|length > 1 %}s{% endif %}
-                                      {% endif %}
-                                      individually.
-                                    </p>
+                                    {% if ctx.data_tables %}
+                                      <p>
+                                        You can also cite the {{ ctx.data_tables|length }} data
+                                        table{% if ctx.data_tables|length > 1 %}s{% endif %}
+                                        {% if ctx.resources_with_doi %}
+                                          or the {{ ctx.resources_with_doi|length }} additional
+                                          resource{% if ctx.resources_with_doi|length > 1 %}s{% endif %}
+                                        {% endif %}
+                                        individually.
+                                      </p>
 
-                                    <h4>Data tables</h4>
+                                      <h4>Data tables</h4>
 
-                                    <p>
-                                      Choose table:
-                                      <select onchange="$('.table-cite-html').hide();$('#table_cite_html_' + this.value).show()">
+                                      <p>
+                                        Choose table:
+                                        <select onchange="$('.table-cite-html').hide();$('#table_cite_html_' + this.value).show()">
+                                        {% for table in ctx.data_tables %}
+                                          <option value="{{ loop.index }}">{{ table.name }}</option>
+                                        {% endfor %}
+                                        </select>
+                                      </p>
+
                                       {% for table in ctx.data_tables %}
-                                        <option value="{{ loop.index }}">{{ table.name }}</option>
+                                          <div class="well well-small table-cite-html" id="table_cite_html_{{ loop.index }}"{% if loop.index > 1 %} style="display:none"{% endif %}>
+                                              {% if ctx.record.collaborations %}
+                                                    {% for collaboration in ctx.record.collaborations %}
+                                                        {% if loop.index > 1 %}&{% endif %}
+                                                        {{ collaboration }}{% endfor %}
+                                                    Collaboration{% if ctx.record.collaborations|length > 1 %}s{% endif %}
+                                                  ({{ ctx.record.last_updated.year }}).
+                                              {% else %}
+                                                  {% for author in ctx.record.authors %}
+                                                      {{ author.full_name }}
+                                                      {% if loop.index < ctx.record.authors|length %},
+                                                      {% else %} ({{ ctx.record.last_updated.year }})
+                                                      {% endif %}
+                                                  {% endfor %}
+                                              {% endif %}
+                                              <p>&ldquo;{{ table.name }}&rdquo; of &ldquo;{{ ctx.record.title }}&rdquo; (Version {{ ctx.version }}). HEPData (dataset).</p>
+                                              <p><strong>https://doi.org/{{ table.doi }}</strong></p>
+                                          </div>
                                       {% endfor %}
-                                      </select>
-                                    </p>
-
-                                    {% for table in ctx.data_tables %}
-                                        <div class="well well-small table-cite-html" id="table_cite_html_{{ loop.index }}"{% if loop.index > 1 %} style="display:none"{% endif %}>
-                                            {% if ctx.record.collaborations %}
-                                                  {% for collaboration in ctx.record.collaborations %}
-                                                      {% if loop.index > 1 %}&{% endif %}
-                                                      {{ collaboration }}{% endfor %}
-                                                  Collaboration{% if ctx.record.collaborations|length > 1 %}s{% endif %}
-                                                ({{ ctx.record.year }}).
-                                            {% else %}
-                                                {% for author in ctx.record.authors %}
-                                                    {{ author.full_name }}
-                                                    {% if loop.index < ctx.record.authors|length %},
-                                                    {% else %} ({{ ctx.record.year }})
-                                                    {% endif %}
-                                                {% endfor %}
-                                            {% endif %}
-                                            <p>&ldquo;{{ table.name }}&rdquo; of &ldquo;{{ ctx.record.title }}&rdquo; (Version {{ ctx.record.version }}). HEPData (dataset).</p>
-                                            <p><strong>https://doi.org/{{ table.doi }}</strong></p>
-                                        </div>
-                                    {% endfor %}
+                                    {% endif %}
 
                                     {% if ctx.resources_with_doi %}
                                       <h4>Additional resources</h4>
@@ -136,16 +150,16 @@
                                                       {% if loop.index > 1 %}&{% endif %}
                                                       {{ collaboration }}{% endfor %}
                                                   Collaboration{% if ctx.record.collaborations|length > 1 %}s{% endif %}
-                                                ({{ ctx.record.year }}).
+                                                ({{ ctx.record.last_updated.year }}).
                                             {% else %}
                                                 {% for author in ctx.record.authors %}
                                                     {{ author.full_name }}
                                                     {% if loop.index < ctx.record.authors|length %},
-                                                    {% else %} ({{ ctx.record.year }})
+                                                    {% else %} ({{ ctx.record.last_updated.year }})
                                                     {% endif %}
                                                 {% endfor %}
                                             {% endif %}
-                                            <p>&ldquo;{{ resource.filename }}&rdquo; of &ldquo;{{ ctx.record.title }}&rdquo; (Version {{ ctx.record.version }}). HEPData (other).</p>
+                                            <p>&ldquo;{{ resource.filename }}&rdquo; of &ldquo;{{ ctx.record.title }}&rdquo; (Version {{ ctx.version }}). HEPData (other).</p>
                                             <p><strong>https://doi.org/{{ resource.doi }}</strong></p>
                                         </div>
                                       {% endfor %}
@@ -170,9 +184,6 @@
                                         </button>
                                     </p>
                                         {% set title = '"{' + ctx.record.title + '}"' %}
-                                        {%  if ctx.record.hepdata_doi %}
-                                          {% set key = ctx.record.hepdata_doi.split('/', 1)[1] %}
-                                        {% endif %}
                                         {% if ctx.record.collaborations %}
                                           {% set author = "{" + "Collaboration} and {".join(ctx.record.collaborations) + " Collaboration}" %}
                                         {% elif ctx.record.summary_authors %}
@@ -182,8 +193,8 @@
     author = "{{ author }}",
     title = {{ title }},
     howpublished = "{HEPData (collection)}",
-    year = {{ ctx.record.year }},
-    note = "\url{https://doi.org/{{ ctx.record.hepdata_doi }}}"
+    year = {{ ctx.record.last_updated.year }},
+    note = "\url{https://doi.org/{{ hepdata_doi }}}"
 }</textarea>
 
                                     <p>or, if you prefer, a specific version of the <img
@@ -193,51 +204,53 @@
                                             <i class="fa fa-copy" alt="Copy to clipboard"></i>
                                         </button>
                                         </p>
-                                    {% set title = '"{' + ctx.record.title + ' (Version ' + ctx.record.version|string + ')}"' %}
-                                    <textarea readonly id="versioned_record_bibtex">@misc{{ "{" }}{{ key }}.v{{ ctx.record.version }},
+                                    {% set title = '"{' + ctx.record.title + ' (Version ' + ctx.version|string + ')}"' %}
+                                    <textarea readonly id="versioned_record_bibtex">@misc{{ "{" }}{{ key }}.v{{ ctx.version }},
     author = "{{ author }}",
     title = {{ title }},
     howpublished = "{HEPData (collection)}",
-    year = {{ ctx.record.year }},
-    note = "\url{https://doi.org/{{ ctx.record.hepdata_doi }}.v{{ ctx.record.version }}}"
+    year = {{ ctx.record.last_updated.year }},
+    note = "\url{https://doi.org/{{ hepdata_doi }}.v{{ ctx.version }}}"
 }</textarea>
 
-                                    <p>
-                                      You can also cite the {{ ctx.data_tables|length }} data
-                                      table{% if ctx.data_tables|length > 1 %}s{% endif %}
-                                      {% if ctx.resources_with_doi %}
-                                        or the {{ ctx.resources_with_doi|length }} additional
-                                        resource{% if ctx.resources_with_doi|length > 1 %}s{% endif %}
-                                      {% endif %}
-                                      individually.
-                                    </p>
+                                    {% if ctx.data_tables %}
+                                      <p>
+                                        You can also cite the {{ ctx.data_tables|length }} data
+                                        table{% if ctx.data_tables|length > 1 %}s{% endif %}
+                                        {% if ctx.resources_with_doi %}
+                                          or the {{ ctx.resources_with_doi|length }} additional
+                                          resource{% if ctx.resources_with_doi|length > 1 %}s{% endif %}
+                                        {% endif %}
+                                        individually.
+                                      </p>
 
-                                    <h4>Data tables</h4>
-                                    <p>
-                                      Choose table:
-                                      <select onchange="$('.table-bibtex').hide();$('#table_bibtex_' + this.value).show();$('#table_bibtex_copy_btn').attr('data-clipboard-target', '#table_bibtex_' + this.value);">
+                                      <h4>Data tables</h4>
+                                      <p>
+                                        Choose table:
+                                        <select onchange="$('.table-bibtex').hide();$('#table_bibtex_' + this.value).show();$('#table_bibtex_copy_btn').attr('data-clipboard-target', '#table_bibtex_' + this.value);">
+                                        {% for table in ctx.data_tables %}
+                                          <option value="{{ loop.index }}">{{ table.name }}</option>
+                                        {% endfor %}
+                                        </select>
+                                        <button class="btn btn-primary btn-sm cite-copy-btn pull-right" id="table_bibtex_copy_btn" data-clipboard-target="#table_bibtex_1">
+                                            <i class="fa fa-copy" alt="Copy to clipboard"></i>
+                                        </button>
+                                      </p>
+
                                       {% for table in ctx.data_tables %}
-                                        <option value="{{ loop.index }}">{{ table.name }}</option>
+                                        {% set title = '"{``' +  table.name + '\'\' of ``' + ctx.record.title + '\'\' (Version ' + ctx.version|string + ')}"' %}
+                                        {% if table.doi %}
+                                            {% set key = table.doi.split('/', 1)[1] %}
+                                        {% endif %}
+                                      <textarea class="table-bibtex" id="table_bibtex_{{ loop.index }}" readonly{% if loop.index > 1 %} style="display:none"{% endif %}>@misc{{ "{" }}{{ key }},
+      author = "{{ author }}",
+      title = {{ title }},
+      howpublished = "{HEPData (dataset)}",
+      year = {{ ctx.record.last_updated.year }},
+      note = "\url{https://doi.org/{{ table.doi }}}"
+  }</textarea>
                                       {% endfor %}
-                                      </select>
-                                      <button class="btn btn-primary btn-sm cite-copy-btn pull-right" id="table_bibtex_copy_btn" data-clipboard-target="#table_bibtex_1">
-                                          <i class="fa fa-copy" alt="Copy to clipboard"></i>
-                                      </button>
-                                    </p>
-
-                                    {% for table in ctx.data_tables %}
-                                      {% set title = '"{``' +  table.name + '\'\' of ``' + ctx.record.title + '\'\' (Version ' + ctx.record.version|string + ')}"' %}
-                                      {% if table.doi %}
-                                          {% set key = table.doi.split('/', 1)[1] %}
-                                      {% endif %}
-                                    <textarea class="table-bibtex" id="table_bibtex_{{ loop.index }}" readonly{% if loop.index > 1 %} style="display:none"{% endif %}>@misc{{ "{" }}{{ key }},
-    author = "{{ author }}",
-    title = {{ title }},
-    howpublished = "{HEPData (dataset)}",
-    year = {{ ctx.record.year }},
-    note = "\url{https://doi.org/{{ table.doi }}}"
-}</textarea>
-                                    {% endfor %}
+                                    {% endif %}
 
                                     {% if ctx.resources_with_doi %}
                                       <h4>Additional resources</h4>
@@ -255,7 +268,7 @@
                                       </p>
 
                                       {% for resource in ctx.resources_with_doi %}
-                                        {% set title = '"{``' +  resource.filename + '\'\' of ``' + ctx.record.title + '\'\' (Version ' + ctx.record.version|string + ')}"' %}
+                                        {% set title = '"{``' +  resource.filename + '\'\' of ``' + ctx.record.title + '\'\' (Version ' + ctx.version|string + ')}"' %}
                                         {% if resource.doi %}
                                           {% set key = resource.doi.split('/', 1)[1] %}
                                         {% endif %}
@@ -263,7 +276,7 @@
     author = "{{ author }}",
     title = {{ title }},
     howpublished = "{HEPData (other)}",
-    year = {{ ctx.record.year }},
+    year = {{ ctx.record.last_updated.year }},
     note = "\url{https://doi.org/{{ resource.doi }}}"
 }</textarea>
                                       {% endfor %}

@@ -142,7 +142,7 @@ def format_submission(recid, record, version, version_count, hepdata_submission,
         ctx['record']['last_updated'] = hepdata_submission.last_updated
         ctx['record']['hepdata_doi'] = "{0}".format(hepdata_submission.doi)
 
-        if ctx['version'] > 1:
+        if version_count > 1:
             ctx['record']['hepdata_doi'] += ".v{0}".format(ctx['version'])
 
         ctx['recid'] = recid
@@ -428,6 +428,8 @@ def render_record(recid, record, version, output_format, light_mode=False):
             redirect_url_after_login = '%2Frecord%2F{0}%3Fversion%3D{1}%26format%3D{2}'.format(recid, version, output_format)
             if 'table' in request.args:
                 redirect_url_after_login += '%26table%3D{0}'.format(request.args['table'])
+            if output_format == 'yoda' and 'rivet' in request.args:
+                redirect_url_after_login += '%26rivet%3D{0}'.format(request.args['rivet'])
             return redirect('/login/?next={0}'.format(redirect_url_after_login))
         else:
             abort(403)
