@@ -97,6 +97,7 @@ def sandbox_display(id):
 
     else:
         return render_template('hepdata_records/error_page.html', recid=None,
+                               header_message="Sandbox record not found",
                                message="No submission exists with that ID.",
                                errors={})
 
