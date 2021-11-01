@@ -35,6 +35,7 @@ from functools import reduce
 from tests.conftest import import_default_data
 
 from hepdata.ext.elasticsearch.api import reindex_all
+from hepdata.modules.records.importer.api import import_records
 from hepdata.modules.submission.api import get_latest_hepsubmission
 from hepdata.modules.records.utils.submission import unload_submission
 
@@ -42,6 +43,12 @@ from hepdata.modules.records.utils.submission import unload_submission
 def test_home(live_server, env_browser, identifiers):
     """E2E home test to check record counts and latest submissions."""
     browser = env_browser
+
+    # Import a record with resources before looking further, so we can check
+    # resource pages
+    # Record has 48 tables
+    import_records(['ins1748602'], synchronous=True)
+
     # 1a. go to the home page
     browser.get(flask.url_for('hepdata_theme.index', _external=True))
     assert (flask.url_for('hepdata_theme.index', _external=True) in
@@ -49,21 +56,21 @@ def test_home(live_server, env_browser, identifiers):
 
     # 2. check number of records and the number of datatables is correct
     record_stats = browser.find_element_by_css_selector("#record_stats")
-    exp_data_table_count = reduce(lambda x, y: x['data_tables'] + y['data_tables'], identifiers)
-    exp_publication_count = len(identifiers)
+    exp_data_table_count = identifiers[0]['data_tables'] + \
+        identifiers[1]['data_tables'] + 48
+    exp_publication_count = len(identifiers) + 1
     assert (record_stats.text == "Search on {0} publications and {1} data tables."
             .format(exp_publication_count, exp_data_table_count))
 
-    # 3. check that there are two submissions in the latest submissions section
-    assert (browser.find_element_by_css_selector('.latest-record'))
-    # 4. click on the first submission.
-    latest_item = browser.find_element_by_css_selector('.latest-record .title')
+    # 3. check that there are three submissions in the latest submissions section
+    assert len(browser.find_elements_by_css_selector('.latest-record .title')) == 3
+    # 4. click on the second submission (should be one in identifiers)
+    second_item = browser.find_elements_by_css_selector('.latest-record .title')[1]
     actions = ActionChains(browser)
-    actions.move_to_element(latest_item).perform()
-    browser.save_screenshot('/tmp/screenshot.png')
-    href = latest_item.get_attribute("href")
+    actions.move_to_element(second_item).perform()
+    href = second_item.get_attribute("href")
     hepdata_id = href[href.rfind("/")+1:]
-    latest_item.click()
+    second_item.click()
 
     # 5. assert that the submission is what we expected it to be.
 
@@ -93,6 +100,46 @@ def test_home(live_server, env_browser, identifiers):
         assert False, "File is not a valid zip file"
     # Close download dropdown by clicking again
     browser.find_element_by_id('dLabel').click()
+
+    # Go back to homepage and click on 1st link - should be record with resources
+    browser.back()
+    latest_item = browser.find_elements_by_css_selector('.latest-record .title')[0]
+    actions = ActionChains(browser)
+    actions.move_to_element(latest_item).perform()
+    latest_item.click()
+
+    assert (flask.url_for('hepdata_records.get_metadata_by_alternative_id', recid='ins1748602', _external=True) in
+            browser.current_url)
+    # Check Resources button is present
+    resources_btn = browser.find_element_by_id('show_all_resources')
+    assert resources_btn is not None
+    resources_btn.click()
+
+    # Wait until resource pane is visible
+    WebDriverWait(browser, 10).until(
+        EC.visibility_of_element_located((By.ID, 'resource-modal-contents'))
+    )
+    submission_resources = browser.find_elements_by_class_name('resource-item-container')
+    assert len(submission_resources) == 4
+
+    # Find C++ file resource
+    cpp_resources = [e for e in submission_resources if e.find_element_by_tag_name('h4').text == 'C++ File']
+    assert len(cpp_resources) == 1
+    cpp_resource = cpp_resources[0]
+    download_btn = cpp_resource.find_element_by_css_selector('a.btn-sm')
+    assert download_btn.text == 'Download'
+    # Get landing page URL from download link and load
+    landing_page_url = download_btn.get_attribute("href").replace('view=true', 'landing_page=true')
+    browser.get(landing_page_url)
+    # Check landing page has appropriate elements
+    header_h4 = browser.find_element_by_css_selector(".hepdata_table_detail_header h4")
+    assert header_h4.find_element_by_class_name("pull-left").text.strip() == \
+        "Additional Resource: C++ File"
+    textarea = browser.find_element_by_id("code-contents")
+    assert textarea.text.startswith("""#include "SimpleAnalysisFramework/AnalysisClass.h"
+DefineAnalysis(SbottomMultiB2018)
+
+//Author: H. Teagle""")
 
 
 def test_tables(app, live_server, env_browser):
