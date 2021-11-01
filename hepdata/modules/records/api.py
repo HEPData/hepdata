@@ -300,6 +300,9 @@ def get_json_ld(doi, content_url=None, download_table_id=None,
         r.raise_for_status()
         data = r.json()
 
+        if 'author' in data and 'creator' not in data:
+            data['creator'] = data['author']
+
         if content_url:
             data['contentUrl'] = content_url
 
@@ -334,6 +337,8 @@ def get_json_ld(doi, content_url=None, download_table_id=None,
                 data['isPartOf']['description'] = parent_description
             if '@id' in data['isPartOf']:
                 data['isPartOf']['url'] = data['isPartOf']['@id']
+            if 'author' in data['isPartOf'] and 'creator' not in data['isPartOf']:
+                data['isPartOf']['creator'] = data['isPartOf']['author']
 
         if data_tables and 'hasPart' in data:
             # Submission container. Mark it as Dataset for Google, and add table details

@@ -718,16 +718,28 @@ def test_create_new_version(app, load_default_data, identifiers, mocker):
 
 def test_get_json_ld(app):
     doi = 'my.test.hepdata.doi'
-    dummy_json = {'a': 1, 'b': 2}
+    dummy_json = {'a': 1, 'b': 2, 'author': 'A. Nonymous'}
     # Use requests_mock to mock the response from datacite
     with requests_mock.Mocker() as m:
         m.get(f'https://api.test.datacite.org/dois/{doi}', json=dummy_json)
         data = get_json_ld(doi)
-        assert data == dummy_json
+        # Only difference from dummy_json is to copy 'author' to 'creator'
+        assert data == {
+            'a': 1,
+            'b': 2,
+            'author': 'A. Nonymous',
+            'creator': 'A. Nonymous'
+        }
 
         m.get(f'https://api.test.datacite.org/dois/{doi}', json=dummy_json)
         data = get_json_ld(doi, content_url='https://my.test.hepdata.url')
-        assert data == {'a': 1, 'b': 2, 'contentUrl': 'https://my.test.hepdata.url'}
+        assert data == {
+            'a': 1,
+            'b': 2,
+            'author': 'A. Nonymous',
+            'creator': 'A. Nonymous',
+            'contentUrl': 'https://my.test.hepdata.url'
+        }
 
         m.get(f'https://api.test.datacite.org/dois/{doi}', json=dummy_json)
         data = get_json_ld(doi, download_table_id=12345)
@@ -735,6 +747,8 @@ def test_get_json_ld(app):
         assert data == {
             'a': 1,
             'b': 2,
+            'author': 'A. Nonymous',
+            'creator': 'A. Nonymous',
             'distribution': [
                 {
                     '@type': 'DataDownload',
@@ -765,7 +779,10 @@ def test_get_json_ld(app):
 
         # Add isPartOf and includedInDataCatalog; check parent name and
         # descriptions are added and URLs added
-        dummy_json['isPartOf'] = { '@id': 'https://doi.org/my.parent.doi' }
+        dummy_json['isPartOf'] = {
+            '@id': 'https://doi.org/my.parent.doi',
+            'author': 'B. Nonymous'
+        }
         dummy_json['includedInDataCatalog'] = { '@id': 'my.parent.doi' }
         m.get(f'https://api.test.datacite.org/dois/{doi}', json=dummy_json)
         data = get_json_ld(doi, parent_name='My HEPData submission',
@@ -773,9 +790,13 @@ def test_get_json_ld(app):
         assert data == {
             'a': 1,
             'b': 2,
+            'author': 'A. Nonymous',
+            'creator': 'A. Nonymous',
             'isPartOf': {
                 '@id': 'https://doi.org/my.parent.doi',
                 '@type': 'Dataset',
+                'author': 'B. Nonymous',
+                'creator': 'B. Nonymous',
                 'name': 'My HEPData submission',
                 'description': "It's amazing",
                 'url': 'https://doi.org/my.parent.doi'
@@ -810,6 +831,8 @@ def test_get_json_ld(app):
         assert data == {
             'a': 1,
             'b': 2,
+            'author': 'A. Nonymous',
+            'creator': 'A. Nonymous',
             '@type': 'Dataset',
             'description': 'Publication description',
             'hasPart': [
