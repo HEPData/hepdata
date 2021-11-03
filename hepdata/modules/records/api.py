@@ -76,6 +76,10 @@ RECORD_PLAIN_TEXT = {
     "todo": "to be reviewed"
 }
 
+JSON_LD_MIMETYPES = [
+    'application/ld+json',
+    'application/vnd.hepdata.ld+json'
+]
 
 def returns_json(f):
     @wraps(f)
@@ -376,8 +380,7 @@ def should_send_json_ld(request):
 
     """
     # Determine whether to send json-ld
-    return request.accept_mimetypes.quality('application/ld+json') >= 1 or \
-        request.accept_mimetypes.quality('application/vnd.hepdata.ld+json') >= 1
+    return any([request.accept_mimetypes.quality(m) >= 1 for m in JSON_LD_MIMETYPES])
 
 
 def get_commit_message(ctx, recid):

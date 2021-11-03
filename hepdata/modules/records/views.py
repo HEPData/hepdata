@@ -47,7 +47,7 @@ from hepdata.modules.records.api import request, determine_user_privileges, rend
     render_record, current_user, db, jsonify, get_user_from_id, get_record_contents, extract_journal_info, \
     user_allowed_to_perform_action, NoResultFound, OrderedDict, query_messages_for_data_review, returns_json, \
     process_payload, has_upload_permissions, has_coordinator_permissions, create_new_version, format_resource, \
-    should_send_json_ld
+    should_send_json_ld, JSON_LD_MIMETYPES
 from hepdata.modules.submission.api import get_submission_participants_for_record
 from hepdata.modules.submission.models import HEPSubmission, DataSubmission, \
     DataResource, DataReview, Message, Question
@@ -642,10 +642,20 @@ def get_resource(resource_id):
             # Accept header matches the file type, so download file instead
             view_mode = True
             landing_page = False
-
-        # Determine whether to send json-ld
-        if should_send_json_ld(request):
+        elif should_send_json_ld(request):
             output_format = 'json_ld'
+        else:
+            if request_mimetypes.quality('text/html') == 0:
+                # If text/html is not requested, user has probably requested the wrong file type
+                # so send an appropriate error so they know the correct type
+                accepted_mimetypes = [file_mimetype[0], 'text/html'] + JSON_LD_MIMETYPES
+                accepted_mimetypes_str = ', '.join([f"'{m}'" for m in accepted_mimetypes])
+                # Send back JSON as client is not expecting HTML
+                return jsonify({
+                    'msg': f"Accept header value '{request_mimetypes}' does not contain a valid mimetype for this resource. "
+                           + f"Expected Accept header to include one of {accepted_mimetypes_str}",
+                    'file_mimetype': file_mimetype[0]
+                }), 406
 
     if resource_obj:
         if view_mode:

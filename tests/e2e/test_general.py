@@ -297,3 +297,20 @@ def test_accept_headers(app, live_server, e2e_identifiers):
     assert dummy_json.items() <= json_ld4.items()
     # Should also have content url
     assert json_ld4.get('contentUrl') == 'http://localhost:5555/record/resource/55?view=true'
+
+    # Test getting python resource directly via content negotiation
+    response = requests.get(resource_url, headers={'Accept': 'text/x-python'})
+    assert response.status_code == 200
+    assert response.headers.get('Content-Disposition') == 'attachment; filename=cut_based_id.py'
+    assert response.headers.get('Content-Type') == 'text/x-python; charset=utf-8'
+    assert """import numpy as np
+import math
+import ROOT as rt""" in response.text
+
+    # Test sending incorrect accept header
+    response = requests.get(resource_url, headers={'Accept': 'application/x-tar'})
+    assert response.status_code == 406
+    assert response.json() == {
+        "file_mimetype": "text/x-python",
+        "msg": "Accept header value 'application/x-tar' does not contain a valid mimetype for this resource. Expected Accept header to include one of 'text/x-python', 'text/html', 'application/ld+json', 'application/vnd.hepdata.ld+json'"
+    }
