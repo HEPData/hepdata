@@ -26,7 +26,7 @@
 import os
 from collections import OrderedDict
 from functools import wraps
-import json
+import mimetypes
 import requests
 import time
 
@@ -267,6 +267,7 @@ def format_resource(resource, contents, content_url):
             parent_name=ctx['record']['title'],
             parent_description=(ctx['record'].get('data_abstract') or ctx['record'].get('abstract'))
         )
+        ctx['file_mimetype'] = mimetypes.guess_type(resource.file_location)[0]
 
     if resource.file_type in IMAGE_TYPES:
         ctx['display_type'] = 'image'
