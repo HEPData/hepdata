@@ -53,7 +53,7 @@ def test_search_from_home(live_server, env_browser, search_tests):
     # Check result count
     sleep(1)
     results = browser.find_elements_by_class_name('search-result-item')
-    assert(len(results) == 2)
+    assert(len(results) == 3)
 
     # Check "More" link works
     table_list = results[0].find_elements_by_css_selector('.data-brief:not(.hidden)')
@@ -64,11 +64,11 @@ def test_search_from_home(live_server, env_browser, search_tests):
 
     # Check facet filtering for each facet
     facets = [
-        {'class_prefix': 'collaboration', 'exp_filter_count': 2, 'exp_first_result_count': 1},
-        {'class_prefix': 'subject_areas', 'exp_filter_count': 1, 'exp_first_result_count': 2},
+        {'class_prefix': 'collaboration', 'exp_filter_count': 3, 'exp_first_result_count': 1},
+        {'class_prefix': 'subject_areas', 'exp_filter_count': 1, 'exp_first_result_count': 3},
         {'class_prefix': 'phrases', 'exp_filter_count': 10, 'exp_first_result_count': 1},
         {'class_prefix': 'reactions', 'exp_filter_count': 10, 'exp_first_result_count': 1},
-        {'class_prefix': 'observables', 'exp_filter_count': 3, 'exp_first_result_count': 1},
+        {'class_prefix': 'observables', 'exp_filter_count': 6, 'exp_first_result_count': 1},
         {'class_prefix': 'cmenergies', 'exp_filter_count': 10, 'exp_first_result_count': None}
     ]
 
@@ -164,7 +164,10 @@ def test_author_search(live_server, env_browser):
     # Check author results are as we expect
     search_results = browser.find_elements_by_class_name('tt-suggestion')
     expected_authors = [
+        'Solano, Ada',
         'Falkowski, Adam',
+        'Adam, Wolfgang',
+        'Eskut, Eda',
         'Lyon, Adam Leonard'
     ]
 

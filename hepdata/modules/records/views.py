@@ -46,7 +46,8 @@ from hepdata.modules.inspire_api.views import get_inspire_record_information
 from hepdata.modules.records.api import request, determine_user_privileges, render_template, format_submission, \
     render_record, current_user, db, jsonify, get_user_from_id, get_record_contents, extract_journal_info, \
     user_allowed_to_perform_action, NoResultFound, OrderedDict, query_messages_for_data_review, returns_json, \
-    process_payload, has_upload_permissions, has_coordinator_permissions, create_new_version, format_resource
+    process_payload, has_upload_permissions, has_coordinator_permissions, create_new_version, format_resource, \
+    should_send_json_ld
 from hepdata.modules.submission.api import get_submission_participants_for_record
 from hepdata.modules.submission.models import HEPSubmission, DataSubmission, \
     DataResource, DataReview, Message, Question
@@ -118,6 +119,10 @@ def get_metadata_by_alternative_id(recid):
 
             output_format = request.args.get('format', 'html')
             light_mode = bool(request.args.get('light', False))
+
+            # Check the Accept header to determine whether to send json-ld
+            if should_send_json_ld(request):
+                output_format = 'json_ld'
 
             return render_record(recid=record['recid'], record=record, version=version, output_format=output_format,
                                  light_mode=light_mode)
@@ -205,7 +210,7 @@ def metadata(recid):
         version = int(request.args.get('version', -1))
     except ValueError:
         version = -1
-    serialization_format = request.args.get('format', 'html')
+    output_format = request.args.get('format', 'html')
     light_mode = bool(request.args.get('light', False))
 
     try:
@@ -213,7 +218,11 @@ def metadata(recid):
     except Exception as e:
         record = None
 
-    return render_record(recid=recid, record=record, version=version, output_format=serialization_format,
+    # Check the Accept header to determine whether to send json-ld
+    if should_send_json_ld(request):
+        output_format = 'json_ld'
+
+    return render_record(recid=recid, record=record, version=version, output_format=output_format,
                          light_mode=light_mode)
 
 
@@ -620,10 +629,10 @@ def get_resource(resource_id):
     :param recid: publication record id
     :return: json dictionary containing any HTML files to show.
     """
-
     resource_obj = DataResource.query.filter_by(id=resource_id).first()
     view_mode = bool(request.args.get('view', False))
     landing_page = bool(request.args.get('landing_page', False))
+    output_format = 'html'
 
     if landing_page:
         # Check the Accept header: if it matches the file's mimetype then send the file back instead
@@ -633,6 +642,10 @@ def get_resource(resource_id):
             # Accept header matches the file type, so download file instead
             view_mode = True
             landing_page = False
+
+        # Determine whether to send json-ld
+        if should_send_json_ld(request):
+            output_format = 'json_ld'
 
     if resource_obj:
         if view_mode:
@@ -658,7 +671,10 @@ def get_resource(resource_id):
                     log.error(str(e))
                     return abort(404)
 
-                return render_template('hepdata_records/related_record.html', ctx=ctx)
+                if output_format == 'json_ld' and ctx.get('json_ld'):
+                    return jsonify(ctx['json_ld'])
+                else:
+                    return render_template('hepdata_records/related_record.html', ctx=ctx)
 
             else:
                 return jsonify(

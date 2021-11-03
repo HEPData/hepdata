@@ -288,75 +288,96 @@ def get_json_ld(doi, content_url=None, download_table_id=None,
     :rtype: dict, or None if DOI is not registered or metadata cannot be retrieved
     """
     headers = {}
-    if current_app.config.get('ENV') == 'development' or current_app.config.get('TESTING'):
-        # If working in dev mode, try to get json-ld from api.test.datacite.org
-        url = f"https://api.test.datacite.org/dois/{doi}"
-        headers['Accept'] = "application/vnd.schemaorg.ld+json"
+    if current_app.config.get('E2E_TESTING'):
+        # If E2E_TESTING=True, use dummy JSON
+        data = {
+            '@context': 'http://schema.org',
+            '@type': 'Thing',
+            'name': 'Test Metadata'
+        }
     else:
-        url = f"https://data.crosscite.org/application/vnd.schemaorg.ld+json/{doi}"
+        if current_app.config.get('ENV') == 'development' or current_app.config.get('TESTING'):
+            # If working in dev mode, try to get json-ld from api.test.datacite.org
+            url = f"https://api.test.datacite.org/dois/{doi}"
+            headers['Accept'] = "application/vnd.schemaorg.ld+json"
+        else:
+            url = f"https://data.crosscite.org/application/vnd.schemaorg.ld+json/{doi}"
 
-    try:
-        r = requests.get(url, headers=headers)
-        r.raise_for_status()
-        data = r.json()
+        try:
+            r = requests.get(url, headers=headers)
+            r.raise_for_status()
+            data = r.json()
+        except Exception as e:
+            log.error(e)
+            return None
 
-        if 'author' in data and 'creator' not in data:
-            data['creator'] = data['author']
+    if 'author' in data and 'creator' not in data:
+        data['creator'] = data['author']
 
-        if content_url:
-            data['contentUrl'] = content_url
+    if content_url:
+        data['contentUrl'] = content_url
 
-        if download_table_id:
-            data_downloads = []
-            download_types = {
-                'root': 'https://root.cern',
-                'yaml': 'https://yaml.org',
-                'csv': 'text/csv',
-                'yoda': 'https://yoda.hepforge.org'
-            }
-            site_url = current_app.config.get('SITE_URL', 'https://www.hepdata.net')
-            for download_type, format in download_types.items():
-                data_downloads.append({
-                  "@type": "DataDownload",
-                  "contentUrl": f"{site_url}/download/table/{download_table_id}/{download_type}",
-                  "description": download_type.upper() + " file",
-                  "encodingFormat": format
-                })
-                data['distribution'] = data_downloads
+    if download_table_id:
+        data_downloads = []
+        download_types = {
+            'root': 'https://root.cern',
+            'yaml': 'https://yaml.org',
+            'csv': 'text/csv',
+            'yoda': 'https://yoda.hepforge.org'
+        }
+        site_url = current_app.config.get('SITE_URL', 'https://www.hepdata.net')
+        for download_type, format in download_types.items():
+            data_downloads.append({
+              "@type": "DataDownload",
+              "contentUrl": f"{site_url}/download/table/{download_table_id}/{download_type}",
+              "description": download_type.upper() + " file",
+              "encodingFormat": format
+            })
+            data['distribution'] = data_downloads
 
-        # Google demands that the data catalog has a url or name
-        if 'includedInDataCatalog' in data and '@id' in data['includedInDataCatalog']:
-            data['includedInDataCatalog']['url'] = f"https://doi.org/{data['includedInDataCatalog']['@id']}"
+    # Google demands that the data catalog has a url or name
+    if 'includedInDataCatalog' in data and '@id' in data['includedInDataCatalog']:
+        data['includedInDataCatalog']['url'] = f"https://doi.org/{data['includedInDataCatalog']['@id']}"
 
-        # Google wants isPartOf to be a dataset not a collection
-        if 'isPartOf' in data:
-            data['isPartOf']['@type'] = 'Dataset'
-            if parent_name:
-                data['isPartOf']['name'] = parent_name
-            if parent_description:
-                data['isPartOf']['description'] = parent_description
-            if '@id' in data['isPartOf']:
-                data['isPartOf']['url'] = data['isPartOf']['@id']
-            if 'author' in data['isPartOf'] and 'creator' not in data['isPartOf']:
-                data['isPartOf']['creator'] = data['isPartOf']['author']
+    # Google wants isPartOf to be a dataset not a collection
+    if 'isPartOf' in data:
+        data['isPartOf']['@type'] = 'Dataset'
+        if parent_name:
+            data['isPartOf']['name'] = parent_name
+        if parent_description:
+            data['isPartOf']['description'] = parent_description
+        if '@id' in data['isPartOf']:
+            data['isPartOf']['url'] = data['isPartOf']['@id']
+        if 'author' in data['isPartOf'] and 'creator' not in data['isPartOf']:
+            data['isPartOf']['creator'] = data['isPartOf']['author']
 
-        if data_tables and 'hasPart' in data:
-            # Submission container. Mark it as Dataset for Google, and add table details
-            data['@type'] = 'Dataset'
-            data_table_dict = { data_table['doi']: data_table for data_table in data_tables}
-            for data_table_json in data['hasPart']:
-                doi = data_table_json['@id'].replace('https://doi.org/', '')
-                if doi in data_table_dict:
-                    data_table_json['name'] = data_table_dict[doi]['name']
-                    data_table_json['description'] = data_table_dict[doi]['description']
+    if data_tables and 'hasPart' in data:
+        # Submission container. Mark it as Dataset for Google, and add table details
+        data['@type'] = 'Dataset'
+        data_table_dict = { data_table['doi']: data_table for data_table in data_tables}
+        for data_table_json in data['hasPart']:
+            doi = data_table_json['@id'].replace('https://doi.org/', '')
+            if doi in data_table_dict:
+                data_table_json['name'] = data_table_dict[doi]['name']
+                data_table_json['description'] = data_table_dict[doi]['description']
 
-        if data_abstract and 'description' not in data:
-            data['description'] = data_abstract
+    if data_abstract and 'description' not in data:
+        data['description'] = data_abstract
 
-        return data
-    except Exception as e:
-        log.error(e)
-        return None
+    return data
+
+
+def should_send_json_ld(request):
+    """Determine whether to send json-ld instead of HTML for this request
+
+    :param type request: flask.Request object
+    :return: True if request accepts JSON-LD; False otherwise
+    :rtype: bool
+
+    """
+    # Determine whether to send json-ld
+    return request.accept_mimetypes.quality('application/ld+json') >= 1 or \
+        request.accept_mimetypes.quality('application/vnd.hepdata.ld+json') >= 1
 
 
 def get_commit_message(ctx, recid):
@@ -451,14 +472,19 @@ def render_record(recid, record, version, output_format, light_mode=False):
             ctx = format_submission(recid, record, version, version_count, hepdata_submission)
             increment(recid)
 
-            if output_format == 'html':
+            if output_format == 'html' or output_format == 'json_ld':
                 if hepdata_submission.overall_status == 'finished':
                     ctx['json_ld'] = get_json_ld(
                         record.get('hepdata_doi'),
                         data_tables=ctx['data_tables'],
                         data_abstract=(ctx['record'].get('data_abstract') or ctx['record'].get('abstract'))
                     )
-                return render_template('hepdata_records/publication_record.html', ctx=ctx)
+                    if output_format == 'json_ld':
+                        return jsonify(ctx['json_ld'])
+
+                if output_format == 'html':
+                    return render_template('hepdata_records/publication_record.html', ctx=ctx)
+
             elif 'table' not in request.args:
                 if output_format == 'json':
                     ctx = process_ctx(ctx, light_mode)
@@ -495,14 +521,19 @@ def render_record(recid, record, version, output_format, light_mode=False):
             ctx['related_publication_id'] = publication_recid
             ctx['table_name'] = record['title']
 
-            if output_format == 'html' and hepdata_submission.overall_status == 'finished':
-                ctx['json_ld'] = get_json_ld(
-                    record.get('doi'),
-                    download_table_id=ctx['table_id_to_show'],
-                    parent_name=publication_record.get('title'),
-                    parent_description=publication_record.get('data_abstract')
-                )
+            if output_format == 'html' or output_format == 'json_ld':
+                if hepdata_submission.overall_status == 'finished':
+                    ctx['json_ld'] = get_json_ld(
+                        record.get('doi'),
+                        download_table_id=ctx['table_id_to_show'],
+                        parent_name=publication_record.get('title'),
+                        parent_description=publication_record.get('data_abstract')
+                    )
+                    if output_format == 'json_ld':
+                        return jsonify(ctx['json_ld'])
+
                 return render_template('hepdata_records/related_record.html', ctx=ctx)
+
             elif output_format == 'yoda' and 'rivet' in request.args:
                 return redirect('/download/table/{0}/{1}/{2}/{3}/{4}'.format(
                     publication_recid, ctx['table_name'].replace('%', '%25').replace('\\', '%5C'), hepdata_submission.version, output_format,

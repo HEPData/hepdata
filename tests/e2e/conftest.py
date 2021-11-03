@@ -37,6 +37,7 @@ from flask_security.utils import hash_password
 import pytest
 from invenio_accounts.models import User, Role
 from invenio_db import db
+from invenio_search import current_search_client as es
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -76,7 +77,8 @@ def app(request):
         AUTHOR_INDEX='hepdata-authors-test',
         SQLALCHEMY_DATABASE_URI=os.environ.get(
             'SQLALCHEMY_DATABASE_URI', 'postgresql+psycopg2://hepdata:hepdata@' + test_db_host + '/hepdata_test'),
-        APP_ENABLE_SECURE_HEADERS=False
+        APP_ENABLE_SECURE_HEADERS=False,
+        E2E_TESTING=True
     ))
 
     with app.app_context():
@@ -111,7 +113,7 @@ def app(request):
             db.session.add(user)
             db.session.commit()
 
-        import_default_data(app, get_identifiers())
+        import_default_data(app, get_e2e_identifiers())
 
     def teardown():
         with app.app_context():
@@ -124,9 +126,17 @@ def app(request):
     return app
 
 
+def get_e2e_identifiers():
+    return get_identifiers() + [{
+        "hepdata_id": "ins1883075", "inspire_id": '1883075',
+         "title": "Search for long-lived particles decaying in the CMS endcap muon detectors in proton-proton collisions at  13 TeV",
+         "data_tables": 15
+    }]
+
+
 @pytest.fixture()
-def test_identifiers(app):
-    return get_identifiers()
+def e2e_identifiers(app):
+    return get_e2e_identifiers()
 
 
 @pytest.fixture()
