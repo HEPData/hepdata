@@ -32,9 +32,17 @@ a {
   padding: 6px 10px;
 }
 
-p {
+p, li {
   font-size: 1.3em;
-  font-weight: lighter
+  font-weight: lighter;
+}
+
+h3 {
+  font-size: 1.1em;
+  border-bottom: 2px solid #894B9D;
+  text-transform: uppercase;
+  display: inline-block;
+  padding-bottom: 2px;
 }
 
 .menu ul li a {
@@ -103,5 +111,22 @@ p {
     background-color: $darker-blue;
     border-color: $darker-blue;
     color: white;
+  }
+}
+
+code {
+  color: white;
+  background-color: $dark-blue;
+}
+
+.light-bg {
+  background-color: #f6f6f6;
+  color: $navy;
+  a {
+    color: $purple;
+  }
+  code, pre {
+    color: $navy;
+    background-color: $lightgrey;
   }
 }
