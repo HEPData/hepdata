@@ -117,10 +117,4 @@
     {% include "hepdata_theme/pagination.html" %}
 {% endif %}
 
-<script>
-
-    $(document).ready(function () {
-        HEPDATA.dashboard.data = {{ctx.submission_stats | safe}};
-    });
-
-</script>
+<div id='submission_stats' data-submission-stats='{{ctx.submission_stats | safe}}'></div>

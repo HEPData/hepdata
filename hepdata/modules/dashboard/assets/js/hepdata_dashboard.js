@@ -10,8 +10,6 @@ import './hepdata_vis_status.js'
 $.typeahead = Typeahead;
 
 HEPDATA.dashboard = (function () {
-  var data = {};
-
   var initialise_finalise_btn = function () {
     $(".finalise-btn").bind("click", function () {
       $("#finalise_submission_button").attr('data-recid', $(this).attr('data-recid'));
@@ -382,8 +380,9 @@ HEPDATA.dashboard = (function () {
     },
 
     render_submission_stats: function () {
-      for (var submission_idx in this.data) {
-        HEPDATA.visualization.submission_status.render(this.data[submission_idx]);
+      const submission_data = $("#submission_stats").data("submission-stats");
+      for (var submission_idx in submission_data) {
+        HEPDATA.visualization.submission_status.render(submission_data[submission_idx]);
       }
     }
   }
