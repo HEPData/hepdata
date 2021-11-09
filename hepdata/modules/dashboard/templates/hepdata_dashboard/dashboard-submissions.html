@@ -21,11 +21,13 @@
                     {% else %}
                         <p class="status">
                             {% if submission.submission_status=='todo' %}
+                              {% if submission.review_flag == 'passed' %}
+                                <span class="complete">Passed review</span>
+                              {% else %}
                                 <span class="in-progress">In Progress</span>
-                            {% elif submission.submission_status=='processing' %}
-                                <span class="in-progress">Processing</span>
+                              {% endif %}
                             {% else %}
-                                <span class="complete">Complete</span>
+                                <span class="in-progress">Processing</span>
                             {% endif %}
                         </p>
                         <div id="submission-{{ submission.recid }}">
