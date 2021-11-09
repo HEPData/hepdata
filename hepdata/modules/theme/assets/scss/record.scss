@@ -890,6 +890,7 @@ g.node {
   background-color: $navy;
   color: #fff;
   border-radius: 2px;
+  --tooltip-background: $navy;
 }
 
 /* Creates a small triangle extender for the tooltip */
@@ -900,6 +901,7 @@ g.node {
   width: 100%;
   line-height: 1;
   color: $navy;
+  color: var(--tooltip-background);
   content: "\25BC";
   position: absolute;
   text-align: center;
