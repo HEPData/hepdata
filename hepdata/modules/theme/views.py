@@ -94,15 +94,20 @@ def terms():
 
 @blueprint.route('/formats')
 def formats():
-    hepsubmission = get_latest_hepsubmission(inspire_id='1748602')
     ctx = {}
+    sample_resource = None
+    hepsubmission = get_latest_hepsubmission(inspire_id='1748602')
+
     if hepsubmission:
         workspace_resources = [r for r in hepsubmission.resources if r.file_location.endswith('HEPData_workspaces.tar.gz')]
         if workspace_resources:
             sample_resource = workspace_resources[0]
-            sample_resource_url = url_for('hepdata_records.get_resource',
-                resource_id=sample_resource.id, landing_page=True, _external=True)
-            sample_resource_doi = sample_resource.doi or '10.17182/hepdata.89408.v1/r2'
+            if sample_resource:
+                sample_resource_url = url_for(
+                    'hepdata_records.get_resource',
+                    resource_id=sample_resource.id, landing_page=True,
+                    _external=True)
+                sample_resource_doi = sample_resource.doi or '10.17182/hepdata.89408.v1/r2'
 
     if not sample_resource:
         sample_resource_url = 'https://www.hepdata.net/record/resource/997020?landing_page=true'
