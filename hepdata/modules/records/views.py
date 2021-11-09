@@ -54,7 +54,7 @@ from hepdata.modules.submission.models import HEPSubmission, DataSubmission, \
 from hepdata.modules.records.utils.common import get_record_by_id, \
     default_time, IMAGE_TYPES, decode_string
 from hepdata.modules.records.utils.data_processing_utils import \
-    generate_table_structure
+    generate_table_structure, process_ctx
 from hepdata.modules.records.utils.submission import create_data_review, \
     get_or_create_hepsubmission
 from hepdata.modules.submission.api import get_latest_hepsubmission
@@ -78,6 +78,8 @@ blueprint = Blueprint(
 
 @blueprint.route('/sandbox/<int:id>', methods=['GET'])
 def sandbox_display(id):
+    output_format = request.args.get('format', 'html')
+    light_mode = bool(request.args.get('light', False))
 
     hepdata_submission = HEPSubmission.query.filter(
         HEPSubmission.publication_recid == id,
@@ -94,6 +96,11 @@ def sandbox_display(id):
             ctx['mode'] = 'sandbox'
             ctx['show_review_widget'] = False
             increment(id)
+
+            if output_format == 'json':
+                ctx = process_ctx(ctx, light_mode)
+                return jsonify(ctx)
+
             return render_template('hepdata_records/sandbox.html', ctx=ctx)
 
     else:

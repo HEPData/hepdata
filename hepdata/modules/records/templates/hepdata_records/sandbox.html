@@ -40,30 +40,13 @@
                     </a>
 
                     {% if ctx.data_tables|length != 0 %}
-                        <li class="pull-right">
+                        <li class="pull-right" style="padding:6px;">
 
-                            <div class="dropdown"
-                                 style="float: right; margin-left: 15px; margin-top: -4px;">
-                                <button id="dLabel" type="button"
-                                        class="btn btn-sm btn-primary"
-                                        data-toggle="dropdown" aria-haspopup="true"
-                                        aria-expanded="false">
-                                    Download Submission as
-                                    <span class="caret"></span>
-                                </button>
-                                {% set download_base_url = "/download/submission/" + ctx.recid|string + "/" + ctx.version|string %}
-                                <ul class="dropdown-menu" aria-labelledby="dLabel"
-                                    style="height: auto;">
-                                    <li><a href="{{ download_base_url }}/yaml"
-                                           id="download_yaml">YAML</a></li>
-                                    <li><a href="{{ download_base_url }}/yoda"
-                                           id="download_yoda">YODA</a></li>
-                                    <li><a href="{{ download_base_url }}/root"
-                                           id="download_root">ROOT</a></li>
-                                    <li><a href="{{ download_base_url }}/csv"
-                                           id="download_csv">CSV</a></li>
-                                </ul>
-                            </div>
+                            <a href="?format=json" id="jsonLabel" type="button"
+                               class="btn btn-sm btn-default"
+                               aria-haspopup="true" aria-expanded="false">
+                                JSON
+                            </a>
 
                         </li>
                     {% endif %}
