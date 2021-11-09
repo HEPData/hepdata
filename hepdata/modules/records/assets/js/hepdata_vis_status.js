@@ -29,9 +29,10 @@ HEPDATA.visualization.submission_status = {
         .append('g');
 
 
+      const padding = 1;
       var x_scale = d3.scale.linear()
         .domain([0, 100])
-        .range([0, HEPDATA.visualization.submission_status.options.width - (data.stats.length * 5)]);
+        .range([0, HEPDATA.visualization.submission_status.options.width - (data.stats.length * padding)]);
 
 
       data.stats.forEach(function (d) {
@@ -62,7 +63,7 @@ HEPDATA.visualization.submission_status = {
             return 0;
           }
           else {
-            _last_x += (data.stats[i - 1].width) + 5;
+            _last_x += (data.stats[i - 1].width) + padding;
             return _last_x;
           }
         })
