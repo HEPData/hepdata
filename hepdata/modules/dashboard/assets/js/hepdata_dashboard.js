@@ -256,6 +256,9 @@ HEPDATA.dashboard = (function () {
     }
     display_loader(loader_placement);
 
+    // Delete existing d3-tip elements
+    $('.d3-tip').remove()
+
     var url = "/dashboard/dashboard-submissions?" + $.param(params);
     $.get(url).done(function (data) {
       $(loader_placement).hide();

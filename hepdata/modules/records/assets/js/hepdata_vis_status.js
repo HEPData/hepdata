@@ -45,7 +45,8 @@ HEPDATA.visualization.submission_status = {
       var d3tip = d3.tip()
         .attr('class', 'd3-tip')
         .attr('id', 'd3-tip-' + data.recid)
-        .offset([-10, 0])
+        .direction('s')
+        .offset([10, 0])
         .html(function (d) {
           d3.select("#d3-tip-" + data.recid).style("background-color", d.color).style('--tooltip-background', d.color);
           return d.name + ": " + d.count;
