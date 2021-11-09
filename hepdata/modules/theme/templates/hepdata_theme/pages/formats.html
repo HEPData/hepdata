@@ -48,8 +48,8 @@
             <li>JSON view - <a href="{{ atlas_search_url }}&format=json">{{ atlas_search_url }}&format=json</a></li>
           </ul>
           <p>
-            By default, the search results are returned with up to 25 records on each page, but this number can be
-            altered by passing <code>size=1</code> up to <code>size=200</code> in the search URL.
+            By default, the search results are returned with up to 10 records on each page, but this number can be
+            altered by passing <code>size=1</code> up to <code>size=100</code> in the search URL.
           </p>
           <h3>Detailed record</h3>
           <p>Record pages also have a JSON view, for example:</p>
@@ -156,12 +156,12 @@
               <p>
                 HEPData record pages include <a href="https://json-ld.org">JSON-LD</a> metadata to provide
                 machine-readable information about the record. To download just the JSON-LD for a record page,
-                use the HTTP header <code>Accept: text/ld+json</code> in your request, e.g.:
+                use the HTTP header <code>Accept: application/ld+json</code> in your request, e.g.:
               </p>
-              <p><code>curl -OJLH "Accept: text/ld+json" {{ record_url }}"</code></p>
+              <p><code>curl -OJLH "Accept: application/ld+json" {{ record_url }}"</code></p>
               <p>
                 If you are using the DOI for a record rather than the HEPData URL, passing
-                <code>Accept: text/ld+json</code> will give you the JSON-LD metadata directly from DataCite, which is
+                <code>Accept: application/ld+json</code> will give you the JSON-LD metadata directly from DataCite, which is
                 less complete than the metadata produced by HEPData. To get the HEPData metadata
                 via the DOI, use the header <code>Accept: application/vnd.hepdata.ld+json</code>, e.g.:
               </p>
