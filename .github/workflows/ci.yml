@@ -128,6 +128,8 @@ jobs:
         hepdata webpack build
         cp hepdata/config_local.gh.py hepdata/config_local.py
     - name: Run tests
+      env:
+        COVERAGE_FILE: '.coverage_func'
       run: |
         py.test -vv tests/*_test.py
     - name: Setup Sauce Connect
@@ -145,13 +147,16 @@ jobs:
       env:
         SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
         SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY }}
+        COVERAGE_FILE: '.coverage_e2e'
       run: |
         if [[ -z ${{ secrets.SAUCE_USERNAME }} || -z ${{ secrets.SAUCE_ACCESS_KEY}} ]]; then py.test -vv tests/e2e; fi
     - name: Run coveralls
+      if: startsWith(matrix.postgres-version, '9.6')
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         COVERALLS_SERVICE_NAME: github
       run: |
+        coverage combine .coverage_func .coverage_e2e
         coveralls
     - name: Build docs
       run: |
