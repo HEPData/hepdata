@@ -45,7 +45,6 @@ jobs:
     runs-on: ubuntu-latest
 
     strategy:
-      max-parallel: 2
       matrix:
         postgres-version: [9.6, 12, 13]
 
@@ -128,8 +127,12 @@ jobs:
         hepdata webpack install
         hepdata webpack build
         cp hepdata/config_local.gh.py hepdata/config_local.py
+    - name: Run tests
+      run: |
+        py.test -vv tests -k 'not tests/e2e'
     - name: Setup Sauce Connect
       uses: saucelabs/sauce-connect-action@main
+      if: startsWith(matrix.postgres-version, '9.6')
       with:
         username: ${{ secrets.SAUCE_USERNAME }}
         accessKey: ${{ secrets.SAUCE_ACCESS_KEY }}
@@ -137,12 +140,13 @@ jobs:
         tunnelIdentifier: ${{ github.run_id }}
         scVersion: 4.7.0
         verbose: true
-    - name: Run tests
+    - name: Run end-to-end tests
+      if: startsWith(matrix.postgres-version, '9.6')
       env:
         SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
         SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY }}
       run: |
-        if [[ -z ${{ secrets.SAUCE_USERNAME }} || -z ${{ secrets.SAUCE_ACCESS_KEY}} ]]; then py.test -vv tests -k 'not tests/e2e'; else py.test -vv tests; fi
+        if [[ -z ${{ secrets.SAUCE_USERNAME }} || -z ${{ secrets.SAUCE_ACCESS_KEY}} ]]; then py.test -vv tests/e2e; fi
     - name: Run coveralls
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
