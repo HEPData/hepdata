@@ -45,6 +45,7 @@ jobs:
     runs-on: ubuntu-latest
 
     strategy:
+      max-parallel: 2
       matrix:
         postgres-version: [9.6, 12, 13]
 
