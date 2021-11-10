@@ -23,7 +23,8 @@
 {%- extends "hepdata_theme/page.html" %}
 
 {%- block additional_assets %}
-    {{ webpack['hepdata-record.css'] }}
+    {{ webpack['hepdata-record.css'] }}    
+    {{ webpack['toastr.css'] }}
 {%- endblock additional_assets %}
 
 {%- set messages = get_flashed_messages(with_categories=true) -%}

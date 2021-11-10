@@ -97,12 +97,27 @@ def sandbox_display(id):
             ctx['show_review_widget'] = False
             increment(id)
 
-            if output_format == 'json':
+            if output_format == 'html':
+                return render_template('hepdata_records/sandbox.html', ctx=ctx)
+            elif 'table' in request.args:
+                if output_format == 'yoda' and 'rivet' in request.args:
+                    return redirect('/download/table/{0}/{1}/{2}/{3}/{4}'.format(
+                        id,
+                        request.args['table'].replace('%', '%25').replace('\\', '%5C'),
+                        1, output_format, request.args['rivet']))
+                else:
+                    return redirect('/download/table/{0}/{1}/{2}'.format(
+                        id,
+                        request.args['table'].replace('%', '%25').replace('\\', '%5C'),
+                        output_format))
+            elif output_format == 'json':
                 ctx = process_ctx(ctx, light_mode)
                 return jsonify(ctx)
-
-            return render_template('hepdata_records/sandbox.html', ctx=ctx)
-
+            elif output_format == 'yoda' and 'rivet' in request.args:
+                return redirect('/download/submission/{0}/{1}/{2}/{3}'.format(
+                    id, 1, output_format, request.args['rivet']))
+            else:
+                return redirect('/download/submission/{0}/{1}'.format(id, output_format))
     else:
         return render_template('hepdata_records/error_page.html', recid=None,
                                header_message="Sandbox record not found",

@@ -28,8 +28,15 @@ HEPDATA.switch_table = function (listId, table_requested, table_name, status) {
   var encoded_name = encodeURIComponent(table_name);
 
   var _recid = HEPDATA.current_inspire_id && status == 'finished' ? 'ins' + HEPDATA.current_inspire_id : HEPDATA.current_record_id;
-  var direct_link = HEPDATA.site_url + '/record/' + _recid
-    + '?version=' + HEPDATA.current_table_version + "&table=" + encoded_name;
+
+  var direct_link;
+  if (status == 'sandbox') {
+    direct_link = HEPDATA.site_url + '/record/sandbox/' + _recid
+      + '?table=' + encoded_name;
+  } else {
+    direct_link = HEPDATA.site_url + '/record/' + _recid
+      + '?version=' + HEPDATA.current_table_version + "&table=" + encoded_name;
+  }
 
   $("#direct_data_link").val(direct_link);
   $(".copy-btn").attr('data-clipboard-text', direct_link);
