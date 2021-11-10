@@ -149,7 +149,7 @@ jobs:
         SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY }}
         COVERAGE_FILE: '.coverage_e2e'
       run: |
-        if [[ -z ${{ secrets.SAUCE_USERNAME }} || -z ${{ secrets.SAUCE_ACCESS_KEY}} ]]; then py.test -vv tests/e2e; fi
+        if [[ -n ${{ secrets.SAUCE_USERNAME }} && -n ${{ secrets.SAUCE_ACCESS_KEY}} ]]; then py.test -vv tests/e2e; fi
     - name: Run coveralls
       if: startsWith(matrix.postgres-version, '9.6')
       env:
