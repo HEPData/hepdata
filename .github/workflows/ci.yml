@@ -44,10 +44,14 @@ jobs:
 
     runs-on: ubuntu-latest
 
+    strategy:
+      matrix:
+        postgres-version: [9.6, 12, 13]
+
     # Service containers to run with `runner-job`
     services:
       postgres:
-        image: postgres:9.6
+        image: postgres:${{ matrix.postgres-version }}
         # Provide the password for postgres
         env:
           POSTGRES_USER: hepdata
