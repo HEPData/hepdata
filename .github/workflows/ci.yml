@@ -129,7 +129,7 @@ jobs:
         cp hepdata/config_local.gh.py hepdata/config_local.py
     - name: Run tests
       run: |
-        py.test -vv tests -k 'not tests/e2e'
+        py.test -vv tests/*_test.py
     - name: Setup Sauce Connect
       uses: saucelabs/sauce-connect-action@main
       if: startsWith(matrix.postgres-version, '9.6')
