@@ -269,10 +269,15 @@ def format_resource(resource, contents, content_url):
         )
         ctx['file_mimetype'] = get_resource_mimetype(resource, contents)
 
+    ctx['resource_filename'] = os.path.basename(resource.file_location)
+    ctx['resource_filetype'] = f'{resource.file_type} File'
+
     if resource.file_type in IMAGE_TYPES:
         ctx['display_type'] = 'image'
     elif resource.file_location.lower().startswith('http'):
         ctx['display_type'] = 'link'
+        ctx['resource_filename'] = 'External Link'
+        ctx['resource_filetype'] = 'External Link'
     elif contents == 'Binary':
         ctx['display_type'] = 'binary'
     else:

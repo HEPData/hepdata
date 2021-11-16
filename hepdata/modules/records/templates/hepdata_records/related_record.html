@@ -63,7 +63,7 @@
                         </li>
                     </a>
 
-                    <li><span class="fa fa-book"></span> {{ ctx.table_name }}
+                    <li><span class="fa fa-book"></span> {{ ctx.resource_filetype or ctx.table_name }}
                         from {{ ctx.breadcrumb_text }}
                         {% if ctx.record.accelerator_experiment %},
                             conducted on the
