@@ -42,7 +42,7 @@ import requests_mock
 from hepdata.modules.permissions.models import SubmissionParticipant
 from hepdata.modules.records.api import process_payload, process_zip_archive, \
     move_files, get_all_ids, has_upload_permissions, \
-    has_coordinator_permissions, create_new_version, get_json_ld
+    has_coordinator_permissions, create_new_version, get_json_ld, get_resource_mimetype
 from hepdata.modules.records.utils.submission import get_or_create_hepsubmission, process_submission_directory, do_finalise, unload_submission
 from hepdata.modules.records.utils.common import get_record_by_id, get_record_contents
 from hepdata.modules.records.utils.data_processing_utils import generate_table_structure
@@ -51,7 +51,7 @@ from hepdata.modules.records.utils.users import get_coordinators_in_system, has_
 from hepdata.modules.records.utils.workflow import update_record, create_record
 from hepdata.modules.records.views import set_data_review_status
 from hepdata.modules.submission.models import HEPSubmission, DataReview, \
-    DataSubmission
+    DataSubmission, DataResource
 from hepdata.modules.submission.views import process_submission_payload
 from hepdata.modules.submission.api import get_latest_hepsubmission
 from tests.conftest import TEST_EMAIL
@@ -714,6 +714,19 @@ def test_create_new_version(app, load_default_data, identifiers, mocker):
     assert result.json == {
         'message': 'Rec id 1 is not finished so cannot create a new version'
     }
+
+
+def test_get_resource_mimetype(app):
+    # Test a file where python can detect the mimetype
+    resource = DataResource(file_location='a/b/test.zip')
+    assert get_resource_mimetype(resource, 'Binary') == 'application/zip'
+
+    # Test a file for which python cannot detect the mimetype
+    resource = DataResource(file_location='a/b/test.yoda')
+    # First use text content
+    assert get_resource_mimetype(resource, 'some text content') == 'text/plain'
+    # Then binary content
+    assert get_resource_mimetype(resource, 'Binary') == 'application/octet-stream'
 
 
 def test_get_json_ld(app):

@@ -267,7 +267,7 @@ def format_resource(resource, contents, content_url):
             parent_name=ctx['record']['title'],
             parent_description=(ctx['record'].get('data_abstract') or ctx['record'].get('abstract'))
         )
-        ctx['file_mimetype'] = mimetypes.guess_type(resource.file_location)[0]
+        ctx['file_mimetype'] = get_resource_mimetype(resource, contents)
 
     if resource.file_type in IMAGE_TYPES:
         ctx['display_type'] = 'image'
@@ -279,6 +279,16 @@ def format_resource(resource, contents, content_url):
         ctx['display_type'] = 'code'
 
     return ctx
+
+
+def get_resource_mimetype(resource, contents):
+    file_mimetype = mimetypes.guess_type(resource.file_location)[0]
+    if file_mimetype is None:
+        if contents == 'Binary':
+            file_mimetype = 'application/octet-stream'
+        else:
+            file_mimetype = 'text/plain'
+    return file_mimetype
 
 
 def get_json_ld(doi, content_url=None, download_table_id=None,

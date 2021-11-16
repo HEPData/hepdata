@@ -47,7 +47,7 @@ from hepdata.modules.records.api import request, determine_user_privileges, rend
     render_record, current_user, db, jsonify, get_user_from_id, get_record_contents, extract_journal_info, \
     user_allowed_to_perform_action, NoResultFound, OrderedDict, query_messages_for_data_review, returns_json, \
     process_payload, has_upload_permissions, has_coordinator_permissions, create_new_version, format_resource, \
-    should_send_json_ld, JSON_LD_MIMETYPES
+    should_send_json_ld, JSON_LD_MIMETYPES, get_resource_mimetype
 from hepdata.modules.submission.api import get_submission_participants_for_record
 from hepdata.modules.submission.models import HEPSubmission, DataSubmission, \
     DataResource, DataReview, Message, Question
@@ -656,38 +656,9 @@ def get_resource(resource_id):
     landing_page = bool(request.args.get('landing_page', False))
     output_format = 'html'
 
-    if landing_page:
-        # Check the Accept header: if it matches the file's mimetype then send the file back instead
-        request_mimetypes = request.accept_mimetypes
-        file_mimetype = mimetypes.guess_type(resource_obj.file_location)
-        if request_mimetypes.quality(file_mimetype[0]) >= 1:
-            # Accept header matches the file type, so download file instead
-            view_mode = True
-            landing_page = False
-        elif should_send_json_ld(request):
-            output_format = 'json_ld'
-        else:
-            if request_mimetypes.quality('text/html') == 0:
-                # If text/html is not requested, user has probably requested the wrong file type
-                # so send an appropriate error so they know the correct type
-                accepted_mimetypes = [file_mimetype[0], 'text/html'] + JSON_LD_MIMETYPES
-                accepted_mimetypes_str = ', '.join([f"'{m}'" for m in accepted_mimetypes])
-                # Send back JSON as client is not expecting HTML
-                return jsonify({
-                    'msg': f"Accept header value '{request_mimetypes}' does not contain a valid mimetype for this resource. "
-                           + f"Expected Accept header to include one of {accepted_mimetypes_str}",
-                    'file_mimetype': file_mimetype[0]
-                }), 406
-
     if resource_obj:
-        if view_mode:
-            return send_file(resource_obj.file_location, as_attachment=True)
-        elif 'html' in resource_obj.file_location and 'http' not in resource_obj.file_location.lower():
-            with open(resource_obj.file_location, 'r') as resource_file:
-                html = resource_file.read()
-                return html
-        else:
-            contents = ''
+        contents = ''
+        if landing_page or not view_mode:
             if resource_obj.file_type.lower() not in IMAGE_TYPES and 'http' not in resource_obj.file_location.lower():
                 print("Resource is at: " + resource_obj.file_location)
                 try:
@@ -696,6 +667,36 @@ def get_resource(resource_id):
                 except UnicodeDecodeError:
                     contents = 'Binary'
 
+        if landing_page:
+            # Check the Accept header: if it matches the file's mimetype then send the file back instead
+            request_mimetypes = request.accept_mimetypes
+            file_mimetype = get_resource_mimetype(resource_obj, contents)
+
+            if request_mimetypes.quality(file_mimetype) >= 1:
+                # Accept header matches the file type, so download file instead
+                view_mode = True
+                landing_page = False
+            elif should_send_json_ld(request):
+                output_format = 'json_ld'
+            else:
+                if request_mimetypes.quality('text/html') == 0:
+                    # If text/html is not requested, user has probably requested the wrong file type
+                    # so send an appropriate error so they know the correct type
+                    accepted_mimetypes = [file_mimetype, 'text/html'] + JSON_LD_MIMETYPES
+                    accepted_mimetypes_str = ', '.join([f"'{m}'" for m in accepted_mimetypes])
+                    # Send back JSON as client is not expecting HTML
+                    return jsonify({
+                        'msg': f"Accept header value '{request_mimetypes}' does not contain a valid mimetype for this resource. "
+                               + f"Expected Accept header to include one of {accepted_mimetypes_str}",
+                        'file_mimetype': file_mimetype
+                    }), 406
+
+        if view_mode:
+            return send_file(resource_obj.file_location, as_attachment=True)
+        elif 'html' in resource_obj.file_location and 'http' not in resource_obj.file_location.lower():
+            with open(resource_obj.file_location, 'r') as resource_file:
+                return contents
+        else:
             if landing_page:
                 try:
                     ctx = format_resource(resource_obj, contents, request.base_url + '?view=true')
