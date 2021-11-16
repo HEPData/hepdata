@@ -48,7 +48,7 @@
       {% if ctx.resource.doi and ctx.file_mimetype %}
           <p>
             Download via DOI:
-            <code>curl -OJLH "Accept: {{ ctx.file_mimetype }}" https://doi.org/{{ ctx.resource.doi }}"</code>
+            <code>curl -OJLH "Accept: {{ ctx.file_mimetype }}" https://doi.org/{{ ctx.resource.doi }}</code>
           </div>
       {% endif %}
 
