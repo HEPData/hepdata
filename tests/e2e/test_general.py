@@ -130,7 +130,7 @@ def test_home(app, live_server, env_browser, e2e_identifiers):
     # Check landing page has appropriate elements
     header_h4 = browser.find_element_by_css_selector(".hepdata_table_detail_header h4")
     assert header_h4.find_element_by_class_name("pull-left").text.strip() == \
-        "Additional Resource: Python File"
+        "cut_based_id.py"
     textarea = browser.find_element_by_id("code-contents")
     assert """import numpy as np
 import math
