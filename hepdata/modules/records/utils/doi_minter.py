@@ -393,5 +393,5 @@ def _get_submission_file_resources(recid, version, submission=None):
     file_resources = [
         r for r in submission.resources if not r.file_location.lower().startswith('http')
     ]
-    file_resources.sort(key=id)
+    file_resources.sort(key=lambda r: r.id)
     return file_resources

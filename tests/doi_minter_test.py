@@ -18,7 +18,8 @@ from hepdata.modules.records.utils.doi_minter import create_doi, register_doi, \
     _get_submission_file_resources
 from hepdata.modules.records.utils.submission import get_or_create_hepsubmission
 from hepdata.modules.records.utils.workflow import create_record
-from hepdata.modules.submission.models import DataSubmission, HEPSubmission, License
+from hepdata.modules.submission.models import DataSubmission, HEPSubmission, \
+    License, DataResource
 
 
 @pytest.fixture()
@@ -388,3 +389,26 @@ def test_xml_validates(app, identifiers):
 
         doc = lxml.etree.fromstring(resource_xml)
         datacite_schema.assertValid(doc)
+
+
+def test_get_submission_file_resources(app, identifiers):
+    # Create data resources with random unordered ids, so they should be out
+    # of order when fetched from the DB
+    hep_submission = get_or_create_hepsubmission(1)
+    for i in [1043, 1001, 1062, 1013, 1002]:
+        resource = DataResource(id=i)
+        if i == 1013: # Set one resource as remote so it won't be given a DOI
+            resource.file_location = "https://github.com/hepdata"
+        else:
+            resource.file_location = "/a/b/c/d.txt"
+        hep_submission.resources.append(resource)
+
+    db.session.add(hep_submission)
+    db.session.commit()
+
+    file_resources = _get_submission_file_resources(hep_submission.publication_recid, 1)
+    assert len(file_resources) == 4
+    assert file_resources[0].id == 1001
+    assert file_resources[1].id == 1002
+    assert file_resources[2].id == 1043
+    assert file_resources[3].id == 1062
