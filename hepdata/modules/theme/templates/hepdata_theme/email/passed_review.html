@@ -15,7 +15,7 @@ Record {{ article }} ready to be finalised
 
     {% if message %}
         <p style="font-weight: bolder">Message:</p>
-        <p style="padding-left: 20px; font-weight: lighter; white-space: pre-wrap;">{{ message }}</p>
+        <pre style="padding-left:20px;font-family:'Lato',sans-serif;font-weight:lighter;">{{ message }}</pre>
     {% endif %}
 
     <p>The submission is now ready to be finalised{% if collaboration %} for {{ collaboration }}{% endif %}, which can be done from your <a href="{{ dashboard_link }}">HEPData dashboard</a>.</p>

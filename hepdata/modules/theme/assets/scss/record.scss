@@ -924,6 +924,7 @@ g.node {
   background-color: $navy;
   color: #fff;
   border-radius: 2px;
+  --tooltip-background: $navy;
 }
 
 /* Creates a small triangle extender for the tooltip */
@@ -934,15 +935,16 @@ g.node {
   width: 100%;
   line-height: 1;
   color: $navy;
-  content: "\25BC";
+  color: var(--tooltip-background);
+  content: "\25B2";
   position: absolute;
   text-align: center;
 }
 
-/* Style northward tooltips differently */
-.d3-tip.n:after {
-  margin: -1px 0 0 0;
-  top: 100%;
+/* Style southward tooltips differently */
+.d3-tip.s:after {
+  margin: 0 0 -2px 0;
+  bottom: 100%;
   left: 0;
 }
 

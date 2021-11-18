@@ -120,7 +120,7 @@ def dashboard_submissions():
         'user_is_admin': has_role(current_user, 'admin'),
         'modify_query': modify_query,
         'submissions': submission_meta,
-        'submission_stats': submission_stats
+        'submission_stats': json.dumps(submission_stats)
     }
 
     if filter_record_id is None:
