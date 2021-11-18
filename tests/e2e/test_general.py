@@ -39,7 +39,8 @@ from tests.conftest import import_default_data
 from hepdata.ext.elasticsearch.api import reindex_all
 from hepdata.modules.records.importer.api import import_records
 from hepdata.modules.submission.api import get_latest_hepsubmission
-from hepdata.modules.records.utils.submission import unload_submission
+from hepdata.modules.records.utils.submission import unload_submission, get_or_create_hepsubmission
+from hepdata.modules.records.utils.workflow import create_record
 
 
 def test_home(app, live_server, env_browser, e2e_identifiers):
@@ -297,6 +298,22 @@ def test_accept_headers(app, live_server, e2e_identifiers):
     assert dummy_json.items() <= json_ld4.items()
     # Should also have content url
     assert json_ld4.get('contentUrl') == 'http://localhost:5555/record/resource/55?view=true'
+
+    # JSON-LD for submission without DOI
+    submission.doi = ''
+    db.session.add(submission)
+    db.session.commit()
+    record_url = flask.url_for(
+        'hepdata_records.get_metadata_by_alternative_id',
+        recid=e2e_identifiers[2]["hepdata_id"],
+        _external=True
+    )
+    response = requests.get(record_url, headers={'Accept': 'application/ld+json'})
+    assert response.status_code == 404
+    json_ld5 = response.json()
+    assert json_ld5 == {
+        'error': 'JSON-LD is unavailable for this record; JSON-LD is only available for finalised records with DOIs.'
+    }
 
     # Test getting python resource directly via content negotiation
     response = requests.get(resource_url, headers={'Accept': 'text/x-python'})

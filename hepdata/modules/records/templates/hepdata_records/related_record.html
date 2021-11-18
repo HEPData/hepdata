@@ -27,7 +27,7 @@
 {% endblock %}
 
 {%- block json_ld %}
-   {% if ctx.json_ld %}
+   {% if ctx.json_ld  and 'error' not in ctx.json_ld %}
        <script type="application/ld+json">
          {{ ctx.json_ld|tojson }}
        </script>

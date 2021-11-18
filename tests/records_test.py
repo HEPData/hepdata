@@ -735,7 +735,7 @@ def test_get_json_ld(app):
     # Use requests_mock to mock the response from datacite
     with requests_mock.Mocker() as m:
         m.get(f'https://api.test.datacite.org/dois/{doi}', json=dummy_json)
-        data = get_json_ld(doi)
+        data = get_json_ld(doi, 'finished')
         # Only difference from dummy_json is to copy 'author' to 'creator'
         assert data == {
             'a': 1,
@@ -745,7 +745,7 @@ def test_get_json_ld(app):
         }
 
         m.get(f'https://api.test.datacite.org/dois/{doi}', json=dummy_json)
-        data = get_json_ld(doi, content_url='https://my.test.hepdata.url')
+        data = get_json_ld(doi, 'finished', content_url='https://my.test.hepdata.url')
         assert data == {
             'a': 1,
             'b': 2,
@@ -755,7 +755,7 @@ def test_get_json_ld(app):
         }
 
         m.get(f'https://api.test.datacite.org/dois/{doi}', json=dummy_json)
-        data = get_json_ld(doi, download_table_id=12345)
+        data = get_json_ld(doi, 'finished', download_table_id=12345)
         site_url = app.config.get('SITE_URL', 'https://www.hepdata.net')
         assert data == {
             'a': 1,
@@ -798,7 +798,7 @@ def test_get_json_ld(app):
         }
         dummy_json['includedInDataCatalog'] = { '@id': 'my.parent.doi' }
         m.get(f'https://api.test.datacite.org/dois/{doi}', json=dummy_json)
-        data = get_json_ld(doi, parent_name='My HEPData submission',
+        data = get_json_ld(doi, 'finished', parent_name='My HEPData submission',
                            parent_description="It's amazing")
         assert data == {
             'a': 1,
@@ -840,7 +840,7 @@ def test_get_json_ld(app):
             }
         ]
         m.get(f'https://api.test.datacite.org/dois/{doi}', json=dummy_json)
-        data = get_json_ld(doi, data_tables=data_tables, data_abstract="Publication description")
+        data = get_json_ld(doi, 'finished', data_tables=data_tables, data_abstract="Publication description")
         assert data == {
             'a': 1,
             'b': 2,
@@ -862,9 +862,10 @@ def test_get_json_ld(app):
             ]
         }
 
-
-        # Check a connection error just returns None
+        # Check a connection error returns JSON with an error
         m.get(f'https://api.test.datacite.org/dois/{doi}',
               exc=requests.exceptions.ConnectTimeout)
-        data = get_json_ld(doi)
-        assert data is None
+        data = get_json_ld(doi, 'finished')
+        assert data == {
+            'error': f'JSON-LD could not be retrieved from https://api.test.datacite.org/dois/{doi}'
+        }

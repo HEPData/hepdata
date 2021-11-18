@@ -260,15 +260,14 @@ def format_resource(resource, contents, content_url):
     ctx['contents'] = contents
     ctx['resource_url'] = request.url
     ctx['related_publication_id'] = hepsubmission.publication_recid
-    if resource.doi and hepsubmission.overall_status == 'finished':
-        ctx['json_ld'] = get_json_ld(
-            resource.doi,
-            content_url=request.base_url + '?view=true',
-            parent_name=ctx['record']['title'],
-            parent_description=(ctx['record'].get('data_abstract') or ctx['record'].get('abstract'))
-        )
-        ctx['file_mimetype'] = get_resource_mimetype(resource, contents)
-
+    ctx['json_ld'] = get_json_ld(
+        resource.doi,
+        hepsubmission.overall_status,
+        content_url=request.base_url + '?view=true',
+        parent_name=ctx['record']['title'],
+        parent_description=(ctx['record'].get('data_abstract') or ctx['record'].get('abstract'))
+    )
+    ctx['file_mimetype'] = get_resource_mimetype(resource, contents)
     ctx['resource_filename'] = os.path.basename(resource.file_location)
     ctx['resource_filetype'] = f'{resource.file_type} File'
 
@@ -296,18 +295,24 @@ def get_resource_mimetype(resource, contents):
     return file_mimetype
 
 
-def get_json_ld(doi, content_url=None, download_table_id=None,
+def get_json_ld(doi, submission_status, content_url=None, download_table_id=None,
                 parent_name=None, parent_description=None, data_tables=None,
                 data_abstract=None):
     """Get the JSON-LD metadata from DataCite for this DOI, amending as necessary.
 
     :param type doi: DOI for which to get metadata
+    :param type submission_status: overall status of submission to which this DOI relates
     :param type content_url: if set, adds URL as `contentUrl`
     :param type download_table_id: if set, adds download links for this table as `distribution`/`DataDownload`
     :return: JSON-LD as python dict
     :rtype: dict, or None if DOI is not registered or metadata cannot be retrieved
     """
     headers = {}
+    if not doi or submission_status != 'finished':
+        return {
+            'error': 'JSON-LD is unavailable for this record; JSON-LD is only available for finalised records with DOIs.'
+        }
+
     if current_app.config.get('E2E_TESTING'):
         # If E2E_TESTING=True, use dummy JSON
         data = {
@@ -329,7 +334,9 @@ def get_json_ld(doi, content_url=None, download_table_id=None,
             data = r.json()
         except Exception as e:
             log.error(e)
-            return None
+            return {
+                'error': f'JSON-LD could not be retrieved from {url}'
+            }
 
     if 'author' in data and 'creator' not in data:
         data['creator'] = data['author']
@@ -492,14 +499,16 @@ def render_record(recid, record, version, output_format, light_mode=False):
             increment(recid)
 
             if output_format == 'html' or output_format == 'json_ld':
-                if hepdata_submission.overall_status == 'finished':
-                    ctx['json_ld'] = get_json_ld(
-                        record.get('hepdata_doi'),
-                        data_tables=ctx['data_tables'],
-                        data_abstract=(ctx['record'].get('data_abstract') or ctx['record'].get('abstract'))
-                    )
-                    if output_format == 'json_ld':
-                        return jsonify(ctx['json_ld'])
+                ctx['json_ld'] = get_json_ld(
+                    record.get('hepdata_doi'),
+                    hepdata_submission.overall_status,
+                    data_tables=ctx['data_tables'],
+                    data_abstract=(ctx['record'].get('data_abstract') or ctx['record'].get('abstract'))
+                )
+
+                if output_format == 'json_ld':
+                    status_code = 404 if 'error' in ctx['json_ld'] else 200
+                    return jsonify(ctx['json_ld']), status_code
 
                 if output_format == 'html':
                     return render_template('hepdata_records/publication_record.html', ctx=ctx)
@@ -541,15 +550,17 @@ def render_record(recid, record, version, output_format, light_mode=False):
             ctx['table_name'] = record['title']
 
             if output_format == 'html' or output_format == 'json_ld':
-                if hepdata_submission.overall_status == 'finished':
-                    ctx['json_ld'] = get_json_ld(
-                        record.get('doi'),
-                        download_table_id=ctx['table_id_to_show'],
-                        parent_name=publication_record.get('title'),
-                        parent_description=publication_record.get('data_abstract')
-                    )
-                    if output_format == 'json_ld':
-                        return jsonify(ctx['json_ld'])
+                ctx['json_ld'] = get_json_ld(
+                    record.get('doi'),
+                    hepdata_submission.overall_status,
+                    download_table_id=ctx['table_id_to_show'],
+                    parent_name=publication_record.get('title'),
+                    parent_description=publication_record.get('data_abstract')
+                )
+
+                if output_format == 'json_ld':
+                    status_code = 404 if 'error' in ctx['json_ld'] else 200
+                    return jsonify(ctx['json_ld']), status_code
 
                 return render_template('hepdata_records/related_record.html', ctx=ctx)
 

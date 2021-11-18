@@ -704,8 +704,9 @@ def get_resource(resource_id):
                     log.error(str(e))
                     return abort(404)
 
-                if output_format == 'json_ld' and ctx.get('json_ld'):
-                    return jsonify(ctx['json_ld'])
+                if output_format == 'json_ld':
+                    status_code = 404 if 'error' in ctx['json_ld'] else 200
+                    return jsonify(ctx['json_ld']), status_code
                 else:
                     return render_template('hepdata_records/related_record.html', ctx=ctx)
 
