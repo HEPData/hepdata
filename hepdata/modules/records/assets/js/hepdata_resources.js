@@ -131,7 +131,7 @@ HEPDATA.hepdata_resources = (function () {
       });
 
       $(document).on('click', '#show_resources', function () {
-        initial_resource = HEPDATA.current_table_name;
+        initial_resource = HEPDATA.current_table_name || ALL_RESOURCES;
         create_modal_view(recid, version);
       });
 
