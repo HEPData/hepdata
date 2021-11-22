@@ -1,10 +1,9 @@
 {% if ctx.record.collaborations %}
-    <p><i>The
-        {% for collaboration in ctx.record.collaborations %}
-          {% if loop.index > 1 %}&{% endif %}
-            {{ collaboration }}{% endfor %}
-        collaboration{% if ctx.record.collaborations|length > 1 %}s{% endif %}
-      ({{ ctx.record.year }})</i>.</p>
+      {% for collaboration in ctx.record.collaborations %}
+        {% if loop.index > 1 %}&{% endif %}
+          {{ collaboration }}{% endfor %}
+      Collaboration{% if ctx.record.collaborations|length > 1 %}s{% endif %}
+    ({{ ctx.record.year }}).
 {% else %}
     {% for author in ctx.record.authors %}
         {{ author.full_name }}{% if loop.index < ctx.record.authors|length %},
@@ -12,10 +11,12 @@
             {{ ctx.record.year }}){% endif %}
     {% endfor %}
 {% endif %}
-<p>{{ ctx.record.title }}. {{ ctx.record.journal_info|trim }}.</p>
-<p><strong>https://doi.org/{{ ctx.record.doi }}</strong></p>
+<p>{{ ctx.record.title }}. {% if ctx.record.journal_info %}{{ ctx.record.journal_info|trim }}.{% endif %}</p>
+{% if ctx.record.doi %}
+  <p><strong>https://doi.org/{{ ctx.record.doi }}</strong></p>
+{% endif %}
 
 <a href="https://inspirehep.net/literature/{{ ctx.record.inspire_id }}" class="btn btn-default btn-sm" target="_new">View
-    Inspire Record</a>
+    INSPIRE Record</a>
 <a href="https://inspirehep.net/api/literature/{{ ctx.record.inspire_id }}?format=bibtex" class="btn btn-default btn-sm"
-   target="_new">Download BibTeX from Inspire</a>
+   target="_new">Download BibTeX from INSPIRE</a>

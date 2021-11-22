@@ -24,9 +24,11 @@
 """HEPData end to end testing of general pages."""
 import flask
 import requests
+import requests_mock
 import zipfile
 import io
 
+from invenio_db import db
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
@@ -35,13 +37,16 @@ from functools import reduce
 from tests.conftest import import_default_data
 
 from hepdata.ext.elasticsearch.api import reindex_all
+from hepdata.modules.records.importer.api import import_records
 from hepdata.modules.submission.api import get_latest_hepsubmission
-from hepdata.modules.records.utils.submission import unload_submission
+from hepdata.modules.records.utils.submission import unload_submission, get_or_create_hepsubmission
+from hepdata.modules.records.utils.workflow import create_record
 
 
-def test_home(live_server, env_browser, identifiers):
+def test_home(app, live_server, env_browser, e2e_identifiers):
     """E2E home test to check record counts and latest submissions."""
     browser = env_browser
+
     # 1a. go to the home page
     browser.get(flask.url_for('hepdata_theme.index', _external=True))
     assert (flask.url_for('hepdata_theme.index', _external=True) in
@@ -49,21 +54,20 @@ def test_home(live_server, env_browser, identifiers):
 
     # 2. check number of records and the number of datatables is correct
     record_stats = browser.find_element_by_css_selector("#record_stats")
-    exp_data_table_count = reduce(lambda x, y: x['data_tables'] + y['data_tables'], identifiers)
-    exp_publication_count = len(identifiers)
+    exp_data_table_count = sum([i['data_tables'] for i in e2e_identifiers])
+    exp_publication_count = len(e2e_identifiers)
     assert (record_stats.text == "Search on {0} publications and {1} data tables."
             .format(exp_publication_count, exp_data_table_count))
 
-    # 3. check that there are two submissions in the latest submissions section
-    assert (browser.find_element_by_css_selector('.latest-record'))
-    # 4. click on the first submission.
-    latest_item = browser.find_element_by_css_selector('.latest-record .title')
+    # 3. check that there are three submissions in the latest submissions section
+    assert len(browser.find_elements_by_css_selector('.latest-record .title')) == 3
+    # 4. click on the second submission (should be one in e2e_identifiers)
+    second_item = browser.find_elements_by_css_selector('.latest-record .title')[1]
     actions = ActionChains(browser)
-    actions.move_to_element(latest_item).perform()
-    browser.save_screenshot('/tmp/screenshot.png')
-    href = latest_item.get_attribute("href")
+    actions.move_to_element(second_item).perform()
+    href = second_item.get_attribute("href")
     hepdata_id = href[href.rfind("/")+1:]
-    latest_item.click()
+    second_item.click()
 
     # 5. assert that the submission is what we expected it to be.
 
@@ -75,7 +79,7 @@ def test_home(live_server, env_browser, identifiers):
     assert (browser.find_element_by_css_selector('#table-list-section li') is not None)
 
     table_placeholder = browser.find_element_by_css_selector('#table-filter').get_attribute('placeholder')
-    expected_record = [x for x in identifiers if x['hepdata_id'] == hepdata_id]
+    expected_record = [x for x in e2e_identifiers if x['hepdata_id'] == hepdata_id]
     assert (table_placeholder == "Filter {0} data tables".format(expected_record[0]['data_tables']))
 
     # Check file download works
@@ -93,6 +97,45 @@ def test_home(live_server, env_browser, identifiers):
         assert False, "File is not a valid zip file"
     # Close download dropdown by clicking again
     browser.find_element_by_id('dLabel').click()
+
+    # Go back to homepage and click on 1st link - should be record with resources
+    browser.back()
+    latest_item = browser.find_elements_by_css_selector('.latest-record .title')[0]
+    actions = ActionChains(browser)
+    actions.move_to_element(latest_item).perform()
+    latest_item.click()
+
+    assert (flask.url_for('hepdata_records.get_metadata_by_alternative_id', recid='ins1883075', _external=True) in
+            browser.current_url)
+    # Check Resources button is present
+    resources_btn = browser.find_element_by_id('show_all_resources')
+    assert resources_btn is not None
+    resources_btn.click()
+
+    # Wait until resource pane is visible
+    WebDriverWait(browser, 10).until(
+        EC.visibility_of_element_located((By.ID, 'resource-modal-contents'))
+    )
+    submission_resources = browser.find_elements_by_class_name('resource-item-container')
+    assert len(submission_resources) == 3
+
+    # Find Python file resource
+    python_resources = [e for e in submission_resources if e.find_element_by_tag_name('h4').text == 'Python File']
+    assert len(python_resources) == 1
+    python_resource = python_resources[0]
+    download_btn = python_resource.find_element_by_css_selector('a.btn-sm')
+    assert download_btn.text == 'Download'
+    # Get landing page URL from download link and load
+    landing_page_url = download_btn.get_attribute("href").replace('view=true', 'landing_page=true')
+    browser.get(landing_page_url)
+    # Check landing page has appropriate elements
+    header_h4 = browser.find_element_by_css_selector(".hepdata_table_detail_header h4")
+    assert header_h4.find_element_by_class_name("pull-left").text.strip() == \
+        "cut_based_id.py"
+    textarea = browser.find_element_by_id("code-contents")
+    assert """import numpy as np
+import math
+import ROOT as rt""" in textarea.text
 
 
 def test_tables(app, live_server, env_browser):
@@ -184,3 +227,107 @@ def test_general_pages(live_server, env_browser):
     browser.get(flask.url_for('hepdata_theme.cookie_policy', _external=True))
     assert (flask.url_for('hepdata_theme.cookie_policy', _external=True) in
             browser.current_url)
+
+
+def test_accept_headers(app, live_server, e2e_identifiers):
+    """Test records pages respond to Accept headers"""
+    dummy_json = {
+        '@context': 'http://schema.org',
+        '@type': 'Thing',
+        'name': 'Test Metadata'
+    }
+
+    # Main submission page (using inspire_id)
+    record_url = flask.url_for(
+        'hepdata_records.get_metadata_by_alternative_id',
+        recid=e2e_identifiers[0]["hepdata_id"],
+        _external=True
+    )
+    response = requests.get(record_url, headers={'Accept': 'application/ld+json'})
+    assert response.status_code == 200
+    json_ld = response.json()
+    # json_ld should be a superset of dummy_json
+    assert dummy_json.items() <= json_ld.items()
+    # Should also contain a description
+    assert json_ld.get('description').startswith(
+        'Fermilab-Tevatron.  We present measurements of the forward-backward asymmetry, ASYMFB(LEPTON) in the angular distribution of leptons'
+    )
+
+    # Main submission page (using rec id, and testing 'application/vnd.hepdata.ld+json')
+    record_url = flask.url_for(
+        'hepdata_records.metadata',
+        recid=1,
+        _external=True
+    )
+    response = requests.get(record_url, headers={'Accept': 'application/vnd.hepdata.ld+json'})
+    assert response.status_code == 200
+    json_ld2 = response.json()
+    # Should be the same as before
+    assert json_ld2 == json_ld
+
+    # Data submission landing page
+    record_url = flask.url_for(
+        'hepdata_records.metadata',
+        recid=2,
+        _external=True
+    )
+    response = requests.get(record_url, headers={'Accept': 'application/ld+json'})
+    assert response.status_code == 200
+    json_ld3 = response.json()
+    # json_ld should be a superset of dummy_json
+    assert dummy_json.items() <= json_ld3.items()
+    # Should also contain data downloads
+    assert json_ld3.get('distribution') == [
+        {'@type': 'DataDownload', 'contentUrl': 'http://localhost:5000/download/table/1/root', 'description': 'ROOT file', 'encodingFormat': 'https://root.cern'},
+        {'@type': 'DataDownload', 'contentUrl': 'http://localhost:5000/download/table/1/yaml', 'description': 'YAML file', 'encodingFormat': 'https://yaml.org'},
+        {'@type': 'DataDownload', 'contentUrl': 'http://localhost:5000/download/table/1/csv', 'description': 'CSV file', 'encodingFormat': 'text/csv'},
+        {'@type': 'DataDownload', 'contentUrl': 'http://localhost:5000/download/table/1/yoda', 'description': 'YODA file', 'encodingFormat': 'https://yoda.hepforge.org'}
+    ]
+
+    # Data resource landing page (use 3rd submission which has resources)
+    submission = get_latest_hepsubmission(inspire_id=e2e_identifiers[2]["inspire_id"])
+    resource_url = flask.url_for(
+        'hepdata_records.get_resource',
+        resource_id=submission.resources[0].id,
+        _external=True
+    ) + '?landing_page=true'
+    response = requests.get(resource_url, headers={'Accept': 'application/ld+json'})
+    assert response.status_code == 200
+    json_ld4 = response.json()
+    # json_ld should be a superset of dummy_json
+    assert dummy_json.items() <= json_ld4.items()
+    # Should also have content url
+    assert json_ld4.get('contentUrl') == 'http://localhost:5555/record/resource/55?view=true'
+
+    # JSON-LD for submission without DOI
+    submission.doi = ''
+    db.session.add(submission)
+    db.session.commit()
+    record_url = flask.url_for(
+        'hepdata_records.get_metadata_by_alternative_id',
+        recid=e2e_identifiers[2]["hepdata_id"],
+        _external=True
+    )
+    response = requests.get(record_url, headers={'Accept': 'application/ld+json'})
+    assert response.status_code == 404
+    json_ld5 = response.json()
+    assert json_ld5 == {
+        'error': 'JSON-LD is unavailable for this record; JSON-LD is only available for finalised records with DOIs.'
+    }
+
+    # Test getting python resource directly via content negotiation
+    response = requests.get(resource_url, headers={'Accept': 'text/x-python'})
+    assert response.status_code == 200
+    assert response.headers.get('Content-Disposition') == 'attachment; filename=cut_based_id.py'
+    assert response.headers.get('Content-Type') == 'text/x-python; charset=utf-8'
+    assert """import numpy as np
+import math
+import ROOT as rt""" in response.text
+
+    # Test sending incorrect accept header
+    response = requests.get(resource_url, headers={'Accept': 'application/x-tar'})
+    assert response.status_code == 406
+    assert response.json() == {
+        "file_mimetype": "text/x-python",
+        "msg": "Accept header value 'application/x-tar' does not contain a valid media type for this resource. Expected Accept header to include one of 'text/x-python', 'text/html', 'application/ld+json', 'application/vnd.hepdata.ld+json'"
+    }

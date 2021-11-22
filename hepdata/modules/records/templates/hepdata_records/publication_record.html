@@ -29,6 +29,14 @@
     HEPData | {{ ctx.record.title }}
 {% endblock %}
 
+{%- block json_ld %}
+   {% if ctx.json_ld and 'error' not in ctx.json_ld %}
+       <script type="application/ld+json">
+         {{ ctx.json_ld|tojson }}
+       </script>
+   {% endif %}
+{%- endblock json_ld %}
+
 {%- block additional_assets %}
     {{ webpack['hepdata-record.css'] }}
     {{ webpack['toastr.css'] }}
@@ -37,7 +45,7 @@
 {% block page_description %}{{ ctx.record.title }}{% endblock %}
 
 {% block page_body %}
-    <div itemtype="http://schema.org/DataCatalog" itemscope>
+    <div>
         <div class="container-fluid">
             <div class="hep_breadcrumbs row">
                 <div class="col-md-12 no-padding">
@@ -130,11 +138,9 @@
                     class="fa fa-chevron-right"></span></span>
 
                     <div>
-                        <div class="record-title" itemprop="name">
+                        <div class="record-title">
                             {{ ctx.record.title }}
                         </div>
-                <span itemprop="url"
-                      class="hidden">{{ ctx.site_url }}/record/{{ ctx.record.recid }}</span>
 
                     <br/>
                         {% if ctx.record.collaborations %}
@@ -152,14 +158,8 @@
 
                         <div class="record-authors">
                             {% for author in ctx.record.summary_authors %}
-                                <a href="/search?author={{ author.full_name }}"
-                                   itemprop="author" itemscope
-                                   itemtype="http://schema.org/Person">
-                                    <span itemprop="name">{{ author.full_name }}</span>
-                                    <span itemprop="affiliation"
-                                        itemtype="http://schema.org/Organization"
-                                        itemscope class="hidden"><span
-                                        itemprop="name">{{ author.affiliation }}</span></span>
+                                <a href="/search?author={{ author.full_name }}">
+                                    <span>{{ author.full_name }}</span>
                                 </a>{% if loop.index < ctx.record.summary_authors|length %},
                             {% endif %}
                             {% endfor %}
@@ -172,10 +172,8 @@
 
 
                         <div class="record-doi">
-                            <a itemprop="identifier" href="https://doi.org/{{ ctx.record.hepdata_doi }}"
+                            <a href="https://doi.org/{{ ctx.record.hepdata_doi }}"
                                target="_blank">https://doi.org/{{ ctx.record.hepdata_doi }}</a>
-                            <a itemprop="identifier" class="hidden" href="https://doi.org/{{ ctx.record.doi }}"
-                               target="_blank">https://doi.org/{{ ctx.record.doi }}</a>
                         </div>
 
                         <br/>
@@ -186,15 +184,11 @@
                                     <li>
                                         <a href="https://doi.org/{{ ctx.record.doi }}"
                                            target="_blank"><span class="link">
-                                          <span class="link-value">Journal<span class="hidden" itemprop="identifier">https://doi.org/{{ ctx.record.doi }}</span></span></span></a>
+                                          <span class="link-value">Journal</span></span></a>
                                     </li>
                                 {% endif %}
                                 {% if ctx.record.inspire_id %}
                                   <li>
-                                    <span itemprop="identifier" class="hidden">
-                                        https://inspirehep.net/literature/{{ ctx.record.inspire_id }}
-                                    </span>
-
                                     <a href="https://inspirehep.net/literature/{{ ctx.record.inspire_id }}"
                                        target="_blank"><span
                                             class="link"><span
@@ -220,23 +214,11 @@
                               {% endfor %}
                             </ul>
                         </div>
-                        {% if ctx.record.publication_info %}
-                            <div class="publication-details">
-                        <span itemprop="publisher" itemscope
-                              typeof="http://schema.org/Organization"><span
-                                itemprop="name">{{ ctx.record.publication_info.journal_title }}</span> </span>,
-                                Volume {{ ctx.record.publication_info.journal_volume }},
-                                pages
-                                <span itemprop="pagination">{{ ctx.record.publication_info.page_artid }}</span>, <span
-                                    itemprop="copyrightYear"
-                                    typeof="http://schema.org/Number">{{ ctx.record.publication_info.year }}</span>
-                            </div>
-                        {% endif %}
                     </div>
 
                     <div class="clearfix"></div>
 
-                    <div class="record-abstract" itemprop="description">
+                    <div class="record-abstract">
                         <strong>Abstract {% if ctx.record.data_abstract %}(data
                             abstract){% endif %}</strong><br/>
 

@@ -26,6 +26,7 @@
 
 import logging
 import json
+import mimetypes
 import time
 from dateutil import parser
 from invenio_accounts.models import User
@@ -45,14 +46,15 @@ from hepdata.modules.inspire_api.views import get_inspire_record_information
 from hepdata.modules.records.api import request, determine_user_privileges, render_template, format_submission, \
     render_record, current_user, db, jsonify, get_user_from_id, get_record_contents, extract_journal_info, \
     user_allowed_to_perform_action, NoResultFound, OrderedDict, query_messages_for_data_review, returns_json, \
-    process_payload, has_upload_permissions, has_coordinator_permissions, create_new_version
+    process_payload, has_upload_permissions, has_coordinator_permissions, create_new_version, format_resource, \
+    should_send_json_ld, JSON_LD_MIMETYPES, get_resource_mimetype
 from hepdata.modules.submission.api import get_submission_participants_for_record
 from hepdata.modules.submission.models import HEPSubmission, DataSubmission, \
     DataResource, DataReview, Message, Question
 from hepdata.modules.records.utils.common import get_record_by_id, \
     default_time, IMAGE_TYPES, decode_string
 from hepdata.modules.records.utils.data_processing_utils import \
-    generate_table_structure
+    generate_table_structure, process_ctx
 from hepdata.modules.records.utils.submission import create_data_review, \
     get_or_create_hepsubmission
 from hepdata.modules.submission.api import get_latest_hepsubmission
@@ -76,6 +78,8 @@ blueprint = Blueprint(
 
 @blueprint.route('/sandbox/<int:id>', methods=['GET'])
 def sandbox_display(id):
+    output_format = request.args.get('format', 'html')
+    light_mode = bool(request.args.get('light', False))
 
     hepdata_submission = HEPSubmission.query.filter(
         HEPSubmission.publication_recid == id,
@@ -92,10 +96,31 @@ def sandbox_display(id):
             ctx['mode'] = 'sandbox'
             ctx['show_review_widget'] = False
             increment(id)
-            return render_template('hepdata_records/sandbox.html', ctx=ctx)
 
+            if output_format == 'html':
+                return render_template('hepdata_records/sandbox.html', ctx=ctx)
+            elif 'table' in request.args:
+                if output_format == 'yoda' and 'rivet' in request.args:
+                    return redirect('/download/table/{0}/{1}/{2}/{3}/{4}'.format(
+                        id,
+                        request.args['table'].replace('%', '%25').replace('\\', '%5C'),
+                        1, output_format, request.args['rivet']))
+                else:
+                    return redirect('/download/table/{0}/{1}/{2}'.format(
+                        id,
+                        request.args['table'].replace('%', '%25').replace('\\', '%5C'),
+                        output_format))
+            elif output_format == 'json':
+                ctx = process_ctx(ctx, light_mode)
+                return jsonify(ctx)
+            elif output_format == 'yoda' and 'rivet' in request.args:
+                return redirect('/download/submission/{0}/{1}/{2}/{3}'.format(
+                    id, 1, output_format, request.args['rivet']))
+            else:
+                return redirect('/download/submission/{0}/{1}'.format(id, output_format))
     else:
         return render_template('hepdata_records/error_page.html', recid=None,
+                               header_message="Sandbox record not found",
                                message="No submission exists with that ID.",
                                errors={})
 
@@ -116,6 +141,10 @@ def get_metadata_by_alternative_id(recid):
 
             output_format = request.args.get('format', 'html')
             light_mode = bool(request.args.get('light', False))
+
+            # Check the Accept header to determine whether to send json-ld
+            if should_send_json_ld(request):
+                output_format = 'json_ld'
 
             return render_record(recid=record['recid'], record=record, version=version, output_format=output_format,
                                  light_mode=light_mode)
@@ -203,7 +232,7 @@ def metadata(recid):
         version = int(request.args.get('version', -1))
     except ValueError:
         version = -1
-    serialization_format = request.args.get('format', 'html')
+    output_format = request.args.get('format', 'html')
     light_mode = bool(request.args.get('light', False))
 
     try:
@@ -211,7 +240,11 @@ def metadata(recid):
     except Exception as e:
         record = None
 
-    return render_record(recid=recid, record=record, version=version, output_format=serialization_format,
+    # Check the Accept header to determine whether to send json-ld
+    if should_send_json_ld(request):
+        output_format = 'json_ld'
+
+    return render_record(recid=recid, record=record, version=version, output_format=output_format,
                          light_mode=light_mode)
 
 
@@ -601,7 +634,7 @@ def process_resource(reference):
 
     _reference_data = {'id': reference.id, 'file_type': reference.file_type,
                        'file_description': reference.file_description,
-                       'location': _location}
+                       'location': _location, 'doi': reference.doi}
 
     if reference.file_type.lower() in IMAGE_TYPES:
         _reference_data['preview_location'] = _location
@@ -618,22 +651,15 @@ def get_resource(resource_id):
     :param recid: publication record id
     :return: json dictionary containing any HTML files to show.
     """
-
-    resource = DataResource.query.filter_by(id=resource_id)
+    resource_obj = DataResource.query.filter_by(id=resource_id).first()
     view_mode = bool(request.args.get('view', False))
+    landing_page = bool(request.args.get('landing_page', False))
+    output_format = 'html'
 
-    if resource.count() > 0:
-        resource_obj = resource.first()
-
-        if view_mode:
-            return send_file(resource_obj.file_location, as_attachment=True)
-        elif 'html' in resource_obj.file_location and 'http' not in resource_obj.file_location.lower():
-            with open(resource_obj.file_location, 'r') as resource_file:
-                html = resource_file.read()
-                return html
-        else:
-            contents = ''
-            if resource_obj.file_type.lower() not in IMAGE_TYPES:
+    if resource_obj:
+        contents = ''
+        if landing_page or not view_mode:
+            if resource_obj.file_type.lower() not in IMAGE_TYPES and 'http' not in resource_obj.file_location.lower():
                 print("Resource is at: " + resource_obj.file_location)
                 try:
                     with open(resource_obj.file_location, 'r', encoding='utf-8') as resource_file:
@@ -641,9 +667,53 @@ def get_resource(resource_id):
                 except UnicodeDecodeError:
                     contents = 'Binary'
 
-            return jsonify(
-                {"location": '/record/resource/{0}?view=true'.format(resource_obj.id), 'type': resource_obj.file_type,
-                 'description': resource_obj.file_description, 'file_contents': decode_string(contents)})
+        if landing_page:
+            # Check the Accept header: if it matches the file's mimetype then send the file back instead
+            request_mimetypes = request.accept_mimetypes
+            file_mimetype = get_resource_mimetype(resource_obj, contents)
+
+            if request_mimetypes.quality(file_mimetype) >= 1:
+                # Accept header matches the file type, so download file instead
+                view_mode = True
+                landing_page = False
+            elif should_send_json_ld(request):
+                output_format = 'json_ld'
+            else:
+                if request_mimetypes.quality('text/html') == 0:
+                    # If text/html is not requested, user has probably requested the wrong file type
+                    # so send an appropriate error so they know the correct type
+                    accepted_mimetypes = [file_mimetype, 'text/html'] + JSON_LD_MIMETYPES
+                    accepted_mimetypes_str = ', '.join([f"'{m}'" for m in accepted_mimetypes])
+                    # Send back JSON as client is not expecting HTML
+                    return jsonify({
+                        'msg': f"Accept header value '{request_mimetypes}' does not contain a valid media type for this resource. "
+                               + f"Expected Accept header to include one of {accepted_mimetypes_str}",
+                        'file_mimetype': file_mimetype
+                    }), 406
+
+        if view_mode:
+            return send_file(resource_obj.file_location, as_attachment=True)
+        elif 'html' in resource_obj.file_location and 'http' not in resource_obj.file_location.lower():
+            with open(resource_obj.file_location, 'r') as resource_file:
+                return contents
+        else:
+            if landing_page:
+                try:
+                    ctx = format_resource(resource_obj, contents, request.base_url + '?view=true')
+                except ValueError as e:
+                    log.error(str(e))
+                    return abort(404)
+
+                if output_format == 'json_ld':
+                    status_code = 404 if 'error' in ctx['json_ld'] else 200
+                    return jsonify(ctx['json_ld']), status_code
+                else:
+                    return render_template('hepdata_records/related_record.html', ctx=ctx)
+
+            else:
+                return jsonify(
+                    {"location": '/record/resource/{0}?view=true'.format(resource_obj.id), 'type': resource_obj.file_type,
+                     'description': resource_obj.file_description, 'file_contents': decode_string(contents)})
 
     else:
         log.error("Unable to find resource %d.", resource_id)
@@ -924,7 +994,7 @@ def add_resource(type, identifier, version):
                 except:
                     log.error('Failed to reindex {0}'.format(recid))
 
-                if inspire_id:
+                if inspire_id and type == 'submission' and submission.overall_status == 'finished':
                     return redirect('/record/ins{0}'.format(inspire_id))
                 else:
                     return redirect('/record/{0}'.format(recid))

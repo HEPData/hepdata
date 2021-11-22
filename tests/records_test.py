@@ -25,6 +25,7 @@
 from io import open, StringIO
 import os
 import re
+import requests
 from time import sleep
 import yaml
 import shutil
@@ -41,7 +42,7 @@ import requests_mock
 from hepdata.modules.permissions.models import SubmissionParticipant
 from hepdata.modules.records.api import process_payload, process_zip_archive, \
     move_files, get_all_ids, has_upload_permissions, \
-    has_coordinator_permissions, create_new_version
+    has_coordinator_permissions, create_new_version, get_json_ld, get_resource_mimetype
 from hepdata.modules.records.utils.submission import get_or_create_hepsubmission, process_submission_directory, do_finalise, unload_submission
 from hepdata.modules.records.utils.common import get_record_by_id, get_record_contents
 from hepdata.modules.records.utils.data_processing_utils import generate_table_structure
@@ -50,7 +51,7 @@ from hepdata.modules.records.utils.users import get_coordinators_in_system, has_
 from hepdata.modules.records.utils.workflow import update_record, create_record
 from hepdata.modules.records.views import set_data_review_status
 from hepdata.modules.submission.models import HEPSubmission, DataReview, \
-    DataSubmission
+    DataSubmission, DataResource
 from hepdata.modules.submission.views import process_submission_payload
 from hepdata.modules.submission.api import get_latest_hepsubmission
 from tests.conftest import TEST_EMAIL
@@ -713,3 +714,158 @@ def test_create_new_version(app, load_default_data, identifiers, mocker):
     assert result.json == {
         'message': 'Rec id 1 is not finished so cannot create a new version'
     }
+
+
+def test_get_resource_mimetype(app):
+    # Test a file where python can detect the mimetype
+    resource = DataResource(file_location='a/b/test.zip')
+    assert get_resource_mimetype(resource, 'Binary') == 'application/zip'
+
+    # Test a file for which python cannot detect the mimetype
+    resource = DataResource(file_location='a/b/test.yoda')
+    # First use text content
+    assert get_resource_mimetype(resource, 'some text content') == 'text/plain'
+    # Then binary content
+    assert get_resource_mimetype(resource, 'Binary') == 'application/octet-stream'
+
+
+def test_get_json_ld(app):
+    doi = 'my.test.hepdata.doi'
+    dummy_json = {'a': 1, 'b': 2, 'author': 'A. Nonymous'}
+    # Use requests_mock to mock the response from datacite
+    with requests_mock.Mocker() as m:
+        m.get(f'https://api.test.datacite.org/dois/{doi}', json=dummy_json)
+        data = get_json_ld(doi, 'finished')
+        # Only difference from dummy_json is to copy 'author' to 'creator'
+        assert data == {
+            'a': 1,
+            'b': 2,
+            'author': 'A. Nonymous',
+            'creator': 'A. Nonymous'
+        }
+
+        m.get(f'https://api.test.datacite.org/dois/{doi}', json=dummy_json)
+        data = get_json_ld(doi, 'finished', content_url='https://my.test.hepdata.url')
+        assert data == {
+            'a': 1,
+            'b': 2,
+            'author': 'A. Nonymous',
+            'creator': 'A. Nonymous',
+            'contentUrl': 'https://my.test.hepdata.url'
+        }
+
+        m.get(f'https://api.test.datacite.org/dois/{doi}', json=dummy_json)
+        data = get_json_ld(doi, 'finished', download_table_id=12345)
+        site_url = app.config.get('SITE_URL', 'https://www.hepdata.net')
+        assert data == {
+            'a': 1,
+            'b': 2,
+            'author': 'A. Nonymous',
+            'creator': 'A. Nonymous',
+            'distribution': [
+                {
+                    '@type': 'DataDownload',
+                    'contentUrl': f'{site_url}/download/table/12345/root',
+                    'description': 'ROOT file',
+                    'encodingFormat': 'https://root.cern'
+                },
+                {
+                    '@type': 'DataDownload',
+                    'contentUrl': f'{site_url}/download/table/12345/yaml',
+                    'description': 'YAML file',
+                    'encodingFormat': 'https://yaml.org'
+                },
+                {
+                    '@type': 'DataDownload',
+                    'contentUrl': f'{site_url}/download/table/12345/csv',
+                    'description': 'CSV file',
+                    'encodingFormat': 'text/csv'
+                },
+                {
+                    '@type': 'DataDownload',
+                    'contentUrl': f'{site_url}/download/table/12345/yoda',
+                    'description': 'YODA file',
+                    'encodingFormat': 'https://yoda.hepforge.org'
+                }
+            ]
+        }
+
+        # Add isPartOf and includedInDataCatalog; check parent name and
+        # descriptions are added and URLs added
+        dummy_json['isPartOf'] = {
+            '@id': 'https://doi.org/my.parent.doi',
+            'author': 'B. Nonymous'
+        }
+        dummy_json['includedInDataCatalog'] = { '@id': 'my.parent.doi' }
+        m.get(f'https://api.test.datacite.org/dois/{doi}', json=dummy_json)
+        data = get_json_ld(doi, 'finished', parent_name='My HEPData submission',
+                           parent_description="It's amazing")
+        assert data == {
+            'a': 1,
+            'b': 2,
+            'author': 'A. Nonymous',
+            'creator': 'A. Nonymous',
+            'isPartOf': {
+                '@id': 'https://doi.org/my.parent.doi',
+                '@type': 'Dataset',
+                'author': 'B. Nonymous',
+                'creator': 'B. Nonymous',
+                'name': 'My HEPData submission',
+                'description': "It's amazing",
+                'url': 'https://doi.org/my.parent.doi'
+            },
+            'includedInDataCatalog': {
+                '@id': 'my.parent.doi',
+                'url': 'https://doi.org/my.parent.doi'
+            }
+        }
+
+        # Reset dummy_json and add hasPart with data tables
+        del dummy_json['isPartOf']
+        del dummy_json['includedInDataCatalog']
+        dummy_json['hasPart'] = [
+            {'@id': 'https://doi.org/table1.doi'},
+            {'@id': 'https://doi.org/table2.doi'}
+        ]
+        data_tables = [
+            {
+                'doi': 'table1.doi',
+                'name': 'Table 1',
+                'description': 'Description of Table 1'
+            },
+            {
+                'doi': 'table2.doi',
+                'name': 'Table 2',
+                'description': 'Description of Table 2'
+            }
+        ]
+        m.get(f'https://api.test.datacite.org/dois/{doi}', json=dummy_json)
+        data = get_json_ld(doi, 'finished', data_tables=data_tables, data_abstract="Publication description")
+        assert data == {
+            'a': 1,
+            'b': 2,
+            'author': 'A. Nonymous',
+            'creator': 'A. Nonymous',
+            '@type': 'Dataset',
+            'description': 'Publication description',
+            'hasPart': [
+                {
+                    '@id': 'https://doi.org/table1.doi',
+                    'name': 'Table 1',
+                    'description': 'Description of Table 1'
+                },
+                {
+                    '@id': 'https://doi.org/table2.doi',
+                    'name': 'Table 2',
+                    'description': 'Description of Table 2'
+                }
+            ]
+        }
+
+        # Check a connection error returns JSON with an error
+        m.get(f'https://api.test.datacite.org/dois/{doi}',
+              exc=requests.exceptions.ConnectTimeout)
+        data = get_json_ld(doi, 'finished')
+        assert data == {
+            'error': f'JSON-LD could not be retrieved from https://api.test.datacite.org/dois/{doi}'
+        }

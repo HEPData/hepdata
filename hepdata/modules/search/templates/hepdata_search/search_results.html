@@ -49,6 +49,16 @@
                    data-target="#searchHelpWidget">Advanced</a>
 
             </form>
+
+            <div class="pull-right">
+              <a href="{{ ctx.modify_query('.search', format='json') }}"
+                 id="jsonLabel" type="button"
+                 class="btn btn-sm btn-default"
+                 aria-haspopup="true" aria-expanded="false"
+                 title="Get search results in JSON format">
+                  JSON
+              </a>
+            </div>
         </div>
 
         <div class="search-results container-fluid">

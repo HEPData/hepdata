@@ -26,8 +26,10 @@
 import os
 from collections import OrderedDict
 from functools import wraps
-
+import mimetypes
+import requests
 import time
+
 from celery import shared_task
 from flask import redirect, request, render_template, jsonify, current_app, Response, abort, flash
 from flask_login import current_user
@@ -44,7 +46,7 @@ from hepdata.modules.permissions.api import user_allowed_to_perform_action
 from hepdata.modules.permissions.models import SubmissionParticipant
 from hepdata.modules.records.subscribers.api import is_current_user_subscribed_to_record
 from hepdata.modules.records.utils.common import decode_string, find_file_in_directory, allowed_file, \
-    remove_file_extension, truncate_string, get_record_contents, get_record_by_id
+    remove_file_extension, truncate_string, get_record_contents, get_record_by_id, IMAGE_TYPES
 from hepdata.modules.records.utils.data_processing_utils import process_ctx
 from hepdata.modules.records.utils.data_files import get_data_path_for_record, cleanup_old_files
 from hepdata.modules.records.utils.submission import process_submission_directory, \
@@ -74,6 +76,10 @@ RECORD_PLAIN_TEXT = {
     "todo": "to be reviewed"
 }
 
+JSON_LD_MIMETYPES = [
+    'application/ld+json',
+    'application/vnd.hepdata.ld+json'
+]
 
 def returns_json(f):
     @wraps(f)
@@ -140,7 +146,7 @@ def format_submission(recid, record, version, version_count, hepdata_submission,
         ctx['record']['last_updated'] = hepdata_submission.last_updated
         ctx['record']['hepdata_doi'] = "{0}".format(hepdata_submission.doi)
 
-        if ctx['version'] > 1:
+        if version_count > 1:
             ctx['record']['hepdata_doi'] += ".v{0}".format(ctx['version'])
 
         ctx['recid'] = recid
@@ -158,6 +164,14 @@ def format_submission(recid, record, version, version_count, hepdata_submission,
                 ctx["version_count"] -= 1
 
         ctx['additional_resources'] = submission_has_resources(hepdata_submission)
+        ctx['resources_with_doi'] = []
+        for resource in hepdata_submission.resources:
+            if resource.doi:
+                ctx['resources_with_doi'].append({
+                    'filename': os.path.basename(resource.file_location),
+                    'description': resource.file_description,
+                    'doi': resource.doi
+                })
 
         # query for a related data submission
         data_record_query = DataSubmission.query.filter_by(
@@ -211,6 +225,185 @@ def format_tables(ctx, data_record_query, data_table, recid):
                 # Set table ID and name to the first matching table.
                 ctx['table_id_to_show'] = matching_tables[0]['id']
                 ctx['table_name_to_show'] = matching_tables[0]['name']
+
+
+def format_resource(resource, contents, content_url):
+    """
+    Gets info about a resource ready to be displayed on the resource's
+    landing page
+
+    :param resource: DataResource object to be displayed
+    :param contents: Resource file contents
+
+    :return: context dictionary ready for the template
+    """
+    # Ensure context for publication/submission is complete (cf data table, check it works for sandbox)
+    # Consider whether landing page should work for resources relating to data tables
+
+    hepsubmission = HEPSubmission.query.filter(HEPSubmission.resources.any(id=resource.id)).first()
+    if not hepsubmission:
+        datasubmission = DataSubmission.query.filter(DataSubmission.resources.any(id=resource.id)).first()
+        if datasubmission:
+            hepsubmission = HEPSubmission.query.filter_by(
+                publication_recid=datasubmission.publication_recid,
+                version=datasubmission.version
+            ).first()
+        if not hepsubmission:
+            # Look for DataSubmission mapping to this resource
+            raise ValueError("Unable to find publication for resource %d. (Is it a data file?)", resource.id)
+
+    record = get_record_by_id(hepsubmission.publication_recid)
+    ctx = format_submission(hepsubmission.publication_recid, record,
+                            hepsubmission.version, 1, hepsubmission)
+    ctx['is_resource'] = True
+    ctx['resource'] = resource
+    ctx['contents'] = contents
+    ctx['resource_url'] = request.url
+    ctx['related_publication_id'] = hepsubmission.publication_recid
+    ctx['json_ld'] = get_json_ld(
+        resource.doi,
+        hepsubmission.overall_status,
+        content_url=request.base_url + '?view=true',
+        parent_name=ctx['record']['title'],
+        parent_description=(ctx['record'].get('data_abstract') or ctx['record'].get('abstract'))
+    )
+    ctx['file_mimetype'] = get_resource_mimetype(resource, contents)
+    ctx['resource_filename'] = os.path.basename(resource.file_location)
+    ctx['resource_filetype'] = f'{resource.file_type} File'
+
+    if resource.file_type in IMAGE_TYPES:
+        ctx['display_type'] = 'image'
+    elif resource.file_location.lower().startswith('http'):
+        ctx['display_type'] = 'link'
+        ctx['resource_filename'] = 'External Link'
+        ctx['resource_filetype'] = 'External Link'
+    elif contents == 'Binary':
+        ctx['display_type'] = 'binary'
+    else:
+        ctx['display_type'] = 'code'
+
+    return ctx
+
+
+def get_resource_mimetype(resource, contents):
+    file_mimetype = mimetypes.guess_type(resource.file_location)[0]
+    if file_mimetype is None:
+        if contents == 'Binary':
+            file_mimetype = 'application/octet-stream'
+        else:
+            file_mimetype = 'text/plain'
+    return file_mimetype
+
+
+def get_json_ld(doi, submission_status, content_url=None, download_table_id=None,
+                parent_name=None, parent_description=None, data_tables=None,
+                data_abstract=None):
+    """Get the JSON-LD metadata from DataCite for this DOI, amending as necessary.
+
+    :param type doi: DOI for which to get metadata
+    :param type submission_status: overall status of submission to which this DOI relates
+    :param type content_url: if set, adds URL as `contentUrl`
+    :param type download_table_id: if set, adds download links for this table as `distribution`/`DataDownload`
+    :return: JSON-LD as python dict
+    :rtype: dict, or None if DOI is not registered or metadata cannot be retrieved
+    """
+    headers = {}
+    if not doi or submission_status != 'finished':
+        return {
+            'error': 'JSON-LD is unavailable for this record; JSON-LD is only available for finalised records with DOIs.'
+        }
+
+    if current_app.config.get('E2E_TESTING'):
+        # If E2E_TESTING=True, use dummy JSON
+        data = {
+            '@context': 'http://schema.org',
+            '@type': 'Thing',
+            'name': 'Test Metadata'
+        }
+    else:
+        if current_app.config.get('ENV') == 'development' or current_app.config.get('TESTING'):
+            # If working in dev mode, try to get json-ld from api.test.datacite.org
+            url = f"https://api.test.datacite.org/dois/{doi}"
+            headers['Accept'] = "application/vnd.schemaorg.ld+json"
+        else:
+            url = f"https://data.crosscite.org/application/vnd.schemaorg.ld+json/{doi}"
+
+        try:
+            r = requests.get(url, headers=headers)
+            r.raise_for_status()
+            data = r.json()
+        except Exception as e:
+            log.error(e)
+            return {
+                'error': f'JSON-LD could not be retrieved from {url}'
+            }
+
+    if 'author' in data and 'creator' not in data:
+        data['creator'] = data['author']
+
+    if content_url:
+        data['contentUrl'] = content_url
+
+    if download_table_id:
+        data_downloads = []
+        download_types = {
+            'root': 'https://root.cern',
+            'yaml': 'https://yaml.org',
+            'csv': 'text/csv',
+            'yoda': 'https://yoda.hepforge.org'
+        }
+        site_url = current_app.config.get('SITE_URL', 'https://www.hepdata.net')
+        for download_type, format in download_types.items():
+            data_downloads.append({
+              "@type": "DataDownload",
+              "contentUrl": f"{site_url}/download/table/{download_table_id}/{download_type}",
+              "description": download_type.upper() + " file",
+              "encodingFormat": format
+            })
+            data['distribution'] = data_downloads
+
+    # Google demands that the data catalog has a url or name
+    if 'includedInDataCatalog' in data and '@id' in data['includedInDataCatalog']:
+        data['includedInDataCatalog']['url'] = f"https://doi.org/{data['includedInDataCatalog']['@id']}"
+
+    # Google wants isPartOf to be a dataset not a collection
+    if 'isPartOf' in data:
+        data['isPartOf']['@type'] = 'Dataset'
+        if parent_name:
+            data['isPartOf']['name'] = parent_name
+        if parent_description:
+            data['isPartOf']['description'] = parent_description
+        if '@id' in data['isPartOf']:
+            data['isPartOf']['url'] = data['isPartOf']['@id']
+        if 'author' in data['isPartOf'] and 'creator' not in data['isPartOf']:
+            data['isPartOf']['creator'] = data['isPartOf']['author']
+
+    if data_tables and 'hasPart' in data:
+        # Submission container. Mark it as Dataset for Google, and add table details
+        data['@type'] = 'Dataset'
+        data_table_dict = { data_table['doi']: data_table for data_table in data_tables}
+        for data_table_json in data['hasPart']:
+            doi = data_table_json['@id'].replace('https://doi.org/', '')
+            if doi in data_table_dict:
+                data_table_json['name'] = data_table_dict[doi]['name']
+                data_table_json['description'] = data_table_dict[doi]['description']
+
+    if data_abstract and 'description' not in data:
+        data['description'] = data_abstract
+
+    return data
+
+
+def should_send_json_ld(request):
+    """Determine whether to send json-ld instead of HTML for this request
+
+    :param type request: flask.Request object
+    :return: True if request accepts JSON-LD; False otherwise
+    :rtype: bool
+
+    """
+    # Determine whether to send json-ld
+    return any([request.accept_mimetypes.quality(m) >= 1 for m in JSON_LD_MIMETYPES])
 
 
 def get_commit_message(ctx, recid):
@@ -287,6 +480,8 @@ def render_record(recid, record, version, output_format, light_mode=False):
             redirect_url_after_login = '%2Frecord%2F{0}%3Fversion%3D{1}%26format%3D{2}'.format(recid, version, output_format)
             if 'table' in request.args:
                 redirect_url_after_login += '%26table%3D{0}'.format(request.args['table'])
+            if output_format == 'yoda' and 'rivet' in request.args:
+                redirect_url_after_login += '%26rivet%3D{0}'.format(request.args['rivet'])
             return redirect('/login/?next={0}'.format(redirect_url_after_login))
         else:
             abort(403)
@@ -303,8 +498,21 @@ def render_record(recid, record, version, output_format, light_mode=False):
             ctx = format_submission(recid, record, version, version_count, hepdata_submission)
             increment(recid)
 
-            if output_format == 'html':
-                return render_template('hepdata_records/publication_record.html', ctx=ctx)
+            if output_format == 'html' or output_format == 'json_ld':
+                ctx['json_ld'] = get_json_ld(
+                    record.get('hepdata_doi'),
+                    hepdata_submission.overall_status,
+                    data_tables=ctx['data_tables'],
+                    data_abstract=(ctx['record'].get('data_abstract') or ctx['record'].get('abstract'))
+                )
+
+                if output_format == 'json_ld':
+                    status_code = 404 if 'error' in ctx['json_ld'] else 200
+                    return jsonify(ctx['json_ld']), status_code
+
+                if output_format == 'html':
+                    return render_template('hepdata_records/publication_record.html', ctx=ctx)
+
             elif 'table' not in request.args:
                 if output_format == 'json':
                     ctx = process_ctx(ctx, light_mode)
@@ -341,8 +549,21 @@ def render_record(recid, record, version, output_format, light_mode=False):
             ctx['related_publication_id'] = publication_recid
             ctx['table_name'] = record['title']
 
-            if output_format == 'html':
-                return render_template('hepdata_records/data_record.html', ctx=ctx)
+            if output_format == 'html' or output_format == 'json_ld':
+                ctx['json_ld'] = get_json_ld(
+                    record.get('doi'),
+                    hepdata_submission.overall_status,
+                    download_table_id=ctx['table_id_to_show'],
+                    parent_name=publication_record.get('title'),
+                    parent_description=publication_record.get('data_abstract')
+                )
+
+                if output_format == 'json_ld':
+                    status_code = 404 if 'error' in ctx['json_ld'] else 200
+                    return jsonify(ctx['json_ld']), status_code
+
+                return render_template('hepdata_records/related_record.html', ctx=ctx)
+
             elif output_format == 'yoda' and 'rivet' in request.args:
                 return redirect('/download/table/{0}/{1}/{2}/{3}/{4}'.format(
                     publication_recid, ctx['table_name'].replace('%', '%25').replace('\\', '%5C'), hepdata_submission.version, output_format,

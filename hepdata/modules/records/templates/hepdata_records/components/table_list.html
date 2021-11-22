@@ -101,11 +101,11 @@
     <ul id="table-list" class="scrollable">
         {% for table in ctx.data_tables %}
 
-            <li id="{{ table.id }}" itemprop="dataset" itemscope itemtype="http://schema.org/Dataset"
+            <li id="{{ table.id }}"
                 class="{{ table.processed_name }} {% if loop.index == 1 %}active{% endif %}"
                 onclick="HEPDATA.switch_table('#table-list', '{{ table.id }}', '{{ table.name | replace("\\","\\\\") }}', '{{ ctx.status }}')">
                 <div class="content">
-                    <h4 itemprop="name">{{ table.name }}</h4>
+                    <h4>{{ table.name }}</h4>
 
                     {% if table.location %}
                         <p>{{ table.location }}</p>
@@ -115,15 +115,8 @@
                     {% endif %}
 
                     {% if table.description != '.' %}
-                        <p itemprop="description">{{ table.description|safe }}</p>
+                        <p>{{ table.description|safe }}</p>
                     {% endif %}
-                    <span class="hidden" itemscope itemprop="distribution"
-                          itemtype="http://schema.org/DataDownload"><span
-                            itemprop="contentUrl">{{ ctx.site_url }}/record/data/{{ table.id }}</span><span
-                            itemprop="encodingFormat">yaml</span></span>
-                <span class="hidden" itemscope itemprop="distribution" itemtype="http://schema.org/DataDownload"><span
-                        itemprop="contentUrl">{{ ctx.site_url }}/record/data/{{ table.id }}/csv</span><span
-                        itemprop="encodingFormat">csv</span></span>
 
                     {% if ctx.mode != 'sandbox' %}
                         {% if ctx.show_review_widget or ctx.show_upload_widget or ctx.submission_coordinator_or_admin %}

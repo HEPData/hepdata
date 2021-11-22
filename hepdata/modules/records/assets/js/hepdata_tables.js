@@ -2,9 +2,7 @@
  * Created by eamonnmaguire on 16/03/2016.
  */
 import $ from 'jquery'
-import ClipboardJS from 'clipboard'
 import d3 from 'd3'
-import toastr from 'toastr'
 import HEPDATA from './hepdata_common.js'
 import './hepdata_reviews.js'
 
@@ -30,28 +28,19 @@ HEPDATA.switch_table = function (listId, table_requested, table_name, status) {
   var encoded_name = encodeURIComponent(table_name);
 
   var _recid = HEPDATA.current_inspire_id && status == 'finished' ? 'ins' + HEPDATA.current_inspire_id : HEPDATA.current_record_id;
-  var direct_link = HEPDATA.site_url + '/record/' + _recid
-    + '?version=' + HEPDATA.current_table_version + "&table=" + encoded_name;
+
+  var direct_link;
+  if (status == 'sandbox') {
+    direct_link = HEPDATA.site_url + '/record/sandbox/' + _recid
+      + '?table=' + encoded_name;
+  } else {
+    direct_link = HEPDATA.site_url + '/record/' + _recid
+      + '?version=' + HEPDATA.current_table_version + "&table=" + encoded_name;
+  }
 
   $("#direct_data_link").val(direct_link);
   $(".copy-btn").attr('data-clipboard-text', direct_link);
-  if (HEPDATA.clipboard == undefined) {
-    HEPDATA.clipboard = new ClipboardJS('.copy-btn');
-    toastr.options.timeOut = 3000;
-
-    HEPDATA.clipboard.on('success', function (e) {
-      toastr.success($(".copy-btn").attr('data-clipboard-text') + ' copied to clipboard.')
-    });
-
-    HEPDATA.clipboard.on('error', function (e) {
-      if (navigator.userAgent.indexOf("Safari") > -1) {
-        toastr.success('Press &#8984; + C to finalise copy');
-      } else {
-        toastr.error('There was a problem copying the link.');
-      }
-    })
-  }
-
+  HEPDATA.setup_clipboard();
 
   $("#hepdata_table_loading").removeClass("hidden");
   $("#hepdata_table_loading_failed").addClass("hidden");

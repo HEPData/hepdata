@@ -1,4 +1,5 @@
 import logging
+import os
 from unittest.mock import call
 
 from datacite.errors import DataCiteUnauthorizedError, DataCiteError
@@ -9,13 +10,16 @@ from invenio_pidstore.errors import PIDInvalidAction, PIDDoesNotExistError
 import lxml
 import pytest
 
+from hepdata.modules.records.importer.api import import_records
 from hepdata.modules.records.utils.common import get_record_by_id
 from hepdata.modules.records.utils.doi_minter import create_doi, register_doi, \
     generate_doi_for_table, generate_dois_for_submission, \
-    reserve_dois_for_data_submissions, reserve_doi_for_hepsubmission
+    reserve_dois_for_data_submissions, reserve_doi_for_hepsubmission, \
+    _get_submission_file_resources
 from hepdata.modules.records.utils.submission import get_or_create_hepsubmission
 from hepdata.modules.records.utils.workflow import create_record
-from hepdata.modules.submission.models import DataSubmission
+from hepdata.modules.submission.models import DataSubmission, HEPSubmission, \
+    License, DataResource
 
 
 @pytest.fixture()
@@ -190,7 +194,7 @@ def test_generate_doi_for_table(mock_data_cite_provider, identifiers, capsys):
     mock_data_cite_provider.get.assert_called_with(doi, 'doi')
     mock_data_cite_provider.get().register.assert_called()
     assert mock_data_cite_provider.get().register.call_args[0][0] == \
-        'http://localhost:5000/record/ins1283842?version=1&table=Table 1'
+        'http://localhost:5000/record/2'
     assert '<creatorName nameType="Organizational">D0 Collaboration</creatorName>' in \
         mock_data_cite_provider.get().register.call_args[0][1]
 
@@ -248,11 +252,43 @@ def test_generate_dois_for_submission(mock_data_cite_provider, identifiers):
     for i in range(identifiers[1]['data_tables']):
         assert call(f'10.17182/hepdata.16.v1/t{i+1}', 'doi') in get_call_args
 
+    # Import a submission with resources and check we also create resource DOIs
+    import_records(['ins1748602'], synchronous=True)
+    hep_submission = get_or_create_hepsubmission(57)
+
+    # Reset dois so we can check generate_dois...
+    hep_submission.doi = None
+    db.session.add(hep_submission)
+
+    for data_submission in DataSubmission.query.filter_by(
+            publication_inspire_id=hep_submission.inspire_id,
+            version=hep_submission.version).all():
+        data_submission.doi = None
+        db.session.add(data_submission)
+
+    for resource in _get_submission_file_resources(
+            hep_submission.publication_recid, hep_submission.version,
+            hep_submission):
+        resource.doi = None
+        db.session.add(resource)
+
+    db.session.commit()
+
+    mock_data_cite_provider.reset_mock()
+    generate_dois_for_submission(57, 57)
+    get_call_args = mock_data_cite_provider.get.call_args_list
+    assert call('10.17182/hepdata.57', 'doi') in get_call_args
+    assert call('10.17182/hepdata.57.v1', 'doi') in get_call_args
+    for i in range(48):
+        assert call(f'10.17182/hepdata.57.v1/t{i+1}', 'doi') in get_call_args
+    for i in range(3):
+        assert call(f'10.17182/hepdata.57.v1/r{i+1}', 'doi') in get_call_args
+
     # Check no calls are made if we try to register DOI for unfinished submission
     mock_data_cite_provider.reset_mock()
     record_information = create_record({})
     recid = record_information['recid']
-    assert recid == 57
+    assert recid == 106
     hep_submission = get_or_create_hepsubmission(recid)
     generate_dois_for_submission(recid, recid)
     mock_data_cite_provider.assert_not_called()
@@ -275,9 +311,9 @@ def test_generate_dois_for_submission(mock_data_cite_provider, identifiers):
     # Generate DOIs again - should work and call `create` for record, v1, table
     generate_dois_for_submission(recid, recid)
     mock_data_cite_provider.create.assert_has_calls([
-        call('10.17182/hepdata.57'),
-        call('10.17182/hepdata.57.v1'),
-        call('10.17182/hepdata.57.v1/t1')
+        call('10.17182/hepdata.106'),
+        call('10.17182/hepdata.106.v1'),
+        call('10.17182/hepdata.106.v1/t1')
     ])
     # Should also have same number of get and register calls
     assert mock_data_cite_provider.get.call_count == 3
@@ -295,7 +331,7 @@ def test_xml_validates(app, identifiers):
     site_url = app.config.get('SITE_URL', 'https://www.hepdata.net')
 
     # Load schema
-    datacite_schema = schema = lxml.etree.XMLSchema(file = 'http://schema.datacite.org/meta/kernel-4.4/metadata.xsd')
+    datacite_schema = lxml.etree.XMLSchema(file = 'http://schema.datacite.org/meta/kernel-4.4/metadata.xsd')
 
     base_xml = render_template('hepdata_records/formats/datacite/datacite_container_submission.xml',
                                doi=hep_submission.doi,
@@ -322,8 +358,57 @@ def test_xml_validates(app, identifiers):
                                    table_description=data_submission.description,
                                    overall_submission=hep_submission,
                                    data_submission=data_submission,
-                                   license=license,
                                    publication_info=publication_info,
                                    site_url=site_url)
         data_doc = lxml.etree.fromstring(data_xml)
         datacite_schema.assertValid(data_doc)
+
+    # Import a record with a resource file
+    import_records(['ins1748602'], synchronous=True)
+    hep_submission = HEPSubmission.query.filter_by(
+        inspire_id='1748602'
+    ).first()
+    publication_info = get_record_by_id(hep_submission.publication_recid)
+
+    for i, resource in enumerate(hep_submission.resources):
+        license = None
+        if resource.file_license:
+            license = License.query.filter_by(id=resource.file_license).first()
+
+        resource_xml = render_template(
+            'hepdata_records/formats/datacite/datacite_resource.xml',
+            resource=resource,
+            doi=resource.doi,
+            overall_submission=hep_submission,
+            filename=os.path.basename(resource.file_location),
+            license=license,
+            publication_info=publication_info,
+            site_url=site_url)
+
+        print(resource_xml)
+
+        doc = lxml.etree.fromstring(resource_xml)
+        datacite_schema.assertValid(doc)
+
+
+def test_get_submission_file_resources(app, identifiers):
+    # Create data resources with random unordered ids, so they should be out
+    # of order when fetched from the DB
+    hep_submission = get_or_create_hepsubmission(1)
+    for i in [1043, 1001, 1062, 1013, 1002]:
+        resource = DataResource(id=i)
+        if i == 1013: # Set one resource as remote so it won't be given a DOI
+            resource.file_location = "https://github.com/hepdata"
+        else:
+            resource.file_location = "/a/b/c/d.txt"
+        hep_submission.resources.append(resource)
+
+    db.session.add(hep_submission)
+    db.session.commit()
+
+    file_resources = _get_submission_file_resources(hep_submission.publication_recid, 1)
+    assert len(file_resources) == 4
+    assert file_resources[0].id == 1001
+    assert file_resources[1].id == 1002
+    assert file_resources[2].id == 1043
+    assert file_resources[3].id == 1062

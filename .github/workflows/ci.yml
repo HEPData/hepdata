@@ -31,7 +31,7 @@ on:
   release:
     types: [ published ]
   schedule:
-    - cron:  '35 2 * * *'
+    - cron:  '35 1 * * *'
 
 
 concurrency:

@@ -23,7 +23,8 @@
 {%- extends "hepdata_theme/page.html" %}
 
 {%- block additional_assets %}
-    {{ webpack['hepdata-record.css'] }}
+    {{ webpack['hepdata-record.css'] }}    
+    {{ webpack['toastr.css'] }}
 {%- endblock additional_assets %}
 
 {%- set messages = get_flashed_messages(with_categories=true) -%}
@@ -40,30 +41,13 @@
                     </a>
 
                     {% if ctx.data_tables|length != 0 %}
-                        <li class="pull-right">
+                        <li class="pull-right" style="padding:6px;">
 
-                            <div class="dropdown"
-                                 style="float: right; margin-left: 15px; margin-top: -4px;">
-                                <button id="dLabel" type="button"
-                                        class="btn btn-sm btn-primary"
-                                        data-toggle="dropdown" aria-haspopup="true"
-                                        aria-expanded="false">
-                                    Download Submission as
-                                    <span class="caret"></span>
-                                </button>
-                                {% set download_base_url = "/download/submission/" + ctx.recid|string + "/" + ctx.version|string %}
-                                <ul class="dropdown-menu" aria-labelledby="dLabel"
-                                    style="height: auto;">
-                                    <li><a href="{{ download_base_url }}/yaml"
-                                           id="download_yaml">YAML</a></li>
-                                    <li><a href="{{ download_base_url }}/yoda"
-                                           id="download_yoda">YODA</a></li>
-                                    <li><a href="{{ download_base_url }}/root"
-                                           id="download_root">ROOT</a></li>
-                                    <li><a href="{{ download_base_url }}/csv"
-                                           id="download_csv">CSV</a></li>
-                                </ul>
-                            </div>
+                            <a href="?format=json" id="jsonLabel" type="button"
+                               class="btn btn-sm btn-default"
+                               aria-haspopup="true" aria-expanded="false">
+                                JSON
+                            </a>
 
                         </li>
                     {% endif %}
@@ -181,8 +165,6 @@
                 class="fa fa-chevron-right"></span></span>
 
                     <div>
-                <span itemprop="url"
-                      class="hidden">{{ ctx.site_url }}/record/sandbox/{{ ctx.recid }}</span>
                         <br/>
 
                         <div class="record-links">
@@ -196,23 +178,11 @@
                                 {% endif %}
                             </ul>
                         </div>
-                        {% if ctx.record.publication_info %}
-                            <div class="publication-details">
-                        <span itemprop="publisher" itemscope
-                              typeof="http://schema.org/Organization"><span
-                                itemprop="name">{{ ctx.record.publication_info.journal_title }}</span> </span>,
-                                Volume {{ ctx.record.publication_info.journal_volume }},
-                                pages
-                                <span itemprop="pagination">{{ ctx.record.publication_info.page_artid }}</span>, <span
-                                    itemprop="copyrightYear"
-                                    typeof="http://schema.org/Number">{{ ctx.record.publication_info.year }}</span>
-                            </div>
-                        {% endif %}
                     </div>
 
                     <div class="clearfix"></div>
 
-                    <div class="record-abstract" itemprop="description">
+                    <div class="record-abstract">
                         <strong>Abstract {% if ctx.record.data_abstract %}(data
                             abstract){% endif %}</strong><br/>
 

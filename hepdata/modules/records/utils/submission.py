@@ -52,7 +52,7 @@ from hepdata.modules.records.utils.data_files import get_data_path_for_record, \
     cleanup_old_files, delete_all_files, delete_packaged_file, \
     find_submission_data_file_path
 from hepdata.modules.records.utils.doi_minter import reserve_dois_for_data_submissions, reserve_doi_for_hepsubmission, \
-    generate_dois_for_submission
+    generate_dois_for_submission, reserve_dois_for_resources
 from hepdata.modules.records.utils.validators import get_full_submission_validator
 from hepdata.utils.twitter import tweet
 from invenio_db import db
@@ -502,6 +502,7 @@ def process_submission_directory(basepath, submission_file_path, recid,
 
             if len(errors) == 0:
                 reserve_dois_for_data_submissions(publication_recid=recid, version=hepsubmission.version)
+                reserve_dois_for_resources(publication_recid=recid, version=hepsubmission.version)
 
                 admin_indexer = AdminIndexer()
                 admin_indexer.index_submission(hepsubmission)

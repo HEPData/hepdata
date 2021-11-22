@@ -1,0 +1,55 @@
+<div id="hepdata_table_detail" class="scrollable {{ resource_details_class }}">
+  <div class="hepdata_table_detail_header">
+    <div>
+      <h4>
+        <div class="pull-left" style="padding-top: 7px;">
+          {{ ctx.resource_filename }}
+        </div>
+        {% if ctx.resource.doi %}
+            <div id="resource_doi" style="padding-top: 7px;" class="pull-left">
+              <div id="resource_doi_contents"><a href="https://doi.org/{{ ctx.resource.doi }}">{{ ctx.resource.doi }}</a></div>
+            </div>
+        {% endif %}
+
+
+        <a href="/record/resource/{{ ctx.resource.id }}" class="pull-right btn btn-link btn-sm" id="json_link">JSON</a>
+
+         {% if ctx.mode != 'sandbox' %}
+            <div class="pull-right" id="data_link_container">
+                <input id="direct_data_link" value="{{ ctx.resource_url }}" disabled>
+                <button class="btn btn-small copy-btn" data-clipboard-text="{{ ctx.resource_url }}">
+                    <i class="fa fa-copy" alt="Copy to clipboard"></i>
+                </button>
+            </div>
+        {% endif %}
+
+        <span class="pull-right" id="support-files" style="margin-right: 20px; margin-top:1px"></span>
+      </h4>
+    </div>
+    <div class="clearfix"></div>
+  </div>
+
+  <div class="resource-details">
+      <p>{{ctx.resource.file_description}}</p>
+
+      {% if ctx.display_type == 'image' %}
+        <div><img src="{{ctx.content_url}}"></div>
+      {% elif ctx.display_type == 'link' %}
+        <p><a href="{{ ctx.resource.file_location }}">{{ ctx.resource.file_location }}</a></p>
+      {% elif ctx.display_type == 'code' %}
+        <textarea id="code-contents" height="70%">{{ ctx.contents }}</textarea>
+      {% endif %}
+
+      {% if ctx.resource.doi and ctx.file_mimetype %}
+          <p>
+            Download via DOI:
+            <code>curl -OJLH "Accept: {{ ctx.file_mimetype }}" https://doi.org/{{ ctx.resource.doi }}</code>
+          </div>
+      {% endif %}
+
+      {% if ctx.display_type != 'link' %}
+        <p><a target="_new" class="btn btn-primary" href="{{ctx.content_url}}"><i class="fa fa-download"></i> Download</a></p>
+      {% endif %}
+  </div>
+
+</div>

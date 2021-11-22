@@ -26,6 +26,13 @@
     HEPData | {{ ctx.record.title }}
 {% endblock %}
 
+{%- block json_ld %}
+   {% if ctx.json_ld  and 'error' not in ctx.json_ld %}
+       <script type="application/ld+json">
+         {{ ctx.json_ld|tojson }}
+       </script>
+   {% endif %}
+{%- endblock json_ld %}
 
 {%- block additional_assets %}
 
@@ -38,7 +45,7 @@
 
 
 {% block page_body %}
-    <div itemtype="http://schema.org/DataCatalog" itemscope>
+    <div>
     <div class="container-fluid">
         <div class="hep_breadcrumbs row">
             <div class="col-md-12 no-padding">
@@ -49,14 +56,14 @@
                         </li>
                     </a>
 
-                    <a href="/record/ins{{ ctx.record.inspire_id }}">
+                    <a href="/record/{% if ctx.record.inspire_id %}ins{{ ctx.record.inspire_id }}{% else %}{% if ctx.status == 'sandbox' %}sandbox/{% endif %}{{ ctx.related_publication_id }}{% endif %}">
                         <li class="active bg-purple-2"><span
                                 class="fa fa-list"></span> View all Publication
                             Data
                         </li>
                     </a>
 
-                    <li><span class="fa fa-book"></span> {{ ctx.table_name }}
+                    <li><span class="fa fa-book"></span> {{ ctx.resource_filetype or ctx.table_name }}
                         from {{ ctx.breadcrumb_text }}
                         {% if ctx.record.accelerator_experiment %},
                             conducted on the
@@ -85,11 +92,9 @@
                   style="left: -40px"><span class="fa fa-chevron-right"></span></span>
 
                 <div>
-                    <div class="record-title" itemprop="name">
+                    <div class="record-title">
                         {{ ctx.record.title }}
                     </div>
-                <span itemprop="url"
-                      class="hidden">{{ ctx.site_url }}/record/{{ ctx.record.recid }}</span>
 
                     <br/>
                     {% if ctx.record.collaborations %}
@@ -107,13 +112,8 @@
 
                     <div class="record-authors">
                         {% for author in ctx.record.summary_authors %}
-                            <a href="/search?author={{ author.full_name }}"
-                               itemprop="author" itemscope
-                               itemtype="http://schema.org/Person">{{ author.full_name }} <span
-                                    itemprop="affiliation"
-                                    itemtype="http://schema.org/Organization"
-                                    itemscope class="hidden"><span
-                                    itemprop="name">{{ author.affiliation }}</span></span>
+                            <a href="/search?author={{ author.full_name }}">
+                              {{ author.full_name }}
                             </a>{% if loop.index < ctx.record.summary_authors|length %},
                         {% endif %}
                         {% endfor %}
@@ -130,20 +130,15 @@
                             {% if ctx.record.doi %}
                                 <li>
                                     <a href="https://doi.org/{{ ctx.record.doi }}"
-                                       target="_blank"><span class="link"><span class="link-value">Journal<span class="hidden"
-                                                      itemprop="citation">https://doi.org/{{ ctx.record.doi }}</span></span>
+                                       target="_blank"><span class="link"><span class="link-value">Journal</span>
                                 </span></a>
                                 </li>
                             {% endif %}
                             {% if ctx.record.inspire_id %}
                               <li>
                                 <a href="https://inspirehep.net/literature/{{ ctx.record.inspire_id }}"
-                                   itemprop="citation" itemscope
-                                   itemtype="http://schema.org/CreativeWork"
                                    target="_blank"><span
-                                        class="link"><span class="link-type">INSPIRE</span></span><span
-                                        class="hidden"
-                                        itemprop="url">https://inspirehep.net/literature/{{ ctx.record.inspire_id }}</span>
+                                        class="link"><span class="link-type">INSPIRE</span></span>
                                 </a>
                               </li>
                             {% endif %}
@@ -164,23 +159,11 @@
                           {% endfor %}
                         </ul>
                     </div>
-                    {% if ctx.record.publication_info %}
-                        <div class="publication-details">
-                        <span itemprop="publisher" itemscope
-                              typeof="http://schema.org/Organization"><span
-                                itemprop="name">{{ ctx.record.publication_info.journal_title }}</span> </span>,
-                            Volume {{ ctx.record.publication_info.journal_volume }},
-                            pages
-                            <span itemprop="pagination">{{ ctx.record.publication_info.page_artid }}</span>,
-                        <span itemprop="copyrightYear"
-                              typeof="http://schema.org/Number">{{ ctx.record.publication_info.year }}</span>
-                        </div>
-                    {% endif %}
                 </div>
 
                 <div class="clearfix"></div>
 
-                <div class="record-abstract" itemprop="description">
+                <div class="record-abstract">
                     <strong>Abstract  {% if ctx.record.data_abstract %}(data
                         abstract){% endif %}</strong><br/>
 
@@ -215,19 +198,23 @@
 
 
             <!--if there is data, we show it. If not, we show the upload screen if the logged in user is an uploader-->
-
-            {% if ctx.data_tables|length == 0 %}
-
-                <div id="hepdata_table_detail" align="center">
-                    <div id="hepdata-loading"
-                         style="width: 200px; height: 200px; margin: 0 auto; margin-top: 5em"></div>
-                    <h4 style="color: #894B9D">No data has been uploaded
-                        for this submission.</h4>
-                </div>
+            {% if ctx.is_resource %}
+              {% set resource_details_class="col-lg-9 col-md-9" %}
+              {% include 'hepdata_records/components/resource_details.html' %}
             {% else %}
-                {% set table_details_class="col-lg-9 col-md-9" %}
-                {% include 'hepdata_records/components/table_details.html' %}
+                {% if ctx.data_tables|length == 0 %}
 
+                    <div id="hepdata_table_detail" align="center">
+                        <div id="hepdata-loading"
+                             style="width: 200px; height: 200px; margin: 0 auto; margin-top: 5em"></div>
+                        <h4 style="color: #894B9D">No data has been uploaded
+                            for this submission.</h4>
+                    </div>
+                {% else %}
+                    {% set table_details_class="col-lg-9 col-md-9" %}
+                    {% include 'hepdata_records/components/table_details.html' %}
+
+                {% endif %}
             {% endif %}
 
         </div>

@@ -4,6 +4,37 @@
 {%- set body_css_classes=['home-page'] %}
 {%- set messages = get_flashed_messages(with_categories=true) -%}
 
+{%- block json_ld %}
+<script type="application/ld+json">
+  {
+    "@context": "http://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "name": "HEPData",
+        "url": "https://hepdata.net",
+        "logo": "{{ url_for('static', filename='img/hepdata_logo.svg', _external=True) }}"
+      },
+      {
+        "@type": "WebSite",
+        "name": "HEPData",
+        "@id": "https://hepdata.net",
+        "url": "https://hepdata.net",
+        "description": "The Durham High-Energy Physics Database (HEPData) has been built up over the past four decades as a unique open-access repository for scattering data from experimental particle physics. It currently comprises the data points from plots and tables related to several thousand publications including those from the Large Hadron Collider (LHC). HEPData is funded by a grant from the UK STFC and is based at the IPPP at Durham University.",
+        "potentialAction": {
+          "@type": "SearchAction",
+          "target": {
+            "@type": "EntryPoint",
+            "urlTemplate": "{{ url_for('es_search.search', _external=True) }}?q={query}"
+          },
+          "query-input": "required name=query"
+        }
+      }
+    ]
+  }
+</script>
+{%- endblock json_ld %}
+
 {%- block body %}
 
     {%- block browserupgrade %}
@@ -42,6 +73,8 @@
                                 <li><a href="/submission"><span
                                         class="fa fa-life-ring"></span> Submission Help</a>
                                 </li>
+                                <li><a href="/formats"><span
+                                        class="fa fa-file-o"></span> File Formats</a></li>
                                 {%- if not current_user.is_authenticated %}
                                     <li>
                                         <a class=""
