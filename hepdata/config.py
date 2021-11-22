@@ -76,7 +76,7 @@ CELERY_BEAT_SCHEDULE = {
     },
     'update_from_inspire': {
         'task': 'hepdata.modules.records.utils.records_update_utils.update_records_info_on',
-        'schedule': crontab(minute=0, hour=2),  # execute daily at 2am UTC
+        'schedule': crontab(minute=0, hour=1),  # execute daily at 1am UTC
         'args': (1,),  # INSPIRE records (with HEPData) updated yesterday
     },
 }
