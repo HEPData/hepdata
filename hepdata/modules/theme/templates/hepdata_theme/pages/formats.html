@@ -20,9 +20,9 @@
             In addition to browsing HEPData, there are various ways to interact with it programatically and to retrieve
             data in different formats:</p>
           <ul>
-            <li><a href="#json_endpoints">JSON endpoints</a></li>
-            <li><a href="#data_file_formats">Data file formats</a></li>
-            <li><a href="#content_negotiation">Content negotiation for resource files and JSON-LD metadata</a></li>
+            <li><a href="#json_endpoints" style="text-decoration: underline">JSON endpoints</a></li>
+            <li><a href="#data_file_formats" style="text-decoration: underline">Data file formats</a></li>
+            <li><a href="#content_negotiation" style="text-decoration: underline">Content negotiation</a></li>
           </ul>
         </div>
     </div>
@@ -33,34 +33,34 @@
 
         <div class="col-md-12">
           <p>
-            Aside from the HTML view of HEPData, all of our pages and data have a JSON equivalent. The JSON format
-            allows programmatic access, from scripts or applications such as Mathematica.
+            Aside from the normal HTML view of HEPData, most of our pages and data have a JSON equivalent. The JSON format
+            allows programmatic access, from scripts in different languages such as Python or from applications such as Mathematica.
           </p>
           <p>Simply add <code>&format=json</code> to the search URL or detailed record URL to get the results back in JSON.</p>
           <h3>Search</h3>
           <p>
               If a user goes to the <a href="{{ search_url }}">search</a> page and filters on <b>Collaboration: ATLAS</b>,
-              they will land at the URL
-              <a href="{{ atlas_search_url }}">{{ atlas_search_url }}</a>
+              they will land at the URL:
           </p>
           <ul>
-            <li>HTML view: - <a href="{{ atlas_search_url }}">{{ atlas_search_url }}</a></li>
+            <li>HTML view - <a href="{{ atlas_search_url }}">{{ atlas_search_url }}</a></li>
             <li>JSON view - <a href="{{ atlas_search_url }}&format=json">{{ atlas_search_url }}&format=json</a></li>
           </ul>
           <p>
-            By default, the search results are returned with up to 10 records on each page, but this number can be
+            By default, the search results are returned with up to 10 records on each page (<code>size=10</code>), but this number can be
             altered by passing <code>size=1</code> up to <code>size=100</code> in the search URL.
+            Multiple URL arguments should each be separated by a <code>&</code> symbol.
           </p>
           <h3>Detailed record</h3>
           <p>Record pages also have a JSON view, for example:</p>
           <ul>
-            <li>HTML view: - <a href="{{ record_url }}">{{ record_url }}</a></li>
-            <li>JSON view - <a href="{{ record_url }}&format=json">{{ record_url }}&format=json</a></li>
-            <li>Light JSON view - <a href="{{ record_url }}&format=json&light=true">{{ record_url }}&format=json&light=true</a></li>
+            <li>HTML view - <a href="{{ record_url }}">{{ record_url }}</a></li>
+            <li>JSON view - <a href="{{ record_url }}?format=json">{{ record_url }}?format=json</a></li>
+            <li>Light JSON view - <a href="{{ record_url }}?format=json&light=true">{{ record_url }}?format=json&light=true</a></li>
           </ul>
           <p>
-            The light view removes author fields and data tables to reduce the size of the JSON (useful for just getting
-            information about the publication).
+            The light view reduces the size of the JSON by removing data tables and is useful for getting
+            information about the whole record.
           </p>
         </div>
       </div>
@@ -76,29 +76,35 @@
 
                 <p>
                   Conversion to various export formats is provided by a separate extensible package,
-                  <a href="http://github.com/HEPData/hepdata-converter">hepdata-converter</a>. Current output
-                  formats are:
+                  <a href="http://github.com/HEPData/hepdata-converter" target="_blank" style="text-decoration: underline">hepdata-converter</a>.
+                  Current output formats are:
                 </p>
                 <ul>
                   <li>
-                    <b>YAML</b>: The native HEPData format of the data tables (see
-                    <a href="https://github.com/HEPData/hepdata-submission">hepdata-submission</a>).
+                    <b>YAML with resource files</b>: The native HEPData format of the data tables (see
+                    <a href="https://github.com/HEPData/hepdata-submission" target="_blank" style="text-decoration: underline">hepdata-submission</a>),
+                    including any additional resource files uploaded with the original submission.
+                  </li>
+                  <li>
+                    <b>YAML</b>: As above but without resource files and with DOI information inserted as
+                    <code>hepdata_doi</code> and <code>table_doi</code> fields.
                   </li>
                   <li>
                     <b>CSV</b>: A simple text format consisting of comma-separated values, which can be imported into
                     many widely-used applications such as an Excel spreadsheet.
                   </li>
                   <li>
-                    <b>ROOT</b>: A binary <code>.root</code> file rather than a CINT script, with each table in a
+                    <b>ROOT</b>: A binary <code>.root</code> file with each table in a
                     separate directory. For numeric data, a <code>TGraphAsymmErrors</code> object is written for each
                     dependent variable. If the data has finite bin widths, then also separate <code>TH1F</code>
                     objects are written for the central value of the data points and each of the uncertainties. If
-                    there is more than one independent variable, the appropriate ROOT object (<code>TH2F</code> or
-                    <code>TH3F</code>) is chosen instead of a <code>TH1F</code> object.
+                    there is more than one independent variable, the appropriate
+                    <a href="https://root.cern" target="_blank" style="text-decoration: underline">ROOT</a> object is chosen, for example,
+                    a <code>TH2F</code> or <code>TH3F</code> instead of a <code>TH1F</code> object.
                   </li>
                   <li>
-                    <b>YODA</b>: The data analysis classes used in the <a href="https://rivet.hepforge.org">Rivet</a>
-                    toolkit. Again, the appropriate <code>YODA</code> object (<code>Scatter1D</code>,
+                    <b>YODA</b>: The data analysis classes used in the <a href="https://rivet.hepforge.org" target="_blank" style="text-decoration: underline">Rivet</a>
+                    toolkit. Again, the appropriate <a href="https://yoda.hepforge.org" target="_blank" style="text-decoration: underline">YODA</a> object (<code>Scatter1D</code>,
                     <code>Scatter2D</code>, <code>Scatter3D</code>) is written according to the number of independent
                     variables in a table.
                   </li>
@@ -108,30 +114,36 @@
                     record, using one of:
                 </p>
                 <ul>
-                  <li><code>?format=csv</code></li>
                   <li><code>?format=json</code></li>
-                  <li><code>?format=root</code></li>
+                  <li><code>?format=original</code></li>
                   <li><code>?format=yaml</code></li>
+                  <li><code>?format=csv</code></li>
+                  <li><code>?format=root</code></li>
                   <li><code>?format=yoda</code></li>
                 </ul>
-                <p>Optional parameters can also be added:</p>
+                <p>Optional parameters can also be added (separated by a <code>&</code> symbol):</p>
                 <ul>
                   <li>
-                    <code>table</code>: provide the table name in order to download a specific table. If omitted,
-                    all tables will be downloaded (in a .tar.gz file for all formats but JSON).
+                    <code>table=Table%201</code>: provide the table name in order to download a specific table instead of all tables.
+                    Special characters should generally be <a href="https://en.wikipedia.org/wiki/Percent-encoding" target="_blank" style="text-decoration: underline">URL-encoded</a>,
+                    for example, <code>%20</code> for a space.  Omitting spaces also works, for example, <code>table=Table1</code>.
                   </li>
                   <li>
-                    <code>version</code>: specify a particular version of a record. If omitted, the latest versin
+                    <code>version=1</code>: specify a particular version of a record. If omitted, the latest version
                     will be returned.
                   </li>
                   <li>
-                    <code>light=True</code>: when using <code>format=json</code> for a whole submission, this omits
+                    <code>light=true</code>: when using <code>format=json</code> for a whole submission, this omits
                     the data tables from the response.
+                  </li>
+                  <li>
+                    <code>rivet=ALICE_2016_I1419244</code>: when using <code>format=yoda</code>, specify the desired
+                    Rivet analysis name to be written in the YODA files if it does not match the automatically generated name.
                   </li>
                 </ul>
                 <p>
                   For example,
-                  <a href="{{ record_url }}?format=yaml&table=Table1&version=1">{{ record_url }}?format=yaml&table=Table1&version=1</a>
+                  <a href="{{ record_url }}?format=yaml&table=Table1&version=1" style="text-decoration: underline">{{ record_url }}?format=yaml&table=Table1&version=1</a>
                   returns <b>Table 1</b> of version 1 of the record, in YAML format.
                 </p>
             </div>
@@ -148,24 +160,25 @@
 
             <div class="col-md-12">
               <p>
-                HEPData record pages support content negotiation to allow automated downloads of JSON-LD metadata and
-                of resource files.
+                HEPData record pages support <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Content_negotiation" target="_blank" style="text-decoration: underline">content negotiation</a>
+                to allow automated downloads of <a href="https://json-ld.org" target="_blank" style="text-decoration: underline">JSON-LD</a>
+                metadata and of resource files attached to a submission.
               </p>
 
               <h3>JSON-LD Metadata</h3>
               <p>
-                HEPData record pages include <a href="https://json-ld.org">JSON-LD</a> metadata to provide
-                machine-readable information about the record. To download just the JSON-LD for a record page,
-                use the HTTP header <code>Accept: application/ld+json</code> in your request, e.g.:
+                HEPData record pages include JSON-LD metadata to provide machine-readable information about the record.
+                To download just the JSON-LD for a record page, use the HTTP header
+                <code>Accept: application/ld+json</code> in your request, e.g.:
               </p>
-              <p><code>curl -OJLH "Accept: application/ld+json" {{ record_url }}"</code></p>
+              <p><code>curl -OJLH "Accept: application/ld+json" {{ record_url }}</code></p>
               <p>
                 If you are using the DOI for a record rather than the HEPData URL, passing
                 <code>Accept: application/ld+json</code> will give you the JSON-LD metadata directly from DataCite, which is
                 less complete than the metadata produced by HEPData. To get the HEPData metadata
                 via the DOI, use the header <code>Accept: application/vnd.hepdata.ld+json</code>, e.g.:
               </p>
-              <p><code>curl -OJLH "Accept: text/vnd.hepdata.ld+json" https://doi.org/10.17182/hepdata.72886.v2"</code></p>
+              <p><code>curl -OJLH "Accept: application/vnd.hepdata.ld+json" https://doi.org/10.17182/hepdata.72886.v2</code></p>
 
               <h3>Direct download of resource files from DOI</h3>
               <p>
@@ -173,21 +186,32 @@
                 <a href="{{ ctx.sample_resource_url }}">{{ ctx.sample_resource_url }}</a>.
               </p>
               <p>
-                To download a resource file directly from its DOI, pass the relevant file type in the
-                <code>Accept</code> header, e.g for DOI <b>{{ ctx.sample_resource_doi }}</b>:
+                To download a resource file directly from its DOI, pass the relevant
+                <a href="https://en.wikipedia.org/wiki/Media_type" target="_blank" style="text-decoration: underline">media type</a>
+                in the <code>Accept</code> header.  For example, for DOI <b>{{ ctx.sample_resource_doi }}</b>:
               </p>
               <p><code>curl -OJLH "Accept: application/x-tar" https://doi.org/{{ ctx.sample_resource_doi }}</code></p>
               <p>
                 If you pass an <code>Accept</code> header that is not valid for the given resource, you will receive a
-                response in JSON format such as:
+                response with a <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/406" target="_blank" style="text-decoration: underline">406 Not Acceptable</a>
+                status code with an error message in JSON format such as:
               </p>
               <pre><code>{
   "file_mimetype": "application/x-tar",
-  "msg": "Accept header value 'application/zip' does not contain a valid mimetype for this resource. Expected Accept header to include one of 'application/x-tar', 'text/html', 'application/ld+json', 'application/vnd.hepdata.ld+json'"
+  "msg": "Accept header value 'application/zip' does not contain a valid media type for this resource. Expected Accept header to include one of 'application/x-tar', 'text/html', 'application/ld+json', 'application/vnd.hepdata.ld+json'"
 }</code></pre>
               <p>
-                The <code>file_mimetype</code> field provides the correct mimetype to use in the <code>Accept</code>
+                The <code>file_mimetype</code> field provides the correct media type to use in the <code>Accept</code>
                 header to download the resource.
+              </p>
+              <p>
+                Note that both the <code>curl</code> command and the </code>Python <code>requests</code> module have a
+                default <code>Accept</code> header of <code>*/*</code>, different from
+                <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Content_negotiation/List_of_default_Accept_values" target="_blank" style="text-decoration: underline">most web browsers</a>
+                where <code>*/*</code> has a lower weighting than <code>text/html</code>. The HEPData code will return the content
+                directly if <code>*/*</code> has weight 1 in a request to a landing page, therefore it is not strictly necessary
+                to specify an explicit <code>Accept</code> header when using <code>curl</code> or </code>Python <code>requests</code>,
+                although it is still recommended to do so.
               </p>
             </div>
 
@@ -196,7 +220,7 @@
 
     <div class="row" style="margin: 0; padding: 0% 10% 2% 5%" >
       <div class="col-md-12" style="padding-top: 5%;">
-        <p style="font-size:1.2em">Text from this page is adapted from:</p>
+        <p style="font-size:1.2em">Some text from this page is adapted from:</p>
         <ul class="talks">
           <li style="width:100%;">
             <p><b>

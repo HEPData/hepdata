@@ -329,5 +329,5 @@ import ROOT as rt""" in response.text
     assert response.status_code == 406
     assert response.json() == {
         "file_mimetype": "text/x-python",
-        "msg": "Accept header value 'application/x-tar' does not contain a valid mimetype for this resource. Expected Accept header to include one of 'text/x-python', 'text/html', 'application/ld+json', 'application/vnd.hepdata.ld+json'"
+        "msg": "Accept header value 'application/x-tar' does not contain a valid media type for this resource. Expected Accept header to include one of 'text/x-python', 'text/html', 'application/ld+json', 'application/vnd.hepdata.ld+json'"
     }

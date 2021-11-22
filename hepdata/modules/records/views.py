@@ -686,7 +686,7 @@ def get_resource(resource_id):
                     accepted_mimetypes_str = ', '.join([f"'{m}'" for m in accepted_mimetypes])
                     # Send back JSON as client is not expecting HTML
                     return jsonify({
-                        'msg': f"Accept header value '{request_mimetypes}' does not contain a valid mimetype for this resource. "
+                        'msg': f"Accept header value '{request_mimetypes}' does not contain a valid media type for this resource. "
                                + f"Expected Accept header to include one of {accepted_mimetypes_str}",
                         'file_mimetype': file_mimetype
                     }), 406
