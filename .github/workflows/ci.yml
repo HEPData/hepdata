@@ -134,7 +134,7 @@ jobs:
         py.test -vv tests/*_test.py
     - name: Setup Sauce Connect
       uses: saucelabs/sauce-connect-action@main
-      if: startsWith(matrix.postgres-version, '9.6')
+      if: startsWith(matrix.postgres-version, '12')
       with:
         username: ${{ secrets.SAUCE_USERNAME }}
         accessKey: ${{ secrets.SAUCE_ACCESS_KEY }}
@@ -143,7 +143,7 @@ jobs:
         scVersion: 4.7.0
         verbose: true
     - name: Run end-to-end tests
-      if: startsWith(matrix.postgres-version, '9.6')
+      if: startsWith(matrix.postgres-version, '12')
       env:
         SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
         SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY }}
@@ -151,7 +151,7 @@ jobs:
       run: |
         if [[ -n ${{ secrets.SAUCE_USERNAME }} && -n ${{ secrets.SAUCE_ACCESS_KEY}} ]]; then py.test -vv tests/e2e; fi
     - name: Run coveralls
-      if: startsWith(matrix.postgres-version, '9.6')
+      if: startsWith(matrix.postgres-version, '12')
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         COVERALLS_SERVICE_NAME: github
