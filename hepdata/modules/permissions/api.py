@@ -195,3 +195,13 @@ def write_submissions_to_files():
 
     csvfile.close()
     csvfile1.close()
+
+
+def get_collaboration_from_coordinator(coordinator_id):
+    coordinator_request = CoordinatorRequest.query.filter_by(
+        user=coordinator_id, approved=True).first()
+    if coordinator_request:
+        collaboration = coordinator_request.collaboration
+    else:
+        collaboration = None
+    return collaboration

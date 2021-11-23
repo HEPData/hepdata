@@ -32,7 +32,7 @@ from hepdata.modules.records.subscribers.api import get_users_subscribed_to_reco
 from hepdata.modules.records.utils.common import get_record_by_id
 from flask import render_template
 
-from hepdata.modules.permissions.models import CoordinatorRequest
+from hepdata.modules.permissions.api import get_collaboration_from_coordinator
 from hepdata.modules.submission.api import get_latest_hepsubmission, \
     get_primary_submission_participants_for_record, get_submission_participants_for_record
 from hepdata.modules.submission.models import DataSubmission, DataReview
@@ -193,7 +193,7 @@ def send_coordinator_notification_email(recid, version, user, message=None):
     if coordinator_profile:
         name = coordinator_profile.full_name
 
-    collaboration = _get_collaboration(hepsubmission.coordinator)
+    collaboration = get_collaboration_from_coordinator(hepsubmission.coordinator)
 
     message_body = render_template('hepdata_theme/email/passed_review.html',
                                    name=name,
@@ -276,7 +276,7 @@ def send_cookie_email(submission_participant,
         publication_recid=record_information['recid']
     )
     coordinator = User.query.get(hepsubmission.coordinator)
-    collaboration = _get_collaboration(hepsubmission.coordinator)
+    collaboration = get_collaboration_from_coordinator(hepsubmission.coordinator)
 
     message_body = render_template(
         'hepdata_theme/email/invite.html',
@@ -428,7 +428,7 @@ def notify_submission_created(record, coordinator_id, uploader, reviewer):
     if coordinator_profile:
         name = coordinator_profile.full_name
 
-    collaboration = _get_collaboration(coordinator_id)
+    collaboration = get_collaboration_from_coordinator(coordinator_id)
 
     message_body = render_template('hepdata_theme/email/created.html',
                                    name=name,
@@ -444,13 +444,3 @@ def notify_submission_created(record, coordinator_id, uploader, reviewer):
     create_send_email_task(coordinator.email,
                            '[HEPData] Submission {0} has been created'.format(record['recid']),
                            message_body)
-
-
-def _get_collaboration(coordinator_id):
-    coordinator_request = CoordinatorRequest.query.filter_by(
-        user=coordinator_id, approved=True).first()
-    if coordinator_request:
-        collaboration = coordinator_request.collaboration
-    else:
-        collaboration = None
-    return collaboration
