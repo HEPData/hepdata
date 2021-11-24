@@ -898,6 +898,15 @@ def test_get_json_ld(app):
             'error': f'JSON-LD could not be retrieved from https://api.test.datacite.org/dois/{doi}'
         }
 
+        # Provide invalid json to get an unexpected error
+        dummy_json = {'isPartOf': 3}
+        m.get(f'https://api.test.datacite.org/dois/{doi}', json=dummy_json)
+        data = get_json_ld(doi, 'finished')
+        assert data == {
+            'error': f"An unexpected error occurred when retrieving/formatting JSON-LD for doi {doi}"
+        }
+
+
 
 def test_create_breadcrumb_text():
     # Test record with first_author
