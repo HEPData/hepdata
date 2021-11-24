@@ -379,6 +379,8 @@ def get_json_ld(doi, submission_status, content_url=None, download_table_id=None
         # Submission container. Mark it as Dataset for Google, and add table details
         data['@type'] = 'Dataset'
         data_table_dict = { data_table['doi']: data_table for data_table in data_tables}
+        if type(data['hasPart']) != list:
+            data['hasPart'] = [data['hasPart']]
         for data_table_json in data['hasPart']:
             doi = data_table_json['@id'].replace('https://doi.org/', '')
             if doi in data_table_dict:

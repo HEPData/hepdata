@@ -863,6 +863,33 @@ def test_get_json_ld(app):
             ]
         }
 
+        # Modify hasPart to only contain a single table
+        dummy_json['hasPart'] = {'@id': 'https://doi.org/table1.doi'}
+        data_tables = [
+            {
+                'doi': 'table1.doi',
+                'name': 'Table 1',
+                'description': 'Description of Table 1'
+            }
+        ]
+        m.get(f'https://api.test.datacite.org/dois/{doi}', json=dummy_json)
+        data = get_json_ld(doi, 'finished', data_tables=data_tables, data_abstract="Publication description")
+        assert data == {
+            'a': 1,
+            'b': 2,
+            'author': 'A. Nonymous',
+            'creator': 'A. Nonymous',
+            '@type': 'Dataset',
+            'description': 'Publication description',
+            'hasPart': [
+                {
+                    '@id': 'https://doi.org/table1.doi',
+                    'name': 'Table 1',
+                    'description': 'Description of Table 1'
+                }
+            ]
+        }
+
         # Check a connection error returns JSON with an error
         m.get(f'https://api.test.datacite.org/dois/{doi}',
               exc=requests.exceptions.ConnectTimeout)
