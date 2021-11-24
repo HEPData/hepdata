@@ -237,9 +237,6 @@ def format_resource(resource, contents, content_url):
 
     :return: context dictionary ready for the template
     """
-    # Ensure context for publication/submission is complete (cf data table, check it works for sandbox)
-    # Consider whether landing page should work for resources relating to data tables
-
     hepsubmission = HEPSubmission.query.filter(HEPSubmission.resources.any(id=resource.id)).first()
     if not hepsubmission:
         datasubmission = DataSubmission.query.filter(DataSubmission.resources.any(id=resource.id)).first()
@@ -252,7 +249,7 @@ def format_resource(resource, contents, content_url):
             # Look for DataSubmission mapping to this resource
             raise ValueError("Unable to find publication for resource %d. (Is it a data file?)", resource.id)
 
-    record = get_record_by_id(hepsubmission.publication_recid)
+    record = get_record_contents(hepsubmission.publication_recid)
     ctx = format_submission(hepsubmission.publication_recid, record,
                             hepsubmission.version, 1, hepsubmission)
     ctx['is_resource'] = True
