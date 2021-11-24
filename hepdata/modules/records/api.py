@@ -427,10 +427,14 @@ def get_commit_message(ctx, recid):
 def create_breadcrumb_text(authors, ctx, record):
     """Creates the breadcrumb text for a submission."""
     if "first_author" in record and 'full_name' in record["first_author"] \
-        and record["first_author"]["full_name"] is not None:
+            and record["first_author"]["full_name"] is not None:
         ctx['breadcrumb_text'] = record["first_author"]["full_name"]
-        if authors is not None and len(record['authors']) > 1:
-            ctx['breadcrumb_text'] += " et al."
+    elif authors and authors[0] and 'full_name' in authors[0] \
+            and authors[0]["full_name"] is not None:
+        ctx['breadcrumb_text'] = authors[0]["full_name"]
+
+    if authors is not None and len(authors) > 1:
+        ctx['breadcrumb_text'] += " et al."
 
 
 def submission_has_resources(hepsubmission):

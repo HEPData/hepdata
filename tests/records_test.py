@@ -42,7 +42,8 @@ import requests_mock
 from hepdata.modules.permissions.models import SubmissionParticipant
 from hepdata.modules.records.api import process_payload, process_zip_archive, \
     move_files, get_all_ids, has_upload_permissions, \
-    has_coordinator_permissions, create_new_version, get_json_ld, get_resource_mimetype
+    has_coordinator_permissions, create_new_version, get_json_ld, \
+    get_resource_mimetype, create_breadcrumb_text
 from hepdata.modules.records.utils.submission import get_or_create_hepsubmission, process_submission_directory, do_finalise, unload_submission
 from hepdata.modules.records.utils.common import get_record_by_id, get_record_contents
 from hepdata.modules.records.utils.data_processing_utils import generate_table_structure
@@ -869,3 +870,40 @@ def test_get_json_ld(app):
         assert data == {
             'error': f'JSON-LD could not be retrieved from https://api.test.datacite.org/dois/{doi}'
         }
+
+
+def test_create_breadcrumb_text():
+    # Test record with first_author
+    record = {
+        'first_author': {
+            'full_name': 'Peppa Pig'
+        }
+    }
+    ctx = {}
+    # First with empty authors list
+    create_breadcrumb_text([], ctx, record)
+    assert ctx == {
+        'breadcrumb_text': 'Peppa Pig'
+    }
+
+    # Next with multiple authors
+    ctx = {}
+    create_breadcrumb_text([{'full_name': 'Peppa Pig'}, {'full_name': 'Suzy Sheep'}], ctx, record)
+    assert ctx == {
+        'breadcrumb_text': 'Peppa Pig et al.'
+    }
+
+    # Now empty record, so using authors list
+    # First with single author
+    ctx = {}
+    create_breadcrumb_text([{'full_name': 'Peppa Pig'}], ctx, {})
+    assert ctx == {
+        'breadcrumb_text': 'Peppa Pig'
+    }
+
+    # Next with multiple authors
+    ctx = {}
+    create_breadcrumb_text([{'full_name': 'Suzy Sheep'}, {'full_name': 'Pedro Pony'}], ctx, {})
+    assert ctx == {
+        'breadcrumb_text': 'Suzy Sheep et al.'
+    }

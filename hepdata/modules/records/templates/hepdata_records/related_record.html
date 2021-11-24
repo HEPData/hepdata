@@ -63,9 +63,9 @@
                         </li>
                     </a>
 
-                    <li><span class="fa fa-book"></span> {{ ctx.resource_filetype or ctx.table_name }}
-                        from {{ ctx.breadcrumb_text }}
-                        {% if ctx.record.accelerator_experiment %},
+                    <li><span class="fa fa-book"></span>
+                      {{ ctx.resource_filetype or ctx.table_name }}{% if ctx.breadcrumb_text %}
+                            from {{ ctx.breadcrumb_text }}{% endif %}{% if ctx.record.accelerator_experiment %},
                             conducted on the
                             <strong>{{ ctx.record.accelerator_experiment.experiment }}</strong>
                             experiment.{% endif %}
