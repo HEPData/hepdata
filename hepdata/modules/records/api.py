@@ -330,7 +330,6 @@ def get_json_ld(doi, submission_status, content_url=None, download_table_id=None
                 r = requests.get(url, headers=headers)
                 r.raise_for_status()
                 data = r.json()
-                breakpoint()
             except Exception as e:
                 log.error(e)
                 return {
