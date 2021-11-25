@@ -33,6 +33,27 @@
                               {% set hepdata_doi = '10.17182/' + key %}
                             {% endif %}
 
+                            {% if ctx.record_type == 'publication' %}
+                              {% set tables_to_show = ctx.data_tables %}
+                              {% set resources_to_show = ctx.resources_with_doi %}
+                            {% else %}
+                              {% set tables_to_show = [] %}
+                              {% set resources_to_show = [] %}
+                              {% if ctx.record_type == 'table' %}
+                                {% for t in ctx.data_tables %}
+                                  {% if t.id == ctx.table_id_to_show %}
+                                    {% set _ = tables_to_show.append(t) %}
+                                  {% endif %}
+                                {% endfor %}
+                              {% else %}
+                                {% for r in ctx.resources_with_doi %}
+                                  {% if r.doi == ctx.resource.doi %}
+                                    {% set _ = resources_to_show.append(r) %}
+                                  {% endif %}
+                                {% endfor %}
+                              {% endif %}
+                            {% endif %}
+
                             <div role="tabpanel" class="tab-pane in active" id="html">
                                 <div class="citation-panel">
                                     <p>When using this data, please cite the original publication:</p>
@@ -87,29 +108,35 @@
                                         <p><strong>https://doi.org/{{ hepdata_doi }}.v{{ ctx.version }}</strong></p>
                                     </div>
 
-                                    {% if ctx.data_tables %}
+                                    {% if tables_to_show or resources_to_show %}
                                       <p>
-                                        You can also cite the {{ ctx.data_tables|length }} data
-                                        table{% if ctx.data_tables|length > 1 %}s{% endif %}
-                                        {% if ctx.resources_with_doi %}
-                                          or the {{ ctx.resources_with_doi|length }} additional
-                                          resource{% if ctx.resources_with_doi|length > 1 %}s{% endif %}
+                                        {% if ctx.record_type == 'publication' %}
+                                          You can also cite the {{ tables_to_show|length }} data
+                                          table{% if tables_to_show|length > 1 %}s{% endif %}
+                                          {% if resources_to_show %}
+                                            or the {{ resources_to_show|length }} additional
+                                            resource{% if resources_to_show|length > 1 %}s{% endif %}
+                                          {% endif %}
+                                          individually.
+                                        {% else %}
+                                          You can also cite this {{ ctx.record_type }} directly.
                                         {% endif %}
-                                        individually.
                                       </p>
 
-                                      <h4>Data tables</h4>
+                                      {% if ctx.record_type == 'publication' %}
+                                        <h4>Data tables</h4>
 
-                                      <p>
-                                        Choose table:
-                                        <select onchange="$('.table-cite-html').hide();$('#table_cite_html_' + this.value).show()">
-                                        {% for table in ctx.data_tables %}
-                                          <option value="{{ loop.index }}">{{ table.name }}</option>
-                                        {% endfor %}
-                                        </select>
-                                      </p>
+                                        <p>
+                                          Choose table:
+                                          <select onchange="$('.table-cite-html').hide();$('#table_cite_html_' + this.value).show()">
+                                          {% for table in tables_to_show %}
+                                            <option value="{{ loop.index }}">{{ table.name }}</option>
+                                          {% endfor %}
+                                          </select>
+                                        </p>
+                                      {% endif %}
 
-                                      {% for table in ctx.data_tables %}
+                                      {% for table in tables_to_show %}
                                           <div class="well well-small table-cite-html" id="table_cite_html_{{ loop.index }}"{% if loop.index > 1 %} style="display:none"{% endif %}>
                                               {% if ctx.record.collaborations %}
                                                     {% for collaboration in ctx.record.collaborations %}
@@ -129,21 +156,24 @@
                                               <p><strong>https://doi.org/{{ table.doi }}</strong></p>
                                           </div>
                                       {% endfor %}
+
                                     {% endif %}
 
-                                    {% if ctx.resources_with_doi %}
-                                      <h4>Additional resources</h4>
+                                    {% if resources_to_show %}
+                                      {% if ctx.record_type == 'publication' %}
+                                        <h4>Additional resources</h4>
 
-                                      <p>
-                                        Choose resource:
-                                        <select onchange="$('.resource-cite-html').hide();$('#resource_cite_html_' + this.value).show();">
-                                        {% for resource in ctx.resources_with_doi %}
-                                          <option value="{{ loop.index }}">{{ resource.filename }}</option>
-                                        {% endfor %}
-                                        </select>
-                                      </p>
+                                        <p>
+                                          Choose resource:
+                                          <select onchange="$('.resource-cite-html').hide();$('#resource_cite_html_' + this.value).show();">
+                                          {% for resource in resources_to_show %}
+                                            <option value="{{ loop.index }}">{{ resource.filename }}</option>
+                                          {% endfor %}
+                                          </select>
+                                        </p>
+                                      {% endif %}
 
-                                      {% for resource in ctx.resources_with_doi %}
+                                      {% for resource in resources_to_show %}
                                         <div class="well well-small resource-cite-html" id="resource_cite_html_{{ loop.index }}"{% if loop.index > 1 %} style="display:none"{% endif %}>
                                             {% if ctx.record.collaborations %}
                                                   {% for collaboration in ctx.record.collaborations %}
@@ -213,31 +243,37 @@
     note = "\url{https://doi.org/{{ hepdata_doi }}.v{{ ctx.version }}}"
 }</textarea>
 
-                                    {% if ctx.data_tables %}
+                                    {% if tables_to_show or resources_to_show %}
                                       <p>
-                                        You can also cite the {{ ctx.data_tables|length }} data
-                                        table{% if ctx.data_tables|length > 1 %}s{% endif %}
-                                        {% if ctx.resources_with_doi %}
-                                          or the {{ ctx.resources_with_doi|length }} additional
-                                          resource{% if ctx.resources_with_doi|length > 1 %}s{% endif %}
+                                        {% if ctx.record_type == 'publication' %}
+                                          You can also cite the {{ tables_to_show|length }} data
+                                          table{% if tables_to_show|length > 1 %}s{% endif %}
+                                          {% if resources_to_show %}
+                                            or the {{ resources_to_show|length }} additional
+                                            resource{% if resources_to_show|length > 1 %}s{% endif %}
+                                          {% endif %}
+                                          individually.
+                                        {% else %}
+                                          You can also cite this {{ ctx.record_type }} directly.
                                         {% endif %}
-                                        individually.
                                       </p>
 
-                                      <h4>Data tables</h4>
-                                      <p>
-                                        Choose table:
-                                        <select onchange="$('.table-bibtex').hide();$('#table_bibtex_' + this.value).show();$('#table_bibtex_copy_btn').attr('data-clipboard-target', '#table_bibtex_' + this.value);">
-                                        {% for table in ctx.data_tables %}
-                                          <option value="{{ loop.index }}">{{ table.name }}</option>
-                                        {% endfor %}
-                                        </select>
-                                        <button class="btn btn-primary btn-sm cite-copy-btn pull-right" id="table_bibtex_copy_btn" data-clipboard-target="#table_bibtex_1">
-                                            <i class="fa fa-copy" alt="Copy to clipboard"></i>
-                                        </button>
-                                      </p>
+                                      {% if ctx.record_type == "publication" %}
+                                        <h4>Data tables</h4>
+                                        <p>
+                                          Choose table:
+                                          <select onchange="$('.table-bibtex').hide();$('#table_bibtex_' + this.value).show();$('#table_bibtex_copy_btn').attr('data-clipboard-target', '#table_bibtex_' + this.value);">
+                                          {% for table in tables_to_show %}
+                                            <option value="{{ loop.index }}">{{ table.name }}</option>
+                                          {% endfor %}
+                                          </select>
+                                          <button class="btn btn-primary btn-sm cite-copy-btn pull-right" id="table_bibtex_copy_btn" data-clipboard-target="#table_bibtex_1">
+                                              <i class="fa fa-copy" alt="Copy to clipboard"></i>
+                                          </button>
+                                        </p>
+                                      {% endif %}
 
-                                      {% for table in ctx.data_tables %}
+                                      {% for table in tables_to_show %}
                                         {% set title = '"{``' +  table.name + '\'\' of ``' + ctx.record.title + '\'\' (Version ' + ctx.version|string + ')}"' %}
                                         {% if table.doi %}
                                             {% set key = table.doi.split('/', 1)[1] %}
@@ -252,22 +288,24 @@
                                       {% endfor %}
                                     {% endif %}
 
-                                    {% if ctx.resources_with_doi %}
-                                      <h4>Additional resources</h4>
+                                    {% if resources_to_show %}
+                                      {% if ctx.record_type == 'publication' %}
+                                        <h4>Additional resources</h4>
 
-                                      <p>
-                                        Choose resource:
-                                        <select onchange="$('.resource-bibtex').hide();$('#resource_bibtex_' + this.value).show();$('#resource_bibtex_copy_btn').attr('data-clipboard-target', '#resource_bibtex_' + this.value)">
-                                        {% for resource in ctx.resources_with_doi %}
-                                          <option value="{{ loop.index }}">{{ resource.filename }}</option>
-                                        {% endfor %}
-                                        </select>
-                                        <button class="btn btn-primary btn-sm cite-copy-btn pull-right" id="resource_bibtex_copy_btn" data-clipboard-target="#resource_bibtex_1">
-                                            <i class="fa fa-copy" alt="Copy to clipboard"></i>
-                                        </button>
-                                      </p>
+                                        <p>
+                                          Choose resource:
+                                          <select onchange="$('.resource-bibtex').hide();$('#resource_bibtex_' + this.value).show();$('#resource_bibtex_copy_btn').attr('data-clipboard-target', '#resource_bibtex_' + this.value)">
+                                          {% for resource in resources_to_show %}
+                                            <option value="{{ loop.index }}">{{ resource.filename }}</option>
+                                          {% endfor %}
+                                          </select>
+                                          <button class="btn btn-primary btn-sm cite-copy-btn pull-right" id="resource_bibtex_copy_btn" data-clipboard-target="#resource_bibtex_1">
+                                              <i class="fa fa-copy" alt="Copy to clipboard"></i>
+                                          </button>
+                                        </p>
+                                      {% endif %}
 
-                                      {% for resource in ctx.resources_with_doi %}
+                                      {% for resource in resources_to_show %}
                                         {% set title = '"{``' +  resource.filename + '\'\' of ``' + ctx.record.title + '\'\' (Version ' + ctx.version|string + ')}"' %}
                                         {% if resource.doi %}
                                           {% set key = resource.doi.split('/', 1)[1] %}

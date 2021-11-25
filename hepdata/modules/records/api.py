@@ -507,7 +507,7 @@ def render_record(recid, record, version, output_format, light_mode=False):
 
         elif not hepdata_submission.overall_status.startswith('sandbox'):
             ctx = format_submission(recid, record, version, version_count, hepdata_submission)
-            ctx['record_type'] = 'submission'
+            ctx['record_type'] = 'publication'
             increment(recid)
 
             if output_format == 'html' or output_format == 'json_ld':

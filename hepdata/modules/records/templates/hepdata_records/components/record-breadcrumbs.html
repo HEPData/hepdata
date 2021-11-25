@@ -7,7 +7,7 @@
                 </li>
             </a>
 
-            {% if ctx.record_type != 'submission' %}
+            {% if ctx.record_type != 'publication' %}
               <a href="/record/{% if ctx.record.inspire_id %}ins{{ ctx.record.inspire_id }}{% else %}{% if ctx.status == 'sandbox' %}sandbox/{% endif %}{{ ctx.related_publication_id }}{% endif %}">
                   <li class="active bg-purple-2"><span
                           class="fa fa-list"></span> View all Publication
