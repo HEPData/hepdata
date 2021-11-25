@@ -42,7 +42,8 @@ import requests_mock
 from hepdata.modules.permissions.models import SubmissionParticipant
 from hepdata.modules.records.api import process_payload, process_zip_archive, \
     move_files, get_all_ids, has_upload_permissions, \
-    has_coordinator_permissions, create_new_version, get_json_ld, get_resource_mimetype
+    has_coordinator_permissions, create_new_version, get_json_ld, \
+    get_resource_mimetype, create_breadcrumb_text
 from hepdata.modules.records.utils.submission import get_or_create_hepsubmission, process_submission_directory, do_finalise, unload_submission
 from hepdata.modules.records.utils.common import get_record_by_id, get_record_contents
 from hepdata.modules.records.utils.data_processing_utils import generate_table_structure
@@ -862,6 +863,33 @@ def test_get_json_ld(app):
             ]
         }
 
+        # Modify hasPart to only contain a single table
+        dummy_json['hasPart'] = {'@id': 'https://doi.org/table1.doi'}
+        data_tables = [
+            {
+                'doi': 'table1.doi',
+                'name': 'Table 1',
+                'description': 'Description of Table 1'
+            }
+        ]
+        m.get(f'https://api.test.datacite.org/dois/{doi}', json=dummy_json)
+        data = get_json_ld(doi, 'finished', data_tables=data_tables, data_abstract="Publication description")
+        assert data == {
+            'a': 1,
+            'b': 2,
+            'author': 'A. Nonymous',
+            'creator': 'A. Nonymous',
+            '@type': 'Dataset',
+            'description': 'Publication description',
+            'hasPart': [
+                {
+                    '@id': 'https://doi.org/table1.doi',
+                    'name': 'Table 1',
+                    'description': 'Description of Table 1'
+                }
+            ]
+        }
+
         # Check a connection error returns JSON with an error
         m.get(f'https://api.test.datacite.org/dois/{doi}',
               exc=requests.exceptions.ConnectTimeout)
@@ -869,3 +897,49 @@ def test_get_json_ld(app):
         assert data == {
             'error': f'JSON-LD could not be retrieved from https://api.test.datacite.org/dois/{doi}'
         }
+
+        # Provide invalid json to get an unexpected error
+        dummy_json = {'isPartOf': 3}
+        m.get(f'https://api.test.datacite.org/dois/{doi}', json=dummy_json)
+        data = get_json_ld(doi, 'finished')
+        assert data == {
+            'error': f"An unexpected error occurred when retrieving/formatting JSON-LD for doi {doi}"
+        }
+
+
+
+def test_create_breadcrumb_text():
+    # Test record with first_author
+    record = {
+        'first_author': {
+            'full_name': 'Peppa Pig'
+        }
+    }
+    ctx = {}
+    # First with empty authors list
+    create_breadcrumb_text([], ctx, record)
+    assert ctx == {
+        'breadcrumb_text': 'Peppa Pig'
+    }
+
+    # Next with multiple authors
+    ctx = {}
+    create_breadcrumb_text([{'full_name': 'Peppa Pig'}, {'full_name': 'Suzy Sheep'}], ctx, record)
+    assert ctx == {
+        'breadcrumb_text': 'Peppa Pig et al.'
+    }
+
+    # Now empty record, so using authors list
+    # First with single author
+    ctx = {}
+    create_breadcrumb_text([{'full_name': 'Peppa Pig'}], ctx, {})
+    assert ctx == {
+        'breadcrumb_text': 'Peppa Pig'
+    }
+
+    # Next with multiple authors
+    ctx = {}
+    create_breadcrumb_text([{'full_name': 'Suzy Sheep'}, {'full_name': 'Pedro Pony'}], ctx, {})
+    assert ctx == {
+        'breadcrumb_text': 'Suzy Sheep et al.'
+    }
