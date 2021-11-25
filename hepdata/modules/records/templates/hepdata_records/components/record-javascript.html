@@ -51,7 +51,7 @@
             var table_name_to_show = "{{ ctx.table_name_to_show | replace("\\","\\\\") }}";  // escape backslashes
             var status = "{{ ctx.status }}";
 
-            {% if ctx.record_type == 'table' %}
+            {% if ctx.record_type != 'resource' %}
               // Pass table name before it gets mangled by MathJax if it contains LaTeX encoding.
               HEPDATA.switch_table('#table-list', table_id_to_show, table_name_to_show, status);
             {% endif %}
