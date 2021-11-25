@@ -67,6 +67,7 @@ CELERY_TASK_ROUTES = {
     'hepdata.modules.records.api.process_saved_file': {'queue': 'priority'},
     'hepdata.modules.records.utils.doi_minter.create_container_doi': {'queue': 'datacite'},
     'hepdata.modules.records.utils.doi_minter.create_data_doi': {'queue': 'datacite'},
+    'hepdata.modules.records.utils.doi_minter.create_resource_doi': {'queue': 'datacite'},
 }
 
 CELERY_BEAT_SCHEDULE = {
@@ -93,12 +94,14 @@ CELERY_TASK_ANNOTATIONS = {
         'default_retry_delay': 30
     },
     'hepdata.modules.records.utils.doi_minter.create_container_doi': {
-        'rate_limit': f"{100 / DATACITE_QUEUE_WORKERS}/m"
+        'rate_limit': f"{50 / DATACITE_QUEUE_WORKERS}/m"
     },
     'hepdata.modules.records.utils.doi_minter.create_data_doi': {
         'rate_limit': f"{500 / DATACITE_QUEUE_WORKERS}/m"
     },
-
+    'hepdata.modules.records.utils.doi_minter.create_resource_doi': {
+        'rate_limit': f"{50 / DATACITE_QUEUE_WORKERS}/m"
+    },
 }
 
 # Cache

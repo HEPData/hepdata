@@ -62,7 +62,7 @@ def generate_doi_for_table(doi):
     ).first()
 
     if hep_submission:
-        create_data_doi(hep_submission.id, data_submission.id, site_url)
+        create_data_doi.delay(hep_submission.id, data_submission.id, site_url)
     else:
         print('Finished submission with INSPIRE ID {} and version {} not found in database'.format(
             data_submission.publication_inspire_id, data_submission.version)
