@@ -62,8 +62,7 @@ def generate_doi_for_table(doi):
     ).first()
 
     if hep_submission:
-        publication_info = get_record_by_id(hep_submission.publication_recid)
-        create_data_doi(hep_submission.id, data_submission.id, publication_info, site_url)
+        create_data_doi(hep_submission.id, data_submission.id, site_url)
     else:
         print('Finished submission with INSPIRE ID {} and version {} not found in database'.format(
             data_submission.publication_inspire_id, data_submission.version)
@@ -101,8 +100,6 @@ def generate_dois_for_submission(*args, **kwargs):
             hep_submission.publication_recid, hep_submission.version,
             hep_submission)
 
-        publication_info = get_record_by_id(hep_submission.publication_recid)
-
         if hep_submission.doi is None:
             reserve_doi_for_hepsubmission(hep_submission)
 
@@ -114,18 +111,20 @@ def generate_dois_for_submission(*args, **kwargs):
                                        version=hep_submission.version,
                                        resources=file_resources)
 
-        create_container_doi.delay(hep_submission.id, [d.id for d in data_submissions],
-            [r.id for r in file_resources], publication_info, site_url)
+        create_container_doi.delay(hep_submission.id,
+                                   [d.id for d in data_submissions],
+                                   [r.id for r in file_resources],
+                                   site_url)
 
         for data_submission in data_submissions:
-            create_data_doi.delay(hep_submission.id, data_submission.id, publication_info, site_url)
+            create_data_doi.delay(hep_submission.id, data_submission.id, site_url)
 
         for resource in file_resources:
-            create_resource_doi.delay(hep_submission.id, resource.id, publication_info, site_url)
+            create_resource_doi.delay(hep_submission.id, resource.id, site_url)
 
 
 @shared_task(max_retries=6, default_retry_delay=10 * 60)
-def create_container_doi(hep_submission_id, data_submission_ids, resource_ids, publication_info, site_url):
+def create_container_doi(hep_submission_id, data_submission_ids, resource_ids, site_url):
     """
     Creates the payload to wrap the whole submission.
 
@@ -143,6 +142,7 @@ def create_container_doi(hep_submission_id, data_submission_ids, resource_ids, p
         DataResource.id.in_(resource_ids)
     ).all()
 
+    publication_info = get_record_by_id(hep_submission.publication_recid)
     version_doi = hep_submission.doi + ".v{0}".format(hep_submission.version)
 
     base_xml = render_template('hepdata_records/formats/datacite/datacite_container_submission.xml',
@@ -168,7 +168,7 @@ def create_container_doi(hep_submission_id, data_submission_ids, resource_ids, p
 
 
 @shared_task(max_retries=6, default_retry_delay=10 * 60)
-def create_data_doi(hep_submission_id, data_submission_id, publication_info, site_url):
+def create_data_doi(hep_submission_id, data_submission_id, site_url):
     """
     Generate DOI record for a data record.
 
@@ -180,6 +180,7 @@ def create_data_doi(hep_submission_id, data_submission_id, publication_info, sit
     data_submission = db.session.query(DataSubmission).get(data_submission_id)
 
     data_file = DataResource.query.filter_by(id=data_submission.data_file).first()
+    publication_info = get_record_by_id(hep_submission.publication_recid)
 
     license = None
     if data_file:
@@ -202,7 +203,7 @@ def create_data_doi(hep_submission_id, data_submission_id, publication_info, sit
 
 
 @shared_task(max_retries=6, default_retry_delay=10 * 60)
-def create_resource_doi(hep_submission_id, resource_id, publication_info, site_url):
+def create_resource_doi(hep_submission_id, resource_id, site_url):
     """
     Generate DOI record for a data resource
 
@@ -212,6 +213,7 @@ def create_resource_doi(hep_submission_id, resource_id, publication_info, site_u
     """
     hep_submission = db.session.query(HEPSubmission).get(hep_submission_id)
     resource = db.session.query(DataResource).get(resource_id)
+    publication_info = get_record_by_id(hep_submission.publication_recid)
 
     license = None
     if resource.file_license:
