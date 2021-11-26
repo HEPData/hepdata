@@ -19,7 +19,7 @@
             <li class="hidden-xs"><span class="fa fa-book"></span>
               {% if ctx.resource_filetype or ctx.table_name %}
                 {{ ctx.resource_filetype or ctx.table_name }}{% if ctx.breadcrumb_text %}
-                  from {{ ctx.breadcrumb_text }}{% endif %}{% else %}
+                  from Version {{ ctx.version }} of {{ ctx.breadcrumb_text }}{% endif %}{% else %}
                   {{ ctx.breadcrumb_text }}{% endif %}{% if ctx.record.accelerator_experiment %},
                 conducted on the
                 <strong>{{ ctx.record.accelerator_experiment.experiment }}</strong>
