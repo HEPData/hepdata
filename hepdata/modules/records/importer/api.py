@@ -221,7 +221,7 @@ def _download_file(base_url, inspire_id):
     url = "{0}/download/submission/ins{1}/original".format(base_url, inspire_id)
     log.info("Trying URL " + url)
     try:
-        response = requests.get(url)
+        response = resilient_requests('get', url)
         if not response.ok:
             raise ConnectionError('Unable to retrieve download from %s' % url)
         elif not response.headers.get('content-type', '').startswith('application/'):
