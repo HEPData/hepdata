@@ -20,6 +20,7 @@
 
         HEPDATA.hepdata_record.initialise();
         HEPDATA.hepdata_resources.initialise({{ ctx.recid|default(0) }}, {{ ctx.version|default(0) }});
+        HEPDATA.current_record_type = '{{ ctx.record_type }}';
 
         HEPDATA.render_loader("#hepdata-loading", [
                     {x: 26, y: 30, color: "#955BA5"},
