@@ -59,7 +59,7 @@
 
                 </div>
 
-                {% if ctx.access_count %}
+                {% if ctx.record_type == 'publication' and ctx.access_count %}
                     <span class="pull-right hidden-xs">
                     <span class="fa fa-bar-chart-o" style="padding-right: 5px"></span>
                     Accessed {{ ctx.access_count.sum }} times
