@@ -47,72 +47,8 @@
 {% block page_body %}
     <div>
         <div class="container-fluid">
-            <div class="hep_breadcrumbs row">
-                <div class="col-md-12 no-padding">
-                    <ul>
-                        <a href="/search">
-                            <li class="active"><span class="fa fa-search"></span>
-                                Browse all
-                            </li>
-                        </a>
-                        <li class="hidden-xs"><span class="fa fa-book"></span> {{ ctx.breadcrumb_text }}
-                            {% if ctx.record.accelerator_experiment %},
-                                conducted on the
-                                <strong>{{ ctx.record.accelerator_experiment.experiment }}</strong>
-                                experiment.{% endif %}
-                        </li>
-                        <li class="pull-right">
 
-                            <div class="cite">
-
-                                <button id="citeLabel" type="button" data-toggle="modal" data-target="#citeModal"
-                                        class="btn btn-sm btn-primary"
-                                        aria-haspopup="true" aria-expanded="false">
-                                    <i class="fa fa-quote-right"></i> Cite
-                                </button>
-
-                                {% if current_user.is_authenticated and ctx.status == 'finished' %}
-                                    <button id="watch_btn" type="button" data-toggle="modal"
-                                            class="btn btn-sm btn-default"
-                                            aria-haspopup="true" aria-expanded="false">
-                                        <i class="fa fa-eye"></i>
-                            <span>
-                                {% if ctx.watched %}
-                                    Unwatch Record
-                                {% else %}
-                                    Watch Record
-                                {% endif %}
-                            </span>
-
-                                    </button>
-                                {% endif %}
-
-                                <a href="?format=json" id="jsonLabel" type="button"
-                                   class="btn btn-sm btn-default"
-                                   aria-haspopup="true" aria-expanded="false">
-                                    JSON
-                                </a>
-
-                            </div>
-
-                            {% if ctx.access_count %}
-                                <span class="pull-right hidden-xs">
-                                <span class="fa fa-bar-chart-o" style="padding-right: 5px"></span>
-                                Accessed {{ ctx.access_count.sum }} times
-                        </span>
-                            {% endif %}
-
-                            {% if ctx.record.last_updated %}
-                                <span class="pull-right hidden-xs"
-                                      style="padding-right: 10px">Last updated on {{ ctx.record.last_updated.strftime('%Y-%m-%d %H:%M') }}
-                        </span>
-                            {% endif %}
-
-
-                        </li>
-                    </ul>
-                </div>
-            </div>
+            {% include 'hepdata_records/components/record-breadcrumbs.html' %}
 
             <div class="clearfix"></div>
 

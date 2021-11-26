@@ -252,7 +252,7 @@ def format_resource(resource, contents, content_url):
     record = get_record_contents(hepsubmission.publication_recid)
     ctx = format_submission(hepsubmission.publication_recid, record,
                             hepsubmission.version, 1, hepsubmission)
-    ctx['is_resource'] = True
+    ctx['record_type'] = 'resource'
     ctx['resource'] = resource
     ctx['contents'] = contents
     ctx['resource_url'] = request.url
@@ -507,6 +507,7 @@ def render_record(recid, record, version, output_format, light_mode=False):
 
         elif not hepdata_submission.overall_status.startswith('sandbox'):
             ctx = format_submission(recid, record, version, version_count, hepdata_submission)
+            ctx['record_type'] = 'publication'
             increment(recid)
 
             if output_format == 'html' or output_format == 'json_ld':
@@ -557,6 +558,7 @@ def render_record(recid, record, version, output_format, light_mode=False):
             ctx = format_submission(publication_recid, publication_record,
                                     hepdata_submission.version, 1, hepdata_submission,
                                     data_table=record['title'])
+            ctx['record_type'] = 'table'
             ctx['related_publication_id'] = publication_recid
             ctx['table_name'] = record['title']
 
