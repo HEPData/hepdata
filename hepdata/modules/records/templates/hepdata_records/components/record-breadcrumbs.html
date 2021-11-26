@@ -1,0 +1,79 @@
+<div class="hep_breadcrumbs row">
+    <div class="col-md-12 no-padding">
+        <ul>
+            <a href="/search">
+                <li class="active"><span class="fa fa-search"></span>
+                    Browse all
+                </li>
+            </a>
+
+            {% if ctx.record_type != 'publication' %}
+              <a href="/record/{% if ctx.record.inspire_id %}ins{{ ctx.record.inspire_id }}{% else %}{% if ctx.status == 'sandbox' %}sandbox/{% endif %}{{ ctx.related_publication_id }}{% endif %}">
+                  <li class="active bg-purple-2"><span
+                          class="fa fa-list"></span> View all Publication
+                      Data
+                  </li>
+              </a>
+            {% endif %}
+
+            <li class="hidden-xs"><span class="fa fa-book"></span>
+              {% if ctx.resource_filetype or ctx.table_name %}
+                {{ ctx.resource_filetype or ctx.table_name }}{% if ctx.breadcrumb_text %}
+                  from Version {{ ctx.version }} of {{ ctx.breadcrumb_text }}{% endif %}{% else %}
+                  {{ ctx.breadcrumb_text }}{% endif %}{% if ctx.record.accelerator_experiment %},
+                conducted on the
+                <strong>{{ ctx.record.accelerator_experiment.experiment }}</strong>
+                experiment.{% endif %}
+            </li>
+            <li class="pull-right">
+
+                <div class="cite">
+
+                    <button id="citeLabel" type="button" data-toggle="modal" data-target="#citeModal"
+                            class="btn btn-sm btn-primary"
+                            aria-haspopup="true" aria-expanded="false">
+                        <i class="fa fa-quote-right"></i> Cite
+                    </button>
+
+                    {% if current_user.is_authenticated and ctx.status == 'finished' %}
+                        <button id="watch_btn" type="button" data-toggle="modal"
+                                class="btn btn-sm btn-default"
+                                aria-haspopup="true" aria-expanded="false">
+                            <i class="fa fa-eye"></i>
+                <span>
+                    {% if ctx.watched %}
+                        Unwatch Record
+                    {% else %}
+                        Watch Record
+                    {% endif %}
+                </span>
+
+                        </button>
+                    {% endif %}
+
+                    <a href="?format=json" id="jsonLabel" type="button"
+                       class="btn btn-sm btn-default"
+                       aria-haspopup="true" aria-expanded="false">
+                        JSON
+                    </a>
+
+                </div>
+
+                {% if ctx.record_type == 'publication' and ctx.access_count %}
+                    <span class="pull-right hidden-xs">
+                    <span class="fa fa-bar-chart-o" style="padding-right: 5px"></span>
+                    Accessed {{ ctx.access_count.sum }} times
+            </span>
+                {% endif %}
+
+                {% if ctx.record.last_updated %}
+                    <span class="pull-right hidden-xs"
+                          style="padding-right: 10px">Last updated on {{ ctx.record.last_updated.strftime('%Y-%m-%d %H:%M') }}
+            </span>
+                {% endif %}
+
+
+            </li>
+        </ul>
+    </div>
+</div>

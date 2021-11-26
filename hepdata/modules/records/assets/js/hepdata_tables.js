@@ -64,7 +64,12 @@ HEPDATA.switch_table = function (listId, table_requested, table_name, status) {
     $(this).attr('href', data_url);
   });
 
-  $("#json_link").attr('href', '/download/table/' + _recid + '/' + encoded_name + '/' + HEPDATA.current_table_version + '/json')
+  if (HEPDATA.current_record_type == 'table') {
+    $("#json_link").hide();
+  } else {
+    $("#json_link").attr('href', '/download/table/' + _recid + '/' + encoded_name + '/' + HEPDATA.current_table_version + '/json');
+    $("#json_link").show();
+  }
 };
 
 HEPDATA.table_renderer = {

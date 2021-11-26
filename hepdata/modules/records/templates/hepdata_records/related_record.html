@@ -47,33 +47,7 @@
 {% block page_body %}
     <div>
     <div class="container-fluid">
-        <div class="hep_breadcrumbs row">
-            <div class="col-md-12 no-padding">
-                <ul>
-                    <a href="/search">
-                        <li class="active"><span class="fa fa-search"></span>
-                            Browse all
-                        </li>
-                    </a>
-
-                    <a href="/record/{% if ctx.record.inspire_id %}ins{{ ctx.record.inspire_id }}{% else %}{% if ctx.status == 'sandbox' %}sandbox/{% endif %}{{ ctx.related_publication_id }}{% endif %}">
-                        <li class="active bg-purple-2"><span
-                                class="fa fa-list"></span> View all Publication
-                            Data
-                        </li>
-                    </a>
-
-                    <li><span class="fa fa-book"></span>
-                      {{ ctx.resource_filetype or ctx.table_name }}{% if ctx.breadcrumb_text %}
-                            from {{ ctx.breadcrumb_text }}{% endif %}{% if ctx.record.accelerator_experiment %},
-                            conducted on the
-                            <strong>{{ ctx.record.accelerator_experiment.experiment }}</strong>
-                            experiment.{% endif %}
-                    </li>
-
-                </ul>
-            </div>
-        </div>
+        {% include 'hepdata_records/components/record-breadcrumbs.html' %}
 
         <div class="clearfix"></div>
 
@@ -198,7 +172,7 @@
 
 
             <!--if there is data, we show it. If not, we show the upload screen if the logged in user is an uploader-->
-            {% if ctx.is_resource %}
+            {% if ctx.record_type == 'resource' %}
               {% set resource_details_class="col-lg-9 col-md-9" %}
               {% include 'hepdata_records/components/resource_details.html' %}
             {% else %}
@@ -223,6 +197,10 @@
 
     {% include 'hepdata_records/components/code-view-widget.html' %}
     {% include 'hepdata_records/components/resources-widget.html' %}
+    {% if ctx.record.title %}
+      {% include 'hepdata_records/components/cite-widget.html' %}
+    {% endif %}
+    
 {% endblock %}
 
 {%- block javascript %}

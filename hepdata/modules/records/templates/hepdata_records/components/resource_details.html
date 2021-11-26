@@ -11,10 +11,7 @@
             </div>
         {% endif %}
 
-
-        <a href="/record/resource/{{ ctx.resource.id }}" class="pull-right btn btn-link btn-sm" id="json_link">JSON</a>
-
-         {% if ctx.mode != 'sandbox' %}
+        {% if ctx.mode != 'sandbox' %}
             <div class="pull-right" id="data_link_container">
                 <input id="direct_data_link" value="{{ ctx.resource_url }}" disabled>
                 <button class="btn btn-small copy-btn" data-clipboard-text="{{ ctx.resource_url }}">
