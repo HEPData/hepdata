@@ -255,6 +255,7 @@ def format_resource(resource, contents, content_url):
     ctx['record_type'] = 'resource'
     ctx['resource'] = resource
     ctx['contents'] = contents
+    ctx['content_url'] = content_url
     ctx['resource_url'] = request.url
     ctx['related_publication_id'] = hepsubmission.publication_recid
     ctx['json_ld'] = get_json_ld(

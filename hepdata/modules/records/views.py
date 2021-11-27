@@ -672,7 +672,7 @@ def get_resource(resource_id):
             request_mimetypes = request.accept_mimetypes
             file_mimetype = get_resource_mimetype(resource_obj, contents)
 
-            if request_mimetypes.quality(file_mimetype) >= 1:
+            if request_mimetypes.quality(file_mimetype) >= 1 and not (file_mimetype == 'text/html' and len(request_mimetypes) > 1):
                 # Accept header matches the file type, so download file instead
                 view_mode = True
                 landing_page = False
@@ -693,7 +693,7 @@ def get_resource(resource_id):
 
         if view_mode:
             return send_file(resource_obj.file_location, as_attachment=True)
-        elif 'html' in resource_obj.file_location and 'http' not in resource_obj.file_location.lower():
+        elif 'html' in resource_obj.file_location and 'http' not in resource_obj.file_location.lower() and not landing_page:
             with open(resource_obj.file_location, 'r') as resource_file:
                 return contents
         else:
