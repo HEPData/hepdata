@@ -554,10 +554,11 @@ def render_record(recid, record, version, output_format, light_mode=False):
             publication_recid = int(record['related_publication'])
             publication_record = get_record_contents(publication_recid)
 
-            hepdata_submission = get_latest_hepsubmission(publication_recid=publication_recid)
+            datasubmission = DataSubmission.query.filter_by(associated_recid=recid).one()
+            hepdata_submission = get_latest_hepsubmission(publication_recid=publication_recid, version=datasubmission.version)
 
             ctx = format_submission(publication_recid, publication_record,
-                                    hepdata_submission.version, 1, hepdata_submission,
+                                    datasubmission.version, 1, hepdata_submission,
                                     data_table=record['title'])
             ctx['record_type'] = 'table'
             ctx['related_publication_id'] = publication_recid
@@ -580,11 +581,11 @@ def render_record(recid, record, version, output_format, light_mode=False):
 
             elif output_format == 'yoda' and 'rivet' in request.args:
                 return redirect('/download/table/{0}/{1}/{2}/{3}/{4}'.format(
-                    publication_recid, ctx['table_name'].replace('%', '%25').replace('\\', '%5C'), hepdata_submission.version, output_format,
+                    publication_recid, ctx['table_name'].replace('%', '%25').replace('\\', '%5C'), datasubmission.version, output_format,
                     request.args['rivet']))
             else:
                 return redirect('/download/table/{0}/{1}/{2}/{3}'.format(
-                    publication_recid, ctx['table_name'].replace('%', '%25').replace('\\', '%5C'), hepdata_submission.version, output_format))
+                    publication_recid, ctx['table_name'].replace('%', '%25').replace('\\', '%5C'), datasubmission.version, output_format))
 
         except Exception as e:
             abort(404)
