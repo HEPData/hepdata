@@ -22,7 +22,7 @@
 import os
 
 from celery import shared_task
-from datacite.errors import DataCiteUnauthorizedError, DataCiteBadRequestError, DataCiteError
+from datacite.errors import DataCiteUnauthorizedError, DataCiteError
 from flask import render_template, current_app
 from invenio_db import db
 from invenio_pidstore.errors import PIDInvalidAction, PIDDoesNotExistError
