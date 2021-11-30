@@ -34,9 +34,9 @@
     <resourceType resourceTypeGeneral="Other">{{ resource.file_type }} file</resourceType>
     <version>{{ overall_submission.version }}</version>
     <descriptions>
-        <description descriptionType="Abstract">{{ resource.file_description }}</description>
+        <description descriptionType="Abstract">{% if resource.file_description %}{{ resource.file_description | truncate(5000) }}{% else %}No file description available.{% endif %}</description>
 
-        <description descriptionType="Other">{{ overall_submission.data_abstract }}</description>
+        <description descriptionType="Other">{% if overall_submission.data_abstract %}{{ overall_submission.data_abstract | truncate(5000) }}{% else %}No data abstract available.{% endif %}</description>
     </descriptions>
 
     {% if license %}

@@ -39,9 +39,9 @@
     <resourceType resourceTypeGeneral="Dataset">Dataset</resourceType>
     <version>{{ data_submission.version }}</version>
     <descriptions>
-        <description descriptionType="Abstract">{{ table_description }}</description>
+        <description descriptionType="Abstract">{% if table_description %}{{ table_description | truncate(5000) }}{% else %}No table description available.{% endif %}</description>
 
-        <description descriptionType="Other">{{ overall_submission.data_abstract }}</description>
+        <description descriptionType="Other">{% if overall_submission.data_abstract %}{{ overall_submission.data_abstract | truncate(5000) }}{% else %}No data abstract available.{% endif %}</description>
     </descriptions>
 
     {% if license %}
