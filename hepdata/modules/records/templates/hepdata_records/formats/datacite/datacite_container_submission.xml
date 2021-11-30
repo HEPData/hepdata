@@ -35,7 +35,7 @@
     <resourceType resourceTypeGeneral="Collection">Collection</resourceType>
     <version>{{ overall_submission.version }}</version>
     <descriptions>
-        <description descriptionType="Abstract">{% if overall_submission.data_abstract %}{{ overall_submission.data_abstract | truncate(5000) }}{% else %}{{ overall_submission.data_abstract }}{% endif %}</description>
+        <description descriptionType="Abstract">{% if overall_submission.data_abstract %}{{ overall_submission.data_abstract | truncate(5000) }}{% else %}No data abstract available.{% endif %}</description>
     </descriptions>
 
 
