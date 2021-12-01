@@ -17,6 +17,6 @@ keywords:
 - name: phrases
   values: [Exclusive, Polarization, Photoproduction]
 - name: cmenergies
-  values: [1.383-1.481]
+  values: [1.383-1.481 GeV]
 name: Table 1
 table_doi: 10.17182/hepdata.21754.v1/t1
