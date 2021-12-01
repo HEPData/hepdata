@@ -274,7 +274,7 @@ def test_old_submission_yaml(app, admin_idx):
     ))
     assert(errors['submission.yaml'][1]['level'] == 'error')
     assert(errors['submission.yaml'][1]['message'].startswith(
-        "Invalid value (in GeV) for cmenergies: '1.383-1.481'"
+        "Invalid value (in GeV) for cmenergies: '1.383-1.481 GeV'"
     ))
 
     # Use old schema - should now work
