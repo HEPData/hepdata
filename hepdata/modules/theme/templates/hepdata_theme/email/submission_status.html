@@ -36,7 +36,7 @@
 
     {% if message %}
         <p style="font-weight: bolder">Message:</p>
-        <pre style="font-family:'Lato',sans-serif;font-weight:lighter;">{{ message }}</pre>
+        <pre style="white-space:pre-wrap;font-family:'Lato',sans-serif;font-weight:lighter;">{{ message }}</pre>
     {% endif %}
 
     {% if show_detail %}
@@ -66,7 +66,7 @@
               {% for message_data in table.messages %}
                 <div style="font-size:90%">
                   <p style="font-weight:bold;margin:5px">{{ message_data.user }} said on {{ message_data.date }}:</p>
-                  <pre style="font-family:'Lato',sans-serif;margin:5px 5px 10px 15px;">{{ message_data.message }}</pre>
+                  <pre style="white-space:pre-wrap;font-family:'Lato',sans-serif;margin:5px 5px 10px 15px;">{{ message_data.message }}</pre>
                 </div>
               {% endfor %}
             </td>
