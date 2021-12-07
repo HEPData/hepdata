@@ -231,12 +231,6 @@ def test_general_pages(live_server, env_browser):
 
 def test_accept_headers(app, live_server, e2e_identifiers):
     """Test records pages respond to Accept headers"""
-    dummy_json = {
-        '@context': 'http://schema.org',
-        '@type': 'Thing',
-        'name': 'Test Metadata'
-    }
-
     # Main submission page (using inspire_id)
     record_url = flask.url_for(
         'hepdata_records.get_metadata_by_alternative_id',
@@ -246,12 +240,10 @@ def test_accept_headers(app, live_server, e2e_identifiers):
     response = requests.get(record_url, headers={'Accept': 'application/ld+json'})
     assert response.status_code == 200
     json_ld = response.json()
-    # json_ld should be a superset of dummy_json
-    assert dummy_json.items() <= json_ld.items()
-    # Should also contain a description
-    assert json_ld.get('description').startswith(
-        'Fermilab-Tevatron.  We present measurements of the forward-backward asymmetry, ASYMFB(LEPTON) in the angular distribution of leptons'
-    )
+    # Check some fields to make sure it's json for right record
+    assert json_ld['@id'] == 'https://doi.org/10.17182/hepdata.1'
+    assert json_ld['url'] == 'http://localhost:5000/record/ins1283842'
+    assert json_ld['@type'] == 'Dataset'
 
     # Main submission page (using rec id, and testing 'application/vnd.hepdata.ld+json')
     record_url = flask.url_for(
@@ -274,10 +266,11 @@ def test_accept_headers(app, live_server, e2e_identifiers):
     response = requests.get(record_url, headers={'Accept': 'application/ld+json'})
     assert response.status_code == 200
     json_ld3 = response.json()
-    # json_ld should be a superset of dummy_json
-    assert dummy_json.items() <= json_ld3.items()
-    # Should also contain data downloads
-    assert json_ld3.get('distribution') == [
+    # Check some fields to make sure it's json for right record
+    assert json_ld3['@id'] == 'https://doi.org/10.17182/hepdata.1.v1/t1'
+    assert json_ld3['url'] == 'http://localhost:5000/record/2'
+    assert json_ld3['@type'] == 'Dataset'
+    assert json_ld3['distribution'] == [
         {'@type': 'DataDownload', 'contentUrl': 'http://localhost:5000/download/table/1/root', 'description': 'ROOT file', 'encodingFormat': 'https://root.cern'},
         {'@type': 'DataDownload', 'contentUrl': 'http://localhost:5000/download/table/1/yaml', 'description': 'YAML file', 'encodingFormat': 'https://yaml.org'},
         {'@type': 'DataDownload', 'contentUrl': 'http://localhost:5000/download/table/1/csv', 'description': 'CSV file', 'encodingFormat': 'text/csv'},
@@ -294,10 +287,11 @@ def test_accept_headers(app, live_server, e2e_identifiers):
     response = requests.get(resource_url, headers={'Accept': 'application/ld+json'})
     assert response.status_code == 200
     json_ld4 = response.json()
-    # json_ld should be a superset of dummy_json
-    assert dummy_json.items() <= json_ld4.items()
-    # Should also have content url
-    assert json_ld4.get('contentUrl') == 'http://localhost:5555/record/resource/55?view=true'
+    # Check some fields to make sure it's json for right record
+    assert json_ld4['@id'] == 'https://doi.org/10.17182/hepdata.57.v1/r1'
+    assert json_ld4['url'] == 'http://localhost:5000/record/resource/55?landing_page=true'
+    assert json_ld4['@type'] == 'CreativeWork'
+    assert json_ld4['contentUrl'] == 'http://localhost:5000/record/resource/55?view=true'
 
     # JSON-LD for submission without DOI
     submission.doi = ''
