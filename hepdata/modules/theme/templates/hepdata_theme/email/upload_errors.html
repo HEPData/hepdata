@@ -40,7 +40,7 @@
             {% for error in file_errors %}
                 <div style="background-color:#ECF0F1;min-height:40px;margin:3px;border-radius:0 4px 4px 0;display:flex;">
                     <div style="background-color:#C03A2B;padding:10px;width:10%;border-radius:4px 0 0 4px;color: #fff;float:left!important;">{{ error.level }}</div>
-                    <pre style="font-family:'Lato',sans-serif;font-weight:lighter;padding:10px;margin:0;width:75%;text-align:left;color: #3B5169;float:right!important;">{{ error.message|safe }}</pre>
+                    <pre style="white-space:pre-wrap;font-family:'Lato',sans-serif;font-weight:lighter;padding:10px;margin:0;width:75%;text-align:left;color: #3B5169;float:right!important;">{{ error.message|safe }}</pre>
                     <div style="clear:both;"></div>
                 </div>
             {% endfor %}
