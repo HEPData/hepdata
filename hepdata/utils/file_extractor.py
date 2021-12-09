@@ -47,7 +47,7 @@ def extract(file_path, unzipped_path):
         tar.extractall(path=unzipped_path)
         tar.close()
         return unzipped_path
-    elif is_gz_file(file_path):
+    elif is_gz_file(file_path) and file_path.endswith('.yaml.gz'):
         with gzip.GzipFile(file_path, 'rb') as gzip_file:
             with open(unzipped_path, 'wb') as unzipped_file:
                 unzipped_file.write(gzip_file.read())
