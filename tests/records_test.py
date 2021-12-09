@@ -507,6 +507,12 @@ def test_process_zip_archive_invalid(app):
     assert ("did not find expected ',' or '}'" in errors["Single YAML file splitter"][0].get("message"))
     shutil.rmtree(tmp_path)
 
+    # Try again, using the path that we've just deleted, to simulate a disk error
+    with pytest.raises(ValueError) as exc_info:
+        process_zip_archive(tmp_file_path, 1)
+
+    assert str(exc_info.value) == 'Unable to extract YAML from file invalid_parser_file.yaml. Please check the file is valid YAML and try again.'
+
 
 def test_move_files_invalid_path():
     errors = move_files('this_is_not_a_real_path', tempfile.mkdtemp(dir=CFG_TMPDIR))
