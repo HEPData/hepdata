@@ -853,7 +853,13 @@ def process_zip_archive(file_path, id, old_schema=False):
             try:
                 unzipped_path = extract(file_path, submission_temp_path)
             except Exception as e:
-                unzipped_path = None
+                # Log the exception and raise it so that celery can retry
+                log.exception(f"Unable to extract file {file_path}")
+                message = clean_error_message_for_display(
+                    "Unable to extract file {}. Please check the file is a valid zip or tar archive file and try again.".format(file_path),
+                    file_save_directory
+                )
+                raise ValueError(message) from e
 
             if not unzipped_path:
                 message = clean_error_message_for_display(

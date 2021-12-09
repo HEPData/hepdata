@@ -476,12 +476,10 @@ def test_process_zip_archive_invalid(app):
     tmp_path = tempfile.mkdtemp(dir=CFG_TMPDIR)
     shutil.copy2(file_path, tmp_path)
     tmp_file_path = os.path.join(tmp_path, 'submission_invalid_tarfile.tgz.gz')
-    errors = process_zip_archive(tmp_file_path, 1)
-    assert ("Archive file extractor" in errors)
-    assert (len(errors["Archive file extractor"]) == 1)
-    assert (errors["Archive file extractor"][0].get("level") == "error")
-    assert (errors["Archive file extractor"][0].get("message")
-            == "submission_invalid_tarfile.tgz.gz is not a valid zip or tar archive file.")
+    with pytest.raises(ValueError) as exc_info:
+        process_zip_archive(tmp_file_path, 1)
+
+    assert str(exc_info.value) == 'Unable to extract file submission_invalid_tarfile.tgz.gz. Please check the file is a valid zip or tar archive file and try again.'
     shutil.rmtree(tmp_path)
 
     # Test uploading a file that is not in any of the given formats
