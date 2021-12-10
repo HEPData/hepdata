@@ -856,7 +856,7 @@ def process_zip_archive(file_path, id, old_schema=False):
                 # Log the exception and raise it so that celery can retry
                 log.exception(f"Unable to extract file {file_path}")
                 message = clean_error_message_for_display(
-                    "Unable to extract file {}. Please check the file is a valid zip or tar archive file and try again.".format(file_path),
+                    "Unable to extract file {}. Please check the file is a valid zip or tar archive file and try again later. Contact info@hepdata.net if problems persist.".format(file_path),
                     file_save_directory
                 )
                 raise ValueError(message) from e

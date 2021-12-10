@@ -488,7 +488,7 @@ def test_process_zip_archive_invalid(app):
     with pytest.raises(ValueError) as exc_info:
         process_zip_archive(tmp_file_path, 1)
 
-    assert str(exc_info.value) == 'Unable to extract file submission_invalid_tarfile.tgz.gz. Please check the file is a valid zip or tar archive file and try again.'
+    assert str(exc_info.value) == 'Unable to extract file submission_invalid_tarfile.tgz.gz. Please check the file is a valid zip or tar archive file and try again later. Contact info@hepdata.net if problems persist.'
 
     # Test uploading a file that is not in any of the given formats
     file_path = os.path.join(base_dir, 'test_data/notazip.yaml.gz')
@@ -519,7 +519,7 @@ def test_process_zip_archive_invalid(app):
     with pytest.raises(ValueError) as exc_info:
         process_zip_archive(tmp_file_path, 1)
 
-    assert str(exc_info.value) == 'Unable to extract YAML from file invalid_parser_file.yaml. Please check the file is valid YAML and try again.'
+    assert str(exc_info.value) == 'Unable to extract YAML from file invalid_parser_file.yaml. Please check the file is valid YAML and try again later. Contact info@hepdata.net if problems persist.'
 
 
 def test_move_files_invalid_path():

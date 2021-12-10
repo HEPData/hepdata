@@ -104,7 +104,7 @@ def split_files(file_location, output_location):
     except Exception as e:
         log.exception('Error extracting YAML from %s, %s', file_location, e)
         message = f"Unable to extract YAML from file {os.path.basename(file_location)}. " \
-            + "Please check the file is valid YAML and try again."
+            + "Please check the file is valid YAML and try again later. Contact info@hepdata.net if problems persist."
         raise ValueError(message) from e
     return None, last_updated
 
