@@ -1,11 +1,3 @@
-{% if not ctx.show_review_widget or ctx.status == 'finished' %}
-    <style>
-        .reviews-view {
-            height: 500px;
-        }
-    </style>
-{% endif %}
-
 <span id="reviewer-button"
       class="slider-option review-option table-show "><span
         class="fa fa-comment"></span></span>
@@ -13,9 +5,8 @@
 <div class="reviews-view" align="center">
 
     {% if (ctx.show_review_widget or ctx.is_submission_coordinator_or_admin) and ctx.status != 'finished' and ctx.version >= ctx.version_count %}
-        <div class="review">
+        <div class="review-summary">
             <h4>Review Summary</h4>
-            <br/>
 
             <div id="review-status" align="center">
                 <span id="todo-option" class="review-status todo deactivate">Todo</span>
@@ -31,8 +22,6 @@
                 Ctrl+2, <span style="font-weight: bolder;">Passed</span> Ctrl +
                 3</p>
         </div>
-
-        <br/>
     {% else %}
 
         {% if ctx.status == 'finished' %}
@@ -45,7 +34,6 @@
 
 
     <h4>Conversation</h4>
-    <br/>
 
     <div class="message-container" id="review_messages">
         <!--will be populated automatically-->
@@ -53,13 +41,9 @@
 
     {% if ctx.status != 'finished' %}
         <div class="text_status">
-            <textarea class="input_box form-control" id="message"
-                      style="height: 10%;"
+            <textarea class="input_box form-control" style="height: 100%" id="message"
                       placeholder="Send feedback on this data..."></textarea>
         </div>
-
-        <br/>
-
 
         <div id="send" align="center">
             <button class="btn btn-primary" disabled="true" id="save_no_email">
