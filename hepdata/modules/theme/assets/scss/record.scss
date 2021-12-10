@@ -181,6 +181,11 @@
     height: 42px;
   }
 
+  @media (max-height: 625px) {
+    top: calc(100vh - 500px);
+    z-index: 9999 !important;
+  }
+
 }
 
 .review-option, .upload-option, .paper-info-option, .admin-option, .question-option {
