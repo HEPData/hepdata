@@ -186,6 +186,19 @@
     z-index: 9999 !important;
   }
 
+  @media (max-height: 500px) {
+    top: 0;
+    height: 100vh;
+    min-height: 100vh;
+    overflow-y: auto;
+    .message-container {
+      min-height: 40px
+    }
+    .text_status {
+      min-height: 30px;
+    }
+  }
+
 }
 
 .review-option, .upload-option, .paper-info-option, .admin-option, .question-option {
