@@ -48,12 +48,12 @@ def get_json_ld(ctx, submission_status, data_submission=None):
             "@type": "Organization",
             "name": "HEPData"
         },
-        "version": "1",
+        "version": ctx['version'],
         "identifier": [
             {
               "@type": "PropertyValue",
               "propertyID": "HEPDataRecord",
-              "value": f"{ctx['site_url']}/record/ins{ctx['record']['inspire_id']}"
+              "value": f"{ctx['site_url']}/record/ins{ctx['record']['inspire_id']}?version={ctx['version']}"
             },
             {
               "@type": "PropertyValue",
@@ -139,7 +139,7 @@ def _add_publication_info(data, ctx):
     data["@type"] = "Dataset"
     data["additionalType"] = "Collection"
     data["@id"] = f"https://doi.org/{ctx['record']['hepdata_doi']}"
-    data["url"] = f"{ctx['site_url']}/record/ins{ctx['record']['inspire_id']}"
+    data["url"] = f"{ctx['site_url']}/record/ins{ctx['record']['inspire_id']}?version={ctx['version']}"
     abstract = ctx['record'].get('data_abstract') or ctx['record'].get('abstract') or "No description available"
     data["description"] = truncate_string(abstract, max_chars=5000)
     data["name"] = truncate_string(ctx['record']['title'], max_chars=5000)
@@ -222,5 +222,5 @@ def _add_is_part_of(data, ctx):
         "@type": "Dataset",
         "name": truncate_string(ctx['record']['title'], max_chars=5000),
         "description": truncate_string(abstract, max_chars=5000),
-        "url": f"{ctx['site_url']}/record/ins{ctx['record']['inspire_id']}"
+        "url": f"{ctx['site_url']}/record/ins{ctx['record']['inspire_id']}?version={ctx['version']}"
     }
