@@ -766,7 +766,7 @@ def test_get_json_ld(app, load_default_data, identifiers):
             '@type': 'Organization',
             'name': 'HEPData'
         },
-        'version': '1',
+        'version': 1,
         'identifier': [
             {'@type': 'PropertyValue',
             'propertyID': 'HEPDataRecord',
