@@ -126,7 +126,7 @@ def _add_authors(data, ctx):
             }
             if author.get('affiliation'):
                 author_data['affiliation'] = {
-                    "@type": "Organisation",
+                    "@type": "Organization",
                     "name": author['affiliation']
                 }
             authors.append(author_data)

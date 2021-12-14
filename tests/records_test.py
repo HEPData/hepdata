@@ -961,17 +961,17 @@ def test_get_json_ld(app, load_default_data, identifiers):
     assert publication_data['author'] == [
         {
             "@type": "Person",
-            "affiliation": {"@type": "Organisation", "name": "Columbia U."},
+            "affiliation": {"@type": "Organization", "name": "Columbia U."},
             "name": "Durbin, R."
         },
         {
             "@type": "Person",
-            "affiliation": {"@type": "Organisation", "name": "Columbia U."},
+            "affiliation": {"@type": "Organization", "name": "Columbia U."},
             "name": "Loar, H."
         },
         {
             "@type": "Person",
-            "affiliation": {"@type": "Organisation", "name": "Columbia U."},
+            "affiliation": {"@type": "Organization", "name": "Columbia U."},
             "name": "Steinberger, J."
         }
     ]
