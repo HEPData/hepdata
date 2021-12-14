@@ -148,17 +148,57 @@
 }
 
 .reviews-view {
+  min-height: 500px;
+
   h4 {
-    margin: 0;
+    margin: 30px 0 10px 0;
+    height: 20px;
+
+    &:first-child {
+      margin-top: 0;
+    }
+  }
+
+  .review-summary {
+    height: 52px;
   }
 
   .reviews-view h5 {
     font-size: .9em;
   }
 
-  .btn-primary {
-    padding: 10px 6px;
+  .message-container {
+    height: calc((100% - 184px) * 0.6);
   }
+
+  .text_status {
+    height: calc((100% - 184px) * 0.4);
+  }
+
+  .btn-primary {
+    padding: 10px 5px;
+    margin-top: 15px;
+    height: 42px;
+  }
+
+  @media (max-height: 625px) {
+    top: calc(100vh - 500px);
+    z-index: 9999 !important;
+  }
+
+  @media (max-height: 500px) {
+    top: 0;
+    height: 100vh;
+    min-height: 100vh;
+    overflow-y: auto;
+    .message-container {
+      min-height: 40px
+    }
+    .text_status {
+      min-height: 30px;
+    }
+  }
+
 }
 
 .review-option, .upload-option, .paper-info-option, .admin-option, .question-option {
@@ -247,8 +287,8 @@
 
 .message-container {
   height: 40%;
-  overflow: scroll;
-  margin-bottom: 10px;
+  overflow: auto;
+  margin-bottom: 15px;
 }
 
 .message-item {

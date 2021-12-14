@@ -244,8 +244,8 @@
 }</textarea>
 
                                     {% if tables_to_show or resources_to_show %}
-                                      <p>
-                                        {% if ctx.record_type == 'publication' %}
+                                      {% if ctx.record_type == 'publication' %}
+                                        <p>
                                           You can also cite the {{ tables_to_show|length }} data
                                           table{% if tables_to_show|length > 1 %}s{% endif %}
                                           {% if resources_to_show %}
@@ -253,10 +253,16 @@
                                             resource{% if resources_to_show|length > 1 %}s{% endif %}
                                           {% endif %}
                                           individually.
-                                        {% else %}
-                                          You can also cite this {{ ctx.record_type }} directly.
-                                        {% endif %}
-                                      </p>
+                                        </p>
+                                      {% else %}
+                                          <p>
+                                            <button class="btn btn-primary btn-sm cite-copy-btn pull-right" id="table_bibtex_copy_btn"
+                                                    data-clipboard-target="#{{ 'table' if tables_to_show else 'resource'}}_bibtex_1">
+                                                <i class="fa fa-copy" alt="Copy to clipboard"></i>
+                                            </button>
+                                          </p>
+                                          <p>You can also cite this {{ ctx.record_type }} directly.</p>
+                                      {% endif %}
 
                                       {% if ctx.record_type == "publication" %}
                                         <h4>Data tables</h4>

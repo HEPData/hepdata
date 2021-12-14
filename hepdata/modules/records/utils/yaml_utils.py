@@ -79,32 +79,33 @@ def split_files(file_location, output_location):
                     write_submission_yaml_block(
                         document, submission_yaml)
                 else:
-                    file_name = document["name"].replace(' ', '_').replace('/', '-') + ".yaml"
+                    file_name = document.get("name", '').replace(' ', '_').replace('/', '-') + ".yaml"
                     document["data_file"] = file_name
 
                     with open(os.path.join(output_location, file_name),
                               'w') as data_file:
                         Dumper.add_representer(str, str_presenter)
-                        yaml.dump(
-                            {"independent_variables":
+                        yaml.dump({
+                            "independent_variables":
                                 cleanup_data_yaml(
-                                    document["independent_variables"]),
-                                "dependent_variables":
-                                    cleanup_data_yaml(
-                                        document["dependent_variables"])},
+                                    document.get("independent_variables")),
+                            "dependent_variables":
+                                cleanup_data_yaml(
+                                    document.get("dependent_variables"))
+                            },
                             data_file, allow_unicode=True, Dumper=Dumper)
 
                     write_submission_yaml_block(document,
                                                 submission_yaml,
                                                 type="record")
 
-    except yaml.scanner.ScannerError as se:
-        return se, last_updated
-    except yaml.parser.ParserError as pe:
-        return pe, last_updated
+    except (yaml.scanner.ScannerError, yaml.parser.ParserError) as ye:
+        return ye, last_updated
     except Exception as e:
-        log.error('Error parsing %s, %s', file_location, e)
-        return e, last_updated
+        log.exception('Error extracting YAML from %s, %s', file_location, e)
+        message = f"Unable to extract YAML from file {os.path.basename(file_location)}. " \
+            + "Please check the file is valid YAML and try again later. Contact info@hepdata.net if problems persist."
+        raise ValueError(message) from e
     return None, last_updated
 
 
