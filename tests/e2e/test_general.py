@@ -242,7 +242,7 @@ def test_accept_headers(app, live_server, e2e_identifiers):
     json_ld = response.json()
     # Check some fields to make sure it's json for right record
     assert json_ld['@id'] == 'https://doi.org/10.17182/hepdata.1'
-    assert json_ld['url'] == 'http://localhost:5000/record/ins1283842'
+    assert json_ld['url'] == 'http://localhost:5000/record/ins1283842?version=1'
     assert json_ld['@type'] == 'Dataset'
 
     # Main submission page (using rec id, and testing 'application/vnd.hepdata.ld+json')
