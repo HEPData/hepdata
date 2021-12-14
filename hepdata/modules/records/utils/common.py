@@ -179,13 +179,20 @@ def default_time(obj):
     return obj
 
 
-def truncate_string(string, words):
-    all_words = string.split()
-    truncated_string = ' '.join(all_words[:words])
+def truncate_string(string, max_words=None, max_chars=None):
+    if max_words:
+        all_words = string.split()
+        truncated_string = ' '.join(all_words[:max_words])
 
-    if len(all_words) > words:
-        truncated_string += '...'
-    return truncated_string
+        if len(all_words) > max_words:
+            truncated_string += '...'
+        return truncated_string
+
+    elif max_chars:
+        if len(string) < max_chars:
+            return string
+        else:
+            return string[:(max_chars - 3)] + '...'
 
 
 def get_record_contents(recid, status=None):

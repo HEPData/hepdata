@@ -49,6 +49,7 @@ from hepdata.modules.records.utils.common import decode_string, find_file_in_dir
     remove_file_extension, truncate_string, get_record_contents, get_record_by_id, IMAGE_TYPES
 from hepdata.modules.records.utils.data_processing_utils import process_ctx
 from hepdata.modules.records.utils.data_files import get_data_path_for_record, cleanup_old_files
+from hepdata.modules.records.utils.json_ld import get_json_ld
 from hepdata.modules.records.utils.submission import process_submission_directory, \
     create_data_review, cleanup_submission, clean_error_message_for_display
 from hepdata.modules.submission.api import get_latest_hepsubmission, get_submission_participants_for_record
@@ -258,13 +259,6 @@ def format_resource(resource, contents, content_url):
     ctx['content_url'] = content_url
     ctx['resource_url'] = request.url
     ctx['related_publication_id'] = hepsubmission.publication_recid
-    ctx['json_ld'] = get_json_ld(
-        resource.doi,
-        hepsubmission.overall_status,
-        content_url=request.base_url + '?view=true',
-        parent_name=ctx['record']['title'],
-        parent_description=(ctx['record'].get('data_abstract') or ctx['record'].get('abstract'))
-    )
     ctx['file_mimetype'] = get_resource_mimetype(resource, contents)
     ctx['resource_filename'] = os.path.basename(resource.file_location)
     ctx['resource_filetype'] = f'{resource.file_type} File'
@@ -280,6 +274,11 @@ def format_resource(resource, contents, content_url):
     else:
         ctx['display_type'] = 'code'
 
+    ctx['json_ld'] = get_json_ld(
+        ctx,
+        hepsubmission.overall_status
+    )
+
     return ctx
 
 
@@ -291,115 +290,6 @@ def get_resource_mimetype(resource, contents):
         else:
             file_mimetype = 'text/plain'
     return file_mimetype
-
-
-def get_json_ld(doi, submission_status, content_url=None, download_table_id=None,
-                parent_name=None, parent_description=None, data_tables=None,
-                data_abstract=None):
-    """Get the JSON-LD metadata from DataCite for this DOI, amending as necessary.
-
-    :param type doi: DOI for which to get metadata
-    :param type submission_status: overall status of submission to which this DOI relates
-    :param type content_url: if set, adds URL as `contentUrl`
-    :param type download_table_id: if set, adds download links for this table as `distribution`/`DataDownload`
-    :return: JSON-LD as python dict
-    :rtype: dict, or None if DOI is not registered or metadata cannot be retrieved
-    """
-    try:
-        headers = {}
-        if not doi or submission_status != 'finished':
-            return {
-                'error': 'JSON-LD is unavailable for this record; JSON-LD is only available for finalised records with DOIs.'
-            }
-
-        if current_app.config.get('E2E_TESTING'):
-            # If E2E_TESTING=True, use dummy JSON
-            data = {
-                '@context': 'http://schema.org',
-                '@type': 'Thing',
-                'name': 'Test Metadata'
-            }
-        else:
-            if current_app.config.get('ENV') == 'development' or current_app.config.get('TESTING'):
-                # If working in dev mode, try to get json-ld from api.test.datacite.org
-                url = f"https://api.test.datacite.org/dois/{doi}"
-                headers['Accept'] = "application/vnd.schemaorg.ld+json"
-            else:
-                url = f"https://data.crosscite.org/application/vnd.schemaorg.ld+json/{doi}"
-
-            try:
-                r = requests.get(url, headers=headers)
-                r.raise_for_status()
-                data = r.json()
-            except Exception as e:
-                log.error(e)
-                return {
-                    'error': f'JSON-LD could not be retrieved from {url}'
-                }
-
-        if 'author' in data and 'creator' not in data:
-            data['creator'] = data['author']
-
-        if content_url:
-            data['contentUrl'] = content_url
-
-        if download_table_id:
-            data_downloads = []
-            download_types = {
-                'root': 'https://root.cern',
-                'yaml': 'https://yaml.org',
-                'csv': 'text/csv',
-                'yoda': 'https://yoda.hepforge.org'
-            }
-            site_url = current_app.config.get('SITE_URL', 'https://www.hepdata.net')
-            for download_type, format in download_types.items():
-                data_downloads.append({
-                  "@type": "DataDownload",
-                  "contentUrl": f"{site_url}/download/table/{download_table_id}/{download_type}",
-                  "description": download_type.upper() + " file",
-                  "encodingFormat": format
-                })
-                data['distribution'] = data_downloads
-
-        # Google demands that the data catalog has a url or name
-        if 'includedInDataCatalog' in data and '@id' in data['includedInDataCatalog']:
-            data['includedInDataCatalog']['url'] = f"https://doi.org/{data['includedInDataCatalog']['@id']}"
-
-        # Google wants isPartOf to be a dataset not a collection
-        if 'isPartOf' in data:
-            data['isPartOf']['@type'] = 'Dataset'
-            if parent_name:
-                data['isPartOf']['name'] = parent_name
-            if parent_description:
-                data['isPartOf']['description'] = parent_description
-            if '@id' in data['isPartOf']:
-                data['isPartOf']['url'] = data['isPartOf']['@id']
-            if 'author' in data['isPartOf'] and 'creator' not in data['isPartOf']:
-                data['isPartOf']['creator'] = data['isPartOf']['author']
-
-        if data_tables and 'hasPart' in data:
-            # Submission container. Mark it as Dataset for Google, and add table details
-            data['@type'] = 'Dataset'
-            data_table_dict = { data_table['doi']: data_table for data_table in data_tables}
-            if type(data['hasPart']) != list:
-                data['hasPart'] = [data['hasPart']]
-            for data_table_json in data['hasPart']:
-                doi = data_table_json['@id'].replace('https://doi.org/', '')
-                if doi in data_table_dict:
-                    data_table_json['name'] = data_table_dict[doi]['name']
-                    data_table_json['description'] = data_table_dict[doi]['description']
-
-        if data_abstract and 'description' not in data:
-            data['description'] = data_abstract
-
-        return data
-
-    except Exception as e:
-        msg = f"An unexpected error occurred when retrieving/formatting JSON-LD for doi {doi}"
-        log.error(f'{msg}: {str(e)}', exc_info=True)
-        return {
-            'error': msg
-        }
 
 
 def should_send_json_ld(request):
@@ -513,10 +403,8 @@ def render_record(recid, record, version, output_format, light_mode=False):
 
             if output_format == 'html' or output_format == 'json_ld':
                 ctx['json_ld'] = get_json_ld(
-                    record.get('hepdata_doi'),
-                    hepdata_submission.overall_status,
-                    data_tables=ctx['data_tables'],
-                    data_abstract=(ctx['record'].get('data_abstract') or ctx['record'].get('abstract'))
+                    ctx,
+                    hepdata_submission.overall_status
                 )
 
                 if output_format == 'json_ld':
@@ -566,11 +454,9 @@ def render_record(recid, record, version, output_format, light_mode=False):
 
             if output_format == 'html' or output_format == 'json_ld':
                 ctx['json_ld'] = get_json_ld(
-                    record.get('doi'),
+                    ctx,
                     hepdata_submission.overall_status,
-                    download_table_id=ctx['table_id_to_show'],
-                    parent_name=publication_record.get('title'),
-                    parent_description=publication_record.get('data_abstract')
+                    datasubmission
                 )
 
                 if output_format == 'json_ld':

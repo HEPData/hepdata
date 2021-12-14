@@ -42,12 +42,15 @@ import requests_mock
 from hepdata.modules.permissions.models import SubmissionParticipant
 from hepdata.modules.records.api import process_payload, process_zip_archive, \
     move_files, get_all_ids, has_upload_permissions, \
-    has_coordinator_permissions, create_new_version, get_json_ld, \
-    get_resource_mimetype, create_breadcrumb_text
+    has_coordinator_permissions, create_new_version, \
+    get_resource_mimetype, create_breadcrumb_text, format_submission, \
+    format_resource
+from hepdata.modules.records.importer.api import import_records
 from hepdata.modules.records.utils.submission import get_or_create_hepsubmission, process_submission_directory, do_finalise, unload_submission
 from hepdata.modules.records.utils.common import get_record_by_id, get_record_contents
 from hepdata.modules.records.utils.data_processing_utils import generate_table_structure
 from hepdata.modules.records.utils.data_files import get_data_path_for_record
+from hepdata.modules.records.utils.json_ld import get_json_ld
 from hepdata.modules.records.utils.users import get_coordinators_in_system, has_role
 from hepdata.modules.records.utils.workflow import update_record, create_record
 from hepdata.modules.records.views import set_data_review_status
@@ -742,182 +745,237 @@ def test_get_resource_mimetype(app):
     assert get_resource_mimetype(resource, 'Binary') == 'application/octet-stream'
 
 
-def test_get_json_ld(app):
-    doi = 'my.test.hepdata.doi'
-    dummy_json = {'a': 1, 'b': 2, 'author': 'A. Nonymous'}
-    # Use requests_mock to mock the response from datacite
-    with requests_mock.Mocker() as m:
-        m.get(f'https://api.test.datacite.org/dois/{doi}', json=dummy_json)
-        data = get_json_ld(doi, 'finished')
-        # Only difference from dummy_json is to copy 'author' to 'creator'
-        assert data == {
-            'a': 1,
-            'b': 2,
-            'author': 'A. Nonymous',
-            'creator': 'A. Nonymous'
-        }
+def test_get_json_ld(app, load_default_data, identifiers):
+    recid = 1
+    hepsubmission = get_latest_hepsubmission(publication_recid=recid)
+    record = get_record_by_id(recid)
 
-        m.get(f'https://api.test.datacite.org/dois/{doi}', json=dummy_json)
-        data = get_json_ld(doi, 'finished', content_url='https://my.test.hepdata.url')
-        assert data == {
-            'a': 1,
-            'b': 2,
-            'author': 'A. Nonymous',
-            'creator': 'A. Nonymous',
-            'contentUrl': 'https://my.test.hepdata.url'
-        }
+    # Publication metadata
+    ctx = format_submission(recid, record, 1, 1, hepsubmission)
+    ctx['record_type'] = 'publication'
 
-        m.get(f'https://api.test.datacite.org/dois/{doi}', json=dummy_json)
-        data = get_json_ld(doi, 'finished', download_table_id=12345)
-        site_url = app.config.get('SITE_URL', 'https://www.hepdata.net')
-        assert data == {
-            'a': 1,
-            'b': 2,
-            'author': 'A. Nonymous',
-            'creator': 'A. Nonymous',
-            'distribution': [
+    publication_data = get_json_ld(ctx, 'finished')
+    assert publication_data == {
+        '@context': 'http://schema.org',
+        'inLanguage': 'en',
+        'provider': {
+            '@type': 'Organization',
+            'name': 'HEPData'
+        },
+        'publisher': {
+            '@type': 'Organization',
+            'name': 'HEPData'
+        },
+        'version': 1,
+        'identifier': [
+            {'@type': 'PropertyValue',
+            'propertyID': 'HEPDataRecord',
+            'value': 'http://localhost:5000/record/ins1283842?version=1'},
+            {'@type': 'PropertyValue',
+                'propertyID': 'HEPDataRecordAlt',
+                'value': 'http://localhost:5000/record/1'}
+        ],
+        'datePublished': '2014',
+        '@reverse': {
+            'isBasedOn': [
                 {
-                    '@type': 'DataDownload',
-                    'contentUrl': f'{site_url}/download/table/12345/root',
-                    'description': 'ROOT file',
-                    'encodingFormat': 'https://root.cern'
+                    '@type': 'ScholarlyArticle',
+                    'identifier': {
+                        '@type': 'PropertyValue',
+                        'propertyID': 'URL',
+                        'value': 'https://inspirehep.net/literature/1283842'
+                    }
                 },
                 {
-                    '@type': 'DataDownload',
-                    'contentUrl': f'{site_url}/download/table/12345/yaml',
-                    'description': 'YAML file',
-                    'encodingFormat': 'https://yaml.org'
-                },
-                {
-                    '@type': 'DataDownload',
-                    'contentUrl': f'{site_url}/download/table/12345/csv',
-                    'description': 'CSV file',
-                    'encodingFormat': 'text/csv'
-                },
-                {
-                    '@type': 'DataDownload',
-                    'contentUrl': f'{site_url}/download/table/12345/yoda',
-                    'description': 'YODA file',
-                    'encodingFormat': 'https://yoda.hepforge.org'
+                    '@id': 'https://doi.org/10.1103/PhysRevD.90.072001',
+                    '@type': 'JournalArticle'
                 }
             ]
-        }
-
-        # Add isPartOf and includedInDataCatalog; check parent name and
-        # descriptions are added and URLs added
-        dummy_json['isPartOf'] = {
-            '@id': 'https://doi.org/my.parent.doi',
-            'author': 'B. Nonymous'
-        }
-        dummy_json['includedInDataCatalog'] = { '@id': 'my.parent.doi' }
-        m.get(f'https://api.test.datacite.org/dois/{doi}', json=dummy_json)
-        data = get_json_ld(doi, 'finished', parent_name='My HEPData submission',
-                           parent_description="It's amazing")
-        assert data == {
-            'a': 1,
-            'b': 2,
-            'author': 'A. Nonymous',
-            'creator': 'A. Nonymous',
-            'isPartOf': {
-                '@id': 'https://doi.org/my.parent.doi',
-                '@type': 'Dataset',
-                'author': 'B. Nonymous',
-                'creator': 'B. Nonymous',
-                'name': 'My HEPData submission',
-                'description': "It's amazing",
-                'url': 'https://doi.org/my.parent.doi'
-            },
-            'includedInDataCatalog': {
-                '@id': 'my.parent.doi',
-                'url': 'https://doi.org/my.parent.doi'
-            }
-        }
-
-        # Reset dummy_json and add hasPart with data tables
-        del dummy_json['isPartOf']
-        del dummy_json['includedInDataCatalog']
-        dummy_json['hasPart'] = [
-            {'@id': 'https://doi.org/table1.doi'},
-            {'@id': 'https://doi.org/table2.doi'}
-        ]
-        data_tables = [
-            {
-                'doi': 'table1.doi',
-                'name': 'Table 1',
-                'description': 'Description of Table 1'
-            },
-            {
-                'doi': 'table2.doi',
-                'name': 'Table 2',
-                'description': 'Description of Table 2'
-            }
-        ]
-        m.get(f'https://api.test.datacite.org/dois/{doi}', json=dummy_json)
-        data = get_json_ld(doi, 'finished', data_tables=data_tables, data_abstract="Publication description")
-        assert data == {
-            'a': 1,
-            'b': 2,
-            'author': 'A. Nonymous',
-            'creator': 'A. Nonymous',
+        },
+        'author': {'@type': 'Organization', 'name': 'D0 Collaboration'},
+        'creator': {'@type': 'Organization', 'name': 'D0 Collaboration'},
+        '@type': 'Dataset',
+        'additionalType': 'Collection',
+        '@id': 'https://doi.org/10.17182/hepdata.1',
+        'url': 'http://localhost:5000/record/ins1283842?version=1',
+        'description': 'Fermilab-Tevatron.  We present measurements of the forward-backward asymmetry, ASYMFB(LEPTON) in the angular distribution of leptons (electrons and muons) from decays of top quarks and antiquarks produced in proton-antiproton collisions. We consider the final state containing a lepton and at least three jets. The entire sample of data collected by the D0 experiment during Run II (2001 - 2011) of the Fermilab Tevatron Collider, corresponding to 9.7 inverse fb of integrated luminosity, is used. We also examine the dependence of ASYMFB(LEPTON) on the transverse momentum, PT(LEPTON), and rapidity, YRAP(LEPTON), of the lepton.',
+        'name': 'Measurement of the forward-backward asymmetry in the distribution of leptons in $t\\bar{t}$ events in the lepton$+$jets channel',
+        'hasPart': [
+            {'@id': 'https://doi.org/10.17182/hepdata.1.v1/t1',
             '@type': 'Dataset',
-            'description': 'Publication description',
-            'hasPart': [
-                {
-                    '@id': 'https://doi.org/table1.doi',
-                    'name': 'Table 1',
-                    'description': 'Description of Table 1'
-                },
-                {
-                    '@id': 'https://doi.org/table2.doi',
-                    'name': 'Table 2',
-                    'description': 'Description of Table 2'
-                }
-            ]
-        }
-
-        # Modify hasPart to only contain a single table
-        dummy_json['hasPart'] = {'@id': 'https://doi.org/table1.doi'}
-        data_tables = [
-            {
-                'doi': 'table1.doi',
-                'name': 'Table 1',
-                'description': 'Description of Table 1'
-            }
-        ]
-        m.get(f'https://api.test.datacite.org/dois/{doi}', json=dummy_json)
-        data = get_json_ld(doi, 'finished', data_tables=data_tables, data_abstract="Publication description")
-        assert data == {
-            'a': 1,
-            'b': 2,
-            'author': 'A. Nonymous',
-            'creator': 'A. Nonymous',
+            'description': 'Observed ASYMFB(LEPTON) as a function of PT(LEPTON) at reconstruction level.',
+            'name': 'Table 1'},
+            {'@id': 'https://doi.org/10.17182/hepdata.1.v1/t2',
             '@type': 'Dataset',
-            'description': 'Publication description',
-            'hasPart': [
-                {
-                    '@id': 'https://doi.org/table1.doi',
-                    'name': 'Table 1',
-                    'description': 'Description of Table 1'
-                }
-            ]
-        }
+            'description': 'Observed production-level ASYMFB(LEPTON) as a function of PT(LEPTON).',
+            'name': 'Table 2'},
+            {'@id': 'https://doi.org/10.17182/hepdata.1.v1/t3',
+            '@type': 'Dataset',
+            'description': 'Observed production-level ASYMFB(LEPTON) as a function of ABS(YRAP(LEPTON)).',
+            'name': 'Table 3'},
+            {'@id': 'https://doi.org/10.17182/hepdata.1.v1/t4',
+            '@type': 'Dataset',
+            'description': 'Observed ASYMFB(LEPTON) at reconstruction level for the "lepton + 3 jets, 1 b-tag" channel.',
+            'name': 'Table 4'},
+            {'@id': 'https://doi.org/10.17182/hepdata.1.v1/t5',
+            '@type': 'Dataset',
+            'description': 'Observed ASYMFB(LEPTON) at reconstruction level for the "lepton + 3 jets, &gt;= 2 b-tags" channel.',
+            'name': 'Table 5'},
+            {'@id': 'https://doi.org/10.17182/hepdata.1.v1/t6',
+            '@type': 'Dataset',
+            'description': 'Observed ASYMFB(LEPTON) at reconstruction level for the "lepton + &gt;= 4 jets, 1 b-tag" channel.',
+            'name': 'Table 6'},
+            {'@id': 'https://doi.org/10.17182/hepdata.1.v1/t7',
+            '@type': 'Dataset',
+            'description': 'Observed ASYMFB(LEPTON) at reconstruction level for the "lepton + &gt;= 4 jets, &gt;= 2 b-tags" channel.',
+            'name': 'Table 7'},
+            {'@id': 'https://doi.org/10.17182/hepdata.1.v1/t8',
+            '@type': 'Dataset',
+            'description': 'Observed ASYMFB(LEPTON) at production level for the "lepton + 3 jets, 1 b-tag" channel.',
+            'name': 'Table 8'},
+            {'@id': 'https://doi.org/10.17182/hepdata.1.v1/t9',
+            '@type': 'Dataset',
+            'description': 'Observed ASYMFB(LEPTON) at production level for the "lepton + 3 jets, &gt;= 2 b-tags" channel.',
+            'name': 'Table 9'},
+            {'@id': 'https://doi.org/10.17182/hepdata.1.v1/t10',
+            '@type': 'Dataset',
+            'description': 'Observed ASYMFB(LEPTON) at production level for the "lepton + &gt;= 4 jets, 1 b-tag" channel.',
+            'name': 'Table 10'},
+            {'@id': 'https://doi.org/10.17182/hepdata.1.v1/t11',
+            '@type': 'Dataset',
+            'description': 'Observed ASYMFB(LEPTON) at production level for the "lepton + &gt;= 4 jets, &gt;= 2 b-tags" channel.',
+            'name': 'Table 11'},
+            {'@id': 'https://doi.org/10.17182/hepdata.1.v1/t12',
+            '@type': 'Dataset',
+            'description': 'The total value of ASYMFB(LEPTON) at reconstruction level measured from the combined channels.',
+            'name': 'Table 12'},
+            {'@id': 'https://doi.org/10.17182/hepdata.1.v1/t13',
+            '@type': 'Dataset',
+            'description': 'The total value of ASYMFB(LEPTON) at production level measured from the combined channels.',
+            'name': 'Table 13'},
+            {'@id': 'https://doi.org/10.17182/hepdata.1.v1/t14',
+            '@type': 'Dataset',
+            'description': 'The total value of ASYMFB(LEPTON) at production level calculated from the measurements using the combined single lepton channels and a...',
+            'name': 'Table 14'}
+        ]}
 
-        # Check a connection error returns JSON with an error
-        m.get(f'https://api.test.datacite.org/dois/{doi}',
-              exc=requests.exceptions.ConnectTimeout)
-        data = get_json_ld(doi, 'finished')
-        assert data == {
-            'error': f'JSON-LD could not be retrieved from https://api.test.datacite.org/dois/{doi}'
-        }
+    table_recid = 2
+    table_record = get_record_contents(table_recid)
+    ctx = format_submission(recid, record,
+                            1, 1, hepsubmission,
+                            data_table=table_record['title'])
+    ctx['record_type'] = 'table'
+    ctx['related_publication_id'] = recid
+    ctx['table_name'] = record['title']
+    ctx['table_id_to_show'] = table_recid
 
-        # Provide invalid json to get an unexpected error
-        dummy_json = {'isPartOf': 3}
-        m.get(f'https://api.test.datacite.org/dois/{doi}', json=dummy_json)
-        data = get_json_ld(doi, 'finished')
-        assert data == {
-            'error': f"An unexpected error occurred when retrieving/formatting JSON-LD for doi {doi}"
-        }
+    # Table metadata
+    data_submission = DataSubmission.query.filter_by(
+        publication_recid=hepsubmission.publication_recid,
+        associated_recid=table_recid).first()
+    table_data = get_json_ld(ctx, 'finished', data_submission)
+    for key in ['@context', 'inLanguage', 'provider', 'publisher', 'version', 'identifier', 'datePublished', '@reverse', 'author', 'creator', '@type']:
+        assert table_data[key] == publication_data[key]
 
+    assert table_data['additionalType'] == 'Dataset'
+    assert table_data["keywords"] == 'PBAR P --> LEPTON JETS X, ASYM, Inclusive, Asymmetry Measurement, Jet Production, 1960.0'
+    assert table_data["url"] == f"http://localhost:5000/record/2"
+    assert table_data['distribution'] == [
+        {
+            '@type': 'DataDownload',
+            'contentUrl': f'http://localhost:5000/download/table/2/root',
+            'description': 'ROOT file',
+            'encodingFormat': 'https://root.cern'
+        },
+        {
+            '@type': 'DataDownload',
+            'contentUrl': f'http://localhost:5000/download/table/2/yaml',
+            'description': 'YAML file',
+            'encodingFormat': 'https://yaml.org'
+        },
+        {
+            '@type': 'DataDownload',
+            'contentUrl': f'http://localhost:5000/download/table/2/csv',
+            'description': 'CSV file',
+            'encodingFormat': 'text/csv'
+        },
+        {
+            '@type': 'DataDownload',
+            'contentUrl': f'http://localhost:5000/download/table/2/yoda',
+            'description': 'YODA file',
+            'encodingFormat': 'https://yoda.hepforge.org'
+        }
+    ]
+    assert table_data['includedInDataCatalog'] == {
+        '@id': 'https://doi.org/10.17182/hepdata.1',
+        '@type': 'DataCatalog',
+        'url': 'http://localhost:5000/record/ins1283842?version=1'
+    }
+    assert table_data['isPartOf'] == {
+        '@id': publication_data['@id'],
+        '@type': publication_data['@type'],
+        'description': publication_data['description'],
+        'name': publication_data['name'],
+        'url': publication_data['url']
+    }
+
+    # Resource metadata
+    resource = DataResource(
+        file_location='a/b/myscript.py',
+        file_type='Python',
+        file_description='A script to do some stuff to the data',
+        doi='10.17182/hepdata.1.v1/r1'
+    )
+    hepsubmission.resources.append(resource)
+    db.session.add(hepsubmission)
+    db.session.commit()
+    ctx = format_resource(resource, 'print("Hello world")', f'http://localhost:5000/record/resource/{resource.id}?view=true')
+    resource_data = get_json_ld(ctx, 'finished')
+    for key in ['@context', 'inLanguage', 'provider', 'publisher', 'version', 'identifier', 'datePublished', '@reverse', 'author', 'creator']:
+        print(key, resource_data[key])
+        assert resource_data[key] == publication_data[key]
+
+    assert resource_data['@id'] == 'https://doi.org/10.17182/hepdata.1.v1/r1'
+    assert resource_data['@type'] == "CreativeWork"
+    assert resource_data['additionalType'] == 'Python file'
+    assert resource_data['contentUrl'] == f'http://localhost:5000/record/resource/{resource.id}?view=true'
+    assert resource_data['description'] == resource.file_description
+    assert resource_data['name'] == f'"myscript.py" of "{publication_data["name"]}"'
+    assert resource_data['url'] == f'http://localhost:5000/record/resource/{resource.id}?landing_page=true'
+    assert resource_data['isPartOf'] == table_data['isPartOf']
+
+    # Provide invalid status
+    data = get_json_ld(ctx, 'todo')
+    assert data == {
+        'error': 'JSON-LD is unavailable for this record; JSON-LD is only available for finalised records with DOIs.'
+    }
+
+    # Import a record with no collaboration to check authors work as expected
+    import_records(['ins47326'], synchronous=True)
+    hepsubmission = get_latest_hepsubmission(inspire_id='47326')
+    record = get_record_contents(hepsubmission.publication_recid)
+    ctx = format_submission(recid, record, 1, 1, hepsubmission)
+    ctx['record_type'] = 'publication'
+
+    publication_data = get_json_ld(ctx, 'finished')
+    assert publication_data['author'] == [
+        {
+            "@type": "Person",
+            "affiliation": {"@type": "Organization", "name": "Columbia U."},
+            "name": "Durbin, R."
+        },
+        {
+            "@type": "Person",
+            "affiliation": {"@type": "Organization", "name": "Columbia U."},
+            "name": "Loar, H."
+        },
+        {
+            "@type": "Person",
+            "affiliation": {"@type": "Organization", "name": "Columbia U."},
+            "name": "Steinberger, J."
+        }
+    ]
+    assert publication_data['creator'] == publication_data['author']
 
 
 def test_create_breadcrumb_text():
