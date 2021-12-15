@@ -26,7 +26,6 @@
 
 import logging
 import json
-import mimetypes
 import time
 from dateutil import parser
 from invenio_accounts.models import User
@@ -347,6 +346,16 @@ def get_table_details(recid, data_recid, version):
                                                  'type': associated_data_file.file_type,
                                                  'id': associated_data_file.id,
                                                  'alt_location': alt_location})
+
+        # If there is no matching thumbnail available for an image file,
+        # just use the image file itself as the preview location.
+        for key, value in tmp_assoc_files.items():
+            if (all(k in value for k in ('alt_location', 'type', 'id')) and
+                    not value['alt_location'].lower().startswith('http') and
+                    value['type'].lower() in IMAGE_TYPES and
+                    'preview_location' not in value):
+                tmp_assoc_files[key]['preview_location'] = \
+                    '/record/resource/{0}?view=true'.format(value['id'])
 
         # add associated files to the table contents
         table_contents['associated_files'] = list(tmp_assoc_files.values())
