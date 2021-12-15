@@ -119,7 +119,7 @@ Run Celery (-B runs celery beat):
 
 .. code-block:: console
 
-   (hepdata)$ celery worker -l info -E -B -A hepdata.celery -Q celery,priority,datacite
+   (hepdata)$ celery -A hepdata.celery worker -l info -E -B -Q celery,priority,datacite
 
 PostgreSQL
 ----------
