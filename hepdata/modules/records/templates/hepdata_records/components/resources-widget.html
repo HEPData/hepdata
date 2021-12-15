@@ -21,7 +21,7 @@
                 </div>
 
                 <div class="col-md-9" id="resource-details">
-                    {% if (ctx.show_review_widget or ctx.show_upload_widget or ctx.is_submission_coordinator_or_admin) %}
+                    {% if ctx.show_review_widget or (ctx.show_upload_widget and ctx.mode != 'sandbox') or ctx.is_submission_coordinator_or_admin %}
 
                         <div class="container-fluid">
 
@@ -102,7 +102,7 @@
 
                     <div class="container-fluid">
                         {% set resource_class='' %}
-                        {% if not(ctx.show_review_widget or ctx.show_upload_widget or ctx.is_submission_coordinator_or_admin) %}
+                        {% if not(ctx.show_review_widget or (ctx.show_upload_widget and ctx.mode != 'sandbox') or ctx.is_submission_coordinator_or_admin) %}
                             {% set resource_class='full' %}
                         {% endif %}
                         <div class="row scrollable {{ resource_class }}" id="resource-list">
