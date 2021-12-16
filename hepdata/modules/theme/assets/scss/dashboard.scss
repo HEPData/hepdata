@@ -537,6 +537,16 @@ body, html {
       width: 20%;
       float: left;
       text-align: right;
+
+      button {
+        margin-right: 1px;
+        &:last-child{
+          margin-right: 0;
+        }
+        .fa {
+          width: 12px;
+        }
+      }
     }
 
     .review-email {

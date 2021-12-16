@@ -47,16 +47,16 @@ blueprint = Blueprint('hep_permissions', __name__, url_prefix="/permissions",
 
 
 @blueprint.route(
-    '/manage/<int:recid>/<string:action>/<string:demote_or_promote>/<int:participant_id>')
+    '/manage/<int:recid>/<string:action>/<string:status_action>/<int:participant_id>')
 @login_required
-def promote_or_demote_participant(recid, action, demote_or_promote,
+def promote_or_demote_participant(recid, action, status_action,
                                   participant_id):
     """
     Can promote or demote a participant to/from primary reviewer/uploader.
 
     :param recid: record id that the user will be promoted or demoted for
     :param action: upload or review
-    :param demote_or_promote: demote or promote
+    :param status_action: demote, promote or remove
     :param participant_id: id of user from the SubmissionParticipant table.
     :return:
     """
@@ -64,23 +64,28 @@ def promote_or_demote_participant(recid, action, demote_or_promote,
         participant = SubmissionParticipant.query.filter_by(
             id=participant_id).one()
 
-        status = 'reserve'
-        if demote_or_promote == 'promote':
-            status = 'primary'
+        if status_action == 'remove':
+            db.session.delete(participant)
+        else:
+            status = 'reserve'
+            if status_action == 'promote':
+                status = 'primary'
 
-        participant.status = status
-        db.session.add(participant)
+            participant.status = status
+            db.session.add(participant)
+
         db.session.commit()
 
         record = get_record_by_id(recid)
 
         # now send the email telling the user of their new status!
-        if status == 'primary':
+        if status_action == 'promote':
             hepsubmission = get_latest_hepsubmission(publication_recid=recid)
             send_cookie_email(participant, record, version=hepsubmission.version)
 
         return json.dumps({"success": True, "recid": recid})
     except Exception as e:
+        import pdb; pdb.set_trace()
         return json.dumps(
             {"success": False, "recid": recid, "error": str(e)})
 
