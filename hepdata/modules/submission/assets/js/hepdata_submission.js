@@ -177,7 +177,7 @@ $(document).ready(function () {
       }
       else if (data.status == 'exists') {
           html = '<div class="alert alert-danger">A ' +
-                  '<a href="/record/ins' + data.id + '" target="_blank">' +
+                  '<a href="/record/' + data.current_recid + '" target="_blank">' +
                   'record</a> with this Inspire ID already exists in HEPData.' +
                   '</div>';
           html = inspire_ds.create_html_summary(data, html);

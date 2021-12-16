@@ -127,3 +127,19 @@ def test_create_submission(live_server, logged_in_browser):
     assert participants[1].role == "uploader"
     assert participants[1].email == "uu@hepdata.net"
     assert participants[1].status == "primary"
+
+    # Try to create another submission with the same inspire id
+    browser.find_element_by_id('another_submission').click()
+    e2e_assert_url(browser, 'submission.submit_ui')
+    browser.find_element_by_id('has_inspire').click()
+    browser.find_element_by_id('inspire_id').send_keys(inspire_id)
+    continue_button = browser.find_element_by_id('continue_btn')
+    continue_button.click()
+    # Wait for alert to appear
+    WebDriverWait(browser, 10).until(
+        EC.presence_of_element_located((By.CSS_SELECTOR, "#inspire-result .alert-danger"))
+    )
+    alert = browser.find_element_by_css_selector("#inspire-result .alert-danger")
+    assert alert.text == 'A record with this Inspire ID already exists in HEPData.'
+    record_link = alert.find_element_by_tag_name('a')
+    assert record_link.get_attribute('href').endswith(f'/record/{submissions[0].publication_recid}')
