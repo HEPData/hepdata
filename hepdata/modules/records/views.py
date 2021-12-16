@@ -26,7 +26,6 @@
 
 import logging
 import json
-import mimetypes
 import time
 from dateutil import parser
 from invenio_accounts.models import User
@@ -339,14 +338,33 @@ def get_table_details(recid, data_recid, version):
                 tmp_assoc_files[key] = {}
 
             if not alt_location.lower().startswith('http'):
-                if "thumb_" in alt_location and associated_data_file.file_type.lower() in IMAGE_TYPES:
-                    tmp_assoc_files[key]['preview_location'] = '/record/resource/{0}?view=true'.format(
-                        associated_data_file.id)
+                if location_parts[-1].startswith('thumb_') and associated_data_file.file_type.lower() in IMAGE_TYPES:
+                    tmp_assoc_files[key]['thumbnail_id'] = associated_data_file.id
                 else:
                     tmp_assoc_files[key].update({'description': associated_data_file.file_description,
                                                  'type': associated_data_file.file_type,
                                                  'id': associated_data_file.id,
                                                  'alt_location': alt_location})
+                    if associated_data_file.file_type.lower() in IMAGE_TYPES:  # add a default if no thumbnail
+                        tmp_assoc_files[key]['preview_location'] = f'/record/resource/{associated_data_file.id}?view=true'
+
+        # Check if there is a matching thumbnail available for an image file.
+        for key, value in tmp_assoc_files.items():
+            if 'thumbnail_id' in value:
+                thumbnail_id = tmp_assoc_files[key].pop('thumbnail_id')
+                tmp_assoc_files[key]['preview_location'] = f'/record/resource/{thumbnail_id}?view=true'
+
+                # Allow for the (unlikely?) special case where there is a
+                # thumbnail file without a matching image file.
+                if len(value.keys()) == 1:  # only 'thumbnail_id'
+                    for associated_data_file in datasub_record.resources:
+                        if associated_data_file.id == thumbnail_id:
+                            tmp_assoc_files[key].update({
+                                'description': associated_data_file.file_description,
+                                'type': associated_data_file.file_type,
+                                'id': associated_data_file.id,
+                                'alt_location': associated_data_file.file_location})
+                            break
 
         # add associated files to the table contents
         table_contents['associated_files'] = list(tmp_assoc_files.values())
