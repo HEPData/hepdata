@@ -698,8 +698,9 @@ def do_finalise(recid, publication_record=None, force_finalise=False,
             for record in existing_data_records["hits"]["hits"]:
 
                 if "recid" in record["_source"]:
-                    existing_submissions[record["_source"]["title"]] = \
-                        record["_source"]["recid"]
+                    if update: # Only reuse existing data submissions for update, not for new version
+                        existing_submissions[record["_source"]["title"]] = \
+                            record["_source"]["recid"]
                     delete_item_from_index(record["_id"],
                                            doc_type=CFG_DATA_TYPE, parent=record["_source"]["related_publication"])
 

@@ -206,9 +206,11 @@ def test_create_submission(app, admin_idx):
 
         assert (record_exists(inspire_id=record['inspire_id']))
 
-        # Test record is in index...
+        # Test record and data submissions are in index...
         index_records = get_records_matching_field('inspire_id', record['inspire_id'], doc_type='publication')
         assert (len(index_records['hits']['hits']) == 1)
+        data_index_records = get_records_matching_field('inspire_id', record['inspire_id'], doc_type='datatable')
+        assert (len(data_index_records['hits']['hits']) == 8)
 
         publication_record = get_record_contents(hepdata_submission.publication_recid)
 
@@ -237,18 +239,26 @@ def test_create_submission(app, admin_idx):
         errors = process_submission_directory(directory2, os.path.join(directory2, 'submission.yaml'),
                                      hepdata_submission_v2.publication_recid)
         data_submissions = DataSubmission.query.filter_by(
-            publication_recid=hepdata_submission.publication_recid).count()
-        assert (data_submissions == 16)
+            publication_recid=hepdata_submission.publication_recid).all()
+        assert (len(data_submissions) == 16)
         assert (len(hepdata_submission_v2.resources) == 4)
 
         do_finalise(hepdata_submission_v2.publication_recid, force_finalise=True, convert=False)
 
         # Associated recids should be unique across both versions
-        data_submission_recids = db.session.query(DataSubmission.associated_recid) \
-            .filter_by(publication_recid=hepdata_submission_v2.publication_recid)
-        associated_recids = [d[0] for d in data_submission_recids]
+        associated_recids = [d.associated_recid for d in data_submissions]
         # Set size should be the same as list length if values are unique
         assert (len(set(associated_recids)) == len(associated_recids))
+
+        # Index should contain the latest data
+        index_records = get_records_matching_field('inspire_id', record['inspire_id'], doc_type='publication')
+        assert (len(index_records['hits']['hits']) == 1)
+        data_index_records = get_records_matching_field('inspire_id', record['inspire_id'], doc_type='datatable')
+        assert (len(data_index_records['hits']['hits']) == 8)
+        data_index_recids = [x['_source']['recid'] for x in data_index_records['hits']['hits']]
+
+        data_submission_v2_recids = [d.associated_recid for d in data_submissions if d.version == 2]
+        assert set(data_index_recids) == set(data_submission_v2_recids)
 
         # remove the submission and test that all is remove
         # First unload latest (v2) submission
