@@ -32,7 +32,7 @@ from invenio_db import db
 
 from hepdata.ext.elasticsearch.api import get_records_matching_field
 from hepdata.modules.permissions.models import SubmissionParticipant
-from hepdata.modules.records.api import format_submission, process_saved_file
+from hepdata.modules.records.api import format_submission, process_saved_file, create_new_version
 from hepdata.modules.records.utils.common import infer_file_type, contains_accepted_url, allowed_file, record_exists, \
     get_record_contents
 from hepdata.modules.records.utils.data_files import get_data_path_for_record
@@ -222,8 +222,41 @@ def test_create_submission(app, admin_idx):
         assert(ctx['version'] == 1)
         assert (ctx['recid'] == hepdata_submission.publication_recid)
 
-        # remove the submission and test that all is remove
+        # Create a new version of the submission
+        create_new_version(hepdata_submission.publication_recid, None)
+        hepdata_submission_v2 = get_latest_hepsubmission(inspire_id='19999999')
+        assert(hepdata_submission_v2.version == 2)
+        assert(hepdata_submission_v2.overall_status == 'todo')
 
+        # Upload the same data (so table names are the same)
+        time_stamp2 = str(int(round(time.time())+1)) # add 1 to make sure it's a different timestamp
+        directory2 = get_data_path_for_record(hepdata_submission_v2.publication_recid, time_stamp2)
+        shutil.copytree(test_directory, directory2)
+        assert(os.path.exists(directory2))
+
+        errors = process_submission_directory(directory2, os.path.join(directory2, 'submission.yaml'),
+                                     hepdata_submission_v2.publication_recid)
+        data_submissions = DataSubmission.query.filter_by(
+            publication_recid=hepdata_submission.publication_recid).count()
+        assert (data_submissions == 16)
+        assert (len(hepdata_submission_v2.resources) == 4)
+
+        do_finalise(hepdata_submission_v2.publication_recid, force_finalise=True, convert=False)
+
+        # Associated recids should be unique across both versions
+        data_submission_recids = db.session.query(DataSubmission.associated_recid) \
+            .filter_by(publication_recid=hepdata_submission_v2.publication_recid)
+        associated_recids = [d[0] for d in data_submission_recids]
+        # Set size should be the same as list length if values are unique
+        assert (len(set(associated_recids)) == len(associated_recids))
+
+        # remove the submission and test that all is remove
+        # First unload latest (v2) submission
+        unload_submission(hepdata_submission_v2.publication_recid, version=2)
+        hepdata_submission = get_latest_hepsubmission(inspire_id='19999999')
+        assert (hepdata_submission.version == 1)
+
+        # Now unload v1
         unload_submission(hepdata_submission.publication_recid)
 
         assert (not record_exists(inspire_id=record['inspire_id']))
