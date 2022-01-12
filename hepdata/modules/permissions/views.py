@@ -32,14 +32,14 @@ from sqlalchemy import func
 
 from flask import Blueprint, jsonify, url_for, redirect, request, abort, render_template
 
-from hepdata.modules.email.api import send_coordinator_request_mail, send_coordinator_approved_email
+from hepdata.modules.email.api import send_coordinator_request_mail, send_coordinator_approved_email, \
+    send_cookie_email, send_reserve_email
 from hepdata.modules.permissions.api import get_records_participated_in_by_user, get_approved_coordinators, \
     get_pending_request
 from hepdata.modules.permissions.models import SubmissionParticipant, CoordinatorRequest
 from hepdata.modules.records.utils.common import get_record_by_id
 from hepdata.modules.submission.api import get_latest_hepsubmission
 from hepdata.modules.submission.models import HEPSubmission
-from hepdata.modules.submission.views import send_cookie_email
 from hepdata.utils.users import get_user_from_id, user_is_admin
 
 blueprint = Blueprint('hep_permissions', __name__, url_prefix="/permissions",
@@ -82,6 +82,8 @@ def promote_or_demote_participant(recid, action, status_action,
         if status_action == 'promote':
             hepsubmission = get_latest_hepsubmission(publication_recid=recid)
             send_cookie_email(participant, record, version=hepsubmission.version)
+        elif status_action == 'demote':
+            send_reserve_email(participant, record)
 
         return json.dumps({"success": True, "recid": recid})
     except Exception as e:
