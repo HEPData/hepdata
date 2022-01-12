@@ -24,6 +24,7 @@
 
 
 import json
+import logging
 
 from flask_login import login_required, current_user
 from invenio_accounts.models import Role
@@ -42,6 +43,9 @@ from hepdata.modules.submission.api import get_latest_hepsubmission
 from hepdata.modules.submission.models import HEPSubmission
 from hepdata.utils.users import get_user_from_id, user_is_admin
 
+logging.basicConfig()
+log = logging.getLogger(__name__)
+
 blueprint = Blueprint('hep_permissions', __name__, url_prefix="/permissions",
                       template_folder='templates')
 
@@ -49,10 +53,11 @@ blueprint = Blueprint('hep_permissions', __name__, url_prefix="/permissions",
 @blueprint.route(
     '/manage/<int:recid>/<string:action>/<string:status_action>/<int:participant_id>')
 @login_required
-def promote_or_demote_participant(recid, action, status_action,
-                                  participant_id):
+def manage_participant_status(recid, action, status_action,
+                              participant_id):
     """
-    Can promote or demote a participant to/from primary reviewer/uploader.
+    Can promote or demote a participant to/from primary reviewer/uploader, or
+    remove the participant from the record.
 
     :param recid: record id that the user will be promoted or demoted for
     :param action: upload or review
@@ -87,9 +92,10 @@ def promote_or_demote_participant(recid, action, status_action,
 
         return json.dumps({"success": True, "recid": recid})
     except Exception as e:
-        import pdb; pdb.set_trace()
+        error_str = f"Unable to {status_action} participant id {participant_id} for record {recid}"
+        log.error(f"{error_str}: {str(e)}")
         return json.dumps(
-            {"success": False, "recid": recid, "error": str(e)})
+            {"success": False, "recid": recid, "message": f"{error_str}. Please refresh the page and try again."})
 
 
 @blueprint.route('/manage/person/add/<int:recid>', methods=['POST'])
