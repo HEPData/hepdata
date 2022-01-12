@@ -29,6 +29,7 @@ from hepdata.modules.records.utils.common import record_exists
 from hepdata.resilient_requests import resilient_requests
 from hepdata.modules.inspire_api.parser import parsed_content_defaults, get_title, get_doi, get_authors, get_type, get_abstract, \
     get_creation_date, get_arxiv_id, get_collaborations, get_keywords, get_journal_info, get_year, get_subject_area, updated_parsed_content_for_thesis
+from hepdata.modules.submission.api import get_latest_hepsubmission
 
 import logging
 
@@ -84,12 +85,15 @@ def get_record_from_inspire():
 
     content, status = get_inspire_record_information(inspire_id)
 
-    # check that id is not present already.
-    exists = record_exists(inspire_id=inspire_id)
-    if exists:
-        status = 'exists'
+    data = {'source': 'inspire',
+            'id': inspire_id,
+            'query': content,
+            'status': status}
 
-    return jsonify({'source': 'inspire',
-                    'id': inspire_id,
-                    'query': content,
-                    'status': status})
+    # check that id is not present already.
+    submission = get_latest_hepsubmission(inspire_id=inspire_id)
+    if submission:
+        data['status'] = 'exists'
+        data['current_recid'] = submission.publication_recid
+
+    return jsonify(data)
