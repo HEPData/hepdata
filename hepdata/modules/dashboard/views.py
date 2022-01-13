@@ -24,6 +24,7 @@
 
 from flask import Blueprint, jsonify, request, render_template
 from flask_login import login_required, current_user
+from invenio_accounts.models import User
 
 from hepdata.ext.elasticsearch.admin_view.api import AdminIndexer
 from hepdata.ext.elasticsearch.api import reindex_all
@@ -226,3 +227,21 @@ def submissions_list():
     admin_idx = AdminIndexer()
     summary = admin_idx.get_summary()
     return jsonify(summary)
+
+
+@blueprint.route('/list-all-users')
+@login_required
+def get_all_users():
+    """
+    Gets a list of all active users in the system.
+
+    :return:
+    """
+    from flask import abort
+
+    if has_role(current_user, 'admin'):
+        active_users = User.query.with_entities(User.id, User.email) \
+            .filter_by(active=True).all()
+        return jsonify([{'id': u[0], 'email': u[1]} for u in active_users])
+    else:
+        abort(403)

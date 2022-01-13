@@ -64,6 +64,17 @@
                         <a href="/account/settings/profile"
                            class="btn-profile"><i class="fa fa-pencil"></i> Edit Profile</a>
                     </div>
+
+                    <div class="col-md-11 view-submissions-as">
+                        {% if ctx.user_is_admin %}
+                            <p>View dashboard as user:</p>
+                            <div>
+                               <div class="user-selector">
+                                 <input id="admin-user-filter" type="text"/>
+                               </div>
+                            </div>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
         </div>

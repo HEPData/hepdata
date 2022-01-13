@@ -124,6 +124,42 @@ body, html {
         }
       }
 
+      .view-submissions-as {
+        text-align:left;
+        padding-top: 10px;
+        font-size: smaller;
+
+        &> div, &> p {
+          display:inline-block;
+          vertical-align: middle;
+          margin: 0 0 0 10px;
+
+          &:first-child {
+            margin-left: 0;
+          }
+        }
+
+        .user-selector {
+          width: 400px;
+
+          .fa {
+              position: absolute;
+              left: 94%;
+              top: 12px;
+          }
+        }
+
+        .tt-input, .tt-hint, .tt-menu {
+          width: 100%;
+          padding: 10px 35px;
+        }
+
+        .tt-menu {
+          top: 100% !important;
+          padding: 0;
+        }
+      }
+
       .email {
         color: $lightgrey;
         font-weight: bolder;
@@ -380,7 +416,7 @@ body, html {
       margin-bottom: 0;
     }
 
-    .filter {
+    .filter, .user-selector {
 
       padding-bottom: 0;
       width: 100%;
