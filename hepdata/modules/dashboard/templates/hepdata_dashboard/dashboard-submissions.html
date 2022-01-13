@@ -76,7 +76,7 @@
                         {% if not submission.requires_inspire_id %}
 
                             {% if submission.review_flag == 'passed' and submission.submission_status=='todo' %}
-                                <button class="btn btn-success btn-sm finalise-btn pull-right"
+                                <button class="btn btn-success btn-sm finalise-btn pull-right{% if ctx.view_as_mode %} disabled{%endif%}"
                                         id="finalise-btn-{{ submission.recid }}"
                                         data-recid="{{ submission.recid }}"
                                         data-versions="{{ submission.versions }}">
@@ -86,14 +86,14 @@
                             {% endif %}
                         {% endif %}
 
-                        <button class="btn btn-sm btn-default pull-right manage-submission-trigger"
+                        <button class="btn btn-sm btn-default pull-right manage-submission-trigger{% if ctx.view_as_mode %} disabled{%endif%}"
                                 data-recid="{{ submission.recid }}"
                                 data-toggle="modal"
                                 data-target="#manageWidget"><span
                                 class="fa fa-cogs"></span>
                         </button>
 
-                        <button class="btn btn-sm btn-danger pull-right delete-submission-trigger"
+                        <button class="btn btn-sm btn-danger pull-right delete-submission-trigger{% if ctx.view_as_mode %} disabled{%endif%}"
                                 data-recid="{{ submission.recid }}"
                                 data-toggle="modal"
                                 data-target="#deleteWidget"

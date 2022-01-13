@@ -766,6 +766,14 @@ body, html {
       padding: 20px 0 20px 0;
     }
 
+    .alert-info a {
+      color: $purple;
+    }
+
+    .disabled {
+      cursor: not-allowed;
+      pointer-events: none;
+    }
   }
 
   .axis path, .axis line {

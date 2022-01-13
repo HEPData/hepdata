@@ -24,13 +24,13 @@ HEPDATA.dashboard = (function () {
   var load_watched_records = function () {
     $.get('/subscriptions/list').done(function (data) {
 
-      if (data.length > 0) {
+      if (data['records'].length > 0) {
         d3.select("#watch_container").html("");
       }
 
 
       var watch_list = d3.select("#watch_container").append("div").attr("class", "container-fluid watch-list");
-      var watch_item = watch_list.selectAll("div.row").data(data).enter()
+      var watch_item = watch_list.selectAll("div.row").data(data['records']).enter()
         .append("div")
         .attr("class", "row item")
         .attr("id", function (d) {
@@ -54,7 +54,9 @@ HEPDATA.dashboard = (function () {
       });
 
       var controls = watch_item.append("div").attr("class", "col-md-1 controls");
-      controls.append("button").attr("class", "btn btn-sm btn-danger")
+      var button_classes = "btn btn-sm btn-danger";
+      if (data['disable_button']) button_classes += " disabled";
+      controls.append("button").attr("class", button_classes)
         .attr("onclick", function (d) {
           return "HEPDATA.dashboard.unwatch('" + d.recid + "')";
         })

@@ -20,11 +20,14 @@
 # In applying this license, CERN does not
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
+from flask import session
+from flask_login import current_user
 from invenio_db import db
 from hepdata.modules.dashboard.api import add_user_to_metadata, \
     create_record_for_dashboard, prepare_submissions, \
     get_pending_invitations_for_user, get_submission_count, \
-    list_submission_titles
+    list_submission_titles, get_dashboard_current_user, \
+    set_dashboard_current_user, VIEW_AS_USER_ID_KEY
 from hepdata.modules.permissions.models import SubmissionParticipant
 from hepdata.modules.records.utils.common import get_record_by_id
 from hepdata.modules.records.utils.submission import get_or_create_hepsubmission
@@ -346,3 +349,41 @@ def test_get_pending_invitations_for_user(mocked_submission_participant_app, moc
             'title': 'decoded Test Title 2'
         }]
         assert(pending == expected)
+
+
+def test_dashboard_current_user(app):
+    with app.app_context():
+        # Add test users to db
+        user1 = dashboardTestMockObjects['user']
+        user2 = dashboardTestMockObjects['user2']
+
+        db.session.add(user1)
+        db.session.add(user2)
+        db.session.commit()
+
+        # Try with no logged-in user
+        dashboard_user = get_dashboard_current_user(current_user)
+        assert not dashboard_user.is_authenticated
+
+        # Try with non-admin user
+        dashboard_user = get_dashboard_current_user(user1)
+        assert dashboard_user == user1
+
+        # Try with admin user
+        admin_user = User.query.filter_by(id=1).first()
+        dashboard_user = get_dashboard_current_user(admin_user)
+        assert dashboard_user == admin_user
+
+        # Set dashboard current user to user2
+        user2 = dashboardTestMockObjects['user2']
+        set_dashboard_current_user(user2)
+
+        # Try getting dashboard user as user1 - should just return user1
+        # as they are not admin
+        user1 = dashboardTestMockObjects['user']
+        dashboard_user = get_dashboard_current_user(user1)
+        assert dashboard_user == user1
+
+        # Try again as admin
+        dashboard_user = get_dashboard_current_user(admin_user)
+        assert dashboard_user == user2

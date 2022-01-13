@@ -2,8 +2,9 @@ from flask import Blueprint, jsonify
 from flask_login import login_required, current_user
 from invenio_db import db
 
+from hepdata.modules.dashboard.api import get_dashboard_current_user
 from hepdata.modules.records.subscribers.api import get_users_subscribed_to_record, \
-    get_records_subscribed_by_current_user
+    get_records_subscribed_by_user
 from hepdata.modules.records.utils.common import get_or_create
 from .models import Subscribers
 
@@ -24,8 +25,12 @@ def list_subscribers_to_record(recid):
 @blueprint.route('/list/', methods=['GET'])
 @login_required
 def list_subscriptions_for_user():
-    subscribers = get_records_subscribed_by_current_user()
-    return jsonify(subscribers)
+    user = get_dashboard_current_user(current_user)
+    subscribers = get_records_subscribed_by_user(user)
+    return jsonify({
+        'disable_button': user != current_user,
+        'records': subscribers
+    })
 
 
 @blueprint.route('/subscribe/<int:recid>', methods=['POST'])

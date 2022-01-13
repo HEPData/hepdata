@@ -33,7 +33,11 @@ from hepdata.modules.records.utils.common import get_record_by_id, decode_string
 from hepdata.modules.submission.api import get_latest_hepsubmission, get_submission_participants_for_record
 from hepdata.modules.records.utils.users import has_role
 from hepdata.modules.submission.models import HEPSubmission, DataReview
+from hepdata.utils.session import get_session_item, set_session_item
 from hepdata.utils.users import get_user_from_id
+
+
+VIEW_AS_USER_ID_KEY = 'dashboard_view_as_user_id'
 
 
 def add_user_to_metadata(type, user_info, record_id, submissions):
@@ -46,7 +50,7 @@ def add_user_to_metadata(type, user_info, record_id, submissions):
             'name': 'No primary ' + type}
 
 
-def create_record_for_dashboard(record_id, submissions, current_user, coordinator=None, user_role=None,
+def create_record_for_dashboard(record_id, submissions, user, coordinator=None, user_role=None,
                                 status="todo"):
     if user_role is None:
         user_role = []
@@ -74,7 +78,7 @@ def create_record_for_dashboard(record_id, submissions, current_user, coordinato
                 submissions[record_id]["metadata"]["coordinator"] = {
                     'id': coordinator.id, 'name': coordinator.email,
                     'email': coordinator.email}
-                if int(current_user.get_id()) == coordinator.id:
+                if int(user.get_id()) == coordinator.id:
                     submissions[record_id]["metadata"]["show_coord_view"] = True
                     if 'coordinator' not in submissions[record_id]["metadata"]["role"]:
                         submissions[record_id]["metadata"]["role"].append("coordinator")
@@ -98,12 +102,12 @@ def create_record_for_dashboard(record_id, submissions, current_user, coordinato
                 submissions[record_id]["metadata"]["role"].append(user_role)
 
 
-def get_submission_count(current_user):
-    query = _prepare_submission_query(current_user)
+def get_submission_count(user):
+    query = _prepare_submission_query(user)
     return query.count()
 
 
-def prepare_submissions(current_user, items_per_page=25, current_page=1, record_id=None):
+def prepare_submissions(user, items_per_page=25, current_page=1, record_id=None):
     """
     Finds all the relevant submissions for a user, or all submissions if the logged in user is a 'super admin'.
 
@@ -112,10 +116,9 @@ def prepare_submissions(current_user, items_per_page=25, current_page=1, record_
     :param current_page: page of current set of results (starting at 1)
     :return: OrderedDict of submissions
     """
-
     submissions = OrderedDict()
 
-    query = _prepare_submission_query(current_user)
+    query = _prepare_submission_query(user)
 
     if record_id:
         query = query.filter(HEPSubmission.publication_recid == record_id)
@@ -134,25 +137,25 @@ def prepare_submissions(current_user, items_per_page=25, current_page=1, record_
 
             participants = get_submission_participants_for_record(
                 hepdata_submission.publication_recid,
-                user_account=current_user.id
+                user_account=user.id
             )
 
             if participants:
-                current_user_roles = []
+                user_roles = []
 
                 for participant in participants:
-                    current_user_roles.append(participant.role)
+                    user_roles.append(participant.role)
 
                 create_record_for_dashboard(
                     str(hepdata_submission.publication_recid), submissions,
-                    current_user,
+                    user,
                     coordinator=coordinator,
-                    user_role=current_user_roles,
+                    user_role=user_roles,
                     status=hepdata_submission.overall_status)
             else:
                 create_record_for_dashboard(
                     str(hepdata_submission.publication_recid), submissions,
-                    current_user,
+                    user,
                     coordinator=coordinator,
                     status=hepdata_submission.overall_status)
 
@@ -172,7 +175,8 @@ def prepare_submissions(current_user, items_per_page=25, current_page=1, record_
 
 
 def list_submission_titles(current_user):
-    query = _prepare_submission_query(current_user)
+    user = get_dashboard_current_user(current_user)
+    query = _prepare_submission_query(user)
 
     hepdata_submission_records = query.order_by(
         HEPSubmission.last_updated.desc()
@@ -190,7 +194,7 @@ def list_submission_titles(current_user):
     return titles
 
 
-def _prepare_submission_query(current_user):
+def _prepare_submission_query(user):
     query = HEPSubmission.query.filter(
         HEPSubmission.overall_status.in_(['processing', 'todo']),
     )
@@ -199,20 +203,20 @@ def _prepare_submission_query(current_user):
     # The final rendering in the dashboard should be different
     # though considering the user him/herself is probably not a
     # reviewer/uploader
-    if not has_role(current_user, 'admin'):
+    if not has_role(user, 'admin'):
         # Not an admin user
         # We just want to pick out people with access to particular records,
         # i.e. submissions for which they are primary reviewers or coordinators.
 
         inner_query = SubmissionParticipant.query.filter_by(
-            user_account=int(current_user.get_id()),
+            user_account=int(user.get_id()),
             status='primary'
         ).with_entities(
             SubmissionParticipant.publication_recid
         )
 
         query = query.filter(
-            or_(HEPSubmission.coordinator == int(current_user.get_id()),
+            or_(HEPSubmission.coordinator == int(user.get_id()),
                 HEPSubmission.publication_recid.in_(inner_query))
         )
 
@@ -247,3 +251,32 @@ def get_pending_invitations_for_user(user):
              'role': invite.role, 'coordinator': coordinator})
 
     return result
+
+
+def get_dashboard_current_user(current_user):
+    """Gets the user to display in the dashboard.
+
+    For non-admin users this will just return the current user.
+    For admin users, if they have chosen to view the dashboard as another user,
+    this will return that user.
+
+    :param invenio_accounts.models.User current_user: Currently logged-in user, e.g. flask_login.current_user
+    :return: User to display in the dashboard
+    :rtype: invenio_accounts.models.User
+
+    """
+    user = None
+
+    if has_role(current_user, 'admin'):
+        user_id = get_session_item(VIEW_AS_USER_ID_KEY)
+        if user_id and user_id != current_user.id:
+            print("Imposter!")
+            user = User.query.filter_by(id=user_id).first()
+
+    if not user:
+        user = current_user
+
+    return user
+
+def set_dashboard_current_user(user):
+    set_session_item(VIEW_AS_USER_ID_KEY, user.id)

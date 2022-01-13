@@ -22,6 +22,14 @@
                 {%- endfor %}
             {%- endif %}
 
+            {% if ctx.view_as_mode %}
+                <div class="alert alert-info">
+                    You are logged in as <strong>{{ current_user.email }}</strong> but are currently viewing the
+                    dashboard as user <strong>{{ ctx.user_to_display.email }}</strong>.
+                    <a href="/dashboard">View as {{ current_user.email }}</a>
+                </div>
+            {% endif %}
+
             <div align="center" class="profile-container container-fluid">
 
                 <div class="row-fluid">
@@ -31,17 +39,20 @@
                     </div>
 
                     <div class="col-md-6 col-sm-10 col-xs-12 user-info">
-                        {% if ctx.user_profile %}
+
+                        {% if ctx.user_profile != None %}
                             <h4>{{ ctx.user_profile.full_name }}</h4>
                         {% else %}
-                            <p>No name provided <a href="/account/settings/profile" class="btn btn-sm btn-default"><i
+                            <p>
+                                No name provided
+                                <a href="/account/settings/profile"
+                                    class="btn btn-sm btn-default{% if ctx.view_as_mode %} disabled{% endif %}"><i
                                     class="fa fa-pencil"></i> Add Name</a></p>
                         {% endif %}
 
-
                         <div>
                     <span class="email"><i class="fa fa-envelope-o"
-                                           style="margin-right: 5px"></i> {{ current_user.email }}</span>
+                                           style="margin-right: 5px"></i> {{ ctx.user_to_display.email }}</span>
                         </div>
                     </div>
 
@@ -62,7 +73,7 @@
                             <a href="/dashboard/submissions" class="btn-profile">Submissions Overview</a>
                         {% endif %}
                         <a href="/account/settings/profile"
-                           class="btn-profile"><i class="fa fa-pencil"></i> Edit Profile</a>
+                           class="btn-profile{% if ctx.view_as_mode %} disabled{% endif %}"><i class="fa fa-pencil"></i> Edit Profile</a>
                     </div>
 
                     <div class="col-md-11 view-submissions-as">
@@ -81,7 +92,7 @@
 
         {% block dashboard_content %}
 
-            {% if not current_user.confirmed_at %}
+          {% if not ctx.user_to_display.confirmed_at %}
                 <div class="container-fluid">
                     <div class="row-fluid">
                         <div class="col-md-12">
@@ -113,11 +124,11 @@
                                             </p>
                                             <p class="coordinator text-small">Coordinator: <a
                                                     href="mailto:{{ invitation.coordinator.email }}"> {{ invitation.coordinator.email }}</a>.
-                                                Invitation sent to <em>{{ current_user.email }}</em></p>
+                                                Invitation sent to <em>{{ ctx.user_to_display.email }}</em></p>
                                         </div>
                                         <div class="col-md-2">
                                             <a href="/permissions/assign/{{ invitation.invitation_cookie }}"
-                                               class="btn btn-success pull-right" style="margin-right: 3px">Accept
+                                               class="btn btn-success pull-right{% if ctx.view_as_mode %} disabled{% endif %}" style="margin-right: 3px">Accept
                                                 Invite</a>
                                         </div>
                                     </div>
@@ -223,12 +234,12 @@
                                 <h4><i class="fa fa-lock"></i> Permissions</h4>
                                 <div id="permissions_container">
 
-                                    {% if user_is_coordinator_or_admin %}
+                                    {% if ctx.user_is_coordinator_or_admin %}
                                         <div class="alert alert-info"><i class="fa fa-gavel"></i> <strong>You are a
                                             HEPData
                                             coordinator</strong>.<br/> <span class="text-muted">You are able to create and manage HEPData submissions.</span>
                                         </div>
-                                    {% elif not current_user.confirmed_at %}
+                                    {% elif not ctx.user_to_display.confirmed_at %}
                                         <div class="alert alert-info">
                                             You are not able to request coordinator privileges until your email address
                                             is confirmed.
@@ -240,7 +251,7 @@
                                             project, request privilege by clicking the button below.</p>
 
                                         {% if not ctx.user_has_coordinator_request %}
-                                            <a id="reindex-button" class="btn btn-md btn-primary"
+                                            <a id="reindex-button" class="btn btn-md btn-primary{% if ctx.view_as_mode %} disabled{% endif %}"
                                                data-toggle="modal"
                                                data-target="#requestCoordinatorDialog"><i class="fa fa-gavel"></i>
                                                 Request

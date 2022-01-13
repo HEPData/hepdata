@@ -22,18 +22,20 @@
 
 """HEPData Dashboard Views."""
 
-from flask import Blueprint, jsonify, request, render_template
+from flask import Blueprint, jsonify, request, render_template, abort
 from flask_login import login_required, current_user
 from invenio_accounts.models import User
 
 from hepdata.ext.elasticsearch.admin_view.api import AdminIndexer
 from hepdata.ext.elasticsearch.api import reindex_all
 from hepdata.ext.elasticsearch.api import push_data_keywords
-from hepdata.modules.dashboard.api import prepare_submissions, get_pending_invitations_for_user, get_submission_count, list_submission_titles
+from hepdata.modules.dashboard.api import prepare_submissions, get_pending_invitations_for_user, get_submission_count, \
+    list_submission_titles, get_dashboard_current_user, set_dashboard_current_user
 from hepdata.modules.permissions.api import get_pending_request, get_pending_coordinator_requests
 from hepdata.modules.permissions.views import check_is_sandbox_record
 from hepdata.modules.records.utils.submission import unload_submission, do_finalise
 from hepdata.modules.submission.api import get_latest_hepsubmission
+from hepdata.modules.records.ext import user_is_admin_or_coordinator
 from hepdata.modules.records.utils.users import has_role
 from hepdata.modules.records.utils.common import get_record_by_id
 from hepdata.modules.records.utils.workflow import update_record
@@ -42,7 +44,7 @@ from hepdata.utils.url import modify_query
 import json
 import math
 
-from invenio_userprofiles import current_userprofile
+from invenio_userprofiles import current_userprofile, UserProfile
 
 blueprint = Blueprint('hep_dashboard', __name__, url_prefix="/dashboard",
                       template_folder='templates',
@@ -56,14 +58,33 @@ def dashboard():
     Depending on the user that is logged in, they will get a
     dashboard that reflects the
     current status of all submissions of which they are a participant.
-    """
-    user_profile = current_userprofile.query.filter_by(user_id=current_user.get_id()).first()
 
-    ctx = {'user_is_admin': has_role(current_user, 'admin'),
+    An admin user can view the dashboard as if they were a different user,
+    using the view_as parameter
+    """
+    view_as_user_id = request.args.get('view_as_user', type=int)
+    user_to_display = current_user
+    if view_as_user_id:
+        if has_role(current_user, 'admin'):
+            user_profile = UserProfile.query.filter_by(user_id=view_as_user_id).first()
+            user_to_display = User.query.filter_by(id=view_as_user_id).first()
+            if not user_to_display:
+                abort(404)
+        else:
+            abort(403)
+    else:
+        user_profile = current_userprofile.query.filter_by(user_id=current_user.get_id()).first()
+
+    set_dashboard_current_user(user_to_display)
+
+    ctx = {'user_is_admin': has_role(user_to_display, 'admin'),
            'user_profile': user_profile,
+           'user_to_display': user_to_display,
+           'view_as_mode': user_to_display != current_user,
+           'user_is_coordinator_or_admin': user_is_admin_or_coordinator(user_to_display),
            'user_has_coordinator_request': get_pending_request(),
            'pending_coordinator_requests': get_pending_coordinator_requests(),
-           'pending_invites': get_pending_invitations_for_user(current_user)}
+           'pending_invites': get_pending_invitations_for_user(user_to_display)}
 
     return render_template('hepdata_dashboard/dashboard.html', ctx=ctx)
 
@@ -71,11 +92,14 @@ def dashboard():
 @blueprint.route('/dashboard-submissions')
 @login_required
 def dashboard_submissions():
+    user = get_dashboard_current_user(current_user)
+    view_as_mode = user != current_user
+
     filter_record_id = request.args.get('record_id')
     current_page = request.args.get('page', default=1, type=int)
     size = request.args.get('size', 25)
     submissions = prepare_submissions(
-        current_user,
+        user,
         items_per_page=size,
         current_page=current_page,
         record_id=filter_record_id
@@ -114,11 +138,12 @@ def dashboard_submissions():
 
         submission_meta.append(submissions[record_id]["metadata"])
 
-    total_records = get_submission_count(current_user)
+    total_records = get_submission_count(user)
     total_pages = int(math.ceil(total_records / size))
 
     ctx = {
-        'user_is_admin': has_role(current_user, 'admin'),
+        'user_is_admin': has_role(user, 'admin'),
+        'view_as_mode': view_as_mode,
         'modify_query': modify_query,
         'submissions': submission_meta,
         'submission_stats': json.dumps(submission_stats)
@@ -136,9 +161,11 @@ def dashboard_submissions():
 
 @blueprint.route('/dashboard-submission-titles')
 @login_required
-def dashboard_submission_titles():
-    return jsonify(list_submission_titles(current_user))
+def dashboard_submission_titles(user=current_user):
+    if user != current_user and not has_role(current_user, 'admin'):
+        abort(403)
 
+    return jsonify(list_submission_titles(user))
 
 
 @blueprint.route('/delete/<int:recid>')
@@ -209,8 +236,6 @@ def finalise(recid, publication_record=None, force_finalise=False):
 @blueprint.route('/submissions/', methods=['GET'])
 @login_required
 def submissions():
-    from flask import abort
-
     if has_role(current_user, 'admin'):
         user_profile = current_userprofile.query.filter_by(user_id=current_user.get_id()).first()
 
@@ -237,8 +262,6 @@ def get_all_users():
 
     :return:
     """
-    from flask import abort
-
     if has_role(current_user, 'admin'):
         active_users = User.query.with_entities(User.id, User.email) \
             .filter_by(active=True).all()
