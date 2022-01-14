@@ -76,16 +76,18 @@
                            class="btn-profile{% if ctx.view_as_mode %} disabled{% endif %}"><i class="fa fa-pencil"></i> Edit Profile</a>
                     </div>
 
-                    <div class="col-md-11 view-submissions-as">
+                    {% block view_as_user %}
                         {% if ctx.user_is_admin %}
-                            <p>View dashboard as user:</p>
-                            <div>
-                               <div class="user-selector">
-                                 <input id="admin-user-filter" type="text"/>
-                               </div>
+                            <div class="col-md-11 view-submissions-as">
+                                <p>View dashboard as user:</p>
+                                    <div>
+                                       <div class="user-selector">
+                                         <input id="admin-user-filter" type="text"/>
+                                       </div>
+                                    </div>
                             </div>
                         {% endif %}
-                    </div>
+                    {% endblock %}
                 </div>
             </div>
         </div>

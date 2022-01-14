@@ -240,7 +240,8 @@ def submissions():
         user_profile = current_userprofile.query.filter_by(user_id=current_user.get_id()).first()
 
         ctx = {'user_is_admin': True,
-               'user_profile': user_profile}
+               'user_profile': user_profile,
+               'user_to_display': current_user}
         return render_template('hepdata_dashboard/submissions.html', ctx=ctx)
     else:
         abort(403)
