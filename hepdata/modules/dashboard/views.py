@@ -31,7 +31,8 @@ from hepdata.ext.elasticsearch.api import reindex_all
 from hepdata.ext.elasticsearch.api import push_data_keywords
 from hepdata.modules.dashboard.api import prepare_submissions, get_pending_invitations_for_user, get_submission_count, \
     list_submission_titles, get_dashboard_current_user, set_dashboard_current_user
-from hepdata.modules.permissions.api import get_pending_request, get_pending_coordinator_requests
+from hepdata.modules.permissions.api import get_pending_request, \
+    get_pending_coordinator_requests, get_collaboration_from_coordinator
 from hepdata.modules.permissions.views import check_is_sandbox_record
 from hepdata.modules.records.utils.submission import unload_submission, do_finalise
 from hepdata.modules.submission.api import get_latest_hepsubmission
@@ -236,10 +237,10 @@ def finalise(recid, publication_record=None, force_finalise=False):
 @blueprint.route('/submissions/', methods=['GET'])
 @login_required
 def submissions():
-    if has_role(current_user, 'admin'):
+    if has_role(current_user, 'admin') or has_role(current_user, 'coordinator'):
         user_profile = current_userprofile.query.filter_by(user_id=current_user.get_id()).first()
 
-        ctx = {'user_is_admin': True,
+        ctx = {'user_is_admin': has_role(current_user, 'admin'),
                'user_profile': user_profile,
                'user_to_display': current_user}
         return render_template('hepdata_dashboard/submissions.html', ctx=ctx)
@@ -250,8 +251,20 @@ def submissions():
 @blueprint.route('/submissions/list', methods=['GET'])
 @login_required
 def submissions_list():
+    if not (has_role(current_user, 'admin') or has_role(current_user, 'coordinator')):
+        return jsonify({"success": False,
+                        'message': "You don't have sufficient privileges to "
+                                   "perform this action."})
+
+    collaboration = None
+    if not has_role(current_user, 'admin'):
+        collaboration = get_collaboration_from_coordinator(current_user.id)
+        if not collaboration:
+            return jsonify({"success": False,
+                            'message': "Collaboration not found"})
+
     admin_idx = AdminIndexer()
-    summary = admin_idx.get_summary()
+    summary = admin_idx.get_summary(collaboration=collaboration)
     return jsonify(summary)
 
 

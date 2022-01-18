@@ -103,12 +103,14 @@ class AdminIndexer:
 
         return result
 
-    def get_summary(self):
+    def get_summary(self, collaboration=None):
         s = Search(index=self.index)
         # Filter by date to approximately 20 years ago, to ensure there aren't more
         # than 10000 buckets
         date_20_years_ago = (datetime.utcnow() - timedelta(days=int(20*365.25))).date()
         s = s.filter('range', **{'last_updated': {'gte': str(date_20_years_ago)}})
+        if collaboration:
+            s = s.filter('term', collaboration=collaboration.lower())
         s.aggs.bucket('daily_workflows', 'date_histogram',
                       field='last_updated',
                       format="yyyy-MM-dd", interval='day') \
