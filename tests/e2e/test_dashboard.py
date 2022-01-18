@@ -23,6 +23,8 @@
 
 """HEPData end to end testing of dashboard and administrative options."""
 
+from flask import url_for
+from invenio_accounts.models import User
 from invenio_db import db
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
@@ -44,16 +46,24 @@ def test_dashboard(live_server, logged_in_browser):
     """
     browser = logged_in_browser
 
+    non_admin_user = User(
+        email='test2@hepdata.net',
+        active=True
+    )
+    db.session.add(non_admin_user)
+    db.session.commit()
+
     # Create some submissions so that there'll be something on the dashboard
-    # and on 2 pages. Current user will be coordinator and uploader.
+    # and on 2 pages. Current user will be coordinator and uploader for most.
     for i in range(26):
         content = {'title': f'Dashboard Test {i}'}
         record_information = create_record(content)
         hepsubmission = get_or_create_hepsubmission(record_information["recid"], 1)
+        user_account = non_admin_user.id if i == 0 else 1
         participant_record = SubmissionParticipant(email='test@hepdata.net',
                                                    status='primary',
                                                    role='uploader',
-                                                   user_account=1,
+                                                   user_account=user_account,
                                                    publication_recid=record_information["recid"])
         db.session.add(hepsubmission)
         db.session.add(participant_record)
@@ -134,7 +144,7 @@ def test_dashboard(live_server, logged_in_browser):
     delete_widget.find_element_by_class_name('confirm-delete').click()
     # Wait for confirmation of deletion
     WebDriverWait(browser, 10).until(
-        EC.presence_of_element_located((By.ID, 'delete-success'))
+        EC.visibility_of_element_located((By.ID, 'delete-success'))
     )
     assert 'Submission deleted' in \
         delete_widget.find_element_by_css_selector('#delete-success p').text
@@ -171,3 +181,37 @@ def test_dashboard(live_server, logged_in_browser):
     # Now last 5 items should be visible
     assert all(not row.is_displayed() for row in uploader_rows[:20])
     assert all(row.is_displayed() for row in uploader_rows[20:])
+
+    # View the dashboard as the non-admin user
+    # First scroll back to the top of the screen
+    browser.execute_script("window.scrollTo(0,0);")
+    admin_user_filter = browser.find_element_by_id('admin-user-filter')
+    admin_user_filter.send_keys('test')
+    suggestions_div = WebDriverWait(browser, 10).until(
+        EC.presence_of_element_located((By.CLASS_NAME, 'tt-open'))
+    )
+    suggestions = suggestions_div.find_elements_by_class_name('tt-suggestion')
+    assert len(suggestions) == 2
+    assert suggestions[0].text == 'test@hepdata.net'
+    assert suggestions[1].text == 'test2@hepdata.net'
+    suggestions[1].click()
+
+    # Dashboard should reload with ?view_as_user=2 query param
+    assert browser.current_url == url_for('hep_dashboard.dashboard',
+        _external=True, view_as_user=non_admin_user.id)
+
+    # Check banner appears at top of page
+    banner = browser.find_element_by_class_name('alert-info')
+    assert banner.text == "You are logged in as test@hepdata.net but are currently viewing the " \
+        "dashboard as user test2@hepdata.net. View as test@hepdata.net"
+
+    # Wait for submissions to load - this user shouldn't have any
+    submissions_list = WebDriverWait(browser, 10).until(
+        EC.presence_of_element_located((By.ID, "hep-submissions"))
+    )
+    submission_items = submissions_list.find_elements_by_class_name('submission-item')
+    assert len(submission_items) == 0
+
+    # Check permissions widget - should be a message saying no contributions
+    permissions_div = browser.find_element_by_id('permissions')
+    assert permissions_div.text.startswith('No contributions to show')

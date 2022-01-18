@@ -270,7 +270,6 @@ def get_dashboard_current_user(current_user):
     if has_role(current_user, 'admin'):
         user_id = get_session_item(VIEW_AS_USER_ID_KEY)
         if user_id and user_id != current_user.id:
-            print("Imposter!")
             user = User.query.filter_by(id=user_id).first()
 
     if not user:
