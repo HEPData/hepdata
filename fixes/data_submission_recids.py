@@ -128,5 +128,7 @@ def _create_new_data_records(hep_submission, is_latest=True):
 
         # Reindex updated data records if this is the latest version
         if is_latest:
-            index_record_ids(generated_record_ids)
+            # Check publication is in the index - add it if not
+            log.info(f'Indexing record ids: {[hep_submission.publication_recid] + generated_record_ids}')
+            index_record_ids([hep_submission.publication_recid] + generated_record_ids)
             push_data_keywords(pub_ids=[hep_submission.publication_recid])
