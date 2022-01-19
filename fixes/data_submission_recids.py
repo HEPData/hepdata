@@ -86,7 +86,8 @@ def _create_new_data_records(hep_submission, is_latest=True):
     data_submissions = DataSubmission.query.filter_by(
         publication_recid=hep_submission.publication_recid,
         version=hep_submission.version
-    )
+    ).order_by(DataSubmission.id.asc())
+
     # Get full list of associated recids across all versions so we can check
     # for duplicates
     all_versions_associated_recids = [
