@@ -685,7 +685,8 @@ def do_finalise(recid, publication_record=None, force_finalise=False,
 
         submissions = DataSubmission.query.filter_by(
             publication_recid=recid,
-            version=hep_submission.version).all()
+            version=hep_submission.version
+        ).order_by(DataSubmission.id.asc()).all()
 
         version = hep_submission.version
 
