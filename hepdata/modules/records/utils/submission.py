@@ -669,7 +669,7 @@ def do_finalise(recid, publication_record=None, force_finalise=False,
             than create new ones (only used for admin/test purposes)
         :param bool convert: Whether to convert to (and store) other data
             formats using hepdata_converter
-        :param type send_email: Whether to email the submission participants
+        :param bool send_email: Whether to email the submission participants
             and coordinator to inform them that the submission is complete
         :return: JSON string with keys: ``success``, ``recid``, (on success)
             ``data_count``, ``generated_records``, (on failure) ``errors``.
