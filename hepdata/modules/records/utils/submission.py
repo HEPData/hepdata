@@ -656,11 +656,24 @@ def do_finalise(recid, publication_record=None, force_finalise=False,
         Creates record SIP for each data record with a link to the associated
         publication.
 
-        :param synchronous: if true then workflow execution and creation is
-               waited on, then everything is indexed in one go.
-               If False, object creation is asynchronous, however reindexing is not
-               performed. This is only really useful for the full migration of
-               content.
+        :param int recid: `publication_recid` of HEPSubmission to finalise
+        :param HEPSubmission publication_record: HEPSubmission object to
+            finalise
+        :param bool force_finalise: Whether to force finalisation. If False,
+            will only finalise if logged-in user is the submission coordinator.
+            Should only be set to True for admin tasks/testing.
+        :param str commit_message: Version information for updated versions of
+            a submission.
+        :param bool send_tweet: Whether to tweet about the new submission.
+        :param bool update: Whether to update the existing data records rather
+            than create new ones (only used for admin/test purposes)
+        :param bool convert: Whether to convert to (and store) other data
+            formats using hepdata_converter
+        :param bool send_email: Whether to email the submission participants
+            and coordinator to inform them that the submission is complete
+        :return: JSON string with keys: ``success``, ``recid``, (on success)
+            ``data_count``, ``generated_records``, (on failure) ``errors``.
+        :rtype: str
     """
     print('Finalising record {}'.format(recid))
 
@@ -672,7 +685,8 @@ def do_finalise(recid, publication_record=None, force_finalise=False,
 
         submissions = DataSubmission.query.filter_by(
             publication_recid=recid,
-            version=hep_submission.version).all()
+            version=hep_submission.version
+        ).order_by(DataSubmission.id.asc()).all()
 
         version = hep_submission.version
 
@@ -685,8 +699,9 @@ def do_finalise(recid, publication_record=None, force_finalise=False,
             for record in existing_data_records["hits"]["hits"]:
 
                 if "recid" in record["_source"]:
-                    existing_submissions[record["_source"]["title"]] = \
-                        record["_source"]["recid"]
+                    if update: # Only reuse existing data submissions for update, not for new version
+                        existing_submissions[record["_source"]["title"]] = \
+                            record["_source"]["recid"]
                     delete_item_from_index(record["_id"],
                                            doc_type=CFG_DATA_TYPE, parent=record["_source"]["related_publication"])
 
