@@ -24,6 +24,7 @@
 
 
 import json
+import logging
 
 from flask_login import login_required, current_user
 from invenio_accounts.models import Role
@@ -32,31 +33,35 @@ from sqlalchemy import func
 
 from flask import Blueprint, jsonify, url_for, redirect, request, abort, render_template
 
-from hepdata.modules.email.api import send_coordinator_request_mail, send_coordinator_approved_email
+from hepdata.modules.email.api import send_coordinator_request_mail, send_coordinator_approved_email, \
+    send_cookie_email, send_reserve_email
 from hepdata.modules.permissions.api import get_records_participated_in_by_user, get_approved_coordinators, \
     get_pending_request
 from hepdata.modules.permissions.models import SubmissionParticipant, CoordinatorRequest
 from hepdata.modules.records.utils.common import get_record_by_id
 from hepdata.modules.submission.api import get_latest_hepsubmission
 from hepdata.modules.submission.models import HEPSubmission
-from hepdata.modules.submission.views import send_cookie_email
 from hepdata.utils.users import get_user_from_id, user_is_admin
+
+logging.basicConfig()
+log = logging.getLogger(__name__)
 
 blueprint = Blueprint('hep_permissions', __name__, url_prefix="/permissions",
                       template_folder='templates')
 
 
 @blueprint.route(
-    '/manage/<int:recid>/<string:action>/<string:demote_or_promote>/<int:participant_id>')
+    '/manage/<int:recid>/<string:action>/<string:status_action>/<int:participant_id>')
 @login_required
-def promote_or_demote_participant(recid, action, demote_or_promote,
-                                  participant_id):
+def manage_participant_status(recid, action, status_action,
+                              participant_id):
     """
-    Can promote or demote a participant to/from primary reviewer/uploader.
+    Can promote or demote a participant to/from primary reviewer/uploader, or
+    remove the participant from the record.
 
     :param recid: record id that the user will be promoted or demoted for
     :param action: upload or review
-    :param demote_or_promote: demote or promote
+    :param status_action: demote, promote or remove
     :param participant_id: id of user from the SubmissionParticipant table.
     :return:
     """
@@ -64,25 +69,33 @@ def promote_or_demote_participant(recid, action, demote_or_promote,
         participant = SubmissionParticipant.query.filter_by(
             id=participant_id).one()
 
-        status = 'reserve'
-        if demote_or_promote == 'promote':
-            status = 'primary'
+        if status_action == 'remove':
+            db.session.delete(participant)
+        else:
+            status = 'reserve'
+            if status_action == 'promote':
+                status = 'primary'
 
-        participant.status = status
-        db.session.add(participant)
+            participant.status = status
+            db.session.add(participant)
+
         db.session.commit()
 
         record = get_record_by_id(recid)
 
         # now send the email telling the user of their new status!
-        if status == 'primary':
+        if status_action == 'promote':
             hepsubmission = get_latest_hepsubmission(publication_recid=recid)
             send_cookie_email(participant, record, version=hepsubmission.version)
+        elif status_action == 'demote':
+            send_reserve_email(participant, record)
 
         return json.dumps({"success": True, "recid": recid})
     except Exception as e:
+        error_str = f"Unable to {status_action} participant id {participant_id} for record {recid}"
+        log.error(f"{error_str}: {str(e)}")
         return json.dumps(
-            {"success": False, "recid": recid, "error": str(e)})
+            {"success": False, "recid": recid, "message": f"{error_str}. Please refresh the page and try again."})
 
 
 @blueprint.route('/manage/person/add/<int:recid>', methods=['POST'])

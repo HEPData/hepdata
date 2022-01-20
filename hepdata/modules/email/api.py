@@ -301,6 +301,31 @@ def send_cookie_email(submission_participant,
                                submission_participant.publication_recid), message_body)
 
 
+def send_reserve_email(submission_participant, record_information):
+
+    hepsubmission = get_latest_hepsubmission(
+        publication_recid=record_information['recid']
+    )
+    coordinator = User.query.get(hepsubmission.coordinator)
+    collaboration = _get_collaboration(hepsubmission.coordinator)
+
+    message_body = render_template(
+        'hepdata_theme/email/reserve.html',
+        name=submission_participant.full_name,
+        role=submission_participant.role,
+        title=record_information['title'],
+        site_url=current_app.config.get('SITE_URL', 'https://www.hepdata.net'),
+        recid=submission_participant.publication_recid,
+        email=submission_participant.email,
+        coordinator_email=coordinator.email,
+        collaboration=collaboration)
+
+    create_send_email_task(submission_participant.email,
+                           "[HEPData] Change of {0} status for record {1} in HEPData".format(
+                               submission_participant.role.capitalize(),
+                               submission_participant.publication_recid), message_body)
+
+
 def send_question_email(question):
     reply_to = current_user.email
 
