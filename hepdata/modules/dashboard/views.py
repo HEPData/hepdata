@@ -22,7 +22,7 @@
 
 """HEPData Dashboard Views."""
 
-from flask import Blueprint, jsonify, request, render_template, abort
+from flask import Blueprint, jsonify, request, render_template, abort, current_app
 from flask_login import login_required, current_user
 from invenio_accounts.models import User
 
@@ -264,7 +264,11 @@ def submissions_list():
                             'message': "Collaboration not found"})
 
     admin_idx = AdminIndexer()
-    summary = admin_idx.get_summary(collaboration=collaboration)
+    # Get summary data, filtering out imported records unless in TESTING mode
+    summary = admin_idx.get_summary(
+        collaboration=collaboration,
+        include_imported=current_app.config.get('TESTING', False)
+    )
     return jsonify(summary)
 
 

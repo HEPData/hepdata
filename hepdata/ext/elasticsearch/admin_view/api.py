@@ -103,31 +103,22 @@ class AdminIndexer:
 
         return result
 
-    def get_summary(self, collaboration=None):
-        s = Search(index=self.index)
-        # Filter by date to approximately 20 years ago, to ensure there aren't more
-        # than 10000 buckets
-        date_20_years_ago = (datetime.utcnow() - timedelta(days=int(20*365.25))).date()
-        s = s.filter('range', **{'last_updated': {'gte': str(date_20_years_ago)}})
+    def get_summary(self, collaboration=None, include_imported=False):
+        s = ESSubmission.search(using=self.client, index=self.index)[0:10000]
+
+        # Exclude items migrated from hepdata.cedar.ac.uk by filtering on coordinator
+        # (coordinator 1 is the default user used for imports)
+        if not include_imported:
+            s = s.exclude('term', coordinator=1)
+
         if collaboration:
             s = s.filter('term', collaboration=collaboration.lower())
-        s.aggs.bucket('daily_workflows', 'date_histogram',
-                      field='last_updated',
-                      format="yyyy-MM-dd", interval='day') \
-            .bucket('recid', 'terms', field='recid')
-        result = s.execute().aggregations.to_dict()
 
-        # flatten summary
-        processed_result = []
-        _daily_workflows = result['daily_workflows']
-        for day in _daily_workflows['buckets']:
-            for recid in day['recid']['buckets']:
-                record_search = self.search(term=recid['key'], fields=['recid'])
-                record = record_search[0] if len(record_search) == 1 else record_search[1]
+        s = s.sort('last_updated')
+        results = s.execute()
 
-                processed_result.append(record.as_custom_dict(exclude=[]))
-
-        return processed_result
+        processed_results = [record.as_custom_dict(exclude=[]) for record in results.hits]
+        return processed_results
 
     def find_and_delete(self, term, fields=None):
         """
@@ -179,15 +170,29 @@ class AdminIndexer:
     def reindex(self, *args, **kwargs):
 
         recreate = kwargs.get('recreate', False)
+        include_imported = kwargs.get('include_imported', False)
+
         if recreate:
             self.recreate_index()
 
-        submissions = HEPSubmission.query.filter(HEPSubmission.overall_status != 'sandbox' and \
-                                                 HEPSubmission.overall_status != 'sandbox_processing' and \
-                                                 HEPSubmission.coordinator > 1).all()
+        submissions_query = HEPSubmission.query.filter(
+            HEPSubmission.overall_status != 'sandbox',
+            HEPSubmission.overall_status != 'sandbox_processing'
+        )
 
-        for submission in submissions:
+        if not include_imported:
+            submissions_query = submissions_query.filter(
+                HEPSubmission.coordinator > 1
+            )
+        submissions = submissions_query.all()
+        print(f'Indexing {len(submissions)} submissions...')
+
+        for i, submission in enumerate(submissions):
             self.index_submission(submission)
+            if i % 100 == 0:
+                print(f"Indexed {i} of {len(submissions)}")
+
+        print(f"Finished indexing {len(submissions)} submissions")
 
     def recreate_index(self):
         """ Delete and then create a given index and set a default mapping.

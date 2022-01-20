@@ -65,6 +65,25 @@ def test_summary(admin_idx):
     summary = admin_idx.get_summary()
     assert (summary is not None)
     assert (len(summary) == 3)
+    assert summary[0] == {
+        'index': 'hepdata-submission-test',
+        'recid': 1,
+        'title': 'Test Submission',
+        'collaboration': 'ATLAS',
+        'version': 1,
+        'inspire_id': '122111',
+        'status': 'finished',
+        'creation_date': '2016-06-01',
+        'last_updated': '2016-06-01',
+        'participants': []
+    }
+
+    # Filter on collaboration
+    collab_summary = admin_idx.get_summary(collaboration='ATLAS')
+    assert (collab_summary is not None)
+    assert (len(collab_summary) == 2)
+    assert collab_summary[0] == summary[0]
+    assert all([s['collaboration'] == 'ATLAS' for s in collab_summary])
 
 
 def test_find_and_delete(admin_idx):
