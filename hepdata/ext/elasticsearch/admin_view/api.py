@@ -56,7 +56,7 @@ class ESSubmission(Document):
     )
     coordinator = Integer()
 
-    def as_custom_dict(self, exclude=None):
+    def as_custom_dict(self, exclude=None, flatten_participants=True):
         _dict_ = vars(self)
 
         data = _dict_['_d_']
@@ -64,9 +64,12 @@ class ESSubmission(Document):
         data['last_updated'] = data['last_updated'].strftime('%Y-%m-%d')
 
         participants = data.get('participants', [])
-        data['participants'] = []
-        for participant in participants:
-            data['participants'].append(participant['full_name'] + ' (' + participant['role'] + ')')
+        if flatten_participants:
+            data['participants'] = []
+            for participant in participants:
+                data['participants'].append(participant['full_name'] + ' (' + participant['role'] + ')')
+        else:
+            data['participants'] = [p.to_dict() for p in participants]
 
         if exclude:
             for field in exclude:
@@ -103,7 +106,7 @@ class AdminIndexer:
 
         return result
 
-    def get_summary(self, collaboration=None, include_imported=False):
+    def get_summary(self, coordinator_id=None, include_imported=False, flatten_participants=True):
         s = ESSubmission.search(using=self.client, index=self.index)[0:10000]
 
         # Exclude items migrated from hepdata.cedar.ac.uk by filtering on coordinator
@@ -111,13 +114,13 @@ class AdminIndexer:
         if not include_imported:
             s = s.exclude('term', coordinator=1)
 
-        if collaboration:
-            s = s.filter('term', collaboration=collaboration.lower())
+        if coordinator_id:
+            s = s.filter('term', coordinator=coordinator_id)
 
         s = s.sort('last_updated')
         results = s.execute()
 
-        processed_results = [record.as_custom_dict(exclude=[]) for record in results.hits]
+        processed_results = [record.as_custom_dict(exclude=[], flatten_participants=flatten_participants) for record in results.hits]
         return processed_results
 
     def find_and_delete(self, term, fields=None):
@@ -143,7 +146,11 @@ class AdminIndexer:
         participants = []
 
         for sub_participant in get_submission_participants_for_record(submission.publication_recid):
-            participants.append({'full_name': sub_participant.full_name, 'role': sub_participant.role})
+            participants.append({
+                'full_name': sub_participant.full_name,
+                'role': sub_participant.role,
+                'email': sub_participant.email
+            })
 
         record_information = get_record_contents(submission.publication_recid,
                                                  submission.overall_status)

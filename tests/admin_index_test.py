@@ -33,13 +33,13 @@ def test_recreate_index(admin_idx):
 
 def test_add_to_index(admin_idx):
     files = [{'_id': 1, 'recid': 1, 'title': 'Test Submission', 'collaboration': 'ATLAS', 'version': 1,
-              'inspire_id': '122111',
+              'inspire_id': '122111', 'coordinator': 2,
               'status': 'finished', 'creation_date': '2016-06-01', 'last_updated': '2016-06-01'},
              {'_id': 2, 'recid': 2, 'title': 'Test Submission', 'collaboration': 'ATLAS', 'version': 1,
-              'inspire_id': '122112',
+              'inspire_id': '122112', 'coordinator': 2,
               'status': 'finished', 'creation_date': '2016-06-02', 'last_updated': '2016-06-02'},
              {'_id': 3, 'recid': 3, 'title': 'Test Submission', 'collaboration': 'ALICE', 'version': 1,
-              'inspire_id': '122113',
+              'inspire_id': '122113', 'coordinator': 3,
               'status': 'finished', 'creation_date': '2016-06-02', 'last_updated': '2016-06-02'}
              ]
 
@@ -70,6 +70,7 @@ def test_summary(admin_idx):
         'recid': 1,
         'title': 'Test Submission',
         'collaboration': 'ATLAS',
+        'coordinator': 2,
         'version': 1,
         'inspire_id': '122111',
         'status': 'finished',
@@ -78,12 +79,12 @@ def test_summary(admin_idx):
         'participants': []
     }
 
-    # Filter on collaboration
-    collab_summary = admin_idx.get_summary(collaboration='ATLAS')
-    assert (collab_summary is not None)
-    assert (len(collab_summary) == 2)
-    assert collab_summary[0] == summary[0]
-    assert all([s['collaboration'] == 'ATLAS' for s in collab_summary])
+    # Filter on coordinator
+    coordinator_summary = admin_idx.get_summary(coordinator_id=2)
+    assert (coordinator_summary is not None)
+    assert (len(coordinator_summary) == 2)
+    assert coordinator_summary[0] == summary[0]
+    assert all([s['coordinator'] == 2 for s in coordinator_summary])
 
 
 def test_find_and_delete(admin_idx):

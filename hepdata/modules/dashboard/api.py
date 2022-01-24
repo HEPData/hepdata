@@ -28,6 +28,7 @@ from invenio_accounts.models import User
 
 from sqlalchemy import and_, or_, func
 
+from hepdata.ext.elasticsearch.admin_view.api import AdminIndexer
 from hepdata.modules.permissions.models import SubmissionParticipant
 from hepdata.modules.records.utils.common import get_record_by_id, decode_string
 from hepdata.modules.submission.api import get_latest_hepsubmission, get_submission_participants_for_record
@@ -279,3 +280,22 @@ def get_dashboard_current_user(current_user):
 
 def set_dashboard_current_user(user):
     set_session_item(VIEW_AS_USER_ID_KEY, user.id)
+
+
+def get_submissions_summary(user, include_imported=False, flatten_participants=True):
+    if not (has_role(user, 'admin') or has_role(user, 'coordinator')):
+        return {"success": False,
+                        'message': "You don't have sufficient privileges to "
+                                   "perform this action."}
+
+    coordinator_id = None
+    if not has_role(user, 'admin'):
+        coordinator_id = user.id
+
+    admin_idx = AdminIndexer()
+    # Get summary data, filtering out imported records unless in TESTING mode
+    return admin_idx.get_summary(
+        coordinator_id=coordinator_id,
+        include_imported=include_imported,
+        flatten_participants=flatten_participants
+    )

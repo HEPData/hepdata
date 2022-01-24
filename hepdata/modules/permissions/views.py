@@ -266,7 +266,8 @@ def get_permissions_list():
 
     :return:
     """
-    return jsonify(get_records_participated_in_by_user())
+    user = get_dashboard_current_user(current_user)
+    return jsonify(get_records_participated_in_by_user(user))
 
 
 @blueprint.route('/coordinators')
