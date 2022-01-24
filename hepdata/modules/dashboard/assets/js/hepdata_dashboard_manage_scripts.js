@@ -142,9 +142,12 @@ $(document).ready(function() {
                           var downgrade_show = (data['reserve-' + type + 's'].length == 0 && data['primary-' + type + 's'].length == 0) ? "hidden" : (data['primary-' + type + 's'].length > 1) ? "" : (data['reserve-' + type + 's'].length > 0) ? "" : "hidden";
                           var action = additional_class == 'primary' ? "demote" : "promote";
 
-                          html_block += '<div class="trigger-actions">' +
-                                  '<button data-toggle="tooltip" data-placement="top" title="' + alt_text + '" class="btn btn-xs btn-' + arrow_box_class + ' ' + downgrade_show + ' mail-trigger" data-action="' + action + '" data-person-type="' + action_type + '" data-recid="' + data["recid"] + '" data-userid="' + array[val_idx]['id'] + '"><span class="fa ' + arrow_box_icon + '"></span> </button>' +
-                                  '</div>';
+                          html_block += '<div class="trigger-actions">';
+                          if (additional_class == 'reserve') {
+                            html_block += '<button data-toggle="tooltip" data-placement="top" title="Remove user from submission" class="btn btn-xs btn-danger mail-trigger" data-action="remove" data-person-type="' + action_type + '" data-recid="' + data["recid"] + '" data-userid="' + array[val_idx]['id'] + '"><span class="fa fa-trash-o"></span> </button>';
+                          }
+                          html_block += '<button data-toggle="tooltip" data-placement="top" title="' + alt_text + '" class="btn btn-xs btn-' + arrow_box_class + ' ' + downgrade_show + ' mail-trigger" data-action="' + action + '" data-person-type="' + action_type + '" data-recid="' + data["recid"] + '" data-userid="' + array[val_idx]['id'] + '"><span class="fa ' + arrow_box_icon + '"></span> </button>' +
+                            '</div>';
                           html_block += '</div>';
 
                           html_block += '<div class="clearfix"></div>';
