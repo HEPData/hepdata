@@ -31,8 +31,7 @@ from hepdata.ext.elasticsearch.api import reindex_all
 from hepdata.ext.elasticsearch.api import push_data_keywords
 from hepdata.modules.dashboard.api import prepare_submissions, get_pending_invitations_for_user, get_submission_count, \
     list_submission_titles, get_dashboard_current_user, set_dashboard_current_user, get_submissions_summary
-from hepdata.modules.permissions.api import get_pending_request, \
-    get_pending_coordinator_requests, get_collaboration_from_coordinator
+from hepdata.modules.permissions.api import get_pending_request, get_pending_coordinator_requests
 from hepdata.modules.permissions.views import check_is_sandbox_record
 from hepdata.modules.records.utils.submission import unload_submission, do_finalise
 from hepdata.modules.submission.api import get_latest_hepsubmission
