@@ -33,6 +33,8 @@ from sqlalchemy import func
 
 from flask import Blueprint, jsonify, url_for, redirect, request, abort, render_template
 
+from hepdata.ext.elasticsearch.admin_view.api import AdminIndexer
+from hepdata.modules.dashboard.api import get_dashboard_current_user
 from hepdata.modules.email.api import send_coordinator_request_mail, send_coordinator_approved_email, \
     send_cookie_email, send_reserve_email
 from hepdata.modules.permissions.api import get_records_participated_in_by_user, get_approved_coordinators, \
@@ -90,6 +92,9 @@ def manage_participant_status(recid, action, status_action,
         elif status_action == 'demote':
             send_reserve_email(participant, record)
 
+        admin_idx = AdminIndexer()
+        admin_idx.index_submission(hepsubmission)
+
         return json.dumps({"success": True, "recid": recid})
     except Exception as e:
         error_str = f"Unable to {status_action} participant id {participant_id} for record {recid}"
@@ -118,6 +123,10 @@ def add_participant(recid):
                                            email=email, role=participant_type)
         db.session.add(new_record)
         db.session.commit()
+
+        admin_idx = AdminIndexer()
+        admin_idx.index_submission(submission_record)
+
         return json.dumps(
             {"success": True, "recid": recid,
              "message": "{0} {1} added.".format(full_name, participant_type)})
@@ -142,9 +151,11 @@ def change_coordinator_for_submission():
     recid = request.form['recid']
     coordinator_id = request.form['coordinator']
     submission_records = HEPSubmission.query.filter_by(publication_recid=recid).all()
+    admin_idx = AdminIndexer()
     for submission_record in submission_records:
         submission_record.coordinator = coordinator_id
         db.session.add(submission_record)
+        admin_idx.index_submission(submission_record)
     db.session.commit()
 
     return jsonify({'success': True})
