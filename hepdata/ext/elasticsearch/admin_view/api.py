@@ -41,6 +41,7 @@ log = logging.getLogger(__name__)
 class ESSubmission(Document):
     recid = Integer()
     inspire_id = Text()
+    arxiv_id = Text()
     version = Integer()
     title = Text()
     collaboration = Text()
@@ -166,6 +167,7 @@ class AdminIndexer:
                               collaboration=collaboration,
                               recid=submission.publication_recid,
                               inspire_id=submission.inspire_id,
+                              arxiv_id=record_information.get('arxiv_id', None),
                               status=submission.overall_status,
                               data_count=data_count,
                               creation_date=submission.created,
