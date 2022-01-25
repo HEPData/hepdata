@@ -1,0 +1,40 @@
+{% extends 'hepdata_theme/email/email_container.html' %}
+{% block email_type %}
+    Change of user status for HEPData record {{ recid }}
+{% endblock %}
+
+
+{% block email_content %}
+
+    Hi {{ name }},
+
+    <p>
+        {{ coordinator_email }}{% if collaboration %} for {{ collaboration }}{% endif %}
+        has changed your participation status in a record in
+        <a href="{{ site_url }}" style="color: #9b59b6">HEPData.net</a>
+{% if title %}
+    entitled:
+    </p>
+    <p style="font-weight: lighter; padding-left: 20px;">{{ title }}.</p>
+{% else %}
+    </p>
+{% endif %}
+
+    <p>
+      You are now a reserve {{ role }} which means that you are no longer able to
+      {% if role == 'uploader' %}
+        upload files to
+      {% else %}
+        review data tables for
+      {% endif %}
+      this record.
+    </p>
+
+    <p>
+      If you would like further details about this change, please contact <a href="mailto:{{coordinator_email}}">{{ coordinator_email }}</a>.
+    </p>
+
+    <p>
+        The <a href="{{ site_url }}" style="color: #9b59b6">HEPData</a> team
+    </p>
+{% endblock %}

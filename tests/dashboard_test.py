@@ -20,12 +20,16 @@
 # In applying this license, CERN does not
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
+from flask import session
+from flask_login import current_user, login_user
 from invenio_db import db
 from hepdata.modules.dashboard.api import add_user_to_metadata, \
     create_record_for_dashboard, prepare_submissions, \
     get_pending_invitations_for_user, get_submission_count, \
-    list_submission_titles
+    list_submission_titles, get_dashboard_current_user, \
+    set_dashboard_current_user, VIEW_AS_USER_ID_KEY
 from hepdata.modules.permissions.models import SubmissionParticipant
+from hepdata.modules.permissions.views import manage_participant_status
 from hepdata.modules.records.utils.common import get_record_by_id
 from hepdata.modules.records.utils.submission import get_or_create_hepsubmission
 from hepdata.modules.records.utils.workflow import create_record
@@ -346,3 +350,93 @@ def test_get_pending_invitations_for_user(mocked_submission_participant_app, moc
             'title': 'decoded Test Title 2'
         }]
         assert(pending == expected)
+
+
+def test_manage_participant_status(app):
+    # Create a record and add a participant
+    record_information = create_record({
+        'journal_info': 'Phys. Letts',
+        'title': 'My Journal Paper',
+        'inspire_id': '1487726'
+    })
+
+    hepsubmission = get_or_create_hepsubmission(record_information['recid'])
+    db.session.add(hepsubmission)
+
+    user = User(email='test@test.com', password='hello1', active=True,
+                id=101)
+    db.session.add(user)
+    db.session.commit()
+
+    participant = SubmissionParticipant(
+        publication_recid=record_information['recid'],
+        role="uploader",
+        email='test@test.com',
+        status='primary',
+        user_account=user.id)
+
+    db.session.add(participant)
+    db.session.commit()
+
+    admin_user = User.query.filter_by(id=1).first()
+    login_user(admin_user)
+
+    # Demote the user to reserve uploader
+    result = manage_participant_status(record_information['recid'], 'upload', 'demote', participant.id)
+    assert result == '{"success": true, "recid": 1}'
+    assert(participant.status == 'reserve')
+
+    # Promote the user again
+    result = manage_participant_status(record_information['recid'], 'upload', 'promote', participant.id)
+    assert result == '{"success": true, "recid": 1}'
+    assert(participant.status == 'primary')
+
+    # Delete the user as participant
+    # First show the participant object is in the session
+    assert participant in db.session
+    result = manage_participant_status(record_information['recid'], 'upload', 'remove', participant.id)
+    assert result == '{"success": true, "recid": 1}'
+    # Check object is no longer in db
+    assert participant not in db.session
+
+    # Check we get a suitable error if we make a change for participant that doesn't exist
+    result = manage_participant_status(record_information['recid'], 'upload', 'demote', participant.id)
+    assert result == '{"success": false, "recid": 1, "message": "Unable to demote participant id 1 for record 1. Please refresh the page and try again."}'
+
+
+def test_dashboard_current_user(app):
+    with app.app_context():
+        # Add test users to db
+        user1 = dashboardTestMockObjects['user']
+        user2 = dashboardTestMockObjects['user2']
+
+        db.session.add(user1)
+        db.session.add(user2)
+        db.session.commit()
+
+        # Try with no logged-in user
+        dashboard_user = get_dashboard_current_user(current_user)
+        assert not dashboard_user.is_authenticated
+
+        # Try with non-admin user
+        dashboard_user = get_dashboard_current_user(user1)
+        assert dashboard_user == user1
+
+        # Try with admin user
+        admin_user = User.query.filter_by(id=1).first()
+        dashboard_user = get_dashboard_current_user(admin_user)
+        assert dashboard_user == admin_user
+
+        # Set dashboard current user to user2
+        user2 = dashboardTestMockObjects['user2']
+        set_dashboard_current_user(user2)
+
+        # Try getting dashboard user as user1 - should just return user1
+        # as they are not admin
+        user1 = dashboardTestMockObjects['user']
+        dashboard_user = get_dashboard_current_user(user1)
+        assert dashboard_user == user1
+
+        # Try again as admin
+        dashboard_user = get_dashboard_current_user(admin_user)
+        assert dashboard_user == user2

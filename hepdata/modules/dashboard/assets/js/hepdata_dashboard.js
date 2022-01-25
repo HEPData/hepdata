@@ -24,13 +24,13 @@ HEPDATA.dashboard = (function () {
   var load_watched_records = function () {
     $.get('/subscriptions/list').done(function (data) {
 
-      if (data.length > 0) {
+      if (data['records'].length > 0) {
         d3.select("#watch_container").html("");
       }
 
 
       var watch_list = d3.select("#watch_container").append("div").attr("class", "container-fluid watch-list");
-      var watch_item = watch_list.selectAll("div.row").data(data).enter()
+      var watch_item = watch_list.selectAll("div.row").data(data['records']).enter()
         .append("div")
         .attr("class", "row item")
         .attr("id", function (d) {
@@ -54,7 +54,9 @@ HEPDATA.dashboard = (function () {
       });
 
       var controls = watch_item.append("div").attr("class", "col-md-1 controls");
-      controls.append("button").attr("class", "btn btn-sm btn-danger")
+      var button_classes = "btn btn-sm btn-danger";
+      if (data['disable_button']) button_classes += " disabled";
+      controls.append("button").attr("class", button_classes)
         .attr("onclick", function (d) {
           return "HEPDATA.dashboard.unwatch('" + d.recid + "')";
         })
@@ -361,9 +363,65 @@ HEPDATA.dashboard = (function () {
     });
   };
 
+  var initialise_user_filter = function () {
+
+    const user_filter_field = $('#admin-user-filter');
+
+    // Only go ahead if user is admin, i.e. that field exists
+    if (user_filter_field.length == 0) {
+      return;
+    }
+
+    // Simple matcher for typeahead filter
+    var substringMatcher = function(data) {
+      return function findMatches(query, callback) {
+        var matches = [];
+        $.each(data, function(i, datum) {
+          if (datum.email.toLowerCase().indexOf(query.toLowerCase()) >= 0) {
+            matches.push(datum);
+          }
+        });
+        callback(matches);
+      }
+    }
+
+    $.get('/dashboard/list-all-users').done(function (data) {
+
+      user_filter_field.typeahead(
+        { highlight: true },
+        {
+          source: substringMatcher(data),
+          templates: {
+            suggestion: function(result) {
+              return $('<p>').attr('id',result.id).text(result.email)[0].outerHTML;
+            }
+          }
+        }
+      );
+
+      user_filter_field.bind('typeahead:select', function (event, suggestion) {
+        $(this).typeahead('val', suggestion.email);
+        window.location.href = "/dashboard?view_as_user=" + suggestion.id;
+      });
+
+      user_filter_field.attr(
+        'placeholder',
+        'Search users by email address'
+      );
+
+      user_filter_field.after(
+        $("<i>").attr("class", "fa fa-times-circle").click(function() {
+          user_filter_field.typeahead('val', '');
+        })
+      );
+
+    });
+  };
+
   return {
     initialise: function () {
       initialise_list_filter();
+      initialise_user_filter();
       load_submissions();
       load_watched_records();
       load_permissions();

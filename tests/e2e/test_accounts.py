@@ -26,6 +26,8 @@ import flask
 
 from .conftest import e2e_assert, e2e_assert_url
 from invenio_accounts import testutils
+from invenio_accounts.models import User
+from invenio_db import db
 from itsdangerous import URLSafeTimedSerializer
 from flask_security import utils
 from passlib.context import CryptContext
@@ -143,3 +145,8 @@ def test_user_registration_and_login(live_server, env_browser):
     browser.get(flask.url_for('security.logout', _external=True))
     e2e_assert(browser, not testutils.webdriver_authenticated(browser),
                'Should not be authenticated')
+
+    # Delete the newly created account
+    user = User.query.filter_by(email=user_email).first()
+    db.session.delete(user)
+    db.session.commit()
