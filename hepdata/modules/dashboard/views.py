@@ -22,7 +22,8 @@
 
 """HEPData Dashboard Views."""
 
-from flask import Blueprint, jsonify, request, render_template, abort, current_app
+from flask import Blueprint, jsonify, request, render_template, abort, \
+    current_app, make_response, url_for
 from flask_login import login_required, current_user
 from invenio_accounts.models import User
 
@@ -30,7 +31,8 @@ from hepdata.ext.elasticsearch.admin_view.api import AdminIndexer
 from hepdata.ext.elasticsearch.api import reindex_all
 from hepdata.ext.elasticsearch.api import push_data_keywords
 from hepdata.modules.dashboard.api import prepare_submissions, get_pending_invitations_for_user, get_submission_count, \
-    list_submission_titles, get_dashboard_current_user, set_dashboard_current_user, get_submissions_summary
+    list_submission_titles, get_dashboard_current_user, set_dashboard_current_user, get_submissions_summary, \
+    get_submissions_csv
 from hepdata.modules.permissions.api import get_pending_request, get_pending_coordinator_requests
 from hepdata.modules.permissions.views import check_is_sandbox_record
 from hepdata.modules.records.utils.submission import unload_submission, do_finalise
@@ -41,6 +43,7 @@ from hepdata.modules.records.utils.common import get_record_by_id
 from hepdata.modules.records.utils.workflow import update_record
 from hepdata.modules.inspire_api.views import get_inspire_record_information
 from hepdata.utils.url import modify_query
+import collections
 import json
 import math
 
@@ -250,12 +253,33 @@ def submissions():
 @blueprint.route('/submissions/list', methods=['GET'])
 @login_required
 def submissions_list():
+    if not (has_role(current_user, 'admin') or has_role(current_user, 'coordinator')):
+        return {"success": False,
+                'message': "You don't have sufficient privileges to "
+                           "perform this action."}
+
     summary = get_submissions_summary(
         current_user,
         include_imported=current_app.config.get('TESTING', False)
     )
 
     return jsonify(summary)
+
+
+@blueprint.route('/submissions/csv', methods=['GET'])
+@login_required
+def submissions_csv():
+    if not (has_role(current_user, 'admin') or has_role(current_user, 'coordinator')):
+        abort(403)
+
+    csv_data = get_submissions_csv(
+        current_user,
+        include_imported=current_app.config.get('TESTING', False)
+    )
+    output = make_response(csv_data)
+    output.headers["Content-Disposition"] = "attachment; filename=export.csv"
+    output.headers["Content-type"] = "text/csv"
+    return output
 
 
 @blueprint.route('/list-all-users')

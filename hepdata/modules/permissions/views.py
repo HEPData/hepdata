@@ -86,8 +86,8 @@ def manage_participant_status(recid, action, status_action,
         record = get_record_by_id(recid)
 
         # now send the email telling the user of their new status!
+        hepsubmission = get_latest_hepsubmission(publication_recid=recid)
         if status_action == 'promote':
-            hepsubmission = get_latest_hepsubmission(publication_recid=recid)
             send_cookie_email(participant, record, version=hepsubmission.version)
         elif status_action == 'demote':
             send_reserve_email(participant, record)

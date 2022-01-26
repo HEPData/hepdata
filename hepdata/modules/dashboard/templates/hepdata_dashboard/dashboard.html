@@ -71,6 +71,7 @@
                         {% endif %}
                         {% if user_is_coordinator_or_admin %}
                             <a href="/dashboard/submissions" class="btn-profile">Submissions Overview</a>
+                            <a href="/dashboard/submissions/csv" class="btn-profile">Download Submissions CSV</a>
                         {% endif %}
                         <a href="/account/settings/profile"
                            class="btn-profile{% if ctx.view_as_mode %} disabled{% endif %}"><i class="fa fa-pencil"></i> Edit Profile</a>
