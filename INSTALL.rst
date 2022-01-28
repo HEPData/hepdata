@@ -30,7 +30,7 @@ Prerequisites
 =============
 
 HEPData uses several services, which you will need to install before running HEPData:
- * `PostgreSQL <http://www.postgresql.org/>`_ (version 9.6) database server
+ * `PostgreSQL <http://www.postgresql.org/>`_ (version 12) database server
  * `Redis <http://redis.io/>`_ for caching
  * `Elasticsearch <https://www.elastic.co/products/elasticsearch>`_ (version 7.1, not later versions) for indexing and information retrieval. See below for further instructions.
  * `Node.js <https://nodejs.org>`_ JavaScript run-time environment and its package manager `npm <https://www.npmjs.com/>`_. (If you're using a Debian-based OS, please follow the `official installation instructions <https://github.com/nodesource/distributions/blob/master/README.md#debinstall>`_ to install NodeJS (which will also install npm), to avoid issues with ``node-sass``.)
@@ -163,9 +163,9 @@ Inspect the ``hepdata`` database from the command line as the ``hepdata`` user:
    hepdata=> \q
 
 If you're having problems with access permissions to the database, a simple solution is to edit the
-PostgreSQL Client Authentication Configuration File (e.g. ``/var/lib/pgsql/9.6/data/pg_hba.conf``) to
+PostgreSQL Client Authentication Configuration File (e.g. ``/var/lib/pgsql/12/data/pg_hba.conf``) to
 ``trust`` local and IPv4/IPv6 connections (instead of ``peer`` or ``ident``), then restart the PostgreSQL
-server (e.g. ``sudo systemctl restart postgresql-9.6``).
+server (e.g. ``sudo systemctl restart postgresql-12``).
 
 Run a local development server
 ------------------------------
