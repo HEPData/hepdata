@@ -198,7 +198,7 @@ def test_dashboard(live_server, logged_in_browser):
     )
     assert(response.status_code == 200)
     decoded_lines = response.content.decode('utf-8').splitlines()
-    assert len(decoded_lines) == 5
+    assert len(decoded_lines) == 4
     csv_reader = csv.reader(decoded_lines)
     for row in csv_reader:
         assert len(row) == 12
