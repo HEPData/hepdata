@@ -239,12 +239,17 @@ def finalise(recid, publication_record=None, force_finalise=False):
 @blueprint.route('/submissions/', methods=['GET'])
 @login_required
 def submissions():
-    if has_role(current_user, 'admin') or has_role(current_user, 'coordinator'):
-        user_profile = current_userprofile.query.filter_by(user_id=current_user.get_id()).first()
+    user = get_dashboard_current_user(current_user)
+    if has_role(user, 'admin') or has_role(user, 'coordinator'):
+        user_profile = UserProfile.query.filter_by(user_id=user.get_id()).first()
+        url_for_params = { 'view_as_user': user.id } if user != current_user else {}
+        dashboard_url = url_for('hep_dashboard.dashboard', **url_for_params)
 
-        ctx = {'user_is_admin': has_role(current_user, 'admin'),
+        ctx = {'user_is_admin': has_role(user, 'admin'),
                'user_profile': user_profile,
-               'user_to_display': current_user}
+               'user_to_display': user,
+               'view_as_mode': user != current_user,
+               'dashboard_url': dashboard_url }
         return render_template('hepdata_dashboard/submissions.html', ctx=ctx)
     else:
         abort(403)
@@ -253,13 +258,14 @@ def submissions():
 @blueprint.route('/submissions/list', methods=['GET'])
 @login_required
 def submissions_list():
-    if not (has_role(current_user, 'admin') or has_role(current_user, 'coordinator')):
+    user = get_dashboard_current_user(current_user)
+    if not (has_role(user, 'admin') or has_role(user, 'coordinator')):
         return {"success": False,
                 'message': "You don't have sufficient privileges to "
                            "perform this action."}
 
     summary = get_submissions_summary(
-        current_user,
+        user,
         include_imported=current_app.config.get('TESTING', False)
     )
 

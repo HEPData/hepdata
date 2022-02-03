@@ -26,7 +26,7 @@
                 <div class="alert alert-info">
                     You are logged in as <strong>{{ current_user.email }}</strong> but are currently viewing the
                     dashboard as user <strong>{{ ctx.user_to_display.email }}</strong>.
-                    <a href="/dashboard">View as {{ current_user.email }}</a>
+                    <a href="/dashboard">View dashboard as {{ current_user.email }}</a>
                 </div>
             {% endif %}
 
@@ -69,7 +69,7 @@
                             -->
 
                         {% endif %}
-                        {% if user_is_coordinator_or_admin %}
+                        {% if user_is_coordinator_or_admin and request.url_rule.endpoint == 'hep_dashboard.dashboard' %}
                             <a href="/dashboard/submissions" class="btn-profile">Submissions Overview</a>
                             <a href="/dashboard/submissions/csv" class="btn-profile">Download Submissions CSV</a>
                         {% endif %}
