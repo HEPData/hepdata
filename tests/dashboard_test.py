@@ -26,6 +26,7 @@ import time
 from flask import session
 from flask_login import current_user, login_user
 from invenio_db import db
+from werkzeug.exceptions import Forbidden
 from hepdata.modules.dashboard.api import add_user_to_metadata, \
     create_record_for_dashboard, prepare_submissions, \
     get_pending_invitations_for_user, get_submission_count, \
@@ -432,9 +433,8 @@ def test_dashboard_current_user(app):
         dashboard_user = get_dashboard_current_user(admin_user)
         assert dashboard_user == admin_user
 
-        # Set dashboard current user to user2
-        user2 = dashboardTestMockObjects['user2']
-        set_dashboard_current_user(user2)
+        # Set dashboard current user to user2 (with current user as admin)
+        set_dashboard_current_user(admin_user, user2.id)
 
         # Try getting dashboard user as user1 - should just return user1
         # as they are not admin
@@ -445,6 +445,23 @@ def test_dashboard_current_user(app):
         # Try again as admin
         dashboard_user = get_dashboard_current_user(admin_user)
         assert dashboard_user == user2
+
+        # Reset dashboard current user
+        set_dashboard_current_user(admin_user, -1)
+        dashboard_user = get_dashboard_current_user(admin_user)
+        assert dashboard_user == admin_user
+
+        # Try setting current user as non-admin - should give error
+        with pytest.raises(Forbidden) as exc_info:
+            set_dashboard_current_user(user1, user2.id)
+
+        assert str(exc_info.value) == "403 Forbidden: You don't have the permission to access the requested resource. It is either read-protected or not readable by the server."
+
+        # Try setting current user to invalid user id
+        with pytest.raises(ValueError) as exc_info:
+            set_dashboard_current_user(admin_user, 123456)
+
+        assert str(exc_info.value) == 'No user with id 123456'
 
 
 def test_submissions_csv(app, admin_idx, load_default_data, identifiers):

@@ -32,7 +32,8 @@ dashboard_js = WebpackBundle(
         'hepdata-dashboard-js': './js/hepdata_dashboard.js',
         'hepdata-dashboard-inspire-js': './js/hepdata_dashboard_inspire.js',
         'hepdata-dashboard-manage-scripts-js': './js/hepdata_dashboard_manage_scripts.js',
-        'hepdata-dashboard-submissions-vis-js': './js/hepdata_dashboard_submissions_vis.js'
+        'hepdata-dashboard-submissions-vis-js': './js/hepdata_dashboard_submissions_vis.js',
+        'hepdata-dashboard-user-filter-js': './js/hepdata_dashboard_user_filter.js'
     },
     dependencies={
         "crossfilter": "1.3.12",

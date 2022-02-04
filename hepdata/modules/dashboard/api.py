@@ -30,6 +30,7 @@ from flask import url_for
 from invenio_accounts.models import User
 
 from sqlalchemy import or_, func
+from werkzeug.exceptions import Forbidden as ForbiddenError
 
 from hepdata.ext.elasticsearch.admin_view.api import AdminIndexer
 from hepdata.modules.permissions.models import SubmissionParticipant
@@ -282,8 +283,20 @@ def get_dashboard_current_user(current_user):
     return user
 
 
-def set_dashboard_current_user(user):
-    set_session_item(VIEW_AS_USER_ID_KEY, user.id)
+def set_dashboard_current_user(current_user, view_as_user_id):
+    user_to_display = current_user
+    if view_as_user_id and view_as_user_id > 0: # -1 resets to current user
+        if has_role(current_user, 'admin'):
+            user_to_display = User.query.filter_by(id=view_as_user_id).first()
+            if not user_to_display:
+                raise ValueError(f"No user with id {view_as_user_id}")
+        else:
+            raise ForbiddenError()
+
+    if view_as_user_id is not None:
+        set_session_item(VIEW_AS_USER_ID_KEY, user_to_display.id)
+
+    return user_to_display
 
 
 def get_submissions_summary(user, include_imported=False, flatten_participants=True):

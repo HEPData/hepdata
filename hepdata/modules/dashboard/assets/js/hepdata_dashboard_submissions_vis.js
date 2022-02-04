@@ -5,6 +5,8 @@ import $ from 'jquery'
 import crossfilter from 'crossfilter'
 import d3 from 'd3'
 import dc from 'dc'
+import HEPDATA from './hepdata_common.js'
+import './hepdata_dashboard_user_filter.js'
 
 var submissions_vis = (function () {
 
@@ -303,5 +305,6 @@ var submissions_vis = (function () {
 })();
 
 $(document).ready(function () {
+    HEPDATA.initialise_user_filter();
     submissions_vis.render('/dashboard/submissions/list', {});
 });
