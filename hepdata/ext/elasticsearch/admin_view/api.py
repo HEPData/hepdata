@@ -172,7 +172,7 @@ class AdminIndexer:
                 else:
                     coordinator_group = ''
 
-            self.add_to_index(_id=submission.publication_recid,
+            self.add_to_index(_id=submission.id,
                               title=record_information['title'],
                               collaboration=collaboration,
                               recid=submission.publication_recid,
