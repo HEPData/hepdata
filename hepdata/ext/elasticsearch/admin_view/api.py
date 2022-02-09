@@ -30,6 +30,7 @@ from elasticsearch_dsl import Document, Text, Keyword, Date, Integer, Nested, In
 from elasticsearch_dsl.connections import connections
 from flask import current_app
 
+from hepdata.modules.permissions.models import CoordinatorRequest
 from hepdata.modules.records.utils.common import get_record_contents
 from hepdata.modules.submission.api import get_submission_participants_for_record
 from hepdata.modules.submission.models import HEPSubmission, DataSubmission
@@ -56,6 +57,7 @@ class ESSubmission(Document):
         }
     )
     coordinator = Integer()
+    coordinator_group = Text()
 
     def as_custom_dict(self, exclude=None, flatten_participants=True):
         _dict_ = vars(self)
@@ -161,6 +163,14 @@ class AdminIndexer:
 
         if record_information:
             collaboration = ','.join(record_information.get('collaborations', []))
+            coordinator_request = CoordinatorRequest.query.filter_by(user=submission.coordinator).first()
+            if coordinator_request:
+                coordinator_group = coordinator_request.collaboration
+            else:
+                if submission.coordinator == 1:
+                    coordinator_group = 'HEPData Admin'
+                else:
+                    coordinator_group = ''
 
             self.add_to_index(_id=submission.publication_recid,
                               title=record_information['title'],
@@ -174,7 +184,8 @@ class AdminIndexer:
                               last_updated=submission.last_updated,
                               version=submission.version,
                               participants=participants,
-                              coordinator=submission.coordinator)
+                              coordinator=submission.coordinator,
+                              coordinator_group=coordinator_group)
 
     def reindex(self, *args, **kwargs):
 

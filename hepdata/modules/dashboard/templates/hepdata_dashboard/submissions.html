@@ -26,16 +26,16 @@
 
             <div class="col-md-8">
                 <div class="row-fluid">
-                    <div id="time-series" class="col-md-6">
-                        <h4>Data Records Per Submission</h4>
-                        <br/>
-                        <div id="data_count_vis"></div>
-                    </div>
-
                     <div id="collaboration" class="col-md-6">
                         <h4>Collaboration <span class="text-muted text-small">TOP 10</span></h4>
                         <br/>
                         <div id="collaboration_vis"></div>
+                    </div>
+
+                    <div id="coordinator" class="col-md-6">
+                        <h4>Coordinator <span class="text-muted text-small">TOP 10</span></h4>
+                        <br/>
+                        <div id="coordinator_vis"></div>
                     </div>
                 </div>
 
@@ -43,14 +43,19 @@
                 <div class="clearfix"></div>
                 <br/>
 
+                <div id="time-series" class="col-md-6">
+                    <h4>Data Records Per Submission</h4>
+                    <br/>
+                    <div id="data_count_vis"></div>
+                </div>
 
-                <div id="status" class="col-md-6">
+                <div id="status" class="col-md-3">
                     <h4>Submission Status</h4>
                     <br/>
                     <div id="status_vis"></div>
                 </div>
 
-                <div id="version" class="col-md-6">
+                <div id="version" class="col-md-3">
                     <h4>Version</h4>
                     <br/>
                     <div id="version_vis"></div>

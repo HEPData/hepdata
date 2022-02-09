@@ -159,6 +159,10 @@ var submissions_vis = (function () {
             return d.collaboration == '' ? 'No collaboration' : d.collaboration;
           }),
 
+          coordinator = submissions.dimension(function (d) {
+            return d.coordinator_group ? d.coordinator_group : d.coordinator;
+          }),
+
           status = submissions.dimension(function (d) {
             return d.status;
           }),
@@ -172,6 +176,7 @@ var submissions_vis = (function () {
           submissions_by_date_count_group = submissions_by_date.group(),
           cumulative_count = submissions_by_date.group().reduceSum(),
           collaboration_count_group = collaboration.group(),
+          coordinator_count_group = coordinator.group(),
           status_count_group = status.group(),
           data_count_group = data.group(),
           version_count_group = version.group();
@@ -227,6 +232,12 @@ var submissions_vis = (function () {
           .group(getTops(collaboration_count_group))
           .colors(general_colors);
 
+        var coordinator_chart = dc.rowChart("#coordinator_vis")
+          .width(calculate_vis_width(window_width, 0.3))
+          .height(250)
+          .dimension(coordinator, 'coordinators')
+          .group(getTops(coordinator_count_group))
+          .colors(general_colors);
 
         var participant_chart = dc.rowChart("#participants_vis")
           .width(calculate_vis_width(window_width, 0.3))
@@ -237,7 +248,7 @@ var submissions_vis = (function () {
 
         var status_chart = dc.pieChart("#status_vis")
 
-          .width(calculate_vis_width(window_width, 0.12))
+          .width(calculate_vis_width(window_width, 0.11))
           .dimension(status, 'status')
           .group(status_count_group)
           .innerRadius(40)
@@ -245,7 +256,7 @@ var submissions_vis = (function () {
 
         var version_chart = dc.pieChart("#version_vis")
 
-          .width(calculate_vis_width(window_width, 0.12))
+          .width(calculate_vis_width(window_width, 0.11))
           .dimension(version, 'versions')
           .group(version_count_group)
           .innerRadius(40)
