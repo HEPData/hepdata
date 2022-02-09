@@ -87,7 +87,11 @@ def test_summary(admin_idx):
     assert all([s['coordinator'] == 2 for s in coordinator_summary])
 
 
-def test_find_and_delete(admin_idx):
-    delete_count, success = admin_idx.find_and_delete(term='ATLAS', fields=['collaboration'])
+def test_delete_by_id(admin_idx):
+    delete_count, success = admin_idx.delete_by_id(1, 2)
     assert (success)
     assert (delete_count == 2)
+
+    delete_count, success = admin_idx.delete_by_id(3)
+    assert (success)
+    assert (delete_count == 1)

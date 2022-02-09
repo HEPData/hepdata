@@ -126,19 +126,15 @@ class AdminIndexer:
         processed_results = [record.as_custom_dict(exclude=[], flatten_participants=flatten_participants) for record in results.hits]
         return processed_results
 
-    def find_and_delete(self, term, fields=None):
+    def delete_by_id(self, *args):
         """
-        Finds records by first searching for them, then deleting
-        them all
-        :param term: e.g. ATLAS
-        :param fields: array of fields to search on, e.g. ['collaboration']
-        :return: True
+        Deletes records from the submissions index by id
+        (HEPSubmission.id)
         """
-        results = self.search(term, fields=fields)
         delete_count = 0
-        for result in results:
+        for id in args:
             try:
-                result.delete()
+                self.client.delete(self.index, id)
                 delete_count += 1
             except:
                 return delete_count, False

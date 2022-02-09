@@ -189,9 +189,8 @@ def delete_submission(recid):
         submission = get_latest_hepsubmission(publication_recid=recid)
         unload_submission(recid, submission.version)
 
-        if submission.version == 1:
-            admin_idx = AdminIndexer()
-            admin_idx.find_and_delete('recid', recid)
+        admin_idx = AdminIndexer()
+        admin_idx.delete_by_id(submission.id)
 
         return json.dumps({"success": True,
                            "recid": recid,
