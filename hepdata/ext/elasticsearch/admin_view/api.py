@@ -86,6 +86,11 @@ class ESSubmission(Document):
 
 
 class AdminIndexer:
+
+    # We don't index or retrieve values with date earlier than EXCLUDE_BEFORE_DATE
+    # unless in TESTING mode
+    EXCLUDE_BEFORE_DATE = datetime(2017, 1, 1)
+
     def __init__(self, *args, **kwargs):
         self.client = Elasticsearch(
             hosts=current_app.config['SEARCH_ELASTIC_HOSTS']) if 'client' not in kwargs else kwargs.get('client')
@@ -113,9 +118,11 @@ class AdminIndexer:
         s = ESSubmission.search(using=self.client, index=self.index)[0:10000]
 
         # Exclude items migrated from hepdata.cedar.ac.uk by filtering on coordinator
-        # (coordinator 1 is the default user used for imports)
+        # (coordinator 1 is the default user used for imports) and removing items
+        # with last_updated before 2017 (e.g. where v2 has been created on HEPData.net)
         if not include_imported:
             s = s.exclude('term', coordinator=1)
+            s = s.exclude('range', last_updated={'lte': AdminIndexer.EXCLUDE_BEFORE_DATE})
 
         if coordinator_id:
             s = s.filter('term', coordinator=coordinator_id)
@@ -198,8 +205,10 @@ class AdminIndexer:
 
         if not include_imported:
             submissions_query = submissions_query.filter(
-                HEPSubmission.coordinator > 1
+                HEPSubmission.coordinator > 1,
+                HEPSubmission.last_updated >= AdminIndexer.EXCLUDE_BEFORE_DATE
             )
+
         submissions = submissions_query.all()
         print(f'Indexing {len(submissions)} submissions...')
 
