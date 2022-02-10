@@ -10,6 +10,23 @@
             <a href="{{ ctx.dashboard_url }}"><i class="fa fa-chevron-left"></i> Back to Dashboard</a>
         </div>
 
+        <div class="row-fluid submissions-overview-header">
+          <div class="col-md-12">
+            <h3>Submissions Overview:</h3>
+            <p>
+            {% if ctx.user_is_admin %}
+               Showing all submissions
+            {% else %}
+               Showing submissions for which you are Coordinator
+            {% endif %}
+            </p>
+          </div>
+        </div>
+
+        <div id="submissions-dashboard-loader" class="loader"></div>
+
+        <div id="submissions-dashboard-contents" style="display:none">
+
         <div class="row-fluid visualization-container">
             <div id="time-series" class="col-md-12">
                 <h4>Submissions By Last Update Time</h4>
@@ -76,7 +93,7 @@
         <div class="clearfix"></div>
         <br/>
 
-        <div class="row-fluid">
+        <div class="row-fluid" style="overflow:hidden;">
             <div id="table-view" class="col-md-12">
                 <div class="row-fluid visualization-container">
                     <div class="col-md-12 col-sm-10 col-xs-8">
@@ -104,6 +121,8 @@
                     </div>
                 </div>
             </div>
+        </div>
+
         </div>
     </div>
 

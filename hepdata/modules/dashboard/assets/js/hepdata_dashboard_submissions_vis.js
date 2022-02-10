@@ -7,6 +7,8 @@ import d3 from 'd3'
 import dc from 'dc'
 import HEPDATA from './hepdata_common.js'
 import './hepdata_dashboard_user_filter.js'
+import './hepdata_loaders.js'
+
 
 var submissions_vis = (function () {
 
@@ -134,10 +136,35 @@ var submissions_vis = (function () {
   }
 
   return {
+    display_loader: function() {
+      HEPDATA.render_loader(
+        '#submissions-dashboard-loader',
+        [
+          {x: 26, y: 30, color: "#955BA5"},
+          {x: -60, y: 55, color: "#FFFFFF"},
+          {x: 37, y: -10, color: "#955BA5"},
+          {x: -60, y: 10, color: "#955BA5"},
+          {x: -27, y: -30, color: "#955BA5"},
+          {x: 60, y: -55, color: "#FFFFFF"}
+        ],
+        {"width": 200, "height": 200}
+      );
+    },
+
     render: function (url, options) {
       d3.json(url, function (result) {
 
         var submission_data = result;
+        var submission_dashboard_container = $('#submissions-dashboard-contents');
+
+        if (submission_data.length == 0) {
+          submission_dashboard_container.html(
+            '<div align="center" class="alert alert-info">You are not yet the coordinator for any submissions.</div>'
+          );
+          $('#submissions-dashboard-loader').hide()
+          submission_dashboard_container.show();
+          return;
+        }
 
         process_data(submission_data);
 
@@ -308,6 +335,8 @@ var submissions_vis = (function () {
         })
           .order(sortByDateAscending);
 
+        $('#submissions-dashboard-loader').hide()
+        submission_dashboard_container.show();
         dc.renderAll();
       });
     }
@@ -317,5 +346,6 @@ var submissions_vis = (function () {
 
 $(document).ready(function () {
     HEPDATA.initialise_user_filter();
+    submissions_vis.display_loader();
     submissions_vis.render('/dashboard/submissions/list', {});
 });

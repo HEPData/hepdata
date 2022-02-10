@@ -882,4 +882,27 @@ body, html {
     margin-bottom: 50px;
   }
 
+  .submissions-overview-header {
+    overflow: hidden;
+    margin-bottom: -40px;
+
+    h3 {
+      font-size: 1.3em;
+    }
+    p {
+      font-size: 1.2em;
+      display: inline-block;
+    }
+  }
+
+  #submissions-dashboard-contents {
+    .alert {
+      margin: 50px 15px 20px 15px;
+    }
+  }
+
+  #submissions-dashboard-loader {
+    height: 100vh;
+  }
+
 }
