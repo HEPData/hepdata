@@ -5,6 +5,31 @@ body, html {
     background-color: $darker-blue !important;
     height: 100%;
 
+    .menu {
+
+      ul {
+        max-width: calc(100vw - 460px);
+        height: 58px;
+        line-height: 58px;
+        text-align: right;
+        margin: 0;
+        padding-top: 0;
+
+        @media screen and (max-width: 1140px) {
+          line-height: normal;
+        }
+
+        &>* {
+          vertical-align: middle;
+          line-height: normal;
+          display: inline-block;
+          float: none;
+          font-size: 14px;
+          padding: 5px 0;
+        }
+      }
+    }
+
     .tab-list-nav-item {
       &:hover {
         color: $purple;
@@ -44,6 +69,15 @@ body, html {
         margin: 0;
         font-size: 1.8em;
         color: white;
+      }
+
+      .action-btns {
+        text-align: right;
+
+        @media screen and (max-width: 992px) {
+          text-align: left;
+          padding: 15px;
+        }
       }
     }
 
@@ -884,7 +918,10 @@ body, html {
 
   .submissions-overview-header {
     overflow: hidden;
-    margin-bottom: -40px;
+
+    @media screen and (min-width: 1000px) {
+      margin-bottom: -40px;
+    }
 
     h3 {
       font-size: 1.3em;

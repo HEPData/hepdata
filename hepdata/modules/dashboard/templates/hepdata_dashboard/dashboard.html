@@ -57,7 +57,7 @@
                     </div>
 
 
-                    <div class="col-md-5 col-xs-12 action-btns text-right">
+                    <div class="col-md-5 col-sm-12 col-xs-12 action-btns">
                         {% if ctx.user_is_admin %}
                             <a href="/admin" class="btn-profile">Administration</a>
                             <!--
@@ -81,7 +81,7 @@
 
                     {% block view_as_user %}
                         {% if ctx.user_is_admin %}
-                            <div class="col-md-11 view-submissions-as">
+                            <div class="col-md-11 col-sm-12 col-xs-12 view-submissions-as">
                                 <p>View dashboard as user:</p>
                                     <div>
                                        <div class="user-selector">
