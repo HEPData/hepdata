@@ -72,7 +72,7 @@ jobs:
           - "6379:6379"
 
       elasticsearch:
-        image: opensearchproject/opensearch:1.2.4
+        image: amazon/opendistro-for-elasticsearch:1.13.2
         env:
           node.name: es01
           cluster.name: hepdata
