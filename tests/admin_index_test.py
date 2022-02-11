@@ -36,11 +36,11 @@ def test_add_to_index(admin_idx):
               'inspire_id': '122111', 'coordinator': 2,
               'status': 'finished', 'creation_date': '2016-06-01', 'last_updated': '2016-06-01'},
              {'_id': 2, 'recid': 2, 'title': 'Test Submission', 'collaboration': 'ATLAS', 'version': 1,
-              'inspire_id': '122112', 'coordinator': 2,
-              'status': 'finished', 'creation_date': '2016-06-02', 'last_updated': '2016-06-02'},
+              'inspire_id': '122112', 'coordinator': 1,
+              'status': 'finished', 'creation_date': '2016-06-02', 'last_updated': '2017-06-02'},
              {'_id': 3, 'recid': 3, 'title': 'Test Submission', 'collaboration': 'ALICE', 'version': 1,
               'inspire_id': '122113', 'coordinator': 3,
-              'status': 'finished', 'creation_date': '2016-06-02', 'last_updated': '2016-06-02'}
+              'status': 'finished', 'creation_date': '2016-06-02', 'last_updated': '2017-06-03'}
              ]
 
     for file in files:
@@ -62,7 +62,7 @@ def test_search_index(admin_idx):
 
 
 def test_summary(admin_idx):
-    summary = admin_idx.get_summary()
+    summary = admin_idx.get_summary(include_imported=True)
     assert (summary is not None)
     assert (len(summary) == 3)
     assert summary[0] == {
@@ -80,11 +80,17 @@ def test_summary(admin_idx):
     }
 
     # Filter on coordinator
-    coordinator_summary = admin_idx.get_summary(coordinator_id=2)
+    coordinator_summary = admin_idx.get_summary(include_imported=True, coordinator_id=2)
     assert (coordinator_summary is not None)
-    assert (len(coordinator_summary) == 2)
+    assert (len(coordinator_summary) == 1)
     assert coordinator_summary[0] == summary[0]
-    assert all([s['coordinator'] == 2 for s in coordinator_summary])
+    assert coordinator_summary[0]['coordinator'] == 2
+
+    # Check we only get 1 result if we don't include imported:
+    # First is excluded by date before 2017, second by coordinator id 1
+    excluded_summary = admin_idx.get_summary()
+    assert (len(excluded_summary) == 1)
+    assert excluded_summary[0] == summary[2]
 
 
 def test_delete_by_id(admin_idx):
