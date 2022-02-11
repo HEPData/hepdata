@@ -9,4 +9,3 @@ omit = *hepdata/wsgi.py
        *hepdata/modules/converter/__init__.py
        *hepdata/modules/permissions/*
        *hepdata/modules/email/*
-       *hepdata/modules/*/views.py
