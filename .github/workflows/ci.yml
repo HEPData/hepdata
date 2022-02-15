@@ -78,7 +78,7 @@ jobs:
           cluster.name: hepdata
           cluster.initial_master_nodes: es01
           ES_JAVA_OPTS: -Xms512m -Xmx512m
-        options: -e "discovery.type=single-node" -e "opendistro_security.disabled=true"
+          opendistro_security.disabled: true
         ports:
         - "9200:9200"
 
