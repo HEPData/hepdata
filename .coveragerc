@@ -7,3 +7,4 @@ omit = *hepdata/wsgi.py
        *hepdata/utils/twitter.py
        *hepdata/config*
        *hepdata/modules/email/*
+       *hepdata/modules/*/webpack.py
