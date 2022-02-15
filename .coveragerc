@@ -6,5 +6,4 @@ omit = *hepdata/wsgi.py
        *hepdata/utils/url.py
        *hepdata/utils/twitter.py
        *hepdata/config*
-       *hepdata/modules/converter/__init__.py
        *hepdata/modules/email/*
