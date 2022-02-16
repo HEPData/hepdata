@@ -8,3 +8,4 @@ omit = *hepdata/wsgi.py
        *hepdata/config*
        *hepdata/modules/email/*
        *hepdata/modules/*/webpack.py
+       *hepdata/utils/celery.py
