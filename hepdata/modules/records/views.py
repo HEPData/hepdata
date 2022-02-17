@@ -530,8 +530,7 @@ def add_data_review_messsage(publication_recid, data_recid):
 
         current_user_obj = get_user_from_id(userid)
 
-        update_action_for_submission_participant(publication_recid, userid,
-                                                 'reviewer')
+        update_action_for_submission_participant(publication_recid, userid)
         if send_email:
             send_new_review_message_email(data_review_record, data_review_message,
                                           current_user_obj)
