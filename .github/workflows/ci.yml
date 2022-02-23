@@ -77,12 +77,14 @@ jobs:
     # We need to modify the ES setup depending on the es-image, so we do it here rather than as a service
     - name: Set up elasticsearch
       env:
-        SECURITY_DISABLED: ${{ startsWith(matrix.es-image, 'amazon/opendistro') && '-e "opendistro_security.disabled=true"' || '' }}
+        DISABLE_SSL: ${{ startsWith(matrix.es-image, 'amazon/opendistro') && 1 || 0 }}
       run: |
-        echo $SECURITY_DISABLED
+        echo $DISABLE_SSL
+        touch es.env
+        if [[ $DISABLE_SSL -eq 1 ]]; then echo 'opendistro_security.disabled=true' >> es.env; fi
         docker run --rm --detach --network ${{ job.container.network }} --network-alias elasticsearch -p 9200:9200 \
           --name elasticsearch -e "node.name=es01" -e "cluster.name=hepdata" -e "cluster.initial_master_nodes=es01" \
-          -e "ES_JAVA_OPTS=-Xms512m -Xmx512m" $SECURITY_DISABLED -e GITHUB_ACTIONS=true -e CI=true \
+          -e "ES_JAVA_OPTS=-Xms512m -Xmx512m" -e GITHUB_ACTIONS=true -e CI=true --env-file es.env \
           ${{ matrix.es-image }}
     - name: Set up Python 3.6
       uses: actions/setup-python@v2
