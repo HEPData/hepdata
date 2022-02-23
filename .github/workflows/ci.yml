@@ -175,8 +175,8 @@ jobs:
         name: sauce-connect-log
         path: ${{ env.SAUCE_CONNECT_DIR_IN_HOST }}/sauce-connect.log
     - name: Stop elasticsearch container
-        if: always()
-        run: docker stop elasticsearch
+      if: always()
+      run: docker stop elasticsearch
 
   deploy:
     needs: test
