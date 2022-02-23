@@ -133,7 +133,9 @@ $(document).ready(function() {
                       for (var val_idx in array) {
                           var html_block = '<div class="' + type + ' ' + additional_class + '">';
                           html_block += '<div class="info">' + array[val_idx]['full_name'] + '<br/><span class="review-email">' + array[val_idx]['email'] + '</span></div>';
-                          html_block += '<div class="recent-activity"><span>Recent Activity</span><br/><span>' + " ---- " + '</span></div>';
+                          var icon = array[val_idx]['accepted'] ? 'check' : 'times';
+                          html_block += '<div class="recent-activity"><span>Accepted?</span><br/><span class="fa fa-' + icon + '"></span></div>';
+                          html_block += '<div class="recent-activity"><span>Last action</span><br/><span class="' + array[val_idx]['last_action_status'] + '">' + array[val_idx]['last_action'] + '</span></div>';
 
                           var arrow_box_class = additional_class == 'primary' ? 'danger' : 'success';
                           var alt_text = additional_class == 'primary' ? 'Demote user to reserve ' + type : 'Promote user to primary ' + type;
