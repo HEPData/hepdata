@@ -46,7 +46,8 @@ jobs:
 
     strategy:
       matrix:
-        postgres-version: [9.6, 12, 13]
+        postgres-version: [12, 13]
+        es-image: ['elasticsearch:7.1.1', 'amazon/opendistro-for-elasticsearch:1.13.2']
 
     # Service containers to run with `runner-job`
     services:
@@ -72,7 +73,7 @@ jobs:
           - "6379:6379"
 
       elasticsearch:
-        image: amazon/opendistro-for-elasticsearch:1.13.2
+        image: ${{ matrix.es-image }}
         env:
           node.name: es01
           cluster.name: hepdata
@@ -116,7 +117,7 @@ jobs:
         python -m pip install twine wheel coveralls requirements-builder
         python -m pip install --force-reinstall -r requirements.txt
         python -m pip install -e .[tests]
-    - name: Check Open Distro elasticsearch is ready
+    - name: Check Elasticsearch is ready
       run: |
         until curl -XGET http://localhost:9200 -u admin:admin --insecure && curl -XGET http://localhost:9200/_cat/nodes?v -u admin:admin --insecure && curl -XGET http://localhost:9200/_cat/plugins?v -u admin:admin --insecure; do
           >&2 echo "Elasticsearch is not ready - sleeping"
@@ -141,7 +142,7 @@ jobs:
         py.test -vv tests/*_test.py
     - name: Setup Sauce Connect
       uses: saucelabs/sauce-connect-action@main
-      if: startsWith(matrix.postgres-version, '12')
+      if: startsWith(matrix.postgres-version, '12') && startsWith(matrix.es-image, 'amazon/opendistro')
       with:
         username: ${{ secrets.SAUCE_USERNAME }}
         accessKey: ${{ secrets.SAUCE_ACCESS_KEY }}
@@ -150,7 +151,7 @@ jobs:
         scVersion: 4.7.0
         verbose: true
     - name: Run end-to-end tests
-      if: startsWith(matrix.postgres-version, '12')
+      if: startsWith(matrix.postgres-version, '12') && startsWith(matrix.es-image, 'amazon/opendistro')
       env:
         SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
         SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY }}
@@ -158,7 +159,7 @@ jobs:
       run: |
         if [[ -n ${{ secrets.SAUCE_USERNAME }} && -n ${{ secrets.SAUCE_ACCESS_KEY}} ]]; then py.test -vv tests/e2e; fi
     - name: Run coveralls
-      if: startsWith(matrix.postgres-version, '12')
+      if: startsWith(matrix.postgres-version, '12') && startsWith(matrix.es-image, 'amazon/opendistro')
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         COVERALLS_SERVICE_NAME: github
