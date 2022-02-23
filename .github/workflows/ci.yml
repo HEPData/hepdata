@@ -72,19 +72,17 @@ jobs:
         ports:
           - "6379:6379"
 
-      elasticsearch:
-        image: ${{ matrix.es-image }}
-        env:
-          node.name: es01
-          cluster.name: hepdata
-          cluster.initial_master_nodes: es01
-          ES_JAVA_OPTS: -Xms512m -Xmx512m
-          opendistro_security.disabled: true
-        ports:
-        - "9200:9200"
-
     steps:
     - uses: actions/checkout@v2
+    # We need to modify the ES setup depending on the es-image, so we do it here rather than as a service
+    - name: Set up elasticsearch
+      env:
+        SECURITY_DISABLED: ${{ startsWith(matrix.es-image, 'amazon/opendistro') && '-e "opendistro_security.disabled=true"' || '' }}
+      run: |
+        docker run --rm --detach --network ${{ job.container.network }} --name elasticsearch \
+          -e "node.name=es01" -e "cluster.name=hepdata" -e "cluster.initial_master_nodes=es01" \
+          -e "ES_JAVA_OPTS=-Xms512m -Xmx512m" $SECURITY_DISABLED \
+          -e GITHUB_ACTIONS=true -e CI=true ${{ matrix.es-image }}
     - name: Set up Python 3.6
       uses: actions/setup-python@v2
       with:
@@ -176,6 +174,9 @@ jobs:
       with:
         name: sauce-connect-log
         path: ${{ env.SAUCE_CONNECT_DIR_IN_HOST }}/sauce-connect.log
+    - name: Stop elasticsearch container
+        if: always()
+        run: docker stop elasticsearch
 
   deploy:
     needs: test
