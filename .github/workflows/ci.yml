@@ -79,6 +79,7 @@ jobs:
       env:
         SECURITY_DISABLED: ${{ startsWith(matrix.es-image, 'amazon/opendistro') && '-e "opendistro_security.disabled=true"' || '' }}
       run: |
+        echo $SECURITY_DISABLED
         docker run --rm --detach --network ${{ job.container.network }} --network-alias elasticsearch -p 9200:9200 \
           --name elasticsearch -e "node.name=es01" -e "cluster.name=hepdata" -e "cluster.initial_master_nodes=es01" \
           -e "ES_JAVA_OPTS=-Xms512m -Xmx512m" $SECURITY_DISABLED -e GITHUB_ACTIONS=true -e CI=true \
@@ -169,7 +170,9 @@ jobs:
         path: ${{ env.SAUCE_CONNECT_DIR_IN_HOST }}/sauce-connect.log
     - name: Stop elasticsearch container
       if: always()
-      run: docker stop elasticsearch
+      run: |
+        docker logs elasticsearch
+        docker stop elasticsearch
 
   deploy:
     needs: test
