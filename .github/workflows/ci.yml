@@ -79,10 +79,10 @@ jobs:
       env:
         SECURITY_DISABLED: ${{ startsWith(matrix.es-image, 'amazon/opendistro') && '-e "opendistro_security.disabled=true"' || '' }}
       run: |
-        docker run --rm --detach --network ${{ job.container.network }} --name elasticsearch \
-          -e "node.name=es01" -e "cluster.name=hepdata" -e "cluster.initial_master_nodes=es01" \
-          -e "ES_JAVA_OPTS=-Xms512m -Xmx512m" $SECURITY_DISABLED \
-          -e GITHUB_ACTIONS=true -e CI=true ${{ matrix.es-image }}
+        docker run --rm --detach --network ${{ job.container.network }} --network-alias elasticsearch -p 9200:9200 \
+          --name elasticsearch -e "node.name=es01" -e "cluster.name=hepdata" -e "cluster.initial_master_nodes=es01" \
+          -e "ES_JAVA_OPTS=-Xms512m -Xmx512m" $SECURITY_DISABLED -e GITHUB_ACTIONS=true -e CI=true \
+          ${{ matrix.es-image }}
     - name: Set up Python 3.6
       uses: actions/setup-python@v2
       with:
