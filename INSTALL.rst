@@ -32,7 +32,7 @@ Prerequisites
 HEPData uses several services, which you will need to install before running HEPData:
  * `PostgreSQL <http://www.postgresql.org/>`_ (version 12) database server
  * `Redis <http://redis.io/>`_ for caching
- * `Elasticsearch <https://www.elastic.co/products/elasticsearch>`_ (version 7.1, not later versions) for indexing and information retrieval. See below for further instructions.
+ * `Elasticsearch <https://www.elastic.co/products/elasticsearch>`_ for indexing and information retrieval. See below for further instructions.
  * `Node.js <https://nodejs.org>`_ JavaScript run-time environment and its package manager `npm <https://www.npmjs.com/>`_. (If you're using a Debian-based OS, please follow the `official installation instructions <https://github.com/nodesource/distributions/blob/master/README.md#debinstall>`_ to install NodeJS (which will also install npm), to avoid issues with ``node-sass``.)
 
 These services can be installed using the relevant package manager for your system,
@@ -41,15 +41,21 @@ for example, using ``yum`` or ``apt-get`` for Linux or ``brew`` for macOS.
 Elasticsearch
 -------------
 
+Currently we use v7.10.2 on our QA cluster (via OpenDistro v1.13.2) and v7.1.1 in production. You can choose which version
+to install but if you install v7.10, be careful to avoid using features of ElasticSearch that are not available in v7.1.
+
+**Elasticsearch v7.1.1**
+~~~~~~~~~~~~~~~~~~~~~~~~
+
 See the `installation instructions <https://www.elastic.co/guide/en/elasticsearch/reference/7.1/install-elasticsearch.html>`_
-for installing ElasticSearch 7.1, but be aware that the instructions for Homebrew (for macOS) will install version 7.6 by default. To
+for installing ElasticSearch 7.1, but be aware that the instructions for Homebrew (for macOS) will install a newer version by default. To
 install v7.1 via Homebrew, run:
 
 .. code-block:: console
 
     $ brew tap elastic/tap
     $ cd $(brew --repo elastic/tap)
-    $ git checkout f90d9a385d44917aee879695c7168a0ca4dc6079
+    $ git checkout f90d9a3
     $ HOMEBREW_NO_AUTO_UPDATE=1 brew install elasticsearch-oss
 
 Alternatively, run Elasticsearch after `installing Docker <https://docs.docker.com/install/>`_ with:
@@ -58,6 +64,24 @@ Alternatively, run Elasticsearch after `installing Docker <https://docs.docker.c
 
     $ docker pull docker.elastic.co/elasticsearch/elasticsearch:7.1.1
     $ docker run -d -p 9200:9200 -p 9300:9300 -e "discovery.type=single-node" docker.elastic.co/elasticsearch/elasticsearch:7.1.1
+
+**Elasticsearch v7.10.2/OpenDistro v1.13.2**
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The `OpenDistro instructions <https://opendistro.github.io/for-elasticsearch/>`_ give details on how to install for Linux
+and Windows. They suggest using docker for MacOS:
+
+.. code-block:: console
+
+    $ docker pull amazon/opendistro-for-elasticsearch:1.13.2
+    $ docker run -d -p 9200:9200 -p 9300:9300 -e "discovery.type=single-node" -e "opendistro_security.disabled=true" amazon/opendistro-for-elasticsearch:1.13.2
+
+To run outside of docker you can use the homebrew installation of elasticsearch 7.10.2:
+
+.. code-block:: console
+
+    $ brew install elasticsearch
+
 
 .. _installation:
 
