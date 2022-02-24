@@ -285,7 +285,7 @@ def search():
             ctx['min_year'] = query_params['min_date']
             ctx['max_year'] = query_params['max_date']
 
-        ctx['modify_query'] = modify_query
+    ctx['modify_query'] = modify_query
 
     return render_template('hepdata_search/search_results.html', ctx=ctx)
 
