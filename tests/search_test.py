@@ -211,9 +211,15 @@ def test_search(app, load_default_data, identifiers):
     for author in expected:
         assert(author in results)
 
-    # Test a search query that ES can't parse
+    # Test search queries that ES can't parse
     results = es_api.search('/', index=index)
     assert results == {'error': 'Failed to parse query [/]'}
+
+    results = es_api.search('cmenergies:[1.3%20TO%201.4]', index=index)
+    assert results == {'error': 'Failed to parse query [data_keywords.cmenergies:[1.3%20TO%201.4]]'}
+
+    results = es_api.search('(SELECT (CHR(113)||CHR(122)||CHR(122)||CHR(122)||CHR(113))||(SELECT (CASE WHEN (6242=6242) THEN 1 ELSE 0 END))::text||(CHR(113)||CHR(120)||CHR(107)||CHR(98)||CHR(113)))', index=index)
+    assert results == {'error': 'Failed to parse query [(SELECT (CHR(113)||CHR(122)||CHR(122)||CHR(122)||CHR(113))||(SELECT (CASE WHEN (6242=6242) THEN 1 ELSE 0 END))::text||(CHR(113)||CHR(120)||CHR(107)||CHR(98)||CHR(113)))]'}
 
     # Test a search query to an invalid index
     results = es_api.search('hello', index='thisisnotanindex')

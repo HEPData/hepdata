@@ -59,7 +59,7 @@ class HEPDataQueryParser(object):
         for query_part in re.split("AND|OR", query_string):
             query_part = query_part.strip()
             if ':' in query_part:
-                _key, _value = query_part.split(':')
+                _key, _value = query_part.split(':', maxsplit=1)
                 _key = mapping['keys'].get(_key, _key)
                 _value = HEPDataQueryParser._quote_phrase(_value)
                 new_query_string = new_query_string.replace(query_part, f"{_key}:{_value}")
