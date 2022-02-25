@@ -3,13 +3,9 @@ source = hepdata
 omit = *hepdata/wsgi.py
        *hepdata/cli.py
        *hepdata/celery.py
-       *hepdata/utils/mail.py
        *hepdata/utils/url.py
        *hepdata/utils/twitter.py
-       *hepdata/utils/unicodeit.py
        *hepdata/config*
-       *hepdata/modules/records/utils/resources.py
-       *hepdata/modules/converter/__init__.py
-       *hepdata/modules/permissions/*
        *hepdata/modules/email/*
-       *hepdata/modules/*/views.py
+       *hepdata/modules/*/webpack.py
+       *hepdata/utils/celery.py
