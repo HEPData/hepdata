@@ -46,7 +46,8 @@ jobs:
 
     strategy:
       matrix:
-        postgres-version: [9.6, 12, 13]
+        postgres-version: [12, 13]
+        es-image: ['elasticsearch:7.1.1', 'amazon/opendistro-for-elasticsearch:1.13.2']
 
     # Service containers to run with `runner-job`
     services:
@@ -71,18 +72,20 @@ jobs:
         ports:
           - "6379:6379"
 
-      elasticsearch:
-        image: elasticsearch:7.1.1
-        env:
-          node.name: es01
-          cluster.name: hepdata
-          cluster.initial_master_nodes: es01
-          ES_JAVA_OPTS: -Xms512m -Xmx512m
-        ports:
-        - "9200:9200"
-
     steps:
     - uses: actions/checkout@v2
+    # We need to modify the ES setup depending on the es-image, so we do it here rather than as a service
+    - name: Set up elasticsearch
+      env:
+        DISABLE_SSL: ${{ startsWith(matrix.es-image, 'amazon/opendistro') && 1 || 0 }}
+      run: |
+        echo $DISABLE_SSL
+        touch es.env
+        if [[ $DISABLE_SSL -eq 1 ]]; then echo 'opendistro_security.disabled=true' >> es.env; fi
+        docker run --rm --detach --network ${{ job.container.network }} --network-alias elasticsearch -p 9200:9200 \
+          --name elasticsearch -e "node.name=es01" -e "cluster.name=hepdata" -e "cluster.initial_master_nodes=es01" \
+          -e "ES_JAVA_OPTS=-Xms512m -Xmx512m" -e GITHUB_ACTIONS=true -e CI=true --env-file es.env \
+          ${{ matrix.es-image }}
     - name: Set up Python 3.6
       uses: actions/setup-python@v2
       with:
@@ -90,7 +93,7 @@ jobs:
     - name: Set up node
       uses: actions/setup-node@v1
       with:
-        node-version: '12'
+        node-version: '14'
     - name: Cache pip modules
       uses: actions/cache@v2
       env:
@@ -134,7 +137,7 @@ jobs:
         py.test -vv tests/*_test.py
     - name: Setup Sauce Connect
       uses: saucelabs/sauce-connect-action@main
-      if: startsWith(matrix.postgres-version, '12')
+      if: startsWith(matrix.postgres-version, '12') && startsWith(matrix.es-image, 'amazon/opendistro')
       with:
         username: ${{ secrets.SAUCE_USERNAME }}
         accessKey: ${{ secrets.SAUCE_ACCESS_KEY }}
@@ -143,7 +146,7 @@ jobs:
         scVersion: 4.7.0
         verbose: true
     - name: Run end-to-end tests
-      if: startsWith(matrix.postgres-version, '12')
+      if: startsWith(matrix.postgres-version, '12') && startsWith(matrix.es-image, 'amazon/opendistro')
       env:
         SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
         SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY }}
@@ -151,7 +154,7 @@ jobs:
       run: |
         if [[ -n ${{ secrets.SAUCE_USERNAME }} && -n ${{ secrets.SAUCE_ACCESS_KEY}} ]]; then py.test -vv tests/e2e; fi
     - name: Run coveralls
-      if: startsWith(matrix.postgres-version, '12')
+      if: startsWith(matrix.postgres-version, '12') && startsWith(matrix.es-image, 'amazon/opendistro')
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         COVERALLS_SERVICE_NAME: github
@@ -167,6 +170,11 @@ jobs:
       with:
         name: sauce-connect-log
         path: ${{ env.SAUCE_CONNECT_DIR_IN_HOST }}/sauce-connect.log
+    - name: Stop elasticsearch container
+      if: always()
+      run: |
+        docker logs elasticsearch
+        docker stop elasticsearch
 
   deploy:
     needs: test
