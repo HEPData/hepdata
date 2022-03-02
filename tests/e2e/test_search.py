@@ -110,7 +110,9 @@ def test_search_from_home(live_server, env_browser, search_tests):
             search_input.send_keys(search_term)
 
             search_form.submit()
-            sleep(1)
+            element = WebDriverWait(browser, 10).until(
+                EC.presence_of_element_located((By.CLASS_NAME, 'search-result-item'))
+            )
 
             assert (flask.url_for('es_search.search', _external=True) in
                     browser.current_url)
@@ -143,6 +145,23 @@ def test_search_from_home(live_server, env_browser, search_tests):
             make_screenshot(browser, screenshot_name)
             print('Error occurred on test. Screenshot captured and saved in tmpdir as {}'.format(screenshot_name))
             raise e
+
+    # Test searching using an invalid query
+    browser.get(flask.url_for('hepdata_theme.index', _external=True))
+    assert (flask.url_for('hepdata_theme.index', _external=True) in
+            browser.current_url)
+
+    # Find the search form, input the query and submit
+    search_form = browser.find_element_by_class_name('main-search-form')
+    search_input = search_form.find_element_by_name('q')
+
+    search_input.send_keys('/')
+    search_form.submit()
+
+    element = WebDriverWait(browser, 10).until(
+        EC.presence_of_element_located((By.CLASS_NAME, 'search-results'))
+    )
+    assert 'Unable to search for /: Failed to parse query [/]' in element.text
 
 
 def test_author_search(live_server, env_browser):
