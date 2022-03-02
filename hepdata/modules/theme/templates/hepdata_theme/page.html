@@ -78,7 +78,19 @@
 {%- endblock css %}
 
 {%- block page_header %}
-    {% include "hepdata_theme/header.html" %}
+  <div class="sticky-bars">
+
+    <div class="banner">
+      <p>This is a placeholder banner</p>
+    </div>
+
+    {%- block header_bars %}
+      {% include "hepdata_theme/header.html" %}
+      {%- block additional_header_bars %}
+      {%- endblock additional_header_bars %}
+    {%- endblock header_bars %}
+
+  </div>
 {%- endblock page_header %}
 
 

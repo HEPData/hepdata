@@ -33,10 +33,6 @@ body {
   font-size: 1em;
 }
 
-.hep-content {
-  padding-top: 65px;
-}
-
 .data-more {
   padding-left: 20px;
   padding-top: 5px;
@@ -50,7 +46,7 @@ body {
 }
 
 .search-results {
-  padding-top: 80px;
+  padding-top: 30px;
 }
 
 .record-header {
@@ -72,8 +68,6 @@ body {
   color: white;
   padding: 13px;
   height: 60px;
-  position: fixed;
-  top: 65px;
   width: 100%;
   z-index: 100;
 }

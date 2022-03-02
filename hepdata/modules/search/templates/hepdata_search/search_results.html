@@ -15,51 +15,53 @@
 
 {%- endblock additional_assets %}
 
+{%- block additional_header_bars %}
+<div class="search-header">
+
+    <form class="search-form"
+          action="/search">
+        <div class="search-box">
+            <input type="text"
+                   name="q"
+                   placeholder="Search HEPData"
+                   value="{% if ctx %}{{ ctx.q }}{% endif %}">
+
+            {% for type, value in ctx.filters.items() %}
+                <a href={{ ctx.modify_query('.search',
+        **{type: None}) }}>
+                    <div class="btn facet-tag {{ type }}-tag">
+                        <i class="fa fa-times"></i>
+                        {{ value }}
+                    </div>
+                </a>
+            {% endfor %}
+        </div>
+
+        <button type="submit" class="search-submit">Search</button>
+
+        {% if ctx.q %}
+            <a href="/search" class="btn btn-link hidden-sm hidden-xs">Reset search</a>
+        {% endif %}
+        <a class="btn btn-link hidden-sm hidden-xs" data-toggle="modal"
+           data-target="#searchHelpWidget">Advanced</a>
+
+    </form>
+
+    <div class="pull-right">
+      <a href="{{ ctx.modify_query('.search', format='json') }}"
+         id="jsonLabel" type="button"
+         class="btn btn-sm btn-default"
+         aria-haspopup="true" aria-expanded="false"
+         title="Get search results in JSON format">
+          JSON
+      </a>
+    </div>
+</div>
+
+{%- endblock additional_header_bars %}
 
 {% block page_body %}
     <div class="hep-content">
-
-        <div class="search-header">
-
-            <form class="search-form"
-                  action="/search">
-                <div class="search-box">
-                    <input type="text"
-                           name="q"
-                           placeholder="Search HEPData"
-                           value="{% if ctx %}{{ ctx.q }}{% endif %}">
-
-                    {% for type, value in ctx.filters.items() %}
-                        <a href={{ ctx.modify_query('.search',
-                **{type: None}) }}>
-                            <div class="btn facet-tag {{ type }}-tag">
-                                <i class="fa fa-times"></i>
-                                {{ value }}
-                            </div>
-                        </a>
-                    {% endfor %}
-                </div>
-
-                <button type="submit" class="search-submit">Search</button>
-
-                {% if ctx.q %}
-                    <a href="/search" class="btn btn-link hidden-sm hidden-xs">Reset search</a>
-                {% endif %}
-                <a class="btn btn-link hidden-sm hidden-xs" data-toggle="modal"
-                   data-target="#searchHelpWidget">Advanced</a>
-
-            </form>
-
-            <div class="pull-right">
-              <a href="{{ ctx.modify_query('.search', format='json') }}"
-                 id="jsonLabel" type="button"
-                 class="btn btn-sm btn-default"
-                 aria-haspopup="true" aria-expanded="false"
-                 title="Get search results in JSON format">
-                  JSON
-              </a>
-            </div>
-        </div>
 
         <div class="search-results container-fluid">
             {% if not no_results %}

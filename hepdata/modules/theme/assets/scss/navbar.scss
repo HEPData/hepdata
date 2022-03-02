@@ -49,12 +49,12 @@
 
 .top-bar {
   background-color: #ECF0F1;
-  height: 65px !important;
   min-height: 65px;
   border: none;
   color: #fff;
   z-index: 1000;
-  top: 0;
+  margin-bottom: 0;
+  position: relative;
 }
 
 .navbar-brand {

@@ -1,3 +1,7 @@
+.home-page .sticky-bars .banner {
+  background-color: $navy-light;
+}
+
 .home-top {
   background: $purple url('../../static/img/home_bg.svg') no-repeat bottom right;
   height: 35vh;
@@ -13,6 +17,9 @@
     font-weight: normal;
   }
 
+  .top-bar {
+    position: static;
+  }
 }
 
 .search-area {
