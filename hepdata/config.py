@@ -361,6 +361,10 @@ APP_DEFAULT_SECURE_HEADERS = {
     'session_cookie_http_only': False
 }
 
+# Set this to an HTML string if you want to put a temporary banner at the top of all pages.
+# It will be placed inside a <p> tag. Tags and attributes not in ALLOWED_HTML_TAGS and ALLOWED_HTML_ATTRS will be escaped
+BANNER_MSG = None
+
 # Import local config file if it is present.
 try:
     from hepdata.config_local import *

@@ -31,6 +31,7 @@ from hepdata_validator import LATEST_SCHEMA_VERSION, RAW_SCHEMAS_URL
 
 from hepdata.modules.email.utils import send_flask_message_email
 from hepdata.modules.submission.api import get_latest_hepsubmission
+from hepdata.utils.miscellaneous import sanitize_html
 from hepdata.version import __version__
 
 blueprint = Blueprint(
@@ -57,6 +58,12 @@ def init(state):
     def security_mail_processor():
         site_url = app.config.get('SITE_URL', 'https://www.hepdata.net')
         return dict(site_url=site_url)
+
+    @app.context_processor
+    def set_banner_msg():
+        banner_msg = app.config.get('BANNER_MSG', None)
+        banner_msg = sanitize_html(banner_msg)
+        return dict(banner_msg=banner_msg)
 
 
 @blueprint.route('/')

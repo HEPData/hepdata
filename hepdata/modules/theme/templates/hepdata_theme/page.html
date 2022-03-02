@@ -80,9 +80,11 @@
 {%- block page_header %}
   <div class="sticky-bars">
 
-    <div class="banner">
-      <p>This is a placeholder banner</p>
-    </div>
+    {% if banner_msg is not none %}
+      <div class="banner">
+        <p>{{ banner_msg | safe }}</p>
+      </div>
+    {% endif %}
 
     {%- block header_bars %}
       {% include "hepdata_theme/header.html" %}
