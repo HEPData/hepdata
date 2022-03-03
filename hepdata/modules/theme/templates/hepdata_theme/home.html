@@ -162,9 +162,10 @@
                 <script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
             </div>
 
+            {% include "hepdata_search/modals/search_help.html" %}
+
 {% endblock page_body %}
 
-{% include "hepdata_search/modals/search_help.html" %}
 
 {%- block javascript %}
   {{ webpack['hepdata-home-js.js'] }}
