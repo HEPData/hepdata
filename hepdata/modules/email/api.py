@@ -165,15 +165,13 @@ def send_notification_email(recid, version, user, reviewers_notified, message=No
             message_subject = '[HEPData] Submission {0} has a new upload available for you to review'.format(recid)
             hepsubmission = HEPSubmission.query.filter_by(publication_recid=recid, version=version).one()
             coordinator = User.query.get(hepsubmission.coordinator)
-            reply_to_address = coordinator.email
         else:
             message_subject = '[HEPData] Notification about submission {0}'.format(recid)
-            reply_to_address = user.email
 
         create_send_email_task(participant.email,
                                message_subject,
                                message_body,
-                               reply_to_address=reply_to_address)
+                               reply_to_address=user.email)
 
 
 def send_coordinator_notification_email(recid, version, user, message=None):
@@ -261,6 +259,7 @@ def notify_participants(hepsubmission, record):
 def notify_subscribers(hepsubmission, record):
     site_url = current_app.config.get('SITE_URL', 'https://www.hepdata.net')
     subscribers = get_users_subscribed_to_record(hepsubmission.publication_recid)
+    coordinator = User.query.get(hepsubmission.coordinator)
     for subscriber in subscribers:
         message_body = render_template(
             'hepdata_theme/email/subscriber_notification.html',
@@ -274,7 +273,8 @@ def notify_subscribers(hepsubmission, record):
         create_send_email_task(subscriber.get('email'),
                                '[HEPData] Record update available for submission {0}'
                                .format(hepsubmission.publication_recid),
-                               message_body)
+                               message_body,
+                               reply_to_address=coordinator.email)
 
 
 def send_cookie_email(submission_participant,
@@ -456,8 +456,7 @@ def notify_submission_created(record, coordinator_id, uploader, reviewer):
 
     create_send_email_task(coordinator.email,
                            '[HEPData] Submission {0} has been created'.format(record['recid']),
-                           message_body,
-                           reply_to_address=coordinator.email)
+                           message_body)
 
 
 def _get_collaboration(coordinator_id):
