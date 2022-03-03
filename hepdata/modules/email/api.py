@@ -35,7 +35,7 @@ from flask import render_template
 from hepdata.modules.permissions.models import CoordinatorRequest
 from hepdata.modules.submission.api import get_latest_hepsubmission, \
     get_primary_submission_participants_for_record, get_submission_participants_for_record
-from hepdata.modules.submission.models import DataSubmission, DataReview
+from hepdata.modules.submission.models import HEPSubmission, DataSubmission, DataReview
 from hepdata.utils.users import get_user_from_id
 from invenio_accounts.models import User
 from invenio_db import db
@@ -84,7 +84,8 @@ def send_new_review_message_email(review, message, user):
         ','.join(set(destinations)),
         '[HEPData] Submission {0} ({1}) has a new review message'.format(
             review.publication_recid, table_information.name),
-        message_body
+        message_body,
+        user.email
     )
 
 
@@ -162,12 +163,15 @@ def send_notification_email(recid, version, user, reviewers_notified, message=No
 
         if participant.role == 'reviewer' and not reviewers_notified:
             message_subject = '[HEPData] Submission {0} has a new upload available for you to review'.format(recid)
+            hepsubmission = HEPSubmission.query.filter_by(publication_recid=recid, version=version).one()
+            coordinator = User.query.get(hepsubmission.coordinator)
         else:
             message_subject = '[HEPData] Notification about submission {0}'.format(recid)
 
         create_send_email_task(participant.email,
                                message_subject,
-                               message_body)
+                               message_body,
+                               reply_to_address=user.email)
 
 
 def send_coordinator_notification_email(recid, version, user, message=None):
@@ -210,7 +214,8 @@ def send_coordinator_notification_email(recid, version, user, message=None):
 
     create_send_email_task(coordinator.email,
                            '[HEPData] Submission {0} is ready to be finalised'.format(recid),
-                           message_body)
+                           message_body,
+                           reply_to_address=user.email)
 
 
 def send_finalised_email(hepsubmission):
@@ -247,12 +252,14 @@ def notify_participants(hepsubmission, record):
     create_send_email_task(','.join(set(destinations)),
                            '[HEPData] Submission {0} has been finalised and is publicly available'
                            .format(hepsubmission.publication_recid),
-                           message_body)
+                           message_body,
+                           reply_to_address=coordinator.email)
 
 
 def notify_subscribers(hepsubmission, record):
     site_url = current_app.config.get('SITE_URL', 'https://www.hepdata.net')
     subscribers = get_users_subscribed_to_record(hepsubmission.publication_recid)
+    coordinator = User.query.get(hepsubmission.coordinator)
     for subscriber in subscribers:
         message_body = render_template(
             'hepdata_theme/email/subscriber_notification.html',
@@ -266,7 +273,8 @@ def notify_subscribers(hepsubmission, record):
         create_send_email_task(subscriber.get('email'),
                                '[HEPData] Record update available for submission {0}'
                                .format(hepsubmission.publication_recid),
-                               message_body)
+                               message_body,
+                               reply_to_address=coordinator.email)
 
 
 def send_cookie_email(submission_participant,
@@ -298,7 +306,9 @@ def send_cookie_email(submission_participant,
                            "[HEPData] Invitation to be {0} {1} of record {2} in HEPData".format(
                                "an" if submission_participant.role == "uploader" else "a",
                                submission_participant.role.capitalize(),
-                               submission_participant.publication_recid), message_body)
+                               submission_participant.publication_recid),
+                           message_body,
+                           reply_to_address=coordinator.email)
 
 
 def send_reserve_email(submission_participant, record_information):
@@ -323,7 +333,9 @@ def send_reserve_email(submission_participant, record_information):
     create_send_email_task(submission_participant.email,
                            "[HEPData] Change of {0} status for record {1} in HEPData".format(
                                submission_participant.role.capitalize(),
-                               submission_participant.publication_recid), message_body)
+                               submission_participant.publication_recid),
+                           message_body,
+                           reply_to_address=coordinator.email)
 
 
 def send_question_email(question):
@@ -384,7 +396,8 @@ def send_coordinator_approved_email(coordinator_request):
     if user:
         create_send_email_task(user.email,
                                subject="[HEPData] Coordinator Request Approved",
-                               message=message_body)
+                               message=message_body,
+                               reply_to_address=current_user.email)
 
 
 def notify_publication_update(hepsubmission, record):
