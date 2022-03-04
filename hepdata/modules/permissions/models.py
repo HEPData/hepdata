@@ -24,6 +24,7 @@
 
 """Models for the HEPData Permissions."""
 import uuid
+from datetime import datetime
 
 from invenio_accounts.models import User
 from invenio_db import db
@@ -71,4 +72,4 @@ class SubmissionParticipant(db.Model):
     role = db.Column(db.String(32), default='')
     # e.g. primary or reserve reviewer/uploader
     status = db.Column(db.String(32), default='reserve')
-    action_date = db.Column(db.DateTime, nullable=True, index=True)
+    action_date = db.Column(db.DateTime, default=datetime.utcnow, nullable=True, index=True)

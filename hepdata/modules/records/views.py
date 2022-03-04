@@ -24,6 +24,7 @@
 
 """Blueprint for HEPData-Records."""
 
+from datetime import datetime
 import logging
 import json
 import time
@@ -398,9 +399,23 @@ def get_coordinator_view(recid):
     record_participants = get_submission_participants_for_record(recid)
     for participant in record_participants:
         if participant.role in participants:
+            last_action_status = "stale"
+            last_action = '-'
+            if participant.action_date:
+                last_action = participant.action_date.strftime("%Y-%m-%d")
+                last_action_delta = datetime.utcnow() - participant.action_date
+                if last_action_delta.days < 30:
+                    last_action_status = "fresh"
+                elif last_action_delta.days < 90:
+                    last_action_status = "medium"
+
             participants[participant.role][participant.status].append(
-                {"full_name": participant.full_name, "email": participant.email,
-                 "id": participant.id})
+                {"full_name": participant.full_name,
+                 "email": participant.email,
+                 "id": participant.id,
+                 "accepted": participant.user_account is not None,
+                 "last_action": last_action,
+                 "last_action_status": last_action_status})
 
     return json.dumps(
         {"recid": recid,
@@ -530,8 +545,7 @@ def add_data_review_messsage(publication_recid, data_recid):
 
         current_user_obj = get_user_from_id(userid)
 
-        update_action_for_submission_participant(publication_recid, userid,
-                                                 'reviewer')
+        update_action_for_submission_participant(publication_recid, userid)
         if send_email:
             send_new_review_message_email(data_review_record, data_review_message,
                                           current_user_obj)
