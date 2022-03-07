@@ -166,7 +166,9 @@ class AdminIndexer:
 
         if record_information:
             collaboration = ','.join(record_information.get('collaborations', []))
-            coordinator_request = CoordinatorRequest.query.filter_by(user=submission.coordinator).first()
+            coordinator_request = CoordinatorRequest.query.filter_by(
+                user=submission.coordinator, approved=True
+            ).first()
             if coordinator_request:
                 coordinator_group = coordinator_request.collaboration
             else:
