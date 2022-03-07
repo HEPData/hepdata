@@ -23,6 +23,7 @@
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
 
+from datetime import datetime
 import json
 import logging
 
@@ -251,6 +252,7 @@ def assign_role(cookie):
             func.lower(SubmissionParticipant.email) == func.lower(current_user.email),
             SubmissionParticipant.invitation_cookie == cookie).first()
         participant_record.user_account = current_user.get_id()
+        participant_record.action_date = datetime.utcnow()
 
         db.session.add(participant_record)
         db.session.commit()

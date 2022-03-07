@@ -153,6 +153,7 @@ def test_dashboard(live_server, logged_in_browser):
         delete_widget.find_element_by_css_selector('#delete-success p').text
 
     # Should now be 25 submissions not 26
+    db.session.flush()
     submissions = HEPSubmission.query \
         .filter_by(overall_status='todo').all()
     assert len(submissions) == 25

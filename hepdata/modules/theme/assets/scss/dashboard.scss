@@ -516,6 +516,12 @@ body, html {
       font-weight: normal;
     }
 
+    @media (min-width: 768px) {
+      #manageWidget .modal-dialog {
+        width: 760px;
+      }
+    }
+
     .modal-body {
       color: $navy;
     }
@@ -593,18 +599,47 @@ body, html {
     }
 
     .reviewer .info, .uploader .info {
-      width: 50%;
+      width: calc(60% - 50px);
       float: left;
     }
 
     .recent-activity {
-      width: 30%;
+      width: 20%;
       float: left;
+
+      .fa-check {
+        color: $green;
+      }
+
+      .fa-times {
+        color: $red;
+      }
+
+      .stale, .fresh, .medium {
+        display: inline-block;
+        border-radius: 2px;
+        padding: 1px;
+        color: white;
+        width: 10ch;
+        text-align: center;
+      }
+
+      .stale {
+        background-color: $red;
+      }
+
+      .medium {
+        background-color: $orange;
+      }
+
+      .fresh {
+        background-color: $green;
+      }
     }
 
     .trigger-actions {
-      padding-top: 8px;
-      width: 20%;
+      padding-top: 12px;
+      width: 50px;
       float: left;
       text-align: right;
 
