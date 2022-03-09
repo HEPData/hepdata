@@ -80,11 +80,7 @@
 {%- block page_header %}
   <div class="sticky-bars">
 
-    {% if banner_msg is not none %}
-      <div class="banner">
-        <p>{{ banner_msg | safe }}</p>
-      </div>
-    {% endif %}
+    {% include "hepdata_theme/banner.html" %}
 
     {%- block header_bars %}
       {% include "hepdata_theme/header.html" %}
