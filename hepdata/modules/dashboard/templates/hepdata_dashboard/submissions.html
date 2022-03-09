@@ -11,7 +11,7 @@
         </div>
 
         <div class="row-fluid submissions-overview-header">
-          <div class="col-md-12">
+          <div class="col-md-11">
             <h3>Submissions Overview:</h3>
             <p>
             {% if ctx.user_is_admin %}
@@ -20,6 +20,9 @@
                Showing submissions from 2017 onwards for which you are Coordinator
             {% endif %}
             </p>
+          </div>
+          <div class="col-md-1">
+            <a id="submissions-vis-reset" class="btn btn-primary">Reset filters</a>
           </div>
         </div>
 
@@ -81,7 +84,7 @@
 
             <div class="col-md-4">
                 <div id="participants">
-                    <h4>Submission Participants</h4>
+                    <h4>Submission Participants <span class="text-muted text-small">TOP 20</span></h4>
                     <div id="participants_vis">
                     </div>
                 </div>

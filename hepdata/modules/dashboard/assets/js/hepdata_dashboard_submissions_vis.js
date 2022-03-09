@@ -2,7 +2,7 @@
  * Created by eamonnmaguire on 04/10/2016.
  */
 import $ from 'jquery'
-import crossfilter from 'crossfilter'
+import crossfilter from 'crossfilter2'
 import d3 from 'd3'
 import dc from 'dc'
 import HEPDATA from './hepdata_common.js'
@@ -38,26 +38,6 @@ var submissions_vis = (function () {
 
   };
 
-  function getTopValues(map, count) {
-
-    var tupleArray = [];
-    for (var key in map) {
-      if (typeof(map[key]) == "number") {
-        tupleArray.push([key, map[key]]);
-      }
-    }
-    tupleArray.sort(function (a, b) {
-      return b[1] - a[1];
-    });
-
-    var result = [];
-    for (var i = 0; i < Math.min(count, tupleArray.length); i++) {
-      result.push({key: tupleArray[i][0], value: tupleArray[i][1]});
-    }
-    return result;
-  }
-
-
   var calculate_window_width = function () {
     return $(window).width();
   };
@@ -79,60 +59,25 @@ var submissions_vis = (function () {
     });
   };
 
-  function getHighestValues(source_group) {
+  function getTops(source_group, count) {
+    if (!count) {
+      count = 10;
+    }
     return {
       all: function () {
-        var values = getTopValues(source_group, 20);
-        return values;
+        return source_group.top(count);
       }
     };
   }
 
-
-  function getTops(source_group) {
-    return {
-      all: function () {
-
-        return source_group.top(10);
-      }
-    };
-  }
-
-  function getContributors(source_group) {
-    return {
-      all: function () {
-        return source_group.top(10);
-      }
-    };
-  }
-
-  function remove_empty_bins(source_group) {
-    return {
-      all: function () {
-        return source_group.all().filter(function (d) {
-          return d.value != 0;
-        });
-      }
-    };
-  }
-
-  function reduceAdd(p, v) {
-    v.participants.forEach(function (val, idx) {
-      p[val] = (p[val] || 0) + 1; //increment counts
+  function resetCharts(charts) {
+    console.log("Aaargh");
+    charts.forEach(function (c) {
+      c.filterAll();
     });
-    return p;
-  }
-
-  function reduceRemove(p, v) {
-    v.participants.forEach(function (val, idx) {
-      p[val] = (p[val] || 0) - 1; //decrement counts
+    charts.forEach(function (c) {
+      c.redraw();
     });
-    return p;
-
-  }
-
-  function reduceInitial() {
-    return {};
   }
 
   return {
@@ -180,7 +125,7 @@ var submissions_vis = (function () {
 
           participants = submissions.dimension(function (d) {
             return d.participants;
-          }),
+          }, true),
 
           collaboration = submissions.dimension(function (d) {
             return d.collaboration == '' ? 'No collaboration' : d.collaboration;
@@ -198,8 +143,7 @@ var submissions_vis = (function () {
             return d.version;
           }),
 
-          participantsGroup = participants.groupAll().reduce(reduceAdd, reduceRemove, reduceInitial).value(),
-
+          participantsGroup = participants.group(),
           submissions_by_date_count_group = submissions_by_date.group(),
           cumulative_count = submissions_by_date.group().reduceSum(),
           collaboration_count_group = collaboration.group(),
@@ -207,20 +151,6 @@ var submissions_vis = (function () {
           status_count_group = status.group(),
           data_count_group = data.group(),
           version_count_group = version.group();
-
-
-        participantsGroup.all = function () {
-          var newObject = [];
-          for (var key in this) {
-            if (this.hasOwnProperty(key) && key != "all") {
-              newObject.push({
-                key: key,
-                value: this[key]
-              });
-            }
-          }
-          return newObject;
-        };
 
         var minDate = new Date(submissions_by_date.bottom(1)[0].last_updated);
         var maxDate = new Date(submissions_by_date.top(1)[0].last_updated);
@@ -237,20 +167,6 @@ var submissions_vis = (function () {
           .dimension(submissions_by_date, 'Submissions')
           .group(submissions_by_date_count_group)
           .colors(general_colors);
-
-        // submission_chart.on("preRedraw", function (chart) {
-        //   var group = chart.group();
-        //   var new_group = {
-        //     all: function () {
-        //       return group.all().filter(function (d) {
-        //         return d.value != 0;
-        //       })
-        //     }
-        //   };
-        //   chart.group(new_group);
-        // });
-        //
-        // submission_chart.elasticX(true);
 
         var collaboration_chart = dc.rowChart("#collaboration_vis")
           .width(calculate_vis_width(window_width, 0.3))
@@ -270,7 +186,7 @@ var submissions_vis = (function () {
           .width(calculate_vis_width(window_width, 0.3))
           .height(575)
           .dimension(participants, 'participants')
-          .group(getHighestValues(participantsGroup))
+          .group(getTops(participantsGroup, 20))
           .colors(general_colors);
 
         var status_chart = dc.pieChart("#status_vis")
@@ -338,6 +254,19 @@ var submissions_vis = (function () {
         $('#submissions-dashboard-loader').hide()
         submission_dashboard_container.show();
         dc.renderAll();
+
+        $('#submissions-vis-reset').click(function() {
+          resetCharts([
+            submission_chart,
+            data_count,
+            participant_chart,
+            collaboration_chart,
+            coordinator_chart,
+            status_chart,
+            version_chart,
+            detailTable
+          ]);
+        });
       });
     }
   }

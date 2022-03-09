@@ -36,7 +36,7 @@ dashboard_js = WebpackBundle(
         'hepdata-dashboard-user-filter-js': './js/hepdata_dashboard_user_filter.js'
     },
     dependencies={
-        "crossfilter": "1.3.12",
+        "crossfilter2": "~1.4.0",
         "d3": "~3.5.12",
         "d3-tip": "~0.6.7",
         "dc": "~2.0.0",
