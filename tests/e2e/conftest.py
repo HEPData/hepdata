@@ -36,7 +36,7 @@ import flask
 from flask_security.utils import hash_password
 import pytest
 from invenio_accounts.models import User, Role
-from invenio_db import db
+from invenio_db.shared import metadata, SQLAlchemy as InvenioSQLAlchemy
 from invenio_search import current_search_client as es
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -51,6 +51,19 @@ from hepdata.ext.elasticsearch.api import reindex_all
 from hepdata.factory import create_app
 from hepdata.modules.records.importer.api import import_records
 from tests.conftest import get_identifiers, import_default_data
+
+
+# Override Invenio-DB's SQLAlchemy object to set pool_pre_ping to True to avoid
+# issues with dropped connection pools
+class SQLAlchemy(InvenioSQLAlchemy):
+    def apply_pool_defaults(self, app, options):
+        # See https://github.com/pallets/flask-sqlalchemy/issues/589#issuecomment-361075700
+        # Will need updating if we move to flask-sqlalchemy >= 2.5
+        super().apply_pool_defaults(app, options)
+        options["pool_pre_ping"] = True
+
+
+db = SQLAlchemy(metadata=metadata)
 
 
 @pytest.fixture(scope='session')
@@ -84,6 +97,7 @@ def app(request):
     with app.app_context():
         if not database_exists(str(db.engine.url)):
             create_database(str(db.engine.url))
+
         db.create_all()
 
     with app.app_context():
@@ -193,15 +207,18 @@ def env_browser(request):
 
     # the desired_capabilities parameter tells us which browsers and OS to spin up.
     desired_cap = {
-        'platform': 'Windows',
         'browserName': 'chrome',
+        'browserVersion': '99',
+        'platformName': 'Windows 11',
         'build': os.environ.get('GITHUB_RUN_ID',
                                 datetime.utcnow().strftime("%Y-%m-%d %H:00ish")),
-        'name': request.node.name,
         'username': sauce_username,
         'accessKey': sauce_access_key,
-        'tunnelIdentifier': os.environ.get('GITHUB_RUN_ID', ''),
-        'screenResolution': '1280x1024',
+        'sauce:options': {
+            'screenResolution': '1280x1024',
+            'tunnelIdentifier': os.environ.get('GITHUB_RUN_ID', ''),
+            'name': request.node.name,
+        },
         'extendedDebugging': True
     }
 

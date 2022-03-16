@@ -151,8 +151,15 @@ def test_dashboard(live_server, logged_in_browser):
 
     # Should now be 25 submissions not 26
     db.session.flush()
-    submissions = HEPSubmission.query \
-        .filter_by(overall_status='todo').all()
+    try:
+        submissions = HEPSubmission.query \
+            .filter_by(overall_status='todo').all()
+    except Exception as e:
+        # Roll back and try again
+        db.session.rollback()
+        submissions = HEPSubmission.query \
+            .filter_by(overall_status='todo').all()
+
     assert len(submissions) == 25
 
     # Reload the dashboard (rather than waiting)
