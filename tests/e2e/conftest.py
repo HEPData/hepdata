@@ -207,15 +207,18 @@ def env_browser(request):
 
     # the desired_capabilities parameter tells us which browsers and OS to spin up.
     desired_cap = {
-        'platform': 'Windows',
         'browserName': 'chrome',
+        'browserVersion': '99',
+        'platformName': 'Windows 11',
         'build': os.environ.get('GITHUB_RUN_ID',
                                 datetime.utcnow().strftime("%Y-%m-%d %H:00ish")),
-        'name': request.node.name,
         'username': sauce_username,
         'accessKey': sauce_access_key,
-        'tunnelIdentifier': os.environ.get('GITHUB_RUN_ID', ''),
-        'screenResolution': '1280x1024',
+        'sauce:options': {
+            'screenResolution': '1280x1024',
+            'tunnelIdentifier': os.environ.get('GITHUB_RUN_ID', ''),
+            'name': request.node.name,
+        },
         'extendedDebugging': True
     }
 
