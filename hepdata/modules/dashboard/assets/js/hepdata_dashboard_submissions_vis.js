@@ -2,9 +2,13 @@
  * Created by eamonnmaguire on 04/10/2016.
  */
 import $ from 'jquery'
-import crossfilter from 'crossfilter'
+import crossfilter from 'crossfilter2'
 import d3 from 'd3'
 import dc from 'dc'
+import HEPDATA from './hepdata_common.js'
+import './hepdata_dashboard_user_filter.js'
+import './hepdata_loaders.js'
+
 
 var submissions_vis = (function () {
 
@@ -34,26 +38,6 @@ var submissions_vis = (function () {
 
   };
 
-  function getTopValues(map, count) {
-
-    var tupleArray = [];
-    for (var key in map) {
-      if (typeof(map[key]) == "number") {
-        tupleArray.push([key, map[key]]);
-      }
-    }
-    tupleArray.sort(function (a, b) {
-      return b[1] - a[1];
-    });
-
-    var result = [];
-    for (var i = 0; i < Math.min(count, tupleArray.length); i++) {
-      result.push({key: tupleArray[i][0], value: tupleArray[i][1]});
-    }
-    return result;
-  }
-
-
   var calculate_window_width = function () {
     return $(window).width();
   };
@@ -75,67 +59,57 @@ var submissions_vis = (function () {
     });
   };
 
-  function getHighestValues(source_group) {
+  function getTops(source_group, count) {
+    if (!count) {
+      count = 10;
+    }
     return {
       all: function () {
-        var values = getTopValues(source_group, 20);
-        return values;
+        return source_group.top(count);
       }
     };
   }
 
-
-  function getTops(source_group) {
-    return {
-      all: function () {
-
-        return source_group.top(10);
-      }
-    };
-  }
-
-  function getContributors(source_group) {
-    return {
-      all: function () {
-        return source_group.top(10);
-      }
-    };
-  }
-
-  function remove_empty_bins(source_group) {
-    return {
-      all: function () {
-        return source_group.all().filter(function (d) {
-          return d.value != 0;
-        });
-      }
-    };
-  }
-
-  function reduceAdd(p, v) {
-    v.participants.forEach(function (val, idx) {
-      p[val] = (p[val] || 0) + 1; //increment counts
+  function resetCharts(charts) {
+    console.log("Aaargh");
+    charts.forEach(function (c) {
+      c.filterAll();
     });
-    return p;
-  }
-
-  function reduceRemove(p, v) {
-    v.participants.forEach(function (val, idx) {
-      p[val] = (p[val] || 0) - 1; //decrement counts
+    charts.forEach(function (c) {
+      c.redraw();
     });
-    return p;
-
-  }
-
-  function reduceInitial() {
-    return {};
   }
 
   return {
+    display_loader: function() {
+      HEPDATA.render_loader(
+        '#submissions-dashboard-loader',
+        [
+          {x: 26, y: 30, color: "#955BA5"},
+          {x: -60, y: 55, color: "#FFFFFF"},
+          {x: 37, y: -10, color: "#955BA5"},
+          {x: -60, y: 10, color: "#955BA5"},
+          {x: -27, y: -30, color: "#955BA5"},
+          {x: 60, y: -55, color: "#FFFFFF"}
+        ],
+        {"width": 200, "height": 200}
+      );
+    },
+
     render: function (url, options) {
       d3.json(url, function (result) {
 
         var submission_data = result;
+        var submission_dashboard_container = $('#submissions-dashboard-contents');
+
+        if (submission_data.length == 0) {
+          submission_dashboard_container.html(
+            '<div align="center" class="alert alert-info">You are not yet the coordinator for any submissions.</div>'
+          );
+          $('#submissions-dashboard-loader').hide()
+          submission_dashboard_container.show();
+          return;
+        }
 
         process_data(submission_data);
 
@@ -151,10 +125,14 @@ var submissions_vis = (function () {
 
           participants = submissions.dimension(function (d) {
             return d.participants;
-          }),
+          }, true),
 
           collaboration = submissions.dimension(function (d) {
             return d.collaboration == '' ? 'No collaboration' : d.collaboration;
+          }),
+
+          coordinator = submissions.dimension(function (d) {
+            return d.coordinator_group ? d.coordinator_group : d.coordinator;
           }),
 
           status = submissions.dimension(function (d) {
@@ -165,28 +143,14 @@ var submissions_vis = (function () {
             return d.version;
           }),
 
-          participantsGroup = participants.groupAll().reduce(reduceAdd, reduceRemove, reduceInitial).value(),
-
+          participantsGroup = participants.group(),
           submissions_by_date_count_group = submissions_by_date.group(),
           cumulative_count = submissions_by_date.group().reduceSum(),
           collaboration_count_group = collaboration.group(),
+          coordinator_count_group = coordinator.group(),
           status_count_group = status.group(),
           data_count_group = data.group(),
           version_count_group = version.group();
-
-
-        participantsGroup.all = function () {
-          var newObject = [];
-          for (var key in this) {
-            if (this.hasOwnProperty(key) && key != "all") {
-              newObject.push({
-                key: key,
-                value: this[key]
-              });
-            }
-          }
-          return newObject;
-        };
 
         var minDate = new Date(submissions_by_date.bottom(1)[0].last_updated);
         var maxDate = new Date(submissions_by_date.top(1)[0].last_updated);
@@ -204,20 +168,6 @@ var submissions_vis = (function () {
           .group(submissions_by_date_count_group)
           .colors(general_colors);
 
-        // submission_chart.on("preRedraw", function (chart) {
-        //   var group = chart.group();
-        //   var new_group = {
-        //     all: function () {
-        //       return group.all().filter(function (d) {
-        //         return d.value != 0;
-        //       })
-        //     }
-        //   };
-        //   chart.group(new_group);
-        // });
-        //
-        // submission_chart.elasticX(true);
-
         var collaboration_chart = dc.rowChart("#collaboration_vis")
           .width(calculate_vis_width(window_width, 0.3))
           .height(250)
@@ -225,17 +175,23 @@ var submissions_vis = (function () {
           .group(getTops(collaboration_count_group))
           .colors(general_colors);
 
+        var coordinator_chart = dc.rowChart("#coordinator_vis")
+          .width(calculate_vis_width(window_width, 0.3))
+          .height(250)
+          .dimension(coordinator, 'coordinators')
+          .group(getTops(coordinator_count_group))
+          .colors(general_colors);
 
         var participant_chart = dc.rowChart("#participants_vis")
           .width(calculate_vis_width(window_width, 0.3))
           .height(575)
           .dimension(participants, 'participants')
-          .group(getHighestValues(participantsGroup))
+          .group(getTops(participantsGroup, 20))
           .colors(general_colors);
 
         var status_chart = dc.pieChart("#status_vis")
 
-          .width(calculate_vis_width(window_width, 0.12))
+          .width(calculate_vis_width(window_width, 0.11))
           .dimension(status, 'status')
           .group(status_count_group)
           .innerRadius(40)
@@ -243,7 +199,7 @@ var submissions_vis = (function () {
 
         var version_chart = dc.pieChart("#version_vis")
 
-          .width(calculate_vis_width(window_width, 0.12))
+          .width(calculate_vis_width(window_width, 0.11))
           .dimension(version, 'versions')
           .group(version_count_group)
           .innerRadius(40)
@@ -295,7 +251,22 @@ var submissions_vis = (function () {
         })
           .order(sortByDateAscending);
 
+        $('#submissions-dashboard-loader').hide()
+        submission_dashboard_container.show();
         dc.renderAll();
+
+        $('#submissions-vis-reset').click(function() {
+          resetCharts([
+            submission_chart,
+            data_count,
+            participant_chart,
+            collaboration_chart,
+            coordinator_chart,
+            status_chart,
+            version_chart,
+            detailTable
+          ]);
+        });
       });
     }
   }
@@ -303,5 +274,7 @@ var submissions_vis = (function () {
 })();
 
 $(document).ready(function () {
+    HEPDATA.initialise_user_filter();
+    submissions_vis.display_loader();
     submissions_vis.render('/dashboard/submissions/list', {});
 });

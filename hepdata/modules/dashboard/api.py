@@ -23,11 +23,16 @@
 """HEPData Dashboard API."""
 
 from collections import OrderedDict
+import csv
+import io
 
+from flask import url_for
 from invenio_accounts.models import User
 
-from sqlalchemy import and_, or_, func
+from sqlalchemy import or_, func
+from werkzeug.exceptions import Forbidden as ForbiddenError
 
+from hepdata.ext.elasticsearch.admin_view.api import AdminIndexer
 from hepdata.modules.permissions.models import SubmissionParticipant
 from hepdata.modules.records.utils.common import get_record_by_id, decode_string
 from hepdata.modules.submission.api import get_latest_hepsubmission, get_submission_participants_for_record
@@ -277,5 +282,94 @@ def get_dashboard_current_user(current_user):
 
     return user
 
-def set_dashboard_current_user(user):
-    set_session_item(VIEW_AS_USER_ID_KEY, user.id)
+
+def set_dashboard_current_user(current_user, view_as_user_id):
+    user_to_display = current_user
+    if view_as_user_id and view_as_user_id > 0: # -1 resets to current user
+        if has_role(current_user, 'admin'):
+            user_to_display = User.query.filter_by(id=view_as_user_id).first()
+            if not user_to_display:
+                raise ValueError(f"No user with id {view_as_user_id}")
+        else:
+            raise ForbiddenError()
+
+    if view_as_user_id is not None:
+        set_session_item(VIEW_AS_USER_ID_KEY, user_to_display.id)
+
+    return user_to_display
+
+
+def get_submissions_summary(user, include_imported=False, flatten_participants=True):
+    """Returns the submissions for which the user is coordinator, formatted as
+    a list of dictionaries.
+
+    :param invenio_accounts.models.User user: Currently logged-in user
+    :param bool include_imported: Whether to include imported records
+    :param bool flatten_participants: Whether to turn participant objects into strings
+    :return: List of dictionaries containing submission info
+    :rtype: list[dict]
+
+    """
+    coordinator_id = None
+    if not has_role(user, 'admin'):
+        coordinator_id = user.id
+
+    admin_idx = AdminIndexer()
+    # Get summary data, filtering out imported records unless in TESTING mode
+    return admin_idx.get_summary(
+        coordinator_id=coordinator_id,
+        include_imported=include_imported,
+        flatten_participants=flatten_participants
+    )
+
+
+def get_submissions_csv(user, include_imported=False):
+    """Returns the submissions for which the user is coordinator, formatted as
+    a CSV string.
+
+    :param invenio_accounts.models.User user: Currently logged-in user
+    :param bool include_imported: Whether to include imported records
+    :return: String containing CSV-formatted submissions
+    :rtype: string
+    """
+    summary = get_submissions_summary(
+        user,
+        include_imported=include_imported,
+        flatten_participants=False
+    )
+
+    si = io.StringIO()
+    fieldnames = [
+        'hepdata_id', 'version', 'url', 'inspire_id', 'arxiv_id',
+        'title', 'collaboration', 'creation_date',
+        'last_updated', 'status', 'uploaders', 'reviewers'
+    ]
+    writer = csv.DictWriter(si, fieldnames=fieldnames, extrasaction='ignore')
+    writer.writeheader()
+
+    for submission_data in summary:
+        participants = submission_data.pop('participants')
+        uploaders = []
+        reviewers = []
+        for participant in participants:
+            participant_string = participant.get('email', '')
+            name = participant.get('full_name')
+            if name:
+                participant_string += f" ({name})"
+
+            if participant.get('role') == 'uploader':
+                uploaders.append(participant_string)
+            elif participant.get('role') == 'reviewer':
+                reviewers.append(participant_string)
+
+        submission_data['uploaders'] = ' | '.join(uploaders)
+        submission_data['reviewers'] = ' | '.join(reviewers)
+        submission_data['hepdata_id'] = submission_data['recid']
+        submission_data['url'] = url_for(
+            'hepdata_records.metadata',
+            recid=submission_data['recid'],
+            _external=True
+        )
+        writer.writerow(submission_data)
+
+    return si.getvalue()

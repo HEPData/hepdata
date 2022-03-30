@@ -26,7 +26,7 @@
                 <div class="alert alert-info">
                     You are logged in as <strong>{{ current_user.email }}</strong> but are currently viewing the
                     dashboard as user <strong>{{ ctx.user_to_display.email }}</strong>.
-                    <a href="/dashboard">View as {{ current_user.email }}</a>
+                    <a href="?view_as_user=-1">View as {{ current_user.email }}</a>
                 </div>
             {% endif %}
 
@@ -57,7 +57,7 @@
                     </div>
 
 
-                    <div class="col-md-5 col-xs-12 action-btns text-right">
+                    <div class="col-md-5 col-sm-12 col-xs-12 action-btns">
                         {% if ctx.user_is_admin %}
                             <a href="/admin" class="btn-profile">Administration</a>
                             <!--
@@ -69,8 +69,11 @@
                             -->
 
                         {% endif %}
-                        {% if ctx.user_is_admin %}
-                            <a href="/dashboard/submissions" class="btn-profile">Submissions Overview</a>
+                        {% if ctx.user_is_coordinator_or_admin %}
+                            {% if request.url_rule.endpoint == 'hep_dashboard.dashboard' %}
+                                <a href="/dashboard/submissions" class="btn-profile">Submissions Overview</a>
+                            {% endif %}
+                            <a href="/dashboard/submissions/csv" class="btn-profile">Download Submissions CSV</a>
                         {% endif %}
                         <a href="/account/settings/profile"
                            class="btn-profile{% if ctx.view_as_mode %} disabled{% endif %}"><i class="fa fa-pencil"></i> Edit Profile</a>
@@ -78,7 +81,7 @@
 
                     {% block view_as_user %}
                         {% if ctx.user_is_admin %}
-                            <div class="col-md-11 view-submissions-as">
+                            <div class="col-md-11 col-sm-12 col-xs-12 view-submissions-as">
                                 <p>View dashboard as user:</p>
                                     <div>
                                        <div class="user-selector">
@@ -300,5 +303,4 @@
 
 {%- block javascript %}
     {{ webpack['hepdata-dashboard-js.js'] }}
-    {{ webpack['hepdata-dashboard-submissions-vis-js.js'] }}
 {% endblock %}

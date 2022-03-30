@@ -30,6 +30,7 @@ from elasticsearch_dsl import Document, Text, Keyword, Date, Integer, Nested, In
 from elasticsearch_dsl.connections import connections
 from flask import current_app
 
+from hepdata.modules.permissions.models import CoordinatorRequest
 from hepdata.modules.records.utils.common import get_record_contents
 from hepdata.modules.submission.api import get_submission_participants_for_record
 from hepdata.modules.submission.models import HEPSubmission, DataSubmission
@@ -41,6 +42,7 @@ log = logging.getLogger(__name__)
 class ESSubmission(Document):
     recid = Integer()
     inspire_id = Text()
+    arxiv_id = Text()
     version = Integer()
     title = Text()
     collaboration = Text()
@@ -55,8 +57,9 @@ class ESSubmission(Document):
         }
     )
     coordinator = Integer()
+    coordinator_group = Text()
 
-    def as_custom_dict(self, exclude=None):
+    def as_custom_dict(self, exclude=None, flatten_participants=True):
         _dict_ = vars(self)
 
         data = _dict_['_d_']
@@ -64,9 +67,12 @@ class ESSubmission(Document):
         data['last_updated'] = data['last_updated'].strftime('%Y-%m-%d')
 
         participants = data.get('participants', [])
-        data['participants'] = []
-        for participant in participants:
-            data['participants'].append(participant['full_name'] + ' (' + participant['role'] + ')')
+        if flatten_participants:
+            data['participants'] = []
+            for participant in participants:
+                data['participants'].append(participant['full_name'] + ' (' + participant['role'] + ')')
+        else:
+            data['participants'] = [p.to_dict() for p in participants]
 
         if exclude:
             for field in exclude:
@@ -80,6 +86,11 @@ class ESSubmission(Document):
 
 
 class AdminIndexer:
+
+    # We don't index or retrieve values with date earlier than EXCLUDE_BEFORE_DATE
+    # unless in TESTING mode
+    EXCLUDE_BEFORE_DATE = datetime(2017, 1, 1)
+
     def __init__(self, *args, **kwargs):
         self.client = Elasticsearch(
             hosts=current_app.config['SEARCH_ELASTIC_HOSTS']) if 'client' not in kwargs else kwargs.get('client')
@@ -103,43 +114,34 @@ class AdminIndexer:
 
         return result
 
-    def get_summary(self):
-        s = Search(index=self.index)
-        # Filter by date to approximately 20 years ago, to ensure there aren't more
-        # than 10000 buckets
-        date_20_years_ago = (datetime.utcnow() - timedelta(days=int(20*365.25))).date()
-        s = s.filter('range', **{'last_updated': {'gte': str(date_20_years_ago)}})
-        s.aggs.bucket('daily_workflows', 'date_histogram',
-                      field='last_updated',
-                      format="yyyy-MM-dd", interval='day') \
-            .bucket('recid', 'terms', field='recid')
-        result = s.execute().aggregations.to_dict()
+    def get_summary(self, coordinator_id=None, include_imported=False, flatten_participants=True):
+        s = ESSubmission.search(using=self.client, index=self.index)[0:10000]
 
-        # flatten summary
-        processed_result = []
-        _daily_workflows = result['daily_workflows']
-        for day in _daily_workflows['buckets']:
-            for recid in day['recid']['buckets']:
-                record_search = self.search(term=recid['key'], fields=['recid'])
-                record = record_search[0] if len(record_search) == 1 else record_search[1]
+        # Exclude items migrated from hepdata.cedar.ac.uk by filtering on coordinator
+        # (coordinator 1 is the default user used for imports) and removing items
+        # with last_updated before 2017 (e.g. where v2 has been created on HEPData.net)
+        if not include_imported:
+            s = s.exclude('term', coordinator=1)
+            s = s.exclude('range', last_updated={'lte': AdminIndexer.EXCLUDE_BEFORE_DATE})
 
-                processed_result.append(record.as_custom_dict(exclude=[]))
+        if coordinator_id:
+            s = s.filter('term', coordinator=coordinator_id)
 
-        return processed_result
+        s = s.sort('last_updated')
+        results = s.execute()
 
-    def find_and_delete(self, term, fields=None):
+        processed_results = [record.as_custom_dict(exclude=[], flatten_participants=flatten_participants) for record in results.hits]
+        return processed_results
+
+    def delete_by_id(self, *args):
         """
-        Finds records by first searching for them, then deleting
-        them all
-        :param term: e.g. ATLAS
-        :param fields: array of fields to search on, e.g. ['collaboration']
-        :return: True
+        Deletes records from the submissions index by id
+        (HEPSubmission.id)
         """
-        results = self.search(term, fields=fields)
         delete_count = 0
-        for result in results:
+        for id in args:
             try:
-                result.delete()
+                self.client.delete(self.index, id)
                 delete_count += 1
             except:
                 return delete_count, False
@@ -149,8 +151,12 @@ class AdminIndexer:
     def index_submission(self, submission):
         participants = []
 
-        for sub_participant in get_submission_participants_for_record(submission.publication_recid):
-            participants.append({'full_name': sub_participant.full_name, 'role': sub_participant.role})
+        for sub_participant in get_submission_participants_for_record(submission.publication_recid, roles=['uploader', 'reviewer']):
+            participants.append({
+                'full_name': sub_participant.full_name,
+                'role': sub_participant.role,
+                'email': sub_participant.email
+            })
 
         record_information = get_record_contents(submission.publication_recid,
                                                  submission.overall_status)
@@ -160,32 +166,60 @@ class AdminIndexer:
 
         if record_information:
             collaboration = ','.join(record_information.get('collaborations', []))
+            coordinator_request = CoordinatorRequest.query.filter_by(
+                user=submission.coordinator, approved=True
+            ).first()
+            if coordinator_request:
+                coordinator_group = coordinator_request.collaboration
+            else:
+                if submission.coordinator == 1:
+                    coordinator_group = 'HEPData Admin'
+                else:
+                    coordinator_group = ''
 
-            self.add_to_index(_id=submission.publication_recid,
+            self.add_to_index(_id=submission.id,
                               title=record_information['title'],
                               collaboration=collaboration,
                               recid=submission.publication_recid,
                               inspire_id=submission.inspire_id,
+                              arxiv_id=record_information.get('arxiv_id', None),
                               status=submission.overall_status,
                               data_count=data_count,
                               creation_date=submission.created,
                               last_updated=submission.last_updated,
                               version=submission.version,
                               participants=participants,
-                              coordinator=submission.coordinator)
+                              coordinator=submission.coordinator,
+                              coordinator_group=coordinator_group)
 
     def reindex(self, *args, **kwargs):
 
         recreate = kwargs.get('recreate', False)
+        include_imported = kwargs.get('include_imported', False)
+
         if recreate:
             self.recreate_index()
 
-        submissions = HEPSubmission.query.filter(HEPSubmission.overall_status != 'sandbox' and \
-                                                 HEPSubmission.overall_status != 'sandbox_processing' and \
-                                                 HEPSubmission.coordinator > 1).all()
+        submissions_query = HEPSubmission.query.filter(
+            HEPSubmission.overall_status != 'sandbox',
+            HEPSubmission.overall_status != 'sandbox_processing'
+        )
 
-        for submission in submissions:
+        if not include_imported:
+            submissions_query = submissions_query.filter(
+                HEPSubmission.coordinator > 1,
+                HEPSubmission.last_updated >= AdminIndexer.EXCLUDE_BEFORE_DATE
+            )
+
+        submissions = submissions_query.all()
+        print(f'Indexing {len(submissions)} submissions...')
+
+        for i, submission in enumerate(submissions):
             self.index_submission(submission)
+            if i % 100 == 0:
+                print(f"Indexed {i} of {len(submissions)}")
+
+        print(f"Finished indexing {len(submissions)} submissions")
 
     def recreate_index(self):
         """ Delete and then create a given index and set a default mapping.

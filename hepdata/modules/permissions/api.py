@@ -27,15 +27,14 @@ from operator import is_not
 from flask_login import current_user
 from sqlalchemy import or_
 
-from hepdata.modules.dashboard.api import get_dashboard_current_user
 from hepdata.modules.permissions.models import SubmissionParticipant, CoordinatorRequest
 from hepdata.modules.records.utils.common import get_record_contents
 from hepdata.modules.submission.models import HEPSubmission
 from hepdata.utils.users import get_user_from_id, user_is_admin
 
 
-def get_records_participated_in_by_user():
-    _current_user_id = get_dashboard_current_user(current_user).id
+def get_records_participated_in_by_user(user):
+    _current_user_id = user.id
 
     as_uploader = SubmissionParticipant.query.filter_by(user_account=_current_user_id, role='uploader').order_by(
         SubmissionParticipant.id.desc()).all()

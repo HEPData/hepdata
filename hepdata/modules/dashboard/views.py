@@ -22,15 +22,17 @@
 
 """HEPData Dashboard Views."""
 
-from flask import Blueprint, jsonify, request, render_template, abort
+from flask import Blueprint, jsonify, request, render_template, abort, \
+    current_app, make_response, url_for
 from flask_login import login_required, current_user
-from invenio_accounts.models import User
+from invenio_accounts.models import User, Role
 
 from hepdata.ext.elasticsearch.admin_view.api import AdminIndexer
 from hepdata.ext.elasticsearch.api import reindex_all
 from hepdata.ext.elasticsearch.api import push_data_keywords
 from hepdata.modules.dashboard.api import prepare_submissions, get_pending_invitations_for_user, get_submission_count, \
-    list_submission_titles, get_dashboard_current_user, set_dashboard_current_user
+    list_submission_titles, get_dashboard_current_user, set_dashboard_current_user, get_submissions_summary, \
+    get_submissions_csv
 from hepdata.modules.permissions.api import get_pending_request, get_pending_coordinator_requests
 from hepdata.modules.permissions.views import check_is_sandbox_record
 from hepdata.modules.records.utils.submission import unload_submission, do_finalise
@@ -41,6 +43,7 @@ from hepdata.modules.records.utils.common import get_record_by_id
 from hepdata.modules.records.utils.workflow import update_record
 from hepdata.modules.inspire_api.views import get_inspire_record_information
 from hepdata.utils.url import modify_query
+import collections
 import json
 import math
 
@@ -63,19 +66,19 @@ def dashboard():
     using the view_as parameter
     """
     view_as_user_id = request.args.get('view_as_user', type=int)
-    user_to_display = current_user
     if view_as_user_id:
-        if has_role(current_user, 'admin'):
-            user_profile = UserProfile.query.filter_by(user_id=view_as_user_id).first()
-            user_to_display = User.query.filter_by(id=view_as_user_id).first()
-            if not user_to_display:
-                abort(404)
-        else:
-            abort(403)
+        try:
+            user_to_display = set_dashboard_current_user(current_user, view_as_user_id)
+        except ValueError:
+            abort(404)
     else:
-        user_profile = current_userprofile.query.filter_by(user_id=current_user.get_id()).first()
+        user_to_display = get_dashboard_current_user(current_user)
 
-    set_dashboard_current_user(user_to_display)
+    if user_to_display == current_user:
+        user_profile = current_userprofile.query.filter_by(user_id=user_to_display.get_id()).first()
+    else:
+        user_profile = UserProfile.query.filter_by(user_id=user_to_display.get_id()).first()
+
 
     ctx = {'user_is_admin': has_role(user_to_display, 'admin'),
            'user_profile': user_profile,
@@ -186,9 +189,8 @@ def delete_submission(recid):
         submission = get_latest_hepsubmission(publication_recid=recid)
         unload_submission(recid, submission.version)
 
-        if submission.version == 1:
-            admin_idx = AdminIndexer()
-            admin_idx.find_and_delete('recid', recid)
+        admin_idx = AdminIndexer()
+        admin_idx.delete_by_id(submission.id)
 
         return json.dumps({"success": True,
                            "recid": recid,
@@ -236,12 +238,26 @@ def finalise(recid, publication_record=None, force_finalise=False):
 @blueprint.route('/submissions/', methods=['GET'])
 @login_required
 def submissions():
-    if has_role(current_user, 'admin'):
-        user_profile = current_userprofile.query.filter_by(user_id=current_user.get_id()).first()
+    view_as_user_id = request.args.get('view_as_user', type=int)
+    if view_as_user_id:
+        try:
+            user = set_dashboard_current_user(current_user, view_as_user_id)
+        except ValueError:
+            abort(404)
+    else:
+        user = get_dashboard_current_user(current_user)
 
-        ctx = {'user_is_admin': True,
+    if has_role(user, 'admin') or has_role(user, 'coordinator'):
+        user_profile = UserProfile.query.filter_by(user_id=user.get_id()).first()
+        url_for_params = { 'view_as_user': user.id } if user != current_user else {}
+        dashboard_url = url_for('hep_dashboard.dashboard', **url_for_params)
+
+        ctx = {'user_is_admin': has_role(user, 'admin'),
+               'user_is_coordinator_or_admin': user_is_admin_or_coordinator(user),
                'user_profile': user_profile,
-               'user_to_display': current_user}
+               'user_to_display': user,
+               'view_as_mode': user != current_user,
+               'dashboard_url': dashboard_url }
         return render_template('hepdata_dashboard/submissions.html', ctx=ctx)
     else:
         abort(403)
@@ -250,9 +266,35 @@ def submissions():
 @blueprint.route('/submissions/list', methods=['GET'])
 @login_required
 def submissions_list():
-    admin_idx = AdminIndexer()
-    summary = admin_idx.get_summary()
+    user = get_dashboard_current_user(current_user)
+    if not (has_role(user, 'admin') or has_role(user, 'coordinator')):
+        return {"success": False,
+                'message': "You don't have sufficient privileges to "
+                           "perform this action."}
+
+    summary = get_submissions_summary(
+        user,
+        include_imported=current_app.config.get('TESTING', False)
+    )
+
     return jsonify(summary)
+
+
+@blueprint.route('/submissions/csv', methods=['GET'])
+@login_required
+def submissions_csv():
+    user = get_dashboard_current_user(current_user)
+    if not (has_role(user, 'admin') or has_role(user, 'coordinator')):
+        abort(403)
+
+    csv_data = get_submissions_csv(
+        user,
+        include_imported=current_app.config.get('TESTING', False)
+    )
+    output = make_response(csv_data)
+    output.headers["Content-Disposition"] = "attachment; filename=export.csv"
+    output.headers["Content-type"] = "text/csv"
+    return output
 
 
 @blueprint.route('/list-all-users')
@@ -264,8 +306,17 @@ def get_all_users():
     :return:
     """
     if has_role(current_user, 'admin'):
-        active_users = User.query.with_entities(User.id, User.email) \
-            .filter_by(active=True).all()
-        return jsonify([{'id': u[0], 'email': u[1]} for u in active_users])
+        coordinators_only = request.args.get(
+            'coordinators_only', default=False,
+            type=lambda v: v.lower() == 'true'
+        )
+        users_query = User.query.with_entities(User.id, User.email) \
+            .filter_by(active=True)
+
+        if coordinators_only:
+            users_query = users_query.filter(User.roles.any(Role.name == 'coordinator'))
+
+        users = users_query.all()
+        return jsonify([{'id': u[0], 'email': u[1]} for u in users])
     else:
         abort(403)

@@ -20,14 +20,19 @@
 # In applying this license, CERN does not
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
+import datetime
+import time
+
 from flask import session
 from flask_login import current_user, login_user
 from invenio_db import db
+from werkzeug.exceptions import Forbidden
 from hepdata.modules.dashboard.api import add_user_to_metadata, \
     create_record_for_dashboard, prepare_submissions, \
     get_pending_invitations_for_user, get_submission_count, \
     list_submission_titles, get_dashboard_current_user, \
-    set_dashboard_current_user, VIEW_AS_USER_ID_KEY
+    set_dashboard_current_user, VIEW_AS_USER_ID_KEY, \
+    get_submissions_csv
 from hepdata.modules.permissions.models import SubmissionParticipant
 from hepdata.modules.permissions.views import manage_participant_status
 from hepdata.modules.records.utils.common import get_record_by_id
@@ -294,6 +299,7 @@ def test_get_pending_invitations_for_user_empty(app):
         pending = get_pending_invitations_for_user(user)
         assert(pending == [])
 
+
 @pytest.fixture()
 def mocked_submission_participant_app(request, mocker):
     global dashboardTestMockObjects
@@ -427,9 +433,8 @@ def test_dashboard_current_user(app):
         dashboard_user = get_dashboard_current_user(admin_user)
         assert dashboard_user == admin_user
 
-        # Set dashboard current user to user2
-        user2 = dashboardTestMockObjects['user2']
-        set_dashboard_current_user(user2)
+        # Set dashboard current user to user2 (with current user as admin)
+        set_dashboard_current_user(admin_user, user2.id)
 
         # Try getting dashboard user as user1 - should just return user1
         # as they are not admin
@@ -440,3 +445,82 @@ def test_dashboard_current_user(app):
         # Try again as admin
         dashboard_user = get_dashboard_current_user(admin_user)
         assert dashboard_user == user2
+
+        # Reset dashboard current user
+        set_dashboard_current_user(admin_user, -1)
+        dashboard_user = get_dashboard_current_user(admin_user)
+        assert dashboard_user == admin_user
+
+        # Try setting current user as non-admin - should give error
+        with pytest.raises(Forbidden) as exc_info:
+            set_dashboard_current_user(user1, user2.id)
+
+        assert str(exc_info.value) == "403 Forbidden: You don't have the permission to access the requested resource. It is either read-protected or not readable by the server."
+
+        # Try setting current user to invalid user id
+        with pytest.raises(ValueError) as exc_info:
+            set_dashboard_current_user(admin_user, 123456)
+
+        assert str(exc_info.value) == 'No user with id 123456'
+
+
+def test_submissions_csv(app, admin_idx, load_default_data, identifiers):
+    with app.app_context():
+        # Recreate the admin index so we know which records it contains
+        admin_idx.reindex(recreate=True, include_imported=True)
+        # Make sure ES search catches up with the reindex
+        time.sleep(1)
+
+        user = User.query.first()
+        csv_data = get_submissions_csv(user, include_imported=True)
+        csv_lines = csv_data.splitlines()
+        assert len(csv_lines) == 3
+        assert csv_lines[0] == 'hepdata_id,version,url,inspire_id,arxiv_id,title,collaboration,creation_date,last_updated,status,uploaders,reviewers'
+        today = datetime.date.today().isoformat()
+        assert csv_lines[1] == f'16,1,http://localhost/record/16,1245023,arXiv:1307.7457,High-statistics study of $K^0_S$ pair production in two-photon collisions,Belle,{today},2013-12-17,finished,,'
+        assert csv_lines[2] == f'1,1,http://localhost/record/1,1283842,arXiv:1403.1294,Measurement of the forward-backward asymmetry in the distribution of leptons in $t\\bar{{t}}$ events in the lepton$+$jets channel,D0,{today},2014-08-11,finished,,'
+
+        # Get data without imported records - should be empty (headers only)
+        csv_data = get_submissions_csv(user, include_imported=False)
+        csv_lines = csv_data.splitlines()
+        assert len(csv_lines) == 1
+        assert csv_lines[0] == 'hepdata_id,version,url,inspire_id,arxiv_id,title,collaboration,creation_date,last_updated,status,uploaders,reviewers'
+
+        # Add participants
+        user1 = User(email='test@test.com', password='hello1', active=True)
+        user2 = User(email='test2@test.com', password='hello2', active=True)
+        db.session.add(user1)
+        db.session.add(user2)
+        db.session.commit()
+        participant1 = SubmissionParticipant(
+            publication_recid=1,
+            role="uploader",
+            email=user1.email,
+            status='primary',
+            user_account=user1.id,
+            full_name='Una Uploader')
+        participant2 = SubmissionParticipant(
+            publication_recid=1,
+            role="reviewer",
+            email=user2.email,
+            status='primary',
+            user_account=user2.id,
+            full_name='Rowan Reviewer')
+        participant3 = SubmissionParticipant(
+            publication_recid=1,
+            role="reviewer",
+            email='test@hepdata.net',
+            status='primary',
+            user_account=1)
+        db.session.add(participant1)
+        db.session.add(participant2)
+        db.session.add(participant3)
+        db.session.commit()
+        admin_idx.reindex(include_imported=True)
+        time.sleep(1)
+
+        # Get CSV again - should be uploader and reviewers in line 2 now
+        csv_data = get_submissions_csv(user, include_imported=True)
+        csv_lines = csv_data.splitlines()
+        assert len(csv_lines) == 3
+        assert csv_lines[2] == f'1,1,http://localhost/record/1,1283842,arXiv:1403.1294,Measurement of the forward-backward asymmetry in the distribution of leptons in $t\\bar{{t}}$ events in the lepton$+$jets channel,D0,{today},2014-08-11,finished,test@test.com (Una Uploader),test2@test.com (Rowan Reviewer) | test@hepdata.net'

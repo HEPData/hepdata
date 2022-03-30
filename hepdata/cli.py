@@ -468,7 +468,10 @@ def submissions():
 def reindex():
     """Reindexes HEPSubmissions and adds to the submission index."""
     admin_idx = AdminIndexer()
-    admin_idx.reindex(recreate=True)
+    admin_idx.reindex(
+        recreate=True,
+        include_imported=current_app.config.get('TESTING', False)
+    )
 
 
 @submissions.command()
