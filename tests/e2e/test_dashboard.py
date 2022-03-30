@@ -22,6 +22,9 @@
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
 """HEPData end to end testing of dashboard and administrative options."""
+import csv
+import io
+import requests
 
 from flask import url_for
 from invenio_accounts.models import User
@@ -189,6 +192,24 @@ def test_dashboard(live_server, logged_in_browser):
     # Now last 5 items should be visible
     assert all(not row.is_displayed() for row in uploader_rows[:20])
     assert all(row.is_displayed() for row in uploader_rows[20:])
+
+    # Check CSV download works
+    csv_button = browser.find_element_by_link_text('Download Submissions CSV')
+    download_url = csv_button.get_attribute("href")
+    assert(download_url.endswith("/submissions/csv"))
+    # We can't test file downloads via selenium on SauceLabs so we'll just
+    # download it using requests and check it can be read as a CSV with the
+    # right number of columns
+    response = requests.get(
+        download_url,
+        cookies={c["name"]: c["value"] for c in browser.get_cookies()}
+    )
+    assert(response.status_code == 200)
+    decoded_lines = response.content.decode('utf-8').splitlines()
+    assert len(decoded_lines) == 4
+    csv_reader = csv.reader(decoded_lines)
+    for row in csv_reader:
+        assert len(row) == 12
 
     # View the dashboard as the non-admin user
     # First scroll back to the top of the screen

@@ -34,6 +34,8 @@ from sqlalchemy import func
 
 from flask import Blueprint, jsonify, url_for, redirect, request, abort, render_template
 
+from hepdata.ext.elasticsearch.admin_view.api import AdminIndexer
+from hepdata.modules.dashboard.api import get_dashboard_current_user
 from hepdata.modules.email.api import send_coordinator_request_mail, send_coordinator_approved_email, \
     send_cookie_email, send_reserve_email
 from hepdata.modules.permissions.api import get_records_participated_in_by_user, get_approved_coordinators, \
@@ -85,11 +87,14 @@ def manage_participant_status(recid, action, status_action,
         record = get_record_by_id(recid)
 
         # now send the email telling the user of their new status!
+        hepsubmission = get_latest_hepsubmission(publication_recid=recid)
         if status_action == 'promote':
-            hepsubmission = get_latest_hepsubmission(publication_recid=recid)
             send_cookie_email(participant, record, version=hepsubmission.version)
         elif status_action == 'demote':
             send_reserve_email(participant, record)
+
+        admin_idx = AdminIndexer()
+        admin_idx.index_submission(hepsubmission)
 
         return json.dumps({"success": True, "recid": recid})
     except Exception as e:
@@ -119,6 +124,10 @@ def add_participant(recid):
                                            email=email, role=participant_type)
         db.session.add(new_record)
         db.session.commit()
+
+        admin_idx = AdminIndexer()
+        admin_idx.index_submission(submission_record)
+
         return json.dumps(
             {"success": True, "recid": recid,
              "message": "{0} {1} added.".format(full_name, participant_type)})
@@ -143,9 +152,11 @@ def change_coordinator_for_submission():
     recid = request.form['recid']
     coordinator_id = request.form['coordinator']
     submission_records = HEPSubmission.query.filter_by(publication_recid=recid).all()
+    admin_idx = AdminIndexer()
     for submission_record in submission_records:
         submission_record.coordinator = coordinator_id
         db.session.add(submission_record)
+        admin_idx.index_submission(submission_record)
     db.session.commit()
 
     return jsonify({'success': True})
@@ -268,7 +279,8 @@ def get_permissions_list():
 
     :return:
     """
-    return jsonify(get_records_participated_in_by_user())
+    user = get_dashboard_current_user(current_user)
+    return jsonify(get_records_participated_in_by_user(user))
 
 
 @blueprint.route('/coordinators')

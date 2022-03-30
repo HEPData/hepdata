@@ -94,10 +94,8 @@ def remove_submission(record_id, version=1):
         except NoResultFound as nrf:
             print(nrf.args)
 
-        if version == 1:
-
-            admin_idx = AdminIndexer()
-            admin_idx.find_and_delete(term=record_id, fields=['recid'])
+        admin_idx = AdminIndexer()
+        admin_idx.delete_by_id(*[s.id for s in hepdata_submissions])
 
         submissions = DataSubmission.query.filter_by(
             publication_recid=record_id, version=version).all()
