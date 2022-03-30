@@ -44,17 +44,19 @@
 
 {% block page_description %}{{ ctx.record.title }}{% endblock %}
 
+{%- block additional_header_bars %}
+    {% include 'hepdata_records/components/record-breadcrumbs.html' %}
+{%- endblock additional_header_bars %}
+
 {% block page_body %}
     <div>
         <div class="container-fluid">
-
-            {% include 'hepdata_records/components/record-breadcrumbs.html' %}
 
             <div class="clearfix"></div>
 
             <!--top level publication information-->
 
-            <div class="row" style="padding-top: 120px;">
+            <div class="row" style="padding-top: 10px;">
 
                 {%- if messages %}
                     {%- for category, message in messages %}

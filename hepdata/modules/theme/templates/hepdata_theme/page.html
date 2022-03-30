@@ -78,7 +78,17 @@
 {%- endblock css %}
 
 {%- block page_header %}
-    {% include "hepdata_theme/header.html" %}
+  <div class="sticky-bars">
+
+    {% include "hepdata_theme/banner.html" %}
+
+    {%- block header_bars %}
+      {% include "hepdata_theme/header.html" %}
+      {%- block additional_header_bars %}
+      {%- endblock additional_header_bars %}
+    {%- endblock header_bars %}
+
+  </div>
 {%- endblock page_header %}
 
 

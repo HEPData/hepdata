@@ -23,41 +23,44 @@
 {%- extends "hepdata_theme/page.html" %}
 
 {%- block additional_assets %}
-    {{ webpack['hepdata-record.css'] }}    
+    {{ webpack['hepdata-record.css'] }}
     {{ webpack['toastr.css'] }}
 {%- endblock additional_assets %}
 
 {%- set messages = get_flashed_messages(with_categories=true) -%}
 
+{%- block additional_header_bars %}
+<div class="hep_breadcrumbs">
+    <div class="col-md-12 no-padding">
+        <ul>
+            <a href="/record/sandbox">
+                <li class="active"><span class="fa fa-cube"></span> HEPData Sandbox
+                </li>
+            </a>
+
+            {% if ctx.data_tables|length != 0 %}
+                <li class="pull-right" style="padding:6px;">
+
+                    <a href="?format=json" id="jsonLabel" type="button"
+                       class="btn btn-sm btn-default"
+                       aria-haspopup="true" aria-expanded="false">
+                        JSON
+                    </a>
+
+                </li>
+            {% endif %}
+        </ul>
+    </div>
+</div>
+{%- endblock additional_header_bars %}
+
 {% block page_body %}
 
     <div class="container-fluid">
-        <div class="hep_breadcrumbs row">
-            <div class="col-md-12 no-padding">
-                <ul>
-                    <a href="/record/sandbox">
-                        <li class="active"><span class="fa fa-cube"></span> HEPData Sandbox
-                        </li>
-                    </a>
-
-                    {% if ctx.data_tables|length != 0 %}
-                        <li class="pull-right" style="padding:6px;">
-
-                            <a href="?format=json" id="jsonLabel" type="button"
-                               class="btn btn-sm btn-default"
-                               aria-haspopup="true" aria-expanded="false">
-                                JSON
-                            </a>
-
-                        </li>
-                    {% endif %}
-                </ul>
-            </div>
-        </div>
 
         <div class="clearfix"></div>
 
-        <div class="row" style="padding-top: 120px;">
+        <div class="row" style="padding-top: 10px;">
 
           {%- if messages %}
               {%- for category, message in messages %}

@@ -35,17 +35,10 @@
 </script>
 {%- endblock json_ld %}
 
-{%- block body %}
+{%- block header_bars %}
+{%- endblock header_bars %}
 
-    {%- block browserupgrade %}
-        <!--[if lt IE 8]>
-            <p class="browserupgrade">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> to improve your experience.</p>
-        <![endif]-->
-    {%- endblock browserupgrade %}
-
-    <div class="site-wrapper">
-
-        {% block page_body %}
+{% block page_body %}
 
             <div class="home-top">
                 <div class="top-bar" id="home_top_bar">
@@ -169,21 +162,15 @@
                 <script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
             </div>
 
-            {% include "hepdata_theme/footer.html" %}
+            {% include "hepdata_search/modals/search_help.html" %}
+
+{% endblock page_body %}
 
 
+{%- block javascript %}
+  {{ webpack['hepdata-home-js.js'] }}
+{% endblock %}
 
-            <div class="clearfix"></div>
-
-        {% endblock page_body %}
-
-        {% include "hepdata_search/modals/search_help.html" %}
-
-    </div>
-    {%- block javascript %}
-      {{ webpack['hepdata-home-js.js'] }}
-    {% endblock %}
-    {%- block trackingcode %}
-        {% include "hepdata_theme/trackingcode.html" %}
-    {% endblock %}
-{%- endblock body %}
+{%- block trackingcode %}
+    {% include "hepdata_theme/trackingcode.html" %}
+{% endblock %}
