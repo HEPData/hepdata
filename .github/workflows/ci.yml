@@ -48,6 +48,7 @@ jobs:
       matrix:
         postgres-version: [12, 13]
         es-image: ['elasticsearch:7.1.1', 'amazon/opendistro-for-elasticsearch:1.13.2']
+        python-version: [ '3.6', '3.7', '3.8', '3.9', '3.10' ]
 
     # Service containers to run with `runner-job`
     services:
@@ -86,10 +87,10 @@ jobs:
           --name elasticsearch -e "node.name=es01" -e "cluster.name=hepdata" -e "cluster.initial_master_nodes=es01" \
           -e "ES_JAVA_OPTS=-Xms512m -Xmx512m" -e GITHUB_ACTIONS=true -e CI=true --env-file es.env \
           ${{ matrix.es-image }}
-    - name: Set up Python 3.6
+    - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v2
       with:
-        python-version: 3.6
+        python-version: ${{ matrix.python-version }}
     - name: Set up node
       uses: actions/setup-node@v1
       with:
