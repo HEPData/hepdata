@@ -471,7 +471,7 @@ def process_submission_directory(basepath, submission_file_path, recid,
 
         db.session.commit()
 
-        if len(errors) is 0:
+        if len(errors) == 0:
             errors = package_submission(basepath, recid, hepsubmission)
 
             # Check the size of the upload to ensure it can be converted

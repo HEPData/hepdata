@@ -150,7 +150,7 @@ def cleanup_yaml(yaml, type):
                       "dependent_variables", "publicationyear", "preprintyear"]
     remove_keys(yaml, keys_to_remove)
 
-    if type is 'info':
+    if type == 'info':
         add_field_if_needed(yaml, 'comment',
                             'No description provided.')
     else:
