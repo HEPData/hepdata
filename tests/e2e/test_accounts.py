@@ -30,7 +30,6 @@ from invenio_accounts.models import User
 from invenio_db import db
 from itsdangerous import URLSafeTimedSerializer
 from flask_security import utils
-from passlib.context import CryptContext
 
 def test_user_registration_and_login(live_server, env_browser):
     """E2E user registration and login test."""
