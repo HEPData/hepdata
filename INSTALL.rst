@@ -112,7 +112,7 @@ Check that PyYAML has been installed with LibYAML bindings:
 
    (venv)$ python -c "from yaml import CSafeLoader"
 
-If LibYAML is already installed (e.g. `brew install libyaml`) but `CSafeLoader` cannot be imported, you may need to
+If LibYAML is already installed (e.g. ``brew install libyaml``) but ``CSafeLoader`` cannot be imported, you may need to
 reinstall PyYAML to ensure it's built with LibYAML bindings, e.g. on an M1 MacBook:
 
 .. code-block:: console
