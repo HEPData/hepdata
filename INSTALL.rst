@@ -104,7 +104,7 @@ First install all requirements in a `virtualenv <https://virtualenv.pypa.io/en/s
    $ python3 -m venv venv
    $ source venv/bin/activate
    (venv)$ pip install --upgrade pip
-   (venv)$ pip install -e .[all] --upgrade -r requirements.txt
+   (venv)$ pip install -e ".[all]" --upgrade -r requirements.txt
 
 Check that PyYAML has been installed with LibYAML bindings:
 
