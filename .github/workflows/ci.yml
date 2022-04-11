@@ -46,8 +46,10 @@ jobs:
 
     strategy:
       matrix:
-        postgres-version: [12, 13]
-        es-image: ['elasticsearch:7.1.1', 'amazon/opendistro-for-elasticsearch:1.13.2']
+        #postgres-version: [12, 13]
+        #es-image: ['elasticsearch:7.1.1', 'amazon/opendistro-for-elasticsearch:1.13.2']
+        postgres-version: [12]
+        es-image: ['elasticsearch:7.1.1']
         python-version: [ '3.6', '3.7', '3.8', '3.9', '3.10' ]
 
     # Service containers to run with `runner-job`
