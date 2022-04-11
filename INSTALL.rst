@@ -151,8 +151,8 @@ Next, build assets using webpack (via `invenio-assets <https://invenio-assets.re
 
    (hepdata)$ ./scripts/clean_assets.sh
 
-On an M1 MacBook, until an `issue <https://github.com/inveniosoftware/invenio-assets/issues/144>`_ with
-`Invenio-Assets <https://github.com/inveniosoftware/invenio-assets>`_ is addressed, you will need to replace
+On an M1 MacBook, until an `issue with Invenio-Assets <https://github.com/inveniosoftware/invenio-assets/issues/144>`_
+is addressed, you will need to replace
 ``"node-sass": "^4.12.0",`` with ``"sass": "^1.50.0",`` (or another `Dart Sass <https://sass-lang.com/dart-sass>`_
 version) in the ``package.json`` file of the ``invenio-assets`` installation.
 
