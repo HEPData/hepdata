@@ -216,10 +216,8 @@ def test_record_update(live_server, logged_in_browser):
     delete_widget.find_element_by_class_name('confirm-delete').click()
     # Wait for confirmation of deletion
     WebDriverWait(browser, 10).until(
-        EC.presence_of_element_located((By.ID, 'delete-success'))
+        EC.text_to_be_present_in_element((By.ID, 'delete-success'), 'Submission deleted')
     )
-    assert 'Submission deleted' in \
-        delete_widget.find_element_by_css_selector('#delete-success p').text
 
     # Should now only be 1 version of our submission
     submissions = HEPSubmission.query \

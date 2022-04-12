@@ -4,14 +4,13 @@ bleach==3.3.0
 celery==4.4.6
 click==7.1.1
 datacite==1.1.2
-elasticsearch==7.1.0
-elasticsearch-dsl==7.1.0
+elasticsearch==7.10.1
+elasticsearch-dsl==7.4.0
 email-validator==1.1.0
 Flask==1.1.4
 Flask-CeleryExt==0.3.4
 Flask-Cors==3.0.9
 Flask-Login==0.3.2
-gevent==1.4.0
 gunicorn==19.5.0
 hepdata-converter-ws-client==0.2.2
 hepdata-validator==0.3.3
