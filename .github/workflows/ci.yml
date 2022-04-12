@@ -48,7 +48,7 @@ jobs:
       matrix:
         postgres-version: [12, 13]
         es-image: ['elasticsearch:7.1.1', 'amazon/opendistro-for-elasticsearch:1.13.2']
-        python-version: [ '3.6', '3.7', '3.8', '3.9' ]
+        python-version: [ '3.7', '3.8', '3.9' ]
 
     # Service containers to run with `runner-job`
     services:
@@ -138,7 +138,7 @@ jobs:
         py.test -vv tests/*_test.py
     - name: Setup Sauce Connect
       uses: saucelabs/sauce-connect-action@main
-      if: startsWith(matrix.postgres-version, '12') && startsWith(matrix.es-image, 'amazon/opendistro') && startsWith(matrix.python-version, '3.6')
+      if: startsWith(matrix.postgres-version, '12') && startsWith(matrix.es-image, 'amazon/opendistro') && startsWith(matrix.python-version, '3.9')
       with:
         username: ${{ secrets.SAUCE_USERNAME }}
         accessKey: ${{ secrets.SAUCE_ACCESS_KEY }}
@@ -147,7 +147,7 @@ jobs:
         scVersion: 4.7.0
         verbose: true
     - name: Run end-to-end tests
-      if: startsWith(matrix.postgres-version, '12') && startsWith(matrix.es-image, 'amazon/opendistro') && startsWith(matrix.python-version, '3.6')
+      if: startsWith(matrix.postgres-version, '12') && startsWith(matrix.es-image, 'amazon/opendistro') && startsWith(matrix.python-version, '3.9')
       env:
         SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
         SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY }}
@@ -155,7 +155,7 @@ jobs:
       run: |
         if [[ -n ${{ secrets.SAUCE_USERNAME }} && -n ${{ secrets.SAUCE_ACCESS_KEY}} ]]; then py.test -vv tests/e2e; fi
     - name: Run coveralls
-      if: startsWith(matrix.postgres-version, '12') && startsWith(matrix.es-image, 'amazon/opendistro') && startsWith(matrix.python-version, '3.6')
+      if: startsWith(matrix.postgres-version, '12') && startsWith(matrix.es-image, 'amazon/opendistro') && startsWith(matrix.python-version, '3.9')
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         COVERALLS_SERVICE_NAME: github
