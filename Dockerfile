@@ -42,8 +42,8 @@ RUN hepdata collect -v  && \
 
 RUN bash -c "echo $APP_ENVIRONMENT"
 
-RUN bash -c "set -x; [[ ${APP_ENVIRONMENT:-prod} = local-web ]] && (cd /usr/local/var && wget https://saucelabs.com/downloads/sc-4.6.2-linux.tar.gz && \
-  tar -xvf sc-4.6.2-linux.tar.gz) || echo 'Not installing SC on prod or worker build'"
+RUN bash -c "set -x; [[ ${APP_ENVIRONMENT:-prod} = local-web ]] && (cd /usr/local/var && wget https://saucelabs.com/downloads/sc-4.7.1-linux.tar.gz && \
+  tar -xvf sc-4.7.1-linux.tar.gz) || echo 'Not installing SC on prod or worker build'"
 
 WORKDIR /code
 

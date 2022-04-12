@@ -315,7 +315,7 @@ To run the tests:
 
 .. code-block:: console
 
-   $ docker-compose exec web bash -c "/usr/local/var/sc-4.5.4-linux/bin/sc -u $SAUCE_USERNAME -k $SAUCE_ACCESS_KEY -x https://eu-central-1.saucelabs.com/rest/v1 & ./run-tests.sh"
+   $ docker-compose exec web bash -c "/usr/local/var/sc-4.7.1-linux/bin/sc -u $SAUCE_USERNAME -k $SAUCE_ACCESS_KEY -x https://eu-central-1.saucelabs.com/rest/v1 & ./run-tests.sh"
 
 
 .. _docker-compose-tips:
