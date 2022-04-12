@@ -82,7 +82,7 @@ To run outside of Docker you can use the Homebrew installation of Elasticsearch 
 
     $ brew install elasticsearch
 
-Neither of these two methods is currently working for an M1 MacBook.
+Neither of these two methods is currently working for an M1 MacBook, so use Elasticsearch v7.1.1 for now.
 
 .. _installation:
 
@@ -96,6 +96,8 @@ It has also been tested with Python 3.8 on an M1 MacBook where some changes were
 
 First install all requirements in a `virtualenv <https://virtualenv.pypa.io/en/stable/installation.html>`_.
 (Use `virtualenvwrapper <https://virtualenvwrapper.readthedocs.io/en/latest/install.html>`_ if you prefer.)
+The instructions below use ``virtualenv`` directly (Python module `venv <https://docs.python.org/3/library/venv.html>`_)
+with a target directory also called ``venv`` (change it if you prefer).
 
 .. code-block:: console
 
@@ -154,7 +156,8 @@ Next, build assets using webpack (via `invenio-assets <https://invenio-assets.re
 On an M1 MacBook, until an `issue with Invenio-Assets <https://github.com/inveniosoftware/invenio-assets/issues/144>`_
 is addressed, you will need to replace
 ``"node-sass": "^4.12.0",`` with ``"sass": "^1.50.0",`` (or another `Dart Sass <https://sass-lang.com/dart-sass>`_
-version) in the ``package.json`` file of the ``invenio-assets`` installation.
+version) in the ``package.json`` file of the ``invenio-assets`` installation
+(e.g. ``venv/lib/python3.8/site-packages/invenio_assets/assets/package.json``).
 
 Celery
 ------
@@ -186,8 +189,8 @@ Make sure that Celery is running before proceeding further.
 Until an `issue <https://github.com/HEPData/hepdata/issues/461>`_ is addressed and ``Invenio-Accounts`` is upgraded
 to at least v1.4.9, you will need to manually
 `patch <https://github.com/inveniosoftware/invenio-accounts/commit/b91649244b11479d8fa817745141c0027001dff1>`_
-the ``invenio_accounts/cli.py`` file before the next step.
-Pass your email address and a password as an argument to the script:
+the ``invenio_accounts/cli.py`` file (e.g. ``venv/lib/python3.8/site-packages/invenio_accounts/cli.py``) before the
+next step.  Pass your email address and a password as an argument to the script:
 
 .. code-block:: console
 
@@ -199,7 +202,6 @@ Inspect the ``hepdata`` database from the command line as the ``hepdata`` user:
 
    $ psql hepdata -U hepdata -h localhost
    Password for user hepdata: hepdata
-   hepdata=> select publication_recid, inspire_id, last_updated from hepsubmission order by publication_recid;
 
    hepdata=> select publication_recid, inspire_id, last_updated from hepsubmission order by publication_recid;
     publication_recid | inspire_id |    last_updated
