@@ -97,7 +97,7 @@ def check_date(args):
     if 'date' in args:
         date_length = len(args['date'])
         if date_length == 4 or date_length == 9:
-            if args['date'] is not '':
+            if args['date']:
                 dates = args['date'].split(',')
 
                 min_date = int(dates[0])

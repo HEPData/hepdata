@@ -33,8 +33,9 @@ invenio-userprofiles==1.2.1
 Jinja2==2.11.3
 jsmin==3.0.0
 lxml==4.6.5
+MarkupSafe==2.0.1
 msgpack==0.6.2
-psycopg2-binary==2.8.4
+psycopg2-binary==2.9.3
 python-dateutil==2.8.1
 pyyaml==5.4.1
 requests==2.23.0

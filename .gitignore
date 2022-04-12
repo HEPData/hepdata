@@ -41,6 +41,7 @@ htmlcov/
 nosetests.xml
 coverage.xml
 *,cover
+.pytest_cache
 
 # Translations
 *.mo
@@ -64,5 +65,11 @@ tmp/
 # Futurize
 *.bak
 
+# PyCharm
 .idea
-.pytest_cache
+
+# Virtual environment
+venv/
+
+# Celery Beat
+celerybeat-schedule.db

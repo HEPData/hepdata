@@ -30,7 +30,6 @@ from smtplib import SMTP, SMTPRecipientsRefused
 from celery import shared_task
 from flask import current_app
 from flask_celeryext import create_celery_app
-from flask_mail import Mail
 
 
 def create_send_email_task(destination, subject, message, reply_to_address=None):
@@ -108,7 +107,7 @@ def send_error_mail(exception):
 
 
 def connect():
-    smtp = SMTP()
+    smtp = SMTP(current_app.config['MAIL_SERVER'])
     smtp.connect(current_app.config['MAIL_SERVER'], current_app.config['MAIL_PORT'])
     if not current_app.config['SMTP_NO_PASSWORD']:
         if current_app.config['SMTP_ENCRYPTION']:

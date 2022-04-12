@@ -111,7 +111,7 @@ def format_submission(recid, record, version, version_count, hepdata_submission,
         ctx['record'] = record
         ctx["version_count"] = version_count
 
-        if version is not -1:
+        if version != -1:
             ctx["version"] = version
         else:
             # we get the latest version by default

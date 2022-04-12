@@ -32,7 +32,7 @@ Prerequisites
 HEPData uses several services, which you will need to install before running HEPData:
  * `PostgreSQL <http://www.postgresql.org/>`_ (version 12) database server
  * `Redis <http://redis.io/>`_ for caching
- * `Elasticsearch <https://www.elastic.co/products/elasticsearch>`_ for indexing and information retrieval. See below for further instructions.
+ * `Elasticsearch <https://www.elastic.co/products/elasticsearch>`_ (version 7) for indexing and information retrieval. See below for further instructions.
  * `Node.js <https://nodejs.org>`_ (version 14) JavaScript run-time environment and its package manager `npm <https://www.npmjs.com/>`_. (If you're using a Debian-based OS, please follow the `official installation instructions <https://github.com/nodesource/distributions/blob/master/README.md#debinstall>`_ to install NodeJS (which will also install npm), to avoid issues with ``node-sass``.)
 
 These services can be installed using the relevant package manager for your system,
@@ -82,6 +82,7 @@ To run outside of Docker you can use the Homebrew installation of Elasticsearch 
 
     $ brew install elasticsearch
 
+Neither of these two methods is currently working for an M1 MacBook, so use Elasticsearch v7.1.1 for now.
 
 .. _installation:
 
@@ -91,19 +92,35 @@ Installation
 Python
 ------
 The HEPData code is only compatible with Python 3 (not Python 2).  It has been tested with Python 3.6.
+It has also been tested with Python 3.8 on an M1 MacBook where some changes were required (documented below).
 
-First install all requirements in a `virtualenv <https://virtualenv.pypa.io/en/stable/installation.html>`_
-using `virtualenvwrapper <https://virtualenvwrapper.readthedocs.io/en/latest/install.html>`_:
+First install all requirements in a `virtualenv <https://virtualenv.pypa.io/en/stable/installation.html>`_.
+(Use `virtualenvwrapper <https://virtualenvwrapper.readthedocs.io/en/latest/install.html>`_ if you prefer.)
+The instructions below use ``virtualenv`` directly (Python module `venv <https://docs.python.org/3/library/venv.html>`_)
+with a target directory also called ``venv`` (change it if you prefer).
 
 .. code-block:: console
 
-   $ mkvirtualenv hepdata
-   (hepdata)$ mkdir ~/src/
-   (hepdata)$ cd ~/src/
-   (hepdata)$ git clone https://github.com/HEPData/hepdata.git
-   (hepdata)$ cd hepdata
-   (hepdata)$ pip install --upgrade pip
-   (hepdata)$ pip install -e .[all] --upgrade -r requirements.txt
+   $ git clone https://github.com/HEPData/hepdata.git
+   $ cd hepdata
+   $ python3 -m venv venv
+   $ source venv/bin/activate
+   (venv)$ pip install --upgrade pip
+   (venv)$ pip install -e ".[all]" --upgrade -r requirements.txt
+
+Check that PyYAML has been installed with LibYAML bindings:
+
+.. code-block:: console
+
+   (venv)$ python -c "from yaml import CSafeLoader"
+
+If LibYAML is already installed (e.g. ``brew install libyaml``) but ``CSafeLoader`` cannot be imported, you may need to
+reinstall PyYAML to ensure it's built with LibYAML bindings, e.g. on an M1 MacBook:
+
+.. code-block:: console
+
+   (venv)$ LDFLAGS="-L$(brew --prefix)/lib" CFLAGS="-I$(brew --prefix)/include" pip install --global-option="--with-libyaml" --force pyyaml==5.4.1
+
 
 Use of config_local.py
 ----------------------
@@ -122,8 +139,8 @@ use a local converter URL, and specify custom temporary and data directories:
    NO_DOI_MINTING = True
    USE_TWITTER = False
    CFG_CONVERTER_URL = 'http://localhost:5500'
-   CFG_TMPDIR = '/mt/home/watt/tmp/hepdata/tmp'
-   CFG_DATADIR = '/mt/home/watt/tmp/hepdata/data'
+   CFG_TMPDIR = '/Users/watt/tmp/hepdata/tmp'
+   CFG_DATADIR = '/Users/watt/tmp/hepdata/data'
 
 An example file ``hepdata/config_local.local.py`` is provided, which can be copied to ``hepdata/config_local.py``.
 
@@ -135,6 +152,12 @@ Next, build assets using webpack (via `invenio-assets <https://invenio-assets.re
 .. code-block:: console
 
    (hepdata)$ ./scripts/clean_assets.sh
+
+On an M1 MacBook, until an `issue with Invenio-Assets <https://github.com/inveniosoftware/invenio-assets/issues/144>`_
+is addressed, you will need to replace
+``"node-sass": "^4.12.0",`` with ``"sass": "^1.50.0",`` (or another `Dart Sass <https://sass-lang.com/dart-sass>`_
+version) in the ``package.json`` file of the ``invenio-assets`` installation
+(e.g. ``venv/lib/python3.8/site-packages/invenio_assets/assets/package.json``).
 
 Celery
 ------
@@ -149,21 +172,25 @@ PostgreSQL
 ----------
 
 See `YUM Installation <https://wiki.postgresql.org/wiki/YUM_Installation>`_ and
-`First steps <https://wiki.postgresql.org/wiki/First_steps>`_.
+`First steps <https://wiki.postgresql.org/wiki/First_steps>`_.  On Linux you might need ``sudo su - postgres`` before
+executing the steps below.  On macOS you can install with ``brew install postgresql@12``.
 
 .. code-block:: console
 
-   $ sudo su - postgres
-   -$ createuser hepdata --createdb --pwprompt
+   $ createuser hepdata --createdb --pwprompt
    Enter password for new role: hepdata
    Enter it again: hepdata
-   -$ createdb hepdata -O hepdata
-   -$ createdb hepdata_test -O hepdata
-   -$ exit
+   $ createdb hepdata -O hepdata
+   $ createdb hepdata_test -O hepdata
 
 Next, create the database and database tables.
 Also create a user and populate the database with some records.
-Pass your email address and a password as an argument to the script:
+Make sure that Celery is running before proceeding further.
+Until an `issue <https://github.com/HEPData/hepdata/issues/461>`_ is addressed and ``Invenio-Accounts`` is upgraded
+to at least v1.4.9, you will need to manually
+`patch <https://github.com/inveniosoftware/invenio-accounts/commit/b91649244b11479d8fa817745141c0027001dff1>`_
+the ``invenio_accounts/cli.py`` file (e.g. ``venv/lib/python3.8/site-packages/invenio_accounts/cli.py``) before the
+next step.  Pass your email address and a password as an argument to the script:
 
 .. code-block:: console
 
@@ -175,18 +202,17 @@ Inspect the ``hepdata`` database from the command line as the ``hepdata`` user:
 
    $ psql hepdata -U hepdata -h localhost
    Password for user hepdata: hepdata
-   hepdata=> select publication_recid, inspire_id, last_updated from hepsubmission;
 
+   hepdata=> select publication_recid, inspire_id, last_updated from hepsubmission order by publication_recid;
     publication_recid | inspire_id |    last_updated
    -------------------+------------+---------------------
-                    1 | 1283842    | 2016-07-13 15:12:45
-                    2 | 1245023    | 2013-12-17 10:35:06
-                   57 | 1311487    | 2016-02-12 18:45:16
-   (3 rows)
+                    1 | 1245023    | 2013-12-17 10:35:06
+                    2 | 1283842    | 2014-08-11 17:25:55
+                    3 | 1311487    | 2016-02-12 18:45:16
+                   58 | 1299143    | 2014-08-05 17:55:54
+   (4 rows)
 
-   hepdata=> \q
-
-If you're having problems with access permissions to the database, a simple solution is to edit the
+If you're having problems with access permissions to the database (on Linux), a simple solution is to edit the
 PostgreSQL Client Authentication Configuration File (e.g. ``/var/lib/pgsql/12/data/pg_hba.conf``) to
 ``trust`` local and IPv4/IPv6 connections (instead of ``peer`` or ``ident``), then restart the PostgreSQL
 server (e.g. ``sudo systemctl restart postgresql-12``).
@@ -208,17 +234,19 @@ Now, switch Flask to the development environment and enable debug mode, then sta
 Running the tests
 -----------------
 
-Some of the tests run using `Selenium <https://selenium.dev>`_ on `Sauce Labs <https://saucelabs.com>`_. To run the tests
-locally you have several options:
+Some of the tests run using `Selenium <https://selenium.dev>`_ on `Sauce Labs <https://saucelabs.com>`_.
+Note that some of the end-to-end tests currently fail when run individually rather than all together.
+To run the tests locally you have several options:
 
-1. Run a Sauce Connect tunnel (recommended).
+1. Run a Sauce Connect tunnel (recommended).  This is used by GitHub Actions CI.
     1. Create a Sauce Labs account, or ask for the HEPData account details.
     2. Log into Sauce Labs, and go to the "Tunnels" page.
     3. Follow the instructions there to install Sauce Connect and start a tunnel.
+       Do not name the tunnel with the ``--tunnel-name`` argument.
     4. Create the variables ``SAUCE_USERNAME`` and ``SAUCE_ACCESS_KEY`` in your local environment (and add them to your
-       bash profile).
+       bash or zsh profile).
 
-2. Run Selenium locally using ChromeDriver.
+2. Run Selenium locally using ChromeDriver.  (Some tests are currently failing with this method.)
     1. Install `ChromeDriver <https://chromedriver.chromium.org>`_
        (matched to your version of `Chrome <https://www.google.com/chrome/>`_).
     2. Include ``RUN_SELENIUM_LOCALLY = True`` and ``RATELIMIT_ENABLED = False`` in your ``hepdata/config_local.py`` file.
@@ -231,8 +259,7 @@ Once you have set up Selenium or Sauce Labs, you can run the tests using:
 
 .. code-block:: console
 
-   (hepdata)$ cd ~/src/hepdata
-   (hepdata)$ ./run-tests.sh
+   (venv)$ ./run-tests.sh
 
 Docker for hepdata-converter-ws
 -------------------------------
@@ -258,7 +285,7 @@ Running via docker-compose
 The Dockerfile is used by GitHub Actions CI to build a Docker image and push to DockerHub ready for deployment in production
 on the Kubernetes cluster at CERN.
 
-For local development you can use the ``docker-compose.yml`` file to run the HEPData docker image and its required services.
+For local development you can use the ``docker-compose.yml`` file to run the HEPData Docker image and its required services.
 
 First, ensure you have installed `Docker <https://docs.docker.com/install/>`_ and `Docker Compose <https://docs.docker.com/compose/install/>`__.
 

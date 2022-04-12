@@ -27,8 +27,6 @@
 from builtins import str
 import multiprocessing
 import os
-import shutil
-import tempfile
 import time
 from datetime import datetime
 
@@ -37,7 +35,6 @@ from flask_security.utils import hash_password
 import pytest
 from invenio_accounts.models import User, Role
 from invenio_db.shared import metadata, SQLAlchemy as InvenioSQLAlchemy
-from invenio_search import current_search_client as es
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -49,7 +46,6 @@ from time import sleep
 from hepdata.config import CFG_TMPDIR, RUN_SELENIUM_LOCALLY
 from hepdata.ext.elasticsearch.api import reindex_all
 from hepdata.factory import create_app
-from hepdata.modules.records.importer.api import import_records
 from tests.conftest import get_identifiers, import_default_data
 
 
@@ -65,6 +61,7 @@ class SQLAlchemy(InvenioSQLAlchemy):
 
 db = SQLAlchemy(metadata=metadata)
 
+multiprocessing.set_start_method('fork')
 
 @pytest.fixture(scope='session')
 def app(request):
