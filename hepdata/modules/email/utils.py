@@ -107,7 +107,10 @@ def send_error_mail(exception):
 
 
 def connect():
-    smtp = SMTP(current_app.config['MAIL_SERVER'])
+    if current_app.config['SMTP_ENCRYPTION']:
+        smtp = SMTP(current_app.config['MAIL_SERVER'])
+    else:
+        smtp = SMTP()
     smtp.connect(current_app.config['MAIL_SERVER'], current_app.config['MAIL_PORT'])
     if not current_app.config['SMTP_NO_PASSWORD']:
         if current_app.config['SMTP_ENCRYPTION']:
