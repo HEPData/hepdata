@@ -29,14 +29,15 @@ Running services locally
 Prerequisites
 =============
 
-HEPData uses several services, which you will need to install before running HEPData:
+HEPData runs with Python 3.7, 3.8 or 3.9. It also uses several services, which you will need to install before running HEPData:
  * `PostgreSQL <http://www.postgresql.org/>`_ (version 12) database server
  * `Redis <http://redis.io/>`_ for caching
  * `Elasticsearch <https://www.elastic.co/products/elasticsearch>`_ (version 7) for indexing and information retrieval. See below for further instructions.
- * `Node.js <https://nodejs.org>`_ (version 14) JavaScript run-time environment and its package manager `npm <https://www.npmjs.com/>`_. (If you're using a Debian-based OS, please follow the `official installation instructions <https://github.com/nodesource/distributions/blob/master/README.md#debinstall>`_ to install NodeJS (which will also install npm), to avoid issues with ``node-sass``.)
+ * `Node.js <https://nodejs.org>`_ (version 14) JavaScript run-time environment and its package manager `npm <https://www.npmjs.com/>`_. [If you're using a Debian-based OS, please follow the `official installation instructions <https://github.com/nodesource/distributions/blob/master/README.md#debinstall>`_ to install NodeJS (which will also install npm), to avoid issues with ``node-sass``.]
 
 These services can be installed using the relevant package manager for your system,
 for example, using ``yum`` or ``apt-get`` for Linux or ``brew`` for macOS.
+
 
 Elasticsearch
 -------------
@@ -91,12 +92,12 @@ Installation
 
 Python
 ------
-The HEPData code is only compatible with Python 3 (not Python 2).  It has been tested with Python 3.6.
-It has also been tested with Python 3.8 on an M1 MacBook where some changes were required (documented below).
+The HEPData code is only compatible with Python 3.7, 3.8 or 3.9 (not Python 2 or other 3.x versions).  We recommend Python 3.9.
 
-First install all requirements in a `virtualenv <https://virtualenv.pypa.io/en/stable/installation.html>`_.
-(Use `virtualenvwrapper <https://virtualenvwrapper.readthedocs.io/en/latest/install.html>`_ if you prefer.)
-The instructions below use ``virtualenv`` directly (Python module `venv <https://docs.python.org/3/library/venv.html>`_)
+First install all requirements in a Python virtual environment.
+(Use `virtualenv <https://virtualenv.pypa.io/en/stable/installation.html>`_ or
+`virtualenvwrapper <https://virtualenvwrapper.readthedocs.io/en/latest/install.html>`_ if you prefer.)
+The instructions below use the Python module `venv <https://docs.python.org/3/library/venv.html>`_ directly
 with a target directory also called ``venv`` (change it if you prefer).
 
 .. code-block:: console
@@ -121,6 +122,10 @@ reinstall PyYAML to ensure it's built with LibYAML bindings, e.g. on an M1 MacBo
 
    (venv)$ LDFLAGS="-L$(brew --prefix)/lib" CFLAGS="-I$(brew --prefix)/include" pip install --global-option="--with-libyaml" --force pyyaml==5.4.1
 
+   (venv)$ export FLASK_ENV=development
+
+The last line sets an environment variable to switch Flask to run in development mode.
+You may want to set this automatically in your bash or zsh profile.
 
 Use of config_local.py
 ----------------------
@@ -144,6 +149,19 @@ use a local converter URL, and specify custom temporary and data directories:
 
 An example file ``hepdata/config_local.local.py`` is provided, which can be copied to ``hepdata/config_local.py``.
 
+With ``TESTING=True`` emails will be output to the terminal, but links are suppressed preventing some functionality
+such as clicking on confirmation links when a new user is created (see
+`HEPData/hepdata#493 <https://github.com/HEPData/hepdata/issues/493>`_).
+With ``TESTING=False`` you will need to configure an SMTP server to send emails such as
+`SMTP2GO <https://www.smtp2go.com>`_ that offers a free plan with a limit of 1000 emails/month.
+An alternative is to install `MailCatcher <https://mailcatcher.me/>`_ (e.g. ``brew install mailcatcher``) where you
+just need to add these lines to ``hepdata/config_local.py``:
+
+.. code-block:: python
+
+   MAIL_SERVER = '127.0.0.1'
+   MAIL_PORT = 1025
+
 JavaScript
 ----------
 
@@ -157,7 +175,7 @@ On an M1 MacBook, until an `issue with Invenio-Assets <https://github.com/inveni
 is addressed, you will need to replace
 ``"node-sass": "^4.12.0",`` with ``"sass": "^1.50.0",`` (or another `Dart Sass <https://sass-lang.com/dart-sass>`_
 version) in the ``package.json`` file of the ``invenio-assets`` installation
-(e.g. ``venv/lib/python3.8/site-packages/invenio_assets/assets/package.json``).
+(e.g. ``venv/lib/python3.9/site-packages/invenio_assets/assets/package.json``).
 
 Celery
 ------
@@ -166,7 +184,7 @@ Run Celery (-B runs celery beat):
 
 .. code-block:: console
 
-   (hepdata)$ celery worker -l info -E -B -A hepdata.celery -Q celery,priority,datacite
+   (hepdata)$ celery -A hepdata.celery worker -l info -E -B -Q celery,priority,datacite
 
 PostgreSQL
 ----------
@@ -186,11 +204,7 @@ executing the steps below.  On macOS you can install with ``brew install postgre
 Next, create the database and database tables.
 Also create a user and populate the database with some records.
 Make sure that Celery is running before proceeding further.
-Until an `issue <https://github.com/HEPData/hepdata/issues/461>`_ is addressed and ``Invenio-Accounts`` is upgraded
-to at least v1.4.9, you will need to manually
-`patch <https://github.com/inveniosoftware/invenio-accounts/commit/b91649244b11479d8fa817745141c0027001dff1>`_
-the ``invenio_accounts/cli.py`` file (e.g. ``venv/lib/python3.8/site-packages/invenio_accounts/cli.py``) before the
-next step.  Pass your email address and a password as an argument to the script:
+Pass your email address and a password as an argument to the script:
 
 .. code-block:: console
 
@@ -212,6 +226,9 @@ Inspect the ``hepdata`` database from the command line as the ``hepdata`` user:
                    58 | 1299143    | 2014-08-05 17:55:54
    (4 rows)
 
+   hepdata=> update accounts_user set confirmed_at=NOW() where id=1;
+   UPDATE 1
+
 If you're having problems with access permissions to the database (on Linux), a simple solution is to edit the
 PostgreSQL Client Authentication Configuration File (e.g. ``/var/lib/pgsql/12/data/pg_hba.conf``) to
 ``trust`` local and IPv4/IPv6 connections (instead of ``peer`` or ``ident``), then restart the PostgreSQL
@@ -220,11 +237,10 @@ server (e.g. ``sudo systemctl restart postgresql-12``).
 Run a local development server
 ------------------------------
 
-Now, switch Flask to the development environment and enable debug mode, then start the HEPData web application:
+Now start the HEPData web application in debug mode:
 
 .. code-block:: console
 
-   (hepdata)$ export FLASK_ENV=development
    (hepdata)$ hepdata run --debugger --reload
    (hepdata)$ firefox http://localhost:5000/
 
@@ -315,7 +331,7 @@ To run the tests:
 
 .. code-block:: console
 
-   $ docker-compose exec web bash -c "/usr/local/var/sc-4.5.4-linux/bin/sc -u $SAUCE_USERNAME -k $SAUCE_ACCESS_KEY -x https://eu-central-1.saucelabs.com/rest/v1 & ./run-tests.sh"
+   $ docker-compose exec web bash -c "/usr/local/var/sc-4.7.1-linux/bin/sc -u $SAUCE_USERNAME -k $SAUCE_ACCESS_KEY --region eu-central & ./run-tests.sh"
 
 
 .. _docker-compose-tips:

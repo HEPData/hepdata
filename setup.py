@@ -40,7 +40,7 @@ tests_require = [
     'pytest-mock>=3.1.0',
     'pytest-timeout>=1.4.2',
     'requests-mock>=1.8.0',
-    'selenium>=3.141.0',
+    'selenium>=4.0.0',
     'lxml'
 ]
 
@@ -184,5 +184,5 @@ setup(
         'Development Status :: Production',
     ],
     cmdclass={'test': PyTest},
-    python_requires='>=3.6',
+    python_requires='>=3.7, <3.10',
 )

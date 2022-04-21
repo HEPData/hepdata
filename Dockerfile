@@ -1,4 +1,19 @@
-FROM inspirehep/python:3.6
+FROM python:3.9
+
+WORKDIR /usr/src/app
+
+ENV PYTHONBUFFERED=0 \
+    SSL_CERT_FILE="/etc/ssl/certs/ca-certificates.crt" \
+    REQUESTS_CA_BUNDLE="/etc/ssl/certs/ca-certificates.crt"
+
+COPY certs/CERN_Root_Certification_Authority_2.pem /usr/local/share/ca-certificates/CERN_Root_Certification_Authority_2.crt
+COPY certs/CERN_Grid_Certification_Authority.crt /usr/local/share/ca-certificates/CERN_Grid_Certification_Authority.crt
+
+RUN update-ca-certificates \
+ && pip config set global.cert "${REQUESTS_CA_BUNDLE}"
+
+ENTRYPOINT [ "python3" ]
+CMD [ "--version" ]
 
 ARG APP_ENVIRONMENT
 
@@ -27,8 +42,8 @@ RUN hepdata collect -v  && \
 
 RUN bash -c "echo $APP_ENVIRONMENT"
 
-RUN bash -c "set -x; [[ ${APP_ENVIRONMENT:-prod} = local-web ]] && (cd /usr/local/var && wget https://saucelabs.com/downloads/sc-4.6.2-linux.tar.gz && \
-  tar -xvf sc-4.6.2-linux.tar.gz) || echo 'Not installing SC on prod or worker build'"
+RUN bash -c "set -x; [[ ${APP_ENVIRONMENT:-prod} = local-web ]] && (cd /usr/local/var && wget https://saucelabs.com/downloads/sc-4.7.1-linux.tar.gz && \
+  tar -xvf sc-4.7.1-linux.tar.gz) || echo 'Not installing SC on prod or worker build'"
 
 WORKDIR /code
 
