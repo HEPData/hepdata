@@ -47,7 +47,8 @@ from hepdata.modules.records.api import process_payload, process_zip_archive, \
     format_resource
 from hepdata.modules.records.importer.api import import_records
 from hepdata.modules.records.utils.submission import get_or_create_hepsubmission, process_submission_directory, do_finalise, unload_submission
-from hepdata.modules.records.utils.common import get_record_by_id, get_record_contents
+from hepdata.modules.records.utils.common import get_record_by_id, \
+    get_record_contents, is_histfactory, infer_file_type
 from hepdata.modules.records.utils.data_processing_utils import generate_table_structure
 from hepdata.modules.records.utils.data_files import get_data_path_for_record
 from hepdata.modules.records.utils.json_ld import get_json_ld
@@ -1013,3 +1014,32 @@ def test_create_breadcrumb_text():
     assert ctx == {
         'breadcrumb_text': 'Suzy Sheep et al.'
     }
+
+@pytest.mark.parametrize("filename,description,type,expected",
+    [
+        ("pyhf.tar.gz", "PyHF", None, True),
+        ("pyhf.tgz", "File containing likelihoods", None, True),
+        ("pyhf.zip", "HistFactory JSON file", None, True),
+        ("test.zip", "Some sort of file", "HistFactory", True),
+        ("test.zip", "Some sort of file", "histfactory", True),
+        ("pyhf.tar.gz", "A file", None, False),
+        ("pyhf.json", "HistFactory JSON file", None, False),
+        ("test.zip", "Some sort of file", "json", False),
+    ]
+)
+def test_is_histfactory(filename, description, type, expected):
+    assert is_histfactory(filename, description, type) == expected
+
+
+@pytest.mark.parametrize("filename,description,type,expected",
+    [
+        ("somesortofresource", "", None, "resource"),
+        ("https://github.com/HEPData/hepdata", "", None, "github"),
+        ("/a/b/c.sh", "", None, "Bash Shell"),
+        ("a/b/c.d", "", None, "d"),
+        ("pyhf.tgz", "File containing likelihoods", None, "HistFactory"),
+        ("test.zip", "Some sort of file", "HistFactory", "HistFactory")
+    ]
+)
+def test_infer_file_type(filename, description, type, expected):
+    assert infer_file_type(filename, description, type) == expected
