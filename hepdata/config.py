@@ -319,6 +319,8 @@ ANALYSES_ENDPOINTS = {
     #'madanalysis': {},
 }
 
+HISTFACTORY_FILE_TYPE = 'HistFactory'
+
 ADMIN_EMAIL = 'info@hepdata.net'
 SUBMISSION_FILE_NAME_PATTERN = 'HEPData-{}-v{}-yaml.zip'
 

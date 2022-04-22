@@ -28,7 +28,7 @@ from invenio_records.api import Record
 import os
 from sqlalchemy.orm.exc import NoResultFound
 
-from hepdata.config import CFG_PUB_TYPE
+from hepdata.config import CFG_PUB_TYPE, HISTFACTORY_FILE_TYPE
 from hepdata.ext.elasticsearch.api import get_record
 from hepdata.modules.submission.models import HEPSubmission, License
 
@@ -72,7 +72,6 @@ URL_PATTERNS = [
 
 ALLOWED_EXTENSIONS = ('.zip', '.tar', '.tar.gz', '.tgz', '.oldhepdata', '.yaml', '.yaml.gz')
 
-HISTFACTORY_FILE_TYPE = 'HistFactory'
 HISTFACTORY_EXTENSIONS = ALLOWED_EXTENSIONS[:4]
 HISTFACTORY_TERMS = ("histfactory json", "pyhf", "likelihoods")
 
