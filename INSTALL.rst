@@ -29,14 +29,14 @@ Running services locally
 Prerequisites
 =============
 
-HEPData runs with Python 3.7, 3.8 or 3.9. It also uses several services, which you will need to install before running HEPData:
+HEPData runs with Python 3.7, 3.8 or 3.9. It also uses several services, which you will need to install before running HEPData.
+These services can be installed using the relevant package manager for your system,
+for example, using ``yum`` or ``apt-get`` for Linux or ``brew`` for macOS:
  * `PostgreSQL <http://www.postgresql.org/>`_ (version 12) database server
  * `Redis <http://redis.io/>`_ for caching
  * `Elasticsearch <https://www.elastic.co/products/elasticsearch>`_ (version 7) for indexing and information retrieval. See below for further instructions.
  * `Node.js <https://nodejs.org>`_ (version 14) JavaScript run-time environment and its package manager `npm <https://www.npmjs.com/>`_. [If you're using a Debian-based OS, please follow the `official installation instructions <https://github.com/nodesource/distributions/blob/master/README.md#debinstall>`_ to install NodeJS (which will also install npm), to avoid issues with ``node-sass``.]
 
-These services can be installed using the relevant package manager for your system,
-for example, using ``yum`` or ``apt-get`` for Linux or ``brew`` for macOS.
 
 
 Elasticsearch
