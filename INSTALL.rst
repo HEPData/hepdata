@@ -279,6 +279,19 @@ Once you have set up Selenium or Sauce Labs, you can run the tests using:
 
    (venv)$ ./run-tests.sh
 
+
+Building the docs
+-----------------
+
+If any changes were to be made to the installation docs, to check docs can be locally built use:
+
+.. code-block:: console
+
+   (venv)$ cd docs
+   (venv)$ make html SPHINXOPTS="-W"
+   (venv)$ open _build/html/index.html
+
+
 Docker for hepdata-converter-ws
 -------------------------------
 
