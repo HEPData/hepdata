@@ -247,13 +247,13 @@ def reserve_doi_for_hepsubmission(hepsubmission, update=False):
         version += 1
 
     if hepsubmission.doi is None:
-        create_doi(base_doi)
+        get_or_create_doi(base_doi)
         hepsubmission.doi = base_doi
         db.session.add(hepsubmission)
         db.session.commit()
 
     if not update:
-        create_doi(base_doi + ".v{0}".format(version))
+        get_or_create_doi(base_doi + ".v{0}".format(version))
 
 
 def reserve_dois_for_data_submissions(*args, **kwargs):
@@ -281,7 +281,7 @@ def reserve_dois_for_data_submissions(*args, **kwargs):
             current_app.config.get('DOI_PREFIX'), data_submission.publication_recid, version, (index + 1))
 
         if data_submission.doi is None:
-            create_doi(doi_value)
+            get_or_create_doi(doi_value)
             data_submission.doi = doi_value
             db.session.add(data_submission)
 
@@ -307,14 +307,14 @@ def reserve_dois_for_resources(publication_recid, version, resources=None):
             current_app.config.get('DOI_PREFIX'), publication_recid, version, (index + 1))
 
         if resource.doi is None:
-            create_doi(doi_value)
+            get_or_create_doi(doi_value)
             resource.doi = doi_value
             db.session.add(resource)
 
     db.session.commit()
 
 
-def create_doi(doi):
+def get_or_create_doi(doi):
     """
     :param doi: Creates a DOI using the data provider. If it already exists, we return back the existing provider.
     :return: DataCiteProvider
@@ -324,11 +324,16 @@ def create_doi(doi):
         return None
 
     try:
-        return DataCiteProvider.create(doi)
-    except DataCiteUnauthorizedError:
-        log.error('Unable to mint DOI. No authorisation credentials provided.')
-    except Exception:
+        # Check if DOI already exists and return
         return DataCiteProvider.get(doi, 'doi')
+    except PIDDoesNotExistError:
+        # DOI does not exist so create it
+        try:
+            return DataCiteProvider.create(doi)
+        except Exception as e:
+            log.error(f'Unable to mint DOI: {str(e)}', exc_info=True)
+    except Exception as e:
+        log.error(f'Unable to fetch DOI: {str(e)}', exc_info=True)
 
 
 def register_doi(doi, url, xml, uuid):
@@ -347,10 +352,7 @@ def register_doi(doi, url, xml, uuid):
     log.info('{0} - {1}'.format(doi, url))
 
     print('Minting doi {}'.format(doi))
-    try:
-        provider = DataCiteProvider.get(doi, 'doi')
-    except PIDDoesNotExistError:
-        provider = create_doi(doi)
+    provider = get_or_create_doi(doi)
 
     pidstore_obj = PersistentIdentifier.query.filter_by(pid_value=doi).first()
     if pidstore_obj:
