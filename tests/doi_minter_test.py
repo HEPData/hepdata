@@ -12,7 +12,7 @@ import pytest
 
 from hepdata.modules.records.importer.api import import_records
 from hepdata.modules.records.utils.common import get_record_by_id
-from hepdata.modules.records.utils.doi_minter import create_doi, register_doi, \
+from hepdata.modules.records.utils.doi_minter import get_or_create_doi, register_doi, \
     generate_doi_for_table, generate_dois_for_submission, \
     reserve_dois_for_data_submissions, reserve_doi_for_hepsubmission, \
     _get_submission_file_resources
@@ -41,29 +41,45 @@ def mock_data_cite_provider(app, mocker, load_default_data):
         app.config['NO_DOI_MINTING'] = True
 
 
-def test_create_doi(mock_data_cite_provider, caplog):
+def test_get_or_create_doi(mock_data_cite_provider, caplog):
     caplog.set_level(logging.ERROR)
 
-    # Valid call should just be passed to DataCiteProvider
-    create_doi('my.test.doi')
+    # Valid call should just be passed to DataCiteProvider.
+    # With no exceptions it assumes PID already exists so just calls get, not create
+    get_or_create_doi('my.test.doi')
+    mock_data_cite_provider.get.assert_called_once_with('my.test.doi', 'doi')
+    mock_data_cite_provider.create.assert_not_called()
+
+    # Mock a PIDDoesNotExistError so that create is called
+    mock_data_cite_provider.reset_mock()
+    mock_data_cite_provider.get.side_effect = PIDDoesNotExistError('doi', None)
+    get_or_create_doi('my.test.doi')
+    mock_data_cite_provider.get.assert_called_once_with('my.test.doi', 'doi')
     mock_data_cite_provider.create.assert_called_once_with('my.test.doi')
 
-    # Unauthorised exception should log error
+    # Exception on get or create should just log error
+    caplog.clear()
     mock_data_cite_provider.reset_mock()
-    mock_data_cite_provider.create.side_effect = DataCiteUnauthorizedError()
-    create_doi('my.test.doi')
+    mock_data_cite_provider.get.side_effect = Exception("Something went wrong")
+    get_or_create_doi('my.test.doi')
+    mock_data_cite_provider.get.assert_called_once_with('my.test.doi', 'doi')
+    mock_data_cite_provider.create.assert_not_called()
     assert len(caplog.records) == 1
     assert caplog.records[0].levelname == "ERROR"
     assert caplog.records[0].msg == \
-        "Unable to mint DOI. No authorisation credentials provided."
+        "Unable to fetch DOI: Something went wrong"
 
-    # Any other exception should call get instead
     caplog.clear()
     mock_data_cite_provider.reset_mock()
-    mock_data_cite_provider.create.side_effect = Exception()
-    create_doi('my.test.doi')
-    mock_data_cite_provider.create.assert_called_once_with('my.test.doi')
+    mock_data_cite_provider.get.side_effect = PIDDoesNotExistError('doi', None)
+    mock_data_cite_provider.create.side_effect = Exception("Something else went wrong")
+    get_or_create_doi('my.test.doi')
     mock_data_cite_provider.get.assert_called_once_with('my.test.doi', 'doi')
+    mock_data_cite_provider.create.assert_called_once_with('my.test.doi')
+    assert len(caplog.records) == 1
+    assert caplog.records[0].levelname == "ERROR"
+    assert caplog.records[0].msg == \
+        "Unable to mint DOI: Something else went wrong"
 
 
 def test_register_doi(mock_data_cite_provider, caplog):
@@ -152,6 +168,9 @@ def test_reserve_doi_for_hepsubmission(mock_data_cite_provider, identifiers):
 
 
 def test_reserve_dois_for_data_submissions(mock_data_cite_provider, identifiers):
+    # Set data provider get to throw error so we are always creating new PIDs
+    mock_data_cite_provider.get.side_effect = PIDDoesNotExistError('doi', None)
+
     # Unset DOIs on data submissions
     data_submissions = DataSubmission.query.filter_by(
         publication_inspire_id=identifiers[0]['inspire_id'],
@@ -308,6 +327,10 @@ def test_generate_dois_for_submission(mock_data_cite_provider, identifiers):
     db.session.add(data_submission)
     db.session.commit()
 
+    # Set data provider get to throw error so we are always creating new PIDs
+    mock_data_cite_provider.reset_mock()
+    mock_data_cite_provider.get.side_effect = PIDDoesNotExistError('doi', None)
+
     # Generate DOIs again - should work and call `create` for record, v1, table
     generate_dois_for_submission(recid, recid)
     mock_data_cite_provider.create.assert_has_calls([
@@ -315,9 +338,9 @@ def test_generate_dois_for_submission(mock_data_cite_provider, identifiers):
         call('10.17182/hepdata.106.v1'),
         call('10.17182/hepdata.106.v1/t1')
     ])
-    # Should also have same number of get and register calls
-    assert mock_data_cite_provider.get.call_count == 3
-    assert mock_data_cite_provider.get().register.call_count == 3
+    # Should have twice as many get calls as register calls (because get is called by create)
+    assert mock_data_cite_provider.get.call_count == 6
+    assert mock_data_cite_provider.create().register.call_count == 3
 
 
 def test_xml_validates(app, identifiers):
