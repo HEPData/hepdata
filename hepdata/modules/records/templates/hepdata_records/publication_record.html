@@ -148,7 +148,7 @@
                             <ul>
                               {% for analysis in ctx.record.analyses %}
                                 <li><div class="analysis"><a href="{{ analysis.analysis }}" target="_blank"><span
-                                  class="fa fa-line-chart"></span> {{ analysis.type }} Analysis</a></div></li>
+                                  class="fa fa-line-chart"></span> {{ analysis.type }}{% if analysis.type != config.HISTFACTORY_FILE_TYPE %} Analysis{% endif %}</a></div></li>
                               {% endfor %}
                             </ul>
                         </div>
