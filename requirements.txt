@@ -34,6 +34,7 @@ jsmin==3.0.0
 lxml==4.6.5
 MarkupSafe==2.0.1
 msgpack==0.6.2
+pluggy==0.13.1    # Fixed version to make sure it works with jsonresolve and pytest
 psycopg2-binary==2.9.3
 python-dateutil==2.8.1
 pyyaml==5.4.1

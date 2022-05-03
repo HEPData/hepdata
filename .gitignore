@@ -73,3 +73,6 @@ venv/
 
 # Celery Beat
 celerybeat-schedule.db
+
+# Ignore Ds_Store for finder
+.DS_Store
