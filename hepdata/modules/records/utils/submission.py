@@ -317,7 +317,7 @@ def parse_additional_resources(basepath, recid, yaml_document):
     for reference in yaml_document['additional_resources']:
         resource_location = reference['location']
 
-        file_type = infer_file_type(reference['location'], reference['description'], reference.get('file_type'))
+        file_type = infer_file_type(reference['location'], reference['description'], reference.get('type'))
         contains_pattern, pattern = contains_accepted_url(reference['location'])
         if ('http' in resource_location.lower() and 'hepdata' not in resource_location) or contains_pattern:
             if pattern:

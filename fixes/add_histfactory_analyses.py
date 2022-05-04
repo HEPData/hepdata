@@ -27,7 +27,7 @@ def add_histfactory_analyses(batch_size, synchronous=False):
 
     count = 0
     total = len(all_ids)
-    while count <= total:
+    while count < total:
         batch_ids = [i[0] for i in all_ids[count:min(count + batch_size, total)]]
         if synchronous:
             _add_histfactory_analyses_batch(batch_ids)
@@ -54,9 +54,9 @@ def _add_histfactory_analyses_batch(ids):
                         db.session.add(resource)
                         db.session.commit()
 
-                        # Check if latest submission - reindex if so
-                        latest_submission = get_latest_hepsubmission(publication_recid=hepsubmission.publication_recid)
-                        if latest_submission.version == hepsubmission.version:
+                        # Check if this is the latest finished submission - reindex if so
+                        latest_submission = get_latest_hepsubmission(publication_recid=hepsubmission.publication_recid, overall_status='finished')
+                        if latest_submission and latest_submission.version == hepsubmission.version:
                             recids_to_reindex.append(hepsubmission.id)
 
     if recids_to_reindex:
