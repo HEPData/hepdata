@@ -166,6 +166,11 @@ def test_query_parser():
 
     assert (parsed_query_string5 == '"P P --> LQ LQ X"')
 
+    _test_query6 = 'analysis:rivet'
+    parsed_query_string6 = HEPDataQueryParser.parse_query(_test_query6)
+
+    assert (parsed_query_string6 == 'analyses.type:rivet')
+
 
 
 def test_search(app, load_default_data, identifiers):

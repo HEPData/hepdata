@@ -29,12 +29,13 @@ import time
 from time import sleep
 
 from invenio_db import db
+import pytest
 
 from hepdata.ext.elasticsearch.api import get_records_matching_field
 from hepdata.modules.permissions.models import SubmissionParticipant
 from hepdata.modules.records.api import format_submission, process_saved_file, create_new_version
 from hepdata.modules.records.utils.common import infer_file_type, contains_accepted_url, allowed_file, record_exists, \
-    get_record_contents
+    get_record_contents, is_histfactory
 from hepdata.modules.records.utils.data_files import get_data_path_for_record
 from hepdata.modules.records.utils.submission import process_submission_directory, do_finalise, unload_submission
 from hepdata.modules.submission.api import get_latest_hepsubmission, get_submission_participants_for_record
@@ -76,20 +77,39 @@ def test_url_pattern():
         assert (url_group["exp_result"] == url_type)
 
 
-def test_file_extension_pattern():
-    test_files = [
-        {"file": "test.py", "exp_result": "Python"},
-        {"file": "test.cpp", "exp_result": "C++"},
-        {"file": "test.c", "exp_result": "C"},
-        {"file": "test.sh", "exp_result": "Bash Shell"},
-        {"file": "test.root", "exp_result": "ROOT"},
-        {"file": "test.docx", "exp_result": "docx"},
-        {"file": "test", "exp_result": "resource"}
+@pytest.mark.parametrize("filename,description,type,expected",
+    [
+        ("pyhf.tar.gz", "PyHF", None, True),
+        ("pyhf.tgz", "File containing likelihoods", None, True),
+        ("pyhf.zip", "HistFactory JSON file", None, True),
+        ("test.zip", "Some sort of file", "HistFactory", True),
+        ("test.zip", "Some sort of file", "histfactory", True),
+        ("pyhf.tar.gz", "A file", None, False),
+        ("pyhf.json", "HistFactory JSON file", None, False),
+        ("test.zip", "Some sort of file", "json", False),
     ]
+)
+def test_is_histfactory(filename, description, type, expected):
+    assert is_histfactory(filename, description, type) == expected
 
-    for file_group in test_files:
-        extension = infer_file_type(file_group["file"])
-        assert (file_group["exp_result"] == extension)
+
+@pytest.mark.parametrize("filename,description,type,expected",
+    [
+        ("somesortofresource", "", None, "resource"),
+        ("https://github.com/HEPData/hepdata", "", None, "github"),
+        ("test.py", "", None, "Python"),
+        ("test.cpp", "", None, "C++"),
+        ("test.c", "", None, "C"),
+        ("test.sh", "", None, "Bash Shell"),
+        ("test.root", "", None, "ROOT"),
+        ("test.docx", "", None, "docx"),
+        ("test", "", None, "resource"),
+        ("pyhf.tgz", "File containing likelihoods", None, "HistFactory"),
+        ("test.zip", "Some sort of file", "HistFactory", "HistFactory")
+    ]
+)
+def test_infer_file_type(filename, description, type, expected):
+    assert infer_file_type(filename, description, type) == expected
 
 
 def test_get_submission_participants(app, load_default_data, identifiers):
