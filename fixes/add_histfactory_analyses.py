@@ -13,6 +13,7 @@ from hepdata.ext.elasticsearch.api import reindex_batch
 from hepdata.modules.records.utils.common import is_histfactory
 from hepdata.modules.submission.api import get_latest_hepsubmission
 from hepdata.modules.submission.models import HEPSubmission
+from hepdata.modules.records.utils.doi_minter import create_resource_doi
 
 logging.basicConfig()
 log = logging.getLogger(__name__)
@@ -58,6 +59,10 @@ def _add_histfactory_analyses_batch(ids):
                         latest_submission = get_latest_hepsubmission(publication_recid=hepsubmission.publication_recid, overall_status='finished')
                         if latest_submission and latest_submission.version == hepsubmission.version:
                             recids_to_reindex.append(hepsubmission.id)
+
+                        if hepsubmission.overall_status == 'finished':
+                            site_url = current_app.config.get('SITE_URL', 'https://www.hepdata.net')
+                            create_resource_doi.delay(hepsubmission.id, resource.id, site_url)
 
     if recids_to_reindex:
         log.info(f"Reindexing records: {recids_to_reindex}")
