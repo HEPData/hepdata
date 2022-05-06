@@ -29,7 +29,7 @@ from collections import defaultdict
 from dateutil.parser import parse
 from flask import current_app
 
-from hepdata.config import CFG_PUB_TYPE, CFG_DATA_TYPE
+from hepdata.config import CFG_PUB_TYPE, CFG_DATA_TYPE, HISTFACTORY_FILE_TYPE, SITE_URL
 from hepdata.ext.elasticsearch.config.record_mapping import mapping as es_mapping
 from hepdata.modules.permissions.models import SubmissionParticipant
 from hepdata.modules.submission.api import get_latest_hepsubmission
@@ -102,6 +102,9 @@ def add_analyses(doc):
         for reference in latest_submission.resources:
             if reference.file_type in current_app.config['ANALYSES_ENDPOINTS']:
                 doc["analyses"].append({'type': reference.file_type, 'analysis': reference.file_location})
+            elif reference.file_type == HISTFACTORY_FILE_TYPE:
+                landing_page_url = f"{SITE_URL}/record/resource/{reference.id}?landing_page=True"
+                doc["analyses"].append({'type': reference.file_type, 'analysis': landing_page_url})
 
 
 def add_data_keywords(doc):

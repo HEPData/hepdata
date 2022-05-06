@@ -28,7 +28,7 @@ from invenio_records.api import Record
 import os
 from sqlalchemy.orm.exc import NoResultFound
 
-from hepdata.config import CFG_PUB_TYPE
+from hepdata.config import CFG_PUB_TYPE, HISTFACTORY_FILE_TYPE
 from hepdata.ext.elasticsearch.api import get_record
 from hepdata.modules.submission.models import HEPSubmission, License
 
@@ -72,6 +72,9 @@ URL_PATTERNS = [
 
 ALLOWED_EXTENSIONS = ('.zip', '.tar', '.tar.gz', '.tgz', '.oldhepdata', '.yaml', '.yaml.gz')
 
+HISTFACTORY_EXTENSIONS = ALLOWED_EXTENSIONS[:4]
+HISTFACTORY_TERMS = ("histfactory", "pyhf", "likelihoods")
+
 
 def contains_accepted_url(file):
     for pattern in URL_PATTERNS:
@@ -91,12 +94,27 @@ def is_image(filename):
     return False
 
 
-def infer_file_type(file):
+def is_histfactory(filename, description, type=None):
+    if type and type.lower() == HISTFACTORY_FILE_TYPE.lower():
+        return True
+
+    if filename.endswith(HISTFACTORY_EXTENSIONS):
+        description_lc = description.lower()
+        for term in HISTFACTORY_TERMS:
+            if term in description_lc:
+                return True
+
+    return False
+
+
+def infer_file_type(file, description, type=None):
     if "." in file:
         result, pattern = contains_accepted_url(file)
         if result:
             return pattern
         else:
+            if is_histfactory(file, description, type):
+                return HISTFACTORY_FILE_TYPE
             extension = file.rsplit(".", 1)[1]
             if extension in FILE_TYPES:
                 return FILE_TYPES[extension]

@@ -50,7 +50,8 @@ class HEPDataQueryParser(object):
                 "observables": "data_keywords.observables",
                 "cmenergies": "data_keywords.cmenergies",
                 "phrases": "data_keywords.phrases",
-                "reactions": "data_keywords.reactions"
+                "reactions": "data_keywords.reactions",
+                "analysis": "analyses.type"
             }
         }
 

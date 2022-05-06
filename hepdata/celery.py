@@ -23,11 +23,38 @@
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
 """HEPData celery application object."""
+import logging
+import os
 
+from celery import shared_task
 from flask_celeryext import create_celery_app
 
 from .factory import create_app
 
 from .config import LOGGING_SENTRY_CELERY
 
+logging.basicConfig()
+log = logging.getLogger(__name__)
+
 celery = create_celery_app(create_app(LOGGING_SENTRY_CELERY=LOGGING_SENTRY_CELERY))
+
+PLUGIN_FOLDER = os.path.join(os.path.dirname(__file__), '..', 'fixes')
+def _absolutepath(filename):
+    """ Return the absolute path to the filename"""
+    return os.path.join(PLUGIN_FOLDER, filename)
+
+@shared_task
+def dynamic_tasks(funcname, module_name, *args, **kwargs):
+    """Task to allow functions to be called dynamically from ../fixes directory"""
+    try:
+        fixes_path = os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), 'fixes')
+        filename = os.path.join(fixes_path, module_name + '.py')
+
+        ns = {}
+        with open(os.path.join(filename)) as f:
+            code = compile(f.read(), filename, 'exec')
+            eval(code, ns, ns)
+            log.info(f"Executing function {funcname} from module {module_name}")
+            return ns[funcname](*args, **kwargs)
+    except IOError:
+        log.error(f"Error loading dynamic function {funcname} from module {module_name}")
