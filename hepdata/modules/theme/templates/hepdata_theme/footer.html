@@ -53,7 +53,9 @@
                     Durham</a>.
             </p>
             {% block version %}
+            {% if ctx and ctx.version %}
                 <p class="sw-version">HEPData version: {{ ctx.version }}</p>
+            {% endif %}
             {% endblock %}
         </div>
     </div>
