@@ -205,6 +205,11 @@ def test_search(app, load_default_data, identifiers):
     assert(results['results'][0]['inspire_id'] == identifiers[1]['inspire_id'])
     assert(len(results['results'][0]['data']) == 0)
 
+    # Test a complex querystring that maps across main doc and nested authors field
+    results = es_api.search("title:asymmetry AND authors.full_name:Orbaker", index=index)
+    assert(results['total'] == 1)
+    assert(results['results'][0]['inspire_id'] == identifiers[0]['inspire_id'])
+
     # Test the authors search (fuzzy)
     results = es_api.search_authors('Bal')
     expected = [

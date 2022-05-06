@@ -117,8 +117,6 @@ def search(query,
     if query:
         fuzzy_query = QueryString(query=query, fuzziness='AUTO')
         search.query = fuzzy_query | \
-                       Q('nested', query=fuzzy_query, path='authors') | \
-                       Q('nested', query=fuzzy_query, path='analyses') | \
                        Q('has_child', type="child_datatable", query=fuzzy_query)
 
     search = search.filter("term", doc_type=CFG_PUB_TYPE)
