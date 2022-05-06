@@ -150,14 +150,19 @@ def utils():
 @click.option('--recreate', '-rc', type=bool, default=False,
               help='Whether or not to recreate the index mappings as well. '
                    'This DELETES the entire index first.')
+@click.option('--update-mapping', '-u', type=bool, default=False,
+              help='Whether or not to update the index mapping as well.')
 @click.option('--start', '-s', type=int, default=-1,
               help='Starting recid for the index operation.')
 @click.option('--end', '-e', type=int, default=-1,
               help='End recid for the index operation.')
 @click.option('--batch', '-b', type=int, default=5,
               help='Number of submissions to index at a time.')
-def reindex(recreate, start, end, batch):
-    reindex_all(recreate=recreate, start=start, end=end, batch=batch)
+def reindex(recreate, update_mapping, start, end, batch):
+    try:
+        reindex_all(recreate=recreate, update_mapping=update_mapping, start=start, end=end, batch=batch)
+    except ValueError as e:
+        print(f'ERROR: {e}')
 
 
 @utils.command()
