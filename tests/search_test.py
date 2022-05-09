@@ -16,7 +16,7 @@
 # along with HEPData; if not, write to the Free Software Foundation, Inc.,
 # 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
 from elasticsearch.exceptions import NotFoundError
-from elasticsearch_dsl import Search
+from elasticsearch_dsl import Search, Index
 import datetime
 import pytest
 from invenio_db import db
@@ -473,6 +473,9 @@ def test_reindex_all(app, load_default_data, identifiers, mocker):
     assert(results['total'] == 1)
     assert(results['results'][0]['data'] == [])
 
+    # Reindex, requesting update of mapping
+    es_api.reindex_all(index=index, recreate=False, update_mapping=True, synchronous=True)
+
     # Test other params using mocking
     m = mocker.patch('hepdata.ext.elasticsearch.api.reindex_batch')
 
@@ -563,6 +566,43 @@ def test_reindex_batch(app, load_default_data, mocker):
     es_api.reindex_batch([2], index)
     mock_index_record_ids.assert_called_once_with(list(range(16, 57)), index=index)
     mock_push_data_keywords.assert_called_once_with(pub_ids=[16])
+
+
+def test_update_record_mapping(app, mocker):
+    index_name = 'mock_index'
+    index = Index(using=es, name=index_name)
+    index.delete(ignore=404)
+    index.create()
+
+    mapping = index.get_mapping()
+    assert mapping == {'mock_index': {'mappings': {}}}
+
+    # Update record mapping with the real one - should succeed as it's adding fields
+    es_api.update_record_mapping(index=index_name)
+
+    # mapping should be as defined in record_mapping
+    mapping = index.get_mapping(using=es)
+    from hepdata.ext.elasticsearch.config.record_mapping import mapping as real_mapping
+    assert 'properties' in mapping['mock_index']['mappings']
+    for k in real_mapping.keys():
+        assert k in mapping['mock_index']['mappings']['properties']
+
+    # Recreate index with a mapping that's incompatible with the real one
+    index.delete(ignore=404)
+    index.create()
+    mapping = {
+        "doc_type": {
+            "type": "date"
+        }
+    }
+    index.put_mapping(using=es, body={ "properties": mapping })
+
+    # Update record mapping with the real one - should give exception
+    with pytest.raises(ValueError) as excinfo:
+        es_api.update_record_mapping(index=index_name)
+
+    assert str(excinfo.value) == "Unable to update record mapping: mapper [doc_type] cannot be changed from type [date] to [keyword]\n" \
+        "You may need to recreate the index to update the mapping."
 
 
 def test_get_record(app, load_default_data, identifiers):
