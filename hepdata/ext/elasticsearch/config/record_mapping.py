@@ -41,7 +41,8 @@ mapping = {
                     }
                 }
             }
-        }
+        },
+        "include_in_parent": "true"
     },
 
     "summary_authors": {
@@ -95,7 +96,8 @@ mapping = {
             "analysis": {
                 "type": "text"
             }
-        }
+        },
+        "include_in_parent": "true"
     },
 
     "dissertation": {

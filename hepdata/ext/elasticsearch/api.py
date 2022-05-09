@@ -117,8 +117,6 @@ def search(query,
     if query:
         fuzzy_query = QueryString(query=query, fuzziness='AUTO')
         search.query = fuzzy_query | \
-                       Q('nested', query=fuzzy_query, path='authors') | \
-                       Q('nested', query=fuzzy_query, path='analyses') | \
                        Q('has_child', type="child_datatable", query=fuzzy_query)
 
     search = search.filter("term", doc_type=CFG_PUB_TYPE)
@@ -181,11 +179,13 @@ def search_authors(name, size=20, author_index=None):
 
 @default_index
 @author_index
-def reindex_all(index=None, author_index=None, recreate=False, batch=5, start=-1, end=-1, synchronous=False):
+def reindex_all(index=None, author_index=None, recreate=False, update_mapping=False, batch=5, start=-1, end=-1, synchronous=False):
     """ Recreate the index and add all the records from the db to ES. """
     if recreate:
         recreate_index(index=index)
         recreate_index(index=author_index)
+    elif update_mapping:
+        update_record_mapping(index=index)
 
     # Get all finished HEPSubmission ids with max version numbers
     # by doing a left outer join of hepsubmission with itself
@@ -499,6 +499,22 @@ def recreate_index(index=None):
 
     es.indices.delete(index=index, ignore=404)
     es.indices.create(index=index, body=body)
+
+
+@default_index
+def update_record_mapping(index=None):
+    """ Updates the default record mapping for the given index
+
+    :param index: [string] name of the index. If None a default is used
+    """
+    from .config.record_mapping import mapping
+
+    body = { "properties": mapping }
+    try:
+        es.indices.put_mapping(index=index, body=body)
+    except TransportError as e:
+        msg = e.info.get('error',{}).get('root_cause',[{}])[0].get('reason')
+        raise ValueError(f"Unable to update record mapping: {msg}\nYou may need to recreate the index to update the mapping.")
 
 
 @default_index
