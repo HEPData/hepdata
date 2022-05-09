@@ -601,8 +601,9 @@ def test_update_record_mapping(app, mocker):
     with pytest.raises(ValueError) as excinfo:
         es_api.update_record_mapping(index=index_name)
 
-    assert str(excinfo.value) == "Unable to update record mapping: mapper [doc_type] cannot be changed from type [date] to [keyword]\n" \
-        "You may need to recreate the index to update the mapping."
+    msg = str(excinfo.value)
+    assert msg.startswith("Unable to update record mapping: mapper [doc_type]")
+    assert msg.endswith("You may need to recreate the index to update the mapping.")
 
 
 def test_get_record(app, load_default_data, identifiers):
