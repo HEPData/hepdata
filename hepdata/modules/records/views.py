@@ -436,8 +436,9 @@ def set_data_review_status():
 
     if user_allowed_to_perform_action(recid):
         if all_tables:
-            data_ids = db.session.query(DataSubmission.id) \
+            data_id_rows = db.session.query(DataSubmission.id) \
                 .filter_by(publication_recid=recid, version=version).distinct()
+            data_ids = [i[0] for i in data_id_rows]
         else:
             data_ids = [int(request.form['data_recid'])]
 
