@@ -95,7 +95,7 @@ def add_analyses(doc):
     :param doc:
     :return:
     """
-    latest_submission = get_latest_hepsubmission(publication_recid=doc['recid'])
+    latest_submission = get_latest_hepsubmission(publication_recid=doc['recid'], overall_status='finished')
 
     if latest_submission:
         doc["analyses"] = []
