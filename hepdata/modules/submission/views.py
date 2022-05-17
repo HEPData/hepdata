@@ -17,7 +17,7 @@
 # 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
 #
 
-from flask import Blueprint, render_template, request, jsonify
+from flask import Blueprint, render_template, request, jsonify, abort
 from flask_login import login_required, current_user
 from invenio_db import db
 
@@ -28,6 +28,7 @@ from hepdata.modules.permissions.models import SubmissionParticipant
 from hepdata.modules.records.utils.submission import \
     get_or_create_hepsubmission
 from hepdata.modules.records.utils.workflow import create_record
+from hepdata.utils.users import user_is_admin_or_coordinator
 
 blueprint = Blueprint(
     'submission',
@@ -41,7 +42,10 @@ blueprint = Blueprint(
 @blueprint.route('', methods=['GET'])
 @login_required
 def submit_ui():
-    return render_template('hepdata_submission/submit.html')
+    if user_is_admin_or_coordinator(current_user):
+        return render_template('hepdata_submission/submit.html')
+    else:
+        abort(403)
 
 
 @blueprint.route('', methods=['POST'])
