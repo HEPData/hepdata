@@ -225,7 +225,7 @@ def do_unload(records_to_unload):
 @with_appcontext
 def find_and_add_record_analyses():
     """Finds analyses such as Rivet and adds them to records."""
-    update_analyses.delay()
+    update_analyses()
 
 
 @utils.command()
