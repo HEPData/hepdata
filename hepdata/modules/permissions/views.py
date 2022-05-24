@@ -37,7 +37,7 @@ from flask import Blueprint, jsonify, url_for, redirect, request, abort, render_
 from hepdata.ext.elasticsearch.admin_view.api import AdminIndexer
 from hepdata.modules.dashboard.api import get_dashboard_current_user
 from hepdata.modules.email.api import send_coordinator_request_mail, send_coordinator_approved_email, \
-    send_cookie_email, send_reserve_email
+    send_cookie_email, send_reserve_email, send_reminder_email
 from hepdata.modules.permissions.api import get_records_participated_in_by_user, get_approved_coordinators, \
     get_pending_request
 from hepdata.modules.permissions.models import SubmissionParticipant, CoordinatorRequest
@@ -72,29 +72,34 @@ def manage_participant_status(recid, action, status_action,
         participant = SubmissionParticipant.query.filter_by(
             id=participant_id).one()
 
-        if status_action == 'remove':
-            db.session.delete(participant)
-        else:
-            status = 'reserve'
-            if status_action == 'promote':
-                status = 'primary'
+        if status_action != 'email':
+            if status_action == 'remove':
+                db.session.delete(participant)
+            else:
+                status = 'reserve'
+                if status_action == 'promote':
+                    status = 'primary'
 
-            participant.status = status
-            db.session.add(participant)
+                participant.status = status
+                db.session.add(participant)
 
-        db.session.commit()
+            db.session.commit()
 
         record = get_record_by_id(recid)
 
         # now send the email telling the user of their new status!
         hepsubmission = get_latest_hepsubmission(publication_recid=recid)
-        if status_action == 'promote':
-            send_cookie_email(participant, record, version=hepsubmission.version)
-        elif status_action == 'demote':
-            send_reserve_email(participant, record)
+        if status_action != 'email':
+            if status_action == 'promote':
+                send_cookie_email(participant, record, version=hepsubmission.version)
+            elif status_action == 'demote':
+                send_reserve_email(participant, record)
+            admin_idx = AdminIndexer()
+            admin_idx.index_submission(hepsubmission)
+        else:
+            send_reminder_email(participant, record, version=hepsubmission.version)
 
-        admin_idx = AdminIndexer()
-        admin_idx.index_submission(hepsubmission)
+
 
         return json.dumps({"success": True, "recid": recid})
     except Exception as e:
