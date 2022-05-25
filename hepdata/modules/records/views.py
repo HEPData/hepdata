@@ -28,6 +28,7 @@ from datetime import datetime
 import logging
 import json
 import time
+import mimetypes
 from dateutil import parser
 from invenio_accounts.models import User
 from flask_login import login_required, login_user
@@ -695,7 +696,7 @@ def get_resource(resource_id):
                 print("Resource is at: " + resource_obj.file_location)
                 try:
                     with open(resource_obj.file_location, 'r', encoding='utf-8') as resource_file:
-                        contents = resource_file.read()
+                        contents = resource_file.read() if mimetypes.guess_type(resource_obj.file_location)[0] != 'application/x-tar' else 'Binary'
                 except UnicodeDecodeError:
                     contents = 'Binary'
 

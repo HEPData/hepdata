@@ -85,7 +85,7 @@ def test_url_pattern():
         ("test.zip", "Some sort of file", "HistFactory", True),
         ("test.zip", "Some sort of file", "histfactory", True),
         ("pyhf.tar.gz", "A file", None, False),
-        ("pyhf.json", "HistFactory JSON file", None, False),
+        ("pyhf.json", "HistFactory JSON file", None, True),
         ("test.zip", "Some sort of file", "json", False),
     ]
 )

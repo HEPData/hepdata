@@ -72,8 +72,8 @@ URL_PATTERNS = [
 
 ALLOWED_EXTENSIONS = ('.zip', '.tar', '.tar.gz', '.tgz', '.oldhepdata', '.yaml', '.yaml.gz')
 
-HISTFACTORY_EXTENSIONS = ALLOWED_EXTENSIONS[:4]
-HISTFACTORY_TERMS = ("histfactory", "pyhf", "likelihoods")
+HISTFACTORY_EXTENSIONS = ALLOWED_EXTENSIONS[:4] + ('.tar.xz', '.json')
+HISTFACTORY_TERMS = ("histfactory", "pyhf", "likelihoods", "workspaces")
 
 
 def contains_accepted_url(file):

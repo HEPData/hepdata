@@ -110,8 +110,9 @@
 
 
                         <div class="record-doi">
-                            <a href="https://doi.org/{{ ctx.record.hepdata_doi }}"
-                               target="_blank">https://doi.org/{{ ctx.record.hepdata_doi }}</a>
+                            {% set hepdata_doi = ctx.record.hepdata_doi|replace('None', '10.17182/hepdata.' + ctx.record.recid|string) %}
+                            <a href="https://doi.org/{{ hepdata_doi }}"
+                               target="_blank">https://doi.org/{{ hepdata_doi }}</a>
                         </div>
 
                         <br/>

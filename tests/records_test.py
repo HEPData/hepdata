@@ -46,6 +46,7 @@ from hepdata.modules.records.api import process_payload, process_zip_archive, \
     get_resource_mimetype, create_breadcrumb_text, format_submission, \
     format_resource
 from hepdata.modules.records.importer.api import import_records
+from hepdata.modules.records.utils.analyses import update_analyses
 from hepdata.modules.records.utils.submission import get_or_create_hepsubmission, process_submission_directory, do_finalise, unload_submission
 from hepdata.modules.records.utils.common import get_record_by_id, get_record_contents
 from hepdata.modules.records.utils.data_processing_utils import generate_table_structure
@@ -1013,3 +1014,25 @@ def test_create_breadcrumb_text():
     assert ctx == {
         'breadcrumb_text': 'Suzy Sheep et al.'
     }
+
+
+def test_update_analyses(app):
+    """ Test update of Rivet analyses """
+
+    # Import a record that already has a Rivet analysis attached (but with '#' in the URL)
+    import_records(['ins1203852'], synchronous=True)
+    analysis_resources = DataResource.query.filter_by(file_type='rivet').all()
+    assert len(analysis_resources) == 1
+    assert analysis_resources[0].file_location == 'http://rivet.hepforge.org/analyses#ATLAS_2012_I1203852'
+
+    # Call update_analyses(): should add new resource and delete existing one
+    update_analyses()
+    analysis_resources = DataResource.query.filter_by(file_type='rivet').all()
+    assert len(analysis_resources) == 1
+    assert analysis_resources[0].file_location == 'http://rivet.hepforge.org/analyses/ATLAS_2012_I1203852'
+
+    # Call update_analyses() again: should be no further changes (but covers more lines of code)
+    update_analyses()
+    analysis_resources = DataResource.query.filter_by(file_type='rivet').all()
+    assert len(analysis_resources) == 1
+    assert analysis_resources[0].file_location == 'http://rivet.hepforge.org/analyses/ATLAS_2012_I1203852'
