@@ -122,7 +122,10 @@ def search(query,
     search = search.filter("term", doc_type=CFG_PUB_TYPE)
     search = QueryBuilder.add_filters(search, filters)
 
-    mapped_sort_field = sort_fields_mapping(sort_field)
+    try:
+        mapped_sort_field = sort_fields_mapping(sort_field)
+    except ValueError as ve:
+        return {'error': str(ve)}
     search = search.sort({mapped_sort_field : {"order" : calculate_sort_order(sort_order, sort_field)}})
     search = add_default_aggregations(search, filters)
 
