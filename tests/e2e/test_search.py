@@ -163,6 +163,13 @@ def test_search_from_home(live_server, env_browser, search_tests):
     )
     assert 'Unable to search for /: Failed to parse query [/]' in element.text
 
+    # Test passing an invalid sort_by value as a URL argument to a search query
+    browser.get(flask.url_for('es_search.search', _external=True) + '?q=collisions&sort_by=invalid_field')
+    element = WebDriverWait(browser, 10).until(
+        EC.presence_of_element_located((By.CLASS_NAME, 'search-results'))
+    )
+    assert 'Unable to search for collisions: Sorting on field invalid_field is not supported' in element.text
+
 
 def test_author_search(live_server, env_browser):
     """Test the author search"""

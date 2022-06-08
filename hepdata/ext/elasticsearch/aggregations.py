@@ -161,7 +161,6 @@ def create_dummy_cmenergies_facets(query_filters=None):
                 span = max_limit - min_limit
                 if span > 0:
                     interval = math.ceil(span / 5)
-                    base = 5
 
                     if span > 1000:
                         base = 500
@@ -175,8 +174,12 @@ def create_dummy_cmenergies_facets(query_filters=None):
                         base = 1
 
                     interval = int(base * math.floor(interval / base))
-                    filter_limits = list(range(min_limit, max_limit, interval))
-                    filter_limits.append(max_limit)
+                    if interval:
+                        filter_limits = list(range(min_limit, max_limit, interval))
+                        filter_limits.append(max_limit)
+                    else:
+                        # The min and max both lie between two adjacent elements in filter_limits.
+                        filter_limits = [min_limit, max_limit]
                 else:
                     # If the span is 0, we've only got a single value, so the
                     # aggregations won't make sense - don't show them.

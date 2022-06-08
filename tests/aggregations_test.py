@@ -449,3 +449,27 @@ def test_create_dummy_cmenergies_facets():
     }
     assert(create_dummy_cmenergies_facets([('cmenergies', [1000.0, 1000.0])]) == expected_filtered3)
     assert(create_dummy_cmenergies_facets([('cmenergies', [1000.0])]) == expected_filtered3)
+
+    expected_filtered4 = {
+        'vals': [
+            {'doc_count': None,
+             'key': u'\u221as \u2265 14000.0',
+             'url_params': {'cmenergies': '14000.0,100000.0'}}
+        ],
+        'max_values': 5,
+        'printable_name': 'CM Energies (GeV)',
+        'type': 'cmenergies'
+    }
+    assert(create_dummy_cmenergies_facets([('cmenergies', [14000.0, 100000.0])]) == expected_filtered4)
+
+    expected_filtered5 = {
+        'vals': [
+            {'doc_count': None,
+             'key': u'2760.0 \u2264 \u221as < 5020.0',
+             'url_params': {'cmenergies': '2760.0,5020.0'}}
+        ],
+        'max_values': 5,
+        'printable_name': 'CM Energies (GeV)',
+        'type': 'cmenergies'
+    }
+    assert(create_dummy_cmenergies_facets([('cmenergies', [2760.0, 5020.0])]) == expected_filtered5)
