@@ -147,6 +147,8 @@ $(document).ready(function() {
                           html_block += '<div class="trigger-actions">';
                           if (additional_class == 'reserve') {
                             html_block += '<button data-toggle="tooltip" data-placement="top" title="Remove user from submission" class="btn btn-xs btn-danger mail-trigger" data-action="remove" data-person-type="' + action_type + '" data-recid="' + data["recid"] + '" data-userid="' + array[val_idx]['id'] + '"><span class="fa fa-trash-o"></span> </button>';
+                          } else {
+                            html_block += '<button data-toggle="tooltip" data-placement="top" title="Send a reminder to this user" class="btn btn-xs btn-primary mail-trigger" data-action="email" data-person-type="' + action_type + '" data-recid="' + data["recid"] + '" data-userid="' + array[val_idx]['id'] + '"><span class="fa fa-envelope-o"></span> </button>';
                           }
                           html_block += '<button data-toggle="tooltip" data-placement="top" title="' + alt_text + '" class="btn btn-xs btn-' + arrow_box_class + ' ' + downgrade_show + ' mail-trigger" data-action="' + action + '" data-person-type="' + action_type + '" data-recid="' + data["recid"] + '" data-userid="' + array[val_idx]['id'] + '"><span class="fa ' + arrow_box_icon + '"></span> </button>' +
                             '</div>';

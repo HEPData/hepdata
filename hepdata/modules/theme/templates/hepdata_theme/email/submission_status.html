@@ -1,5 +1,8 @@
 {% extends 'hepdata_theme/email/email_container.html' %}
 {% block email_type %}
+    {% if reminder %}
+        Reminder:
+    {% endif %}
     {% if invite_token %}
         Invitation to be {{ role }} for a HEPData Record {{ article }}
     {% elif reviewers_notified %}

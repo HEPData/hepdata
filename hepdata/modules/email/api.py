@@ -158,6 +158,7 @@ def send_notification_email(recid, version, user, reviewers_notified, message=No
                                        reviewers_notified=reviewers_notified,
                                        title=record['title'],
                                        site_url=site_url,
+                                       reminder=False,
                                        link=site_url + "/record/{0}"
                                        .format(recid))
 
@@ -307,6 +308,43 @@ def send_cookie_email(submission_participant,
                                "an" if submission_participant.role == "uploader" else "a",
                                submission_participant.role.capitalize(),
                                submission_participant.publication_recid),
+                           message_body,
+                           reply_to_address=coordinator.email)
+
+def send_reminder_email(submission_participant, record_information, version, show_detail=False):
+
+    site_url = current_app.config.get('SITE_URL', 'https://www.hepdata.net')
+    tables = []
+    hepsubmission = get_latest_hepsubmission(
+        publication_recid=record_information['recid']
+    )
+    coordinator = User.query.get(hepsubmission.coordinator)
+
+    reviewers_notified = submission_participant.user_account is not None
+
+    message_body = render_template('hepdata_theme/email/submission_status.html',
+                                   name=submission_participant.full_name,
+                                   actor=coordinator.email,
+                                   article=record_information['recid'],
+                                   message=None,
+                                   invite_token=submission_participant.invitation_cookie,
+                                   role=submission_participant.role,
+                                   show_detail=show_detail,
+                                   data_tables=tables,
+                                   reviewers_notified=reviewers_notified,
+                                   title=record_information['title'],
+                                   site_url=site_url,
+                                   reminder=True,
+                                   link=site_url + "/record/{0}"
+                                   .format(record_information['recid']))
+
+    if not reviewers_notified:
+        message_subject = '[HEPData] Reminder to review submission {0}'.format(record_information['recid'])
+    else:
+        message_subject = '[HEPData] Reminder about submission {0}'.format(record_information['recid'])
+
+    create_send_email_task(submission_participant.email,
+                           message_subject,
                            message_body,
                            reply_to_address=coordinator.email)
 
