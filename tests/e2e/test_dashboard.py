@@ -79,12 +79,12 @@ def test_dashboard(live_server, logged_in_browser):
     assert len(submissions) == 26
 
     # Click on dashboard link
-    browser.find_element_by_link_text('Dashboard').click()
+    browser.find_element(By.LINK_TEXT, 'Dashboard').click()
     e2e_assert_url(browser, 'hep_dashboard.dashboard')
 
     # Check links in top section work
     # Submissions Overview link
-    browser.find_element_by_link_text('Submissions Overview').click()
+    browser.find_element(By.LINK_TEXT, 'Submissions Overview').click()
     e2e_assert_url(browser, 'hep_dashboard.submissions')
 
     # Wait for graph to load
@@ -97,7 +97,7 @@ def test_dashboard(live_server, logged_in_browser):
     e2e_assert_url(browser, 'hep_dashboard.dashboard')
 
     # Edit Profile link
-    browser.find_element_by_link_text('Edit Profile').click()
+    browser.find_element(By.LINK_TEXT, 'Edit Profile').click()
     e2e_assert_url(browser, 'invenio_userprofiles.profile')
 
     # Go back
@@ -112,7 +112,7 @@ def test_dashboard(live_server, logged_in_browser):
     assert len(submission_items) == 25
 
     # Check pagination works
-    browser.find_element_by_css_selector(".pagination-bar a[href='/dashboard/?page=2']").click()
+    browser.find_element(By.CSS_SELECTOR, ".pagination-bar a[href='/dashboard/?page=2']").click()
     # Wait for loader, then new items appear
     WebDriverWait(browser, 10).until(
         EC.text_to_be_present_in_element(
@@ -125,32 +125,32 @@ def test_dashboard(live_server, logged_in_browser):
     assert len(submission_items) == 1
 
     # Check settings modal appears
-    submission_items[0].find_element_by_class_name('manage-submission-trigger').click()
+    submission_items[0].find_element(By.CLASS_NAME, 'manage-submission-trigger').click()
     manage_widget = WebDriverWait(browser, 10).until(
         EC.visibility_of_element_located((By.ID, 'manageWidget'))
     )
-    assert manage_widget.find_element_by_class_name('modal-title').text == 'Manage Submission'
+    assert manage_widget.find_element(By.CLASS_NAME, 'modal-title').text == 'Manage Submission'
     # Close modal
-    manage_widget.find_element_by_css_selector('.modal-footer .btn-default').click()
+    manage_widget.find_element(By.CSS_SELECTOR, '.modal-footer .btn-default').click()
     WebDriverWait(browser, 10).until(
         EC.invisibility_of_element(manage_widget)
     )
 
     # Click delete button
     # Check settings modal appears
-    submission_items[0].find_element_by_class_name('delete-submission-trigger').click()
+    submission_items[0].find_element(By.CLASS_NAME, 'delete-submission-trigger').click()
     delete_widget = WebDriverWait(browser, 10).until(
         EC.visibility_of_element_located((By.ID, 'deleteWidget'))
     )
-    assert delete_widget.find_element_by_class_name('modal-title').text == 'Delete Submission'
+    assert delete_widget.find_element(By.CLASS_NAME, 'modal-title').text == 'Delete Submission'
     # Confirm deletion
-    delete_widget.find_element_by_class_name('confirm-delete').click()
+    delete_widget.find_element(By.CLASS_NAME, 'confirm-delete').click()
     # Wait for confirmation of deletion
     WebDriverWait(browser, 10).until(
         EC.visibility_of_element_located((By.ID, 'delete-success'))
     )
     assert 'Submission deleted' in \
-        delete_widget.find_element_by_css_selector('#delete-success p').text
+        delete_widget.find_element(By.CSS_SELECTOR, '#delete-success p').text
 
     # Should now be 25 submissions not 26
     db.session.flush()
@@ -177,8 +177,8 @@ def test_dashboard(live_server, logged_in_browser):
     assert len(coordinator_rows) == 5
 
     # Click on uploader pane - should be all 25 items
-    browser.find_element_by_link_text('uploader').click()
-    uploader_pane = browser.find_element_by_id('uploader')
+    browser.find_element(By.LINK_TEXT, 'uploader').click()
+    uploader_pane = browser.find_element(By.ID, 'uploader')
     uploader_rows = uploader_pane.find_elements_by_class_name('row')
     assert len(uploader_rows) == 25
 
@@ -188,13 +188,13 @@ def test_dashboard(live_server, logged_in_browser):
     # Scroll down to find paginator
     ActionChains(browser).move_to_element(uploader_rows[4]).perform()
     # Click on last page
-    uploader_pane.find_element_by_css_selector(".pagination-bar li a[title=last]").click()
+    uploader_pane.find_element(By.CSS_SELECTOR, ".pagination-bar li a[title=last]").click()
     # Now last 5 items should be visible
     assert all(not row.is_displayed() for row in uploader_rows[:20])
     assert all(row.is_displayed() for row in uploader_rows[20:])
 
     # Check CSV download works
-    csv_button = browser.find_element_by_link_text('Download Submissions CSV')
+    csv_button = browser.find_element(By.LINK_TEXT, 'Download Submissions CSV')
     download_url = csv_button.get_attribute("href")
     assert(download_url.endswith("/submissions/csv"))
     # We can't test file downloads via selenium on SauceLabs so we'll just
@@ -214,7 +214,7 @@ def test_dashboard(live_server, logged_in_browser):
     # View the dashboard as the non-admin user
     # First scroll back to the top of the screen
     browser.execute_script("window.scrollTo(0,0);")
-    admin_user_filter = browser.find_element_by_id('admin-user-filter')
+    admin_user_filter = browser.find_element(By.ID, 'admin-user-filter')
     admin_user_filter.send_keys('test')
     suggestions_div = WebDriverWait(browser, 10).until(
         EC.presence_of_element_located((By.CLASS_NAME, 'tt-open'))
@@ -230,7 +230,7 @@ def test_dashboard(live_server, logged_in_browser):
         _external=True, view_as_user=non_admin_user.id)
 
     # Check banner appears at top of page
-    banner = browser.find_element_by_class_name('alert-info')
+    banner = browser.find_element(By.CLASS_NAME, 'alert-info')
     assert banner.text == "You are logged in as test@hepdata.net but are currently viewing the " \
         "dashboard as user test2@hepdata.net. View as test@hepdata.net"
 
@@ -242,5 +242,5 @@ def test_dashboard(live_server, logged_in_browser):
     assert len(submission_items) == 0
 
     # Check permissions widget - should be a message saying no contributions
-    permissions_div = browser.find_element_by_id('permissions')
+    permissions_div = browser.find_element(By.ID, 'permissions')
     assert permissions_div.text.startswith('No contributions to show')

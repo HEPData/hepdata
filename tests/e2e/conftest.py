@@ -233,7 +233,7 @@ def env_browser(request):
     wait = WebDriverWait(browser, 10)
     wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, ".cc_btn_accept_all")))
     sleep(1)
-    cookie_accept_btn = browser.find_element_by_css_selector(".cc_btn_accept_all")
+    cookie_accept_btn = browser.find_element(By.CSS_SELECTOR, ".cc_btn_accept_all")
     cookie_accept_btn.click()
 
     # Add finalizer to quit the webdriver instance
@@ -255,9 +255,9 @@ def logged_in_browser(env_browser):
     env_browser.get(flask.url_for('security.login', _external=True))
     e2e_assert_url(env_browser, 'security.login')
 
-    login_form = env_browser.find_element_by_name('login_user_form')
-    login_form.find_element_by_name('email').send_keys('test@hepdata.net')
-    login_form.find_element_by_name('password').send_keys('hello1')
+    login_form = env_browser.find_element(By.NAME, 'login_user_form')
+    login_form.find_element(By.NAME, 'email').send_keys('test@hepdata.net')
+    login_form.find_element(By.NAME, 'password').send_keys('hello1')
     login_form.submit()
 
     # Check we're back at the homepage
@@ -284,7 +284,7 @@ def e2e_assert(driver, assertion, message = None):
             print('Assertion message: ' + message + '\n')
 
         print('Browser body text was:\n')
-        print(driver.find_element_by_tag_name('body').text)
+        print(driver.find_element(By.TAG_NAME, 'body').text)
         print('\n================================================================================')
 
     assert assertion, message

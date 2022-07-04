@@ -40,7 +40,7 @@ tests_require = [
     'pytest-mock>=3.1.0',
     'pytest-timeout>=1.4.2',
     'requests-mock>=1.8.0',
-    'selenium>=4.0.0,<4.3.0',
+    'selenium>=4.0.0',
     'lxml'
 ]
 

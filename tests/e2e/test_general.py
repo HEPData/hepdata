@@ -53,7 +53,7 @@ def test_home(app, live_server, env_browser, e2e_identifiers):
             browser.current_url)
 
     # 2. check number of records and the number of datatables is correct
-    record_stats = browser.find_element_by_css_selector("#record_stats")
+    record_stats = browser.find_element(By.CSS_SELECTOR, "#record_stats")
     exp_data_table_count = sum([i['data_tables'] for i in e2e_identifiers])
     exp_publication_count = len(e2e_identifiers)
     assert (record_stats.text == "Search on {0} publications and {1} data tables."
@@ -74,17 +74,17 @@ def test_home(app, live_server, env_browser, e2e_identifiers):
     assert (flask.url_for('hepdata_records.get_metadata_by_alternative_id', recid=hepdata_id, _external=True) in
             browser.current_url)
 
-    assert (browser.find_element_by_css_selector('.record-title').text is not None)
-    assert (browser.find_element_by_css_selector('.record-journal').text is not None)
-    assert (browser.find_element_by_css_selector('#table-list-section li') is not None)
+    assert (browser.find_element(By.CSS_SELECTOR, '.record-title').text is not None)
+    assert (browser.find_element(By.CSS_SELECTOR, '.record-journal').text is not None)
+    assert (browser.find_element(By.CSS_SELECTOR, '#table-list-section li') is not None)
 
-    table_placeholder = browser.find_element_by_css_selector('#table-filter').get_attribute('placeholder')
+    table_placeholder = browser.find_element(By.CSS_SELECTOR, '#table-filter').get_attribute('placeholder')
     expected_record = [x for x in e2e_identifiers if x['hepdata_id'] == hepdata_id]
     assert (table_placeholder == "Filter {0} data tables".format(expected_record[0]['data_tables']))
 
     # Check file download works
-    browser.find_element_by_id('dLabel').click()
-    download_original_link = browser.find_element_by_id('download_original')
+    browser.find_element(By.ID, 'dLabel').click()
+    download_original_link = browser.find_element(By.ID, 'download_original')
     download_url = download_original_link.get_attribute("href")
     assert(download_url.endswith("/download/submission/ins1283842/1/original"))
     # We can't test file downloads via selenium on SauceLabs so we'll just
@@ -96,7 +96,7 @@ def test_home(app, live_server, env_browser, e2e_identifiers):
     except zipfile.BadZipFile:
         assert False, "File is not a valid zip file"
     # Close download dropdown by clicking again
-    browser.find_element_by_id('dLabel').click()
+    browser.find_element(By.ID, 'dLabel').click()
 
     # Go back to homepage and click on 1st link - should be record with resources
     browser.back()
@@ -108,7 +108,7 @@ def test_home(app, live_server, env_browser, e2e_identifiers):
     assert (flask.url_for('hepdata_records.get_metadata_by_alternative_id', recid='ins1883075', _external=True) in
             browser.current_url)
     # Check Resources button is present
-    resources_btn = browser.find_element_by_id('show_all_resources')
+    resources_btn = browser.find_element(By.ID, 'show_all_resources')
     assert resources_btn is not None
     resources_btn.click()
 
@@ -120,19 +120,19 @@ def test_home(app, live_server, env_browser, e2e_identifiers):
     assert len(submission_resources) == 3
 
     # Find Python file resource
-    python_resources = [e for e in submission_resources if e.find_element_by_tag_name('h4').text == 'Python File']
+    python_resources = [e for e in submission_resources if e.find_element(By.TAG_NAME, 'h4').text == 'Python File']
     assert len(python_resources) == 1
     python_resource = python_resources[0]
-    download_btn = python_resource.find_element_by_css_selector('a.btn-sm')
+    download_btn = python_resource.find_element(By.CSS_SELECTOR, 'a.btn-sm')
     assert download_btn.text == 'Download'
     # Get landing page URL from download link and load
     landing_page_url = download_btn.get_attribute("href").replace('view=true', 'landing_page=true')
     browser.get(landing_page_url)
     # Check landing page has appropriate elements
-    header_h4 = browser.find_element_by_css_selector(".hepdata_table_detail_header h4")
-    assert header_h4.find_element_by_class_name("pull-left").text.strip() == \
+    header_h4 = browser.find_element(By.CSS_SELECTOR, ".hepdata_table_detail_header h4")
+    assert header_h4.find_element(By.CLASS_NAME, "pull-left").text.strip() == \
         "cut_based_id.py"
-    textarea = browser.find_element_by_id("code-contents")
+    textarea = browser.find_element(By.ID, "code-contents")
     assert """import numpy as np
 import math
 import ROOT as rt""" in textarea.text
@@ -150,13 +150,13 @@ def test_tables(app, live_server, env_browser):
         assert (flask.url_for('hepdata_theme.index', _external=True) in
                 browser.current_url)
 
-        latest_item = browser.find_element_by_css_selector('.latest-record .title')
+        latest_item = browser.find_element(By.CSS_SELECTOR, '.latest-record .title')
         actions = ActionChains(browser)
         actions.move_to_element(latest_item).perform()
         latest_item.click()
 
         # Check current table name
-        assert(browser.find_element_by_id('table_name').text == 'Figure 8 panel (a)')
+        assert(browser.find_element(By.ID, 'table_name').text == 'Figure 8 panel (a)')
 
         # Check switching tables works as expected
         new_table = browser.find_elements_by_css_selector('#table-list li h4')[2]
@@ -165,7 +165,7 @@ def test_tables(app, live_server, env_browser):
         _check_table_links(browser, "Figure 8 panel (c)")
 
         # Get link to table from table page
-        table_link = browser.find_element_by_css_selector('#data_link_container button') \
+        table_link = browser.find_element(By.CSS_SELECTOR, '#data_link_container button') \
             .get_attribute('data-clipboard-text')
         assert(table_link.endswith('table=Figure%208%20panel%20(c)'))
         _check_table_links(browser, "Figure 8 panel (c)", url=table_link)
@@ -197,7 +197,7 @@ def _check_table_links(browser, table_full_name, url=None):
         EC.text_to_be_present_in_element((By.ID, 'table_name'), table_full_name)
     )
     # Check download YAML link for table
-    yaml_link = browser.find_element_by_id('download_yaml_data') \
+    yaml_link = browser.find_element(By.ID, 'download_yaml_data') \
         .get_attribute('href')
     assert(yaml_link.endswith(f'/{table_full_name.replace(" ", "%20")}/1/yaml'))
     # Download yaml using requests and check we get expected filename

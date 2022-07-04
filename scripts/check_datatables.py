@@ -123,15 +123,15 @@ def _get_driver(username=None):
         (By.CSS_SELECTOR, ".cc_btn_accept_all")
     ))
     time.sleep(1)
-    cookie_accept_btn = driver.find_element_by_css_selector(".cc_btn_accept_all")
+    cookie_accept_btn = driver.find_element(By.CSS_SELECTOR, ".cc_btn_accept_all")
     cookie_accept_btn.click()
 
     if username and password:
         click.echo("Logging in...")
         driver.get('https://www.hepdata.net/login/')
-        login_form = driver.find_element_by_name('login_user_form')
-        login_form.find_element_by_name('email').send_keys(username)
-        login_form.find_element_by_name('password').send_keys(password)
+        login_form = driver.find_element(By.NAME, 'login_user_form')
+        login_form.find_element(By.NAME, 'email').send_keys(username)
+        login_form.find_element(By.NAME, 'password').send_keys(password)
         login_form.submit()
 
     return driver

@@ -56,24 +56,24 @@ def test_record_update(live_server, logged_in_browser):
         'hepdata_records.get_metadata_by_alternative_id',
         recid=f'ins{inspire_id}', _external=True)
     browser.get(record_url)
-    browser.find_element_by_css_selector(
+    browser.find_element(By.CSS_SELECTOR, 
         "button.btn-danger[data-target='#reviseSubmission']").click()
-    revise_submission_dialog = browser.find_element_by_id('reviseSubmission')
+    revise_submission_dialog = browser.find_element(By.ID, 'reviseSubmission')
     WebDriverWait(browser, 10).until(
         EC.visibility_of(revise_submission_dialog)
     )
 
     # Check for warning about a new version
     assert "This submission is already finished." in \
-        revise_submission_dialog.find_element_by_id('revise-confirm').text
+        revise_submission_dialog.find_element(By.ID, 'revise-confirm').text
 
     # Click "Revise Submission" button and wait for response
-    revise_submission_dialog.find_element_by_css_selector("#revise-confirm button[type='submit']").click()
-    revise_success = browser.find_element_by_id('revise-success')
+    revise_submission_dialog.find_element(By.CSS_SELECTOR, "#revise-confirm button[type='submit']").click()
+    revise_success = browser.find_element(By.ID, 'revise-success')
     WebDriverWait(browser, 10).until(
         EC.visibility_of(revise_success)
     )
-    assert revise_success.find_element_by_tag_name('p').text \
+    assert revise_success.find_element(By.TAG_NAME, 'p').text \
         .startswith("Version 2 created.\nThis window will close in ")
 
     # Refresh record page (to avoid waiting)
@@ -90,16 +90,16 @@ def test_record_update(live_server, logged_in_browser):
     assert submissions[1].overall_status == 'todo'
 
     # Upload a new file
-    upload = browser.find_element_by_id('root_file_upload')
+    upload = browser.find_element(By.ID, 'root_file_upload')
     ActionChains(browser).move_to_element(upload).perform()
     upload.send_keys(os.path.abspath("tests/test_data/TestHEPSubmission.zip"))
-    browser.find_element_by_css_selector('form[name=upload-form] input[type=submit]').click()
+    browser.find_element(By.CSS_SELECTOR, 'form[name=upload-form] input[type=submit]').click()
 
     # Wait for page reload
     WebDriverWait(browser, 15).until(
         EC.staleness_of(upload)
     )
-    alert = browser.find_element_by_class_name('alert-info')
+    alert = browser.find_element(By.CLASS_NAME, 'alert-info')
     assert alert.text == "File saved. You will receive an email when the file has been processed."
 
     # Run common checks
@@ -107,19 +107,19 @@ def test_record_update(live_server, logged_in_browser):
 
     # Add some reviews
     # Check initial status of Table 1 is "ToDo"
-    table1_summary = browser.find_element_by_id('table-list') \
-        .find_element_by_class_name('Table1')
+    table1_summary = browser.find_element(By.ID, 'table-list') \
+        .find_element(By.CLASS_NAME, 'Table1')
     table1_id = table1_summary.get_attribute('id')
-    table1_status = table1_summary.find_element_by_id(f'{table1_id}-status')
+    table1_status = table1_summary.find_element(By.ID, f'{table1_id}-status')
     assert "todo" in table1_status.get_attribute('class')
 
     # Change review status
-    browser.find_element_by_id('reviewer-button').click()
-    reviews_view = browser.find_element_by_class_name('reviews-view')
+    browser.find_element(By.ID, 'reviewer-button').click()
+    reviews_view = browser.find_element(By.CLASS_NAME, 'reviews-view')
     WebDriverWait(browser, 10).until(
         EC.visibility_of(reviews_view)
     )
-    reviews_view.find_element_by_id('attention-option').click()
+    reviews_view.find_element(By.ID, 'attention-option').click()
     if "attention" not in table1_status.get_attribute('class'):
         WebDriverWait(browser, 10).until(
             EC.visibility_of_element_located(
@@ -129,10 +129,10 @@ def test_record_update(live_server, logged_in_browser):
     assert "attention" in table1_status.get_attribute('class')
 
     # Send a message
-    message_box = reviews_view.find_element_by_id('message')
+    message_box = reviews_view.find_element(By.ID, 'message')
     ActionChains(browser).move_to_element(message_box).perform()
     message_box.send_keys("This needs to change!")
-    reviews_view.find_element_by_id('save_no_email').click()
+    reviews_view.find_element(By.ID, 'save_no_email').click()
     # Wait until message appears
     message = WebDriverWait(browser, 10).until(
         EC.visibility_of_element_located(
@@ -140,25 +140,25 @@ def test_record_update(live_server, logged_in_browser):
         )
     )
     assert "This needs to change!" in message.text
-    assert "test@hepdata.net" in message.find_element_by_class_name('reviewer').text
+    assert "test@hepdata.net" in message.find_element(By.CLASS_NAME, 'reviewer').text
     # Close review pane
-    browser.find_element_by_id('reviewer-button').click()
+    browser.find_element(By.ID, 'reviewer-button').click()
 
     # Switch to Table 2 and change review status
-    table2_summary = browser.find_element_by_id('table-list') \
-        .find_element_by_class_name('Table2')
+    table2_summary = browser.find_element(By.ID, 'table-list') \
+        .find_element(By.CLASS_NAME, 'Table2')
     table2_summary.click()
     table2_id = table2_summary.get_attribute('id')
-    table2_status = table2_summary.find_element_by_id(f'{table2_id}-status')
+    table2_status = table2_summary.find_element(By.ID, f'{table2_id}-status')
     assert "todo" in table2_status.get_attribute('class')
 
     # Change review status
-    browser.find_element_by_id('reviewer-button').click()
-    reviews_view = browser.find_element_by_class_name('reviews-view')
+    browser.find_element(By.ID, 'reviewer-button').click()
+    reviews_view = browser.find_element(By.CLASS_NAME, 'reviews-view')
     WebDriverWait(browser, 10).until(
         EC.visibility_of(reviews_view)
     )
-    reviews_view.find_element_by_id('passed-option').click()
+    reviews_view.find_element(By.ID, 'passed-option').click()
     if "passed" not in table2_status.get_attribute('class'):
         WebDriverWait(browser, 10).until(
             EC.visibility_of_element_located(
@@ -168,52 +168,52 @@ def test_record_update(live_server, logged_in_browser):
     assert "passed" in table2_status.get_attribute('class')
 
     # Check "Notify Coordinator" is hidden
-    assert not browser.find_element_by_id('notify-coordinator-btn').is_displayed()
+    assert not browser.find_element(By.ID, 'notify-coordinator-btn').is_displayed()
 
     # Click "Approve All"
-    browser.find_element_by_id('approve-all-btn').click()
-    approve_all_modal = browser.find_element_by_id('approveAllTables')
+    browser.find_element(By.ID, 'approve-all-btn').click()
+    approve_all_modal = browser.find_element(By.ID, 'approveAllTables')
     WebDriverWait(browser, 10).until(
         EC.visibility_of(approve_all_modal)
     )
-    approve_all_modal.find_element_by_id('confirmApproveAll').click()
-    approve_all_modal.find_element_by_css_selector('button[type=submit]').click()
+    approve_all_modal.find_element(By.ID, 'confirmApproveAll').click()
+    approve_all_modal.find_element(By.CSS_SELECTOR, 'button[type=submit]').click()
 
     # Wait for page reload
     WebDriverWait(browser, 10).until(
         EC.staleness_of(approve_all_modal)
     )
     # Check all statuses are now 'passed'
-    review_statuses = browser.find_element_by_id('table-list') \
+    review_statuses = browser.find_element(By.ID, 'table-list') \
         .find_elements_by_class_name('review-status')
     for element in review_statuses:
         assert "passed" in element.get_attribute('class')
 
     # Check that "Approve all" button is not visible and "Notify Coordinator"
     # is now visible
-    assert not browser.find_element_by_id('approve-all-btn').is_displayed()
-    assert browser.find_element_by_id('notify-coordinator-btn').is_displayed()
+    assert not browser.find_element(By.ID, 'approve-all-btn').is_displayed()
+    assert browser.find_element(By.ID, 'notify-coordinator-btn').is_displayed()
 
     # Delete the new version
     # Open admin slider
-    browser.find_element_by_id('admin-button').click()
-    admin_view = browser.find_element_by_class_name('admin-view')
+    browser.find_element(By.ID, 'admin-button').click()
+    admin_view = browser.find_element(By.CLASS_NAME, 'admin-view')
     WebDriverWait(browser, 10).until(
         EC.visibility_of(admin_view)
     )
     # Click "Delete"
-    admin_view.find_element_by_css_selector(
+    admin_view.find_element(By.CSS_SELECTOR, 
         "button.btn-danger[data-target='#deleteWidget']"
         ).click()
     # Wait for modal to load
-    delete_widget = browser.find_element_by_id('deleteWidget')
+    delete_widget = browser.find_element(By.ID, 'deleteWidget')
     WebDriverWait(browser, 10).until(
         EC.visibility_of(delete_widget)
     )
-    assert delete_widget.find_element_by_css_selector('#delete-confirm p').text \
+    assert delete_widget.find_element(By.CSS_SELECTOR, '#delete-confirm p').text \
         .startswith("Are you sure you want to delete the latest version of this submission?")
     # Click "Delete now"
-    delete_widget.find_element_by_class_name('confirm-delete').click()
+    delete_widget.find_element(By.CLASS_NAME, 'confirm-delete').click()
     # Wait for confirmation of deletion
     WebDriverWait(browser, 10).until(
         EC.text_to_be_present_in_element((By.ID, 'delete-success'), 'Submission deleted')
@@ -240,20 +240,20 @@ def test_sandbox(live_server, logged_in_browser):
     e2e_assert_url(browser, 'hepdata_records.sandbox')
 
     # Check there are no past sandbox submissions
-    assert browser.find_element_by_id('past_submissions') \
+    assert browser.find_element(By.ID, 'past_submissions') \
         .find_elements_by_xpath(".//*") == []
 
     # Try uploading a file
-    upload = browser.find_element_by_id('root_file_upload')
+    upload = browser.find_element(By.ID, 'root_file_upload')
     ActionChains(browser).move_to_element(upload).perform()
     upload.send_keys(os.path.abspath("tests/test_data/TestHEPSubmission.zip"))
-    browser.find_element_by_class_name('btn-primary').click()
+    browser.find_element(By.CLASS_NAME, 'btn-primary').click()
 
     # Should redirect to record page with confirmation message
     WebDriverWait(browser, 15).until(
         EC.url_matches(f'{sandbox_url}/\\d+')
     )
-    alert = browser.find_element_by_class_name('alert-info')
+    alert = browser.find_element(By.CLASS_NAME, 'alert-info')
     assert alert.text == "File saved. You will receive an email when the file has been processed."
 
     # Record should have been processed immediately by test celery runner
@@ -264,16 +264,16 @@ def test_sandbox(live_server, logged_in_browser):
     browser.get(sandbox_url)
 
     # Check that past submissions column now has a child
-    past_submissions_div = browser.find_element_by_id('past_submissions')
+    past_submissions_div = browser.find_element(By.ID, 'past_submissions')
     assert len(past_submissions_div.find_elements_by_class_name('col-md-10')) == 1
 
     # Delete the sandbox record
-    past_submissions_div.find_element_by_class_name('delete_button').click()
-    delete_modal = browser.find_element_by_id('deleteWidget')
+    past_submissions_div.find_element(By.CLASS_NAME, 'delete_button').click()
+    delete_modal = browser.find_element(By.ID, 'deleteWidget')
     WebDriverWait(browser, 10).until(
         EC.visibility_of(delete_modal)
     )
-    delete_modal.find_element_by_class_name('confirm-delete').click()
+    delete_modal.find_element(By.CLASS_NAME, 'confirm-delete').click()
     WebDriverWait(browser, 10).until(
         EC.text_to_be_present_in_element((By.ID, 'deleteDialogLabel'), 'Submission Deleted')
     )
@@ -282,7 +282,7 @@ def test_sandbox(live_server, logged_in_browser):
     browser.get(sandbox_url)
 
     # Check there are no past sandbox submissions
-    assert browser.find_element_by_id('past_submissions') \
+    assert browser.find_element(By.ID, 'past_submissions') \
         .find_elements_by_xpath(".//*") == []
 
 
@@ -291,45 +291,45 @@ def _check_record_common(browser):
     Check record features that are common to standard and sandbox records.
     Browser should be at relevant record URL before calling this function.
     """
-    assert browser.find_element_by_class_name('record-abstract-content').text \
+    assert browser.find_element(By.CLASS_NAME, 'record-abstract-content').text \
         .startswith('CERN-LHC.  Measurements of the cross section  for ZZ production')
-    table_items = browser.find_element_by_id('table-list').find_elements_by_tag_name('li')
+    table_items = browser.find_element(By.ID, 'table-list').find_elements_by_tag_name('li')
     assert len(table_items) == 8
     assert "active" in table_items[0].get_attribute("class")
-    assert table_items[0].find_element_by_tag_name('h4').text == "Table 1"
-    assert table_items[0].find_element_by_tag_name('p').text == "Data from Page 17 of preprint"
-    table_content = browser.find_element_by_id('hepdata_table_content')
-    assert table_content.find_element_by_id('table_name').text == "Table 1"
-    assert table_content.find_element_by_id('table_location').text == "Data from Page 17 of preprint"
+    assert table_items[0].find_element(By.TAG_NAME, 'h4').text == "Table 1"
+    assert table_items[0].find_element(By.TAG_NAME, 'p').text == "Data from Page 17 of preprint"
+    table_content = browser.find_element(By.ID, 'hepdata_table_content')
+    assert table_content.find_element(By.ID, 'table_name').text == "Table 1"
+    assert table_content.find_element(By.ID, 'table_location').text == "Data from Page 17 of preprint"
 
     # Check resources load (using button for table)
     # modal content should not be visible beforehand
-    modal_content = browser.find_element_by_id('resourceModal')
+    modal_content = browser.find_element(By.ID, 'resourceModal')
     assert not modal_content.is_displayed()
-    table_content.find_element_by_id('show_resources').click()
+    table_content.find_element(By.ID, 'show_resources').click()
     WebDriverWait(browser, 10).until(
         EC.visibility_of(modal_content)
     )
-    assert modal_content.find_element_by_id('additionalResource').text == \
+    assert modal_content.find_element(By.ID, 'additionalResource').text == \
         "Additional Publication Resources"
-    assert modal_content.find_element_by_id('selected_resource_item').text == \
+    assert modal_content.find_element(By.ID, 'selected_resource_item').text == \
         "Table 1"
 
     resource_list_items = modal_content \
-        .find_element_by_id('resource-list-items') \
+        .find_element(By.ID, 'resource-list-items') \
         .find_elements_by_tag_name('li')
 
     # Check we can select a different table/common resources
     resource_list_items[0].click()
-    assert modal_content.find_element_by_id('selected_resource_item').text == \
+    assert modal_content.find_element(By.ID, 'selected_resource_item').text == \
         "Common Resources"
     resource_list_items[8].click()
-    assert modal_content.find_element_by_id('selected_resource_item').text == \
+    assert modal_content.find_element(By.ID, 'selected_resource_item').text == \
         "Table 8"
 
     # Check filtering by table name
     assert len([e for e in resource_list_items if e.is_displayed()]) == 9
-    filter_field = modal_content.find_element_by_id('resource-filter-input')
+    filter_field = modal_content.find_element(By.ID, 'resource-filter-input')
 
     # Filter by 'tab'. First item ("Common resources") should fade out
     filter_field.send_keys('tab')
@@ -353,25 +353,25 @@ def _check_record_common(browser):
     assert len([e for e in resource_list_items if e.is_displayed()]) == 1
 
     # Close the modal
-    modal_content.find_element_by_class_name('close').click()
+    modal_content.find_element(By.CLASS_NAME, 'close').click()
     WebDriverWait(browser, 10).until(
         EC.invisibility_of_element(modal_content)
     )
 
     # Try uploading another file
-    browser.find_element_by_css_selector("button.btn-success[data-target='#uploadDialog']") \
+    browser.find_element(By.CSS_SELECTOR, "button.btn-success[data-target='#uploadDialog']") \
         .click()
-    upload_dialog = browser.find_element_by_id('uploadDialog')
+    upload_dialog = browser.find_element(By.ID, 'uploadDialog')
     WebDriverWait(browser, 10).until(
         EC.visibility_of(upload_dialog)
     )
-    upload = upload_dialog.find_element_by_id('file_upload_field')
+    upload = upload_dialog.find_element(By.ID, 'file_upload_field')
     ActionChains(browser).move_to_element(upload).perform()
     upload.send_keys(os.path.abspath("tests/test_data/sample.oldhepdata"))
-    upload_dialog.find_element_by_css_selector('input[type=submit]').click()
+    upload_dialog.find_element(By.CSS_SELECTOR, 'input[type=submit]').click()
     # Wait for page reload
     WebDriverWait(browser, 15).until(
         EC.staleness_of(upload_dialog)
     )
-    alert = browser.find_element_by_class_name('alert-info')
+    alert = browser.find_element(By.CLASS_NAME, 'alert-info')
     assert alert.text == "File saved. You will receive an email when the file has been processed."
