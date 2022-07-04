@@ -185,7 +185,7 @@ def test_record_update(live_server, logged_in_browser):
     )
     # Check all statuses are now 'passed'
     review_statuses = browser.find_element(By.ID, 'table-list') \
-        .find_elements_by_class_name('review-status')
+        .find_elements(By.CLASS_NAME, 'review-status')
     for element in review_statuses:
         assert "passed" in element.get_attribute('class')
 
@@ -241,7 +241,7 @@ def test_sandbox(live_server, logged_in_browser):
 
     # Check there are no past sandbox submissions
     assert browser.find_element(By.ID, 'past_submissions') \
-        .find_elements_by_xpath(".//*") == []
+        .find_elements(By.XPATH, ".//*") == []
 
     # Try uploading a file
     upload = browser.find_element(By.ID, 'root_file_upload')
@@ -265,7 +265,7 @@ def test_sandbox(live_server, logged_in_browser):
 
     # Check that past submissions column now has a child
     past_submissions_div = browser.find_element(By.ID, 'past_submissions')
-    assert len(past_submissions_div.find_elements_by_class_name('col-md-10')) == 1
+    assert len(past_submissions_div.find_elements(By.CLASS_NAME, 'col-md-10')) == 1
 
     # Delete the sandbox record
     past_submissions_div.find_element(By.CLASS_NAME, 'delete_button').click()
@@ -283,7 +283,7 @@ def test_sandbox(live_server, logged_in_browser):
 
     # Check there are no past sandbox submissions
     assert browser.find_element(By.ID, 'past_submissions') \
-        .find_elements_by_xpath(".//*") == []
+        .find_elements(By.XPATH, ".//*") == []
 
 
 def _check_record_common(browser):
@@ -293,7 +293,7 @@ def _check_record_common(browser):
     """
     assert browser.find_element(By.CLASS_NAME, 'record-abstract-content').text \
         .startswith('CERN-LHC.  Measurements of the cross section  for ZZ production')
-    table_items = browser.find_element(By.ID, 'table-list').find_elements_by_tag_name('li')
+    table_items = browser.find_element(By.ID, 'table-list').find_elements(By.TAG_NAME, 'li')
     assert len(table_items) == 8
     assert "active" in table_items[0].get_attribute("class")
     assert table_items[0].find_element(By.TAG_NAME, 'h4').text == "Table 1"
@@ -317,7 +317,7 @@ def _check_record_common(browser):
 
     resource_list_items = modal_content \
         .find_element(By.ID, 'resource-list-items') \
-        .find_elements_by_tag_name('li')
+        .find_elements(By.TAG_NAME, 'li')
 
     # Check we can select a different table/common resources
     resource_list_items[0].click()

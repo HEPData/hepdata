@@ -108,7 +108,7 @@ def test_dashboard(live_server, logged_in_browser):
     submissions_list = WebDriverWait(browser, 10).until(
         EC.presence_of_element_located((By.ID, "hep-submissions"))
     )
-    submission_items = submissions_list.find_elements_by_class_name('submission-item')
+    submission_items = submissions_list.find_elements(By.CLASS_NAME, 'submission-item')
     assert len(submission_items) == 25
 
     # Check pagination works
@@ -121,7 +121,7 @@ def test_dashboard(live_server, logged_in_browser):
         )
     )
     # Should just be 1 submission on page 2
-    submission_items = browser.find_elements_by_class_name('submission-item')
+    submission_items = browser.find_elements(By.CLASS_NAME, 'submission-item')
     assert len(submission_items) == 1
 
     # Check settings modal appears
@@ -173,13 +173,13 @@ def test_dashboard(live_server, logged_in_browser):
     coordinator_pane = WebDriverWait(browser, 10).until(
         EC.presence_of_element_located((By.ID, 'coordinator'))
     )
-    coordinator_rows = coordinator_pane.find_elements_by_class_name('row')
+    coordinator_rows = coordinator_pane.find_elements(By.CLASS_NAME, 'row')
     assert len(coordinator_rows) == 5
 
     # Click on uploader pane - should be all 25 items
     browser.find_element(By.LINK_TEXT, 'uploader').click()
     uploader_pane = browser.find_element(By.ID, 'uploader')
-    uploader_rows = uploader_pane.find_elements_by_class_name('row')
+    uploader_rows = uploader_pane.find_elements(By.CLASS_NAME, 'row')
     assert len(uploader_rows) == 25
 
     # Only first 5 should be visible
@@ -219,7 +219,7 @@ def test_dashboard(live_server, logged_in_browser):
     suggestions_div = WebDriverWait(browser, 10).until(
         EC.presence_of_element_located((By.CLASS_NAME, 'tt-open'))
     )
-    suggestions = suggestions_div.find_elements_by_class_name('tt-suggestion')
+    suggestions = suggestions_div.find_elements(By.CLASS_NAME, 'tt-suggestion')
     assert len(suggestions) == 2
     assert suggestions[0].text == 'test@hepdata.net'
     assert suggestions[1].text == 'test2@hepdata.net'
@@ -238,7 +238,7 @@ def test_dashboard(live_server, logged_in_browser):
     submissions_list = WebDriverWait(browser, 10).until(
         EC.presence_of_element_located((By.ID, "hep-submissions"))
     )
-    submission_items = submissions_list.find_elements_by_class_name('submission-item')
+    submission_items = submissions_list.find_elements(By.CLASS_NAME, 'submission-item')
     assert len(submission_items) == 0
 
     # Check permissions widget - should be a message saying no contributions

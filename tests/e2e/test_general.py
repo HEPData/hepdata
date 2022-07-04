@@ -60,9 +60,9 @@ def test_home(app, live_server, env_browser, e2e_identifiers):
             .format(exp_publication_count, exp_data_table_count))
 
     # 3. check that there are three submissions in the latest submissions section
-    assert len(browser.find_elements_by_css_selector('.latest-record .title')) == 3
+    assert len(browser.find_elements(By.CSS_SELECTOR, '.latest-record .title')) == 3
     # 4. click on the second submission (should be one in e2e_identifiers)
-    second_item = browser.find_elements_by_css_selector('.latest-record .title')[1]
+    second_item = browser.find_elements(By.CSS_SELECTOR, '.latest-record .title')[1]
     actions = ActionChains(browser)
     actions.move_to_element(second_item).perform()
     href = second_item.get_attribute("href")
@@ -100,7 +100,7 @@ def test_home(app, live_server, env_browser, e2e_identifiers):
 
     # Go back to homepage and click on 1st link - should be record with resources
     browser.back()
-    latest_item = browser.find_elements_by_css_selector('.latest-record .title')[0]
+    latest_item = browser.find_elements(By.CSS_SELECTOR, '.latest-record .title')[0]
     actions = ActionChains(browser)
     actions.move_to_element(latest_item).perform()
     latest_item.click()
@@ -116,7 +116,7 @@ def test_home(app, live_server, env_browser, e2e_identifiers):
     WebDriverWait(browser, 10).until(
         EC.visibility_of_element_located((By.ID, 'resource-modal-contents'))
     )
-    submission_resources = browser.find_elements_by_class_name('resource-item-container')
+    submission_resources = browser.find_elements(By.CLASS_NAME, 'resource-item-container')
     assert len(submission_resources) == 3
 
     # Find Python file resource
@@ -159,7 +159,7 @@ def test_tables(app, live_server, env_browser):
         assert(browser.find_element(By.ID, 'table_name').text == 'Figure 8 panel (a)')
 
         # Check switching tables works as expected
-        new_table = browser.find_elements_by_css_selector('#table-list li h4')[2]
+        new_table = browser.find_elements(By.CSS_SELECTOR, '#table-list li h4')[2]
         assert(new_table.text == "Figure 8 panel (c)")
         new_table.click()
         _check_table_links(browser, "Figure 8 panel (c)")
