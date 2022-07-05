@@ -45,7 +45,7 @@ def check_by_page(start_page, end_page, max_tables, username):
     for page in range(int(start_page), int(end_page) + 1):
         click.echo("Checking page %s of search results" % page)
         driver.get('https://www.hepdata.net/search/?page=%s' % page)
-        record_links = driver.find_elements_by_css_selector(
+        record_links = driver.find_elements(By.CSS_SELECTOR,
             '.search-result-item .record-header a'
         )
         urls = []
@@ -83,7 +83,7 @@ def _check_url(url, start_table, end_table, driver):
 
     driver.get(url)
 
-    table_links = driver.find_elements_by_css_selector('#table-list li')
+    table_links = driver.find_elements(By.CSS_SELECTOR, '#table-list li')
     table_links = table_links[start_table-1:end_table]
 
     for i, table_link in enumerate(table_links):
@@ -100,7 +100,7 @@ def _check_url(url, start_table, end_table, driver):
             click.echo("Loaded")
         except TimeoutException:
             click.echo("***** Missing table at %s: *****" % url)
-            for el in driver.find_elements_by_id("hepdata_table_loading_failed"):
+            for el in driver.find_elements(By.ID, "hepdata_table_loading_failed"):
                 click.echo("***** %s *****" % el.text)
 
 
@@ -123,15 +123,15 @@ def _get_driver(username=None):
         (By.CSS_SELECTOR, ".cc_btn_accept_all")
     ))
     time.sleep(1)
-    cookie_accept_btn = driver.find_element_by_css_selector(".cc_btn_accept_all")
+    cookie_accept_btn = driver.find_element(By.CSS_SELECTOR, ".cc_btn_accept_all")
     cookie_accept_btn.click()
 
     if username and password:
         click.echo("Logging in...")
         driver.get('https://www.hepdata.net/login/')
-        login_form = driver.find_element_by_name('login_user_form')
-        login_form.find_element_by_name('email').send_keys(username)
-        login_form.find_element_by_name('password').send_keys(password)
+        login_form = driver.find_element(By.NAME, 'login_user_form')
+        login_form.find_element(By.NAME, 'email').send_keys(username)
+        login_form.find_element(By.NAME, 'password').send_keys(password)
         login_form.submit()
 
     return driver

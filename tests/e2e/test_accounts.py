@@ -30,6 +30,7 @@ from invenio_accounts.models import User
 from invenio_db import db
 from itsdangerous import URLSafeTimedSerializer
 from flask_security import utils
+from selenium.webdriver.common.by import By
 
 def test_user_registration_and_login(live_server, env_browser):
     """E2E user registration and login test."""
@@ -39,9 +40,9 @@ def test_user_registration_and_login(live_server, env_browser):
     e2e_assert_url(browser, 'security.register')
 
     # 2. Input user data
-    signup_form = browser.find_element_by_name('register_user_form')
-    input_email = signup_form.find_element_by_name('email')
-    input_password = signup_form.find_element_by_name('password')
+    signup_form = browser.find_element(By.NAME, 'register_user_form')
+    input_email = signup_form.find_element(By.NAME, 'email')
+    input_password = signup_form.find_element(By.NAME, 'password')
     # input w/ name "email"
     # input w/ name "password"
     user_email = 'user@hepdata.net'
@@ -53,7 +54,7 @@ def test_user_registration_and_login(live_server, env_browser):
     signup_form.submit()
 
     # ...and get a message saying to expect an email
-    success_element = browser.find_element_by_css_selector('.alert-success')
+    success_element = browser.find_element(By.CSS_SELECTOR, '.alert-success')
     assert(success_element is not None)
     assert(success_element.text == 'Thank you. Confirmation instructions have been sent to {}.'.format(user_email))
 
@@ -65,15 +66,15 @@ def test_user_registration_and_login(live_server, env_browser):
     browser.get(flask.url_for('security.login', _external=True))
     e2e_assert_url(browser, 'security.login')
 
-    login_form = browser.find_element_by_name('login_user_form')
+    login_form = browser.find_element(By.NAME, 'login_user_form')
     # 5. input registered info
-    login_form.find_element_by_name('email').send_keys(user_email)
-    login_form.find_element_by_name('password').send_keys(user_password)
+    login_form.find_element(By.NAME, 'email').send_keys(user_email)
+    login_form.find_element(By.NAME, 'password').send_keys(user_password)
     # 6. Submit!
     login_form.submit()
 
     # 7. We should not yet be able to log in as we haven't confirmed the email
-    error_element = browser.find_element_by_css_selector('.alert-danger')
+    error_element = browser.find_element(By.CSS_SELECTOR, '.alert-danger')
     assert(error_element is not None)
     assert('Email requires confirmation.' in error_element.text)
 
@@ -84,13 +85,13 @@ def test_user_registration_and_login(live_server, env_browser):
     # 8. Check that the resend confirmation link works
     browser.get(flask.url_for('security.send_confirmation', _external=True))
     e2e_assert_url(browser, 'security.send_confirmation')
-    email_confirm_form = browser.find_element_by_name('send_confirmation_form')
+    email_confirm_form = browser.find_element(By.NAME, 'send_confirmation_form')
     # 8a. input registered info
-    email_confirm_form.find_element_by_name('email').send_keys(user_email)
+    email_confirm_form.find_element(By.NAME, 'email').send_keys(user_email)
     # 8b. Submit!
     email_confirm_form.submit()
 
-    info_element = browser.find_element_by_css_selector('.alert-info')
+    info_element = browser.find_element(By.CSS_SELECTOR, '.alert-info')
     assert(info_element is not None)
     assert('Confirmation instructions have been sent to %s.' % user_email
            in info_element.text)
@@ -108,7 +109,7 @@ def test_user_registration_and_login(live_server, env_browser):
 
     # 9c Check that we're on the dashboard and we've got a success message
     e2e_assert_url(browser, 'hep_dashboard.dashboard')
-    success_element = browser.find_element_by_css_selector('.alert-success')
+    success_element = browser.find_element(By.CSS_SELECTOR, '.alert-success')
     assert(success_element is not None)
     assert('Thank you. Your email has been confirmed.' in success_element.text)
 
@@ -126,10 +127,10 @@ def test_user_registration_and_login(live_server, env_browser):
     browser.get(flask.url_for('security.login', _external=True))
     e2e_assert_url(browser, 'security.login')
 
-    login_form = browser.find_element_by_name('login_user_form')
+    login_form = browser.find_element(By.NAME, 'login_user_form')
     # 11a. input registered info
-    login_form.find_element_by_name('email').send_keys(user_email)
-    login_form.find_element_by_name('password').send_keys(user_password)
+    login_form.find_element(By.NAME, 'email').send_keys(user_email)
+    login_form.find_element(By.NAME, 'password').send_keys(user_password)
     # 11b. Submit!
     # check if authenticated at `flask.url_for('security.change_password')`
     login_form.submit()
