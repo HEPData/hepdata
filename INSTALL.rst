@@ -106,7 +106,8 @@ with a target directory also called ``venv`` (change it if you prefer).
 
    $ git clone https://github.com/HEPData/hepdata.git
    $ cd hepdata
-   $ python3 -m venv venv
+   $ sudo apt-get install python3.9-venv
+   $ python3.9 -m venv venv
    $ source venv/bin/activate
    (venv)$ pip install --upgrade pip
    (venv)$ pip install -e ".[all]" --upgrade -r requirements.txt
@@ -119,6 +120,9 @@ Check that PyYAML has been installed with LibYAML bindings:
 
 If LibYAML is already installed (e.g. ``brew install libyaml``) but ``CSafeLoader`` cannot be imported, you may need to
 reinstall PyYAML to ensure it's built with LibYAML bindings, e.g. on an M1 MacBook:
+
+.. code-block:: console
+   pip install pyyaml
 
 .. code-block:: console
 
@@ -149,7 +153,8 @@ use a local converter URL, and specify custom temporary and data directories:
    CFG_TMPDIR = '/Users/watt/tmp/hepdata/tmp'
    CFG_DATADIR = '/Users/watt/tmp/hepdata/data'
 
-An example file ``hepdata/config_local.local.py`` is provided, which can be copied to ``hepdata/config_local.py``.
+An example file ``hepdata/config_local.local.py`` is provided, which can be copied to ``hepdata/config_local.py``. 
+Replace the CFG_TMPDIR and CFG_DATADIR directory values a suitable path for your system.
 
 With ``TESTING=True`` emails will be output to the terminal, but links are suppressed preventing some functionality
 such as clicking on confirmation links when a new user is created (see
@@ -159,6 +164,16 @@ With ``TESTING=False`` you will need to configure an SMTP server to send emails 
 An alternative is to install `MailCatcher <https://mailcatcher.me/>`_ (e.g. ``brew install mailcatcher``) where you
 just need to add these lines to ``hepdata/config_local.py``:
 
+MailCatcher installation
+
+.. code-block:: console
+   $sudo apt-get update
+   $sudo apt-get install -y build-essential softare-properties-common
+   $sudo apt install ruby-rubygems
+   $sudo apt install ruby-dev
+   $sudo apt install libsqlite3-dev
+   $sudo gem install mailcatcher
+
 .. code-block:: python
 
    MAIL_SERVER = '127.0.0.1'
@@ -166,6 +181,9 @@ just need to add these lines to ``hepdata/config_local.py``:
 
 JavaScript
 ----------
+
+.. code-block:: console
+   $sudo apt install nodejs
 
 Next, build assets using webpack (via `invenio-assets <https://invenio-assets.readthedocs.io/en/latest/>`_).
 
@@ -178,6 +196,26 @@ is addressed, you will need to replace
 ``"node-sass": "^4.12.0",`` with ``"sass": "^1.50.0",`` (or another `Dart Sass <https://sass-lang.com/dart-sass>`_
 version) in the ``package.json`` file of the ``invenio-assets`` installation
 (e.g. ``venv/lib/python3.9/site-packages/invenio_assets/assets/package.json``).
+
+Legacy Peer Dependencies
+-----
+
+.. code-block:: console
+   (venv)$hepdata webpack install --legacy-peer-deps
+   (venv)$hepdata webpack build
+
+Start the redis service after installation, before running celery
+
+Redis
+-----
+
+.. code-block:: console
+   $sudo apt install redis
+
+Start the redis service after installation, before running celery
+
+.. code-block:: console
+   $sudo apt install redis
 
 Celery
 ------
