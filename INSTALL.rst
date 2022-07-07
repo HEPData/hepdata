@@ -39,8 +39,6 @@ for example, using ``yum`` or ``apt-get`` for Linux or ``brew`` for macOS:
  * `Elasticsearch <https://www.elastic.co/products/elasticsearch>`_ (version 7) for indexing and information retrieval. See below for further instructions.
  * `Node.js <https://nodejs.org>`_ (version 14) JavaScript run-time environment and its package manager `npm <https://www.npmjs.com/>`_. [If you're using a Debian-based OS, please follow the `official installation instructions <https://github.com/nodesource/distributions/blob/master/README.md#debinstall>`_ to install NodeJS (which will also install npm), to avoid issues with ``node-sass``.]
 
-
-
 Elasticsearch
 -------------
 
@@ -106,7 +104,6 @@ with a target directory also called ``venv`` (change it if you prefer).
 
    $ git clone https://github.com/HEPData/hepdata.git
    $ cd hepdata
-   $ sudo apt-get install python3.9-venv
    $ python3.9 -m venv venv
    $ source venv/bin/activate
    (venv)$ pip install --upgrade pip
@@ -115,14 +112,11 @@ with a target directory also called ``venv`` (change it if you prefer).
 Check that PyYAML has been installed with LibYAML bindings:
 
 .. code-block:: console
-
+   
    (venv)$ python -c "from yaml import CSafeLoader"
 
 If LibYAML is already installed (e.g. ``brew install libyaml``) but ``CSafeLoader`` cannot be imported, you may need to
 reinstall PyYAML to ensure it's built with LibYAML bindings, e.g. on an M1 MacBook:
-
-.. code-block:: console
-   pip install pyyaml
 
 .. code-block:: console
 
@@ -154,7 +148,7 @@ use a local converter URL, and specify custom temporary and data directories:
    CFG_DATADIR = '/Users/watt/tmp/hepdata/data'
 
 An example file ``hepdata/config_local.local.py`` is provided, which can be copied to ``hepdata/config_local.py``. 
-Replace the CFG_TMPDIR and CFG_DATADIR directory values a suitable path for your system.
+Replace the CFG_TMPDIR and CFG_DATADIR directory values with a suitable path for your system.
 
 With ``TESTING=True`` emails will be output to the terminal, but links are suppressed preventing some functionality
 such as clicking on confirmation links when a new user is created (see
@@ -164,16 +158,6 @@ With ``TESTING=False`` you will need to configure an SMTP server to send emails 
 An alternative is to install `MailCatcher <https://mailcatcher.me/>`_ (e.g. ``brew install mailcatcher``) where you
 just need to add these lines to ``hepdata/config_local.py``:
 
-MailCatcher installation
-
-.. code-block:: console
-   $sudo apt-get update
-   $sudo apt-get install -y build-essential softare-properties-common
-   $sudo apt install ruby-rubygems
-   $sudo apt install ruby-dev
-   $sudo apt install libsqlite3-dev
-   $sudo gem install mailcatcher
-
 .. code-block:: python
 
    MAIL_SERVER = '127.0.0.1'
@@ -181,9 +165,6 @@ MailCatcher installation
 
 JavaScript
 ----------
-
-.. code-block:: console
-   $sudo apt install nodejs
 
 Next, build assets using webpack (via `invenio-assets <https://invenio-assets.readthedocs.io/en/latest/>`_).
 
@@ -197,30 +178,10 @@ is addressed, you will need to replace
 version) in the ``package.json`` file of the ``invenio-assets`` installation
 (e.g. ``venv/lib/python3.9/site-packages/invenio_assets/assets/package.json``).
 
-Legacy Peer Dependencies
------
-
-.. code-block:: console
-   (venv)$hepdata webpack install --legacy-peer-deps
-   (venv)$hepdata webpack build
-
-Start the redis service after installation, before running celery
-
-Redis
------
-
-.. code-block:: console
-   $sudo apt install redis
-
-Start the redis service after installation, before running celery
-
-.. code-block:: console
-   $sudo apt install redis
-
 Celery
 ------
 
-Run Celery (-B runs celery beat):
+Run Celery and ensure the redis-server service is running (-B runs celery beat):
 
 .. code-block:: console
 
@@ -296,7 +257,7 @@ To run the tests locally you have several options:
 
 1. Run a Sauce Connect tunnel (recommended).  This is used by GitHub Actions CI.
     1. Create a Sauce Labs account, or ask for the HEPData account details.
-    2. Log into Sauce Labs, and go to the "Tunnels" page.
+    2. Log into Sauce Labs, and go to the "Tunnel Proxies" page.
     3. Follow the instructions there to install Sauce Connect and start a tunnel.
        Do not name the tunnel with the ``--tunnel-name`` argument.
     4. Create the variables ``SAUCE_USERNAME`` and ``SAUCE_ACCESS_KEY`` in your local environment (and add them to your
