@@ -31,7 +31,7 @@ invenio-theme==1.3.8
 invenio-userprofiles==1.2.1
 Jinja2==2.11.3
 jsmin==3.0.0
-lxml==4.6.5
+lxml==4.9.1
 MarkupSafe==2.0.1
 msgpack==0.6.2
 pluggy==0.13.1    # Fixed version to make sure it works with jsonresolve and pytest
