@@ -178,6 +178,16 @@ is addressed, you will need to replace
 version) in the ``package.json`` file of the ``invenio-assets`` installation
 (e.g. ``venv/lib/python3.9/site-packages/invenio_assets/assets/package.json``).
 
+Peer Dependencies
+-----------------
+
+Install the peer dependencies and build.
+
+.. code-block:: console
+
+   (hepdata) $ hepdata webpack install --legacy-peer-deps
+   (hepdata) $ hepdata webpack build
+
 Celery
 ------
 
@@ -205,13 +215,13 @@ executing the steps below.  On macOS you can install with ``brew install postgre
 Next, create the database and database tables.
 Also create a user and populate the database with some records.
 Make sure that Celery is running before proceeding further.
-Pass your email address and a password as an argument to the script:
+Pass an email address and any password as an argument to the script:
 
 .. code-block:: console
 
    (hepdata)$ ./scripts/initialise_db.sh your@email.com password
 
-Inspect the ``hepdata`` database from the command line as the ``hepdata`` user:
+Inspect the ``hepdata`` database from the command line as the ``hepdata`` user and add email confirmation:
 
 .. code-block:: console
 
@@ -227,6 +237,9 @@ Inspect the ``hepdata`` database from the command line as the ``hepdata`` user:
                    58 | 1299143    | 2014-08-05 17:55:54
    (4 rows)
 
+Set email confirmation for the test user within the database.
+
+.. code-block:: console
    hepdata=> update accounts_user set confirmed_at=NOW() where id=1;
    UPDATE 1
 
@@ -234,6 +247,14 @@ If you're having problems with access permissions to the database (on Linux), a 
 PostgreSQL Client Authentication Configuration File (e.g. ``/var/lib/pgsql/12/data/pg_hba.conf``) to
 ``trust`` local and IPv4/IPv6 connections (instead of ``peer`` or ``ident``), then restart the PostgreSQL
 server (e.g. ``sudo systemctl restart postgresql-12``).
+
+Reindex
+---------------
+
+You may need to reindex the database.
+
+.. code-block:: console
+   (hepdata) $ hepdata utils reindex -rc True
 
 Run a local development server
 ------------------------------
