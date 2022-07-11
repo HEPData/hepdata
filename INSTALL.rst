@@ -178,16 +178,6 @@ is addressed, you will need to replace
 version) in the ``package.json`` file of the ``invenio-assets`` installation
 (e.g. ``venv/lib/python3.9/site-packages/invenio_assets/assets/package.json``).
 
-Peer Dependencies
------------------
-
-Install the peer dependencies and build.
-
-.. code-block:: console
-
-   (hepdata) $ hepdata webpack install --legacy-peer-deps
-   (hepdata) $ hepdata webpack build
-
 Celery
 ------
 
