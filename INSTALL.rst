@@ -230,6 +230,7 @@ Inspect the ``hepdata`` database from the command line as the ``hepdata`` user a
 Set email confirmation for the test user within the database.
 
 .. code-block:: console
+
    hepdata=> update accounts_user set confirmed_at=NOW() where id=1;
    UPDATE 1
 
@@ -241,9 +242,10 @@ server (e.g. ``sudo systemctl restart postgresql-12``).
 Reindex
 ---------------
 
-You may need to reindex the database.
+You may need to reindex the ElasticSearch data.
 
 .. code-block:: console
+
    (hepdata) $ hepdata utils reindex -rc True
 
 Run a local development server
