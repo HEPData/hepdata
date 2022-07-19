@@ -112,7 +112,7 @@ with a target directory also called ``venv`` (change it if you prefer).
 Check that PyYAML has been installed with LibYAML bindings:
 
 .. code-block:: console
-   
+
    (venv)$ python -c "from yaml import CSafeLoader"
 
 If LibYAML is already installed (e.g. ``brew install libyaml``) but ``CSafeLoader`` cannot be imported, you may need to
@@ -147,7 +147,7 @@ use a local converter URL, and specify custom temporary and data directories:
    CFG_TMPDIR = '/Users/watt/tmp/hepdata/tmp'
    CFG_DATADIR = '/Users/watt/tmp/hepdata/data'
 
-An example file ``hepdata/config_local.local.py`` is provided, which can be copied to ``hepdata/config_local.py``. 
+An example file ``hepdata/config_local.local.py`` is provided, which can be copied to ``hepdata/config_local.py``.
 Replace the CFG_TMPDIR and CFG_DATADIR directory values with a suitable path for your system.
 
 With ``TESTING=True`` emails will be output to the terminal, but links are suppressed preventing some functionality
@@ -239,10 +239,10 @@ PostgreSQL Client Authentication Configuration File (e.g. ``/var/lib/pgsql/12/da
 ``trust`` local and IPv4/IPv6 connections (instead of ``peer`` or ``ident``), then restart the PostgreSQL
 server (e.g. ``sudo systemctl restart postgresql-12``).
 
-Reindex
----------------
+Recreate the Elasticsearch index
+--------------------------------
 
-You may need to reindex the ElasticSearch data.
+You may need to recreate the Elasticsearch data, for example, after switching to a new Elasticsearch instance.
 
 .. code-block:: console
 
@@ -256,7 +256,13 @@ Now start the HEPData web application in debug mode:
 .. code-block:: console
 
    (hepdata)$ hepdata run --debugger --reload
-   (hepdata)$ firefox http://localhost:5000/
+
+Then open your preferred web browser (Chrome, Firefox, Safari, etc.) at http://localhost:5000/ .
+
+On macOS Monterey you might find that ControlCenter is already listening to port 5000
+(check with ``lsof -i -P | grep 5000``).  If this is the case,
+`turn off AirPlay Receiver <https://support.apple.com/en-gb/guide/mac-help/mchl15c9e4b5/mac>`_.
+
 
 .. _running-the-tests:
 
@@ -290,6 +296,8 @@ Once you have set up Selenium or Sauce Labs, you can run the tests using:
 .. code-block:: console
 
    (venv)$ ./run-tests.sh
+
+Note that the end-to-end tests require the converter (specified by ``CFG_CONVERTER_URL``) to be running.
 
 
 Building the docs
