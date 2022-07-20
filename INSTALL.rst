@@ -39,8 +39,6 @@ for example, using ``yum`` or ``apt-get`` for Linux or ``brew`` for macOS:
  * `Elasticsearch <https://www.elastic.co/products/elasticsearch>`_ (version 7) for indexing and information retrieval. See below for further instructions.
  * `Node.js <https://nodejs.org>`_ (version 14) JavaScript run-time environment and its package manager `npm <https://www.npmjs.com/>`_. [If you're using a Debian-based OS, please follow the `official installation instructions <https://github.com/nodesource/distributions/blob/master/README.md#debinstall>`_ to install NodeJS (which will also install npm), to avoid issues with ``node-sass``.]
 
-
-
 Elasticsearch
 -------------
 
@@ -106,7 +104,7 @@ with a target directory also called ``venv`` (change it if you prefer).
 
    $ git clone https://github.com/HEPData/hepdata.git
    $ cd hepdata
-   $ python3 -m venv venv
+   $ python3.9 -m venv venv
    $ source venv/bin/activate
    (venv)$ pip install --upgrade pip
    (venv)$ pip install -e ".[all]" --upgrade -r requirements.txt
@@ -150,6 +148,7 @@ use a local converter URL, and specify custom temporary and data directories:
    CFG_DATADIR = '/Users/watt/tmp/hepdata/data'
 
 An example file ``hepdata/config_local.local.py`` is provided, which can be copied to ``hepdata/config_local.py``.
+Replace the CFG_TMPDIR and CFG_DATADIR directory values with a suitable path for your system.
 
 With ``TESTING=True`` emails will be output to the terminal, but links are suppressed preventing some functionality
 such as clicking on confirmation links when a new user is created (see
@@ -182,7 +181,7 @@ version) in the ``package.json`` file of the ``invenio-assets`` installation
 Celery
 ------
 
-Run Celery (-B runs celery beat):
+Run Celery and ensure the redis-server service is running (-B runs celery beat):
 
 .. code-block:: console
 
@@ -206,13 +205,13 @@ executing the steps below.  On macOS you can install with ``brew install postgre
 Next, create the database and database tables.
 Also create a user and populate the database with some records.
 Make sure that Celery is running before proceeding further.
-Pass your email address and a password as an argument to the script:
+Pass an email address and any password as an argument to the script:
 
 .. code-block:: console
 
    (hepdata)$ ./scripts/initialise_db.sh your@email.com password
 
-Inspect the ``hepdata`` database from the command line as the ``hepdata`` user:
+Inspect the ``hepdata`` database from the command line as the ``hepdata`` user and add email confirmation:
 
 .. code-block:: console
 
@@ -228,6 +227,10 @@ Inspect the ``hepdata`` database from the command line as the ``hepdata`` user:
                    58 | 1299143    | 2014-08-05 17:55:54
    (4 rows)
 
+Set email confirmation for the test user within the database.
+
+.. code-block:: console
+
    hepdata=> update accounts_user set confirmed_at=NOW() where id=1;
    UPDATE 1
 
@@ -235,6 +238,15 @@ If you're having problems with access permissions to the database (on Linux), a 
 PostgreSQL Client Authentication Configuration File (e.g. ``/var/lib/pgsql/12/data/pg_hba.conf``) to
 ``trust`` local and IPv4/IPv6 connections (instead of ``peer`` or ``ident``), then restart the PostgreSQL
 server (e.g. ``sudo systemctl restart postgresql-12``).
+
+Recreate the Elasticsearch index
+--------------------------------
+
+You may need to recreate the Elasticsearch data, for example, after switching to a new Elasticsearch instance.
+
+.. code-block:: console
+
+   (hepdata) $ hepdata utils reindex -rc True
 
 Run a local development server
 ------------------------------
@@ -244,7 +256,13 @@ Now start the HEPData web application in debug mode:
 .. code-block:: console
 
    (hepdata)$ hepdata run --debugger --reload
-   (hepdata)$ firefox http://localhost:5000/
+
+Then open your preferred web browser (Chrome, Firefox, Safari, etc.) at http://localhost:5000/ .
+
+On macOS Monterey you might find that ControlCenter is already listening to port 5000
+(check with ``lsof -i -P | grep 5000``).  If this is the case,
+`turn off AirPlay Receiver <https://support.apple.com/en-gb/guide/mac-help/mchl15c9e4b5/mac>`_.
+
 
 .. _running-the-tests:
 
@@ -258,7 +276,7 @@ To run the tests locally you have several options:
 
 1. Run a Sauce Connect tunnel (recommended).  This is used by GitHub Actions CI.
     1. Create a Sauce Labs account, or ask for the HEPData account details.
-    2. Log into Sauce Labs, and go to the "Tunnels" page.
+    2. Log into Sauce Labs, and go to the "Tunnel Proxies" page.
     3. Follow the instructions there to install Sauce Connect and start a tunnel.
        Do not name the tunnel with the ``--tunnel-name`` argument.
     4. Create the variables ``SAUCE_USERNAME`` and ``SAUCE_ACCESS_KEY`` in your local environment (and add them to your
@@ -278,6 +296,8 @@ Once you have set up Selenium or Sauce Labs, you can run the tests using:
 .. code-block:: console
 
    (venv)$ ./run-tests.sh
+
+Note that the end-to-end tests require the converter (specified by ``CFG_CONVERTER_URL``) to be running.
 
 
 Building the docs

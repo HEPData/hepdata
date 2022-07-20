@@ -37,6 +37,6 @@ Authors
 
   * Jan Stypka
 
-* **Developer (2019-):**
+* **Developer (2019-2022):**
 
   * Alison Clarke
