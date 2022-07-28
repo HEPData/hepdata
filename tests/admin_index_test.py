@@ -17,7 +17,7 @@
 # 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
 import logging
 
-from elasticsearch_dsl import Index
+from opensearch_dsl import Index
 
 
 logging.basicConfig()

@@ -15,8 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with HEPData; if not, write to the Free Software Foundation, Inc.,
 # 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
-from elasticsearch.exceptions import NotFoundError
-from elasticsearch_dsl import Search, Index
+from opensearchpy.exceptions import NotFoundError
+from opensearch_dsl import Search, Index
 import datetime
 import pytest
 from invenio_db import db
@@ -179,7 +179,7 @@ def test_search(app, load_default_data, identifiers):
     Testing both standard and authors search here to save loading the data multiple times
     :return:
     """
-    index = app.config.get('ELASTICSEARCH_INDEX')
+    index = app.config.get('OPENSEARCH_INDEX')
 
     # Test searching with an empty query
     results = es_api.search('', index=index)
@@ -448,7 +448,7 @@ def test_is_datatable():
 
 
 def test_reindex_all(app, load_default_data, identifiers, mocker):
-    index = app.config.get('ELASTICSEARCH_INDEX')
+    index = app.config.get('OPENSEARCH_INDEX')
     # Delete the default index
     es.indices.delete(index=index)
 
@@ -547,7 +547,7 @@ def test_reindex_all(app, load_default_data, identifiers, mocker):
 
 
 def test_reindex_batch(app, load_default_data, mocker):
-    index = app.config.get('ELASTICSEARCH_INDEX')
+    index = app.config.get('OPENSEARCH_INDEX')
 
     # Mock methods called so we can check they're called with correct parameters
     mock_index_record_ids = mocker.patch('hepdata.ext.elasticsearch.api.index_record_ids')
