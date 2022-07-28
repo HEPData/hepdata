@@ -21,13 +21,13 @@ log = logging.getLogger(__name__)
 @click.option('--batch', '-b', type=int, default=5,
               help='Number of hepsubmission entries to cleanup at a time.')
 def cleanup_index(batch):
-    """Clean up old datasubmission entries from elasticsearch"""
+    """Clean up old datasubmission entries from opensearch"""
     cleanup_index_all(batch=batch)
 
 
 @default_index
 def cleanup_index_all(index=None, batch=5, synchronous=False):
-    # Find entries in elasticsearch which are from previous versions of submissions and remove
+    # Find entries in opensearch which are from previous versions of submissions and remove
     # Get all finished HEPSubmission ids with version numbers less than the max
     # finished version by doing a left outer join of hepsubmission with itself
     h1 = aliased(HEPSubmission)

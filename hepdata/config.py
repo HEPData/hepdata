@@ -324,7 +324,7 @@ HISTFACTORY_FILE_TYPE = 'HistFactory'
 ADMIN_EMAIL = 'info@hepdata.net'
 SUBMISSION_FILE_NAME_PATTERN = 'HEPData-{}-v{}-yaml.zip'
 
-# For ignoring URLLIB3 errors on the server where we use https for elastic search,
+# For ignoring URLLIB3 errors on the server where we use https for opensearch,
 # but the certificate is generated on our side.
 PYTHONWARNINGS="ignore:Unverified HTTPS request"
 

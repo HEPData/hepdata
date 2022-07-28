@@ -21,7 +21,7 @@
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
-"""Enhancers for the document sent to elastic search """
+"""Enhancers for the document sent to opensearch """
 import re
 import datetime
 import logging

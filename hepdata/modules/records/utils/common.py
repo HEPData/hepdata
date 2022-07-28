@@ -218,7 +218,7 @@ def get_record_contents(recid, status=None):
     Tries to get record from Elasticsearch first. Failing that, it tries from the database.
 
     :param recid: Record ID to get.
-    :param status: Status of submission. If provided and not 'finished', will not check elasticsearch first.
+    :param status: Status of submission. If provided and not 'finished', will not check opensearch first.
     :return: a dictionary containing the record contents if the recid exists, None otherwise.
     """
     record = None
