@@ -25,9 +25,9 @@
 from datetime import datetime, timedelta
 import logging
 
-from elasticsearch import Elasticsearch
-from elasticsearch_dsl import Document, Text, Keyword, Date, Integer, Nested, InnerDoc, Q, Index, Search
-from elasticsearch_dsl.connections import connections
+from opensearchpy import OpenSearch
+from opensearch_dsl import Document, Text, Keyword, Date, Integer, Nested, InnerDoc, Q, Index, Search
+from opensearch_dsl.connections import connections
 from flask import current_app
 
 from hepdata.modules.permissions.models import CoordinatorRequest
@@ -92,8 +92,8 @@ class AdminIndexer:
     EXCLUDE_BEFORE_DATE = datetime(2017, 1, 1)
 
     def __init__(self, *args, **kwargs):
-        self.client = Elasticsearch(
-            hosts=current_app.config['SEARCH_ELASTIC_HOSTS']) if 'client' not in kwargs else kwargs.get('client')
+        self.client = OpenSearch(
+            hosts=current_app.config['SEARCH_OPENSEARCH_HOSTS']) if 'client' not in kwargs else kwargs.get('client')
 
         self.index = kwargs.get('index', current_app.config['SUBMISSION_INDEX'])
 

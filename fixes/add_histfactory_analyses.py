@@ -66,4 +66,4 @@ def _add_histfactory_analyses_batch(ids):
 
     if recids_to_reindex:
         log.info(f"Reindexing records: {recids_to_reindex}")
-        reindex_batch(recids_to_reindex, current_app.config['ELASTICSEARCH_INDEX'])
+        reindex_batch(recids_to_reindex, current_app.config['OPENSEARCH_INDEX'])

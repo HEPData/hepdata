@@ -114,7 +114,7 @@ SESSION_REDIS = "redis://localhost:6379/0"
 PERMANENT_SESSION_LIFETIME = timedelta(days=1)
 
 # ElasticSearch
-ELASTICSEARCH_HOST = "localhost"
+OPENSEARCH_HOST = "localhost"
 
 # Accounts
 RECAPTCHA_PUBLIC_KEY = None
@@ -165,10 +165,10 @@ BASE_TEMPLATE = "hepdata_theme/page.html"
 COVER_TEMPLATE = "hepdata_theme/page_cover.html"
 SETTINGS_TEMPLATE = "invenio_theme/page_settings.html"
 
-ELASTICSEARCH_INDEX = 'hepdata-main'
+OPENSEARCH_INDEX = 'hepdata-main'
 SUBMISSION_INDEX = 'hepdata-submission'
 AUTHOR_INDEX = 'hepdata-authors'
-SEARCH_ELASTIC_HOSTS = [
+SEARCH_OPENSEARCH_HOSTS = [
     'localhost:9200'
 ]
 

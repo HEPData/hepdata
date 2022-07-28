@@ -23,9 +23,9 @@ import re
 from celery import shared_task
 from dateutil.parser import parse
 from flask import current_app
-from elasticsearch.exceptions import TransportError
-from elasticsearch_dsl import Search
-from elasticsearch_dsl.query import QueryString, Q
+from opensearchpy.exceptions import TransportError
+from opensearch_dsl import Search
+from opensearch_dsl.query import QueryString, Q
 from invenio_pidstore.models import RecordIdentifier
 from sqlalchemy import and_
 from sqlalchemy.orm import aliased
@@ -43,7 +43,7 @@ import logging
 from invenio_search import current_search_client as es, RecordsSearch
 from hepdata.modules.submission.api import get_latest_hepsubmission
 from hepdata.modules.submission.models import HEPSubmission, DataSubmission
-from hepdata.modules.search.config import ELASTICSEARCH_MAX_RESULT_WINDOW, LIMIT_MAX_RESULTS_PER_PAGE
+from hepdata.modules.search.config import OPENSEARCH_MAX_RESULT_WINDOW, LIMIT_MAX_RESULTS_PER_PAGE
 
 
 __all__ = ['search', 'index_record_ids', 'index_record_dict', 'fetch_record',
@@ -59,7 +59,7 @@ def default_index(f):
 
     def decorator(*args, **kwargs):
         if 'index' not in kwargs:
-            kwargs['index'] = current_app.config['ELASTICSEARCH_INDEX']
+            kwargs['index'] = current_app.config['OPENSEARCH_INDEX']
         return f(*args, **kwargs)
 
     decorator.__name__ = f.__name__
@@ -151,7 +151,7 @@ def search(query,
         if query:
             data_search = data_search.query(QueryString(query=query))
 
-        data_search_size = size * ELASTICSEARCH_MAX_RESULT_WINDOW // LIMIT_MAX_RESULTS_PER_PAGE
+        data_search_size = size * OPENSEARCH_MAX_RESULT_WINDOW // LIMIT_MAX_RESULTS_PER_PAGE
         data_search = data_search[0:data_search_size]
         data_result = data_search.execute().to_dict()
 

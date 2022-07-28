@@ -28,7 +28,7 @@ from datetime import datetime
 from dateutil.parser import parse
 import shutil
 
-from elasticsearch import NotFoundError, ConnectionTimeout
+from opensearchpy import NotFoundError, ConnectionTimeout
 from flask import current_app
 from flask_celeryext import create_celery_app
 from flask_login import current_user

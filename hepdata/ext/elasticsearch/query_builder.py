@@ -21,7 +21,7 @@
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
 import re
-from elasticsearch_dsl import Q
+from opensearch_dsl import Q
 
 
 class QueryBuilder:
