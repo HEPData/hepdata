@@ -39,7 +39,7 @@ import yaml
 from yaml import CBaseLoader as Loader
 
 from hepdata.config import CFG_DATA_TYPE, CFG_PUB_TYPE, SITE_URL
-from hepdata.ext.elasticsearch.api import get_records_matching_field, get_count_for_collection, get_n_latest_records, \
+from hepdata.ext.opensearch.api import get_records_matching_field, get_count_for_collection, get_n_latest_records, \
     index_record_ids
 from hepdata.modules.email.api import send_notification_email, send_new_review_message_email, NoParticipantsException, \
     send_question_email, send_coordinator_notification_email

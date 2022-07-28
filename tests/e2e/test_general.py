@@ -36,7 +36,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from functools import reduce
 from tests.conftest import import_default_data
 
-from hepdata.ext.elasticsearch.api import reindex_all
+from hepdata.ext.opensearch.api import reindex_all
 from hepdata.modules.records.importer.api import import_records
 from hepdata.modules.submission.api import get_latest_hepsubmission
 from hepdata.modules.records.utils.submission import unload_submission, get_or_create_hepsubmission

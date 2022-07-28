@@ -34,8 +34,8 @@ from flask_celeryext import create_celery_app
 from flask_login import current_user
 from hepdata_converter_ws_client import get_data_size
 from hepdata.config import CFG_DATA_TYPE, CFG_PUB_TYPE
-from hepdata.ext.elasticsearch.admin_view.api import AdminIndexer
-from hepdata.ext.elasticsearch.api import get_records_matching_field, \
+from hepdata.ext.opensearch.admin_view.api import AdminIndexer
+from hepdata.ext.opensearch.api import get_records_matching_field, \
     delete_item_from_index, index_record_ids, push_data_keywords
 from hepdata.modules.converter import prepare_data_folder
 from hepdata.modules.converter.tasks import convert_and_store

@@ -31,7 +31,7 @@ from sqlalchemy import and_
 from sqlalchemy.orm import aliased
 
 
-from hepdata.ext.elasticsearch.document_enhancers import enhance_data_document, enhance_publication_document
+from hepdata.ext.opensearch.document_enhancers import enhance_data_document, enhance_publication_document
 from .config.es_config import sort_fields_mapping, add_default_aggregations
 from .utils import calculate_sort_order, prepare_author_for_indexing
 from hepdata.config import CFG_PUB_TYPE, CFG_DATA_TYPE

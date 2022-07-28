@@ -44,7 +44,7 @@ from sqlalchemy_utils.functions import create_database, database_exists, \
 from time import sleep
 
 from hepdata.config import CFG_TMPDIR, RUN_SELENIUM_LOCALLY
-from hepdata.ext.elasticsearch.api import reindex_all
+from hepdata.ext.opensearch.api import reindex_all
 from hepdata.factory import create_app
 from tests.conftest import get_identifiers, import_default_data
 

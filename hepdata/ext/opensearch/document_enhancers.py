@@ -30,7 +30,7 @@ from dateutil.parser import parse
 from flask import current_app
 
 from hepdata.config import CFG_PUB_TYPE, CFG_DATA_TYPE, HISTFACTORY_FILE_TYPE
-from hepdata.ext.elasticsearch.config.record_mapping import mapping as es_mapping
+from hepdata.ext.opensearch.config.record_mapping import mapping as es_mapping
 from hepdata.modules.permissions.models import SubmissionParticipant
 from hepdata.modules.submission.api import get_latest_hepsubmission
 

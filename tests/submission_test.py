@@ -31,7 +31,7 @@ from time import sleep
 from invenio_db import db
 import pytest
 
-from hepdata.ext.elasticsearch.api import get_records_matching_field
+from hepdata.ext.opensearch.api import get_records_matching_field
 from hepdata.modules.permissions.models import SubmissionParticipant
 from hepdata.modules.records.api import format_submission, process_saved_file, create_new_version
 from hepdata.modules.records.utils.common import infer_file_type, contains_accepted_url, allowed_file, record_exists, \

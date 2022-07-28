@@ -22,15 +22,15 @@ import pytest
 from invenio_db import db
 from unittest.mock import call
 
-from hepdata.ext.elasticsearch.config.es_config import \
+from hepdata.ext.opensearch.config.es_config import \
     add_default_aggregations, sort_fields_mapping
-from hepdata.ext.elasticsearch import api as es_api
-from hepdata.ext.elasticsearch.config.es_config import get_filter_field
-from hepdata.ext.elasticsearch.document_enhancers import add_data_keywords, process_cmenergies
-from hepdata.ext.elasticsearch.process_results import merge_results, match_tables_to_papers, \
+from hepdata.ext.opensearch import api as es_api
+from hepdata.ext.opensearch.config.es_config import get_filter_field
+from hepdata.ext.opensearch.document_enhancers import add_data_keywords, process_cmenergies
+from hepdata.ext.opensearch.process_results import merge_results, match_tables_to_papers, \
     get_basic_record_information, is_datatable
-from hepdata.ext.elasticsearch.query_builder import QueryBuilder, HEPDataQueryParser
-from hepdata.ext.elasticsearch.utils import flip_sort_order, parse_and_format_date, prepare_author_for_indexing, \
+from hepdata.ext.opensearch.query_builder import QueryBuilder, HEPDataQueryParser
+from hepdata.ext.opensearch.utils import flip_sort_order, parse_and_format_date, prepare_author_for_indexing, \
     calculate_sort_order, push_keywords
 from hepdata.modules.records.importer.api import import_records
 from hepdata.modules.submission.models import HEPSubmission
@@ -477,7 +477,7 @@ def test_reindex_all(app, load_default_data, identifiers, mocker):
     es_api.reindex_all(index=index, recreate=False, update_mapping=True, synchronous=True)
 
     # Test other params using mocking
-    m = mocker.patch('hepdata.ext.elasticsearch.api.reindex_batch')
+    m = mocker.patch('hepdata.ext.opensearch.api.reindex_batch')
 
     # Start and end at publication_recid 1, batch size 2:
     # should call reindex_batch twice with submission ids [1] then [2]
@@ -550,8 +550,8 @@ def test_reindex_batch(app, load_default_data, mocker):
     index = app.config.get('OPENSEARCH_INDEX')
 
     # Mock methods called so we can check they're called with correct parameters
-    mock_index_record_ids = mocker.patch('hepdata.ext.elasticsearch.api.index_record_ids')
-    mock_push_data_keywords = mocker.patch('hepdata.ext.elasticsearch.api.push_data_keywords')
+    mock_index_record_ids = mocker.patch('hepdata.ext.opensearch.api.index_record_ids')
+    mock_push_data_keywords = mocker.patch('hepdata.ext.opensearch.api.push_data_keywords')
 
     # Reindex submission id 1 (pub_recid=1, with data submissions 2-15)
     mock_index_record_ids.return_value = {'publication': [1], 'datatable': list(range(2,16))}
@@ -582,7 +582,7 @@ def test_update_record_mapping(app, mocker):
 
     # mapping should be as defined in record_mapping
     mapping = index.get_mapping(using=es)
-    from hepdata.ext.elasticsearch.config.record_mapping import mapping as real_mapping
+    from hepdata.ext.opensearch.config.record_mapping import mapping as real_mapping
     assert 'properties' in mapping['mock_index']['mappings']
     for k in real_mapping.keys():
         assert k in mapping['mock_index']['mappings']['properties']

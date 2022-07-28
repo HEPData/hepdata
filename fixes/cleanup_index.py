@@ -9,7 +9,7 @@ from sqlalchemy import and_, distinct
 from sqlalchemy.orm import aliased
 
 from hepdata.cli import fix
-from hepdata.ext.elasticsearch.api import default_index
+from hepdata.ext.opensearch.api import default_index
 from hepdata.modules.submission.models import HEPSubmission, DataSubmission
 
 logging.basicConfig()

@@ -29,7 +29,7 @@ import os
 from sqlalchemy.orm.exc import NoResultFound
 
 from hepdata.config import CFG_PUB_TYPE, HISTFACTORY_FILE_TYPE
-from hepdata.ext.elasticsearch.api import get_record
+from hepdata.ext.opensearch.api import get_record
 from hepdata.modules.submission.models import HEPSubmission, License
 
 FILE_TYPES = {

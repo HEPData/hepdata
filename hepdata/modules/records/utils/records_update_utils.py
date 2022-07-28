@@ -9,7 +9,7 @@ from hepdata.modules.submission.models import DataSubmission
 from hepdata.modules.records.utils.common import get_record_by_id
 from hepdata.modules.records.utils.workflow import update_record
 from hepdata.modules.inspire_api.views import get_inspire_record_information
-from hepdata.ext.elasticsearch.api import index_record_ids, push_data_keywords
+from hepdata.ext.opensearch.api import index_record_ids, push_data_keywords
 from hepdata.modules.email.api import notify_publication_update
 from hepdata.resilient_requests import resilient_requests
 from hepdata.config import TESTING

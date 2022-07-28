@@ -9,7 +9,7 @@ from invenio_db import db
 from hepdata.celery import dynamic_tasks
 from hepdata.config import HISTFACTORY_FILE_TYPE
 from hepdata.cli import fix
-from hepdata.ext.elasticsearch.api import reindex_batch
+from hepdata.ext.opensearch.api import reindex_batch
 from hepdata.modules.records.utils.common import is_histfactory
 from hepdata.modules.submission.api import get_latest_hepsubmission
 from hepdata.modules.submission.models import HEPSubmission

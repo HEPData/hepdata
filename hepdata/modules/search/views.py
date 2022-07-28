@@ -23,7 +23,7 @@ import sys
 
 from flask import Blueprint, request, render_template, jsonify
 from hepdata.config import CFG_DATA_KEYWORDS
-from hepdata.ext.elasticsearch.api import search as es_search, \
+from hepdata.ext.opensearch.api import search as es_search, \
     search_authors as es_search_authors, get_all_ids as es_get_all_ids
 from hepdata.modules.records.utils.common import decode_string
 from hepdata.modules.records.api import get_all_ids as db_get_all_ids

@@ -5,7 +5,7 @@ from flask.cli import with_appcontext
 from invenio_db import db
 
 from hepdata.cli import fix
-from hepdata.ext.elasticsearch.api import index_record_ids, push_data_keywords
+from hepdata.ext.opensearch.api import index_record_ids, push_data_keywords
 from hepdata.modules.submission.models import HEPSubmission, DataSubmission
 from hepdata.modules.records.utils.common import get_record_by_id
 from hepdata.modules.records.utils.doi_minter import generate_doi_for_table

@@ -31,8 +31,8 @@ from invenio_accounts.models import Role, User
 from invenio_db import db
 import pytest
 
-from hepdata.ext.elasticsearch.admin_view.api import AdminIndexer
-from hepdata.ext.elasticsearch.api import reindex_all
+from hepdata.ext.opensearch.admin_view.api import AdminIndexer
+from hepdata.ext.opensearch.api import reindex_all
 from hepdata.factory import create_app
 from hepdata.modules.records.importer.api import import_records, _download_file
 
