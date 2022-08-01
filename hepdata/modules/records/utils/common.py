@@ -215,7 +215,7 @@ def truncate_string(string, max_words=None, max_chars=None):
 
 def get_record_contents(recid, status=None):
     """
-    Tries to get record from Elasticsearch first. Failing that, it tries from the database.
+    Tries to get record from OpenSearch first. Failing that, it tries from the database.
 
     :param recid: Record ID to get.
     :param status: Status of submission. If provided and not 'finished', will not check opensearch first.

@@ -300,7 +300,7 @@ def all_ids():
     - ``inspire_ids``: if set to a truthy value, return inspire IDs rather than HEPData record IDs
     - ``last_updated``: return IDs updated since given date (in format YYYY-mm-dd)
     - ``sort_by``: if set to ``latest``, sort the results latest first
-    - ``use_es``: if set to a truthy values, use ElasticSearch rather than the database to return the ids
+    - ``use_es``: if set to a truthy values, use OpenSearch rather than the database to return the ids
     """
     id_field = 'recid'
     if _get_bool_parameter(request, 'inspire_ids'):

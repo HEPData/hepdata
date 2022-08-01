@@ -102,7 +102,7 @@ def get_filter_field(name, value):
 
 
 def sort_fields_mapping(sort_by):
-    """ JSON mappings to ElasticSearch fields used for sorting. """
+    """ JSON mappings to OpenSearch fields used for sorting. """
     if sort_by == 'title':
         return 'title.raw'
     elif sort_by == 'collaborations':

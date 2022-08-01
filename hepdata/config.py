@@ -113,7 +113,7 @@ CACHE_TYPE = "redis"
 SESSION_REDIS = "redis://localhost:6379/0"
 PERMANENT_SESSION_LIFETIME = timedelta(days=1)
 
-# ElasticSearch
+# OpenSearch
 OPENSEARCH_HOST = "localhost"
 
 # Accounts

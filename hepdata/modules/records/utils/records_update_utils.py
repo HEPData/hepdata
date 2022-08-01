@@ -87,7 +87,7 @@ def update_record_info(inspire_id, send_email=False):
         return 'Invalid Inspire ID'
 
     if hep_submission.overall_status == 'finished' or hep_submission.version > 1:
-        index_record_ids(record_ids)  # index for Elasticsearch
+        index_record_ids(record_ids)  # index for OpenSearch
         push_data_keywords(pub_ids=[recid])
         if not TESTING:
             generate_dois_for_submission.delay(inspire_id=inspire_id)  # update metadata stored in DataCite
