@@ -29,6 +29,7 @@ from dateutil.parser import parse
 import shutil
 
 from opensearchpy import NotFoundError, ConnectionTimeout
+from celery import shared_task
 from flask import current_app
 from flask_celeryext import create_celery_app
 from flask_login import current_user
@@ -612,7 +613,7 @@ def create_data_review(data_recid, publication_recid, version=1):
 
     return None
 
-
+@shared_task
 def unload_submission(record_id, version=1):
 
     submission = get_latest_hepsubmission(publication_recid=record_id)
