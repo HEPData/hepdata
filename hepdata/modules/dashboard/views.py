@@ -187,7 +187,7 @@ def delete_submission(recid):
         or check_is_sandbox_record(recid):
 
         submission = get_latest_hepsubmission(publication_recid=recid)
-        unload_submission(recid, submission.version)
+        unload_submission.delay(recid, submission.version)
 
         admin_idx = AdminIndexer()
         admin_idx.delete_by_id(submission.id)
