@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with HEPData; if not, write to the Free Software Foundation, Inc.,
 # 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
-from hepdata.ext.elasticsearch.aggregations import parse_author_aggregations, \
+from hepdata.ext.opensearch.aggregations import parse_author_aggregations, \
     parse_date_aggregations, parse_collaboration_aggregations, \
     parse_other_facets, parse_aggregations, parse_cmenergies_aggregations, \
     create_dummy_cmenergies_facets

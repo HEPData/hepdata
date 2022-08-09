@@ -1,7 +1,7 @@
 """HEPData DOI Banner Views."""
 
 from flask import Blueprint, redirect, abort, send_file, url_for
-from hepdata.ext.elasticsearch.api import get_records_matching_field
+from hepdata.ext.opensearch.api import get_records_matching_field
 import logging
 import os
 

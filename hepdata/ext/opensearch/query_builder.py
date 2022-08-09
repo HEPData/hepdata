@@ -21,14 +21,14 @@
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
 import re
-from elasticsearch_dsl import Q
+from opensearch_dsl import Q
 
 
 class QueryBuilder:
 
     @staticmethod
     def add_filters(search, filters):
-        from .config.es_config import get_filter_field
+        from .config.os_config import get_filter_field
 
         for name, value in filters:
             if name == "author":

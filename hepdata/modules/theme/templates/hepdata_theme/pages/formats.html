@@ -4,8 +4,8 @@
 
     {{ webpack['hepdata-info.css'] }}
 
-    {% set search_url = url_for('es_search.search', q='') %}
-    {% set atlas_search_url = url_for('es_search.search', q='', page=1, collaboration='ATLAS', _external=True) %}
+    {% set search_url = url_for('os_search.search', q='') %}
+    {% set atlas_search_url = url_for('os_search.search', q='', page=1, collaboration='ATLAS', _external=True) %}
     {% set record_url = url_for('hepdata_records.get_metadata_by_alternative_id', recid='ins1419244', _external=True) %}
 
     <div class="row" style="margin: 0; padding:2% 10% 2% 5%;">

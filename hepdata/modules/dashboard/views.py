@@ -27,9 +27,9 @@ from flask import Blueprint, jsonify, request, render_template, abort, \
 from flask_login import login_required, current_user
 from invenio_accounts.models import User, Role
 
-from hepdata.ext.elasticsearch.admin_view.api import AdminIndexer
-from hepdata.ext.elasticsearch.api import reindex_all
-from hepdata.ext.elasticsearch.api import push_data_keywords
+from hepdata.ext.opensearch.admin_view.api import AdminIndexer
+from hepdata.ext.opensearch.api import reindex_all
+from hepdata.ext.opensearch.api import push_data_keywords
 from hepdata.modules.dashboard.api import prepare_submissions, get_pending_invitations_for_user, get_submission_count, \
     list_submission_titles, get_dashboard_current_user, set_dashboard_current_user, get_submissions_summary, \
     get_submissions_csv

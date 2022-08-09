@@ -79,7 +79,7 @@ class HEPSubmission(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
 
     # publication_recid remains the same for each version of a submission
-    # and is used as the document id in elasticsearch and as the record id
+    # and is used as the document id in opensearch and as the record id
     publication_recid = db.Column(db.Integer)
     inspire_id = db.Column(db.String(128))
 

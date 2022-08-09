@@ -18,21 +18,19 @@
 from __future__ import print_function
 
 from collections import defaultdict
-import re
 
 from celery import shared_task
 from dateutil.parser import parse
 from flask import current_app
-from elasticsearch.exceptions import TransportError
-from elasticsearch_dsl import Search
-from elasticsearch_dsl.query import QueryString, Q
-from invenio_pidstore.models import RecordIdentifier
+from opensearchpy.exceptions import TransportError
+from opensearch_dsl import Search
+from opensearch_dsl.query import QueryString, Q
 from sqlalchemy import and_
 from sqlalchemy.orm import aliased
 
 
-from hepdata.ext.elasticsearch.document_enhancers import enhance_data_document, enhance_publication_document
-from .config.es_config import sort_fields_mapping, add_default_aggregations
+from hepdata.ext.opensearch.document_enhancers import enhance_data_document, enhance_publication_document
+from .config.os_config import sort_fields_mapping, add_default_aggregations
 from .utils import calculate_sort_order, prepare_author_for_indexing
 from hepdata.config import CFG_PUB_TYPE, CFG_DATA_TYPE
 from .query_builder import QueryBuilder, HEPDataQueryParser
@@ -40,10 +38,10 @@ from .process_results import map_result, merge_results
 from invenio_db import db
 import logging
 
-from invenio_search import current_search_client as es, RecordsSearch
+from invenio_search import current_search_client as os, RecordsSearch
 from hepdata.modules.submission.api import get_latest_hepsubmission
 from hepdata.modules.submission.models import HEPSubmission, DataSubmission
-from hepdata.modules.search.config import ELASTICSEARCH_MAX_RESULT_WINDOW, LIMIT_MAX_RESULTS_PER_PAGE
+from hepdata.modules.search.config import OPENSEARCH_MAX_RESULT_WINDOW, LIMIT_MAX_RESULTS_PER_PAGE
 
 
 __all__ = ['search', 'index_record_ids', 'index_record_dict', 'fetch_record',
@@ -59,7 +57,7 @@ def default_index(f):
 
     def decorator(*args, **kwargs):
         if 'index' not in kwargs:
-            kwargs['index'] = current_app.config['ELASTICSEARCH_INDEX']
+            kwargs['index'] = current_app.config['OPENSEARCH_INDEX']
         return f(*args, **kwargs)
 
     decorator.__name__ = f.__name__
@@ -112,7 +110,7 @@ def search(query,
 
     query = HEPDataQueryParser.parse_query(query)
     # Create search with preference param to ensure consistency of results across shards
-    search = RecordsSearch(using=es, index=index).with_preference_param()
+    search = RecordsSearch(using=os, index=index).with_preference_param()
 
     if query:
         fuzzy_query = QueryString(query=query, fuzziness='AUTO')
@@ -144,14 +142,14 @@ def search(query,
             }
         }
 
-        data_search = RecordsSearch(using=es, index=index)
+        data_search = RecordsSearch(using=os, index=index)
         data_search = data_search.query('has_parent',
                                         parent_type="parent_publication",
                                         query=parent_filter)
         if query:
             data_search = data_search.query(QueryString(query=query))
 
-        data_search_size = size * ELASTICSEARCH_MAX_RESULT_WINDOW // LIMIT_MAX_RESULTS_PER_PAGE
+        data_search_size = size * OPENSEARCH_MAX_RESULT_WINDOW // LIMIT_MAX_RESULTS_PER_PAGE
         data_search = data_search[0:data_search_size]
         data_result = data_search.execute().to_dict()
 
@@ -173,7 +171,7 @@ def search(query,
 @author_index
 def search_authors(name, size=20, author_index=None):
     """ Search for authors in the author index. """
-    search = Search(using=es, index=author_index) \
+    search = Search(using=os, index=author_index) \
         .query("match", full_name={"query": name, "fuzziness":"AUTO"})
     search = search[0:size]
     results = search.execute().to_dict()
@@ -183,7 +181,7 @@ def search_authors(name, size=20, author_index=None):
 @default_index
 @author_index
 def reindex_all(index=None, author_index=None, recreate=False, update_mapping=False, batch=5, start=-1, end=-1, synchronous=False):
-    """ Recreate the index and add all the records from the db to ES. """
+    """ Recreate the index and add all the records from the db to OS. """
     if recreate:
         recreate_index(index=index)
         recreate_index(index=author_index)
@@ -267,15 +265,15 @@ def reindex_batch(hepsubmission_record_ids, index):
 
 @default_index
 def get_record(record_id, index=None):
-    """ Fetch a given record from ES.
+    """ Fetch a given record from OS.
 
-    :param record_id: [int] ES record id
+    :param record_id: [int] OS record id
     :param index: [string] name of the index. If None a default is used
 
     :return: [dict] Fetched record
     """
     try:
-        search = RecordsSearch(using=es, index=index).source(includes="*")
+        search = RecordsSearch(using=os, index=index).source(includes="*")
         result = search.get_record(record_id).execute()
         if result.hits.total.value > 0:
             return result.hits[0].to_dict()
@@ -315,7 +313,7 @@ def get_records_matching_field(field, id, index=None, doc_type=None, source=None
     if source:
         query["_source"] = source
 
-    return es.search(index=index, body=query)
+    return os.search(index=index, body=query)
 
 
 @default_index
@@ -329,9 +327,9 @@ def delete_item_from_index(id, index, doc_type, parent=None):
     :return:
     """
     if parent:
-        es.delete(index=index, id=id, routing=parent)
+        os.delete(index=index, id=id, routing=parent)
     else:
-        es.delete(index=index, id=id, routing=id)
+        os.delete(index=index, id=id, routing=id)
 
 
 @default_index
@@ -340,14 +338,14 @@ def push_data_keywords(pub_ids=None, index=None):
      keywords from tables to their parent publications. """
     log.info("Pushing data keywords for publication rec ids: %s", pub_ids)
     if not pub_ids:
-        search = Search(using=es, index=index) \
+        search = Search(using=os, index=index) \
             .filter("term", doc_type=CFG_PUB_TYPE) \
             .source(False)
         results = search.execute()
         pub_ids = [h.meta.id for h in results.hits]
 
     for pub_id in pub_ids:
-        search = Search(using=es, index=index) \
+        search = Search(using=os, index=index) \
             .query('has_parent',
                    parent_type="parent_publication",
                    query={'match': {'recid': pub_id}}) \
@@ -384,7 +382,7 @@ def push_data_keywords(pub_ids=None, index=None):
         }
 
         try:
-            es.update(index=index, id=pub_id, body=body, retry_on_conflict=3)
+            os.update(index=index, id=pub_id, body=body, retry_on_conflict=3)
         except Exception as e:
             log.error(e)
 
@@ -454,7 +452,7 @@ def index_record_ids(record_ids, index=None):
         to_index.append(doc)
 
     if to_index:
-        result = es.bulk(index=index, body=to_index, refresh=True)
+        result = os.bulk(index=index, body=to_index, refresh=True)
         if result['errors']:
             log.error('Bulk insert failed: %s' % result)
 
@@ -474,13 +472,13 @@ def index_record_dict(record_dict, doc_type, recid, index=None, parent=None):
     :return: [dict] Response dictionary
     """
     if parent:
-        return es.index(index=index,
+        return os.index(index=index,
                         doc_type=doc_type,
                         id=recid,
                         body=record_dict,
                         parent=parent)
     else:
-        return es.index(index=index,
+        return os.index(index=index,
                         doc_type=doc_type,
                         id=recid,
                         body=record_dict)
@@ -500,8 +498,8 @@ def recreate_index(index=None):
         }
     }
 
-    es.indices.delete(index=index, ignore=404)
-    es.indices.create(index=index, body=body)
+    os.indices.delete(index=index, ignore=404)
+    os.indices.create(index=index, body=body)
 
 
 @default_index
@@ -514,7 +512,7 @@ def update_record_mapping(index=None):
 
     body = { "properties": mapping }
     try:
-        es.indices.put_mapping(index=index, body=body)
+        os.indices.put_mapping(index=index, body=body)
     except TransportError as e:
         msg = e.info.get('error',{}).get('root_cause',[{}])[0].get('reason')
         raise ValueError(f"Unable to update record mapping: {msg}\nYou may need to recreate the index to update the mapping.")
@@ -522,7 +520,7 @@ def update_record_mapping(index=None):
 
 @default_index
 def fetch_record(record_id, doc_type, index=None):
-    """ Fetch a record from ES with a given id.
+    """ Fetch a record from OS with a given id.
 
     :param record_id: [int]
     :param doc_type: [string] document type
@@ -530,7 +528,7 @@ def fetch_record(record_id, doc_type, index=None):
 
     :return: [dict] Record if found, otherwise an error message
     """
-    res = es.get(index=index, id=record_id)
+    res = os.get(index=index, id=record_id)
     return res.get('_source', res)
 
 
@@ -538,7 +536,7 @@ def fetch_record(record_id, doc_type, index=None):
 def get_n_latest_records(n_latest, field="last_updated", index=None):
     """ Gets latest N records from the index """
 
-    search = Search(using=es, index=index) \
+    search = Search(using=os, index=index) \
         .filter("term", doc_type=CFG_PUB_TYPE) \
         .sort({field: {"order": "desc"}}) \
         .source(excludes=["authors", "keywords"])
@@ -556,7 +554,7 @@ def get_count_for_collection(doc_type, index=None):
     :param index: name of index to use.
     :return: the number of records in that collection
     """
-    return es.count(index=index, q='doc_type:'+doc_type)
+    return os.count(index=index, q='doc_type:'+doc_type)
 
 
 @default_index
@@ -564,13 +562,13 @@ def get_all_ids(index=None, id_field='recid', last_updated=None, latest_first=Fa
     """Get all record or inspire ids of publications in the search index
 
     :param index: name of index to use.
-    :param id_field: elasticsearch field to return. Should be 'recid' or 'inspire_id'
+    :param id_field: opensearch field to return. Should be 'recid' or 'inspire_id'
     :return: list of integer ids
     """
     if id_field not in ('recid', 'inspire_id'):
         raise ValueError('Invalid ID field %s' % id_field)
 
-    search = Search(using=es, index=index) \
+    search = Search(using=os, index=index) \
         .filter("term", doc_type=CFG_PUB_TYPE) \
         .source(fields=[id_field])
 

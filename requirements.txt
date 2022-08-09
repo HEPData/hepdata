@@ -4,8 +4,6 @@ bleach==3.3.0
 celery==5.1.2
 click==7.1.1
 datacite==1.1.2
-elasticsearch==7.10.1
-elasticsearch-dsl==7.4.0
 email-validator==1.1.0
 Flask==1.1.4
 Flask-CeleryExt==0.4.1
@@ -26,7 +24,7 @@ invenio-logging[sentry-sdk]==1.3.0
 invenio-oauthclient==1.5.1
 invenio-pidstore==1.2.2
 invenio-records==1.4.0
-invenio-search==1.4.1
+invenio-search[opensearch1] @ git+https://github.com/max-moser/invenio-search@mm/opensearch
 invenio-theme==1.3.8
 invenio-userprofiles==1.2.1
 Jinja2==2.11.3

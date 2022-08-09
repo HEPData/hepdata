@@ -7,7 +7,7 @@ from fixes.cleanup_index import cleanup_index_all, cleanup_index_batch
 
 
 def test_cleanup_index_all(app, load_default_data, identifiers, mocker):
-    index = app.config.get('ELASTICSEARCH_INDEX')
+    index = app.config.get('OPENSEARCH_INDEX')
 
     m = mocker.patch('fixes.cleanup_index.cleanup_index_batch')
 
@@ -62,7 +62,7 @@ def test_cleanup_index_all(app, load_default_data, identifiers, mocker):
 
 
 def test_cleanup_index_batch(app, load_default_data, identifiers, mocker):
-    index = app.config.get('ELASTICSEARCH_INDEX')
+    index = app.config.get('OPENSEARCH_INDEX')
 
     def _create_new_versions(version, expected_range):
         # Create new HEPSubmission and DataSubmissions for ins1283842

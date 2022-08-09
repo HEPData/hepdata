@@ -29,14 +29,14 @@ import click
 from flask import current_app
 from flask.cli import with_appcontext
 from invenio_base.app import create_cli
-from hepdata.ext.elasticsearch.admin_view.api import AdminIndexer
+from hepdata.ext.opensearch.admin_view.api import AdminIndexer
 from hepdata.modules.converter.tasks import convert_and_store
 from hepdata.modules.records.utils.common import record_exists, get_record_by_id
 from hepdata.modules.submission.models import HEPSubmission
 from hepdata.modules.submission.api import get_latest_hepsubmission
 from .factory import create_app
 from hepdata.config import CFG_PUB_TYPE
-from hepdata.ext.elasticsearch.api import reindex_all, get_records_matching_field
+from hepdata.ext.opensearch.api import reindex_all, get_records_matching_field
 from hepdata.modules.records.importer import api as importer_api
 from hepdata.modules.records.utils import data_files
 from hepdata.modules.records.utils.analyses import update_analyses
@@ -84,7 +84,7 @@ def import_records(inspireids, recreate_index, base_url, update_existing, send_e
 
     Usage: ``hepdata importer import-records -i 'ins1262703' -rc False``
     """
-    from hepdata.ext.elasticsearch.api import recreate_index as reindex
+    from hepdata.ext.opensearch.api import recreate_index as reindex
     if current_app.config.get('ENV') == 'production':
         click.confirm('You are currently running in production mode on'
                       ' %s. Are you sure you want to import records from %s?'

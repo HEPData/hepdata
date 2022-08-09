@@ -113,8 +113,8 @@ CACHE_TYPE = "redis"
 SESSION_REDIS = "redis://localhost:6379/0"
 PERMANENT_SESSION_LIFETIME = timedelta(days=1)
 
-# ElasticSearch
-ELASTICSEARCH_HOST = "localhost"
+# OpenSearch
+OPENSEARCH_HOST = "localhost"
 
 # Accounts
 RECAPTCHA_PUBLIC_KEY = None
@@ -165,10 +165,10 @@ BASE_TEMPLATE = "hepdata_theme/page.html"
 COVER_TEMPLATE = "hepdata_theme/page_cover.html"
 SETTINGS_TEMPLATE = "invenio_theme/page_settings.html"
 
-ELASTICSEARCH_INDEX = 'hepdata-main'
+OPENSEARCH_INDEX = 'hepdata-main'
 SUBMISSION_INDEX = 'hepdata-submission'
 AUTHOR_INDEX = 'hepdata-authors'
-SEARCH_ELASTIC_HOSTS = [
+SEARCH_HOSTS = [
     'localhost:9200'
 ]
 
@@ -324,7 +324,7 @@ HISTFACTORY_FILE_TYPE = 'HistFactory'
 ADMIN_EMAIL = 'info@hepdata.net'
 SUBMISSION_FILE_NAME_PATTERN = 'HEPData-{}-v{}-yaml.zip'
 
-# For ignoring URLLIB3 errors on the server where we use https for elastic search,
+# For ignoring URLLIB3 errors on the server where we use https for opensearch,
 # but the certificate is generated on our side.
 PYTHONWARNINGS="ignore:Unverified HTTPS request"
 

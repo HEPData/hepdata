@@ -20,7 +20,7 @@ HEPData requires:
  * `PostgreSQL <http://www.postgresql.org/>`_ (version 12) databases
  * `Redis <http://redis.io/>`_ for caching
  * `Celery <https://docs.celeryproject.org/en/stable/index.html>`_ for managing asynchronous tasks
- * `Elasticsearch <https://www.elastic.co/products/elasticsearch>`_ for indexing and searching data
+ * `OpenSearch <https://opensearch.org/>`_ for indexing and searching data
 
 Useful links:
 

@@ -9,7 +9,7 @@ from hepdata.modules.submission.models import DataSubmission
 from hepdata.modules.records.utils.common import get_record_by_id
 from hepdata.modules.records.utils.workflow import update_record
 from hepdata.modules.inspire_api.views import get_inspire_record_information
-from hepdata.ext.elasticsearch.api import index_record_ids, push_data_keywords
+from hepdata.ext.opensearch.api import index_record_ids, push_data_keywords
 from hepdata.modules.email.api import notify_publication_update
 from hepdata.resilient_requests import resilient_requests
 from hepdata.config import TESTING
@@ -87,7 +87,7 @@ def update_record_info(inspire_id, send_email=False):
         return 'Invalid Inspire ID'
 
     if hep_submission.overall_status == 'finished' or hep_submission.version > 1:
-        index_record_ids(record_ids)  # index for Elasticsearch
+        index_record_ids(record_ids)  # index for OpenSearch
         push_data_keywords(pub_ids=[recid])
         if not TESTING:
             generate_dois_for_submission.delay(inspire_id=inspire_id)  # update metadata stored in DataCite

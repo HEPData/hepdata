@@ -31,8 +31,8 @@ from invenio_accounts.models import Role, User
 from invenio_db import db
 import pytest
 
-from hepdata.ext.elasticsearch.admin_view.api import AdminIndexer
-from hepdata.ext.elasticsearch.api import reindex_all
+from hepdata.ext.opensearch.admin_view.api import AdminIndexer
+from hepdata.ext.opensearch.api import reindex_all
 from hepdata.factory import create_app
 from hepdata.modules.records.importer.api import import_records, _download_file
 
@@ -51,7 +51,7 @@ def create_basic_app():
         CELERY_CACHE_BACKEND="memory",
         MAIL_SUPPRESS_SEND=True,
         CELERY_TASK_EAGER_PROPAGATES=True,
-        ELASTICSEARCH_INDEX="hepdata-main-test",
+        OPENSEARCH_INDEX="hepdata-main-test",
         SUBMISSION_INDEX='hepdata-submission-test',
         AUTHOR_INDEX='hepdata-authors-test',
         SQLALCHEMY_DATABASE_URI=os.environ.get(

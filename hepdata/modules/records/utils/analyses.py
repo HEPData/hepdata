@@ -29,7 +29,7 @@ from flask import current_app
 from invenio_db import db
 import requests
 
-from hepdata.ext.elasticsearch.api import index_record_ids
+from hepdata.ext.opensearch.api import index_record_ids
 from hepdata.modules.submission.api import get_latest_hepsubmission, is_resource_added_to_submission
 from hepdata.modules.submission.models import DataResource, HEPSubmission, data_reference_link
 

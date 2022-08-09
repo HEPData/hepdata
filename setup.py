@@ -148,7 +148,7 @@ setup(
             'hepdata_doi = hepdata.modules.records.utils.doi_minter',
             'hepdata_mail = hepdata.modules.email.utils',
             'hepdata_conversion = hepdata.modules.converter.tasks',
-            'hepdata_elasticsearch = hepdata.ext.elasticsearch.api',
+            'hepdata_opensearch = hepdata.ext.opensearch.api',
             'hepdata_inspireupdate = hepdata.modules.records.utils.records_update_utils',
         ],
         'invenio_i18n.translations': [

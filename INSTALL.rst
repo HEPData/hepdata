@@ -36,54 +36,46 @@ for example, using ``yum`` or ``apt-get`` for Linux or ``brew`` for macOS:
 
  * `PostgreSQL <http://www.postgresql.org/>`_ (version 12) database server
  * `Redis <http://redis.io/>`_ for caching
- * `Elasticsearch <https://www.elastic.co/products/elasticsearch>`_ (version 7) for indexing and information retrieval. See below for further instructions.
+ * `OpenSearch <https://opensearch.org/>`_ (version 1.3.2) for indexing and information retrieval. See below for further instructions.
  * `Node.js <https://nodejs.org>`_ (version 14) JavaScript run-time environment and its package manager `npm <https://www.npmjs.com/>`_. [If you're using a Debian-based OS, please follow the `official installation instructions <https://github.com/nodesource/distributions/blob/master/README.md#debinstall>`_ to install NodeJS (which will also install npm), to avoid issues with ``node-sass``.]
 
-Elasticsearch
--------------
+OpenSearch v1.3.2
+-----------------
 
-Currently we use v7.10.2 on our QA cluster (via Open Distro v1.13.2) and v7.1.1 in production. You can choose which version
-to install but if you install v7.10, be careful to avoid using features of Elasticsearch that are not available in v7.1.
+We are currently using OpenSearch v1.3.2. Here, you can find the `download instructions. <https://opensearch.org/versions/opensearch-1-3-2.html>`_
 
-**Elasticsearch v7.1.1**
-~~~~~~~~~~~~~~~~~~~~~~~~
+There are some examples below:
 
-See the `installation instructions <https://www.elastic.co/guide/en/elasticsearch/reference/7.1/install-elasticsearch.html>`_
-for installing ElasticSearch 7.1, but be aware that the instructions for Homebrew (for macOS) will install a newer version by default. To
-install v7.1 via Homebrew, run:
+**MacOS**
+
+To install v1.3.2 via Homebrew, run:
 
 .. code-block:: console
 
-    $ brew tap elastic/tap
-    $ cd $(brew --repo elastic/tap)
-    $ git checkout f90d9a3
-    $ HOMEBREW_NO_AUTO_UPDATE=1 brew install elasticsearch-oss
+    $ brew tap opensearch/tap
+    $ brew extract --version=1.3.2 opensearch opensearch/tap
+    $ brew services restart opensearch/tap/opensearch@1.3.2
 
-Alternatively, run Elasticsearch after `installing Docker <https://docs.docker.com/install/>`_ with:
+If this doesn't work, either install the latest version instead (``brew install opensearch``) or run a Docker container.
 
-.. code-block:: console
+**Linux**
 
-    $ docker pull docker.elastic.co/elasticsearch/elasticsearch:7.1.1
-    $ docker run -d -p 9200:9200 -p 9300:9300 -e "discovery.type=single-node" docker.elastic.co/elasticsearch/elasticsearch:7.1.1
+You can see the tarball instructions on the OpenSearch installation `webpage. <https://opensearch.org/docs/1.3/opensearch/install/tar/>`_
 
-**Elasticsearch v7.10.2 / Open Distro v1.13.2**
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-The `Open Distro instructions <https://opendistro.github.io/for-elasticsearch/>`_ give details on how to install for Linux
-and Windows. They suggest using Docker for macOS:
+To execute, run this command within the extracted folder.
 
 .. code-block:: console
 
-    $ docker pull amazon/opendistro-for-elasticsearch:1.13.2
-    $ docker run -d -p 9200:9200 -p 9300:9300 -e "discovery.type=single-node" -e "opendistro_security.disabled=true" amazon/opendistro-for-elasticsearch:1.13.2
+		./opensearch-tar-install.sh -E "plugins.security.disabled=true"
 
-To run outside of Docker you can use the Homebrew installation of Elasticsearch 7.10.2:
+**Docker**
+
+Alternatively, run OpenSearch after `installing Docker <https://docs.docker.com/install/>`_ with:
 
 .. code-block:: console
 
-    $ brew install elasticsearch
-
-Neither of these two methods is currently working for an M1 MacBook, so use Elasticsearch v7.1.1 for now.
+    $ docker pull opensearchproject/opensearch:1.3.2
+    $ docker run -d -p 9200:9200 -p 9600:9600 -e "discovery.type=single-node" -e "plugins.security.disabled=true" opensearchproject/opensearch:1.3.2
 
 .. _installation:
 
@@ -233,10 +225,10 @@ PostgreSQL Client Authentication Configuration File (e.g. ``/var/lib/pgsql/12/da
 ``trust`` local and IPv4/IPv6 connections (instead of ``peer`` or ``ident``), then restart the PostgreSQL
 server (e.g. ``sudo systemctl restart postgresql-12``).
 
-Recreate the Elasticsearch index
---------------------------------
+Recreate the OpenSearch index
+-----------------------------
 
-You may need to recreate the Elasticsearch data, for example, after switching to a new Elasticsearch instance.
+You may need to recreate the OpenSearch data, for example, after switching to a new OpenSearch instance.
 
 .. code-block:: console
 
@@ -369,11 +361,11 @@ Tips
 ====
 
 * If you see errors about ports already being allocated, ensure you're not running any of the services another way (e.g. hepdata-converter via Docker).
-* If you want to run just some of the containers, specify their names in the docker-compose command. For example, to just run the web server, database and elasticsearch, run:
+* If you want to run just some of the containers, specify their names in the docker-compose command. For example, to just run the web server, database and OpenSearch, run:
 
   .. code-block:: console
 
-    $ docker-compose up web db es
+    $ docker-compose up web db os
 
   See ``docker-compose.yml`` for the names of each service. Running a subset of containers could be useful in the following cases:
 

@@ -32,7 +32,7 @@ from invenio_accounts.models import User
 from sqlalchemy import or_, func
 from werkzeug.exceptions import Forbidden as ForbiddenError
 
-from hepdata.ext.elasticsearch.admin_view.api import AdminIndexer
+from hepdata.ext.opensearch.admin_view.api import AdminIndexer
 from hepdata.modules.permissions.models import SubmissionParticipant
 from hepdata.modules.records.utils.common import get_record_by_id, decode_string
 from hepdata.modules.submission.api import get_latest_hepsubmission, get_submission_participants_for_record

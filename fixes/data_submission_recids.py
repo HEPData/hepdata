@@ -31,7 +31,7 @@ from invenio_db import db
 from sqlalchemy import func
 
 from hepdata.cli import fix
-from hepdata.ext.elasticsearch.api import index_record_ids, push_data_keywords
+from hepdata.ext.opensearch.api import index_record_ids, push_data_keywords
 from hepdata.modules.records.utils.common import get_record_by_id
 from hepdata.modules.records.utils.doi_minter import generate_dois_for_submission
 from hepdata.modules.records.utils.submission import finalise_datasubmission
