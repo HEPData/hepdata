@@ -97,7 +97,7 @@ def test_get_record(app, client):
 
 
 def test_get_record_contents(app, load_default_data, identifiers):
-    # Status finished - should use ES to get results
+    # Status finished - should use OS to get results
     record1 = get_record_contents(1, status='finished')
     for key in ["inspire_id", "title"]:
         assert (record1[key] == identifiers[0][key])
@@ -105,7 +105,7 @@ def test_get_record_contents(app, load_default_data, identifiers):
     # Status todo - should use DB for result
     record2 = get_record_contents(1, status='todo')
     # DB returns data from an Invenio RecordMetadata obj so has fewer fields
-    # than the ES dict
+    # than the OS dict
     for key in record2.keys():
         if key == 'last_updated':
             # Date format is slightly different for DB vs ES

@@ -28,7 +28,7 @@ class QueryBuilder:
 
     @staticmethod
     def add_filters(search, filters):
-        from .config.es_config import get_filter_field
+        from .config.os_config import get_filter_field
 
         for name, value in filters:
             if name == "author":

@@ -22,10 +22,10 @@ import pytest
 from invenio_db import db
 from unittest.mock import call
 
-from hepdata.ext.opensearch.config.es_config import \
+from hepdata.ext.opensearch.config.os_config import \
     add_default_aggregations, sort_fields_mapping
-from hepdata.ext.opensearch import api as es_api
-from hepdata.ext.opensearch.config.es_config import get_filter_field
+from hepdata.ext.opensearch import api as os_api
+from hepdata.ext.opensearch.config.os_config import get_filter_field
 from hepdata.ext.opensearch.document_enhancers import add_data_keywords, process_cmenergies
 from hepdata.ext.opensearch.process_results import merge_results, match_tables_to_papers, \
     get_basic_record_information, is_datatable
@@ -34,7 +34,7 @@ from hepdata.ext.opensearch.utils import flip_sort_order, parse_and_format_date,
     calculate_sort_order, push_keywords
 from hepdata.modules.records.importer.api import import_records
 from hepdata.modules.submission.models import HEPSubmission
-from invenio_search import current_search_client as es
+from invenio_search import current_search_client as os
 
 from hepdata.modules.search.config import LIMIT_MAX_RESULTS_PER_PAGE, \
     HEPDATA_CFG_DEFAULT_RESULTS_PER_PAGE
@@ -182,7 +182,7 @@ def test_search(app, load_default_data, identifiers):
     index = app.config.get('OPENSEARCH_INDEX')
 
     # Test searching with an empty query
-    results = es_api.search('', index=index)
+    results = os_api.search('', index=index)
     assert(results['total'] == len(identifiers))
     assert(len(results['facets']) == 8)
     assert(len(results['results']) == len(identifiers))
@@ -193,25 +193,25 @@ def test_search(app, load_default_data, identifiers):
         assert(len(results['results'][i]['data']) == identifiers[i]['data_tables'])
 
     # Test pagination (1 item per page as we only have 2; get 2nd page)
-    results = es_api.search('', index=index, size=1, offset=1)
+    results = os_api.search('', index=index, size=1, offset=1)
     assert(results['total'] == len(identifiers))
     assert(len(results['results']) == 1)
     assert(results['results'][0]['title'] == identifiers[1]['title'])
 
     # Test a simple search query from the second test submission
     # The search matches the publication but not the data tables
-    results = es_api.search('charmonium', index=index)
+    results = os_api.search('charmonium', index=index)
     assert(results['total'] == 1)
     assert(results['results'][0]['inspire_id'] == identifiers[1]['inspire_id'])
     assert(len(results['results'][0]['data']) == 0)
 
     # Test a complex querystring that maps across main doc and nested authors field
-    results = es_api.search("title:asymmetry AND authors.full_name:Orbaker", index=index)
+    results = os_api.search("title:asymmetry AND authors.full_name:Orbaker", index=index)
     assert(results['total'] == 1)
     assert(results['results'][0]['inspire_id'] == identifiers[0]['inspire_id'])
 
     # Test the authors search (fuzzy)
-    results = es_api.search_authors('Bal')
+    results = os_api.search_authors('Bal')
     expected = [
         {'affiliation': 'Texas U., Arlington', 'full_name': 'Pal, Arnab'},
         {'affiliation': 'Panjab U.', 'full_name': 'Bala, A.'}
@@ -221,18 +221,18 @@ def test_search(app, load_default_data, identifiers):
     for author in expected:
         assert(author in results)
 
-    # Test search queries that ES can't parse
-    results = es_api.search('/', index=index)
+    # Test search queries that OS can't parse
+    results = os_api.search('/', index=index)
     assert results == {'error': 'Failed to parse query [/]'}
 
-    results = es_api.search('cmenergies:[1.3%20TO%201.4]', index=index)
+    results = os_api.search('cmenergies:[1.3%20TO%201.4]', index=index)
     assert results == {'error': 'Failed to parse query [data_keywords.cmenergies:[1.3%20TO%201.4]]'}
 
-    results = es_api.search('(SELECT (CHR(113)||CHR(122)||CHR(122)||CHR(122)||CHR(113))||(SELECT (CASE WHEN (6242=6242) THEN 1 ELSE 0 END))::text||(CHR(113)||CHR(120)||CHR(107)||CHR(98)||CHR(113)))', index=index)
+    results = os_api.search('(SELECT (CHR(113)||CHR(122)||CHR(122)||CHR(122)||CHR(113))||(SELECT (CASE WHEN (6242=6242) THEN 1 ELSE 0 END))::text||(CHR(113)||CHR(120)||CHR(107)||CHR(98)||CHR(113)))', index=index)
     assert results == {'error': 'Failed to parse query [(SELECT (CHR(113)||CHR(122)||CHR(122)||CHR(122)||CHR(113))||(SELECT (CASE WHEN (6242=6242) THEN 1 ELSE 0 END))::text||(CHR(113)||CHR(120)||CHR(107)||CHR(98)||CHR(113)))]'}
 
     # Test a search query to an invalid index
-    results = es_api.search('hello', index='thisisnotanindex')
+    results = os_api.search('hello', index='thisisnotanindex')
     assert results == {'error': 'An unexpected error occurred: index_not_found_exception'}
 
 
@@ -450,38 +450,38 @@ def test_is_datatable():
 def test_reindex_all(app, load_default_data, identifiers, mocker):
     index = app.config.get('OPENSEARCH_INDEX')
     # Delete the default index
-    es.indices.delete(index=index)
+    os.indices.delete(index=index)
 
     # Check we can't search
-    results = es_api.search('', index=index)
+    results = os_api.search('', index=index)
     assert results == {'error': 'An unexpected error occurred: index_not_found_exception'}
 
     # Reindex, recreating the index
-    es_api.reindex_all(index=index, recreate=True, synchronous=True)
+    os_api.reindex_all(index=index, recreate=True, synchronous=True)
 
     # Search should work again
-    results = es_api.search('', index=index)
+    results = os_api.search('', index=index)
     assert(results['total'] == len(identifiers))
 
     # Test indexing record with no data tables
-    results = es_api.search('electroweak', index=index)
+    results = os_api.search('electroweak', index=index)
     assert(results['total'] == 0)
     # Import inspire id 1478981 which has no data tables
     import_records(['1478981'], synchronous=True)
-    es_api.reindex_all(index=index, synchronous=True)
-    results = es_api.search('electroweak', index=index)
+    os_api.reindex_all(index=index, synchronous=True)
+    results = os_api.search('electroweak', index=index)
     assert(results['total'] == 1)
     assert(results['results'][0]['data'] == [])
 
     # Reindex, requesting update of mapping
-    es_api.reindex_all(index=index, recreate=False, update_mapping=True, synchronous=True)
+    os_api.reindex_all(index=index, recreate=False, update_mapping=True, synchronous=True)
 
     # Test other params using mocking
     m = mocker.patch('hepdata.ext.opensearch.api.reindex_batch')
 
     # Start and end at publication_recid 1, batch size 2:
     # should call reindex_batch twice with submission ids [1] then [2]
-    es_api.reindex_all(index=index, start=1, batch=2, synchronous=True)
+    os_api.reindex_all(index=index, start=1, batch=2, synchronous=True)
     m.assert_has_calls([
         call([1, 2], index),
         call([3], index)
@@ -490,19 +490,19 @@ def test_reindex_all(app, load_default_data, identifiers, mocker):
 
     # Start and end at publication_recid 1:
     # should call reindex_batch with submission ids [1]
-    es_api.reindex_all(index=index, start=1, end=1, synchronous=True)
+    os_api.reindex_all(index=index, start=1, end=1, synchronous=True)
     m.assert_called_once_with([1], index)
     m.reset_mock()
 
     # Start at publication_recid 16, end at 100:
     # should call with submission ids [2, 3]
-    es_api.reindex_all(index=index, start=16, end=100, synchronous=True)
+    os_api.reindex_all(index=index, start=16, end=100, synchronous=True)
     m.assert_called_once_with([2, 3], index)
     m.reset_mock()
 
     # Start at publication_recid 16, end at 1, batch size 10:
     # should fix max/min order and call with submission ids [1, 2]
-    es_api.reindex_all(index=index, start=16, end=1, batch=10, synchronous=True)
+    os_api.reindex_all(index=index, start=16, end=1, batch=10, synchronous=True)
     m.assert_called_once_with([1, 2], index)
     m.reset_mock()
 
@@ -513,7 +513,7 @@ def test_reindex_all(app, load_default_data, identifiers, mocker):
     # New id should be 4
     assert(new_submission.id == 4)
     # Reindex should still index submission 3 as 4 is not finished
-    es_api.reindex_all(index=index, synchronous=True)
+    os_api.reindex_all(index=index, synchronous=True)
     m.assert_called_once_with([1, 2, 3], index)
     m.reset_mock()
 
@@ -522,7 +522,7 @@ def test_reindex_all(app, load_default_data, identifiers, mocker):
     db.session.add(new_submission)
     db.session.commit()
     # Reindex should now index 4 instead of 3
-    es_api.reindex_all(index=index, synchronous=True)
+    os_api.reindex_all(index=index, synchronous=True)
     m.assert_called_once_with([1, 2, 4], index)
     m.reset_mock()
 
@@ -533,7 +533,7 @@ def test_reindex_all(app, load_default_data, identifiers, mocker):
     # New id should be 5
     assert(new_submission2.id == 5)
     # Reindex should still index submission 4 as 5 is not finished
-    es_api.reindex_all(index=index, synchronous=True)
+    os_api.reindex_all(index=index, synchronous=True)
     m.assert_called_once_with([1, 2, 4], index)
     m.reset_mock()
 
@@ -542,7 +542,7 @@ def test_reindex_all(app, load_default_data, identifiers, mocker):
     db.session.add(new_submission2)
     db.session.commit()
     # Reindex should now index 5 instead of 4
-    es_api.reindex_all(index=index, synchronous=True)
+    os_api.reindex_all(index=index, synchronous=True)
     m.assert_called_once_with([1, 2, 5], index)
 
 
@@ -555,7 +555,7 @@ def test_reindex_batch(app, load_default_data, mocker):
 
     # Reindex submission id 1 (pub_recid=1, with data submissions 2-15)
     mock_index_record_ids.return_value = {'publication': [1], 'datatable': list(range(2,16))}
-    es_api.reindex_batch([1], index)
+    os_api.reindex_batch([1], index)
     mock_index_record_ids.assert_called_once_with(list(range(1, 16)), index=index)
     mock_push_data_keywords.assert_called_once_with(pub_ids=[1])
     mock_index_record_ids.reset_mock()
@@ -563,14 +563,14 @@ def test_reindex_batch(app, load_default_data, mocker):
 
     # Reindex submission id 2 (pub_recid=16, data submissions 17-56)
     mock_index_record_ids.return_value = {'publication': [16], 'datatable': list(range(17,56))}
-    es_api.reindex_batch([2], index)
+    os_api.reindex_batch([2], index)
     mock_index_record_ids.assert_called_once_with(list(range(16, 57)), index=index)
     mock_push_data_keywords.assert_called_once_with(pub_ids=[16])
 
 
 def test_update_record_mapping(app, mocker):
     index_name = 'mock_index'
-    index = Index(using=es, name=index_name)
+    index = Index(using=os, name=index_name)
     index.delete(ignore=404)
     index.create()
 
@@ -578,10 +578,10 @@ def test_update_record_mapping(app, mocker):
     assert mapping == {'mock_index': {'mappings': {}}}
 
     # Update record mapping with the real one - should succeed as it's adding fields
-    es_api.update_record_mapping(index=index_name)
+    os_api.update_record_mapping(index=index_name)
 
     # mapping should be as defined in record_mapping
-    mapping = index.get_mapping(using=es)
+    mapping = index.get_mapping(using=os)
     from hepdata.ext.opensearch.config.record_mapping import mapping as real_mapping
     assert 'properties' in mapping['mock_index']['mappings']
     for k in real_mapping.keys():
@@ -595,11 +595,11 @@ def test_update_record_mapping(app, mocker):
             "type": "date"
         }
     }
-    index.put_mapping(using=es, body={ "properties": mapping })
+    index.put_mapping(using=os, body={ "properties": mapping })
 
     # Update record mapping with the real one - should give exception
     with pytest.raises(ValueError) as excinfo:
-        es_api.update_record_mapping(index=index_name)
+        os_api.update_record_mapping(index=index_name)
 
     msg = str(excinfo.value)
     assert msg.startswith("Unable to update record mapping: mapper [doc_type]")
@@ -607,39 +607,39 @@ def test_update_record_mapping(app, mocker):
 
 
 def test_get_record(app, load_default_data, identifiers):
-    record = es_api.get_record(1)
+    record = os_api.get_record(1)
     for key in ["inspire_id", "title"]:
         assert (record[key] == identifiers[0][key])
 
-    assert(es_api.get_record(9999999) is None)
+    assert(os_api.get_record(9999999) is None)
 
 
 def test_get_all_ids(app, load_default_data, identifiers):
     expected_record_ids = [1, 16]
-    # Order is not guaranteed by ES unless we use latest_first,
+    # Order is not guaranteed by OS unless we use latest_first,
     # so sort the results before checking
-    assert(es_api.get_all_ids() == expected_record_ids)
+    assert(os_api.get_all_ids() == expected_record_ids)
 
     # Check id_field works
-    assert(es_api.get_all_ids(id_field='recid') == expected_record_ids)
-    assert(es_api.get_all_ids(id_field='inspire_id')
+    assert(os_api.get_all_ids(id_field='recid') == expected_record_ids)
+    assert(os_api.get_all_ids(id_field='inspire_id')
            == [int(x["inspire_id"]) for x in identifiers])
     with pytest.raises(ValueError):
-        es_api.get_all_ids(id_field='authors')
+        os_api.get_all_ids(id_field='authors')
 
     # Check last_updated works
     # Default records were last updated on 2016-07-13 and 2013-12-17
     date_2013_1 = datetime.datetime(year=2013, month=12, day=16)
-    assert(es_api.get_all_ids(last_updated=date_2013_1) == expected_record_ids)
+    assert(os_api.get_all_ids(last_updated=date_2013_1) == expected_record_ids)
     date_2013_2 = datetime.datetime(year=2013, month=12, day=17)
-    assert(es_api.get_all_ids(last_updated=date_2013_2) == expected_record_ids)
+    assert(os_api.get_all_ids(last_updated=date_2013_2) == expected_record_ids)
     date_2013_3 = datetime.datetime(year=2013, month=12, day=18)
-    assert(es_api.get_all_ids(last_updated=date_2013_3) == [1])
+    assert(os_api.get_all_ids(last_updated=date_2013_3) == [1])
     date_2020 = datetime.datetime(year=2020, month=1, day=1)
-    assert(es_api.get_all_ids(last_updated=date_2020) == [])
+    assert(os_api.get_all_ids(last_updated=date_2020) == [])
 
     # Check sort by latest works - first record is newer than previous
-    assert(es_api.get_all_ids(latest_first=True) == expected_record_ids)
+    assert(os_api.get_all_ids(latest_first=True) == expected_record_ids)
 
 
 @pytest.mark.parametrize("input_size, output_size",

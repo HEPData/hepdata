@@ -42,7 +42,7 @@ for example, using ``yum`` or ``apt-get`` for Linux or ``brew`` for macOS:
 OpenSearch v1.3.2
 -----------------
 
-We are currently using OpenSearch v1.3.2. Here, you can find the `download instructions. <https://opensearch.org/versions/opensearch-1-3-2.html>`_ 
+We are currently using OpenSearch v1.3.2. Here, you can find the `download instructions. <https://opensearch.org/versions/opensearch-1-3-2.html>`_
 
 There are some examples below:
 
@@ -56,6 +56,8 @@ To install v1.3.2 via Homebrew, run:
     $ brew extract --version=1.3.2 opensearch opensearch/tap
     $ brew services restart opensearch/tap/opensearch@1.3.2
 
+If this doesn't work, either install the latest version instead (``brew install opensearch``) or run a Docker container.
+
 **Linux**
 
 You can see the tarball instructions on the OpenSearch installation `webpage. <https://opensearch.org/docs/1.3/opensearch/install/tar/>`_
@@ -63,7 +65,7 @@ You can see the tarball instructions on the OpenSearch installation `webpage. <h
 To execute, run this command within the extracted folder.
 
 .. code-block:: console
-	
+
 		./opensearch-tar-install.sh -E "plugins.security.disabled=true"
 
 **Docker**
@@ -224,7 +226,7 @@ PostgreSQL Client Authentication Configuration File (e.g. ``/var/lib/pgsql/12/da
 server (e.g. ``sudo systemctl restart postgresql-12``).
 
 Recreate the OpenSearch index
---------------------------------
+-----------------------------
 
 You may need to recreate the OpenSearch data, for example, after switching to a new OpenSearch instance.
 

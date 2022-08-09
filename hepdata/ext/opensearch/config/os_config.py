@@ -58,7 +58,7 @@ def add_default_aggregations(search, filters=[]):
 
 
 def get_filter_field(name, value):
-    """ Returns an appropriate ES clause for a given filter """
+    """ Returns an appropriate OS clause for a given filter """
     filter_type = "term"
 
     if name == 'collaboration':

@@ -30,7 +30,7 @@ from dateutil.parser import parse
 from flask import current_app
 
 from hepdata.config import CFG_PUB_TYPE, CFG_DATA_TYPE, HISTFACTORY_FILE_TYPE
-from hepdata.ext.opensearch.config.record_mapping import mapping as es_mapping
+from hepdata.ext.opensearch.config.record_mapping import mapping as os_mapping
 from hepdata.modules.permissions.models import SubmissionParticipant
 from hepdata.modules.submission.api import get_latest_hepsubmission
 
@@ -110,7 +110,7 @@ def add_analyses(doc):
 
 def add_data_keywords(doc):
     # Aggregate and filter out invalid keywords
-    valid_keywords = list(es_mapping['data_keywords']['properties'].keys())
+    valid_keywords = list(os_mapping['data_keywords']['properties'].keys())
     agg_keywords = defaultdict(list)
     for kw in doc["keywords"]:
         if kw['name'] in valid_keywords:

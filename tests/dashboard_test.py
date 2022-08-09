@@ -468,7 +468,7 @@ def test_submissions_csv(app, admin_idx, load_default_data, identifiers):
     with app.app_context():
         # Recreate the admin index so we know which records it contains
         admin_idx.reindex(recreate=True, include_imported=True)
-        # Make sure ES search catches up with the reindex
+        # Make sure OS search catches up with the reindex
         time.sleep(1)
 
         user = User.query.first()
