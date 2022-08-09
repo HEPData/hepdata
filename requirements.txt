@@ -1,7 +1,7 @@
 Babel==2.9.1
 beautifulsoup4==4.5.1
 bleach==3.3.0
-celery==5.1.2
+celery==5.2.2
 click==7.1.1
 datacite==1.1.2
 email-validator==1.1.0
