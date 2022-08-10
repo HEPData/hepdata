@@ -187,10 +187,15 @@ def delete_submission(recid):
         or check_is_sandbox_record(recid):
 
         submission = get_latest_hepsubmission(publication_recid=recid)
-        unload_submission.delay(recid, submission.version)
-
-        admin_idx = AdminIndexer()
-        admin_idx.delete_by_id(submission.id)
+        if(submission):
+            unload_submission.delay(recid, submission.version)
+            admin_idx = AdminIndexer()
+            admin_idx.delete_by_id(submission.id)
+        else:
+            return json.dumps({"success": False,
+                           "recid": recid,
+                           "errors": [
+                               "Record is pending deletion."]})
 
         return json.dumps({"success": True,
                            "recid": recid,
