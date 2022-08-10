@@ -194,8 +194,7 @@ def delete_submission(recid):
         else:
             return json.dumps({"success": False,
                            "recid": recid,
-                           "errors": [
-                               "Record is pending deletion."]})
+                           "message": "Record is pending deletion."})
 
         return json.dumps({"success": True,
                            "recid": recid,
