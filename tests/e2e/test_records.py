@@ -216,7 +216,7 @@ def test_record_update(live_server, logged_in_browser):
     delete_widget.find_element(By.CLASS_NAME, 'confirm-delete').click()
     # Wait for confirmation of deletion
     WebDriverWait(browser, 10).until(
-        EC.text_to_be_present_in_element((By.ID, 'delete-success'), 'Submission deleted')
+        EC.text_to_be_present_in_element((By.ID, 'delete-success'), 'Submission will be deleted')
     )
 
     # Should now only be 1 version of our submission

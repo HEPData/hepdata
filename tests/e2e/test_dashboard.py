@@ -149,7 +149,7 @@ def test_dashboard(live_server, logged_in_browser):
     WebDriverWait(browser, 10).until(
         EC.visibility_of_element_located((By.ID, 'delete-success'))
     )
-    assert 'Submission deleted' in \
+    assert 'Submission will be deleted' in \
         delete_widget.find_element(By.CSS_SELECTOR, '#delete-success p').text
 
     # Should now be 25 submissions not 26
