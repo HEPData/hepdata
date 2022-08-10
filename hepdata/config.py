@@ -168,7 +168,7 @@ SETTINGS_TEMPLATE = "invenio_theme/page_settings.html"
 OPENSEARCH_INDEX = 'hepdata-main'
 SUBMISSION_INDEX = 'hepdata-submission'
 AUTHOR_INDEX = 'hepdata-authors'
-SEARCH_OPENSEARCH_HOSTS = [
+SEARCH_HOSTS = [
     'localhost:9200'
 ]
 

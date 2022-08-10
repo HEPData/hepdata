@@ -47,7 +47,7 @@ def test_search_from_home(live_server, env_browser, search_tests):
     element = WebDriverWait(browser, 10).until(
         EC.url_contains('search')
     )
-    assert (flask.url_for('es_search.search', _external=True) in
+    assert (flask.url_for('os_search.search', _external=True) in
             browser.current_url)
 
     # Check result count
@@ -85,7 +85,7 @@ def test_search_from_home(live_server, env_browser, search_tests):
             # Move to the first filter and click
             ActionChains(browser).move_to_element(facet_filters[0])
             facet_filters[0].click()
-            assert (flask.url_for('es_search.search', _external=True) in
+            assert (flask.url_for('os_search.search', _external=True) in
                     browser.current_url)
 
             # Check the number of search results matches the number given in the filter
@@ -114,7 +114,7 @@ def test_search_from_home(live_server, env_browser, search_tests):
                 EC.presence_of_element_located((By.CLASS_NAME, 'search-result-item'))
             )
 
-            assert (flask.url_for('es_search.search', _external=True) in
+            assert (flask.url_for('os_search.search', _external=True) in
                     browser.current_url)
 
             # Check the expected publication appears in the search results
@@ -164,7 +164,7 @@ def test_search_from_home(live_server, env_browser, search_tests):
     assert 'Unable to search for /: Failed to parse query [/]' in element.text
 
     # Test passing an invalid sort_by value as a URL argument to a search query
-    browser.get(flask.url_for('es_search.search', _external=True) + '?q=collisions&sort_by=invalid_field')
+    browser.get(flask.url_for('os_search.search', _external=True) + '?q=collisions&sort_by=invalid_field')
     element = WebDriverWait(browser, 10).until(
         EC.presence_of_element_located((By.CLASS_NAME, 'search-results'))
     )
@@ -176,7 +176,7 @@ def test_author_search(live_server, env_browser):
     browser = env_browser
 
     # Go to the search page
-    browser.get(flask.url_for('es_search.search', _external=True))
+    browser.get(flask.url_for('os_search.search', _external=True))
 
     # Find the author search box
     search_input = browser.find_element(By.CSS_SELECTOR, '#author-suggest')
