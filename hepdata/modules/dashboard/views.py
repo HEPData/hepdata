@@ -183,25 +183,21 @@ def delete_submission(recid):
     :param recid:
     :return:
     """
-    if has_role(current_user, 'admin') or has_role(current_user, 'coordinator') \
-        or check_is_sandbox_record(recid):
-
+    if has_role(current_user, 'admin') or has_role(current_user, 'coordinator') or check_is_sandbox_record(recid):
         submission = get_latest_hepsubmission(publication_recid=recid)
-        unload_submission(recid, submission.version)
-
-        admin_idx = AdminIndexer()
-        admin_idx.delete_by_id(submission.id)
-
-        return json.dumps({"success": True,
-                           "recid": recid,
-                           "errors": [
-                               "Record successfully removed!"]})
+        if submission:
+            unload_submission.delay(recid, submission.version)
+            admin_idx = AdminIndexer()
+            admin_idx.delete_by_id(submission.id)
+            return json.dumps({"success": True})
+        else:
+            return json.dumps({"success": False, "message": "This submission has already been deleted."})
     else:
         return json.dumps(
-            {"success": False, "recid": recid,
-             "errors": [
+            {"success": False,
+             "message":
                  "You do not have permission to delete this submission. "
-                 "Only coordinators can do that."]})
+                 "Only coordinators can do that."})
 
 
 @blueprint.route('/manage/reindex/', methods=['POST'])
