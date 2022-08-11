@@ -56,7 +56,7 @@ def test_record_update(live_server, logged_in_browser):
         'hepdata_records.get_metadata_by_alternative_id',
         recid=f'ins{inspire_id}', _external=True)
     browser.get(record_url)
-    browser.find_element(By.CSS_SELECTOR, 
+    browser.find_element(By.CSS_SELECTOR,
         "button.btn-danger[data-target='#reviseSubmission']").click()
     revise_submission_dialog = browser.find_element(By.ID, 'reviseSubmission')
     WebDriverWait(browser, 10).until(
@@ -202,7 +202,7 @@ def test_record_update(live_server, logged_in_browser):
         EC.visibility_of(admin_view)
     )
     # Click "Delete"
-    admin_view.find_element(By.CSS_SELECTOR, 
+    admin_view.find_element(By.CSS_SELECTOR,
         "button.btn-danger[data-target='#deleteWidget']"
         ).click()
     # Wait for modal to load
@@ -275,7 +275,7 @@ def test_sandbox(live_server, logged_in_browser):
     )
     delete_modal.find_element(By.CLASS_NAME, 'confirm-delete').click()
     WebDriverWait(browser, 10).until(
-        EC.text_to_be_present_in_element((By.ID, 'deleteDialogLabel'), 'Submission Deleted')
+        EC.text_to_be_present_in_element((By.CSS_SELECTOR, '#delete-success p'), 'Submission will be deleted')
     )
 
     # Refresh sandbox page (to avoid waiting)

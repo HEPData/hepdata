@@ -76,15 +76,18 @@ HEPDATA.delete_submission = function (record_id, redirect_url) {
     dataType: "json",
     url: '/dashboard/delete/' + window.recid,
     success: function (data) {
-      if (data.success) {
-        $("#deleteDialogLabel").text("Submission Deleted");
         $("#progress").addClass("hidden");
-        $("#delete-success").removeClass("hidden");
+        if (data.success) {
+          $("#delete-success").removeClass("hidden");
+        } else {
+          $("#delete-failure").removeClass("hidden");
+          $("#deleteDialogMessage").text(data.message);
+        }
 
         var count = 5;
         setInterval(function () {
           count -= 1;
-          $("#timer").text(count);
+          $(".timer").text(count);
           if (count == 0) {
             $("#deleteWidget").modal('hide');
           }
@@ -94,10 +97,6 @@ HEPDATA.delete_submission = function (record_id, redirect_url) {
           window.location = redirect_url;
         }, 5500);
 
-
-      } else {
-        alert("Error! " + data.message)
-      }
     }
   })
 };
