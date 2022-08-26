@@ -47,7 +47,7 @@ jobs:
     strategy:
       matrix:
         postgres-version: [12, 13]
-        os-image: ['opensearchproject/opensearch:1.3.2']
+        os-image: ['opensearchproject/opensearch:2.2.0']
         python-version: [ '3.7', '3.8', '3.9' ]
 
     # Service containers to run with `runner-job`

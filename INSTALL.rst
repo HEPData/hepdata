@@ -36,31 +36,30 @@ for example, using ``yum`` or ``apt-get`` for Linux or ``brew`` for macOS:
 
  * `PostgreSQL <http://www.postgresql.org/>`_ (version 12) database server
  * `Redis <http://redis.io/>`_ for caching
- * `OpenSearch <https://opensearch.org/>`_ (version 1.3.2) for indexing and information retrieval. See below for further instructions.
+ * `OpenSearch <https://opensearch.org/>`_ (version 2.2.0) for indexing and information retrieval. See below for further instructions.
  * `Node.js <https://nodejs.org>`_ (version 14) JavaScript run-time environment and its package manager `npm <https://www.npmjs.com/>`_. [If you're using a Debian-based OS, please follow the `official installation instructions <https://github.com/nodesource/distributions/blob/master/README.md#debinstall>`_ to install NodeJS (which will also install npm), to avoid issues with ``node-sass``.]
 
-OpenSearch v1.3.2
+OpenSearch v2.2.0
 -----------------
 
-We are currently using OpenSearch v1.3.2. Here, you can find the `download instructions. <https://opensearch.org/versions/opensearch-1-3-2.html>`_
+We are currently using OpenSearch v2.2.0. Here, you can find the `download instructions. <https://opensearch.org/versions/opensearch-2-2-0.html>`_
 
 There are some examples below:
 
 **MacOS**
 
-To install v1.3.2 via Homebrew, run:
+Install the latest version with ``brew install opensearch``.  Alternatively, to install v2.2.0 via Homebrew, run:
 
 .. code-block:: console
 
-    $ brew tap opensearch/tap
-    $ brew extract --version=1.3.2 opensearch opensearch/tap
-    $ brew services restart opensearch/tap/opensearch@1.3.2
-
-If this doesn't work, either install the latest version instead (``brew install opensearch``) or run a Docker container.
+    $ brew tap-new opensearch/tap
+    $ brew extract --version=2.2.0 opensearch opensearch/tap
+    $ brew install opensearch/tap/opensearch@2.2.0
+    $ brew services restart opensearch/tap/opensearch@2.2.0
 
 **Linux**
 
-You can see the tarball instructions on the OpenSearch installation `webpage. <https://opensearch.org/docs/1.3/opensearch/install/tar/>`_
+You can see the tarball instructions on the OpenSearch installation `webpage. <https://opensearch.org/docs/2.2/opensearch/install/tar/>`_
 
 To execute, run this command within the extracted folder.
 
@@ -74,8 +73,8 @@ Alternatively, run OpenSearch after `installing Docker <https://docs.docker.com/
 
 .. code-block:: console
 
-    $ docker pull opensearchproject/opensearch:1.3.2
-    $ docker run -d -p 9200:9200 -p 9600:9600 -e "discovery.type=single-node" -e "plugins.security.disabled=true" opensearchproject/opensearch:1.3.2
+    $ docker pull opensearchproject/opensearch:2.2.0
+    $ docker run -d -p 9200:9200 -p 9600:9600 -e "discovery.type=single-node" -e "plugins.security.disabled=true" opensearchproject/opensearch:2.2.0
 
 .. _installation:
 
@@ -114,10 +113,12 @@ reinstall PyYAML to ensure it's built with LibYAML bindings, e.g. on an M1 MacBo
 
    (venv)$ LDFLAGS="-L$(brew --prefix)/lib" CFLAGS="-I$(brew --prefix)/include" pip install --global-option="--with-libyaml" --force pyyaml==5.4.1
 
-   (venv)$ export FLASK_ENV=development
-
-The last line sets an environment variable to switch Flask to run in development mode.
+The next line sets an environment variable to switch Flask to run in development mode.
 You may want to set this automatically in your bash or zsh profile.
+
+.. code-block:: console
+
+   (venv)$ export FLASK_ENV=development
 
 Use of config_local.py
 ----------------------
