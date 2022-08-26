@@ -272,7 +272,7 @@ To run the tests locally you have several options:
 2. Run Selenium locally using ChromeDriver.  (Some tests are currently failing with this method.)
     1. Install `ChromeDriver <https://chromedriver.chromium.org>`_
        (matched to your version of `Chrome <https://www.google.com/chrome/>`_).
-    2. Include ``RUN_SELENIUM_LOCALLY = True`` and ``RATELIMIT_ENABLED = False`` in your ``hepdata/config_local.py`` file.
+    2. Include ``RUN_SELENIUM_LOCALLY = True`` in your ``hepdata/config_local.py`` file.
     3. You might need to close Chrome before running the end-to-end tests.
 
 3. Omit the end-to-end tests when running locally, by running ``pytest tests -k 'not tests/e2e'`` instead of ``run-tests.sh``.
