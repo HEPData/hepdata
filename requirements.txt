@@ -1,8 +1,8 @@
 Babel==2.10.3
 beautifulsoup4==4.11.1
 bleach==5.0.1
-celery==5.1.2
-click==7.1.2
+celery==5.2.7
+click==8.0.4
 datacite==1.1.2
 email-validator==1.2.1
 Flask==2.0.0
