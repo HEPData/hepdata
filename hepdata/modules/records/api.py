@@ -293,14 +293,14 @@ def get_resource_mimetype(resource, contents):
 
 
 def should_send_json_ld(request):
-    """Determine whether to send json-ld instead of HTML for this request
+    """Determine whether to send JSON-LD instead of HTML for this request
 
     :param type request: flask.Request object
     :return: True if request accepts JSON-LD; False otherwise
     :rtype: bool
 
     """
-    # Determine whether to send json-ld
+    # Determine whether to send JSON-LD
     return any([request.accept_mimetypes.quality(m) >= 1 for m in JSON_LD_MIMETYPES])
 
 
