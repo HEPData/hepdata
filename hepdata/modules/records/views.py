@@ -143,8 +143,8 @@ def get_metadata_by_alternative_id(recid):
             output_format = request.args.get('format', 'html')
             light_mode = bool(request.args.get('light', False))
 
-            # Check the Accept header to determine whether to send json-ld
-            if should_send_json_ld(request):
+            # Check the Accept header to determine whether to send JSON-LD
+            if output_format == 'html' and should_send_json_ld(request):
                 output_format = 'json_ld'
 
             return render_record(recid=record['recid'], record=record, version=version, output_format=output_format,
@@ -241,8 +241,8 @@ def metadata(recid):
     except Exception as e:
         record = None
 
-    # Check the Accept header to determine whether to send json-ld
-    if should_send_json_ld(request):
+    # Check the Accept header to determine whether to send JSON-LD
+    if output_format == 'html' and should_send_json_ld(request):
         output_format = 'json_ld'
 
     return render_record(recid=recid, record=record, version=version, output_format=output_format,
