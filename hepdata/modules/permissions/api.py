@@ -147,16 +147,16 @@ def write_submissions_to_files():
     """Writes some statistics on number of submissions per Coordinator to files."""
 
     import csv
-    from datetime import date
+    from datetime import datetime
 
     # Open a CSV file to write the number of unfinished and finished submissions for each Coordinator.
-    csvfile = open('submissions_per_coordinator_{}.csv'.format(date.today()), 'w')
+    csvfile = open('submissions_per_coordinator_{}.csv'.format(datetime.utcnow().date()), 'w')
     writer = csv.writer(csvfile)
     writer.writerow(['user_id', 'user_email', 'collaboration', 'version',
                  'number_todo', 'number_finished'])
 
     # Open another CSV file to write the collaboration and date of each finished version 1 submission.
-    csvfile1 = open('submissions_with_date_{}.csv'.format(date.today()), 'w')
+    csvfile1 = open('submissions_with_date_{}.csv'.format(datetime.utcnow().date()), 'w')
     writer1 = csv.writer(csvfile1)
     writer1.writerow(['collaboration', 'publication_recid', 'inspire_id',
                   'created', 'last_updated'])

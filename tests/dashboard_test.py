@@ -476,7 +476,7 @@ def test_submissions_csv(app, admin_idx, load_default_data, identifiers):
         csv_lines = csv_data.splitlines()
         assert len(csv_lines) == 3
         assert csv_lines[0] == 'hepdata_id,version,url,inspire_id,arxiv_id,title,collaboration,creation_date,last_updated,status,uploaders,reviewers'
-        today = datetime.date.today().isoformat()
+        today = datetime.datetime.utcnow().date().isoformat()
         assert csv_lines[1] == f'16,1,http://localhost/record/16,1245023,arXiv:1307.7457,High-statistics study of $K^0_S$ pair production in two-photon collisions,Belle,{today},2013-12-17,finished,,'
         assert csv_lines[2] == f'1,1,http://localhost/record/1,1283842,arXiv:1403.1294,Measurement of the forward-backward asymmetry in the distribution of leptons in $t\\bar{{t}}$ events in the lepton$+$jets channel,D0,{today},2014-08-11,finished,,'
 
