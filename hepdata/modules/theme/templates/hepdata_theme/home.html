@@ -55,6 +55,7 @@
   }(document, "script", "twitter-wjs"));</script>
   <meta name="twitter:dnt" content="on">
   <meta name="twitter:widgets:csp" content="on">
+  <meta name="twitter:widgets:autoload" content="off">
 {% endblock header %}
 
 {%- block header_bars %}
@@ -176,7 +177,7 @@
 
             </div>
 
-            <div class="twitter-area">
+            <div class="twitter-area" id="twitter-feed">
               <a class="twitter-timeline" data-height="200"
                  href="https://twitter.com/HEPData?ref_src=twsrc%5Etfw">Tweets by HEPData</a>
             </div>
@@ -188,6 +189,9 @@
 
 {%- block javascript %}
   {{ webpack['hepdata-home-js.js'] }}
+  {% if not config['TESTING'] %}
+    <script>twttr.widgets.load(document.getElementById("twitter-feed"));</script>
+  {%  endif %}
 {% endblock %}
 
 {%- block trackingcode %}
