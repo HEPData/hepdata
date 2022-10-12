@@ -173,7 +173,7 @@ def _get_time(date):
     date_is_int = (type(date) is int or type(date) is str and date.isdigit())
 
     if date_is_int:
-        specified_time = datetime.datetime.today() + datetime.timedelta(days=-abs(int(date)))
+        specified_time = datetime.datetime.utcnow() + datetime.timedelta(days=-abs(int(date)))
     else:
         specified_time = datetime.datetime.strptime(date, "%Y-%m-%d")
 
