@@ -142,7 +142,7 @@ def get_identifiers():
     return [{"hepdata_id": "ins1283842", "inspire_id": '1283842',
              "title": "Measurement of the forward-backward asymmetry "
                       "in the distribution of leptons in $t\\bar{t}$ "
-                      "events in the lepton$+$jets channel",
+                      "events in the lepton+jets channel",
              "data_tables": 14,
              "arxiv": "arXiv:1403.1294"},
 

@@ -41,7 +41,8 @@ parsed_content_defaults = {
 
 
 def get_title(metadata):
-    """Get the title of the publication from the first value in list of english translations (if applicable) otherwise from first title in list of titles."""
+    """Get the title of the publication from the first value in list of english translations (if applicable)
+    otherwise the first title in the list of titles or preferably the first arXiv title in the list."""
     title = deepcopy(parsed_content_defaults['title'])
     if 'title_translations' in metadata.keys():
         for title_translation in metadata['title_translations']:
@@ -49,6 +50,10 @@ def get_title(metadata):
                 title = title_translation['title']
     if title is parsed_content_defaults['title'] and 'titles' in metadata.keys() and len(metadata['titles']) > 0:
         title = metadata['titles'][0]['title']
+        for _title in metadata['titles']:
+            if 'title' in _title.keys() and 'source' in _title.keys() and _title['source'] == 'arXiv':
+                title = _title['title']
+                break
     return title
 
 
@@ -86,6 +91,7 @@ def get_abstract(metadata):
         for _abstract in metadata['abstracts']:
             if 'value' in _abstract.keys() and 'source' in _abstract.keys() and _abstract['source'] == 'arXiv':
                 abstract = _abstract['value']
+                break
     return abstract
 
 

@@ -537,11 +537,11 @@ def test_move_files_invalid_path():
 
 
 def test_get_updated_records_since_date(app):
+    ids_since = get_inspire_records_updated_since(3)
     ids_on = get_inspire_records_updated_on(0)
     ids_on += get_inspire_records_updated_on(1)
     ids_on += get_inspire_records_updated_on(2)
     ids_on += get_inspire_records_updated_on(3)
-    ids_since = get_inspire_records_updated_since(3)
     assert set(ids_on) == set(ids_since)
 
 
@@ -800,7 +800,7 @@ def test_get_json_ld(app, load_default_data, identifiers):
         '@id': 'https://doi.org/10.17182/hepdata.1',
         'url': 'http://localhost:5000/record/ins1283842?version=1',
         'description': 'Fermilab-Tevatron.  We present measurements of the forward-backward asymmetry, ASYMFB(LEPTON) in the angular distribution of leptons (electrons and muons) from decays of top quarks and antiquarks produced in proton-antiproton collisions. We consider the final state containing a lepton and at least three jets. The entire sample of data collected by the D0 experiment during Run II (2001 - 2011) of the Fermilab Tevatron Collider, corresponding to 9.7 inverse fb of integrated luminosity, is used. We also examine the dependence of ASYMFB(LEPTON) on the transverse momentum, PT(LEPTON), and rapidity, YRAP(LEPTON), of the lepton.',
-        'name': 'Measurement of the forward-backward asymmetry in the distribution of leptons in $t\\bar{t}$ events in the lepton$+$jets channel',
+        'name': 'Measurement of the forward-backward asymmetry in the distribution of leptons in $t\\bar{t}$ events in the lepton+jets channel',
         'hasPart': [
             {'@id': 'https://doi.org/10.17182/hepdata.1.v1/t1',
             '@type': 'Dataset',
