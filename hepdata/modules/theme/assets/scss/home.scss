@@ -171,12 +171,15 @@
 }
 
 .disclaimer-area, .twitter-area {
+  display: flex;
+  justify-content: center;
   background-color: $navy-light;
   padding-top: 1.5vh;
   padding-bottom: 1vh;
   color: white;
   p {
     font-size: 1.1em;
+    text-align: center;
   }
 
   a {

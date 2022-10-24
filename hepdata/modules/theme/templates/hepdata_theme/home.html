@@ -35,29 +35,6 @@
 </script>
 {%- endblock json_ld %}
 
-{%- block header %}
-  {# https://developer.twitter.com/en/docs/twitter-for-websites/javascript-api/guides/set-up-twitter-for-websites #}
-  <script>window.twttr = (function(d, s, id) {
-    var js, fjs = d.getElementsByTagName(s)[0],
-      t = window.twttr || {};
-    if (d.getElementById(id)) return t;
-    js = d.createElement(s);
-    js.id = id;
-    js.src = "https://platform.twitter.com/widgets.js";
-    fjs.parentNode.insertBefore(js, fjs);
-
-    t._e = [];
-    t.ready = function(f) {
-      t._e.push(f);
-    };
-
-    return t;
-  }(document, "script", "twitter-wjs"));</script>
-  <meta name="twitter:dnt" content="on">
-  <meta name="twitter:widgets:csp" content="on">
-  <meta name="twitter:widgets:autoload" content="off">
-{% endblock header %}
-
 {%- block header_bars %}
 {%- endblock header_bars %}
 
@@ -177,10 +154,15 @@
 
             </div>
 
-            <div class="twitter-area" id="twitter-feed">
-              <a class="twitter-timeline" data-height="200"
-                 href="https://twitter.com/HEPData?ref_src=twsrc%5Etfw">Tweets by HEPData</a>
-            </div>
+            {% if not config['TESTING'] %}
+              <div class="twitter-area">
+                <p>
+                  <a class="twitter-timeline" data-width="800" data-height="200" data-dnt="true"
+                     href="https://twitter.com/HEPData?ref_src=twsrc%5Etfw">Tweets by HEPData</a>
+                </p>
+                <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+              </div>
+            {% endif %}
 
             {% include "hepdata_search/modals/search_help.html" %}
 
@@ -189,9 +171,6 @@
 
 {%- block javascript %}
   {{ webpack['hepdata-home-js.js'] }}
-  {% if not config['TESTING'] %}
-    <script>twttr.widgets.load(document.getElementById("twitter-feed"));</script>
-  {%  endif %}
 {% endblock %}
 
 {%- block trackingcode %}
