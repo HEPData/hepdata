@@ -66,7 +66,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u''
+project = u'HEPData'
 copyright = u'2016, CERN'
 author = u'CERN'
 

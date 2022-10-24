@@ -1,27 +1,28 @@
+.. only:: html
 
-.. image:: https://github.com/HEPData/hepdata/workflows/Continuous%20Integration/badge.svg?branch=master
-   :target: https://github.com/HEPData/hepdata/actions?query=branch%3Amaster
-   :alt: GitHub Actions Build Status
+    .. image:: https://github.com/HEPData/hepdata/workflows/Continuous%20Integration/badge.svg?branch=master
+       :target: https://github.com/HEPData/hepdata/actions?query=branch%3Amaster
+       :alt: GitHub Actions Build Status
 
-.. image:: https://coveralls.io/repos/github/HEPData/hepdata/badge.svg?branch=master
-   :target: https://coveralls.io/github/HEPData/hepdata?branch=master
-   :alt: Coveralls Status
+    .. image:: https://coveralls.io/repos/github/HEPData/hepdata/badge.svg?branch=master
+       :target: https://coveralls.io/github/HEPData/hepdata?branch=master
+       :alt: Coveralls Status
 
-.. image:: https://img.shields.io/github/license/HEPData/hepdata.svg
-   :target: https://github.com/HEPData/hepdata/blob/master/LICENSE
-   :alt: License
+    .. image:: https://img.shields.io/github/license/HEPData/hepdata.svg
+       :target: https://github.com/HEPData/hepdata/blob/master/LICENSE
+       :alt: License
 
-.. image:: https://img.shields.io/docker/image-size/hepdata/hepdata/latest
-   :target: https://hub.docker.com/r/hepdata/hepdata/tags
-   :alt: Docker Image Size
+    .. image:: https://img.shields.io/docker/image-size/hepdata/hepdata/latest
+       :target: https://hub.docker.com/r/hepdata/hepdata/tags
+       :alt: Docker Image Size
 
-.. image:: https://img.shields.io/github/issues/hepdata/hepdata.svg?maxAge=2592000
-   :target: https://github.com/HEPData/hepdata/issues
-   :alt: GitHub Issues
+    .. image:: https://img.shields.io/github/issues/hepdata/hepdata.svg?maxAge=2592000
+       :target: https://github.com/HEPData/hepdata/issues
+       :alt: GitHub Issues
 
-.. image:: https://readthedocs.org/projects/hepdata/badge/?version=latest
-   :target: http://hepdata.readthedocs.io/en/latest/?badge=latest
-   :alt: Documentation Status
+    .. image:: https://readthedocs.org/projects/hepdata/badge/?version=latest
+       :target: http://hepdata.readthedocs.io/en/latest/?badge=latest
+       :alt: Documentation Status
 
 The Durham High-Energy Physics Database (HEPData) has been built up over the past four decades as a unique open-access
 repository for scattering data from experimental particle physics. It currently comprises the data points from plots and
