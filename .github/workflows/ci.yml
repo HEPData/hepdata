@@ -165,7 +165,7 @@ jobs:
     - name: Build docs
       run: |
         python -m pip install -e .[docs]
-        cd docs && make html SPHINXOPTS="-W"
+        cd docs && make html
     - uses: actions/upload-artifact@v2
       if: ${{ failure() }}
       with:

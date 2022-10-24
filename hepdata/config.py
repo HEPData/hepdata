@@ -186,7 +186,7 @@ CFG_DATA_KEYWORDS = ['observables', 'reactions', 'cmenergies', 'phrases']
 
 CFG_CONVERTER_URL = 'https://converter.hepdata.net'
 CFG_SUPPORTED_FORMATS = ['yaml', 'root', 'csv', 'yoda', 'original']
-CFG_CONVERTER_TIMEOUT = CLIENT_TIMEOUT # timeout in seconds
+CFG_CONVERTER_TIMEOUT = 220  # timeout in seconds
 
 CFG_TMPDIR = tempfile.gettempdir()
 CFG_DATADIR = tempfile.gettempdir()
