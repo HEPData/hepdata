@@ -28,7 +28,6 @@ from hepdata.utils.url import modify_query
 
 def test_url_modify(app):
     with app.app_context():
-
         url_path = modify_query('os_search.search', **{'date': '2001, 2002'})
         assert(url_path == '/search/?date=2001%2C+2002')
 

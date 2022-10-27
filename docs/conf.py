@@ -25,8 +25,16 @@
 from __future__ import print_function
 
 import os
+import sys
 
 import sphinx.environment
+
+def setup(app):
+    argv = ' '.join(sys.argv)
+    if '-b html' in argv:
+        app.add_config_value('buildername', 'html', 'env')
+    else:
+        app.add_config_value('buildername', 'not-html', 'env')
 
 
 # -- General configuration ------------------------------------------------
@@ -45,6 +53,7 @@ extensions = [
     'sphinx.ext.autosummary',
     'sphinx.ext.coverage',
     'sphinx.ext.doctest',
+    'sphinx.ext.ifconfig',
     'sphinx.ext.intersphinx',
     'sphinx.ext.viewcode',
     'sphinx_click.ext',
