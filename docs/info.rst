@@ -1,4 +1,4 @@
-.. only:: html
+.. ifconfig:: buildername == 'html'
 
     .. image:: https://github.com/HEPData/hepdata/workflows/Continuous%20Integration/badge.svg?branch=master
        :target: https://github.com/HEPData/hepdata/actions?query=branch%3Amaster
