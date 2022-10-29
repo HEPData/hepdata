@@ -142,8 +142,8 @@ jobs:
       with:
         username: ${{ secrets.SAUCE_USERNAME }}
         accessKey: ${{ secrets.SAUCE_ACCESS_KEY }}
-        restUrl: https://api.eu-central-1.saucelabs.com/rest/v1
-        tunnelIdentifier: ${{ github.run_id }}
+        region: eu-central
+        tunnelName: ${{ github.run_id }}
         scVersion: 4.8.1
         verbose: true
     - name: Run end-to-end tests
