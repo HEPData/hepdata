@@ -53,6 +53,9 @@ class LargeBinaryString(TypeDecorator):
     impl = types.LargeBinary
 
     def process_literal_param(self, value, dialect):
+        """
+        Encodes and returns string object.
+        """
         if isinstance(value, str):
             value = value.encode('utf-8', errors='replace')
 
@@ -61,6 +64,9 @@ class LargeBinaryString(TypeDecorator):
     process_bind_param = process_literal_param
 
     def process_result_value(self, value, dialect):
+        """
+        Encodes and returns string object.
+        """
         if isinstance(value, bytes):
             value = value.decode('utf-8', errors='replace')
 
