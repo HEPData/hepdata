@@ -489,7 +489,7 @@ def download_datatable(datasubmission, file_format, *args, **kwargs):
         return send_file(
             dataresource.file_location,
             as_attachment=True,
-            attachment_filename=filename + '.yaml'
+            download_name=filename + '.yaml'
         )
 
     options = {
@@ -536,7 +536,7 @@ def download_datatable(datasubmission, file_format, *args, **kwargs):
         file_format = 'html'
 
     return send_file(file_to_send, as_attachment=True,
-                     attachment_filename=filename + '.' + file_format)
+                     download_name=filename + '.' + file_format)
 
 
 def display_error(title='Unknown Error', description=''):
