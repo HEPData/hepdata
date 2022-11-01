@@ -28,7 +28,6 @@ invenio-search[opensearch2]==2.1.0
 invenio-theme==1.4.1
 invenio-userprofiles==1.2.1
 jsmin==3.0.1
-jsonref==0.3.0  # 1.0.0 gives "ImportError: cannot import name 'JsonLoader' from 'jsonref'"
 lxml==4.9.1
 MarkupSafe==2.1.1
 msgpack==1.0.4
