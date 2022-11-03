@@ -118,7 +118,7 @@ You may want to set this automatically in your bash or zsh profile.
 
 .. code-block:: console
 
-   (venv)$ export FLASK_ENV=development
+   (venv)$ export FLASK_DEBUG=1
 
 Use of config_local.py
 ----------------------
