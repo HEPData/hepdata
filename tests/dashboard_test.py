@@ -43,6 +43,12 @@ from pytest_mock import mocker
 from . import conftest
 import pytest
 
+def get_mock_user_object():
+    """Returns a mock user object for use in tests."""
+    return {
+        'user': User(email='test@test.com', password='hello1', active=True, id=101),
+        'user2': User(email='test2@test.com', password='hello2', active=True, id=202)
+    }
 
 def test_add_user_to_metadata():
     test_submissions = {
@@ -291,10 +297,7 @@ def test_submissions_participant(app, load_submission):
 
 def test_get_pending_invitations_for_user_empty(app):
     with app.app_context():
-        dashboardTestMockObjects = {
-            'user': User(email='test@test.com', password='hello1', active=True, id=101),
-            'user2': User(email='test2@test.com', password='hello2', active=True, id=202)
-        }
+        dashboardTestMockObjects = get_mock_user_object()
         user = dashboardTestMockObjects['user']
         pending = get_pending_invitations_for_user(user)
         assert(pending == [])
@@ -305,10 +308,8 @@ def mocked_submission_participant_app(request, mocker):
     # Create the flask app
     app = conftest.create_basic_app()
     with app.app_context():
-        dashboardTestMockObjects = {
-            'user': User(email='test@test.com', password='hello1', active=True, id=101),
-            'user2': User(email='test2@test.com', password='hello2', active=True, id=202)
-        }
+        dashboardTestMockObjects = get_mock_user_object()
+
         # Create some mock objects and chain the mock calls
         def mock_all():
             return [
@@ -341,10 +342,7 @@ def mocked_submission_participant_app(request, mocker):
 
 def test_get_pending_invitations_for_user(mocked_submission_participant_app, mocker):
     with mocked_submission_participant_app.app_context():
-        dashboardTestMockObjects = {
-        'user': User(email='test@test.com', password='hello1', active=True, id=101),
-        'user2': User(email='test2@test.com', password='hello2', active=True, id=202)
-     }
+        dashboardTestMockObjects = get_mock_user_object()
         user = dashboardTestMockObjects['user']
         pending = get_pending_invitations_for_user(user)
 
@@ -416,10 +414,7 @@ def test_manage_participant_status(app):
 
 def test_dashboard_current_user(app):
     with app.app_context():
-        dashboardTestMockObjects = {
-            'user': User(email='test@test.com', password='hello1', active=True, id=101),
-            'user2': User(email='test2@test.com', password='hello2', active=True, id=202)
-        }
+        dashboardTestMockObjects = get_mock_user_object()
         # Add test users to db
         user1 = dashboardTestMockObjects['user']
         user2 = dashboardTestMockObjects['user2']
