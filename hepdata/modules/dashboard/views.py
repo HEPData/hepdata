@@ -75,9 +75,9 @@ def dashboard():
         user_to_display = get_dashboard_current_user(current_user)
 
     if user_to_display == current_user:
-        user_profile = current_userprofile.query.filter_by(user_id=user_to_display.get_id()).first()
+        user_profile = current_userprofile
     else:
-        user_profile = UserProfile.query.filter_by(user_id=user_to_display.get_id()).first()
+        user_profile = UserProfile.get_by_userid(user_to_display.get_id())
 
 
     ctx = {'user_is_admin': has_role(user_to_display, 'admin'),
@@ -244,7 +244,7 @@ def submissions():
         user = get_dashboard_current_user(current_user)
 
     if has_role(user, 'admin') or has_role(user, 'coordinator'):
-        user_profile = UserProfile.query.filter_by(user_id=user.get_id()).first()
+        user_profile = UserProfile.get_by_userid(user.get_id())
         url_for_params = { 'view_as_user': user.id } if user != current_user else {}
         dashboard_url = url_for('hep_dashboard.dashboard', **url_for_params)
 
