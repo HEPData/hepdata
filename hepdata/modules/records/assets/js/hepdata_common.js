@@ -50,7 +50,8 @@ HEPDATA.file_type_to_details = {
   "ufo": {"icon": "rocket", "description": "Universal Feynrules Output (UFO)"},
   "html": {"icon": "code", "description": "External Link"},
   "oldhepdata": {"icon": "file-text-o", "description": "Legacy HEPData Format"},
-  "root": {"icon": "line-chart", "description": "ROOT File"}
+  "root": {"icon": "line-chart", "description": "ROOT File"},
+  "zenodo": {"icon": "code", "description": "Zenodo Record"}
 };
 
 HEPDATA.stats = {
