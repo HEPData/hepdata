@@ -113,11 +113,12 @@ reinstall PyYAML to ensure it's built with LibYAML bindings, e.g. on an M1 MacBo
 
    (venv)$ LDFLAGS="-L$(brew --prefix)/lib" CFLAGS="-I$(brew --prefix)/include" pip install --global-option="--with-libyaml" --force pyyaml==5.4.1
 
-The next line sets an environment variable to switch Flask to run in development mode.
-You may want to set this automatically in your bash or zsh profile.
+The next line sets environment variables to switch Flask to run in development mode.
+You may want to set these automatically in your bash or zsh profile.
 
 .. code-block:: console
 
+   (venv)$ export FLASK_ENV=development
    (venv)$ export FLASK_DEBUG=1
 
 Use of config_local.py
