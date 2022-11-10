@@ -11,7 +11,7 @@ CELERY_RESULT_BACKEND = "redis://cache:6379/1"
 CACHE_REDIS_URL = "redis://cache:6379/0"
 SESSION_REDIS = "redis://cache:6379/0"
 TEST_DB_HOST = "db"
-OPENSEARCH_HOST = "es"
+OPENSEARCH_HOST = "os"
 SEARCH_HOSTS = [
     'os:9200'
 ]
