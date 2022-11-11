@@ -16,6 +16,7 @@ ENTRYPOINT [ "python3" ]
 CMD [ "--version" ]
 
 ARG APP_ENVIRONMENT
+ARG SAUCE_OS
 
 RUN curl -sL https://deb.nodesource.com/setup_14.x | bash -
 RUN apt-get update
@@ -42,8 +43,8 @@ RUN hepdata collect -v  && \
 
 RUN bash -c "echo $APP_ENVIRONMENT"
 
-RUN bash -c "set -x; [[ ${APP_ENVIRONMENT:-prod} = local-web ]] && (cd /usr/local/var && wget https://saucelabs.com/downloads/sc-4.8.1-linux.tar.gz && \
-  tar -xvf sc-4.8.1-linux.tar.gz) || echo 'Not installing SC on prod or worker build'"
+RUN bash -c "set -x; [[ ${APP_ENVIRONMENT:-prod} = local-web ]] && (cd /usr/local/var && wget https://saucelabs.com/downloads/sc-4.8.1-${SAUCE_OS:-linux}.tar.gz && \
+  tar -xvf sc-4.8.1-${SAUCE_OS:-linux}.tar.gz) || echo 'Not installing SC on prod or worker build'"
 
 WORKDIR /code
 
