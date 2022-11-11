@@ -54,7 +54,6 @@ from tests.conftest import get_identifiers, import_default_data
 class SQLAlchemy(InvenioSQLAlchemy):
     def apply_pool_defaults(self, app, options):
         # See https://github.com/pallets/flask-sqlalchemy/issues/589#issuecomment-361075700
-        # Will need updating if we move to flask-sqlalchemy >= 2.5
         options = super().apply_pool_defaults(app, options)
         options["pool_pre_ping"] = True
         return options
