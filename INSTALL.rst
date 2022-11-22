@@ -113,12 +113,13 @@ reinstall PyYAML to ensure it's built with LibYAML bindings, e.g. on an M1 MacBo
 
    (venv)$ LDFLAGS="-L$(brew --prefix)/lib" CFLAGS="-I$(brew --prefix)/include" pip install --global-option="--with-libyaml" --force pyyaml==5.4.1
 
-The next line sets an environment variable to switch Flask to run in development mode.
-You may want to set this automatically in your bash or zsh profile.
+The next line sets environment variables to switch Flask to run in development mode.
+You may want to set these automatically in your bash or zsh profile.
 
 .. code-block:: console
 
    (venv)$ export FLASK_ENV=development
+   (venv)$ export FLASK_DEBUG=1
 
 Use of config_local.py
 ----------------------
@@ -325,12 +326,17 @@ on the Kubernetes cluster at CERN.
 
 For local development you can use the ``docker-compose.yml`` file to run the HEPData Docker image and its required services.
 
-First, ensure you have installed `Docker <https://docs.docker.com/install/>`_ and `Docker Compose <https://docs.docker.com/compose/install/>`__.
+First, ensure you have installed `Docker <https://docs.docker.com/install/>`_ and `Docker Compose <https://docs.docker.com/compose/install/>`_.
 
 Copy the file ``config_local.docker_compose.py`` to ``config_local.py``.
 
 In order to run the tests via Sauce Labs, ensure you have the variables ``$SAUCE_USERNAME`` and ``$SAUCE_ACCESS_KEY``
 set in your environment (see :ref:`running-the-tests`) **before** starting the containers.
+
+If using an M1 MacBook, also add ``export SAUCE_OS=linux-arm64`` to your bash or zsh profile. This is necessary to
+download the correct `Sauce Connect Proxy
+<https://docs.saucelabs.com/secure-connections/sauce-connect/installation/#downloading-sauce-connect-proxy>`_
+client.
 
 Start the containers:
 
@@ -338,13 +344,15 @@ Start the containers:
 
    $ docker-compose up
 
-(This starts containers for all the 5 necessary services. See :ref:`docker-compose-tips` if you only want to run some containers.)
+(This starts containers for all the 6 necessary services. See :ref:`docker-compose-tips` if you only want to run some containers.)
 
 In another terminal, initialise the database:
 
 .. code-block:: console
 
+   $ docker-compose exec web bash -c "hepdata utils reindex -rc True"  # ignore error "hepsubmission" does not exist
    $ docker-compose exec web bash -c "mkdir -p /code/tmp; ./scripts/initialise_db.sh your@email.com password"
+   $ docker-compose exec db bash -c "psql hepdata -U hepdata -c 'update accounts_user set confirmed_at=NOW() where id=1;'"
 
 Now open http://localhost:5000/ and HEPData should be up and running. (It may take a few minutes for Celery to process
 the sample records.)
@@ -353,8 +361,11 @@ To run the tests:
 
 .. code-block:: console
 
-   $ docker-compose exec web bash -c "/usr/local/var/sc-4.8.1-linux/bin/sc -u $SAUCE_USERNAME -k $SAUCE_ACCESS_KEY --region eu-central & ./run-tests.sh"
+   $ docker-compose exec web bash -c "/usr/local/var/sc-4.8.1-${SAUCE_OS:-linux}/bin/sc -u $SAUCE_USERNAME -k $SAUCE_ACCESS_KEY --region eu-central & ./run-tests.sh"
 
+On an M1 MacBook, the end-to-end tests failed with ``WARNING: security - Error with Permissions-Policy header:
+Unrecognized feature: 'interest-cohort'.`` and the ``assert len(log) == 0`` line in ``tests/e2e/conftest.py`` had to be
+commented out for all tests to pass.
 
 .. _docker-compose-tips:
 
@@ -362,7 +373,7 @@ Tips
 ====
 
 * If you see errors about ports already being allocated, ensure you're not running any of the services another way (e.g. hepdata-converter via Docker).
-* If you want to run just some of the containers, specify their names in the docker-compose command. For example, to just run the web server, database and OpenSearch, run:
+* If you want to run just some of the containers, specify their names in the ``docker-compose`` command. For example, to just run the web server, database and OpenSearch, run:
 
   .. code-block:: console
 
@@ -371,8 +382,11 @@ Tips
   See ``docker-compose.yml`` for the names of each service. Running a subset of containers could be useful in the following cases:
 
    * You want to use the live converter service, i.e.  ``CFG_CONVERTER_URL = 'https://converter.hepdata.net'`` instead of running the converter locally.
-   * You want to run the container for the web service by pulling an image from DockerHub instead of building an image locally.
+   * You want to run the container for the web service by pulling an image from Docker Hub instead of building an image locally.
    * You want to run containers for all services apart from web (and maybe converter) then use a non-Docker web service.
+
+  If using Docker Desktop, you need to use ``host.docker.internal`` instead of ``localhost`` when `connecting from a
+  container to a service on the host <https://docs.docker.com/desktop/networking/#use-cases-and-workarounds-for-all-platforms>`_.
 
 * To run the containers in the background, run:
 

@@ -5,6 +5,7 @@ services:
       context: .
       args:
         - "APP_ENVIRONMENT=local-web"
+        - "SAUCE_OS=${SAUCE_OS:-linux}"
     command: hepdata run -h 0.0.0.0 -p 5000 --debugger --reload
     ports:
     - "5000:5000"
@@ -23,6 +24,7 @@ services:
     - "SAUCE_USERNAME=${SAUCE_USERNAME}"
     - "SAUCE_ACCESS_KEY=${SAUCE_ACCESS_KEY}"
     - "FLASK_ENV=development"
+    - "FLASK_DEBUG=1"
     read_only: false
     volumes:
     - ".:/code"
@@ -30,7 +32,7 @@ services:
     build: .
     command: "celery -A hepdata.celery worker -l info -E -B -Q celery,priority,datacite"
     environment:
-    - "APP_CELERY_BROKER_URL=redis://cache:6379/0"
+    - "APP_BROKER_URL=redis://cache:6379/0"
     - "APP_CACHE_REDIS_URL=redis://cache:6379/0"
     - "APP_CACHE_TYPE=redis"
     - "APP_CELERY_RESULT_BACKEND=redis://cache:6379/2"

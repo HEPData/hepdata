@@ -43,10 +43,12 @@ from pytest_mock import mocker
 from . import conftest
 import pytest
 
-dashboardTestMockObjects = {
-    'user': User(email='test@test.com', password='hello1', active=True, id=101),
-    'user2': User(email='test2@test.com', password='hello2', active=True, id=202)
-}
+def get_mock_user_object():
+    """Returns a mock user object for use in tests."""
+    return {
+        'user': User(email='test@test.com', password='hello1', active=True, id=101),
+        'user2': User(email='test2@test.com', password='hello2', active=True, id=202)
+    }
 
 def test_add_user_to_metadata():
     test_submissions = {
@@ -295,6 +297,7 @@ def test_submissions_participant(app, load_submission):
 
 def test_get_pending_invitations_for_user_empty(app):
     with app.app_context():
+        dashboardTestMockObjects = get_mock_user_object()
         user = dashboardTestMockObjects['user']
         pending = get_pending_invitations_for_user(user)
         assert(pending == [])
@@ -302,34 +305,34 @@ def test_get_pending_invitations_for_user_empty(app):
 
 @pytest.fixture()
 def mocked_submission_participant_app(request, mocker):
-    global dashboardTestMockObjects
-
     # Create the flask app
     app = conftest.create_basic_app()
+    with app.app_context():
+        dashboardTestMockObjects = get_mock_user_object()
 
-    # Create some mock objects and chain the mock calls
-    def mock_all():
-        return [
-            mocker.MagicMock(publication_recid=1, invitation_cookie='c00kie1', role='TestRole1'),
-            mocker.MagicMock(publication_recid=2, invitation_cookie='c00kie2', role='TestRole2')
-        ]
+        # Create some mock objects and chain the mock calls
+        def mock_all():
+            return [
+                mocker.MagicMock(publication_recid=1, invitation_cookie='c00kie1', role='TestRole1'),
+                mocker.MagicMock(publication_recid=2, invitation_cookie='c00kie2', role='TestRole2')
+            ]
 
-    mockFilter = mocker.Mock(all=mock_all)
-    mockQuery = mocker.Mock(filter=lambda a, b, c, d: mockFilter)
-    mockSubmissionParticipant = mocker.Mock(query=mockQuery)
+        mockFilter = mocker.Mock(all=mock_all)
+        mockQuery = mocker.Mock(filter=lambda a, b, c, d: mockFilter)
+        mockSubmissionParticipant = mocker.Mock(query=mockQuery)
 
-    # Patch some methods called from hepdata.modules.dashboard.api so they return mock values
-    dashboardTestMockObjects['submission'] = \
-        mocker.patch('hepdata.modules.dashboard.api.SubmissionParticipant',
-                     mockSubmissionParticipant)
-    mocker.patch('hepdata.modules.dashboard.api.get_record_by_id',
-                 lambda x: {'title': 'Test Title 1' if x <= 1 else 'Test Title 2'})
-    mocker.patch('hepdata.modules.dashboard.api.get_latest_hepsubmission',
-                 mocker.Mock(coordinator=101))
-    mocker.patch('hepdata.modules.dashboard.api.get_user_from_id',
-                 mocker.Mock(return_value=dashboardTestMockObjects['user']))
-    mocker.patch('hepdata.modules.dashboard.api.decode_string',
-                 lambda x: "decoded " + str(x))
+        # Patch some methods called from hepdata.modules.dashboard.api so they return mock values
+        dashboardTestMockObjects['submission'] = \
+            mocker.patch('hepdata.modules.dashboard.api.SubmissionParticipant',
+                        mockSubmissionParticipant)
+        mocker.patch('hepdata.modules.dashboard.api.get_record_by_id',
+                    lambda x: {'title': 'Test Title 1' if x <= 1 else 'Test Title 2'})
+        mocker.patch('hepdata.modules.dashboard.api.get_latest_hepsubmission',
+                    mocker.Mock(coordinator=101))
+        mocker.patch('hepdata.modules.dashboard.api.get_user_from_id',
+                    mocker.Mock(return_value=dashboardTestMockObjects['user']))
+        mocker.patch('hepdata.modules.dashboard.api.decode_string',
+                    lambda x: "decoded " + str(x))
 
     # Do the rest of the app setup
     app_generator = conftest.setup_app(app)
@@ -338,9 +341,8 @@ def mocked_submission_participant_app(request, mocker):
 
 
 def test_get_pending_invitations_for_user(mocked_submission_participant_app, mocker):
-    global dashboardTestMockObjects
-
     with mocked_submission_participant_app.app_context():
+        dashboardTestMockObjects = get_mock_user_object()
         user = dashboardTestMockObjects['user']
         pending = get_pending_invitations_for_user(user)
 
@@ -412,6 +414,7 @@ def test_manage_participant_status(app):
 
 def test_dashboard_current_user(app):
     with app.app_context():
+        dashboardTestMockObjects = get_mock_user_object()
         # Add test users to db
         user1 = dashboardTestMockObjects['user']
         user2 = dashboardTestMockObjects['user2']

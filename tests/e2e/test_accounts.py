@@ -26,7 +26,7 @@ import flask
 
 from .conftest import e2e_assert, e2e_assert_url
 from invenio_accounts import testutils
-from invenio_accounts.models import User
+from invenio_accounts.models import User, LoginInformation
 from invenio_db import db
 from itsdangerous import URLSafeTimedSerializer
 from flask_security import utils
@@ -148,5 +148,7 @@ def test_user_registration_and_login(live_server, env_browser):
 
     # Delete the newly created account
     user = User.query.filter_by(email=user_email).first()
+    login_information = LoginInformation.query.filter_by(user_id=user.id).first()
     db.session.delete(user)
+    db.session.delete(login_information)
     db.session.commit()
