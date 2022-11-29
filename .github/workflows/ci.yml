@@ -94,7 +94,7 @@ jobs:
     - name: Set up node
       uses: actions/setup-node@v1
       with:
-        node-version: '14'
+        node-version: '18'
     - name: Cache pip modules
       uses: actions/cache@v2
       env:
