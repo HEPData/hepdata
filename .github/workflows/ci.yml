@@ -92,11 +92,12 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
     - name: Set up node
-      uses: actions/setup-node@v2
+      uses: actions/setup-node@v3
       with:
         node-version: '18'
-      env: 
-        run: echo 'NODE_OPTIONS="--openssl-legacy-provider"' >> $GITHUB_ENV
+    - name: Specify node options
+      if: matrix.node-version >= '17'
+      run: echo 'NODE_OPTIONS="--openssl-legacy-provider"' >> $GITHUB_ENV
     - name: Cache pip modules
       uses: actions/cache@v2
       env:
