@@ -44,6 +44,8 @@ jobs:
 
     runs-on: ubuntu-latest
 
+    permissions: write-all
+
     strategy:
       matrix:
         postgres-version: [12, 13]
