@@ -76,7 +76,7 @@ jobs:
           - "6379:6379"
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     # We need to modify the OS setup depending on the os-image, so we do it here rather than as a service
     - name: Set up opensearch
       env:
@@ -184,7 +184,7 @@ jobs:
     if: contains(github.ref, 'master') || github.event_name == 'release'
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Deploy to DockerHub
       env:
         CI_TAG: ${{ github.event.release.tag_name }}
