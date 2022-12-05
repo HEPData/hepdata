@@ -22,7 +22,7 @@ invenio-config==1.0.3
 invenio-db==1.0.14
 invenio-logging[sentry-sdk]==1.3.2
 invenio-oauthclient==2.0.1
-invenio-pidstore==1.2.3
+invenio-pidstore==1.2.4
 invenio-records==2.0.0
 invenio-search[opensearch2]==2.1.0
 invenio-theme==1.4.2
