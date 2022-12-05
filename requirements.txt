@@ -25,7 +25,7 @@ invenio-oauthclient==2.0.1
 invenio-pidstore==1.2.4
 invenio-records==2.0.0
 invenio-search[opensearch2]==2.1.0
-invenio-theme==1.4.2
+invenio-theme==1.4.5
 invenio-userprofiles==2.0.4
 jsmin==3.0.1
 lxml==4.9.1
