@@ -110,9 +110,6 @@ jobs:
       uses: actions/setup-node@v3
       with:
         node-version: ${{ matrix.node-version }}
-    - name: Specify node options
-      if: matrix.node-version >= '17'
-      run: echo 'NODE_OPTIONS="--openssl-legacy-provider"' >> $GITHUB_ENV
     - name: Cache pip modules
       uses: actions/cache@v3
       if: ${{ !env.ACT }}
@@ -151,6 +148,8 @@ jobs:
         hepdata webpack install
         hepdata webpack build
         cp hepdata/config_local.gh.py hepdata/config_local.py
+      env:
+        NODE_OPTIONS: "--openssl-legacy-provider"
     - name: Run tests
       env:
         COVERAGE_FILE: '.coverage_func'
