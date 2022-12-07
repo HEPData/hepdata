@@ -37,7 +37,7 @@ for example, using ``yum`` or ``apt-get`` for Linux or ``brew`` for macOS:
  * `PostgreSQL <http://www.postgresql.org/>`_ (version 12) database server
  * `Redis <http://redis.io/>`_ for caching
  * `OpenSearch <https://opensearch.org/>`_ (version 2.2.0) for indexing and information retrieval. See below for further instructions.
- * `Node.js <https://nodejs.org>`_ (version 18) JavaScript run-time environment and its package manager `npm <https://www.npmjs.com/>`_. [If you're using a Debian-based OS, please follow the `official installation instructions <https://github.com/nodesource/distributions/blob/master/README.md#debinstall>`_ to install NodeJS (which will also install npm), to avoid issues with ``node-sass``.]
+ * `Node.js <https://nodejs.org>`_ (version 18) JavaScript run-time environment and its package manager `npm <https://www.npmjs.com/>`_.
 
 OpenSearch v2.2.0
 -----------------
