@@ -174,7 +174,7 @@ jobs:
       run: |
         if [[ -n ${{ secrets.SAUCE_USERNAME }} && -n ${{ secrets.SAUCE_ACCESS_KEY}} ]]; then py.test -vv tests/e2e; fi
     - name: Run coveralls
-      if: startsWith(matrix.postgres-version, '12') && startsWith(matrix.python-version, '3.9') && ${{ !env.ACT }}
+      if: ${{ startsWith(matrix.postgres-version, '12') && startsWith(matrix.python-version, '3.9') && !env.ACT }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         COVERALLS_SERVICE_NAME: github
@@ -186,12 +186,12 @@ jobs:
         python -m pip install -e .[docs]
         cd docs && make html
     - uses: actions/upload-artifact@v3
-      if: failure() && ${{ !env.ACT }}
+      if: ${{ failure() && !env.ACT }}
       with:
         name: sauce-connect-log
         path: ${{ env.SAUCE_CONNECT_DIR_IN_HOST }}/sauce-connect.log
     - name: Stop service containers for act
-      if: always() && ${{ env.ACT }}
+      if: ${{ always() && env.ACT }}
       run: |
         docker stop act-postgres act-redis act-opensearch
 
