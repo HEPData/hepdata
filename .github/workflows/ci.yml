@@ -50,9 +50,9 @@ jobs:
 
       matrix:
         # For act, edit below to use only one element of matrix.  (TO DO: make conditional.)
-        postgres-version: [12, 13]
+        postgres-version: [12, 13]  # use [12] for act
         os-image: ['opensearchproject/opensearch:2.2.0']
-        python-version: [ '3.7', '3.8', '3.9' ]
+        python-version: [ '3.7', '3.8', '3.9' ]  # use ['3.9'] for act
         node-version: ['18']
 
     # Service containers to run with `runner-job`
@@ -95,7 +95,7 @@ jobs:
 
     # Services are not currently supported by act (https://github.com/nektos/act#services)
     - name: Set up services for act
-      if: env.ACT
+      if: ${{ env.ACT }}
       run: |
         docker run --name act-postgres -e POSTGRES_USER=hepdata -e POSTGRES_PASSWORD=hepdata -e POSTGRES_DB=hepdata_test -p 5432:5432 --rm -d postgres:${{ matrix.postgres-version }}
         docker run --name act-redis --rm -d -p 6379:6379 redis
@@ -115,7 +115,7 @@ jobs:
       run: echo 'NODE_OPTIONS="--openssl-legacy-provider"' >> $GITHUB_ENV
     - name: Cache pip modules
       uses: actions/cache@v3
-      if: !env.ACT
+      if: ${{ !env.ACT }}
       env:
         cache-name: cache-pip-modules
       with:
@@ -125,7 +125,7 @@ jobs:
           ${{ runner.os }}-test-${{ env.cache-name }}-
     - name: Cache node modules
       uses: actions/cache@v3
-      if: !env.ACT
+      if: ${{ !env.ACT }}
       env:
         cache-name: cache-node-modules
       with:
@@ -175,7 +175,7 @@ jobs:
       run: |
         if [[ -n ${{ secrets.SAUCE_USERNAME }} && -n ${{ secrets.SAUCE_ACCESS_KEY}} ]]; then py.test -vv tests/e2e; fi
     - name: Run coveralls
-      if: startsWith(matrix.postgres-version, '12') && startsWith(matrix.python-version, '3.9') && !env.ACT
+      if: startsWith(matrix.postgres-version, '12') && startsWith(matrix.python-version, '3.9') && ${{ !env.ACT }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         COVERALLS_SERVICE_NAME: github
@@ -187,12 +187,12 @@ jobs:
         python -m pip install -e .[docs]
         cd docs && make html
     - uses: actions/upload-artifact@v3
-      if: failure() && !env.ACT
+      if: failure() && ${{ !env.ACT }}
       with:
         name: sauce-connect-log
         path: ${{ env.SAUCE_CONNECT_DIR_IN_HOST }}/sauce-connect.log
     - name: Stop service containers for act
-      if: always() && env.ACT
+      if: always() && ${{ env.ACT }}
       run: |
         docker stop act-postgres act-redis act-opensearch
 
@@ -203,7 +203,6 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Deploy to DockerHub
-      if: !env.ACT
       env:
         CI_TAG: ${{ github.event.release.tag_name }}
         DOCKERHUB_USER: ${{ secrets.DOCKERHUB_USER }}
