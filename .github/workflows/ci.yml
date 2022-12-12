@@ -82,7 +82,7 @@ jobs:
           - "6379:6379"
 
       opensearch:
-        image: $os-image
+        image: ${{ env.os-image }}
         env:
           node.name: os01
           cluster.name: hepdata
@@ -101,7 +101,7 @@ jobs:
       run: |
         docker run --name act-postgres -e POSTGRES_USER=hepdata -e POSTGRES_PASSWORD=hepdata -e POSTGRES_DB=hepdata_test -p 5432:5432 --rm -d postgres:${{ matrix.postgres-version }}
         docker run --name act-redis --rm -d -p 6379:6379 redis
-        docker run --name act-opensearch --rm -d -p 9200:9200 -p 9600:9600 -e "discovery.type=single-node" -e "plugins.security.disabled=true" $os-image
+        docker run --name act-opensearch --rm -d -p 9200:9200 -p 9600:9600 -e "discovery.type=single-node" -e "plugins.security.disabled=true" ${{ env.os-image }}
 
     - uses: actions/checkout@v3
     - name: Set up Python ${{ matrix.python-version }}
@@ -111,7 +111,7 @@ jobs:
     - name: Set up node
       uses: actions/setup-node@v3
       with:
-        node-version: $node-version
+        node-version: ${{ env.node-version }}
     - name: Cache pip modules
       uses: actions/cache@v3
       if: ${{ !env.ACT }}
