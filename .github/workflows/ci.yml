@@ -46,7 +46,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       os-image: ${{ env.os-image }}
-      node-version: ${{ needs.prepare-image.outputs.node-version }}
+      node-version: ${{ env.node-version }}
 
   test:
     runs-on: ubuntu-latest
