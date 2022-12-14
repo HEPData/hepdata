@@ -34,21 +34,23 @@ on:
     - cron:  '35 1 * * *'
 
 env:
-  OS_IMAGE: opensearchproject/opensearch:2.2.0
-  NODE_VERSION: 18
+  os-image: opensearchproject/opensearch:2.2.0
+  node-version: 18
 
 concurrency:
   group: ${{github.event_name}}-${{ github.head_ref || github.ref }}
   cancel-in-progress: true
 
 jobs:
+  prepare-image:
+    runs-on: ubuntu-latest
+    outputs:
+      os-image: ${{ env.os-image }}
+      node-version: ${{ needs.prepare-image.outputs.node-version }}
 
   test:
-
     runs-on: ubuntu-latest
-
     permissions: write-all
-
     strategy:
 
       matrix:
@@ -81,7 +83,7 @@ jobs:
           - "6379:6379"
 
       opensearch:
-        image: ${{ env.OS_IMAGE }}
+        image: ${{ needs.prepare-image.outputs.os-image }}
         env:
           node.name: os01
           cluster.name: hepdata
@@ -100,7 +102,7 @@ jobs:
       run: |
         docker run --name act-postgres -e POSTGRES_USER=hepdata -e POSTGRES_PASSWORD=hepdata -e POSTGRES_DB=hepdata_test -p 5432:5432 --rm -d postgres:${{ matrix.postgres-version }}
         docker run --name act-redis --rm -d -p 6379:6379 redis
-        docker run --name act-opensearch --rm -d -p 9200:9200 -p 9600:9600 -e "discovery.type=single-node" -e "plugins.security.disabled=true" ${{ env.OS_IMAGE }}
+        docker run --name act-opensearch --rm -d -p 9200:9200 -p 9600:9600 -e "discovery.type=single-node" -e "plugins.security.disabled=true" ${{ needs.prepare-image.outputs.os-image }}
 
     - uses: actions/checkout@v3
     - name: Set up Python ${{ matrix.python-version }}
@@ -110,7 +112,7 @@ jobs:
     - name: Set up node
       uses: actions/setup-node@v3
       with:
-        NODE_VERSION: ${{ env.NODE_VERSION }}
+        node-version: ${{ needs.prepare-image.outputs.node-version }}
     - name: Cache pip modules
       uses: actions/cache@v3
       if: ${{ !env.ACT }}
