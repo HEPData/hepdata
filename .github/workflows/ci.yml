@@ -33,30 +33,27 @@ on:
   schedule:
     - cron:  '35 1 * * *'
 
-env:
-  os-image: opensearchproject/opensearch:2.2.0
-  node-version: 18
 
 concurrency:
   group: ${{github.event_name}}-${{ github.head_ref || github.ref }}
   cancel-in-progress: true
 
 jobs:
-  prepare-image:
-    runs-on: ubuntu-latest
-    outputs:
-      os-image: ${{ env.os-image }}
-      node-version: ${{ env.node-version }}
-
   test:
     runs-on: ubuntu-latest
-    permissions: write-all
-    strategy:
 
+    permissions: write-all
+
+    env:
+      os-image: '2.2.0'
+      node-version: '18'
+
+    strategy:
       matrix:
         # For act, edit below to use only one element of matrix.  (TO DO: make conditional.)
-        postgres-version: [12, 13]  # use [12] for act
-        python-version: [ '3.7', '3.8', '3.9' ]  # use ['3.9'] for act
+        postgres-version: [12]  # use [12] for act
+        python-version: ['3.9' ]  # use ['3.9'] for act
+        
 
     # Service containers to run with `runner-job`
     services:
@@ -83,7 +80,7 @@ jobs:
           - "6379:6379"
 
       opensearch:
-        image: ${{ needs.prepare-image.outputs.os-image }}
+        image: opensearchproject/opensearch:${{ env.os-image }}
         env:
           node.name: os01
           cluster.name: hepdata
@@ -102,7 +99,7 @@ jobs:
       run: |
         docker run --name act-postgres -e POSTGRES_USER=hepdata -e POSTGRES_PASSWORD=hepdata -e POSTGRES_DB=hepdata_test -p 5432:5432 --rm -d postgres:${{ matrix.postgres-version }}
         docker run --name act-redis --rm -d -p 6379:6379 redis
-        docker run --name act-opensearch --rm -d -p 9200:9200 -p 9600:9600 -e "discovery.type=single-node" -e "plugins.security.disabled=true" ${{ needs.prepare-image.outputs.os-image }}
+        docker run --name act-opensearch --rm -d -p 9200:9200 -p 9600:9600 -e "discovery.type=single-node" -e "plugins.security.disabled=true" opensearchproject/opensearch:${{ env.os-image }}
 
     - uses: actions/checkout@v3
     - name: Set up Python ${{ matrix.python-version }}
@@ -112,7 +109,7 @@ jobs:
     - name: Set up node
       uses: actions/setup-node@v3
       with:
-        node-version: ${{ needs.prepare-image.outputs.node-version }}
+        node-version: ${{ env.node-version }}
     - name: Cache pip modules
       uses: actions/cache@v3
       if: ${{ !env.ACT }}
