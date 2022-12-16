@@ -53,10 +53,9 @@ jobs:
     strategy:
 
       matrix:
-        # For act, edit below to use only one element of matrix.  (TO DO: make conditional.)
-        postgres-version: [12, 13]  # use [12] for act
+        postgres-version: [12, 13]
         os-version: ['2.2.0']
-        python-version: [ '3.7', '3.8', '3.9' ]  # use ['3.9'] for act
+        python-version: [ '3.7', '3.8', '3.9' ]
 
     # Service containers to run with `runner-job`
     services:
