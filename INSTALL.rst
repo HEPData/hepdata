@@ -260,6 +260,11 @@ Running the tests
 
 Some of the tests run using `Selenium <https://selenium.dev>`_ on `Sauce Labs <https://saucelabs.com>`_.
 Note that some of the end-to-end tests currently fail when run individually rather than all together.
+
+NOTE: If you are looking to test changes to ci.yml locally, we use `act <https://github.com/nektos/act>`_ for this purpose.
+A .secrets file should be created in the project root with the varables SAUCE_USERNAME and SAUCE_ACCESS_KEY set in order to run the end-to-end tests.
+You may edit the matrix in the "test" job in ci.yml to specify test elements to reduce runtime.
+
 To run the tests locally you have several options:
 
 1. Run a Sauce Connect tunnel (recommended).  This is used by GitHub Actions CI.
