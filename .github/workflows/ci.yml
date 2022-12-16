@@ -53,9 +53,13 @@ jobs:
     strategy:
 
       matrix:
-        postgres-version: [12, 13]
-        os-version: ['2.2.0']
+        postgres-version: [ 12, 13 ]
+        os-version: [ '2.2.0' ]
         python-version: [ '3.7', '3.8', '3.9' ]
+        exclude:
+          - postgres-version: ${{ env.ACT && 13 }}
+          - python-version: ${{ env.ACT && '3.7' }}
+          - python-version: ${{ env.ACT && '3.8' }}
 
     # Service containers to run with `runner-job`
     services:
@@ -99,9 +103,9 @@ jobs:
     - name: Set up services for act
       if: ${{ env.ACT }}
       run: |
-        docker run --name act-postgres-${{ matrix.postgres-version }}-${{ matrix.os-version }}-${{ matrix.python-version }} -e POSTGRES_USER=hepdata -e POSTGRES_PASSWORD=hepdata -e POSTGRES_DB=hepdata_test -p 5432:5432 --rm -d postgres:${{ matrix.postgres-version }}
-        docker run --name act-redis-${{ matrix.postgres-version }}-${{ matrix.os-version }}-${{ matrix.python-version }} --rm -d -p 6379:6379 redis
-        docker run --name act-opensearch-${{ matrix.postgres-version }}-${{ matrix.os-version }}-${{ matrix.python-version }} --rm -d -p 9200:9200 -p 9600:9600 -e "discovery.type=single-node" -e "plugins.security.disabled=true" opensearchproject/opensearch:${{ matrix.os-version }}
+        docker run --name act-postgres -e POSTGRES_USER=hepdata -e POSTGRES_PASSWORD=hepdata -e POSTGRES_DB=hepdata_test -p 5432:5432 --rm -d postgres:${{ matrix.postgres-version }}
+        docker run --name act-redis --rm -d -p 6379:6379 redis
+        docker run --name act-opensearch --rm -d -p 9200:9200 -p 9600:9600 -e "discovery.type=single-node" -e "plugins.security.disabled=true" opensearchproject/opensearch:${{ matrix.os-version }}
 
     - uses: actions/checkout@v3
     - name: Set up Python ${{ matrix.python-version }}
