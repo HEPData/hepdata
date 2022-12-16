@@ -57,9 +57,9 @@ jobs:
         os-version: [ '2.2.0' ]
         python-version: [ '3.7', '3.8', '3.9' ]
         exclude:
-          - postgres-version: ${{ env.ACT && 13 }}
-          - python-version: ${{ env.ACT && '3.7' }}
-          - python-version: ${{ env.ACT && '3.8' }}
+          - postgres-version: ${{ github.event.act && 13 }}
+          - python-version: ${{ github.event.act && '3.7' }}
+          - python-version: ${{ github.event.act && '3.8' }}
 
     # Service containers to run with `runner-job`
     services:
