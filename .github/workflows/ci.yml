@@ -24,6 +24,7 @@
 
 name: Continuous Integration
 
+
 on:
   push:
   pull_request:
@@ -39,21 +40,23 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+
   test:
+
     runs-on: ubuntu-latest
 
     permissions: write-all
 
     env:
-      os-image: '2.2.0'
       node-version: '18'
 
     strategy:
+
       matrix:
         # For act, edit below to use only one element of matrix.  (TO DO: make conditional.)
-        postgres-version: [12]  # use [12] for act
-        python-version: ['3.9' ]  # use ['3.9'] for act
-        
+        postgres-version: [12, 13]  # use [12] for act
+        os-version: ['2.2.0']
+        python-version: [ '3.7', '3.8', '3.9' ]  # use ['3.9'] for act
 
     # Service containers to run with `runner-job`
     services:
@@ -80,7 +83,7 @@ jobs:
           - "6379:6379"
 
       opensearch:
-        image: opensearchproject/opensearch:${{ env.os-image }}
+        image: opensearchproject/opensearch:${{ matrix.os-version }}
         env:
           node.name: os01
           cluster.name: hepdata
@@ -97,9 +100,9 @@ jobs:
     - name: Set up services for act
       if: ${{ env.ACT }}
       run: |
-        docker run --name act-postgres -e POSTGRES_USER=hepdata -e POSTGRES_PASSWORD=hepdata -e POSTGRES_DB=hepdata_test -p 5432:5432 --rm -d postgres:${{ matrix.postgres-version }}
-        docker run --name act-redis --rm -d -p 6379:6379 redis
-        docker run --name act-opensearch --rm -d -p 9200:9200 -p 9600:9600 -e "discovery.type=single-node" -e "plugins.security.disabled=true" opensearchproject/opensearch:${{ env.os-image }}
+        docker run --name act-postgres-${{ matrix.postgres-version }}-${{ matrix.os-version }}-${{ matrix.python-version }} -e POSTGRES_USER=hepdata -e POSTGRES_PASSWORD=hepdata -e POSTGRES_DB=hepdata_test -p 5432:5432 --rm -d postgres:${{ matrix.postgres-version }}
+        docker run --name act-redis-${{ matrix.postgres-version }}-${{ matrix.os-version }}-${{ matrix.python-version }} --rm -d -p 6379:6379 redis
+        docker run --name act-opensearch-${{ matrix.postgres-version }}-${{ matrix.os-version }}-${{ matrix.python-version }} --rm -d -p 9200:9200 -p 9600:9600 -e "discovery.type=single-node" -e "plugins.security.disabled=true" opensearchproject/opensearch:${{ matrix.os-version }}
 
     - uses: actions/checkout@v3
     - name: Set up Python ${{ matrix.python-version }}
