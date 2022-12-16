@@ -37,7 +37,7 @@ for example, using ``yum`` or ``apt-get`` for Linux or ``brew`` for macOS:
  * `PostgreSQL <http://www.postgresql.org/>`_ (version 12) database server
  * `Redis <http://redis.io/>`_ for caching
  * `OpenSearch <https://opensearch.org/>`_ (version 2.2.0) for indexing and information retrieval. See below for further instructions.
- * `Node.js <https://nodejs.org>`_ (version 14) JavaScript run-time environment and its package manager `npm <https://www.npmjs.com/>`_. [If you're using a Debian-based OS, please follow the `official installation instructions <https://github.com/nodesource/distributions/blob/master/README.md#debinstall>`_ to install NodeJS (which will also install npm), to avoid issues with ``node-sass``.]
+ * `Node.js <https://nodejs.org>`_ (version 18) JavaScript run-time environment and its package manager `npm <https://www.npmjs.com/>`_.
 
 OpenSearch v2.2.0
 -----------------
@@ -260,6 +260,7 @@ Running the tests
 
 Some of the tests run using `Selenium <https://selenium.dev>`_ on `Sauce Labs <https://saucelabs.com>`_.
 Note that some of the end-to-end tests currently fail when run individually rather than all together.
+
 To run the tests locally you have several options:
 
 1. Run a Sauce Connect tunnel (recommended).  This is used by GitHub Actions CI.
@@ -286,6 +287,13 @@ Once you have set up Selenium or Sauce Labs, you can run the tests using:
    (venv)$ ./run-tests.sh
 
 Note that the end-to-end tests require the converter (specified by ``CFG_CONVERTER_URL``) to be running.
+
+
+NOTE: To test changes to `ci.yml <https://github.com/HEPData/hepdata/blob/master/.github/workflows/ci.yml>`_ locally,
+you can use `act <https://github.com/nektos/act>`_.  A ``.secrets`` file should be created in the project root
+directory with the variables ``SAUCE_USERNAME`` and ``SAUCE_ACCESS_KEY`` set in order to run the end-to-end tests.
+Only one ``matrix`` configuration will be used to avoid problem with conflicting ports.  Running ``act -n`` is useful
+for dryrun mode.
 
 
 Building the docs
@@ -361,7 +369,7 @@ To run the tests:
 
 .. code-block:: console
 
-   $ docker-compose exec web bash -c "/usr/local/var/sc-4.8.1-${SAUCE_OS:-linux}/bin/sc -u $SAUCE_USERNAME -k $SAUCE_ACCESS_KEY --region eu-central & ./run-tests.sh"
+   $ docker-compose exec web bash -c "/usr/local/var/sc-4.8.2-${SAUCE_OS:-linux}/bin/sc -u $SAUCE_USERNAME -k $SAUCE_ACCESS_KEY --region eu-central & ./run-tests.sh"
 
 On an M1 MacBook, the end-to-end tests failed with ``WARNING: security - Error with Permissions-Policy header:
 Unrecognized feature: 'interest-cohort'.`` and the ``assert len(log) == 0`` line in ``tests/e2e/conftest.py`` had to be

@@ -24,6 +24,7 @@
 
 name: Continuous Integration
 
+
 on:
   push:
   pull_request:
@@ -46,14 +47,23 @@ jobs:
 
     permissions: write-all
 
+    env:
+      node-version: '18'
+
     strategy:
+
       matrix:
-        postgres-version: [12, 13]
-        os-image: ['opensearchproject/opensearch:2.2.0']
+        postgres-version: [ 12, 13 ]
+        os-version: [ '2.2.0' ]
         python-version: [ '3.7', '3.8', '3.9' ]
+        exclude:
+          - postgres-version: ${{ github.event.act && 13 }}
+          - python-version: ${{ github.event.act && '3.7' }}
+          - python-version: ${{ github.event.act && '3.8' }}
 
     # Service containers to run with `runner-job`
     services:
+
       postgres:
         image: postgres:${{ matrix.postgres-version }}
         # Provide the password for postgres
@@ -75,20 +85,29 @@ jobs:
         ports:
           - "6379:6379"
 
+      opensearch:
+        image: opensearchproject/opensearch:${{ matrix.os-version }}
+        env:
+          node.name: os01
+          cluster.name: hepdata
+          cluster.initial_master_nodes: os01
+          OPENSEARCH_JAVA_OPTS: -Xms512m -Xmx512m
+          plugins.security.disabled: true
+        ports:
+        - "9200:9200"
+        - "9600:9600"
+
     steps:
-    - uses: actions/checkout@v3
-    # We need to modify the OS setup depending on the os-image, so we do it here rather than as a service
-    - name: Set up opensearch
-      env:
-        DISABLE_SSL: ${{ startsWith(matrix.os-image, 'opensearchproject/opensearch') && 1 || 0 }}
+
+    # Services are not currently supported by act (https://github.com/nektos/act#services)
+    - name: Set up services for act
+      if: ${{ env.ACT }}
       run: |
-        echo $DISABLE_SSL
-        touch os.env
-        if [[ $DISABLE_SSL -eq 1 ]]; then echo 'plugins.security.disabled=true' >> os.env; fi
-        docker run --rm --detach --network ${{ job.container.network }} --network-alias opensearch -p 9200:9200 -p 9600:9600 \
-          --name opensearch -e "node.name=os01" -e "cluster.name=hepdata" -e "cluster.initial_master_nodes=os01" \
-          -e "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m" -e GITHUB_ACTIONS=true -e CI=true --env-file os.env \
-          ${{ matrix.os-image }}
+        docker run --name act-postgres -e POSTGRES_USER=hepdata -e POSTGRES_PASSWORD=hepdata -e POSTGRES_DB=hepdata_test -p 5432:5432 --rm -d postgres:${{ matrix.postgres-version }}
+        docker run --name act-redis --rm -d -p 6379:6379 redis
+        docker run --name act-opensearch --rm -d -p 9200:9200 -p 9600:9600 -e "discovery.type=single-node" -e "plugins.security.disabled=true" opensearchproject/opensearch:${{ matrix.os-version }}
+
+    - uses: actions/checkout@v3
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v4
       with:
@@ -96,9 +115,10 @@ jobs:
     - name: Set up node
       uses: actions/setup-node@v3
       with:
-        node-version: '14'
+        node-version: ${{ env.node-version }}
     - name: Cache pip modules
       uses: actions/cache@v3
+      if: ${{ !env.ACT }}
       env:
         cache-name: cache-pip-modules
       with:
@@ -108,6 +128,7 @@ jobs:
           ${{ runner.os }}-test-${{ env.cache-name }}-
     - name: Cache node modules
       uses: actions/cache@v3
+      if: ${{ !env.ACT }}
       env:
         cache-name: cache-node-modules
       with:
@@ -133,6 +154,8 @@ jobs:
         hepdata webpack install
         hepdata webpack build
         cp hepdata/config_local.gh.py hepdata/config_local.py
+      env:
+        NODE_OPTIONS: "--openssl-legacy-provider"
     - name: Run tests
       env:
         COVERAGE_FILE: '.coverage_func'
@@ -140,16 +163,16 @@ jobs:
         py.test -vv tests/*_test.py
     - name: Setup Sauce Connect
       uses: saucelabs/sauce-connect-action@v2
-      if: startsWith(matrix.postgres-version, '12') && startsWith(matrix.os-image, 'opensearchproject/opensearch') && startsWith(matrix.python-version, '3.9')
+      if: startsWith(matrix.postgres-version, '12') && startsWith(matrix.python-version, '3.9')
       with:
         username: ${{ secrets.SAUCE_USERNAME }}
         accessKey: ${{ secrets.SAUCE_ACCESS_KEY }}
         region: eu-central
         tunnelName: ${{ github.run_id }}
-        scVersion: 4.8.1
+        scVersion: 4.8.2
         verbose: true
     - name: Run end-to-end tests
-      if: startsWith(matrix.postgres-version, '12') && startsWith(matrix.os-image, 'opensearchproject/opensearch') && startsWith(matrix.python-version, '3.9')
+      if: startsWith(matrix.postgres-version, '12') && startsWith(matrix.python-version, '3.9')
       env:
         SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
         SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY }}
@@ -157,7 +180,7 @@ jobs:
       run: |
         if [[ -n ${{ secrets.SAUCE_USERNAME }} && -n ${{ secrets.SAUCE_ACCESS_KEY}} ]]; then py.test -vv tests/e2e; fi
     - name: Run coveralls
-      if: startsWith(matrix.postgres-version, '12') && startsWith(matrix.os-image, 'opensearchproject/opensearch') && startsWith(matrix.python-version, '3.9')
+      if: ${{ startsWith(matrix.postgres-version, '12') && startsWith(matrix.python-version, '3.9') && !env.ACT }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         COVERALLS_SERVICE_NAME: github
@@ -169,15 +192,14 @@ jobs:
         python -m pip install -e .[docs]
         cd docs && make html
     - uses: actions/upload-artifact@v3
-      if: ${{ failure() }}
+      if: ${{ failure() && !env.ACT }}
       with:
         name: sauce-connect-log
         path: ${{ env.SAUCE_CONNECT_DIR_IN_HOST }}/sauce-connect.log
-    - name: Stop opensearch container
-      if: always()
+    - name: Stop service containers for act
+      if: ${{ always() && env.ACT }}
       run: |
-        docker logs opensearch
-        docker stop opensearch
+        docker stop act-postgres act-redis act-opensearch
 
   deploy:
     needs: test
