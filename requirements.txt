@@ -39,7 +39,6 @@ responses==0.22.0
 speaklater==1.3
 SQLAlchemy-Continuum==1.3.13   # Indirect: see https://github.com/inveniosoftware/invenio-records/issues/250
 SQLAlchemy==1.4.45
-SQLAlchemy-Utils==0.39.0
 timestring==1.6.4
 twitter==1.19.6
 unicodeit==0.7.2
