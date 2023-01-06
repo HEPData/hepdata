@@ -244,9 +244,14 @@ def env_browser(request):
 
     # Check browser logs before quitting
     log = browser.get_log('browser')
-    assert len(log) == 0, \
+
+    # Filter out error message for:
+    # WARNING: security - Error with Permissions-Policy header: Unrecognized feature: 'interest-cohort'
+    temp_log = [t for t in log if 'interest-cohort' not in t['message']]
+
+    assert len(temp_log) == 0, \
         "Errors in browser log:\n" + \
-        "\n".join([f"{line['level']}: {line['message']}" for line in log])
+        "\n".join([f"{line['level']}: {line['message']}" for line in temp_log])
 
 
 @pytest.fixture()
