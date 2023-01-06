@@ -245,12 +245,9 @@ def env_browser(request):
     # Check browser logs before quitting
     log = browser.get_log('browser')
 
-    # Very crude solution to tolerate a non-critical error
-    # Could have been list comprehension instead
-    temp_log = []
-    for t in log:
-        if 'interest-cohort' not in t['message']:
-            temp_log.append(t)
+    # Filter out error message for:
+    # WARNING: security - Error with Permissions-Policy header: Unrecognized feature: 'interest-cohort'
+    temp_log = [t for t in log if 'interest-cohort' not in t['message']]
 
     assert len(temp_log) == 0, \
         "Errors in browser log:\n" + \
