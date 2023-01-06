@@ -27,7 +27,7 @@
 The Durham High-Energy Physics Database (HEPData) has been built up over the past four decades as a unique open-access
 repository for scattering data from experimental particle physics. It currently comprises the data points from plots and
 tables related to several thousand publications including those from the Large Hadron Collider (LHC). HEPData is funded
-by a `grant <https://gtr.ukri.org/projects?ref=ST/T001011/1>`_ from the UK `STFC <https://www.ukri.org/councils/stfc/>`_ and is
+by a `grant <https://gtr.ukri.org/projects?ref=ST/X003167/1>`_ from the UK `STFC <https://www.ukri.org/councils/stfc/>`_ and is
 based at the `IPPP <http://www.ippp.dur.ac.uk/>`_ at Durham University.
 
 HEPData is built upon `Invenio <https://inveniosoftware.org/>`_ v3 and is open source and free to use!

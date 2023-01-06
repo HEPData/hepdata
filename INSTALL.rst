@@ -371,10 +371,6 @@ To run the tests:
 
    $ docker-compose exec web bash -c "/usr/local/var/sc-4.8.2-${SAUCE_OS:-linux}/bin/sc -u $SAUCE_USERNAME -k $SAUCE_ACCESS_KEY --region eu-central & ./run-tests.sh"
 
-On an M1 MacBook, the end-to-end tests failed with ``WARNING: security - Error with Permissions-Policy header:
-Unrecognized feature: 'interest-cohort'.`` and the ``assert len(log) == 0`` line in ``tests/e2e/conftest.py`` had to be
-commented out for all tests to pass.
-
 .. _docker-compose-tips:
 
 Tips
