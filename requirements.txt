@@ -9,6 +9,7 @@ Flask==2.2.2
 Flask-CeleryExt==0.4.3
 Flask-Cors==3.0.10
 Flask-Login==0.6.2
+Flask-WTF==1.0.1
 gunicorn==20.1.0
 hepdata-converter-ws-client==0.2.2
 hepdata-validator==0.3.3
