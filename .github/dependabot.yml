@@ -20,4 +20,3 @@ updates:
       interval: "weekly"
     ignore:
       - dependency-name: "pytest-cov"  # see https://github.com/HEPData/hepdata/issues/580
-      - dependency-name: "Flask-WTF"  # see https://github.com/HEPData/hepdata/issues/601
