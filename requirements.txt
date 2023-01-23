@@ -4,7 +4,7 @@ bleach==5.0.1
 celery==5.2.7
 click==8.1.3
 datacite==1.1.2
-email-validator==1.3.0
+email-validator==1.3.1
 Flask==2.2.2
 Flask-CeleryExt==0.4.3
 Flask-Cors==3.0.10
