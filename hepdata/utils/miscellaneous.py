@@ -58,7 +58,7 @@ def sanitize_html(value, tags=None, attributes=None, strip=False):
     escaped = p.sub(r'&lt;\1&lt;', value)
 
     tags = tags if tags is not None \
-        else current_app.config.get('ALLOWED_HTML_TAGS', [])
+        else current_app.config.get('ALLOWED_HTML_TAGS', {})
     attributes = attributes if attributes is not None \
         else current_app.config.get('ALLOWED_HTML_ATTRS', {})
 
