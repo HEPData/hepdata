@@ -100,12 +100,12 @@ SRs</a> </li><li><a href=\"89413?version=1&amp;table=Backgroundfit3\">inclusive 
         # Test other params
         assert(sanitize_html(test_cases[0][0], strip=True)
                == "<b>Here is some bold text</b> and here is a dodgy script")
-        assert(sanitize_html(test_cases[0][0], tags=["script", "b"])
+        assert(sanitize_html(test_cases[0][0], tags={"script", "b"})
                == test_cases[0][0])
-        assert(sanitize_html(test_cases[0][0], tags=["i"])
+        assert(sanitize_html(test_cases[0][0], tags={"i"})
                == "&lt;b&gt;Here is some bold text&lt;/b&gt; and &lt;script&gt;here is a dodgy script&lt;/script&gt;")
         assert(sanitize_html("<a href=\"89413?version=1&amp;table=Backgroundfit3\">inclusive SF-0J SRs</a>",
                              attributes=["title"])
                == "<a>inclusive SF-0J SRs</a>")
-        assert(sanitize_html(test_cases[1][0], tags=[], strip=True)
+        assert(sanitize_html(test_cases[1][0], tags={}, strip=True)
                == "Dphi correlation functions for 0.15&lt;pT&lt;4 GEV/c and 4&lt;p_T^trig&lt;6 GEV/c.")
