@@ -245,6 +245,12 @@ var submissions_vis = (function () {
                 return '<a href="/search/?q=&collaboration=' +
                   d.collaboration + '" target="_blank">' + '<span class="label ' + d.collaboration + '">' + d.collaboration + '</span>' + '</a>';
               }
+            },
+            function (d) {
+              if(d.participants) {
+                // Add in a space after each comma (end of participant).
+                return '<span>' + String(d.participants).replace(',', ', ') + '</span>';
+              }
             }
           ]).sortBy(function (d) {
           return d.last_updated;
