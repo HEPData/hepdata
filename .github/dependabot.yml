@@ -12,9 +12,11 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
-      
+
   # Maintain dependencies for pip
   - package-ecosystem: "pip"
     directory: "/"
     schedule:
       interval: "weekly"
+    ignore:
+      - dependency-name: "pytest-cov"  # see https://github.com/HEPData/hepdata/issues/580
