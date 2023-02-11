@@ -205,7 +205,7 @@ def env_browser(request):
     # the desired_capabilities parameter tells us which browsers and OS to spin up.
     desired_cap = {
         'browserName': 'chrome',
-        'browserVersion': '99',
+        'browserVersion': '109',
         'platformName': 'Windows 11',
         'build': os.environ.get('GITHUB_RUN_ID',
                                 datetime.utcnow().strftime("%Y-%m-%d %H:00ish")),
@@ -246,7 +246,8 @@ def env_browser(request):
     log = browser.get_log('browser')
 
     # Filter out error message for:
-    # WARNING: security - Error with Permissions-Policy header: Unrecognized feature: 'interest-cohort'
+    # WARNING: security - Error with Permissions-Policy header:
+    # Origin trial controlled feature not enabled: 'interest-cohort'
     temp_log = [t for t in log if 'interest-cohort' not in t['message']]
 
     assert len(temp_log) == 0, \
