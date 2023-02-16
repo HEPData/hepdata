@@ -41,4 +41,4 @@ SQLAlchemy-Continuum==1.3.14   # Indirect: see https://github.com/inveniosoftwar
 timestring==1.6.4
 twitter==1.19.6
 unicodeit==0.7.2
-werkzeug==2.2.2
+werkzeug==2.2.3
