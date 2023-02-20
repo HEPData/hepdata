@@ -151,7 +151,9 @@ class AdminIndexer:
     def index_submission(self, submission):
         participants = []
 
-        for sub_participant in get_submission_participants_for_record(submission.publication_recid, roles=['uploader', 'reviewer']):
+        for sub_participant in get_submission_participants_for_record(submission.publication_recid,
+                                                                      roles=['uploader', 'reviewer'],
+                                                                      status='primary'):
             participants.append({
                 'full_name': sub_participant.full_name,
                 'role': sub_participant.role,

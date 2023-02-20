@@ -249,7 +249,7 @@ var submissions_vis = (function () {
             function (d) {
               if (d.participants) {
                 // Add in a space after each comma (end of participant).
-                return '<span>' + String(d.participants).replace(',', ', ') + '</span>';
+                return '<span>' + String(d.participants).replaceAll(',', ', ') + '</span>';
               }
             }
           ]).sortBy(function (d) {
