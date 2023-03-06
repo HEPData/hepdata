@@ -24,7 +24,7 @@
 
 """Configuration for HEPData Records."""
 
-from flask_babelex import gettext
+from invenio_i18n import gettext
 from speaklater import make_lazy_gettext
 
 _ = make_lazy_gettext(lambda: gettext)
