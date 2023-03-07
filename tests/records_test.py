@@ -542,7 +542,8 @@ def test_get_updated_records_since_date(app):
     ids_on += get_inspire_records_updated_on(1)
     ids_on += get_inspire_records_updated_on(2)
     ids_on += get_inspire_records_updated_on(3)
-    assert set(ids_on) == set(ids_since)
+    if ids_since == get_inspire_records_updated_since(3):  # check no further updates
+        assert set(ids_on) == set(ids_since)
 
 
 def test_get_updated_records_on_date(app):
