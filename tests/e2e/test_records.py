@@ -33,6 +33,7 @@ from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
 from hepdata.modules.submission.models import HEPSubmission
+from invenio_db import db
 
 from .conftest import e2e_assert_url
 
@@ -220,8 +221,15 @@ def test_record_update(live_server, logged_in_browser):
     )
 
     # Should now only be 1 version of our submission
-    submissions = HEPSubmission.query \
-        .filter_by(inspire_id=inspire_id).all()
+    db.session.flush()
+    try:
+        submissions = HEPSubmission.query \
+            .filter_by(inspire_id=inspire_id).all()
+    except Exception as e:
+        # Roll back and try again
+        db.session.rollback()
+        submissions = HEPSubmission.query \
+            .filter_by(inspire_id=inspire_id).all()
     assert len(submissions) == 1
     assert submissions[0].version == 1
     assert submissions[0].overall_status == 'finished'
