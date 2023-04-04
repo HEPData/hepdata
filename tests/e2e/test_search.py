@@ -44,7 +44,7 @@ def test_search_from_home(live_server, env_browser, search_tests):
     # Click 'View all'
     search_all_link = browser.find_element(By.CSS_SELECTOR, '#latest_records_section').find_element(By.TAG_NAME, 'a')
     search_all_link.click()
-    element = WebDriverWait(browser, 10).until(
+    WebDriverWait(browser, 10).until(
         EC.url_contains('search')
     )
     assert (flask.url_for('os_search.search', _external=True) in
@@ -110,7 +110,7 @@ def test_search_from_home(live_server, env_browser, search_tests):
             search_input.send_keys(search_term)
 
             search_form.submit()
-            element = WebDriverWait(browser, 10).until(
+            WebDriverWait(browser, 10).until(
                 EC.presence_of_element_located((By.CLASS_NAME, 'search-result-item'))
             )
 

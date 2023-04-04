@@ -22,7 +22,6 @@
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
 """HEPData end to end testing of record submission."""
-import flask
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
@@ -87,16 +86,13 @@ def test_create_submission(live_server, logged_in_browser):
 
     # Click continue and wait for animation to finish
     browser.find_element(By.ID, 'people_continue_btn').click()
-    WebDriverWait(browser, 10).until(
-        EC.visibility_of_element_located((By.CSS_SELECTOR, "#uploader_message h4"))
-    )
 
     # Add message for uploader
     browser.find_element(By.ID, 'uploader-message-input').send_keys('Please could you upload something?')
 
     # Click continue and wait for animation to finish
     browser.find_element(By.ID, 'message_continue_btn').click()
-    submission_state_p = WebDriverWait(browser, 10).until(
+    WebDriverWait(browser, 10).until(
         EC.text_to_be_present_in_element(
             (By.CSS_SELECTOR, "#submission_state p"),
             "You are about to create a submission for")
@@ -104,7 +100,7 @@ def test_create_submission(live_server, logged_in_browser):
 
     # Click continue and wait for animation to finish
     browser.find_element(By.ID, 'submit_btn').click()
-    submission_state_p = WebDriverWait(browser, 10).until(
+    WebDriverWait(browser, 10).until(
         EC.text_to_be_present_in_element(
             (By.CSS_SELECTOR, "#submission_state p"),
             "Submission Complete!"
@@ -136,9 +132,6 @@ def test_create_submission(live_server, logged_in_browser):
     continue_button = browser.find_element(By.ID, 'continue_btn')
     continue_button.click()
     # Wait for alert to appear
-    WebDriverWait(browser, 10).until(
-        EC.presence_of_element_located((By.CSS_SELECTOR, "#inspire-result .alert-danger"))
-    )
     alert = browser.find_element(By.CSS_SELECTOR, "#inspire-result .alert-danger")
     assert alert.text == 'A record with this Inspire ID already exists in HEPData.'
     record_link = alert.find_element(By.TAG_NAME, 'a')

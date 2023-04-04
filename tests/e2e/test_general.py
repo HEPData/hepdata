@@ -24,7 +24,6 @@
 """HEPData end to end testing of general pages."""
 import flask
 import requests
-import requests_mock
 import zipfile
 import io
 
@@ -33,14 +32,11 @@ from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from functools import reduce
 from tests.conftest import import_default_data
 
 from hepdata.ext.opensearch.api import reindex_all
-from hepdata.modules.records.importer.api import import_records
 from hepdata.modules.submission.api import get_latest_hepsubmission
-from hepdata.modules.records.utils.submission import unload_submission, get_or_create_hepsubmission
-from hepdata.modules.records.utils.workflow import create_record
+from hepdata.modules.records.utils.submission import unload_submission
 
 
 def test_home(app, live_server, env_browser, e2e_identifiers):

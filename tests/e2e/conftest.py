@@ -226,7 +226,8 @@ def env_browser(request):
         # Run tests locally instead of on Sauce Labs (requires local chromedriver installation).
         browser = getattr(webdriver, request.param)()
 
-    browser.set_window_size(1280,1024)
+    browser.set_window_size(1280, 1024)
+    browser.implicitly_wait(10)  # seconds
 
     # Go to homepage and click cookie accept button so cookie bar is out of the way
     browser.get(flask.url_for('hepdata_theme.index', _external=True))
