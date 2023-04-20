@@ -23,11 +23,10 @@
 """Twitter API."""
 
 from hepdata.modules.records.utils.common import encode_string, decode_string, truncate_string
-from twitter import Twitter
-from twitter import OAuth
+from pytwitter import Api
+from pytwitter.error import PyTwitterError
 from hepdata.config import USE_TWITTER, TWITTER_HANDLE_MAPPINGS
 from flask import current_app
-import json
 from unicodeit import replace
 import re
 
@@ -53,7 +52,10 @@ def tweet(title, collaborations, url, version=1):
             # log this error
             print("Twitter credentials must be supplied!")
         else:
-            twitter = Twitter(auth=OAuth(OAUTH_TOKEN, OAUTH_SECRET, CONSUMER_KEY, CONSUMER_SECRET))
+            api = Api(
+                consumer_key=CONSUMER_KEY, consumer_secret=CONSUMER_SECRET,
+                access_token=OAUTH_TOKEN, access_secret=OAUTH_SECRET
+            )
 
             cleaned_title = decode_string(encode_string(title))  # in case of binary characters in title
             cleaned_title = replace(cleaned_title)  # use UnicodeIt to replace LaTeX expressions
@@ -77,24 +79,21 @@ def tweet(title, collaborations, url, version=1):
                             get_collaboration_string(collaborations),
                             truncate_string(cleaned_title, words), url, version)
 
-                    twitter.statuses.update(status=status)
+                    api.create_tweet(text=status)
                     tweeted = True
                     print("Tweeted: {}".format(status))
 
-                except Exception as e:
-                    # It would be nice to get a stack trace here
-                    if e.e.code == 403:
-                        error = json.loads(e.response_data.decode('utf8'))
-                        if error["errors"][0]["code"] == 186:  # Status is over 140 characters.
-                            words = words - 1  # Try again with one less word.
-                        else:
-                            break
+                except PyTwitterError as e:
+                    message = e.message
+                    if 'errors' in message and message['errors'][0]['message'].startswith(
+                        "Your Tweet text is too long."):
+                        words = words - 1  # Try again with one less word.
                     else:
+                        print(message)
                         break
 
             if not tweeted:
-                print(e.__str__())
-                print("(P) Failed to post tweet for record {0}".format(url))
+                print("Failed to post tweet for record {0}".format(url))
 
 
 def cleanup_latex(latex_string):
