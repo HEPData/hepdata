@@ -39,4 +39,4 @@ speaklater==1.3
 SQLAlchemy-Continuum==1.3.14   # Indirect: see https://github.com/inveniosoftware/invenio-records/issues/250
 timestring==1.6.4
 unicodeit==0.7.5
-werkzeug==2.2.3
+werkzeug==2.3.3
