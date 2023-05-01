@@ -38,8 +38,7 @@ from hepdata.modules.submission.api import get_latest_hepsubmission, \
 from hepdata.modules.submission.models import HEPSubmission, DataSubmission, DataReview
 from hepdata.utils.users import get_user_from_id
 from invenio_accounts.models import User
-from invenio_db import db
-from sqlalchemy import and_
+
 
 logging.basicConfig()
 log = logging.getLogger(__name__)
@@ -194,7 +193,7 @@ def send_coordinator_notification_email(recid, version, user, message=None):
 
     name = coordinator.email
     coordinator_profile = UserProfile.get_by_userid(hepsubmission.coordinator)
-    if coordinator_profile:
+    if coordinator_profile and coordinator_profile.user_profile and coordinator_profile.full_name:
         name = coordinator_profile.full_name
 
     collaboration = _get_collaboration(hepsubmission.coordinator)
@@ -438,7 +437,7 @@ def notify_submission_created(record, coordinator_id, uploader, reviewer):
 
     name = coordinator.email
     coordinator_profile = UserProfile.get_by_userid(coordinator_id)
-    if coordinator_profile:
+    if coordinator_profile and coordinator_profile.user_profile and coordinator_profile.full_name:
         name = coordinator_profile.full_name
 
     collaboration = _get_collaboration(coordinator_id)

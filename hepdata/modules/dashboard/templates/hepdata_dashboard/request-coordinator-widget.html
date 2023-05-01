@@ -4,36 +4,42 @@
      aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content" style="background-color: #2C3E50">
-            <div class="modal-header" style="border: none">
-                <button type="button" class="close" data-dismiss="modal"
-                        aria-label="Close"><span
-                        aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="codeDialogLabel">Request Coordinator Privileges</h4>
+          <div class="modal-header" style="border: none">
+            <button type="button" class="close" data-dismiss="modal"
+                    aria-label="Close"><span
+              aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title" id="codeDialogLabel">Request Coordinator Privileges</h4>
+          </div>
+
+          <div class="modal-body">
+
+            <div class="alert alert-info" id="alert-section">
+              This form will send a request to HEPData admins who will either approve or reject your request or
+              email you if further information is needed. The Experiment/Group you enter below will appear in the
+              first column in the list of
+              <a href="/permissions/coordinators" target="_blank" style="color: navy">Coordinators</a>.
+              Do <strong>not</strong> send this request if there is already a
+              <a href="/permissions/coordinators" target="_blank" style="color: navy">Coordinator</a>
+              listed for your experiment/group.<br/><br/>
+              If you only want to request Uploader or Reviewer permissions for a specific publication, please
+              email the relevant <a href="/permissions/coordinators" target="_blank" style="color: navy">Coordinator</a>
+              and do <strong>not</strong> send a Coordinator request.
             </div>
 
-            <div class="modal-body">
+            <div id="request_information">
 
-                <div class="alert alert-info" id="alert-section">
-                    This will send a request to HEPData admins who will approve your request and/or email you
-                    if further information is needed.  The Experiment/Group you enter below will appear in the first
-                    column in the list of
-                    <a href="/permissions/coordinators" target="_blank"  style="color: navy">Coordinators</a>.
-                </div>
+              <label style="color: white;">Experiment/Group (required)</label>
+              <input placeholder="Experiment/Group you wish to coordinate for" type="text" id="experiment"
+                     name="experiment" class="form-control"/>
+              <br/>
+              <label style="color: white; font-weight: lighter;">
+                Please enter any information you think important to support this request (optional)</label>
+              <textarea class="final_commit_message" name="message" id="request_message"></textarea>
+            </div>
 
-                <div id="request_information">
-
-                    <label style="color: white;">Experiment/Group (required)</label>
-                    <input placeholder="Experiment/Group you wish to submit for" type="text" id="experiment"
-                           name="experiment" class="form-control"/>
-                    <br/>
-                    <label style="color: white; font-weight: lighter;">
-                        Please enter any information you think important to support this request (optional)</label>
-                    <textarea class="final_commit_message" name="message" id="request_message"></textarea>
-                </div>
-
-                <div align="center" style="padding: 40px;"
-                     id="send_request_button_container">
-                    <button class="btn btn-lg btn-primary"
+            <div align="center" style="padding: 40px;"
+                 id="send_request_button_container">
+              <button class="btn btn-lg btn-primary"
                             id="send_request" data-recid=""
                             data-versions=""> Send Request
                     </button>
