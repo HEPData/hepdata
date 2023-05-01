@@ -11,7 +11,7 @@ gunicorn==20.1.0
 hepdata-converter-ws-client==0.2.2
 hepdata-validator==0.3.3
 invenio-access==1.4.5     # Indirect (needed by invenio-admin)
-invenio-accounts==2.1.0
+invenio-accounts==2.2.0
 invenio-admin==1.4.0
 invenio-app==1.3.4
 invenio-assets==2.0.0
