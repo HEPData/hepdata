@@ -20,3 +20,4 @@ updates:
       interval: "weekly"
     ignore:
       - dependency-name: "pytest-cov"  # see https://github.com/HEPData/hepdata/issues/580
+      - dependency-name: "Sphinx"  # see https://github.com/HEPData/hepdata/issues/594
