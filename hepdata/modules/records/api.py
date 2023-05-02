@@ -625,7 +625,8 @@ def process_saved_file(file_path, recid, userid, redirect_url, previous_status):
                                            name=full_name,
                                            article=recid,
                                            link=redirect_url.format(recid),
-                                           site_url=site_url)
+                                           site_url=site_url,
+                                           overall_status=hepsubmission.overall_status)
 
             create_send_email_task(uploader.email,
                                    '[HEPData] Submission {0} upload succeeded'.format(recid),
