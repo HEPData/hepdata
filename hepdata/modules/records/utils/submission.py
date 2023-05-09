@@ -34,7 +34,7 @@ from flask import current_app
 from flask_celeryext import create_celery_app
 from flask_login import current_user
 from hepdata_converter_ws_client import get_data_size
-from hepdata.config import CFG_DATA_TYPE, CFG_PUB_TYPE
+from hepdata.config import CFG_DATA_TYPE, CFG_PUB_TYPE, CFG_SUPPORTED_FORMATS
 from hepdata.ext.opensearch.admin_view.api import AdminIndexer
 from hepdata.ext.opensearch.api import get_records_matching_field, \
     delete_item_from_index, index_record_ids, push_data_keywords
@@ -764,7 +764,7 @@ def do_finalise(recid, publication_record=None, force_finalise=False,
                 send_finalised_email(hep_submission)
 
             if convert:
-                for file_format in ['yaml', 'csv', 'yoda', 'root']:
+                for file_format in CFG_SUPPORTED_FORMATS:
                     convert_and_store.delay(hep_submission.inspire_id, file_format, force=True)
 
             if send_tweet:
