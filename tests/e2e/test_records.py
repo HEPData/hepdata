@@ -81,9 +81,13 @@ def test_record_update(live_server, logged_in_browser):
     browser.get(record_url)
 
     # Should now be 2 versions of our submission
-    submissions = HEPSubmission.query \
-        .filter_by(inspire_id=inspire_id) \
-        .order_by(HEPSubmission.created).all()
+    db.session.flush()
+    try:
+        submissions = HEPSubmission.query.filter_by(inspire_id=inspire_id).order_by(HEPSubmission.created).all()
+    except Exception as e:
+        # Roll back and try again
+        db.session.rollback()
+        submissions = HEPSubmission.query.filter_by(inspire_id=inspire_id).order_by(HEPSubmission.created).all()
     assert len(submissions) == 2
     assert submissions[0].version == 1
     assert submissions[0].overall_status == 'finished'
