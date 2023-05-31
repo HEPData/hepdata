@@ -266,7 +266,7 @@ TWITTER_HANDLE_MAPPINGS = {
     "bicep2": "@BICEPTWO",
     "xenon": "@Xenon1T",
     "microboone": "@Microboone",
-    "belle-II": "@belle2collab",
+    "belle-ii": "@belle2collab",
 }
 
 INVALID_DOI_TEMPLATE = "hepdata_theme/invalid_doi.html"
