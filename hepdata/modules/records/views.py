@@ -35,6 +35,7 @@ from flask_login import login_required, login_user
 from flask import Blueprint, send_file, abort, redirect
 from flask_security.utils import verify_password
 from sqlalchemy import or_, func
+from sqlalchemy.orm import joinedload
 import yaml
 from yaml import CBaseLoader as Loader
 
@@ -297,9 +298,7 @@ def get_table_details(recid, data_recid, version):
     :param version:
     :return:
     """
-
-    datasub_query = DataSubmission.query.filter_by(id=data_recid,
-                                                   version=version)
+    datasub_query = DataSubmission.query.options(joinedload('related_tables')).filter_by(id=data_recid, version=version)
     table_contents = {}
 
     if datasub_query.count() > 0:
@@ -326,6 +325,7 @@ def get_table_details(recid, data_recid, version):
             table_contents["name"] = datasub_record.name
             table_contents["title"] = datasub_record.description
             table_contents["keywords"] = datasub_record.keywords
+            table_contents["related_tables"] = datasub_record.related_tables
             table_contents["doi"] = datasub_record.doi
             table_contents["location"] = datasub_record.location_in_publication
 
