@@ -129,8 +129,15 @@ keyword_identifier = db.Table(
     'keyword_submission',
     db.Column('submission_id', db.Integer,
               db.ForeignKey('datasubmission.id')),
+    db.Column('keyword_id', db.Integer, db.ForeignKey('keyword.id', ondelete='CASCADE'))
+)
 
-    db.Column('keyword_id', db.Integer, db.ForeignKey('keyword.id', ondelete='CASCADE')))
+relatedtable_identifier = db.Table(
+    'relatedtable_identifier',
+    db.Column('submission_id', db.Integer,
+              db.ForeignKey('datasubmission.id')),
+    db.Column('relatedtable_id', db.Integer, db.ForeignKey('relatedtable.id', ondelete='CASCADE'))
+)
 
 
 class DataSubmission(db.Model):
@@ -161,6 +168,9 @@ class DataSubmission(db.Model):
 
     doi = db.Column(db.String(128), nullable=True)
 
+    related_tables = db.relationship("RelatedTable", secondary="relatedtable_identifier",
+                               cascade="all,delete")
+
     # the record ID for the resulting record created on finalisation.
     associated_recid = db.Column(db.Integer)
 
@@ -168,6 +178,17 @@ class DataSubmission(db.Model):
     # maintained so people can go back in time
     # through a submissions review stages.
     version = db.Column(db.Integer, default=0)
+
+
+class RelatedTable(db.Model):
+    """
+    The submission object associated with a related table entry.
+    """
+    __tablename__ = "relatedtable"
+    id = db.Column(db.Integer, primary_key=True, nullable=False,
+                autoincrement=True)
+    table_doi = db.Column(db.String(128), nullable=True)
+    related_doi = db.Column(db.String(128), nullable=True)
 
 
 @event.listens_for(db.Session, 'before_flush')
