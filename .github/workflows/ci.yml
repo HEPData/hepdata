@@ -28,7 +28,7 @@ name: Continuous Integration
 on:
   push:
   pull_request:
-    branches: [ master ]
+    branches: [ main ]
   release:
     types: [ published ]
   schedule:
@@ -203,7 +203,7 @@ jobs:
 
   deploy:
     needs: test
-    if: contains(github.ref, 'master') || github.event_name == 'release'
+    if: contains(github.ref, 'main') || github.event_name == 'release'
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3

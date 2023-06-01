@@ -52,24 +52,9 @@ logout() {
   retry docker logout
 }
 
-deployQA() {
-  app="${1}"
-  if [ -z "${CI_TAG}" ]; then
-    echo "Deploying ${app} ..."
-    curl -X POST \
-      -F token=${DEPLOY_QA_TOKEN} \
-      -F ref=master \
-      -F variables[APP_NAME]=${app} \
-      -F variables[NEW_TAG]=${TAG} \
-      https://gitlab.cern.ch/api/v4/projects/11111/trigger/pipeline
-  fi
-}
-
 main() {
   login
   buildPush "." "hepdata/hepdata"
   logout
-  # FIXME: Enable when cluster is ready
-  # deployQA "hepdata"
 }
 main

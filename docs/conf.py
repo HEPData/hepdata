@@ -69,10 +69,10 @@ templates_path = ['_templates']
 source_suffix = '.rst'
 
 # The encoding of source files.
-#source_encoding = 'utf-8-sig'
+# source_encoding = 'utf-8-sig'
 
-# The master toctree document.
-master_doc = 'index'
+# The root toctree document.
+root_doc = 'index'
 
 # General information about the project.
 project = u'HEPData'
@@ -277,8 +277,8 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-  (master_doc, 'HEPData.tex', u'HEPData Documentation',
-   u'CERN', 'manual'),
+    (root_doc, 'HEPData.tex', u'HEPData Documentation',
+     u'CERN', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -307,7 +307,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'HEPData', u'HEPData Documentation',
+    (root_doc, 'HEPData', u'HEPData Documentation',
      [author], 1)
 ]
 
@@ -321,9 +321,9 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  (master_doc, 'HEPData', u'HEPData Documentation',
-   author, 'HEPData', 'HEPData - Repository for publication-related High-Energy Physics data.',
-   'Miscellaneous'),
+    (root_doc, 'HEPData', u'HEPData Documentation',
+     author, 'HEPData', 'HEPData - Repository for publication-related High-Energy Physics data.',
+     'Miscellaneous'),
 ]
 
 # Documents to append as an appendix to all manuals.

@@ -289,7 +289,7 @@ Once you have set up Selenium or Sauce Labs, you can run the tests using:
 Note that the end-to-end tests require the converter (specified by ``CFG_CONVERTER_URL``) to be running.
 
 
-NOTE: To test changes to `ci.yml <https://github.com/HEPData/hepdata/blob/master/.github/workflows/ci.yml>`_ locally,
+NOTE: To test changes to `ci.yml <https://github.com/HEPData/hepdata/blob/main/.github/workflows/ci.yml>`_ locally,
 you can use `act <https://github.com/nektos/act>`_.  A ``.secrets`` file should be created in the project root
 directory with the variables ``SAUCE_USERNAME`` and ``SAUCE_ACCESS_KEY`` set in order to run the end-to-end tests.
 Only one ``matrix`` configuration will be used to avoid problem with conflicting ports.  Running ``act -n`` is useful
