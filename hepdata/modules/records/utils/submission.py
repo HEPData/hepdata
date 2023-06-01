@@ -34,7 +34,7 @@ from flask import current_app
 from flask_celeryext import create_celery_app
 from flask_login import current_user
 from hepdata_converter_ws_client import get_data_size
-from hepdata.config import CFG_DATA_TYPE, CFG_PUB_TYPE, CFG_SUPPORTED_FORMATS
+from hepdata.config import CFG_DATA_TYPE, CFG_PUB_TYPE, CFG_SUPPORTED_FORMATS, HEPDATA_DOI_PREFIX
 from hepdata.ext.opensearch.admin_view.api import AdminIndexer
 from hepdata.ext.opensearch.api import get_records_matching_field, \
     delete_item_from_index, index_record_ids, push_data_keywords
@@ -45,7 +45,7 @@ from hepdata.modules.permissions.models import SubmissionParticipant
 from hepdata.modules.records.utils.workflow import create_record
 from hepdata.modules.submission.api import get_latest_hepsubmission
 from hepdata.modules.submission.models import DataSubmission, DataReview, \
-    DataResource, Keyword, HEPSubmission, RecordVersionCommitMessage
+    DataResource, Keyword, RelatedTable, HEPSubmission, RecordVersionCommitMessage
 from hepdata.modules.records.utils.common import \
     get_license, infer_file_type, get_record_by_id, contains_accepted_url
 from hepdata.modules.records.utils.common import get_or_create
@@ -213,7 +213,7 @@ def cleanup_data_keywords(data_submission):
     db.session.commit()
 
 
-def process_data_file(recid, version, basepath, data_obj, datasubmission, main_file_path):
+def process_data_file(recid, version, basepath, data_obj, datasubmission, main_file_path, tablectr):
     """
     Takes a data file and any supplementary files and persists their
     metadata to the database whilst recording their upload path.
@@ -254,6 +254,12 @@ def process_data_file(recid, version, basepath, data_obj, datasubmission, main_f
                 datasubmission.keywords.append(keyword)
 
     cleanup_data_resources(datasubmission)
+
+    if "related_to_table_dois" in data_obj:
+        for related_doi in data_obj["related_to_table_dois"]:
+            this_doi = f"{HEPDATA_DOI_PREFIX}/hepdata.{recid}.v{version}/t{tablectr}"
+            related_table = RelatedTable(table_doi=this_doi, related_doi=related_doi)
+            datasubmission.related_tables.append(related_table)
 
     if "additional_resources" in data_obj:
         resources = parse_additional_resources(basepath, recid, data_obj)
@@ -426,6 +432,8 @@ def process_submission_directory(basepath, submission_file_path, recid,
         # Side effect that reviews will be deleted between uploads.
         cleanup_submission(recid, hepsubmission.version, added_file_names)
 
+        # Counter to store current table number.
+        tablectr = 0
         for yaml_document_index, yaml_document in enumerate(full_submission_validator.submission_docs):
             if not yaml_document:
                 continue
@@ -454,8 +462,10 @@ def process_submission_directory(basepath, submission_file_path, recid,
                 main_file_path = os.path.join(basepath, yaml_document["data_file"])
 
                 try:
+                    # Tablectr should only be incremented when a new table is to be processed
+                    tablectr += 1
                     process_data_file(recid, hepsubmission.version, basepath, yaml_document,
-                                  datasubmission, main_file_path)
+                                  datasubmission, main_file_path, tablectr)
                 except SQLAlchemyError as sqlex:
                     errors[yaml_document["data_file"]] = [{"level": "error", "message":
                         "There was a problem processing the file.\n" + str(sqlex)}]
