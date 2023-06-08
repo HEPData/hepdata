@@ -369,7 +369,7 @@ To run the tests:
 
 .. code-block:: console
 
-   $ docker-compose exec web bash -c "/usr/local/var/sc-4.8.2-${SAUCE_OS:-linux}/bin/sc -u $SAUCE_USERNAME -k $SAUCE_ACCESS_KEY --region eu-central & ./run-tests.sh"
+   $ docker-compose exec web bash -c "/usr/local/var/sc-4.9.0-${SAUCE_OS:-linux}/bin/sc -u $SAUCE_USERNAME -k $SAUCE_ACCESS_KEY --region eu-central & ./run-tests.sh"
 
 .. _docker-compose-tips:
 
