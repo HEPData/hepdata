@@ -196,32 +196,23 @@ def env_browser(request):
 
     timeout_process = multiprocessing.Process(target=wait_kill)
 
-    sauce_username = os.environ.get('SAUCE_USERNAME', '')
-    sauce_access_key = os.environ.get('SAUCE_ACCESS_KEY', '')
-    remote_url = \
-        "https://%s:%s@ondemand.eu-central-1.saucelabs.com:443/wd/hub" \
-        % (sauce_username, sauce_access_key)
-
-    # the desired_capabilities parameter tells us which browsers and OS to spin up.
-    desired_cap = {
-        'browserName': 'chrome',
-        'browserVersion': '109',
-        'platformName': 'Windows 11',
-        'build': os.environ.get('GITHUB_RUN_ID',
-                                datetime.utcnow().strftime("%Y-%m-%d %H:00ish")),
-        'username': sauce_username,
-        'accessKey': sauce_access_key,
-        'sauce:options': {
-            'screenResolution': '1280x1024',
-            'tunnelIdentifier': os.environ.get('GITHUB_RUN_ID', ''),
-            'name': request.node.name,
-        },
-        'extendedDebugging': True
-    }
-
     if not RUN_SELENIUM_LOCALLY:
+        remote_url = "https://ondemand.eu-central-1.saucelabs.com:443/wd/hub"
+        options = webdriver.ChromeOptions()
+        options.browser_version = '114'
+        options.platform_name = 'Windows 10'
+        sauce_options = {
+            'extendedDebugging': True,
+            'screenResolution': '1280x1024',
+            'name': request.node.name,
+            'build': os.environ.get('GITHUB_RUN_ID', datetime.utcnow().strftime("%Y-%m-%d %H:00ish")),
+            'username': os.environ.get('SAUCE_USERNAME', ''),
+            'accessKey': os.environ.get('SAUCE_ACCESS_KEY', ''),
+            'tunnelName': os.environ.get('GITHUB_RUN_ID', ''),
+        }
+        options.set_capability('sauce:options', sauce_options)
         # This creates a webdriver object to send to Sauce Labs including the desired capabilities
-        browser = webdriver.Remote(remote_url, desired_capabilities=desired_cap)
+        browser = webdriver.Remote(remote_url, options=options)
     else:
         # Run tests locally instead of on Sauce Labs (requires local chromedriver installation).
         browser = getattr(webdriver, request.param)()
