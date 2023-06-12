@@ -21,7 +21,6 @@ ARG SAUCE_OS
 RUN curl -sL https://deb.nodesource.com/setup_18.x | bash -
 RUN apt-get update
 RUN apt-get install -y nodejs
-ENV NODE_OPTIONS=--openssl-legacy-provider
 
 WORKDIR /code
 
