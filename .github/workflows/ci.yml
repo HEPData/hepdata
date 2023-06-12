@@ -150,12 +150,8 @@ jobs:
     - name: Setup npm and build assets
       run: |
         hepdata collect -v
-        hepdata webpack create
-        hepdata webpack install
-        hepdata webpack build
+        hepdata webpack buildall
         cp hepdata/config_local.gh.py hepdata/config_local.py
-      env:
-        NODE_OPTIONS: "--openssl-legacy-provider"
     - name: Run tests
       env:
         COVERAGE_FILE: '.coverage_func'

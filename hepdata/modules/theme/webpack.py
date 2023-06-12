@@ -47,6 +47,7 @@ theme = WebpackBundle(
         "bootstrap-sass": "~3.3.5",
         "bootstrap": "~3.3.5",
         "font-awesome": "~4.6.3",
-        "toastr": "~2.1.2"
+        "toastr": "~2.1.2",
+        "semantic-ui-less": "~2.5.0"
     }
 )
