@@ -1,15 +1,15 @@
 .. ifconfig:: buildername == 'html'
 
-    .. image:: https://github.com/HEPData/hepdata/workflows/Continuous%20Integration/badge.svg?branch=master
-       :target: https://github.com/HEPData/hepdata/actions?query=branch%3Amaster
+    .. image:: https://github.com/HEPData/hepdata/workflows/Continuous%20Integration/badge.svg?branch=main
+       :target: https://github.com/HEPData/hepdata/actions?query=branch%3Amain
        :alt: GitHub Actions Build Status
 
-    .. image:: https://coveralls.io/repos/github/HEPData/hepdata/badge.svg?branch=master
-       :target: https://coveralls.io/github/HEPData/hepdata?branch=master
+    .. image:: https://coveralls.io/repos/github/HEPData/hepdata/badge.svg?branch=main
+       :target: https://coveralls.io/github/HEPData/hepdata?branch=main
        :alt: Coveralls Status
 
     .. image:: https://img.shields.io/github/license/HEPData/hepdata.svg
-       :target: https://github.com/HEPData/hepdata/blob/master/LICENSE
+       :target: https://github.com/HEPData/hepdata/blob/main/LICENSE
        :alt: License
 
     .. image:: https://img.shields.io/docker/image-size/hepdata/hepdata/latest

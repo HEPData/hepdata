@@ -249,7 +249,7 @@ Then open your preferred web browser (Chrome, Firefox, Safari, etc.) at http://l
 
 On macOS Monterey you might find that ControlCenter is already listening to port 5000
 (check with ``lsof -i -P | grep 5000``).  If this is the case,
-`turn off AirPlay Receiver <https://support.apple.com/en-gb/guide/mac-help/mchl15c9e4b5/mac>`_.
+`turn off AirPlay Receiver <https://support.apple.com/en-gb/guide/mac-help/mchl15c9e4b5/12.0/mac/12.0>`_.
 
 
 .. _running-the-tests:
@@ -289,7 +289,7 @@ Once you have set up Selenium or Sauce Labs, you can run the tests using:
 Note that the end-to-end tests require the converter (specified by ``CFG_CONVERTER_URL``) to be running.
 
 
-NOTE: To test changes to `ci.yml <https://github.com/HEPData/hepdata/blob/master/.github/workflows/ci.yml>`_ locally,
+NOTE: To test changes to `ci.yml <https://github.com/HEPData/hepdata/blob/main/.github/workflows/ci.yml>`_ locally,
 you can use `act <https://github.com/nektos/act>`_.  A ``.secrets`` file should be created in the project root
 directory with the variables ``SAUCE_USERNAME`` and ``SAUCE_ACCESS_KEY`` set in order to run the end-to-end tests.
 Only one ``matrix`` configuration will be used to avoid problem with conflicting ports.  Running ``act -n`` is useful
@@ -369,7 +369,7 @@ To run the tests:
 
 .. code-block:: console
 
-   $ docker-compose exec web bash -c "/usr/local/var/sc-4.8.2-${SAUCE_OS:-linux}/bin/sc -u $SAUCE_USERNAME -k $SAUCE_ACCESS_KEY --region eu-central & ./run-tests.sh"
+   $ docker-compose exec web bash -c "/usr/local/var/sc-4.9.0-${SAUCE_OS:-linux}/bin/sc -u $SAUCE_USERNAME -k $SAUCE_ACCESS_KEY --region eu-central & ./run-tests.sh"
 
 .. _docker-compose-tips:
 

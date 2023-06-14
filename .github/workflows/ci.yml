@@ -28,7 +28,7 @@ name: Continuous Integration
 on:
   push:
   pull_request:
-    branches: [ master ]
+    branches: [ main ]
   release:
     types: [ published ]
   schedule:
@@ -150,12 +150,8 @@ jobs:
     - name: Setup npm and build assets
       run: |
         hepdata collect -v
-        hepdata webpack create
-        hepdata webpack install
-        hepdata webpack build
+        hepdata webpack buildall
         cp hepdata/config_local.gh.py hepdata/config_local.py
-      env:
-        NODE_OPTIONS: "--openssl-legacy-provider"
     - name: Run tests
       env:
         COVERAGE_FILE: '.coverage_func'
@@ -169,7 +165,7 @@ jobs:
         accessKey: ${{ secrets.SAUCE_ACCESS_KEY }}
         region: eu-central
         tunnelName: ${{ github.run_id }}
-        scVersion: 4.8.2
+        scVersion: 4.9.0
         verbose: true
     - name: Run end-to-end tests
       if: startsWith(matrix.postgres-version, '12') && startsWith(matrix.python-version, '3.9')
@@ -203,7 +199,7 @@ jobs:
 
   deploy:
     needs: test
-    if: contains(github.ref, 'master') || github.event_name == 'release'
+    if: contains(github.ref, 'main') || github.event_name == 'release'
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
