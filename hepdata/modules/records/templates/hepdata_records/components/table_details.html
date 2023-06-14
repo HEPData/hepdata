@@ -82,15 +82,21 @@
 
                     <span class="pull-right" id="support-files" style="margin-right: 20px; margin-top:1px"></span>
                 </h4>
+
                 <div class="clearfix"></div>
-                {% if ctx.record.related_dois %}
-                <div class="related-doi">
-                    <p>Related Tables</p>
-                    {% for doi in ctx.record.related_tables %}
-                      <p>{{ doi }}</p>
-                    {% endfor %}
+                
+                <div id="related_tables">
+                    <h4>This table is related to:</h4>
+                    <div class="row-fluid"></div>
                 </div>
-                {% endif %}
+
+                <div class="clearfix"></div>
+
+                <div id="related_to_this">
+                    <h4>Tables related to this:</h4>
+                    <div class="row-fluid"></div>
+                </div>
+
                 <div class="clearfix"></div>
                 <p id="table_location"></p>
             </div>
