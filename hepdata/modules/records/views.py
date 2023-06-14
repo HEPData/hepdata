@@ -325,7 +325,7 @@ def get_table_details(recid, data_recid, version):
             table_contents["name"] = datasub_record.name
             table_contents["title"] = datasub_record.description
             table_contents["keywords"] = datasub_record.keywords
-            table_contents["related_tables"] = datasub_record.related_tables
+            table_contents["related_tables"] = [r.related_doi for r in datasub_record.related_tables]
             table_contents["doi"] = datasub_record.doi
             table_contents["location"] = datasub_record.location_in_publication
 
