@@ -90,9 +90,11 @@ HEPDATA.table_renderer = {
         $("#table_name").text(table_data.name);
         $("#table_location").html(table_data.location);
         $("#table_doi_contents").html('<a href="https://doi.org/' + table_data.doi + '" target="_blank">' + table_data.doi + '</a>');
-
         $("#table_description").html((table_data.description.indexOf('.') == 0) ? '' : table_data.description.trim());
 
+        HEPDATA.table_renderer.render_related_dois(table_data.related_tables, "#related_tables");
+        // table_data.related_to_this
+        HEPDATA.table_renderer.render_related_dois([], "#related_to_this");
         HEPDATA.table_renderer.render_keywords(table_data.keywords, "#table_keywords");
 
         HEPDATA.reset_stats();
@@ -184,6 +186,31 @@ HEPDATA.table_renderer = {
       value = ""
     }
     return value;
+  },
+
+  render_related_dois: function(related_dois, placement) {
+    /*
+      Renders the related_doi sections of the records page.
+      The `placement` argument is used to specify between
+        both related record types.
+        The records `this is relating to`, and records `that relate to this` record.
+    */
+    var relatedTablesWrapper = $(placement);
+  
+    if (related_dois.length > 0) {
+      var table = $('<table>').addClass('table');
+  
+      for (var i = 0; i < related_dois.length; i++) {
+        var doi = related_dois[i];
+        var row = $('<tr>').append($('<td>').append($('<a>').text(doi).attr('href', doi)));
+        table.append(row);
+      }
+  
+      relatedTablesWrapper.append(table);
+    } else {
+      relatedTablesWrapper.empty();
+      relatedTablesWrapper.hide();
+    }
   },
 
   render_keywords: function (keywords, placement) {
