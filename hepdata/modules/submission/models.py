@@ -117,6 +117,9 @@ class HEPSubmission(db.Model):
 
     reviewers_notified = db.Column(db.Boolean, default=False)
 
+    related_recids = db.relationship("RelatedRecid", secondary="relatedrecid_identifier",
+                               cascade="all,delete")
+
 
 datafile_identifier = db.Table(
     'datafile_identifier',
@@ -137,6 +140,13 @@ relatedtable_identifier = db.Table(
     db.Column('submission_id', db.Integer,
               db.ForeignKey('datasubmission.id')),
     db.Column('relatedtable_id', db.Integer, db.ForeignKey('relatedtable.id', ondelete='CASCADE'))
+)
+
+relatedrecid_identifier = db.Table(
+    'relatedrecid_identifier',
+    db.Column('submission_id', db.Integer,
+              db.ForeignKey('hepsubmission.id')),
+    db.Column('relatedrecid_id', db.Integer, db.ForeignKey('relatedrecid.id', ondelete='CASCADE'))
 )
 
 
@@ -189,6 +199,17 @@ class RelatedTable(db.Model):
                 autoincrement=True)
     table_doi = db.Column(db.String(128), nullable=True)
     related_doi = db.Column(db.String(128), nullable=True)
+
+
+class RelatedRecid(db.Model):
+    """
+    The submission object associated with a related table entry.
+    """
+    __tablename__ = "relatedrecid"
+    id = db.Column(db.Integer, primary_key=True, nullable=False,
+                autoincrement=True)
+    this_recid = db.Column(db.String(128), nullable=True)
+    related_recid = db.Column(db.String(128), nullable=True)
 
 
 @event.listens_for(db.Session, 'before_flush')
