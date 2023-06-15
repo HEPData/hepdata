@@ -78,5 +78,6 @@ celerybeat-schedule
 # Ignore Ds_Store for finder
 .DS_Store
 
-# Secrets file for act
+# Secrets files
 .secrets
+.env
