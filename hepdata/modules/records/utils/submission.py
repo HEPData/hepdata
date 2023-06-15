@@ -45,7 +45,7 @@ from hepdata.modules.permissions.models import SubmissionParticipant
 from hepdata.modules.records.utils.workflow import create_record
 from hepdata.modules.submission.api import get_latest_hepsubmission
 from hepdata.modules.submission.models import DataSubmission, DataReview, \
-    DataResource, Keyword, RelatedTable, HEPSubmission, RecordVersionCommitMessage
+    DataResource, Keyword, RelatedTable, RelatedRecid, HEPSubmission, RecordVersionCommitMessage
 from hepdata.modules.records.utils.common import \
     get_license, infer_file_type, get_record_by_id, contains_accepted_url
 from hepdata.modules.records.utils.common import get_or_create
@@ -306,6 +306,11 @@ def process_general_submission_info(basepath, submission_info_document, recid):
         resources = parse_additional_resources(basepath, recid, submission_info_document)
         for resource in resources:
             hepsubmission.resources.append(resource)
+
+    if 'related_to_hepdata_recids' in submission_info_document:
+        for related_id in submission_info_document['related_to_hepdata_recids']:
+            related = RelatedRecid(this_recid=recid, related_recid=related_id)
+            hepsubmission.related_recids.append(related)
 
     db.session.add(hepsubmission)
     db.session.commit()
