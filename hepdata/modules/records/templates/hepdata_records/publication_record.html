@@ -115,6 +115,22 @@
                                target="_blank">https://doi.org/{{ hepdata_doi }}</a>
                         </div>
 
+                        <div class="related-recids">
+                            <h4>This record is related to:</h4>
+                            <p>
+                                {% for related in ctx.related_recids %}
+                                <a href="#">{{ related.related_recid }}</a><br>
+                                {% endfor %}
+                            </p>
+                        </div>
+
+                        <div class="related-to-this-recids">
+                            <h4>Records relating to this:</h4>
+                            <p>
+                                Not Implemented.
+                            </p>
+                        </div>
+
                         <br/>
 
                         <div class="record-links">
