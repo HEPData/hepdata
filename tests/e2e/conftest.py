@@ -210,6 +210,11 @@ def env_browser(request):
             'accessKey': os.environ.get('SAUCE_ACCESS_KEY', ''),
             'tunnelName': os.environ.get('GITHUB_RUN_ID', ''),
         }
+
+        for key in ['username', 'accessKey']:
+            if sauce_options[key] == '':
+                raise Exception(f"Sauce {key} is not in Environment")
+
         options.set_capability('sauce:options', sauce_options)
         # This creates a webdriver object to send to Sauce Labs including the desired capabilities
         browser = webdriver.Remote(remote_url, options=options)
