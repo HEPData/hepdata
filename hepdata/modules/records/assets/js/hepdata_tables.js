@@ -199,7 +199,7 @@ HEPDATA.table_renderer = {
 
     var relatedTablesText = relatedTablesWrapper.find(".related_table_count");
     relatedTablesText.empty();
-    relatedTablesText.append(relatedDois.length + " records found.");
+    relatedTablesText.append(relatedDois.length + " record(s) found.");
 
   
     if (relatedDois.length > 0) {
