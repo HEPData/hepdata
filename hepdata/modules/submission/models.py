@@ -222,8 +222,8 @@ class RelatedRecid(db.Model):
     __tablename__ = "relatedrecid"
     id = db.Column(db.Integer, primary_key=True, nullable=False,
                 autoincrement=True)
-    this_recid = db.Column(db.String(128), nullable=True)
-    related_recid = db.Column(db.String(128), nullable=True)
+    this_recid = db.Column(db.Integer, nullable=True)
+    related_recid = db.Column(db.Integer, nullable=True)
 
 
 @event.listens_for(db.Session, 'before_flush')
