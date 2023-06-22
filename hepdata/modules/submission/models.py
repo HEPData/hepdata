@@ -120,6 +120,20 @@ class HEPSubmission(db.Model):
     related_recids = db.relationship("RelatedRecid", secondary="relatedrecid_identifier",
                                cascade="all,delete")
 
+    def get_related_to_this_recids(self):
+        '''
+            Queries the database for all records in the RelatedRecId table
+                that have THIS record's id as a related record.
+
+                :return: [list] List containing related records.
+        '''
+        related_submissions = db.session.query(RelatedRecid) \
+            .join(HEPSubmission,
+                RelatedRecid.related_recid == HEPSubmission.doi) \
+            .filter(HEPSubmission.id == self.id) \
+            .all()
+        return related_submissions
+
 
 datafile_identifier = db.Table(
     'datafile_identifier',
