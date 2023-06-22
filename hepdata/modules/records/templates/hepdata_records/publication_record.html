@@ -108,7 +108,6 @@
                             {% include "hepdata_records/components/journal_info.html" %}
                         </div>
 
-
                         <div class="record-doi">
                             {% set hepdata_doi = ctx.record.hepdata_doi|replace('None', '10.17182/hepdata.' + ctx.record.recid|string) %}
                             <a href="https://doi.org/{{ hepdata_doi }}"
@@ -117,21 +116,27 @@
 
                         <div class="related-recids">
                             <h4>This record is related to:</h4>
-                            <p>
-                                {% for related in ctx.related_recids %}
-                                <a href="#">{{ related.related_recid }}</a><br>
-                                {% endfor %}
-                            </p>
+                            <p>{{ ctx.related_recids|length }} records found.</p>
+                            <div id="related-recid-links">
+                                <ul>
+                                    {% for related in ctx.related_recids %}
+                                    <li><a href="{{ related }}">{{ related }}</a></li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
                         </div>
 
                         <div class="related-to-this-recids">
                             <h4>Records relating to this:</h4>
-                            <p>
-                                Not Implemented.
-                            </p>
+                            <p>{{ ctx.related_to_this_recids|length }} records found.</p>
+                            <div id="related-to-this-recids-links">
+                                <ul>
+                                    {% for related in ctx.related_to_this_recids %}
+                                    <li><a href="{{ related }}">{{ related }}</a></li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
                         </div>
-
-                        <br/>
 
                         <div class="record-links">
                             <ul>
