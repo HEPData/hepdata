@@ -210,6 +210,10 @@ HEPDATA.table_renderer = {
         var relatedItem = $('<li>').append($('<a>').text(doi).attr('href', "https://doi.org/" + doi));
         relatedList.append(relatedItem);
       }
+      relatedTablesWrapper.show();
+    }
+    else {
+      relatedTablesWrapper.hide();
     }
   },
 
