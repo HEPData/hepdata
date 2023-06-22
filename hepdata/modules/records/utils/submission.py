@@ -309,7 +309,7 @@ def process_general_submission_info(basepath, submission_info_document, recid):
 
     if 'related_to_hepdata_recids' in submission_info_document:
         for related_id in submission_info_document['related_to_hepdata_recids']:
-            related = RelatedRecid(this_recid=recid, related_recid=related_id)
+            related = RelatedRecid(this_recid=hepsubmission.publication_recid, related_recid=related_id)
             hepsubmission.related_recids.append(related)
 
     db.session.add(hepsubmission)

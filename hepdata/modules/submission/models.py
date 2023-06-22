@@ -129,7 +129,7 @@ class HEPSubmission(db.Model):
         '''
         related_submissions = db.session.query(RelatedRecid) \
             .join(HEPSubmission,
-                RelatedRecid.related_recid == HEPSubmission.doi) \
+                RelatedRecid.related_recid == HEPSubmission.publication_recid) \
             .filter(HEPSubmission.id == self.id) \
             .all()
         return related_submissions
