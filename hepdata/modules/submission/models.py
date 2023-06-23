@@ -203,6 +203,14 @@ class DataSubmission(db.Model):
     # through a submissions review stages.
     version = db.Column(db.Integer, default=0)
 
+    def get_related_to_this_dois(self):
+        related_submissions = (
+        DataSubmission.query.join(DataSubmission.related_tables)
+        .filter(RelatedTable.related_doi == self.doi)
+        .all())
+        return related_submissions
+        
+
 
 class RelatedTable(db.Model):
     """
