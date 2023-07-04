@@ -213,7 +213,7 @@ def cleanup_data_keywords(data_submission):
     db.session.commit()
 
 
-def process_data_file(recid, version, basepath, data_obj, datasubmission, main_file_path, tablectr):
+def process_data_file(recid, version, basepath, data_obj, datasubmission, main_file_path, tablenum, overall_status):
     """
     Takes a data file and any supplementary files and persists their
     metadata to the database whilst recording their upload path.
@@ -224,6 +224,8 @@ def process_data_file(recid, version, basepath, data_obj, datasubmission, main_f
     :param data_obj: Object representation of loaded YAML file
     :param datasubmission: the DataSubmission object representing this file in the DB
     :param main_file_path: the data file path
+    :param tablenum: This table's number in the submission.
+    :param overall_status: Overall status of submission to use for sandbox filtering.
     :return:
     """
     main_data_file = DataResource(
@@ -255,11 +257,12 @@ def process_data_file(recid, version, basepath, data_obj, datasubmission, main_f
 
     cleanup_data_resources(datasubmission)
 
-    if "related_to_table_dois" in data_obj:
-        for related_doi in data_obj["related_to_table_dois"]:
-            this_doi = f"{HEPDATA_DOI_PREFIX}/hepdata.{recid}.v{version}/t{tablectr}"
-            related_table = RelatedTable(table_doi=this_doi, related_doi=related_doi)
-            datasubmission.related_tables.append(related_table)
+    if overall_status not in ("sandbox", "sandbox_processing"):
+        if "related_to_table_dois" in data_obj:
+            for related_doi in data_obj["related_to_table_dois"]:
+                this_doi = f"{HEPDATA_DOI_PREFIX}/hepdata.{recid}.v{version}/t{tablenum}"
+                related_table = RelatedTable(table_doi=this_doi, related_doi=related_doi)
+                datasubmission.related_tables.append(related_table)
 
     if "additional_resources" in data_obj:
         resources = parse_additional_resources(basepath, recid, data_obj)
@@ -307,10 +310,11 @@ def process_general_submission_info(basepath, submission_info_document, recid):
         for resource in resources:
             hepsubmission.resources.append(resource)
 
-    if 'related_to_hepdata_recids' in submission_info_document:
-        for related_id in submission_info_document['related_to_hepdata_recids']:
-            related = RelatedRecid(this_recid=hepsubmission.publication_recid, related_recid=related_id)
-            hepsubmission.related_recids.append(related)
+    if hepsubmission.overall_status not in ("sandbox", "sandbox_processing"):
+        if 'related_to_hepdata_recids' in submission_info_document:
+            for related_id in submission_info_document['related_to_hepdata_recids']:
+                related = RelatedRecid(this_recid=hepsubmission.publication_recid, related_recid=related_id)
+                hepsubmission.related_recids.append(related)
 
     db.session.add(hepsubmission)
     db.session.commit()
@@ -470,7 +474,7 @@ def process_submission_directory(basepath, submission_file_path, recid,
                     # Tablectr should only be incremented when a new table is to be processed
                     tablectr += 1
                     process_data_file(recid, hepsubmission.version, basepath, yaml_document,
-                                  datasubmission, main_file_path, tablectr)
+                                  datasubmission, main_file_path, tablectr, hepsubmission.overall_status)
                 except SQLAlchemyError as sqlex:
                     errors[yaml_document["data_file"]] = [{"level": "error", "message":
                         "There was a problem processing the file.\n" + str(sqlex)}]
