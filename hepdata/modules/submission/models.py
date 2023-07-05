@@ -120,18 +120,21 @@ class HEPSubmission(db.Model):
     related_recids = db.relationship("RelatedRecid", secondary="relatedrecid_identifier",
                                cascade="all,delete")
 
-    def get_related_to_this_recids(self):
+
+    def get_related_hepsubmissions(self):
         '''
             Queries the database for all records in the RelatedRecId table
-                that have THIS record's id as a related record.
+             that have THIS record's id as a related record.
+            Then returns the HEPSubmission object marked in the RelatedRecid table.
 
-                :return: [list] List containing related records.
+            :return: [list] List containing related records.
         '''
-        related_submissions = db.session.query(RelatedRecid) \
-            .join(HEPSubmission,
-                RelatedRecid.related_recid == HEPSubmission.publication_recid) \
-            .filter(HEPSubmission.id == self.id) \
-            .all()
+        related_submissions = (
+            HEPSubmission.query
+            .join(RelatedRecid, RelatedRecid.this_recid == HEPSubmission.publication_recid)
+            .filter(RelatedRecid.related_recid == self.publication_recid)
+            .filter(HEPSubmission.overall_status == 'finished')
+            .all())
         return related_submissions
 
 
@@ -203,14 +206,22 @@ class DataSubmission(db.Model):
     # through a submissions review stages.
     version = db.Column(db.Integer, default=0)
 
-    def get_related_to_this_dois(self):
+    def get_related_datasubmissions(self):
+        """
+            Get the DataSubmission Objects with a RelatedTable entry
+            where this doi is referred to in related_doi.
+
+            :return: [List] List of DataSubmission objects.
+        """
         related_submissions = (
-        DataSubmission.query.join(DataSubmission.related_tables)
-        .filter(RelatedTable.related_doi == self.doi)
-        .all())
+            DataSubmission.query.join(RelatedTable, RelatedTable.table_doi == DataSubmission.doi)
+            .join(HEPSubmission, HEPSubmission.publication_recid == DataSubmission.publication_recid)
+            .filter(RelatedTable.related_doi == self.doi)
+            .filter(HEPSubmission.overall_status == 'finished')
+            .all()
+        )
         return related_submissions
         
-
 
 class RelatedTable(db.Model):
     """

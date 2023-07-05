@@ -400,7 +400,7 @@ def render_record(recid, record, version, output_format, light_mode=False):
             ctx = format_submission(recid, record, version, version_count, hepdata_submission)
             ctx['record_type'] = 'publication'
             ctx['related_recids'] = [r.related_recid for r in hepdata_submission.related_recids]
-            ctx['related_to_this_recids'] = [r.this_recid for r in hepdata_submission.get_related_to_this_recids()]
+            ctx['related_to_this_recids'] = [s.publication_recid for s in hepdata_submission.get_related_hepsubmissions()]
 
             increment(recid)
 
