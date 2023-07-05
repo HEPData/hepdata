@@ -1,0 +1,33 @@
+independent_variables:
+- header: {name: M(ZZ), units: GEV}
+  values:
+  - {low: 0, high: 240}
+  - {low: 240, high: 300}
+  - {low: 300, high: 400}
+  - {low: 400, high: 800}
+dependent_variables:
+- header: {name: 10**6 * 1/SIG(fiducial) * D(SIG(fiducial))/DM(ZZ)}
+  qualifiers:
+  - {name: RE, value: P P --> Z0 < LEPTON+ LEPTON- > Z0 < LEPTON+ LEPTON- > X}
+  - {name: SQRT(S), units: GeV, value: 7000}
+  values:
+  - value: 2200
+    errors:
+    - {label: stat, symerror: 300}
+    - {label: 'sys,detector', symerror: 40}
+    - {label: 'sys,background', symerror: 2}
+  - value: 4500
+    errors:
+    - {label: stat, symerror: 1000}
+    - {label: 'sys,detector', symerror: 100}
+    - {label: 'sys,background', symerror: 5}
+  - value: 1000
+    errors:
+    - {label: stat, symerror: 400}
+    - {label: 'sys,detector', symerror: 20}
+    - {label: 'sys,background', symerror: 2}
+  - value: 280
+    errors:
+    - {label: stat, symerror: 100}
+    - {label: 'sys,detector', symerror: 10}
+    - {label: 'sys,background', symerror: 1}
