@@ -302,7 +302,6 @@ def get_table_details(recid, data_recid, version):
     table_contents = {}
 
     if datasub_query.count() > 0:
-
         datasub_record = datasub_query.one()
         data_query = db.session.query(DataResource).filter(
             DataResource.id == datasub_record.data_file)
