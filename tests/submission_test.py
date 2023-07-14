@@ -312,7 +312,7 @@ def test_create_submission(app, admin_idx):
 
 def test_related_records(app, admin_idx):
     """
-    Test uploading of submission directories with values 
+    Test uploading of submission directories with values
     for related record IDs and data table entries with related
     doi entries.
     Checks submissions are correctly inserted, and linking
@@ -321,14 +321,16 @@ def test_related_records(app, admin_idx):
     """
     with app.app_context():
         admin_idx.recreate_index()
-        print("thisran0")
         # The directories containing the test data
+        test_dir = "test_data/related_submission_test/"
+        # First two are valid, and relate to each other
+        # 3 has invalid record entry (a string), 4 has invalid data DOI string (doesn't match regex)
         test_data = [
-            {"dir" : "test_data/related_submission_1", "related_id" : 2},
-            {"dir" : "test_data/related_submission_2", "related_id" : 1},
-            {"dir" : "test_data/related_submission_3_invalid_recid", "related_id" : None},
+            {"dir" : "related_submission_1", "related" : 2},
+            {"dir" : "related_submission_2", "related" : 1},
+            {"dir" : "related_submission_3", "related" : None},
+            {"dir": "related_submission_4", "related": None}
         ]
-
         # Dummy record data
         record = {'title': 'HEPData Testing',
                   'reviewer': {'name': 'Testy McTester', 'email': 'test@test.com'},
@@ -336,18 +338,17 @@ def test_related_records(app, admin_idx):
                   'message': 'This is ready',
                   'user_id': 1}
         base_dir = os.path.dirname(os.path.realpath(__file__))
-        
-        # Begin submission of test submissions 
+
+        # Begin submission of test submissions
         for data in test_data:
             test_sub = process_submission_payload(**record)
             data['sub'] = test_sub
             test_sub.overall_status = 'finished'
-            test_directory = os.path.join(base_dir, data['dir'])
+            test_directory = os.path.join(base_dir, test_dir, data['dir'])
             record_dir = get_data_path_for_record(test_sub.publication_recid, str(int(round(time.time()))))
             shutil.copytree(test_directory, record_dir)
             process_submission_directory(record_dir, os.path.join(record_dir, 'submission.yaml'),
                                 test_sub.publication_recid)
-            
 
         # Checking against results in test_data
         for data in test_data:
@@ -355,28 +356,27 @@ def test_related_records(app, admin_idx):
             related_hepsubmissions = submission.get_related_hepsubmissions()
 
             # If related_id is None, then some tests should yield empty lists.
-            submission_count, table_count = (1, 8) if data['related_id'] is not None else (0, 0)
+            submission_count, table_count = (1, 3) if data['related'] is not None else (0, 0)
 
-            assert len(related_hepsubmissions) == submission_count
+            # Check that the correct amount of objects are returned from the query.
             assert len(submission.related_recids) == submission_count
-
+            assert len(related_hepsubmissions) == submission_count
             for related_table in submission.related_recids:
                 # Get all other RelatedTable entries related to this one
                 # and check against the expected value in `data`
-                assert related_table.related_recid == data['related_id']
-
+                assert related_table.related_recid == data['related']
             for related_hepsub in related_hepsubmissions:
                 # Get all other submissions related to this one
                 # and check against the expected value in `data`
-                assert related_hepsub.publication_recid == data['related_id']
-        
+                assert related_hepsub.publication_recid == data['related']
+
             # DataSubmission DOI checking
             data_submissions = DataSubmission.query.filter_by(publication_recid=submission.publication_recid).all()
             assert len(data_submissions) == table_count
             for s in range(0, len(data_submissions)):
                 submission = data_submissions[s]
                 for related in submission.get_related_datasubmissions():
-                    check = f"{HEPDATA_DOI_PREFIX}/hepdata.{data['related_id']}.v1/t{s+1}"
+                    check = f"{HEPDATA_DOI_PREFIX}/hepdata.{data['related']}.v1/t{s+1}"
                     assert check == related.doi
 
 
