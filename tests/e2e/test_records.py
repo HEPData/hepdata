@@ -32,7 +32,13 @@ from selenium.webdriver.remote.file_detector import LocalFileDetector
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
-from hepdata.modules.submission.models import HEPSubmission
+from hepdata.modules.submission.models import HEPSubmission, RelatedRecid
+from hepdata.modules.dashboard.api import create_record_for_dashboard
+from hepdata.modules.records.utils.common import get_record_by_id
+from hepdata.modules.records.utils.submission import get_or_create_hepsubmission
+from hepdata.modules.records.utils.workflow import create_record
+
+from invenio_accounts.models import User
 from invenio_db import db
 
 from .conftest import e2e_assert_url
@@ -237,6 +243,53 @@ def test_record_update(live_server, logged_in_browser):
     assert len(submissions) == 1
     assert submissions[0].version == 1
     assert submissions[0].overall_status == 'finished'
+
+
+def test_related_records(live_server, logged_in_browser):
+    """
+        Test inserting two new submissions, and testing related
+        recid/doi links display on the records page and link correctly.
+    """
+    browser = logged_in_browser
+    test_data = [
+        {"recid": None, "expected": None, "submission": None},
+        {"recid": None, "expected": None, "submission": None}
+    ]
+    for test in test_data:
+        record_information = create_record(
+            {'journal_info': 'Journal', 'title': 'Test Paper'})
+        test['submission'] = get_or_create_hepsubmission(record_information['recid'])
+        # Set the overall status to finished, so the related data will appear
+        test['submission'].overall_status = 'finished'
+        test['recid'] = record_information['recid']
+        record = get_record_by_id(test['recid'])
+        user = User(email=f'test@test.com', password='hello1', active=True,
+                    id=1)
+        test_submissions = {}
+        create_record_for_dashboard(record['recid'], test_submissions, user)
+
+    # Recids for the test are set dynamically, based on what comes out of the minter
+    test_data[0]['expected'] = test_data[1]['recid']
+    test_data[1]['expected'] = test_data[0]['recid']
+
+    for test in test_data:
+        related = RelatedRecid(this_recid=test['recid'],
+            related_recid=test['expected'])
+        db.session.add(related)
+        test['submission'].related_recids.append(related)
+    db.session.commit()
+
+    import time
+    for test in test_data:
+        record_url = flask.url_for('hepdata_records.get_metadata_by_alternative_id',
+                                   recid=test['recid'], _external=True)
+        browser.get(record_url)
+        time.sleep(15)
+        WebDriverWait(browser, 45).until(lambda driver: True)
+        related_recids_element = browser.find_element(By.ID, 'related-recid-links')
+        list_items = related_recids_element.find_elements(By.TAG_NAME, 'li')
+        assert len(list_items) == 1
+        assert list_items[0].text == str(test['expected'])
 
 
 def test_sandbox(live_server, logged_in_browser):
