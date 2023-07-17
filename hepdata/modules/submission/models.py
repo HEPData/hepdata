@@ -122,13 +122,12 @@ class HEPSubmission(db.Model):
 
 
     def get_related_hepsubmissions(self):
-        '''
-            Queries the database for all records in the RelatedRecId table
-             that have THIS record's id as a related record.
-            Then returns the HEPSubmission object marked in the RelatedRecid table.
-
-            :return: [list] List containing related records.
-        '''
+        """
+        Queries the database for all records in the RelatedRecId table
+        that have THIS record's id as a related record.
+        Then returns the HEPSubmission object marked in the RelatedRecid table.
+        :return: [list] List containing related records.
+        """
         related_submissions = (
             HEPSubmission.query
             .join(RelatedRecid, RelatedRecid.this_recid == HEPSubmission.publication_recid)
@@ -221,7 +220,7 @@ class DataSubmission(db.Model):
             .all()
         )
         return related_submissions
-        
+
 
 class RelatedTable(db.Model):
     """
