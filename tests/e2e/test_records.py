@@ -279,13 +279,10 @@ def test_related_records(live_server, logged_in_browser):
         test['submission'].related_recids.append(related)
     db.session.commit()
 
-    import time
     for test in test_data:
         record_url = flask.url_for('hepdata_records.get_metadata_by_alternative_id',
                                    recid=test['recid'], _external=True)
         browser.get(record_url)
-        time.sleep(15)
-        WebDriverWait(browser, 45).until(lambda driver: True)
         related_recids_element = browser.find_element(By.ID, 'related-recid-links')
         list_items = related_recids_element.find_elements(By.TAG_NAME, 'li')
         assert len(list_items) == 1
