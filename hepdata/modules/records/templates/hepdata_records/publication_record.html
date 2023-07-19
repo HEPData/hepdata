@@ -113,11 +113,9 @@
                             <a href="https://doi.org/{{ hepdata_doi }}"
                                target="_blank">https://doi.org/{{ hepdata_doi }}</a>
                         </div>
-                        
+
                         {% if ctx.related_recids|length > 0 %}
                         <div class="related-recids">
-                            <h4>This record is related to:</h4>
-                            <p>{{ ctx.related_recids|length }} record(s) found.</p>
                             <div id="related-recid-links">
                                 <ul>
                                     {% for related in ctx.related_recids %}
@@ -127,11 +125,9 @@
                             </div>
                         </div>
                         {% endif %}
-                        
+
                         {% if ctx.related_to_this_recids|length > 0 %}
                         <div class="related-to-this-recids">
-                            <h4>Records relating to this:</h4>
-                            <p>{{ ctx.related_to_this_recids|length }} record(s) found.</p>
                             <div id="related-to-this-recids-links">
                                 <ul>
                                     {% for related in ctx.related_to_this_recids %}

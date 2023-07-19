@@ -92,7 +92,7 @@ HEPDATA.table_renderer = {
         $("#table_doi_contents").html('<a href="https://doi.org/' + table_data.doi + '" target="_blank">' + table_data.doi + '</a>');
         $("#table_description").html((table_data.description.indexOf('.') == 0) ? '' : table_data.description.trim());
 
-        HEPDATA.table_renderer.render_related_dois(table_data.related_tables, "#related_tables"); 
+        HEPDATA.table_renderer.render_related_dois(table_data.related_tables, "#related_tables");
         HEPDATA.table_renderer.render_related_dois(table_data.related_to_this, "#related_to_this");
         HEPDATA.table_renderer.render_keywords(table_data.keywords, "#table_keywords");
 
@@ -197,14 +197,9 @@ HEPDATA.table_renderer = {
     var relatedTablesWrapper = $(placement);
     relatedTablesWrapper.find("ul").empty();
 
-    var relatedTablesText = relatedTablesWrapper.find(".related_table_count");
-    relatedTablesText.empty();
-    relatedTablesText.append(relatedDois.length + " record(s) found.");
-
-  
     if (relatedDois.length > 0) {
       var relatedList = relatedTablesWrapper.find(".related_list")
- 
+
       for (var i = 0; i < relatedDois.length; i++) {
         var doi = relatedDois[i];
         var relatedItem = $('<li>').append($('<a>').text(doi).attr('href', "https://doi.org/" + doi));
