@@ -45,18 +45,19 @@
             <br/>
 
 
-            <p>Copyright ~1975-Present, HEPData | Powered by <a href="https://inveniosoftware.org/"
-                                                                target="_blank" style="color:white">Invenio</a>,
-                funded by <a href="https://www.ukri.org/councils/stfc/" target="_blank" style="color:white">STFC</a>,
-                hosted and originally developed at <a href="https://home.cern/" target="_blank" style="color:white">CERN</a>,
-                supported and further developed at <a href="https://www.ippp.dur.ac.uk/" target="_blank" style="color:white">IPPP
-                    Durham</a>.
-            </p>
-            {% block version %}
-            {% if ctx and ctx.version %}
-                <p class="sw-version">HEPData version: {{ ctx.version }}</p>
+          <p>Copyright ~1975-Present, HEPData | Powered by <a href="https://inveniosoftware.org/"
+                                                              target="_blank" style="color:white">Invenio</a>,
+            funded by <a href="https://www.ukri.org/councils/stfc/" target="_blank" style="color:white">STFC</a>,
+            hosted and originally developed at <a href="https://home.cern/" target="_blank" style="color:white">CERN</a>,
+            supported and further developed at <a href="https://www.ippp.dur.ac.uk/" target="_blank"
+                                                  style="color:white">IPPP
+              Durham</a>.
+          </p>
+          {% block version %}
+            {% if ctx and ctx.sw_version %}
+              <p class="sw-version">HEPData version: {{ ctx.sw_version }}</p>
             {% endif %}
-            {% endblock %}
+          {% endblock %}
         </div>
     </div>
 </div>

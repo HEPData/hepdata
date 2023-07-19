@@ -68,7 +68,7 @@ def init(state):
 
 @blueprint.route('/')
 def index():
-    return render_template('hepdata_theme/home.html', ctx={"version": __version__})
+    return render_template('hepdata_theme/home.html', ctx={"sw_version": __version__})
 
 
 @blueprint.route('/submission')
