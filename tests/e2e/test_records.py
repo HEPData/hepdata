@@ -26,13 +26,16 @@
 import os.path
 
 import flask
+import os
+import re
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.file_detector import LocalFileDetector
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
-from hepdata.modules.submission.models import HEPSubmission, RelatedRecid
+from hepdata.config import HEPDATA_DOI_PREFIX
+from hepdata.modules.submission.models import HEPSubmission, RelatedRecid, DataSubmission, RelatedTable
 from hepdata.modules.dashboard.api import create_record_for_dashboard
 from hepdata.modules.records.utils.common import get_record_by_id
 from hepdata.modules.records.utils.submission import get_or_create_hepsubmission
@@ -251,15 +254,19 @@ def test_related_records(live_server, logged_in_browser):
         recid/doi links display on the records page and link correctly.
     """
     browser = logged_in_browser
+    # Dictionary to store the generated data.
+    # The two objects should have flipped recid/expected values
+    # i.e. Related to each other
     test_data = [
-        {"recid": None, "expected": None, "submission": None},
-        {"recid": None, "expected": None, "submission": None}
+        {"recid": None, "related_recid": None, "submission": None},
+        {"recid": None, "related_recid": None, "submission": None}
     ]
+    # Creates two records.
     for test in test_data:
         record_information = create_record(
             {'journal_info': 'Journal', 'title': 'Test Paper'})
         test['submission'] = get_or_create_hepsubmission(record_information['recid'])
-        # Set the overall status to finished, so the related data will appear
+        # Set overall status to finished so related data appears on dashboard
         test['submission'].overall_status = 'finished'
         test['recid'] = record_information['recid']
         record = get_record_by_id(test['recid'])
@@ -269,24 +276,56 @@ def test_related_records(live_server, logged_in_browser):
         create_record_for_dashboard(record['recid'], test_submissions, user)
 
     # Recids for the test are set dynamically, based on what comes out of the minter
-    test_data[0]['expected'] = test_data[1]['recid']
-    test_data[1]['expected'] = test_data[0]['recid']
+    test_data[0]['related_recid'] = test_data[1]['recid']
+    test_data[1]['related_recid'] = test_data[0]['recid']
 
     for test in test_data:
+        # Create the mock related record ID data
         related = RelatedRecid(this_recid=test['recid'],
-            related_recid=test['expected'])
-        db.session.add(related)
+            related_recid=test['related_recid'])
         test['submission'].related_recids.append(related)
+        # Create a mock DataSubmission object
+        doi_string = f"{HEPDATA_DOI_PREFIX}/hepdata.{test['recid']}.v1/t1"
+        datasubmission = DataSubmission(
+            name="Test", location_in_publication="Somewhere", data_file=1,
+            publication_recid=test['recid'], associated_recid=test['recid'],
+            doi=doi_string, version=1, description="Test")
+        # Create the mock RelatedTable object and set the doi
+        related_doi_string = f"{HEPDATA_DOI_PREFIX}/hepdata.{test['related_recid']}.v1/t1"
+        related_table = RelatedTable(table_doi=doi_string, related_doi=related_doi_string)
+        datasubmission.related_tables.append(related_table)
+        db.session.add_all([related, datasubmission, related_table])
     db.session.commit()
 
+    # Begin testing
     for test in test_data:
+        # Load up the Record page.
         record_url = flask.url_for('hepdata_records.get_metadata_by_alternative_id',
                                    recid=test['recid'], _external=True)
         browser.get(record_url)
-        related_recids_element = browser.find_element(By.ID, 'related-recid-links')
-        list_items = related_recids_element.find_elements(By.TAG_NAME, 'li')
-        assert len(list_items) == 1
-        assert list_items[0].text == str(test['expected'])
+        # The page elements to test and their type (Record/Data)
+        related_elements = [
+            {'element':'related-recid-links', 'type':'recid'},
+            {'element':'related-to-this-recids-links', 'type':'recid'},
+            {'element':'related_tables', 'type':'doi'},
+            {'element':'related_to_this', 'type':'doi'}
+        ]
+        for element in related_elements:
+            html_element = browser.find_element(By.ID, element['element'])
+            list_items = html_element.find_elements(By.TAG_NAME, 'li')
+            assert len(list_items) == 1
+            url_text = list_items[0].find_element(By.TAG_NAME, 'a').get_attribute('href')
+
+            # Expected ul and a tag contents differ based on which elements are tested
+            if element['type'] == 'recid':
+                pattern = rf"http://localhost:\d+/record/{test['related_recid']}"
+                assert re.match(pattern, url_text)
+                assert list_items[0].text == str(test['related_recid'])
+            elif element['type'] == 'doi':
+                doi_url = "https://doi.org/"
+                related_doi_check = f"{HEPDATA_DOI_PREFIX}/hepdata.{test['related_recid']}.v1/t1"
+                assert url_text == doi_url + related_doi_check
+                assert list_items[0].text == related_doi_check
 
 
 def test_sandbox(live_server, logged_in_browser):
