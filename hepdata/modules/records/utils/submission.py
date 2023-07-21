@@ -315,10 +315,6 @@ def process_general_submission_info(basepath, submission_info_document, recid):
         parse_modifications(hepsubmission, recid, submission_info_document)
 
     if 'additional_resources' in submission_info_document:
-
-        for reference in hepsubmission.resources:
-            db.session.delete(reference)
-
         resources = parse_additional_resources(basepath, recid, submission_info_document)
         for resource in resources:
             hepsubmission.resources.append(resource)
