@@ -116,6 +116,7 @@
 
                         {% if ctx.related_recids|length > 0 %}
                         <div class="related-recids">
+                          <h4>This record is related to:</h4>
                             <div id="related-recid-links">
                                 <ul>
                                     {% for related in ctx.related_recids %}
@@ -128,6 +129,7 @@
 
                         {% if ctx.related_to_this_recids|length > 0 %}
                         <div class="related-to-this-recids">
+                          <h4>Records related to this:</h4>
                             <div id="related-to-this-recids-links">
                                 <ul>
                                     {% for related in ctx.related_to_this_recids %}
