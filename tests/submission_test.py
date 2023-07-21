@@ -37,9 +37,10 @@ from hepdata.modules.records.api import format_submission, process_saved_file, c
 from hepdata.modules.records.utils.common import infer_file_type, contains_accepted_url, allowed_file, record_exists, \
     get_record_contents, is_histfactory
 from hepdata.modules.records.utils.data_files import get_data_path_for_record
-from hepdata.modules.records.utils.submission import process_submission_directory, do_finalise, unload_submission
+from hepdata.modules.records.utils.submission import process_submission_directory, do_finalise, unload_submission, \
+    cleanup_data_related_recid
 from hepdata.modules.submission.api import get_latest_hepsubmission, get_submission_participants_for_record
-from hepdata.modules.submission.models import DataSubmission, HEPSubmission
+from hepdata.modules.submission.models import DataSubmission, HEPSubmission, RelatedRecid
 from hepdata.modules.submission.views import process_submission_payload
 from hepdata.config import HEPDATA_DOI_PREFIX
 
@@ -378,6 +379,35 @@ def test_related_records(app, admin_idx):
                 for related in submission.get_related_datasubmissions():
                     check = f"{HEPDATA_DOI_PREFIX}/hepdata.{data['related']}.v1/t{s+1}"
                     assert check == related.doi
+
+
+def test_cleanup_data_related_recid(app, admin_idx):
+    """
+    Insert a related record ID entry and test that the cleanup function will
+    remove all RelatedRecid objects.
+    :return:
+    """
+    # The test record ID to use
+    recid = 123123
+    # Creating the dummy submission and related record ID entry
+    hepsubmission = HEPSubmission(publication_recid=recid,
+                                  overall_status='todo',
+                                  version=1)
+    related = RelatedRecid(this_recid=recid, related_recid=1)
+    hepsubmission.related_recids.append(related)
+    db.session.add_all([related, hepsubmission])
+    db.session.commit()
+
+    # Check that there is one related record ID
+    check_submission = HEPSubmission.query.filter_by(publication_recid=recid).first()
+    assert len(check_submission.related_recids) == 1
+
+    # Run the cleanup function to test
+    cleanup_data_related_recid(recid)
+
+    # Query and check that there are no submissions
+    check_submission = HEPSubmission.query.filter_by(publication_recid=recid).first()
+    assert len(check_submission.related_recids) == 0
 
 
 def test_old_submission_yaml(app, admin_idx):
