@@ -315,6 +315,8 @@ def process_general_submission_info(basepath, submission_info_document, recid):
     if "modifications" in submission_info_document:
         parse_modifications(hepsubmission, recid, submission_info_document)
 
+    cleanup_data_resources(hepsubmission)
+
     if 'additional_resources' in submission_info_document:
         resources = parse_additional_resources(basepath, recid, submission_info_document)
         for resource in resources:
