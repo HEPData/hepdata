@@ -169,6 +169,7 @@ def cleanup_submission(recid, version, to_keep):
     :param to_keep: an array of names to keep in the submission
     :return:
     """
+    # Clean up related recid entries first as these are not versioned
     cleanup_data_related_recid(recid)
     data_submissions = DataSubmission.query.filter_by(
         publication_recid=recid, version=version).all()
