@@ -657,6 +657,20 @@
   }
 }
 
+.related-list-container {
+  overflow: auto;
+  // Used to move the scrollbar to the left side.
+  // Flips the element
+  transform: scaleX(-1);
+  max-height: 100px;
+  margin-bottom: 2px;
+}
+
+.related-list {
+  // Flips the child element back
+  transform: scaleX(-1);
+}
+
 .total_errors {
   font-size: .8em;
   color: $grey;
