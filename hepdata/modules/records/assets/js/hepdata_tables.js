@@ -92,8 +92,8 @@ HEPDATA.table_renderer = {
         $("#table_doi_contents").html('<a href="https://doi.org/' + table_data.doi + '" target="_blank">' + table_data.doi + '</a>');
         $("#table_description").html((table_data.description.indexOf('.') == 0) ? '' : table_data.description.trim());
 
-        HEPDATA.table_renderer.render_related_dois(table_data.related_tables, "#related_tables");
-        HEPDATA.table_renderer.render_related_dois(table_data.related_to_this, "#related_to_this");
+        HEPDATA.table_renderer.render_related_dois(table_data.related_tables, "#related-tables");
+        HEPDATA.table_renderer.render_related_dois(table_data.related_to_this, "#related-to-this-tables");
         HEPDATA.table_renderer.render_keywords(table_data.keywords, "#table_keywords");
 
         HEPDATA.reset_stats();
@@ -198,7 +198,7 @@ HEPDATA.table_renderer = {
     relatedTablesWrapper.find("ul").empty();
 
     if (relatedDois.length > 0) {
-      var relatedList = relatedTablesWrapper.find(".related_list")
+      var relatedList = relatedTablesWrapper.find(".related-list")
 
       for (var i = 0; i < relatedDois.length; i++) {
         var doi = relatedDois[i];

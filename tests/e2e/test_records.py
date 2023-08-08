@@ -305,14 +305,15 @@ def test_related_records(live_server, logged_in_browser):
         browser.get(record_url)
         # The page elements to test and their type (Record/Data)
         related_elements = [
-            {'element':'related-recid-links', 'type':'recid'},
-            {'element':'related-to-this-recids-links', 'type':'recid'},
-            {'element':'related_tables', 'type':'doi'},
-            {'element':'related_to_this', 'type':'doi'}
+            {'element':'related-recids', 'type':'recid'},
+            {'element':'related-to-this-recids', 'type':'recid'},
+            {'element':'related-tables', 'type':'doi'},
+            {'element':'related-to-this-tables', 'type':'doi'}
         ]
         for element in related_elements:
             html_element = browser.find_element(By.ID, element['element'])
-            list_items = html_element.find_elements(By.TAG_NAME, 'li')
+            data_list = html_element.find_element(By.CLASS_NAME, 'related-list')
+            list_items = data_list.find_elements(By.TAG_NAME, 'li')
             assert len(list_items) == 1
             url_text = list_items[0].find_element(By.TAG_NAME, 'a').get_attribute('href')
 
