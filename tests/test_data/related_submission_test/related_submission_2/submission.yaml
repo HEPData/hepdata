@@ -2,31 +2,29 @@
 ---
 description: "Test Data"
 comment: Test
-related_to_hepdata_recids: 
-  - 1
-
+related_to_hepdata_recids:
+- 1
 ---
 name: "Table 1"
 description: Test Table 1
-keywords: 
-  - {name: cmenergies, values: [0]}
+keywords:
+- {name: cmenergies, values: [0]}
 data_file: data1.yaml
 related_to_table_dois:
- - "10.17182/hepdata.1.v1/t1"
+- "10.17182/hepdata.1.v1/t1"
 ---
 name: "Table 2"
 description: Test Table 2
-keywords: 
-  - {name: cmenergies, values: [0]}
+keywords:
+- {name: cmenergies, values: [0]}
 data_file: data2.yaml
 related_to_table_dois:
- - "10.17182/hepdata.1.v1/t2"
+- "10.17182/hepdata.1.v1/t2"
 ---
 name: "Table 3"
 description: Test Table 3
-keywords: 
-  - {name: cmenergies, values: [0]}
+keywords:
+- {name: cmenergies, values: [0]}
 data_file: data3.yaml
 related_to_table_dois:
- - "10.17182/hepdata.1.v1/t3"
----
+- "10.17182/hepdata.1.v1/t3"
