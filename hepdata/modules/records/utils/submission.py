@@ -453,7 +453,9 @@ def process_submission_directory(basepath, submission_file_path, recid,
         # Side effect that reviews will be deleted between uploads.
         cleanup_submission(recid, hepsubmission.version, added_file_names)
 
-        # Counter to store current table number.
+        # Counter to store current table number, which is later used to generate the table DOI ID.
+        # We need to know this before the minting process to have a value to insert.
+        # The first document is always the main submission document.
         tablectr = 0
         for yaml_document_index, yaml_document in enumerate(full_submission_validator.submission_docs):
             if not yaml_document:

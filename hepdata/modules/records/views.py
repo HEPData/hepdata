@@ -298,6 +298,7 @@ def get_table_details(recid, data_recid, version):
     :param version:
     :return:
     """
+    # joinedload allows query of data in another table without a second database access.
     datasub_query = DataSubmission.query.options(joinedload('related_tables')).filter_by(id=data_recid, version=version)
     table_contents = {}
 

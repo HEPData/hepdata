@@ -137,6 +137,7 @@ class HEPSubmission(db.Model):
         return related_submissions
 
 
+# Declarations of the helper tables used to manage many-to-many relationships.
 datafile_identifier = db.Table(
     'datafile_identifier',
     db.Column('submission_id', db.Integer,
@@ -194,6 +195,7 @@ class DataSubmission(db.Model):
 
     doi = db.Column(db.String(128), nullable=True)
 
+    # A collection of objects containing DOI values of related tables defined in the submission file.
     related_tables = db.relationship("RelatedTable", secondary="relatedtable_identifier",
                                cascade="all,delete")
 
