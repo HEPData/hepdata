@@ -16,7 +16,7 @@ invenio-oauthclient==3.3.0
 invenio-pidstore==1.3.1
 invenio-records==2.1.0
 invenio-search[opensearch2]==2.2.0
-invenio-theme==2.4.0
+invenio-theme==2.5.0
 invenio-userprofiles==2.3.0
 python-twitter-v2==0.8.1
 responses==0.23.1
