@@ -262,6 +262,8 @@ def format_resource(resource, contents, content_url):
     ctx['file_mimetype'] = get_resource_mimetype(resource, contents)
     ctx['resource_filename'] = os.path.basename(resource.file_location)
     ctx['resource_filetype'] = f'{resource.file_type} File'
+    ctx['related_recids'] = [r.related_recid for r in hepsubmission.related_recids]
+    ctx['related_to_this_recids'] = [s.publication_recid for s in hepsubmission.get_related_hepsubmissions()]
 
     if resource.file_type in IMAGE_TYPES:
         ctx['display_type'] = 'image'
@@ -446,7 +448,8 @@ def render_record(recid, record, version, output_format, light_mode=False):
             publication_record = get_record_contents(publication_recid)
 
             datasubmission = DataSubmission.query.filter_by(associated_recid=recid).one()
-            hepdata_submission = get_latest_hepsubmission(publication_recid=publication_recid, version=datasubmission.version)
+            hepdata_submission = get_latest_hepsubmission(publication_recid=publication_recid,
+                                                          version=datasubmission.version)
 
             ctx = format_submission(publication_recid, publication_record,
                                     datasubmission.version, 1, hepdata_submission,
@@ -454,6 +457,9 @@ def render_record(recid, record, version, output_format, light_mode=False):
             ctx['record_type'] = 'table'
             ctx['related_publication_id'] = publication_recid
             ctx['table_name'] = record['title']
+            ctx['related_recids'] = [r.related_recid for r in hepdata_submission.related_recids]
+            ctx['related_to_this_recids'] = [s.publication_recid for s in
+                                             hepdata_submission.get_related_hepsubmissions()]
 
             if output_format == 'html' or output_format == 'json_ld':
                 ctx['json_ld'] = get_json_ld(
