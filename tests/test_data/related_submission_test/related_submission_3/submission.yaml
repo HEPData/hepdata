@@ -2,7 +2,7 @@
 ---
 description: "Test Data"
 comment: Test
-related_to_hepdata_recids:
+related_to_hepdata_records:
 - "2"
 ---
 name: "Table 1"

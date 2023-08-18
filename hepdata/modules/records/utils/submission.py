@@ -323,8 +323,8 @@ def process_general_submission_info(basepath, submission_info_document, recid):
             hepsubmission.resources.append(resource)
 
     if hepsubmission.overall_status not in ("sandbox", "sandbox_processing"):
-        if 'related_to_hepdata_recids' in submission_info_document:
-            for related_id in submission_info_document['related_to_hepdata_recids']:
+        if 'related_to_hepdata_records' in submission_info_document:
+            for related_id in submission_info_document['related_to_hepdata_records']:
                 related = RelatedRecid(this_recid=hepsubmission.publication_recid, related_recid=related_id)
                 hepsubmission.related_recids.append(related)
 
