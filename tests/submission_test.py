@@ -342,8 +342,10 @@ def test_related_records(app, admin_idx):
 
         # Begin submission of test submissions
         for data in test_data:
+            # Set up a new test submission
             test_sub = process_submission_payload(**record)
             data['sub'] = test_sub
+            # Ensure the status is set to `finished` so the related data can be accessed.
             test_sub.overall_status = 'finished'
             test_directory = os.path.join(base_dir, test_dir, data['dir'])
             record_dir = get_data_path_for_record(test_sub.publication_recid, str(int(round(time.time()))))
@@ -356,12 +358,14 @@ def test_related_records(app, admin_idx):
             submission = data['sub']
             related_hepsubmissions = submission.get_related_hepsubmissions()
 
+            # Set some test criteria based on the current data.
             # If related_id is None, then some tests should yield empty lists.
             submission_count, table_count = (1, 3) if data['related'] is not None else (0, 0)
 
-            # Check that the correct amount of objects are returned from the query.
+            # Check that the correct amount of objects are returned from the queries.
             assert len(submission.related_recids) == submission_count
             assert len(related_hepsubmissions) == submission_count
+
             for related_table in submission.related_recids:
                 # Get all other RelatedTable entries related to this one
                 # and check against the expected value in `data`
@@ -372,11 +376,14 @@ def test_related_records(app, admin_idx):
                 assert related_hepsub.publication_recid == data['related']
 
             # DataSubmission DOI checking
+            # Get the data for the current test DataSubmission object
             data_submissions = DataSubmission.query.filter_by(publication_recid=submission.publication_recid).all()
+            # Check against the expected amount of related objects as defined above
             assert len(data_submissions) == table_count
             for s in range(0, len(data_submissions)):
                 submission = data_submissions[s]
                 for related in submission.get_related_datasubmissions():
+                    # Test that the stored DOI is as expected.
                     check = f"{HEPDATA_DOI_PREFIX}/hepdata.{data['related']}.v1/t{s+1}"
                     assert check == related.doi
 

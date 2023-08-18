@@ -126,13 +126,14 @@ class HEPSubmission(db.Model):
         Queries the database for all records in the RelatedRecId table
         that have THIS record's id as a related record.
         Then returns the HEPSubmission object marked in the RelatedRecid table.
+        Returns only submissions marked as 'finished'
         :return: [list] List containing related records.
         """
         related_submissions = (
             HEPSubmission.query
             .join(RelatedRecid, RelatedRecid.this_recid == HEPSubmission.publication_recid)
             .filter(RelatedRecid.related_recid == self.publication_recid)
-            .filter(HEPSubmission.overall_status == 'finished')
+            .filter(HEPSubmission.overall_status == 'finished') # Only finished submissions
             .all())
         return related_submissions
 
@@ -195,7 +196,7 @@ class DataSubmission(db.Model):
 
     doi = db.Column(db.String(128), nullable=True)
 
-    # A collection of objects containing DOI values of related tables defined in the submission file.
+    # A list of objects containing DOI values of related tables defined in the submission file.
     related_tables = db.relationship("RelatedTable", secondary="relatedtable_identifier",
                                cascade="all,delete")
 
@@ -237,7 +238,7 @@ class RelatedTable(db.Model):
 
 class RelatedRecid(db.Model):
     """
-    The submission object associated with a related table entry.
+    The submission object associated with a related record entry.
     """
     __tablename__ = "relatedrecid"
     id = db.Column(db.Integer, primary_key=True, nullable=False,

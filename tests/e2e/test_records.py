@@ -261,6 +261,7 @@ def test_related_records(live_server, logged_in_browser):
         {"recid": None, "related_recid": None, "submission": None},
         {"recid": None, "related_recid": None, "submission": None}
     ]
+
     # Creates two records.
     for test in test_data:
         record_information = create_record(
@@ -284,17 +285,30 @@ def test_related_records(live_server, logged_in_browser):
         related = RelatedRecid(this_recid=test['recid'],
             related_recid=test['related_recid'])
         test['submission'].related_recids.append(related)
-        # Create a mock DataSubmission object
+
+        # Generate the DOI for the test DataSubmission object
         doi_string = f"{HEPDATA_DOI_PREFIX}/hepdata.{test['recid']}.v1/t1"
+
+        # Create a test DataSubmission object
         datasubmission = DataSubmission(
-            name="Test", location_in_publication="Somewhere", data_file=1,
-            publication_recid=test['recid'], associated_recid=test['recid'],
-            doi=doi_string, version=1, description="Test")
-        # Create the mock RelatedTable object and set the doi
+            name="Test",
+            location_in_publication="Somewhere",
+            data_file=1,
+            publication_recid=test['recid'],
+            associated_recid=test['recid'],
+            doi=doi_string,
+            version=1,
+            description="Test")
+
+        # Generate the test DOI string for the related DOI
         related_doi_string = f"{HEPDATA_DOI_PREFIX}/hepdata.{test['related_recid']}.v1/t1"
+
+        # Create a test RelatedTable object and add it to the DataSubmission
         related_table = RelatedTable(table_doi=doi_string, related_doi=related_doi_string)
         datasubmission.related_tables.append(related_table)
+
         db.session.add_all([related, datasubmission, related_table])
+
     db.session.commit()
 
     # Begin testing
@@ -314,18 +328,29 @@ def test_related_records(live_server, logged_in_browser):
             html_element = browser.find_element(By.ID, element['element'])
             data_list = html_element.find_element(By.CLASS_NAME, 'related-list')
             list_items = data_list.find_elements(By.TAG_NAME, 'li')
+
+            # There should be only one entry for each related test category
             assert len(list_items) == 1
+
+            # Get the URL of the found `li` tag.
             url_text = list_items[0].find_element(By.TAG_NAME, 'a').get_attribute('href')
 
             # Expected ul and a tag contents differ based on which elements are tested
+            # Records expect a link to the HEPData site. Tables link to doi.org
             if element['type'] == 'recid':
+                # Check the URL against the regex
                 pattern = rf"http://localhost:\d+/record/{test['related_recid']}"
                 assert re.match(pattern, url_text)
+                # Check that the tag text is the expected record ID number
                 assert list_items[0].text == str(test['related_recid'])
+
             elif element['type'] == 'doi':
-                doi_url = "https://doi.org/"
+                # Generate the test DOI string
                 related_doi_check = f"{HEPDATA_DOI_PREFIX}/hepdata.{test['related_recid']}.v1/t1"
-                assert url_text == doi_url + related_doi_check
+                # Generate expected DOI URL (linking to doi.org/DOI)
+                doi_url = "https://doi.org/" + related_doi_check
+                assert url_text == doi_url
+                # Check that the tag text is the expected DOI string
                 assert list_items[0].text == related_doi_check
 
 
