@@ -108,14 +108,17 @@
                             {% include "hepdata_records/components/journal_info.html" %}
                         </div>
 
-
                         <div class="record-doi">
                             {% set hepdata_doi = ctx.record.hepdata_doi|replace('None', '10.17182/hepdata.' + ctx.record.recid|string) %}
                             <a href="https://doi.org/{{ hepdata_doi }}"
                                target="_blank">https://doi.org/{{ hepdata_doi }}</a>
                         </div>
 
-                        <br/>
+                        {% if not (ctx.related_recids or ctx.related_to_this_recids) %}
+                            <br/>
+                        {% else %}
+                            {% include 'hepdata_records/components/related_recids.html' %}
+                        {% endif %}
 
                         <div class="record-links">
                             <ul>

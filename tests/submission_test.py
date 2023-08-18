@@ -37,10 +37,12 @@ from hepdata.modules.records.api import format_submission, process_saved_file, c
 from hepdata.modules.records.utils.common import infer_file_type, contains_accepted_url, allowed_file, record_exists, \
     get_record_contents, is_histfactory
 from hepdata.modules.records.utils.data_files import get_data_path_for_record
-from hepdata.modules.records.utils.submission import process_submission_directory, do_finalise, unload_submission
+from hepdata.modules.records.utils.submission import process_submission_directory, do_finalise, unload_submission, \
+    cleanup_data_related_recid
 from hepdata.modules.submission.api import get_latest_hepsubmission, get_submission_participants_for_record
-from hepdata.modules.submission.models import DataSubmission, HEPSubmission
+from hepdata.modules.submission.models import DataSubmission, HEPSubmission, RelatedRecid
 from hepdata.modules.submission.views import process_submission_payload
+from hepdata.config import HEPDATA_DOI_PREFIX
 
 
 def test_submission_endpoint(app, client):
@@ -307,6 +309,112 @@ def test_create_submission(app, admin_idx):
 
         # Check file dir has been deleted
         assert(not os.path.exists(directory))
+
+
+def test_related_records(app, admin_idx):
+    """
+    Test uploading of submission directories with values
+    for related record IDs and data table entries with related
+    doi entries.
+    Checks submissions are correctly inserted, and linking
+    occurs.
+    :return:
+    """
+    with app.app_context():
+        admin_idx.recreate_index()
+        # The directories containing the test data
+        test_dir = "test_data/related_submission_test/"
+        # First two are valid, and relate to each other
+        # 3 has invalid record entry (a string), 4 has invalid data DOI string (doesn't match regex)
+        test_data = [
+            {"dir" : "related_submission_1", "related" : 2},
+            {"dir" : "related_submission_2", "related" : 1},
+            {"dir" : "related_submission_3", "related" : None},
+            {"dir": "related_submission_4", "related": None}
+        ]
+        # Dummy record data
+        record = {'title': 'HEPData Testing',
+                  'reviewer': {'name': 'Testy McTester', 'email': 'test@test.com'},
+                  'uploader': {'name': 'Testy McTester', 'email': 'test@test.com'},
+                  'message': 'This is ready',
+                  'user_id': 1}
+        base_dir = os.path.dirname(os.path.realpath(__file__))
+
+        # Begin submission of test submissions
+        for data in test_data:
+            # Set up a new test submission
+            test_sub = process_submission_payload(**record)
+            data['sub'] = test_sub
+            # Ensure the status is set to `finished` so the related data can be accessed.
+            test_sub.overall_status = 'finished'
+            test_directory = os.path.join(base_dir, test_dir, data['dir'])
+            record_dir = get_data_path_for_record(test_sub.publication_recid, str(int(round(time.time()))))
+            shutil.copytree(test_directory, record_dir)
+            process_submission_directory(record_dir, os.path.join(record_dir, 'submission.yaml'),
+                                test_sub.publication_recid)
+
+        # Checking against results in test_data
+        for data in test_data:
+            submission = data['sub']
+            related_hepsubmissions = submission.get_related_hepsubmissions()
+
+            # Set some test criteria based on the current data.
+            # If related_id is None, then some tests should yield empty lists.
+            submission_count, table_count = (1, 3) if data['related'] is not None else (0, 0)
+
+            # Check that the correct amount of objects are returned from the queries.
+            assert len(submission.related_recids) == submission_count
+            assert len(related_hepsubmissions) == submission_count
+
+            for related_table in submission.related_recids:
+                # Get all other RelatedTable entries related to this one
+                # and check against the expected value in `data`
+                assert related_table.related_recid == data['related']
+            for related_hepsub in related_hepsubmissions:
+                # Get all other submissions related to this one
+                # and check against the expected value in `data`
+                assert related_hepsub.publication_recid == data['related']
+
+            # DataSubmission DOI checking
+            # Get the data for the current test DataSubmission object
+            data_submissions = DataSubmission.query.filter_by(publication_recid=submission.publication_recid).all()
+            # Check against the expected amount of related objects as defined above
+            assert len(data_submissions) == table_count
+            for s in range(0, len(data_submissions)):
+                submission = data_submissions[s]
+                for related in submission.get_related_datasubmissions():
+                    # Test that the stored DOI is as expected.
+                    check = f"{HEPDATA_DOI_PREFIX}/hepdata.{data['related']}.v1/t{s+1}"
+                    assert check == related.doi
+
+
+def test_cleanup_data_related_recid(app, admin_idx):
+    """
+    Insert a related record ID entry and test that the cleanup function will
+    remove all RelatedRecid objects.
+    :return:
+    """
+    # The test record ID to use
+    recid = 123123
+    # Creating the dummy submission and related record ID entry
+    hepsubmission = HEPSubmission(publication_recid=recid,
+                                  overall_status='todo',
+                                  version=1)
+    related = RelatedRecid(this_recid=recid, related_recid=1)
+    hepsubmission.related_recids.append(related)
+    db.session.add_all([related, hepsubmission])
+    db.session.commit()
+
+    # Check that there is one related record ID
+    check_submission = HEPSubmission.query.filter_by(publication_recid=recid).first()
+    assert len(check_submission.related_recids) == 1
+
+    # Run the cleanup function to test
+    cleanup_data_related_recid(recid)
+
+    # Query and check that there are no submissions
+    check_submission = HEPSubmission.query.filter_by(publication_recid=recid).first()
+    assert len(check_submission.related_recids) == 0
 
 
 def test_old_submission_yaml(app, admin_idx):

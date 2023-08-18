@@ -35,6 +35,7 @@ from flask_login import login_required, login_user
 from flask import Blueprint, send_file, abort, redirect
 from flask_security.utils import verify_password
 from sqlalchemy import or_, func
+from sqlalchemy.orm import joinedload
 import yaml
 from yaml import CBaseLoader as Loader
 
@@ -297,13 +298,11 @@ def get_table_details(recid, data_recid, version):
     :param version:
     :return:
     """
-
-    datasub_query = DataSubmission.query.filter_by(id=data_recid,
-                                                   version=version)
+    # joinedload allows query of data in another table without a second database access.
+    datasub_query = DataSubmission.query.options(joinedload('related_tables')).filter_by(id=data_recid, version=version)
     table_contents = {}
 
     if datasub_query.count() > 0:
-
         datasub_record = datasub_query.one()
         data_query = db.session.query(DataResource).filter(
             DataResource.id == datasub_record.data_file)
@@ -326,6 +325,9 @@ def get_table_details(recid, data_recid, version):
             table_contents["name"] = datasub_record.name
             table_contents["title"] = datasub_record.description
             table_contents["keywords"] = datasub_record.keywords
+            # The functions used only return the objects themselves.
+            table_contents["related_tables"] = [r.related_doi for r in datasub_record.related_tables]
+            table_contents["related_to_this"] = [r.doi for r in datasub_record.get_related_datasubmissions()]
             table_contents["doi"] = datasub_record.doi
             table_contents["location"] = datasub_record.location_in_publication
 

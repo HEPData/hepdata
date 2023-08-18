@@ -34,7 +34,7 @@ from flask import current_app
 from flask_celeryext import create_celery_app
 from flask_login import current_user
 from hepdata_converter_ws_client import get_data_size
-from hepdata.config import CFG_DATA_TYPE, CFG_PUB_TYPE, CFG_SUPPORTED_FORMATS
+from hepdata.config import CFG_DATA_TYPE, CFG_PUB_TYPE, CFG_SUPPORTED_FORMATS, HEPDATA_DOI_PREFIX
 from hepdata.ext.opensearch.admin_view.api import AdminIndexer
 from hepdata.ext.opensearch.api import get_records_matching_field, \
     delete_item_from_index, index_record_ids, push_data_keywords
@@ -45,7 +45,7 @@ from hepdata.modules.permissions.models import SubmissionParticipant
 from hepdata.modules.records.utils.workflow import create_record
 from hepdata.modules.submission.api import get_latest_hepsubmission
 from hepdata.modules.submission.models import DataSubmission, DataReview, \
-    DataResource, Keyword, HEPSubmission, RecordVersionCommitMessage
+    DataResource, Keyword, RelatedTable, RelatedRecid, HEPSubmission, RecordVersionCommitMessage
 from hepdata.modules.records.utils.common import \
     get_license, infer_file_type, get_record_by_id, contains_accepted_url
 from hepdata.modules.records.utils.common import get_or_create
@@ -169,6 +169,8 @@ def cleanup_submission(recid, version, to_keep):
     :param to_keep: an array of names to keep in the submission
     :return:
     """
+    # Clean up related recid entries first as these are not versioned
+    cleanup_data_related_recid(recid)
     data_submissions = DataSubmission.query.filter_by(
         publication_recid=recid, version=version).all()
 
@@ -213,7 +215,19 @@ def cleanup_data_keywords(data_submission):
     db.session.commit()
 
 
-def process_data_file(recid, version, basepath, data_obj, datasubmission, main_file_path):
+def cleanup_data_related_recid(recid):
+    """
+    Deletes all related record ID entries of a HEPSubmission object of a given recid
+    :param recid: The record ID of the HEPSubmission object to be cleaned
+    :return:
+    """
+    hepsubmission = HEPSubmission.query.filter_by(publication_recid=recid).first()
+    for related in hepsubmission.related_recids:
+        db.session.delete(related)
+    db.session.commit()
+
+
+def process_data_file(recid, version, basepath, data_obj, datasubmission, main_file_path, tablenum, overall_status):
     """
     Takes a data file and any supplementary files and persists their
     metadata to the database whilst recording their upload path.
@@ -224,6 +238,8 @@ def process_data_file(recid, version, basepath, data_obj, datasubmission, main_f
     :param data_obj: Object representation of loaded YAML file
     :param datasubmission: the DataSubmission object representing this file in the DB
     :param main_file_path: the data file path
+    :param tablenum: This table's number in the submission.
+    :param overall_status: Overall status of submission to use for sandbox filtering.
     :return:
     """
     main_data_file = DataResource(
@@ -252,6 +268,13 @@ def process_data_file(recid, version, basepath, data_obj, datasubmission, main_f
             for value in keyword['values']:
                 keyword = Keyword(name=keyword_name, value=value)
                 datasubmission.keywords.append(keyword)
+
+    if overall_status not in ("sandbox", "sandbox_processing"):
+        if "related_to_table_dois" in data_obj:
+            for related_doi in data_obj["related_to_table_dois"]:
+                this_doi = f"{HEPDATA_DOI_PREFIX}/hepdata.{recid}.v{version}/t{tablenum}"
+                related_table = RelatedTable(table_doi=this_doi, related_doi=related_doi)
+                datasubmission.related_tables.append(related_table)
 
     cleanup_data_resources(datasubmission)
 
@@ -292,14 +315,18 @@ def process_general_submission_info(basepath, submission_info_document, recid):
     if "modifications" in submission_info_document:
         parse_modifications(hepsubmission, recid, submission_info_document)
 
+    cleanup_data_resources(hepsubmission)
+
     if 'additional_resources' in submission_info_document:
-
-        for reference in hepsubmission.resources:
-            db.session.delete(reference)
-
         resources = parse_additional_resources(basepath, recid, submission_info_document)
         for resource in resources:
             hepsubmission.resources.append(resource)
+
+    if hepsubmission.overall_status not in ("sandbox", "sandbox_processing"):
+        if 'related_to_hepdata_records' in submission_info_document:
+            for related_id in submission_info_document['related_to_hepdata_records']:
+                related = RelatedRecid(this_recid=hepsubmission.publication_recid, related_recid=related_id)
+                hepsubmission.related_recids.append(related)
 
     db.session.add(hepsubmission)
     db.session.commit()
@@ -426,6 +453,10 @@ def process_submission_directory(basepath, submission_file_path, recid,
         # Side effect that reviews will be deleted between uploads.
         cleanup_submission(recid, hepsubmission.version, added_file_names)
 
+        # Counter to store current table number, which is later used to generate the table DOI ID.
+        # We need to know this before the minting process to have a value to insert.
+        # The first document is always the main submission document.
+        tablectr = 0
         for yaml_document_index, yaml_document in enumerate(full_submission_validator.submission_docs):
             if not yaml_document:
                 continue
@@ -454,8 +485,10 @@ def process_submission_directory(basepath, submission_file_path, recid,
                 main_file_path = os.path.join(basepath, yaml_document["data_file"])
 
                 try:
+                    # Tablectr should only be incremented when a new table is to be processed
+                    tablectr += 1
                     process_data_file(recid, hepsubmission.version, basepath, yaml_document,
-                                  datasubmission, main_file_path)
+                                  datasubmission, main_file_path, tablectr, hepsubmission.overall_status)
                 except SQLAlchemyError as sqlex:
                     errors[yaml_document["data_file"]] = [{"level": "error", "message":
                         "There was a problem processing the file.\n" + str(sqlex)}]

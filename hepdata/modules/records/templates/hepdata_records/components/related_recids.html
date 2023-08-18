@@ -1,0 +1,25 @@
+{% if ctx.related_recids|length > 0 %}
+<div id="related-recids" class="related-recids-container">
+    <h5>This record is related to:</h5>
+    <div class="related-list-container">
+        <ul class="related-list">
+            {% for related in ctx.related_recids %}
+            <li><a href="{{ related }}">{{ related }}</a></li>
+            {% endfor %}
+          </ul>
+    </div>
+</div>
+{% endif %}
+
+{% if ctx.related_to_this_recids|length > 0 %}
+<div id="related-to-this-recids" class="related-recids-container">
+    <h5>This record is referred to by:</h5>
+    <div class="related-list-container">
+        <ul class="related-list">
+            {% for related in ctx.related_to_this_recids %}
+            <li><a href="{{ related }}">{{ related }}</a></li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+{% endif %}

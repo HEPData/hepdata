@@ -26,13 +26,22 @@
 import os.path
 
 import flask
+import os
+import re
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.file_detector import LocalFileDetector
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
-from hepdata.modules.submission.models import HEPSubmission
+from hepdata.config import HEPDATA_DOI_PREFIX
+from hepdata.modules.submission.models import HEPSubmission, RelatedRecid, DataSubmission, RelatedTable
+from hepdata.modules.dashboard.api import create_record_for_dashboard
+from hepdata.modules.records.utils.common import get_record_by_id
+from hepdata.modules.records.utils.submission import get_or_create_hepsubmission
+from hepdata.modules.records.utils.workflow import create_record
+
+from invenio_accounts.models import User
 from invenio_db import db
 
 from .conftest import e2e_assert_url
@@ -237,6 +246,112 @@ def test_record_update(live_server, logged_in_browser):
     assert len(submissions) == 1
     assert submissions[0].version == 1
     assert submissions[0].overall_status == 'finished'
+
+
+def test_related_records(live_server, logged_in_browser):
+    """
+        Test inserting two new submissions, and testing related
+        recid/doi links display on the records page and link correctly.
+    """
+    browser = logged_in_browser
+    # Dictionary to store the generated data.
+    # The two objects should have flipped recid/expected values
+    # i.e. Related to each other
+    test_data = [
+        {"recid": None, "related_recid": None, "submission": None},
+        {"recid": None, "related_recid": None, "submission": None}
+    ]
+
+    # Creates two records.
+    for test in test_data:
+        record_information = create_record(
+            {'journal_info': 'Journal', 'title': 'Test Paper'})
+        test['submission'] = get_or_create_hepsubmission(record_information['recid'])
+        # Set overall status to finished so related data appears on dashboard
+        test['submission'].overall_status = 'finished'
+        test['recid'] = record_information['recid']
+        record = get_record_by_id(test['recid'])
+        user = User(email=f'test@test.com', password='hello1', active=True,
+                    id=1)
+        test_submissions = {}
+        create_record_for_dashboard(record['recid'], test_submissions, user)
+
+    # Recids for the test are set dynamically, based on what comes out of the minter
+    test_data[0]['related_recid'] = test_data[1]['recid']
+    test_data[1]['related_recid'] = test_data[0]['recid']
+
+    for test in test_data:
+        # Create the mock related record ID data
+        related = RelatedRecid(this_recid=test['recid'],
+            related_recid=test['related_recid'])
+        test['submission'].related_recids.append(related)
+
+        # Generate the DOI for the test DataSubmission object
+        doi_string = f"{HEPDATA_DOI_PREFIX}/hepdata.{test['recid']}.v1/t1"
+
+        # Create a test DataSubmission object
+        datasubmission = DataSubmission(
+            name="Test",
+            location_in_publication="Somewhere",
+            data_file=1,
+            publication_recid=test['recid'],
+            associated_recid=test['recid'],
+            doi=doi_string,
+            version=1,
+            description="Test")
+
+        # Generate the test DOI string for the related DOI
+        related_doi_string = f"{HEPDATA_DOI_PREFIX}/hepdata.{test['related_recid']}.v1/t1"
+
+        # Create a test RelatedTable object and add it to the DataSubmission
+        related_table = RelatedTable(table_doi=doi_string, related_doi=related_doi_string)
+        datasubmission.related_tables.append(related_table)
+
+        db.session.add_all([related, datasubmission, related_table])
+
+    db.session.commit()
+
+    # Begin testing
+    for test in test_data:
+        # Load up the Record page.
+        record_url = flask.url_for('hepdata_records.get_metadata_by_alternative_id',
+                                   recid=test['recid'], _external=True)
+        browser.get(record_url)
+        # The page elements to test and their type (Record/Data)
+        related_elements = [
+            {'element':'related-recids', 'type':'recid'},
+            {'element':'related-to-this-recids', 'type':'recid'},
+            {'element':'related-tables', 'type':'doi'},
+            {'element':'related-to-this-tables', 'type':'doi'}
+        ]
+        for element in related_elements:
+            html_element = browser.find_element(By.ID, element['element'])
+            data_list = html_element.find_element(By.CLASS_NAME, 'related-list')
+            list_items = data_list.find_elements(By.TAG_NAME, 'li')
+
+            # There should be only one entry for each related test category
+            assert len(list_items) == 1
+
+            # Get the URL of the found `li` tag.
+            url_text = list_items[0].find_element(By.TAG_NAME, 'a').get_attribute('href')
+
+            # Expected ul and a tag contents differ based on which elements are tested
+            # Records expect a link to the HEPData site. Tables link to doi.org
+            if element['type'] == 'recid':
+                # Check the URL against the regex
+                pattern = rf"http://localhost:\d+/record/{test['related_recid']}"
+                assert re.match(pattern, url_text)
+                # Check that the tag text is the expected record ID number
+                assert list_items[0].text == str(test['related_recid'])
+
+            elif element['type'] == 'doi':
+                # Generate the test DOI string
+                related_doi_check = f"{HEPDATA_DOI_PREFIX}/hepdata.{test['related_recid']}.v1/t1"
+                # Generate expected DOI URL (linking to doi.org/DOI)
+                doi_url = "https://doi.org/" + related_doi_check
+                assert url_text == doi_url
+                # Check that the tag text is the expected DOI string
+                assert list_items[0].text == related_doi_check
 
 
 def test_sandbox(live_server, logged_in_browser):
