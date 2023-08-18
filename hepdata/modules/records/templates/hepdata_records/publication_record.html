@@ -19,22 +19,22 @@
 
 {% extends "hepdata_theme/page.html" %}
 
-{#
-{% set title = title %}
-#}
+{% set title = _(config.THEME_SITENAME) %}
+{% set title = title + ' | ' + ctx.record.title %}
+{% if ctx.record.year %}
+  {% set title = title + ' | ' + ctx.record.year %}
+{% endif %}
 
 {%- set messages = get_flashed_messages(with_categories=true) -%}
 
-{% block title %}
-    HEPData | {{ ctx.record.title }}
-{% endblock %}
-
 {%- block json_ld %}
-   {% if ctx.json_ld and 'error' not in ctx.json_ld %}
-       <script type="application/ld+json">
+  {% if ctx.json_ld and 'error' not in ctx.json_ld %}
+    <script type="application/ld+json">
+       {{ title }}
          {{ ctx.json_ld|tojson }}
-       </script>
-   {% endif %}
+
+    </script>
+  {% endif %}
 {%- endblock json_ld %}
 
 {%- block additional_assets %}

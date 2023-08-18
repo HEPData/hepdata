@@ -1,14 +1,16 @@
 {%- extends "hepdata_theme/page.html" %}
 
+{% set title = _(config.THEME_SITENAME) + ' Submission Help' %}
+
 {% block page_body %}
 
-    {{ webpack['hepdata-info.css'] }}
+  {{ webpack['hepdata-info.css'] }}
 
-    <div id="steps" class="row" style="margin: 0; padding:2% 10% 2% 5%; background-color: #894B9D">
-        <div class="section-header" style="width:185px; padding-bottom: 2em"><p>Submission Steps</p></div>
+  <div id="steps" class="row" style="margin: 0; padding:2% 10% 2% 5%; background-color: #894B9D">
+    <div class="section-header" style="width:185px; padding-bottom: 2em"><p>Submission Steps</p></div>
 
-        <div class="col-md-6">
-            <div id="hepdata-loading" style="width:330px; margin: 0 auto;">
+    <div class="col-md-6">
+      <div id="hepdata-loading" style="width:330px; margin: 0 auto;">
                 <img src="{{ url_for('static', filename='img/submission/submission-steps.svg') }}" width="330">
             </div>
         </div>
