@@ -99,7 +99,11 @@
                         {% include "hepdata_records/components/journal_info.html" %}
                     </div>
 
-                    <br/>
+                    {% if not (ctx.related_recids or ctx.related_to_this_recids) %}
+                        <br/>
+                    {% else %}
+                        {% include 'hepdata_records/components/related_recids.html' %}
+                    {% endif %}
 
                     <div class="record-links">
                         <ul>
