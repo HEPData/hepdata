@@ -22,15 +22,20 @@
 
 {%- extends "hepdata_theme/page.html" %}
 
+{% set title = _(config.THEME_SITENAME) + ' Sandbox' %}
+{% if ctx.recid %}
+  {% set title = title +  ' | ' + ctx.recid|string %}
+{% endif %}
+
 {%- block additional_assets %}
-    {{ webpack['hepdata-record.css'] }}
-    {{ webpack['toastr.css'] }}
+  {{ webpack['hepdata-record.css'] }}
+  {{ webpack['toastr.css'] }}
 {%- endblock additional_assets %}
 
 {%- set messages = get_flashed_messages(with_categories=true) -%}
 
 {%- block additional_header_bars %}
-<div class="hep_breadcrumbs">
+  <div class="hep_breadcrumbs">
     <div class="col-md-12 no-padding">
         <ul>
             <a href="/record/sandbox">

@@ -1,10 +1,12 @@
 {%- extends "hepdata_theme/page.html" %}
 
+{% set title = _(config.THEME_SITENAME) + ' Dashboard' %}
+
 {% set body_css_classes = ["dashboard"] %}
 {%- set messages = get_flashed_messages(with_categories=true) -%}
 
 {%- block additional_assets %}
-    {{ webpack['hepdata-info.css'] }}
+  {{ webpack['hepdata-info.css'] }}
 {%- endblock additional_assets %}
 
 

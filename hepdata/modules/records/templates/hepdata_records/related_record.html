@@ -19,19 +19,27 @@
 
 {% extends "hepdata_theme/page.html" %}
 
-{#
-{% set title = title %}
-#}
-{% block title %}
-    HEPData | {{ ctx.record.title }}
-{% endblock %}
+{% set title = _(config.THEME_SITENAME) %}
+{% if ctx.record.collaborations %}
+  {% set title = title + ' | ' + ctx.record.collaborations|join(' & ') %}
+{% endif %}
+{% if ctx.record.year %}
+  {% set title = title + ' | ' + ctx.record.year %}
+{% endif %}
+{% set title = title + ' | ' + ctx.record.title %}
+{% if ctx.record_type == 'resource' %}
+  {% set title = title + ' | ' + ctx.resource_filename %}
+{% else %}
+  {% set title = title + ' | ' + ctx.table_name %}
+{% endif %}
 
 {%- block json_ld %}
-   {% if ctx.json_ld  and 'error' not in ctx.json_ld %}
-       <script type="application/ld+json">
+  {% if ctx.json_ld  and 'error' not in ctx.json_ld %}
+    <script type="application/ld+json">
          {{ ctx.json_ld|tojson }}
-       </script>
-   {% endif %}
+
+    </script>
+  {% endif %}
 {%- endblock json_ld %}
 
 {%- block additional_assets %}

@@ -1,11 +1,6 @@
 {% extends "hepdata_theme/page.html" %}
 
-{#
-{% set title = title %}
-#}
-{% block title %}
-    HEPData | {{ ctx.record.name }}
-{% endblock %}
+{% set title = _(config.THEME_SITENAME) + ' | Processing record ' + ctx.recid|string %}
 
 {%- block additional_assets %}
 

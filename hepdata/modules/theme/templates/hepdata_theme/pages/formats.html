@@ -1,14 +1,16 @@
 {%- extends "hepdata_theme/page.html" %}
 
+{% set title = _(config.THEME_SITENAME) + ' File Formats' %}
+
 {% block page_body %}
 
-    {{ webpack['hepdata-info.css'] }}
+  {{ webpack['hepdata-info.css'] }}
 
-    {% set search_url = url_for('os_search.search', q='') %}
-    {% set atlas_search_url = url_for('os_search.search', q='', page=1, collaboration='ATLAS', _external=True) %}
-    {% set record_url = url_for('hepdata_records.get_metadata_by_alternative_id', recid='ins1419244', _external=True) %}
+  {% set search_url = url_for('os_search.search', q='') %}
+  {% set atlas_search_url = url_for('os_search.search', q='', page=1, collaboration='ATLAS', _external=True) %}
+  {% set record_url = url_for('hepdata_records.get_metadata_by_alternative_id', recid='ins1419244', _external=True) %}
 
-    <div class="row" style="margin: 0; padding:2% 10% 2% 5%;">
+  <div class="row" style="margin: 0; padding:2% 10% 2% 5%;">
         <div class="section-header" style="width:185px; padding-bottom: 2em"><p>HEPData Output Formats</p></div>
         <div class="col-md-6">
           <div style="width:330px; margin: 0 auto;">
