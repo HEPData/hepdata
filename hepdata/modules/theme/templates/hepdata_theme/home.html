@@ -1,5 +1,7 @@
 {% extends "hepdata_theme/page.html" %}
 
+{% set title = _(config.THEME_SITENAME) + ' Homepage' %}
+
 {%- set html_css_classes=['home-page'] %}
 {%- set body_css_classes=['home-page'] %}
 {%- set messages = get_flashed_messages(with_categories=true) -%}

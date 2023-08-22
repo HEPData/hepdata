@@ -1,5 +1,7 @@
 {% extends "hepdata_theme/page.html" %}
 
+{% set title = _(config.THEME_SITENAME) + ' Search' %}
+
 {% set no_results = (ctx.results|length == 0) %}
 {% set max_datatables = 3 %}
 {% set show_records_number = 3 %}

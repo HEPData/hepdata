@@ -20,10 +20,13 @@
 {% extends "hepdata_theme/page.html" %}
 
 {% set title = _(config.THEME_SITENAME) %}
-{% set title = title + ' | ' + ctx.record.title %}
+{% if ctx.record.collaborations %}
+  {% set title = title + ' | ' + ctx.record.collaborations|join(' & ') %}
+{% endif %}
 {% if ctx.record.year %}
   {% set title = title + ' | ' + ctx.record.year %}
 {% endif %}
+{% set title = title + ' | ' + ctx.record.title %}
 
 {%- set messages = get_flashed_messages(with_categories=true) -%}
 

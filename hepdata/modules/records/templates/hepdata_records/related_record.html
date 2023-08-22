@@ -19,14 +19,18 @@
 
 {% extends "hepdata_theme/page.html" %}
 
-{% set title = _(config.THEME_SITENAME) + ' | ' + ctx.record.title %}
+{% set title = _(config.THEME_SITENAME) %}
+{% if ctx.record.collaborations %}
+  {% set title = title + ' | ' + ctx.record.collaborations|join(' & ') %}
+{% endif %}
+{% if ctx.record.year %}
+  {% set title = title + ' | ' + ctx.record.year %}
+{% endif %}
+{% set title = title + ' | ' + ctx.record.title %}
 {% if ctx.record_type == 'resource' %}
   {% set title = title + ' | ' + ctx.resource_filename %}
 {% else %}
   {% set title = title + ' | ' + ctx.table_name %}
-{% endif %}
-{% if ctx.record.year %}
-  {% set title = title + ' | ' + ctx.record.year %}
 {% endif %}
 
 {%- block json_ld %}
