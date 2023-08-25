@@ -24,7 +24,7 @@
   {% set title = title + ' | ' + ctx.record.collaborations|join(' & ') %}
 {% endif %}
 {% if ctx.record.year %}
-  {% set title = title + ' | ' + ctx.record.year %}
+  {% set title = title + ' | ' + ctx.record.year|string %}
 {% endif %}
 {% set title = title + ' | ' + ctx.record.title %}
 
