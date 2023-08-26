@@ -33,9 +33,7 @@
 {%- block json_ld %}
   {% if ctx.json_ld and 'error' not in ctx.json_ld %}
     <script type="application/ld+json">
-       {{ title }}
-         {{ ctx.json_ld|tojson }}
-
+      {{ ctx.json_ld|tojson }}
     </script>
   {% endif %}
 {%- endblock json_ld %}
