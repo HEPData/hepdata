@@ -107,7 +107,7 @@ jobs:
         docker run --name act-redis --rm -d -p 6379:6379 redis
         docker run --name act-opensearch --rm -d -p 9200:9200 -p 9600:9600 -e "discovery.type=single-node" -e "plugins.security.disabled=true" opensearchproject/opensearch:${{ matrix.os-version }}
 
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v4
       with:
@@ -202,7 +202,7 @@ jobs:
     if: contains(github.ref, 'main') || github.event_name == 'release'
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Deploy to DockerHub
       env:
         CI_TAG: ${{ github.event.release.tag_name }}
