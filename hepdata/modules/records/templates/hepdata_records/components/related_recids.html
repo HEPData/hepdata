@@ -4,7 +4,7 @@
     <div class="related-list-container">
         <ul class="related-list">
             {% for related in ctx.related_recids %}
-            <li><a href="{{ related }}">{{ related }}</a></li>
+            <li title="{{ related.title }}"><a href="{{ related.recid }}">{{ related.recid }}</a></li>
             {% endfor %}
           </ul>
     </div>
@@ -17,7 +17,7 @@
     <div class="related-list-container">
         <ul class="related-list">
             {% for related in ctx.related_to_this_recids %}
-            <li><a href="{{ related }}">{{ related }}</a></li>
+            <li title="{{ related.title }}"><a href="{{ related.recid }}">{{ related.recid }}</a></li>
             {% endfor %}
         </ul>
     </div>
