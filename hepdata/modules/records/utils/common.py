@@ -30,7 +30,7 @@ from sqlalchemy.orm.exc import NoResultFound
 
 from hepdata.config import CFG_PUB_TYPE, HISTFACTORY_FILE_TYPE
 from hepdata.ext.opensearch.api import get_record
-from hepdata.modules.submission.models import HEPSubmission, License
+from hepdata.modules.submission.models import HEPSubmission, License, DataSubmission
 
 FILE_TYPES = {
     "py": "Python",
@@ -251,3 +251,22 @@ def get_record_by_id(recid):
 def record_exists(*args, **kwargs):
     count = HEPSubmission.query.filter_by(**kwargs).count()
     return count > 0
+
+def get_record_data_list(record, data_type):
+    """
+    Generates a dictionary (title/recid) from a list of record IDs.
+    This must be done as the record contents are not stored within the hepsubmission object.
+    :return: List: A list of dictionary objects containing record ID and title pairs
+    """
+    record_data = []
+    if data_type == "related":
+        data = record.get_related_hepsubmissions()
+    elif data_type == "related-to-this":
+        data = record.get_related_to_this_hepsubmissions()
+
+    if data:
+        record_data = [
+            {"recid": s.publication_recid,
+             "title": get_record_contents(s.publication_recid)["title"]
+             } for s in data]
+    return record_data
