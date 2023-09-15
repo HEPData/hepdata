@@ -325,9 +325,8 @@ def get_table_details(recid, data_recid, version):
             table_contents["name"] = datasub_record.name
             table_contents["title"] = datasub_record.description
             table_contents["keywords"] = datasub_record.keywords
-            # The functions used only return the objects themselves.
-            table_contents["related_tables"] = [r.related_doi for r in datasub_record.related_tables]
-            table_contents["related_to_this"] = [r.doi for r in datasub_record.get_related_datasubmissions()]
+            table_contents["related_tables"] = datasub_record.get_table_data_list("related")
+            table_contents["related_to_this"] = datasub_record.get_table_data_list("related-to-this")
             table_contents["doi"] = datasub_record.doi
             table_contents["location"] = datasub_record.location_in_publication
 

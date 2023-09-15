@@ -46,7 +46,7 @@ from hepdata.modules.permissions.api import user_allowed_to_perform_action
 from hepdata.modules.permissions.models import SubmissionParticipant
 from hepdata.modules.records.subscribers.api import is_current_user_subscribed_to_record
 from hepdata.modules.records.utils.common import decode_string, find_file_in_directory, allowed_file, \
-    remove_file_extension, truncate_string, get_record_contents, get_record_by_id, IMAGE_TYPES
+    remove_file_extension, truncate_string, get_record_contents, get_record_by_id, IMAGE_TYPES, get_record_data_list
 from hepdata.modules.records.utils.data_processing_utils import process_ctx
 from hepdata.modules.records.utils.data_files import get_data_path_for_record, cleanup_old_files
 from hepdata.modules.records.utils.json_ld import get_json_ld
@@ -262,8 +262,8 @@ def format_resource(resource, contents, content_url):
     ctx['file_mimetype'] = get_resource_mimetype(resource, contents)
     ctx['resource_filename'] = os.path.basename(resource.file_location)
     ctx['resource_filetype'] = f'{resource.file_type} File'
-    ctx['related_recids'] = [r.related_recid for r in hepsubmission.related_recids]
-    ctx['related_to_this_recids'] = [s.publication_recid for s in hepsubmission.get_related_hepsubmissions()]
+    ctx['related_recids'] = get_record_data_list(hepsubmission, "related")
+    ctx['related_to_this_recids'] = get_record_data_list(hepsubmission, "related-to-this")
 
     if resource.file_type in IMAGE_TYPES:
         ctx['display_type'] = 'image'
@@ -401,8 +401,8 @@ def render_record(recid, record, version, output_format, light_mode=False):
         elif not hepdata_submission.overall_status.startswith('sandbox'):
             ctx = format_submission(recid, record, version, version_count, hepdata_submission)
             ctx['record_type'] = 'publication'
-            ctx['related_recids'] = [r.related_recid for r in hepdata_submission.related_recids]
-            ctx['related_to_this_recids'] = [s.publication_recid for s in hepdata_submission.get_related_hepsubmissions()]
+            ctx['related_recids'] = get_record_data_list(hepdata_submission, "related")
+            ctx['related_to_this_recids'] = get_record_data_list(hepdata_submission, "related-to-this")
 
             increment(recid)
 
@@ -457,9 +457,8 @@ def render_record(recid, record, version, output_format, light_mode=False):
             ctx['record_type'] = 'table'
             ctx['related_publication_id'] = publication_recid
             ctx['table_name'] = record['title']
-            ctx['related_recids'] = [r.related_recid for r in hepdata_submission.related_recids]
-            ctx['related_to_this_recids'] = [s.publication_recid for s in
-                                             hepdata_submission.get_related_hepsubmissions()]
+            ctx['related_recids'] = get_record_data_list(hepdata_submission, "related")
+            ctx['related_to_this_recids'] = get_record_data_list(hepdata_submission, "related-to-this")
 
             if output_format == 'html' or output_format == 'json_ld':
                 ctx['json_ld'] = get_json_ld(
