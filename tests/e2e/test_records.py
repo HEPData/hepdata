@@ -258,14 +258,20 @@ def test_related_records(live_server, logged_in_browser):
     # The two objects should have flipped recid/expected values
     # i.e. Related to each other
     test_data = [
-        {"recid": None, "related_recid": None, "submission": None},
-        {"recid": None, "related_recid": None, "submission": None}
+        {"recid": None, "related_recid": None, "submission": None, "title": "Test Paper 1"},
+        {"recid": None, "related_recid": None, "submission": None, "title": "Test Paper 2"}
     ]
+
+    # Pre lists the expected order of titles
+    # TODO - Update this to be accurate
+    expected_title_list = ["Test Paper 1", "Test Paper 2"]
+    title_list = []
+    text_list = []
 
     # Creates two records.
     for test in test_data:
         record_information = create_record(
-            {'journal_info': 'Journal', 'title': 'Test Paper'})
+            {'journal_info': 'Journal', 'title': test['title']})
         test['submission'] = get_or_create_hepsubmission(record_information['recid'])
         # Set overall status to finished so related data appears on dashboard
         test['submission'].overall_status = 'finished'
@@ -291,14 +297,14 @@ def test_related_records(live_server, logged_in_browser):
 
         # Create a test DataSubmission object
         datasubmission = DataSubmission(
-            name="Test",
+            name=test['title'],
             location_in_publication="Somewhere",
             data_file=1,
             publication_recid=test['recid'],
             associated_recid=test['recid'],
             doi=doi_string,
             version=1,
-            description="Test")
+            description=test['title'])
 
         # Generate the test DOI string for the related DOI
         related_doi_string = f"{HEPDATA_DOI_PREFIX}/hepdata.{test['related_recid']}.v1/t1"
@@ -324,6 +330,7 @@ def test_related_records(live_server, logged_in_browser):
             {'element':'related-tables', 'type':'doi'},
             {'element':'related-to-this-tables', 'type':'doi'}
         ]
+
         for element in related_elements:
             html_element = browser.find_element(By.ID, element['element'])
             data_list = html_element.find_element(By.CLASS_NAME, 'related-list')
@@ -334,6 +341,9 @@ def test_related_records(live_server, logged_in_browser):
 
             # Get the URL of the found `li` tag.
             url_text = list_items[0].find_element(By.TAG_NAME, 'a').get_attribute('href')
+            # Get the tooltip of the element
+            title_text = list_items[0].get_attribute('title')
+            title_list.append(title_text)
 
             # Expected ul and a tag contents differ based on which elements are tested
             # Records expect a link to the HEPData site. Tables link to doi.org
@@ -341,7 +351,8 @@ def test_related_records(live_server, logged_in_browser):
                 # Check the URL against the regex
                 pattern = rf"http://localhost:\d+/record/{test['related_recid']}"
                 assert re.match(pattern, url_text)
-                # Check that the tag text is the expected record ID number
+                # Check that the tag text is the expected string
+                # The result will be the string "Test Paper(X)" Where X is the ID.
                 assert list_items[0].text == str(test['related_recid'])
 
             elif element['type'] == 'doi':
@@ -350,8 +361,11 @@ def test_related_records(live_server, logged_in_browser):
                 # Generate expected DOI URL (linking to doi.org/DOI)
                 doi_url = "https://doi.org/" + related_doi_check
                 assert url_text == doi_url
-                # Check that the tag text is the expected DOI string
-                assert list_items[0].text == related_doi_check
+                text_list.append(list_items[0].text)
+
+    # Checks that all found titles in order and runs against expected outputs
+    assert title_list == expected_title_list
+    assert text_list == expected_title_list
 
 
 def test_sandbox(live_server, logged_in_browser):

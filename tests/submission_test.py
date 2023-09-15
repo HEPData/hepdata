@@ -356,7 +356,7 @@ def test_related_records(app, admin_idx):
         # Checking against results in test_data
         for data in test_data:
             submission = data['sub']
-            related_hepsubmissions = submission.get_related_hepsubmissions()
+            related_hepsubmissions = submission.get_related_to_this_hepsubmissions()
 
             # Set some test criteria based on the current data.
             # If related_id is None, then some tests should yield empty lists.
