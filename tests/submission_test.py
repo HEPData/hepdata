@@ -35,7 +35,7 @@ from hepdata.ext.opensearch.api import get_records_matching_field
 from hepdata.modules.permissions.models import SubmissionParticipant
 from hepdata.modules.records.api import format_submission, process_saved_file, create_new_version
 from hepdata.modules.records.utils.common import infer_file_type, contains_accepted_url, allowed_file, record_exists, \
-    get_record_contents, is_histfactory
+    get_record_contents, is_histfactory, get_record_data_list
 from hepdata.modules.records.utils.data_files import get_data_path_for_record
 from hepdata.modules.records.utils.submission import process_submission_directory, do_finalise, unload_submission, \
     cleanup_data_related_recid
@@ -327,13 +327,13 @@ def test_related_records(app, admin_idx):
         # First two are valid, and relate to each other
         # 3 has invalid record entry (a string), 4 has invalid data DOI string (doesn't match regex)
         test_data = [
-            {"dir" : "related_submission_1", "related" : 2},
-            {"dir" : "related_submission_2", "related" : 1},
-            {"dir" : "related_submission_3", "related" : None},
-            {"dir": "related_submission_4", "related": None}
+            {"dir": "related_submission_1", "related": 2, "record_title": "Title 1", "expected_title": "Title 2"},
+            {"dir": "related_submission_2", "related": 1, "record_title": "Title 2", "expected_title": "Title 1"},
+            {"dir": "related_submission_3", "related": None, "record_title": "Title 3"},
+            {"dir": "related_submission_4", "related": None, "record_title": "Title 4"}
         ]
         # Dummy record data
-        record = {'title': 'HEPData Testing',
+        record = {'title': None,
                   'reviewer': {'name': 'Testy McTester', 'email': 'test@test.com'},
                   'uploader': {'name': 'Testy McTester', 'email': 'test@test.com'},
                   'message': 'This is ready',
@@ -343,6 +343,7 @@ def test_related_records(app, admin_idx):
         # Begin submission of test submissions
         for data in test_data:
             # Set up a new test submission
+            record['title'] = data['record_title']
             test_sub = process_submission_payload(**record)
             data['sub'] = test_sub
             # Ensure the status is set to `finished` so the related data can be accessed.
@@ -356,21 +357,37 @@ def test_related_records(app, admin_idx):
         # Checking against results in test_data
         for data in test_data:
             submission = data['sub']
-            related_hepsubmissions = submission.get_related_to_this_hepsubmissions()
-
             # Set some test criteria based on the current data.
             # If related_id is None, then some tests should yield empty lists.
             submission_count, table_count = (1, 3) if data['related'] is not None else (0, 0)
 
+            related_hepsubmissions = submission.get_related_hepsubmissions()
+            related_to_this_hepsubmissions = submission.get_related_to_this_hepsubmissions()
+
             # Check that the correct amount of objects are returned from the queries.
             assert len(submission.related_recids) == submission_count
+            assert len(related_to_this_hepsubmissions) == submission_count
             assert len(related_hepsubmissions) == submission_count
+
+            related_record_data = get_record_data_list(submission, "related")
+            related_to_this_record_data = get_record_data_list(submission, "related-to-this")
+
+            assert len(related_record_data) == submission_count
+            assert len(related_to_this_record_data) == submission_count
+
+            if data['related']:
+                assert int(related_hepsubmissions[0].publication_recid) == data['related']
+                assert int(related_to_this_hepsubmissions[0].publication_recid) == data['related']
+
+                expected_record_data = [{"recid": data['related'], "title": data['expected_title']}]
+                assert related_record_data == expected_record_data
+                assert related_to_this_record_data == expected_record_data
 
             for related_table in submission.related_recids:
                 # Get all other RelatedTable entries related to this one
                 # and check against the expected value in `data`
                 assert related_table.related_recid == data['related']
-            for related_hepsub in related_hepsubmissions:
+            for related_hepsub in related_to_this_hepsubmissions:
                 # Get all other submissions related to this one
                 # and check against the expected value in `data`
                 assert related_hepsub.publication_recid == data['related']
@@ -382,10 +399,32 @@ def test_related_records(app, admin_idx):
             assert len(data_submissions) == table_count
             for s in range(0, len(data_submissions)):
                 submission = data_submissions[s]
-                for related in submission.get_related_datasubmissions():
-                    # Test that the stored DOI is as expected.
-                    check = f"{HEPDATA_DOI_PREFIX}/hepdata.{data['related']}.v1/t{s+1}"
-                    assert check == related.doi
+                # Set the current table number for checking
+                tablenum = s + 1
+                # Generate the test DOI
+                doi_check = f"{HEPDATA_DOI_PREFIX}/hepdata.{data['related']}.v1/t{tablenum}"
+                expected_table_data = [{"name": f"Table {tablenum}",
+                                        "doi": doi_check,
+                                        "description": f"Test Table {tablenum}"}]
+
+                related_table_data = submission.get_table_data_list("related")
+                related_to_this_table_data = submission.get_table_data_list("related-to-this")
+                related_datasubmissions = submission.get_related_datasubmissions()
+                related_to_this_datasubmissions = submission.get_related_to_this_datasubmissions()
+
+                # Check that the get related functions are returning the correct amount of objects.
+                assert len(related_datasubmissions) == submission_count
+                assert len(related_to_this_datasubmissions) == submission_count
+                assert len(related_table_data) == submission_count
+                assert len(related_to_this_table_data) == submission_count
+
+                if data['related']:
+                    assert related_table_data == expected_table_data
+                    assert related_to_this_table_data == expected_table_data
+
+                # Test doi_check against the related DOI list.
+                for related in related_datasubmissions:
+                    assert doi_check == related.doi
 
 
 def test_cleanup_data_related_recid(app, admin_idx):
