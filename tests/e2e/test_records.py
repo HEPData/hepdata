@@ -257,21 +257,15 @@ def test_related_records(live_server, logged_in_browser):
     # Dictionary to store the generated data.
     # The two objects should have flipped recid/expected values
     # i.e. Related to each other
+    # TODO - Maybe make expected_number a list, to allow for testing of multiple expected values.
     test_data = [
-        {"recid": None, "related_recid": None, "submission": None, "title": "Test Paper 1"},
-        {"recid": None, "related_recid": None, "submission": None, "title": "Test Paper 2"}
+        {"recid": None,  "submission": None, "related_recid": None, "submission_number": 1, "expected_number": 2},
+        {"recid": None,  "submission": None, "related_recid": None, "submission_number": 2, "expected_number": 1}
     ]
-
-    # Pre lists the expected order of titles
-    # TODO - Update this to be accurate
-    expected_title_list = ["Test Paper 1", "Test Paper 2"]
-    title_list = []
-    text_list = []
-
     # Creates two records.
     for test in test_data:
         record_information = create_record(
-            {'journal_info': 'Journal', 'title': test['title']})
+            {'journal_info': 'Journal', 'title': f"Test Record {test['submission_number']}"})
         test['submission'] = get_or_create_hepsubmission(record_information['recid'])
         # Set overall status to finished so related data appears on dashboard
         test['submission'].overall_status = 'finished'
@@ -283,6 +277,7 @@ def test_related_records(live_server, logged_in_browser):
         create_record_for_dashboard(record['recid'], test_submissions, user)
 
     # Recids for the test are set dynamically, based on what comes out of the minter
+    # TODO - Would need to be changed to extend for more than one-to-one cases
     test_data[0]['related_recid'] = test_data[1]['recid']
     test_data[1]['related_recid'] = test_data[0]['recid']
 
@@ -297,14 +292,14 @@ def test_related_records(live_server, logged_in_browser):
 
         # Create a test DataSubmission object
         datasubmission = DataSubmission(
-            name=test['title'],
+            name=f"Test Table {test['submission_number']}",
             location_in_publication="Somewhere",
             data_file=1,
             publication_recid=test['recid'],
             associated_recid=test['recid'],
             doi=doi_string,
             version=1,
-            description=test['title'])
+            description=f"Test Description {test['submission_number']}")
 
         # Generate the test DOI string for the related DOI
         related_doi_string = f"{HEPDATA_DOI_PREFIX}/hepdata.{test['related_recid']}.v1/t1"
@@ -325,47 +320,46 @@ def test_related_records(live_server, logged_in_browser):
         browser.get(record_url)
         # The page elements to test and their type (Record/Data)
         related_elements = [
-            {'element':'related-recids', 'type':'recid'},
-            {'element':'related-to-this-recids', 'type':'recid'},
-            {'element':'related-tables', 'type':'doi'},
-            {'element':'related-to-this-tables', 'type':'doi'}
+            {'id':'related-recids', 'type':'recid'},
+            {'id':'related-to-this-recids', 'type':'recid'},
+            {'id':'related-tables', 'type':'doi'},
+            {'id':'related-to-this-tables', 'type':'doi'}
         ]
 
         for element in related_elements:
-            html_element = browser.find_element(By.ID, element['element'])
+            html_element = browser.find_element(By.ID, element['id'])
             data_list = html_element.find_element(By.CLASS_NAME, 'related-list')
             list_items = data_list.find_elements(By.TAG_NAME, 'li')
 
             # There should be only one entry for each related test category
             assert len(list_items) == 1
 
+            url_tag = list_items[0].find_element(By.TAG_NAME, 'a')
             # Get the URL of the found `li` tag.
-            url_text = list_items[0].find_element(By.TAG_NAME, 'a').get_attribute('href')
-            # Get the tooltip of the element
-            title_text = list_items[0].get_attribute('title')
-            title_list.append(title_text)
-
+            url_loc = url_tag.get_attribute('href')
             # Expected ul and a tag contents differ based on which elements are tested
             # Records expect a link to the HEPData site. Tables link to doi.org
             if element['type'] == 'recid':
                 # Check the URL against the regex
                 pattern = rf"http://localhost:\d+/record/{test['related_recid']}"
-                assert re.match(pattern, url_text)
+                assert re.match(pattern, url_loc)
                 # Check that the tag text is the expected string
                 # The result will be the string "Test Paper(X)" Where X is the ID.
                 assert list_items[0].text == str(test['related_recid'])
+                # Check the expected title of the related record tag
+                assert url_tag.get_attribute('title') == f"Test Record {test['expected_number']}"
 
             elif element['type'] == 'doi':
                 # Generate the test DOI string
+                # Currently only testing v1/t1, maybe needs to be extended.
                 related_doi_check = f"{HEPDATA_DOI_PREFIX}/hepdata.{test['related_recid']}.v1/t1"
                 # Generate expected DOI URL (linking to doi.org/DOI)
                 doi_url = "https://doi.org/" + related_doi_check
-                assert url_text == doi_url
-                text_list.append(list_items[0].text)
-
-    # Checks that all found titles in order and runs against expected outputs
-    assert title_list == expected_title_list
-    assert text_list == expected_title_list
+                assert url_loc == doi_url
+                # Check the expected text of the related table DOI tag
+                assert url_tag.text == f"Test Table {test['expected_number']}"
+                # Check the expected title of the related table DOI tag
+                assert url_tag.get_attribute('title') == f"Test Description {test['expected_number']}"
 
 
 def test_sandbox(live_server, logged_in_browser):
