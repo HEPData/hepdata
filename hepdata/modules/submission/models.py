@@ -245,13 +245,19 @@ class DataSubmission(db.Model):
         """
         Queries the database for all DataSubmission objects contained in
         this object's related DOI list.
+        Only returns an object if associated HEPSubmission status is 'finished'
         (All submissions this one is relating to)
         :return: [list] A list of DataSubmission objects
         """
         related_submissions = []
 
-        for i in self.related_tables:
-            related_submissions.append(DataSubmission.query.join(RelatedTable, RelatedTable.table_doi == DataSubmission.doi).join(HEPSubmission, HEPSubmission.publication_recid == DataSubmission.publication_recid).filter(RelatedTable.table_doi == self.doi).filter(HEPSubmission.overall_status == 'finished').first())
+        for related in self.related_tables:
+            submission = (((DataSubmission.query.filter(DataSubmission.doi == related.related_doi)
+                          .join(HEPSubmission, HEPSubmission.publication_recid == DataSubmission.publication_recid))
+                          .filter(HEPSubmission.overall_status == 'finished'))
+                          .first())
+            if submission:
+                related_submissions.append(submission)
         return related_submissions
 
 
@@ -265,8 +271,7 @@ class DataSubmission(db.Model):
         :return: [list] A list of dictionaries with the name, doi and description of the object.
         """
         if data_type == "related":
-            # TODO - Fix
-            data = self.get_related_to_this_datasubmissions()
+            data = self.get_related_datasubmissions()
         elif data_type == "related-to-this":
             data = self.get_related_to_this_datasubmissions()
 
