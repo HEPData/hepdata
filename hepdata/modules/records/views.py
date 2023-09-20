@@ -29,6 +29,7 @@ import logging
 import json
 import time
 import mimetypes
+import os
 from dateutil import parser
 from invenio_accounts.models import User
 from flask_login import login_required, login_user
@@ -39,7 +40,7 @@ from sqlalchemy.orm import joinedload
 import yaml
 from yaml import CBaseLoader as Loader
 
-from hepdata.config import CFG_DATA_TYPE, CFG_PUB_TYPE, SITE_URL
+from hepdata.config import CFG_DATA_TYPE, CFG_PUB_TYPE, SITE_URL, SIZE_LOAD_CHECK_THRESHOLD
 from hepdata.ext.opensearch.api import get_records_matching_field, get_count_for_collection, get_n_latest_records, \
     index_record_ids
 from hepdata.modules.email.api import send_notification_email, send_new_review_message_email, NoParticipantsException, \
@@ -287,6 +288,38 @@ def get_latest():
 
     return jsonify(result)
 
+
+@blueprint.route('/data/file_size_check/<int:data_recid>/<int:version>', methods=['POST', ])
+def file_size_check(data_recid, version):
+    """
+    Queries a specific data file and returns whether it breaks the file size
+        autoload limit or not.
+
+    Will return True if the file size is too large.
+
+    :param data_recid: The record ID for the requested data file
+    :param version: Version of the data file to find.
+    :return:
+    """
+
+    datasub_query = DataSubmission.query.options().filter_by(id=data_recid, version=version)
+
+    if datasub_query.count() > 0:
+        datasub_record = datasub_query.one()
+        data_query = db.session.query(DataResource).filter(
+            DataResource.id == datasub_record.data_file)
+
+        if data_query.count() > 0:
+            data_record = data_query.one()
+            file_location = data_record.file_location
+
+            file_size = os.path.getsize(file_location)
+            if file_size > SIZE_LOAD_CHECK_THRESHOLD:
+                check = True
+            else:
+                check = False
+            return jsonify({"file_size_check": check})
+    return jsonify({"error": "Request error"})
 
 @blueprint.route('/data/<int:recid>/<int:data_recid>/<int:version>', methods=['GET', ])
 def get_table_details(recid, data_recid, version):
