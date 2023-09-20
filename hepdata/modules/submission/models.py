@@ -276,14 +276,12 @@ class DataSubmission(db.Model):
             data = self.get_related_to_this_datasubmissions()
 
         record_data = []
-        for d in data:
-            if d:
-                data_submission = DataSubmission.query.filter_by(doi=d.doi).one()
-                record_data.append({
-                    "name": data_submission.name,
-                    "doi": data_submission.doi,
-                    "description": data_submission.description
-                })
+        for datum in data:
+            record_data.append({
+                "name": datum.name,
+                "doi": datum.doi,
+                "description": datum.description
+            })
         return record_data
 
 

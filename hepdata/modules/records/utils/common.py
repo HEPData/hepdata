@@ -264,9 +264,11 @@ def get_record_data_list(record, data_type):
     elif data_type == "related-to-this":
         data = record.get_related_to_this_hepsubmissions()
 
-    if data:
-        record_data = [
-            {"recid": s.publication_recid,
-             "title": get_record_contents(s.publication_recid)["title"]
-             } for s in data]
+    record_data = []
+    for datum in data:
+        record_data.append(
+        {
+            "recid": datum.publication_recid,
+            "title": get_record_contents(datum.publication_recid)["title"]
+        })
     return record_data
