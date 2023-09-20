@@ -250,11 +250,11 @@ class DataSubmission(db.Model):
         :return: [list] A list of DataSubmission objects
         """
         related_submissions = []
-
         for related in self.related_tables:
-            submission = (((DataSubmission.query.filter(DataSubmission.doi == related.related_doi)
-                          .join(HEPSubmission, HEPSubmission.publication_recid == DataSubmission.publication_recid))
-                          .filter(HEPSubmission.overall_status == 'finished'))
+            submission = (
+                DataSubmission.query.filter(DataSubmission.doi == related.related_doi)
+                          .join(HEPSubmission, HEPSubmission.publication_recid == DataSubmission.publication_recid)
+                          .filter(HEPSubmission.overall_status == 'finished')
                           .first())
             if submission:
                 related_submissions.append(submission)
@@ -270,6 +270,7 @@ class DataSubmission(db.Model):
         :param str data_type : The flag to decide which relation data to use.
         :return: [list] A list of dictionaries with the name, doi and description of the object.
         """
+        # Selects the related data based on the data_type flag
         if data_type == "related":
             data = self.get_related_datasubmissions()
         elif data_type == "related-to-this":

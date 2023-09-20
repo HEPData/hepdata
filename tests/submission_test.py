@@ -403,16 +403,21 @@ def test_related_records(app, admin_idx):
                 tablenum = s + 1
                 # Generate the test DOI
                 doi_check = f"{HEPDATA_DOI_PREFIX}/hepdata.{data['related']}.v1/t{tablenum}"
+                # Generate the expected table data
                 expected_table_data = [{"name": f"Table {tablenum}",
                                         "doi": doi_check,
                                         "description": f"Test Table {tablenum}"}]
 
-                related_table_data = submission.get_table_data_list("related")
-                related_to_this_table_data = submission.get_table_data_list("related-to-this")
+                # Execute the related data functions
+                # The table data functions generate a dictionary for tooltip data for each contained entry.
+                # The submission.get_related functions test that the related objects are found as expected.
                 related_datasubmissions = submission.get_related_datasubmissions()
                 related_to_this_datasubmissions = submission.get_related_to_this_datasubmissions()
+                related_table_data = submission.get_table_data_list("related")
+                related_to_this_table_data = submission.get_table_data_list("related-to-this")
 
                 # Check that the get related functions are returning the correct amount of objects.
+                # Based on the current tests, this is either 0, or 3
                 assert len(related_datasubmissions) == submission_count
                 assert len(related_to_this_datasubmissions) == submission_count
                 assert len(related_table_data) == submission_count

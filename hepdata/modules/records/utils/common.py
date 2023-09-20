@@ -258,7 +258,7 @@ def get_record_data_list(record, data_type):
     This must be done as the record contents are not stored within the hepsubmission object.
     :return: List: A list of dictionary objects containing record ID and title pairs
     """
-    record_data = []
+    # Selects the related data based on the data_type flag
     if data_type == "related":
         data = record.get_related_hepsubmissions()
     elif data_type == "related-to-this":

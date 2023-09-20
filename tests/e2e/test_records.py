@@ -328,6 +328,7 @@ def test_related_records(live_server, logged_in_browser):
 
         for element in related_elements:
             html_element = browser.find_element(By.ID, element['id'])
+            # Get the related data list html based on the current element
             data_list = html_element.find_element(By.CLASS_NAME, 'related-list')
             list_items = data_list.find_elements(By.TAG_NAME, 'li')
 
