@@ -165,7 +165,7 @@ jobs:
         accessKey: ${{ secrets.SAUCE_ACCESS_KEY }}
         region: eu-central
         tunnelName: ${{ github.run_id }}
-        scVersion: 4.9.0
+        scVersion: 4.9.1
         verbose: true
     - name: Run end-to-end tests
       if: startsWith(matrix.postgres-version, '12') && startsWith(matrix.python-version, '3.9')
