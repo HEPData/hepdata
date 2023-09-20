@@ -54,24 +54,9 @@ HEPDATA.switch_table = function (listId, table_requested, table_name, status) {
       HEPDATA.current_record_id,
       HEPDATA.current_table_id);
   }
-
-  // Generate the URL for the call
-  var tableApiCall = '/record/data/file_size_check/' + table_requested + "/" + HEPDATA.current_table_version
-
-  // Asynchronous check function
-  HEPDATA.table_renderer.file_size_check(tableApiCall)
-    .then((result) => {
-      console.log(result);
-      if(result) {
-        console.log("File too large!");
-      } else {
-        console.log("File small enough.")
-      }
-      HEPDATA.table_renderer.begin_render();
-    })
-    .catch((error) => {
-      console.error(error);
-    });
+  HEPDATA.table_renderer.display_table('/record/data/' + HEPDATA.current_record_id + '/' + table_requested + "/" + HEPDATA.current_table_version,
+    '#data_table_region',
+    '#data_visualization_region');
 
   $(".data_download_link").each(function () {
     var data_format = $(this).text().toLowerCase();
@@ -423,31 +408,5 @@ HEPDATA.table_renderer = {
       var row_num = d3.select(this).attr('id').split("-")[1];
       return !(row_num in target_rows) && Object.keys(target_rows).length > 0;
     });
-  },
-
-
-  file_size_check: function (url) {
-    return new Promise((resolve, reject) => {
-      $.ajax({
-        dataType: "json",
-        url: url,
-        method: "POST",
-        processData: false,
-        cache: true,
-        success: function (check_data) {
-          resolve(check_data.file_size_check);
-        },
-        error: function (data, error) {
-          reject(error);
-        }
-      });
-    });
-  },
-
-
-  begin_render: function() {
-    this.display_table('/record/data/' + HEPDATA.current_record_id + '/' + HEPDATA.current_table_id + "/" + HEPDATA.current_table_version,
-        '#data_table_region',
-        '#data_visualization_region');
   }
 };
