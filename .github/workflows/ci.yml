@@ -53,7 +53,7 @@ jobs:
     strategy:
 
       matrix:
-        postgres-version: [ 13 ]
+        postgres-version: [ 14 ]
         os-version: [ '2.7.0' ]
         python-version: [ '3.7', '3.8', '3.9' ]
         exclude:
