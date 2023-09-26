@@ -34,7 +34,7 @@ HEPData runs with Python 3.7, 3.8 or 3.9. It also uses several services, which y
 These services can be installed using the relevant package manager for your system,
 for example, using ``yum`` or ``apt-get`` for Linux or ``brew`` for macOS:
 
- * `PostgreSQL <http://www.postgresql.org/>`_ (version 13) database server
+ * `PostgreSQL <http://www.postgresql.org/>`_ (version 14) database server
  * `Redis <http://redis.io/>`_ for caching
  * `OpenSearch <https://opensearch.org/>`_ (version 2.7.0) for indexing and information retrieval. See below for further instructions.
  * `Node.js <https://nodejs.org>`_ (version 18) JavaScript run-time environment and its package manager `npm <https://www.npmjs.com/>`_.
@@ -181,7 +181,7 @@ PostgreSQL
 
 See `YUM Installation <https://wiki.postgresql.org/wiki/YUM_Installation>`_ and
 `First steps <https://wiki.postgresql.org/wiki/First_steps>`_.  On Linux you might need ``sudo su - postgres`` before
-executing the steps below.  On macOS you can install with ``brew install postgresql@13``.
+executing the steps below.  On macOS you can install with ``brew install postgresql@14``.
 
 .. code-block:: console
 
@@ -224,9 +224,9 @@ Set email confirmation for the test user within the database.
    UPDATE 1
 
 If you're having problems with access permissions to the database (on Linux), a simple solution is to edit the
-PostgreSQL Client Authentication Configuration File (e.g. ``/var/lib/pgsql/13/data/pg_hba.conf``) to
+PostgreSQL Client Authentication Configuration File (e.g. ``/var/lib/pgsql/14/data/pg_hba.conf``) to
 ``trust`` local and IPv4/IPv6 connections (instead of ``peer`` or ``ident``), then restart the PostgreSQL
-server (e.g. ``sudo systemctl restart postgresql-13``).
+server (e.g. ``sudo systemctl restart postgresql-14``).
 
 Recreate the OpenSearch index
 -----------------------------
