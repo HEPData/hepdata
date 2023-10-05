@@ -101,7 +101,7 @@
                                             <div class="analysis">
                                                 <a href="{{ analysis.analysis }}" target="_blank"><span
                                                         class="fa fa-line-chart"></span>
-                                                    {{ analysis.type }}{% if analysis.type != config.HISTFACTORY_FILE_TYPE %} Analysis{% endif %}
+                                                    {{ analysis.type }}{% if analysis.type == 'rivet' %} Analysis{% endif %}
                                                   </a>
                                             </div>
                                         {% endfor %}
