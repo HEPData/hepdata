@@ -91,7 +91,8 @@ def add_shortened_authors(doc):
 
 def add_analyses(doc):
     """
-    TODO: Generalise for badges other than Rivet
+    Add analyses links such as Rivet, MadAnalysis 5 and HistFactory to the index.
+
     :param doc:
     :return:
     """
