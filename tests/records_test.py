@@ -1040,7 +1040,7 @@ def test_update_analyses(app):
     assert len(analysis_resources) == 1
     assert analysis_resources[0].file_location == 'http://rivet.hepforge.org/analyses/ATLAS_2012_I1203852'
 
-    # Import a record that has an associated MadAnalysis 5 analyses
+    # Import a record that has an associated MadAnalysis 5 analysis
     import_records(['ins1811596'], synchronous=True)
     analysis_resources = DataResource.query.filter_by(file_type='MadAnalysis').all()
     assert len(analysis_resources) == 0
