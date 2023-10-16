@@ -38,10 +38,17 @@ log = logging.getLogger(__name__)
 
 
 @shared_task
-def update_analyses():
-    """Update (Rivet) analyses and remove outdated resources."""
+def update_analyses(endpoint=None):
+    """
+    Update (Rivet and MadAnalysis 5) analyses and remove outdated resources.
+
+    :param endpoint: either "Rivet" or "MadAnalysis" or None (default) for both
+    """
     endpoints = current_app.config["ANALYSES_ENDPOINTS"]
     for analysis_endpoint in endpoints:
+
+        if endpoint and endpoint != analysis_endpoint:
+            continue
 
         if "endpoint_url" in endpoints[analysis_endpoint]:
 
