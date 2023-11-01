@@ -18,9 +18,12 @@ CMD [ "--version" ]
 ARG APP_ENVIRONMENT
 ARG SAUCE_OS
 
-RUN curl -sL https://deb.nodesource.com/setup_18.x | bash -
-RUN apt-get update
-RUN apt-get install -y nodejs
+# https://github.com/nodesource/distributions#deb
+ENV NODE_MAJOR=18
+RUN curl -SLO https://deb.nodesource.com/nsolid_setup_deb.sh
+RUN chmod 500 nsolid_setup_deb.sh
+RUN ./nsolid_setup_deb.sh ${NODE_MAJOR}
+RUN apt-get install nodejs -y
 
 WORKDIR /code
 
