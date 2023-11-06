@@ -36,31 +36,31 @@ for example, using ``yum`` or ``apt-get`` for Linux or ``brew`` for macOS:
 
  * `PostgreSQL <http://www.postgresql.org/>`_ (version 14) database server
  * `Redis <http://redis.io/>`_ for caching
- * `OpenSearch <https://opensearch.org/>`_ (version 2.7.0) for indexing and information retrieval. See below for further instructions.
+ * `OpenSearch <https://opensearch.org/>`_ (version 2.11.0) for indexing and information retrieval. See below for further instructions.
  * `Node.js <https://nodejs.org>`_ (version 18) JavaScript run-time environment and its package manager `npm <https://www.npmjs.com/>`_.
 
-OpenSearch v2.7.0
------------------
+OpenSearch v2.11.0
+------------------
 
-We are currently using OpenSearch v2.7.0. Here, you can find the `download instructions. <https://opensearch.org/versions/opensearch-2-7-0.html>`_
+We are currently using OpenSearch v2.11.0. Here, you can find the `download instructions. <https://opensearch.org/versions/opensearch-2-11-0.html>`_
 
 There are some examples below:
 
 **MacOS**
 
-Install the latest version (currently, v2.8.0) with ``brew install opensearch``.
-Alternatively, to install a specific version like v2.6.0 via Homebrew (v2.7.0 is unavailable), run:
+Install the latest version (currently, v2.11.0) with ``brew install opensearch``.
+Alternatively, to install a specific version like v2.11.0 via Homebrew (if the latest version is newer), run:
 
 .. code-block:: console
 
     $ brew tap-new opensearch/tap
-    $ brew extract --version=2.6.0 opensearch opensearch/tap
-    $ brew install opensearch/tap/opensearch@2.6.0
-    $ brew services restart opensearch/tap/opensearch@2.6.0
+    $ brew extract --version=2.11.0 opensearch opensearch/tap
+    $ brew install opensearch/tap/opensearch@2.11.0
+    $ brew services restart opensearch/tap/opensearch@2.11.0
 
 **Linux**
 
-You can see the tarball instructions on the OpenSearch installation `webpage. <https://opensearch.org/docs/2.2/opensearch/install/tar/>`_
+You can see the tarball instructions on the OpenSearch installation `webpage. <https://opensearch.org/docs/2.11/install-and-configure/install-opensearch/tar/>`_
 
 To execute, run this command within the extracted folder.
 
@@ -74,8 +74,8 @@ Alternatively, run OpenSearch after `installing Docker <https://docs.docker.com/
 
 .. code-block:: console
 
-    $ docker pull opensearchproject/opensearch:2.7.0
-    $ docker run -d -p 9200:9200 -p 9600:9600 -e "discovery.type=single-node" -e "plugins.security.disabled=true" opensearchproject/opensearch:2.7.0
+    $ docker pull opensearchproject/opensearch:2.11.0
+    $ docker run -d -p 9200:9200 -p 9600:9600 -e "discovery.type=single-node" -e "plugins.security.disabled=true" opensearchproject/opensearch:2.11.0
 
 .. _installation:
 
