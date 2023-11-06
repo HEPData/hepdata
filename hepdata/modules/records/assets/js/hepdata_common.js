@@ -44,7 +44,7 @@ HEPDATA.file_type_to_details = {
   "bitbucket": {"icon": "bitbucket", "description": "Bitbucket Repository"},
   "fastnlo": {"icon": "area-chart", "description": "fastNLO Analysis"},
   "rivet": {"icon": "area-chart", "description": "Rivet Analysis"},
-  "madanalysis": {"icon": "area-chart", "description": "MadAnalysis5 Analysis"},
+  "madanalysis": {"icon": "area-chart", "description": "MadAnalysis 5 Analysis"},
   "xfitter": {"icon": "area-chart", "description": "xFitter Analysis"},
   "applgrid": {"icon": "area-chart", "description": "APPLgrid Analysis"},
   "ufo": {"icon": "rocket", "description": "Universal Feynrules Output (UFO)"},

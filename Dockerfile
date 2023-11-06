@@ -18,9 +18,12 @@ CMD [ "--version" ]
 ARG APP_ENVIRONMENT
 ARG SAUCE_OS
 
-RUN curl -sL https://deb.nodesource.com/setup_18.x | bash -
-RUN apt-get update
-RUN apt-get install -y nodejs
+# https://github.com/nodesource/distributions#deb
+ENV NODE_MAJOR=18
+RUN curl -SLO https://deb.nodesource.com/nsolid_setup_deb.sh
+RUN chmod 500 nsolid_setup_deb.sh
+RUN ./nsolid_setup_deb.sh ${NODE_MAJOR}
+RUN apt-get install nodejs -y
 
 WORKDIR /code
 
@@ -43,8 +46,8 @@ RUN hepdata collect -v  && \
 
 RUN bash -c "echo $APP_ENVIRONMENT"
 
-RUN bash -c "set -x; [[ ${APP_ENVIRONMENT:-prod} = local-web ]] && (cd /usr/local/var && wget https://saucelabs.com/downloads/sc-4.9.0-${SAUCE_OS:-linux}.tar.gz && \
-  tar -xvf sc-4.9.0-${SAUCE_OS:-linux}.tar.gz) || echo 'Not installing SC on prod or worker build'"
+RUN bash -c "set -x; [[ ${APP_ENVIRONMENT:-prod} = local-web ]] && (cd /usr/local/var && wget https://saucelabs.com/downloads/sc-4.9.1-${SAUCE_OS:-linux}.tar.gz && \
+  tar -xvf sc-4.9.1-${SAUCE_OS:-linux}.tar.gz) || echo 'Not installing SC on prod or worker build'"
 
 WORKDIR /code
 

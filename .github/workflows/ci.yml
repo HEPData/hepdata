@@ -53,12 +53,10 @@ jobs:
     strategy:
 
       matrix:
-        postgres-version: [ 12, 13 ]
+        postgres-version: [ 14 ]
         os-version: [ '2.7.0' ]
-        python-version: [ '3.7', '3.8', '3.9' ]
+        python-version: [ '3.8', '3.9' ]
         exclude:
-          - postgres-version: ${{ github.event.act && 13 }}
-          - python-version: ${{ github.event.act && '3.7' }}
           - python-version: ${{ github.event.act && '3.8' }}
 
     # Service containers to run with `runner-job`
@@ -113,7 +111,7 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
     - name: Set up node
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@v4
       with:
         node-version: ${{ env.node-version }}
     - name: Cache pip modules
@@ -159,16 +157,16 @@ jobs:
         py.test -vv tests/*_test.py
     - name: Setup Sauce Connect
       uses: saucelabs/sauce-connect-action@v2
-      if: startsWith(matrix.postgres-version, '12') && startsWith(matrix.python-version, '3.9')
+      if: startsWith(matrix.python-version, '3.9')
       with:
         username: ${{ secrets.SAUCE_USERNAME }}
         accessKey: ${{ secrets.SAUCE_ACCESS_KEY }}
         region: eu-central
         tunnelName: ${{ github.run_id }}
-        scVersion: 4.9.0
+        scVersion: 4.9.1
         verbose: true
     - name: Run end-to-end tests
-      if: startsWith(matrix.postgres-version, '12') && startsWith(matrix.python-version, '3.9')
+      if: startsWith(matrix.python-version, '3.9')
       env:
         SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
         SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY }}
@@ -176,7 +174,7 @@ jobs:
       run: |
         if [[ -n ${{ secrets.SAUCE_USERNAME }} && -n ${{ secrets.SAUCE_ACCESS_KEY}} ]]; then py.test -vv tests/e2e; fi
     - name: Run coveralls
-      if: ${{ startsWith(matrix.postgres-version, '12') && startsWith(matrix.python-version, '3.9') && !env.ACT }}
+      if: ${{ startsWith(matrix.python-version, '3.9') && !env.ACT }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         COVERALLS_SERVICE_NAME: github

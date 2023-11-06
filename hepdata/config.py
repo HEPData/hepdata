@@ -314,11 +314,14 @@ ANALYSES_ENDPOINTS = {
         'endpoint_url': 'http://rivet.hepforge.org/analyses.json',
         'url_template': 'http://rivet.hepforge.org/analyses/{0}'
     },
+    'MadAnalysis': {
+        'endpoint_url': 'https://madanalysis.irmp.ucl.ac.be/raw-attachment/wiki/MA5SandBox/analyses.json',
+        'url_template': 'https://doi.org/{0}'
+    },
     #'ufo': {},
     #'xfitter': {},
     #'applgrid': {},
     #'fastnlo': {},
-    #'madanalysis': {},
 }
 
 HISTFACTORY_FILE_TYPE = 'HistFactory'
