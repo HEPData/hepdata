@@ -55,7 +55,7 @@ from hepdata.modules.submission.api import get_submission_participants_for_recor
 from hepdata.modules.submission.models import HEPSubmission, DataSubmission, \
     DataResource, DataReview, Message, Question
 from hepdata.modules.records.utils.common import get_record_by_id, \
-    default_time, IMAGE_TYPES, decode_string
+    default_time, IMAGE_TYPES, decode_string, file_size_check
 from hepdata.modules.records.utils.data_processing_utils import \
     generate_table_structure, process_ctx
 from hepdata.modules.records.utils.submission import create_data_review, \
@@ -289,14 +289,15 @@ def get_latest():
     return jsonify(result)
 
 
-@blueprint.route('/data/<int:recid>/<int:data_recid>/<int:version>', methods=['GET', ])
-def get_table_details(recid, data_recid, version):
+@blueprint.route('/data/<int:recid>/<int:data_recid>/<int:version>/<int:load_all>', methods=['GET'])
+def get_table_details(recid, data_recid, version, load_all):
     """
     Get the table details.
 
     :param recid:
     :param data_recid:
     :param version:
+    :param load_all:
     :return:
     """
     # joinedload allows query of data in another table without a second database access.
@@ -311,18 +312,28 @@ def get_table_details(recid, data_recid, version):
         if data_query.count() > 0:
             data_record = data_query.one()
             file_location = data_record.file_location
+            load_fail = True
 
-            attempts = 0
-            while True:
-                try:
-                    with open(file_location, 'r') as table_file:
-                        table_contents = yaml.load(table_file, Loader=Loader)
-                except:
-                    attempts += 1
-                # allow multiple attempts to read file in case of temporary disk problems
-                if (table_contents and table_contents is not None) or attempts > 5:
-                    break
+            if  file_size_check(file_location, load_all):
+                attempts = 0
+                while True:
+                    try:
+                        with open(file_location, 'r') as table_file:
+                            table_contents = yaml.load(table_file, Loader=Loader)
+                            if table_contents:
+                                load_fail = False
 
+                    except (FileNotFoundError, PermissionError) as e:
+                        attempts += 1
+                    # allow multiple attempts to read file in case of temporary disk problems
+                    if (table_contents and table_contents is not None) or attempts > 5:
+                        break
+            if load_fail:
+                # TODO - Needs to be initialised for later
+                table_contents["dependent_variables"] = []
+                table_contents["independent_variables"] = []
+
+            table_contents["load_fail"] = load_fail
             table_contents["name"] = datasub_record.name
             table_contents["title"] = datasub_record.description
             table_contents["keywords"] = datasub_record.keywords
