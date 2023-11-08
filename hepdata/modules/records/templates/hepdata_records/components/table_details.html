@@ -125,9 +125,13 @@
         <div class="clearfix"></div>
 
         <div class="clearfix"></div>
-
-        <div class="row">
-
+        <div id="hepdata_filesize_fail" class="hidden">
+            <div id="hepdata_filesize_fail_text" align="center" style="font-weight: bolder; color: #2C3E50; padding-top: 0px">
+            </div>
+            <div><p>This table is too large to load automatically.</p></div>
+            <button id="hepdata_filesize_loading_button" class="btn btn-primary btn-sm">Load Table</button>
+        </div>
+        <div id="hep_table" class="row">
             <div id="hep_table_data" class="col-md-7 hidden-xs">
                 <div id="table_options_region"></div>
                 <div id="table_section">
