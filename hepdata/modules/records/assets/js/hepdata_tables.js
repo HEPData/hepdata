@@ -103,8 +103,7 @@ HEPDATA.table_renderer = {
 
         $("#hepdata_table_loader").addClass("hidden");
         $("#hepdata_table_content").removeClass("hidden");
-
-        if(table_data.load_fail) {
+        if(table_data.values.length == 0) {
           $("#hepdata_table_loader").addClass("hidden");
           $("#hepdata_filesize_fail").removeClass("hidden");
           $("#hep_table").addClass("hidden");

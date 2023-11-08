@@ -333,7 +333,6 @@ def get_table_details(recid, data_recid, version, load_all):
                 table_contents["dependent_variables"] = []
                 table_contents["independent_variables"] = []
 
-            table_contents["load_fail"] = load_fail
             table_contents["name"] = datasub_record.name
             table_contents["title"] = datasub_record.description
             table_contents["keywords"] = datasub_record.keywords
