@@ -59,8 +59,8 @@ HEPDATA.switch_table = function (listId, table_requested, table_name, status) {
   $("#hepdata_table_content").addClass("hidden");
   // Reset filesize loader state
   $("#hepdata_filesize_loader").addClass("hidden");
-  $("filesize_table_confirm").removeClass("hidden");
-  $("filesize_table_loading").addClass("hidden");
+  $("#filesize_table_confirm").removeClass("hidden");
+  $("#filesize_table_loading").addClass("hidden");
   $("#filesize_table_loading_failed").addClass("hidden");
   $("#hep_table").addClass("hidden");
 
