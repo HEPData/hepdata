@@ -262,7 +262,9 @@ def file_size_check(file_location, load_all):
         :param load_all: If the check should be run
         :return bool: Pass or fail
     """
+    size_check = { "status": True, "size": 0 }
+    size_check["size"] = os.path.getsize(file_location)
     # We do the check only if told to
     if load_all == 0:
-        return os.path.getsize(file_location) <= SIZE_LOAD_CHECK_THRESHOLD
-    return True
+        size_check["status"] = size_check["size"] <= SIZE_LOAD_CHECK_THRESHOLD
+    return size_check

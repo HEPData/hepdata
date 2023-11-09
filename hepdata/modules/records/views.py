@@ -290,7 +290,7 @@ def get_latest():
 
 
 @blueprint.route('/data/<int:recid>/<int:data_recid>/<int:version>/<int:load_all>', methods=['GET'])
-def get_table_details(recid, data_recid, version, load_all):
+def get_table_details(recid, data_recid, version, load_all=1):
     """
     Get the table details.
 
@@ -314,7 +314,8 @@ def get_table_details(recid, data_recid, version, load_all):
             file_location = data_record.file_location
             load_fail = True
 
-            if  file_size_check(file_location, load_all):
+            size_check = file_size_check(file_location, load_all)
+            if size_check["status"]:
                 attempts = 0
                 while True:
                     try:
@@ -341,6 +342,7 @@ def get_table_details(recid, data_recid, version, load_all):
             table_contents["related_to_this"] = [r.doi for r in datasub_record.get_related_datasubmissions()]
             table_contents["doi"] = datasub_record.doi
             table_contents["location"] = datasub_record.location_in_publication
+            table_contents["size"] = size_check["size"]
 
         # we create a map of files mainly to accommodate the use of thumbnails for images where possible.
         tmp_assoc_files = {}

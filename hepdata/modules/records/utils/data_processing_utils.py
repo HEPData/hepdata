@@ -216,7 +216,8 @@ def generate_table_structure(table_contents):
               "review": table_contents["review"],
               "associated_files": table_contents["associated_files"],
               "keywords": {},
-              "values": []}
+              "values": [],
+              "size": table_contents["size"]}
 
     record["description"] = sanitize_html(table_contents["title"])
 
