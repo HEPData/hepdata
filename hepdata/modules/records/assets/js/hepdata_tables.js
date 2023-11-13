@@ -127,7 +127,8 @@ HEPDATA.table_renderer = {
 
         if(table_data.values.length == 0) {
           $("#hepdata_table_loader").addClass("hidden");
-          d3.select("#filesize_table_size").html('Table size is:' + table_data.size);
+          var megabyte_size = (table_data.size / (1024 * 1024)).toFixed(2);
+          d3.select("#filesize_table_size").html("Table size is: " + megabyte_size + " MB");
           $("#hepdata_filesize_loader").removeClass("hidden");
           $("filesize_table_confirm").removeClass("hidden");
         }
