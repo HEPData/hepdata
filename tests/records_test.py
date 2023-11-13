@@ -156,6 +156,7 @@ def test_data_processing(app):
     data["location"] = 'Data from Figure 2 of preprint'
     data["review"] = []
     data["associated_files"] = []
+    data["size"] = 0
 
     table_structure = generate_table_structure(data)
 
