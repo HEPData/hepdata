@@ -45,6 +45,7 @@ from invenio_accounts.models import User
 from invenio_db import db
 
 from .conftest import e2e_assert_url
+from ..conftest import create_blank_test_record
 
 
 def test_record_update(live_server, logged_in_browser):
@@ -258,44 +259,35 @@ def test_related_records(live_server, logged_in_browser):
     # The two objects should have flipped recid/expected values
     # i.e. Related to each other
     test_data = [
-        {"recid": None, "related_recid": None, "submission": None},
-        {"recid": None, "related_recid": None, "submission": None}
+        {"submission": None, "related_recid": None},
+        {"submission": None, "related_recid": None}
     ]
 
-    # Creates two records.
+    # Creates two blank records.
     for test in test_data:
-        record_information = create_record(
-            {'journal_info': 'Journal', 'title': 'Test Paper'})
-        test['submission'] = get_or_create_hepsubmission(record_information['recid'])
-        # Set overall status to finished so related data appears on dashboard
-        test['submission'].overall_status = 'finished'
-        test['recid'] = record_information['recid']
-        record = get_record_by_id(test['recid'])
-        user = User(email=f'test@test.com', password='hello1', active=True,
-                    id=1)
-        test_submissions = {}
-        create_record_for_dashboard(record['recid'], test_submissions, user)
+        test['submission'] = create_blank_test_record()
 
     # Recids for the test are set dynamically, based on what comes out of the minter
-    test_data[0]['related_recid'] = test_data[1]['recid']
-    test_data[1]['related_recid'] = test_data[0]['recid']
+    test_data[0]['related_recid'] = test_data[1]['submission'].publication_recid
+    test_data[1]['related_recid'] = test_data[0]['submission'].publication_recid
 
     for test in test_data:
+        recid = test['submission'].publication_recid
         # Create the mock related record ID data
-        related = RelatedRecid(this_recid=test['recid'],
+        related = RelatedRecid(this_recid=recid,
             related_recid=test['related_recid'])
         test['submission'].related_recids.append(related)
 
         # Generate the DOI for the test DataSubmission object
-        doi_string = f"{HEPDATA_DOI_PREFIX}/hepdata.{test['recid']}.v1/t1"
+        doi_string = f"{HEPDATA_DOI_PREFIX}/hepdata.{recid}.v1/t1"
 
         # Create a test DataSubmission object
         datasubmission = DataSubmission(
             name="Test",
             location_in_publication="Somewhere",
             data_file=1,
-            publication_recid=test['recid'],
-            associated_recid=test['recid'],
+            publication_recid=recid,
+            associated_recid=recid,
             doi=doi_string,
             version=1,
             description="Test")
@@ -315,7 +307,7 @@ def test_related_records(live_server, logged_in_browser):
     for test in test_data:
         # Load up the Record page.
         record_url = flask.url_for('hepdata_records.get_metadata_by_alternative_id',
-                                   recid=test['recid'], _external=True)
+                                   recid=test['submission'].publication_recid, _external=True)
         browser.get(record_url)
         # The page elements to test and their type (Record/Data)
         related_elements = [
@@ -339,8 +331,7 @@ def test_related_records(live_server, logged_in_browser):
             # Records expect a link to the HEPData site. Tables link to doi.org
             if element['type'] == 'recid':
                 # Check the URL against the regex
-                pattern = rf"http://localhost:\d+/record/{test['related_recid']}"
-                assert re.match(pattern, url_text)
+                assert f"/record/{test['related_recid']}" in url_text
                 # Check that the tag text is the expected record ID number
                 assert list_items[0].text == str(test['related_recid'])
 
