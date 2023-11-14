@@ -43,6 +43,7 @@ from hepdata.modules.submission.api import get_latest_hepsubmission, get_submiss
 from hepdata.modules.submission.models import DataSubmission, HEPSubmission, RelatedRecid
 from hepdata.modules.submission.views import process_submission_payload
 from hepdata.config import HEPDATA_DOI_PREFIX
+from tests.conftest import create_test_record
 
 
 def test_submission_endpoint(app, client):
@@ -332,26 +333,12 @@ def test_related_records(app, admin_idx):
             {"dir" : "related_submission_3", "related" : None},
             {"dir": "related_submission_4", "related": None}
         ]
-        # Dummy record data
-        record = {'title': 'HEPData Testing',
-                  'reviewer': {'name': 'Testy McTester', 'email': 'test@test.com'},
-                  'uploader': {'name': 'Testy McTester', 'email': 'test@test.com'},
-                  'message': 'This is ready',
-                  'user_id': 1}
         base_dir = os.path.dirname(os.path.realpath(__file__))
 
         # Begin submission of test submissions
         for data in test_data:
-            # Set up a new test submission
-            test_sub = process_submission_payload(**record)
-            data['sub'] = test_sub
-            # Ensure the status is set to `finished` so the related data can be accessed.
-            test_sub.overall_status = 'finished'
-            test_directory = os.path.join(base_dir, test_dir, data['dir'])
-            record_dir = get_data_path_for_record(test_sub.publication_recid, str(int(round(time.time()))))
-            shutil.copytree(test_directory, record_dir)
-            process_submission_directory(record_dir, os.path.join(record_dir, 'submission.yaml'),
-                                test_sub.publication_recid)
+            location = os.path.join(base_dir, test_dir, data['dir'])
+            data['sub'] = create_test_record(location)
 
         # Checking against results in test_data
         for data in test_data:
