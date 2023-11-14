@@ -299,6 +299,8 @@ def process_ctx(ctx, light_mode=False):
                         site_url, _recid, _cleaned_table_name),
                     'yoda': '{0}/download/table/{1}/{2}/yoda'.format(
                         site_url, _recid, _cleaned_table_name),
+                    'yoda1': '{0}/download/table/{1}/{2}/yoda1'.format(
+                        site_url, _recid, _cleaned_table_name),
                     'yaml': '{0}/download/table/{1}/{2}/yaml'.format(
                         site_url, _recid, _cleaned_table_name)}
 
