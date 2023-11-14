@@ -38,7 +38,6 @@ from hepdata.ext.opensearch.api import reindex_all
 from hepdata.factory import create_app
 from hepdata.modules.dashboard.api import create_record_for_dashboard
 from hepdata.modules.records.importer.api import import_records, _download_file
-from hepdata.modules.records.utils.common import get_record_by_id
 from hepdata.modules.records.utils.data_files import get_data_path_for_record
 from hepdata.modules.records.utils.submission import get_or_create_hepsubmission, process_submission_directory
 from hepdata.modules.records.utils.workflow import create_record
