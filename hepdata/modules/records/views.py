@@ -102,7 +102,7 @@ def sandbox_display(id):
             if output_format == 'html':
                 return render_template('hepdata_records/sandbox.html', ctx=ctx)
             elif 'table' in request.args:
-                if output_format == 'yoda' and 'rivet' in request.args:
+                if output_format.startswith('yoda') and 'rivet' in request.args:
                     return redirect('/download/table/{0}/{1}/{2}/{3}/{4}'.format(
                         id,
                         request.args['table'].replace('%', '%25').replace('\\', '%5C'),
@@ -115,7 +115,7 @@ def sandbox_display(id):
             elif output_format == 'json':
                 ctx = process_ctx(ctx, light_mode)
                 return jsonify(ctx)
-            elif output_format == 'yoda' and 'rivet' in request.args:
+            elif output_format.startswith('yoda') and 'rivet' in request.args:
                 return redirect('/download/submission/{0}/{1}/{2}/{3}'.format(
                     id, 1, output_format, request.args['rivet']))
             else:
