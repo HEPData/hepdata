@@ -34,7 +34,11 @@ import pytest
 from hepdata.ext.opensearch.admin_view.api import AdminIndexer
 from hepdata.ext.opensearch.api import reindex_all
 from hepdata.factory import create_app
+from hepdata.modules.dashboard.api import create_record_for_dashboard
 from hepdata.modules.records.importer.api import import_records, _download_file
+from hepdata.modules.records.utils.common import get_record_by_id
+from hepdata.modules.records.utils.submission import get_or_create_hepsubmission
+from hepdata.modules.records.utils.workflow import create_record
 
 TEST_EMAIL = 'test@hepdata.net'
 TEST_PWD = 'hello1'
@@ -155,3 +159,21 @@ def get_identifiers():
 @pytest.fixture()
 def load_submission(app, load_default_data):
     import_records(['ins1487726'], synchronous=True)
+
+
+def create_blank_test_record():
+    """
+    Helper function to create a single, blank record
+    """
+    record_information = create_record(
+        {'journal_info': 'Journal', 'title': 'Test Paper'})
+    recid = record_information['recid']
+    submission = get_or_create_hepsubmission(recid)
+    # Set overall status to finished so related data appears on dashboard
+    submission.overall_status = 'finished'
+    record = get_record_by_id(recid)
+    user = User(email=f'test@test.com', password='hello1', active=True,
+                id=1)
+    test_submissions = {}
+    create_record_for_dashboard(recid, test_submissions, user)
+    return submission
