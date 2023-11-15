@@ -221,10 +221,11 @@ def cleanup_data_related_recid(recid):
     :param recid: The record ID of the HEPSubmission object to be cleaned
     :return:
     """
-    hepsubmission = HEPSubmission.query.filter_by(publication_recid=recid).first()
-    for related in hepsubmission.related_recids:
-        db.session.delete(related)
-    db.session.commit()
+    hepsubmission = get_latest_hepsubmission(publication_recid=recid)
+    if hepsubmission:
+        for related in hepsubmission.related_recids:
+            db.session.delete(related)
+        db.session.commit()
 
 
 def process_data_file(recid, version, basepath, data_obj, datasubmission, main_file_path, tablenum, overall_status):
