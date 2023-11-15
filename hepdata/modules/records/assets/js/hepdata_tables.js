@@ -126,6 +126,8 @@ HEPDATA.table_renderer = {
         HEPDATA.table_renderer.render_keywords(table_data.keywords, "#table_keywords");
         $("#hepdata_table_loader").addClass("hidden");
         $("#hepdata_table_content").removeClass("hidden");
+        // We also need to clear the figure
+        $("#figures").html('');
 
         // If there is no table, the table is too big
         if(table_data.values.length == 0) {
