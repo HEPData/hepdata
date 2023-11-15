@@ -53,7 +53,7 @@ def convert_zip_archive(input_archive, output_archive, options):
         input_directory, input_file = validation
 
         successful = convert(
-            CFG_CONVERTER_URL,
+            current_app.config.get('CFG_CONVERTER_URL', CFG_CONVERTER_URL),
             input_directory if input == 'yaml' else input_file,
             output=output_archive,
             options=options,
@@ -84,7 +84,7 @@ def convert_oldhepdata_to_yaml(input_path, output_path):
         'output_format': 'yaml',
     }
     successful = convert(
-        CFG_CONVERTER_URL,
+        current_app.config.get('CFG_CONVERTER_URL', CFG_CONVERTER_URL),
         input_path,
         output=output_path,
         options=options,
