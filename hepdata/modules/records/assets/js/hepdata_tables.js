@@ -52,7 +52,7 @@ HEPDATA.switch_table = function (listId, table_requested, table_name, status) {
   $(".copy-btn").attr('data-clipboard-text', direct_link);
   HEPDATA.setup_clipboard();
 
-
+  // Reset the table loading section
   $("#hepdata_table_loading").removeClass("hidden");
   $("#hepdata_table_loading_failed").addClass("hidden");
   $("#hepdata_table_loader").removeClass("hidden");
@@ -75,6 +75,7 @@ HEPDATA.switch_table = function (listId, table_requested, table_name, status) {
   var web_url = '/record/data/' + HEPDATA.current_record_id + '/' + table_requested + "/" + HEPDATA.current_table_version + "/";
   HEPDATA.table_renderer.display_table_headers(web_url, 0);
 
+  // Function to initiate the button to attempt loading of the table
   $("#hepdata_filesize_loading_button").on('click', function() {
     $("#filesize_table_confirm").addClass("hidden");
     $("#filesize_table_loading").removeClass("hidden");
@@ -101,6 +102,7 @@ HEPDATA.switch_table = function (listId, table_requested, table_name, status) {
 
 HEPDATA.table_renderer = {
   display_table_headers: function(url, load_all) {
+    // Render only the main table information (name, details, etc.) at the top
     $.ajax({
       dataType: "json",
       url: url + load_all,
@@ -125,7 +127,9 @@ HEPDATA.table_renderer = {
         $("#hepdata_table_loader").addClass("hidden");
         $("#hepdata_table_content").removeClass("hidden");
 
+        // If there is no table, the table is too big
         if(table_data.values.length == 0) {
+          // Set up filesize attempt section
           $("#hepdata_table_loader").addClass("hidden");
           var megabyte_size = (table_data.size / (1024 * 1024)).toFixed(2);
           d3.select("#filesize_table_size").html("Table size is: " + megabyte_size + " MB");
@@ -147,6 +151,7 @@ HEPDATA.table_renderer = {
     });
   },
   display_table: function (url, table_placement, visualization_placement, load_all) {
+    // Renders the table data section of a record page.
     $.ajax({
       dataType: "json",
       url: url + load_all,

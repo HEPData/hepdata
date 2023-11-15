@@ -499,46 +499,57 @@ def test_large_file_load(app, live_server, admin_idx, logged_in_browser):
     """
     Tests the loading of a large (over 1mb) file to the database.
     Used for testing the load button on the records page that appears when a file is
-        too large for immediate loading.
+    too large for immediate loading.
     """
     browser = logged_in_browser
     with app.app_context():
         admin_idx.recreate_index()
-        directory = os.path.abspath("tests/test_data/TestLargeSubmission")
-        submission = create_test_record(directory)
+
+        # Create the test record
+        submission = create_test_record(os.path.abspath("tests/test_data/TestLargeSubmission"))
+        # Load the webpage
         record_url = flask.url_for('hepdata_records.get_metadata_by_alternative_id',
                                    recid=submission.publication_recid, _external=True)
         browser.get(record_url)
+
+        # The required elements for testing/navigation
         table_name = browser.find_element(By.ID, "table_name")
         table_description =browser.find_element(By.ID, "table_description")
         load_button = browser.find_element(By.ID, "hepdata_filesize_loading_button")
         data_table = browser.find_element(By.ID, "hep_table")
-
         tables = browser.find_element(By.ID, "table-list").find_elements(By.TAG_NAME, "li")
+
+        # Wait for the table to attempt to load
         WebDriverWait(browser, 10).until(
             EC.visibility_of(table_name)
         )
+        # Check the contents of the top table data
         assert table_name.text == "Table 1"
         assert table_description.text == "Test Table 1"
+        # Check that the filesize error message and size has displayed
         assert re.match(
             r"Table size is: (\d+(\.\d+)?) MB",
             browser.find_element(By.ID, "filesize_table_size").text
         )
+        # Check for load button/contents
         assert EC.visibility_of(load_button)
         assert EC.visibility_of(browser.find_element(By.ID, "hepdata_filesize_loader"))
-        load_button.click()
-        assert EC.visibility_of(browser.find_element(By.ID, "filesize_table_loading"))
 
+        # Click to load the table
+        load_button.click()
+        # Check that the animation is now visible and wait for loading
+        assert EC.visibility_of(browser.find_element(By.ID, "filesize_table_loading"))
         WebDriverWait(browser, 10).until(
             EC.visibility_of(data_table)
         )
 
+        # Swap to a new table and wait (this one is under the size)
         tables[1].click()
-
         WebDriverWait(browser, 5).until(
             EC.visibility_of(data_table)
         )
 
+        # Check that the table is now visible
         assert table_name.text == "Table 2"
         assert table_description.text == "Test Table 2"
         assert EC.visibility_of(data_table)
