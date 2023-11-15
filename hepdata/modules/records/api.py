@@ -384,7 +384,7 @@ def render_record(recid, record, version, output_format, light_mode=False):
             redirect_url_after_login = '%2Frecord%2F{0}%3Fversion%3D{1}%26format%3D{2}'.format(recid, version, output_format)
             if 'table' in request.args:
                 redirect_url_after_login += '%26table%3D{0}'.format(request.args['table'])
-            if output_format == 'yoda' and 'rivet' in request.args:
+            if output_format.startswith('yoda') and 'rivet' in request.args:
                 redirect_url_after_login += '%26rivet%3D{0}'.format(request.args['rivet'])
             return redirect('/login/?next={0}'.format(redirect_url_after_login))
         else:
@@ -423,14 +423,14 @@ def render_record(recid, record, version, output_format, light_mode=False):
                 if output_format == 'json':
                     ctx = process_ctx(ctx, light_mode)
                     return jsonify(ctx)
-                elif output_format == 'yoda' and 'rivet' in request.args:
+                elif output_format.startswith('yoda') and 'rivet' in request.args:
                     return redirect('/download/submission/{0}/{1}/{2}/{3}'.format(recid, version, output_format,
                                                                               request.args['rivet']))
                 else:
                     return redirect('/download/submission/{0}/{1}/{2}'.format(recid, version, output_format))
             else:
                 file_identifier = 'ins{}'.format(hepdata_submission.inspire_id) if hepdata_submission.inspire_id else recid
-                if output_format == 'yoda' and 'rivet' in request.args:
+                if output_format.startswith('yoda') and 'rivet' in request.args:
                     return redirect('/download/table/{0}/{1}/{2}/{3}/{4}'.format(
                         file_identifier, request.args['table'].replace('%', '%25').replace('\\', '%5C'), version, output_format,
                         request.args['rivet']))
@@ -474,7 +474,7 @@ def render_record(recid, record, version, output_format, light_mode=False):
 
                 return render_template('hepdata_records/related_record.html', ctx=ctx)
 
-            elif output_format == 'yoda' and 'rivet' in request.args:
+            elif output_format.startswith('yoda') and 'rivet' in request.args:
                 return redirect('/download/table/{0}/{1}/{2}/{3}/{4}'.format(
                     publication_recid, ctx['table_name'].replace('%', '%25').replace('\\', '%5C'), datasubmission.version, output_format,
                     request.args['rivet']))

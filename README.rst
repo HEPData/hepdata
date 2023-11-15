@@ -2,7 +2,7 @@
 HEPData
 =======
 
-.. image:: https://github.com/HEPData/hepdata/workflows/Continuous%20Integration/badge.svg?branch=main
+.. image:: https://github.com/HEPData/hepdata/actions/workflows/ci.yml/badge.svg?branch=main
    :target: https://github.com/HEPData/hepdata/actions?query=branch%3Amain
    :alt: GitHub Actions Build Status
 

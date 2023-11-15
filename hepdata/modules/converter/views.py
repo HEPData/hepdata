@@ -27,9 +27,7 @@ import shutil
 import tempfile
 
 from flask import Blueprint, send_file, render_template, \
-    request, current_app, redirect, abort
-import time
-from werkzeug.utils import secure_filename
+    current_app, redirect, abort
 from hepdata.config import CFG_CONVERTER_URL, CFG_SUPPORTED_FORMATS, CFG_CONVERTER_TIMEOUT
 
 from hepdata_converter_ws_client import convert, Error
@@ -60,66 +58,9 @@ blueprint = Blueprint('converter', __name__,
 FORMATS = ','.join(['json'] + CFG_SUPPORTED_FORMATS)
 
 
-@blueprint.route('/convert', methods=['GET', 'POST'])
-def convert_endpoint():
-    """
-    Endpoint for general conversion, the file is passed as a GET parameter
-    and options ('from=' & 'to=') are query string arguments.
-    TO DO: is this function used anywhere?  If not, it can probably be removed.
-
-    :return: display_error or send_file depending on success of conversion
-    """
-    input_format, output_format = request.args.get('from', 'oldhepdata'), request.args.get('to', 'yaml')
-
-    if input_format not in ['yaml', 'oldhepdata'] or \
-            output_format not in ['root', 'yoda', 'csv', 'yaml']:
-        return display_error(
-            title="Chosen formats are not supported",
-            description="Supported input formats: oldhepdata, yaml\n" +
-                        "Supported output formats: root, yoda, csv"
-        )
-
-    fileobject = request.files.get('file')
-    if not fileobject or not fileobject.filename.endswith('.zip'):
-        print("Fileobject: " + str(fileobject))
-        return display_error(
-            title="Please send a zip file for conversion",
-            description="No file has been sent or it does not have a zip extension"
-        )
-
-    filename = secure_filename(fileobject.filename)
-    timestamp = str(int(round(time.time())))
-    input_archive = os.path.join(current_app.config['CFG_TMPDIR'], timestamp + '.zip')
-    fileobject.save(input_archive)
-
-    options = {
-        'input_format': input_format,
-        'output_format': output_format,
-        'filename': filename[:-4],
-    }
-    output_file = os.path.join(current_app.config['CFG_TMPDIR'], timestamp + '.tar.gz')
-
-    try:
-        conversion_result = convert_zip_archive(input_archive, output_file, options)
-    except Error as error:  # hepdata_converter_ws_client.Error
-        return display_error(title='Report concerns to info@hepdata.net', description=str(error))
-    finally:
-        os.remove(input_archive)
-
-    if not conversion_result:
-        return display_error(
-            title="Your archive does not contain necessary files",
-            description="For YAML conversions a submission.yaml file is necessary,"
-                        " and for conversions from the oldhepdata format"
-                        " a file with .oldhepdata extension is required."
-        )
-
-    return send_file(conversion_result, as_attachment=True)
-
-
 @blueprint.route(f'/submission/<inspire_id>/<any({FORMATS}):file_format>')
 @blueprint.route(f'/submission/<inspire_id>/<int:version>/<any({FORMATS}):file_format>')
-@blueprint.route('/submission/<inspire_id>/<int:version>/<any(yoda):file_format>/<rivet>')
+@blueprint.route('/submission/<inspire_id>/<int:version>/<any(yoda,yoda1):file_format>/<rivet>')
 def download_submission_with_inspire_id(*args, **kwargs):
     """
     Gets the submission file and either serves it back directly from YAML, or converts it
@@ -130,7 +71,7 @@ def download_submission_with_inspire_id(*args, **kwargs):
 
     :param inspire_id: inspire id
     :param version: version of submission to export. If absent, returns the latest.
-    :param file_format: json, yaml, csv, root, yoda or original
+    :param file_format: json, yaml, csv, root, yoda, yoda1 or original
     :param rivet: Rivet analysis name to override default written in YODA export
     :return: download_submission
     """
@@ -174,7 +115,7 @@ def download_submission_with_inspire_id(*args, **kwargs):
 
 @blueprint.route(f'/submission/<int:recid>/<any({FORMATS}):file_format>')
 @blueprint.route(f'/submission/<int:recid>/<int:version>/<any({FORMATS}):file_format>')
-@blueprint.route('/submission/<int:recid>/<int:version>/<any(yoda):file_format>/<rivet>')
+@blueprint.route('/submission/<int:recid>/<int:version>/<any(yoda,yoda1):file_format>/<rivet>')
 def download_submission_with_recid(*args, **kwargs):
     """
     Gets the submission file and either serves it back directly from YAML, or converts it
@@ -185,7 +126,7 @@ def download_submission_with_recid(*args, **kwargs):
 
     :param recid: submissions recid
     :param version: version of submission to export. If absent, returns the latest.
-    :param file_format: json, yaml, csv, root, yoda or original
+    :param file_format: json, yaml, csv, root, yoda, yoda1 or original
     :param rivet: Rivet analysis name to override default written in YODA export
     :return: download_submission
     """
@@ -219,7 +160,7 @@ def download_submission(submission, file_format, offline=False, force=False, riv
     for other formats.
 
     :param submission: HEPSubmission
-    :param file_format: json, yaml, csv, root, yoda or original
+    :param file_format: json, yaml, csv, root, yoda, yoda1 or original
     :param offline: offline creation of the conversion when a record is finalised
     :param force: force recreation of the conversion
     :param rivet_analysis_name: Rivet analysis name to override default written in YODA export
@@ -255,7 +196,7 @@ def download_submission(submission, file_format, offline=False, force=False, riv
     if not os.path.exists(converted_dir):
         os.makedirs(converted_dir, exist_ok=True)
 
-    if file_format == 'yoda' and rivet_analysis_name:
+    if file_format.startswith('yoda') and rivet_analysis_name:
         # Don't store in converted_dir since rivet_analysis_name might possibly change between calls.
         output_path = os.path.join(current_app.config['CFG_TMPDIR'], output_file)
     else:
@@ -288,7 +229,7 @@ def download_submission(submission, file_format, offline=False, force=False, riv
     if submission.doi and not submission.overall_status.startswith('sandbox'):
         converter_options['hepdata_doi'] = '{0}.v{1}'.format(submission.doi, version)
 
-    if file_format == 'yoda':
+    if file_format.startswith('yoda'):
         if not rivet_analysis_name:
             rivet_analysis_name = guess_rivet_analysis_name(submission)
         if rivet_analysis_name:
@@ -312,7 +253,7 @@ def download_submission(submission, file_format, offline=False, force=False, riv
 
 @blueprint.route(f'/table/<inspire_id>/<path:table_name>/<any({FORMATS}):file_format>')
 @blueprint.route(f'/table/<inspire_id>/<path:table_name>/<int:version>/<any({FORMATS}):file_format>')
-@blueprint.route('/table/<inspire_id>/<path:table_name>/<int:version>/<any(yoda):file_format>/<rivet>')
+@blueprint.route('/table/<inspire_id>/<path:table_name>/<int:version>/<any(yoda,yoda1):file_format>/<rivet>')
 def download_data_table_by_inspire_id(*args, **kwargs):
     """
     Downloads the latest data file given the url ``/download/submission/ins1283842/Table 1/yaml`` or
@@ -383,7 +324,7 @@ def download_data_table_by_inspire_id(*args, **kwargs):
 
 @blueprint.route(f'/table/<int:recid>/<path:table_name>/<any({FORMATS}):file_format>')
 @blueprint.route(f'/table/<int:recid>/<path:table_name>/<int:version>/<any({FORMATS}):file_format>')
-@blueprint.route('/table/<int:recid>/<path:table_name>/<int:version>/<any(yoda):file_format>/<rivet>')
+@blueprint.route('/table/<int:recid>/<path:table_name>/<int:version>/<any(yoda,yoda1):file_format>/<rivet>')
 def download_data_table_by_recid(*args, **kwargs):
     """
     Record ID download.
@@ -506,7 +447,7 @@ def download_datatable(datasubmission, file_format, *args, **kwargs):
     if datasubmission.doi and not hepsubmission.overall_status.startswith('sandbox'):
         options['hepdata_doi'] = datasubmission.doi.rsplit('/', 1)[0]
 
-    if file_format == 'yoda':
+    if file_format.startswith('yoda'):
         rivet_analysis_name = kwargs.pop('rivet_analysis_name', '')
         if not rivet_analysis_name:
             rivet_analysis_name = guess_rivet_analysis_name(hepsubmission)
@@ -529,6 +470,7 @@ def download_datatable(datasubmission, file_format, *args, **kwargs):
         new_path = output_path + "." + file_format
         new_path = extract(output_path + '-dir', new_path)
         os.remove(output_path + '-dir')
+        file_format = file_format[:-1] if file_format == 'yoda1' else file_format
         file_to_send = get_file_in_directory(new_path, file_format)
     else:
         # Error occurred, the output is a HTML file
