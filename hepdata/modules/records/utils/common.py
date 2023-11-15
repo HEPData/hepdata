@@ -28,9 +28,9 @@ from invenio_records.api import Record
 import os
 from sqlalchemy.orm.exc import NoResultFound
 
-from hepdata.config import CFG_PUB_TYPE, HISTFACTORY_FILE_TYPE
+from hepdata.config import HISTFACTORY_FILE_TYPE
 from hepdata.ext.opensearch.api import get_record
-from hepdata.modules.submission.models import HEPSubmission, License, DataSubmission
+from hepdata.modules.submission.models import HEPSubmission, License
 
 FILE_TYPES = {
     "py": "Python",
@@ -252,23 +252,4 @@ def record_exists(*args, **kwargs):
     count = HEPSubmission.query.filter_by(**kwargs).count()
     return count > 0
 
-def get_record_data_list(record, data_type):
-    """
-    Generates a dictionary (title/recid) from a list of record IDs.
-    This must be done as the record contents are not stored within the hepsubmission object.
-    :return: List: A list of dictionary objects containing record ID and title pairs
-    """
-    # Selects the related data based on the data_type flag
-    if data_type == "related":
-        data = record.get_related_hepsubmissions()
-    elif data_type == "related-to-this":
-        data = record.get_related_to_this_hepsubmissions()
 
-    record_data = []
-    for datum in data:
-        record_data.append(
-        {
-            "recid": datum.publication_recid,
-            "title": get_record_contents(datum.publication_recid)["title"]
-        })
-    return record_data
