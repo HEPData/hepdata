@@ -342,7 +342,7 @@ def test_related_records(live_server, logged_in_browser):
             # Records expect a link to the HEPData site. Tables link to doi.org
             if element['type'] == 'recid':
                 # Check the URL against the regex
-                pattern = rf"http://localhost:\d+/record/{test['related_recid']}"
+                pattern = rf"^.+/record/{test['related_recid']}$"
                 assert re.match(pattern, url_loc)
                 # Check that the tag text is the expected string
                 # The result will be the string "Test Paper(X)" Where X is the ID.
