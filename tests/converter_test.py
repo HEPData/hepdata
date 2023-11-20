@@ -42,7 +42,7 @@ def test_convert_and_store_valid_yaml(app, capsys, load_submission):
         base_dir = os.path.dirname(os.path.realpath(__file__))
         test_tar_gz_file = os.path.join(base_dir, 'test_data', '1396331.tar.gz')
         with open(test_tar_gz_file, "rb") as stream:
-            responses.add(responses.GET, CFG_CONVERTER_URL + '/convert',
+            responses.add(responses.GET, app.config.get('CFG_CONVERTER_URL', CFG_CONVERTER_URL) + '/convert',
                           status=200, headers={'mimetype': 'application/x-gzip'},
                           body=stream.read(), stream=True)
 
