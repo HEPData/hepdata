@@ -24,6 +24,8 @@
 """HEPData end to end testing of updating/reviewing records"""
 
 import os.path
+import shutil
+import time
 
 import flask
 import os
@@ -35,15 +37,17 @@ from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
 from hepdata.config import HEPDATA_DOI_PREFIX
+from hepdata.modules.records.utils.data_files import get_data_path_for_record
 from hepdata.modules.submission.models import HEPSubmission, RelatedRecid, DataSubmission, RelatedTable
 from hepdata.modules.dashboard.api import create_record_for_dashboard
 from hepdata.modules.records.utils.common import get_record_by_id
-from hepdata.modules.records.utils.submission import get_or_create_hepsubmission
+from hepdata.modules.records.utils.submission import get_or_create_hepsubmission, process_submission_directory
 from hepdata.modules.records.utils.workflow import create_record
 
 from invenio_accounts.models import User
 from invenio_db import db
 
+from hepdata.modules.submission.views import process_submission_payload
 from .conftest import e2e_assert_url
 
 
@@ -362,6 +366,85 @@ def test_related_records(live_server, logged_in_browser):
                 # Check the expected title of the related table DOI tag
                 assert url_tag.get_attribute('title') == f"Test Description {test['expected_number']}"
 
+def test_version_related(live_server, logged_in_browser):
+    """
+    Tests the related version
+    """
+    browser = logged_in_browser
+    browser.file_detector = LocalFileDetector()
+    record = {'title': "Test Title",
+                  'reviewer': {'name': 'Testy McTester', 'email': 'test@test.com'},
+                  'uploader': {'name': 'Testy McTester', 'email': 'test@test.com'},
+                  'message': 'This is ready',
+                  'user_id': 1}
+    test_data = [
+        {
+            "title": "Submission1",
+            "recid" : None,
+            "data_dir": None,
+            "inspire_id": 1,
+            "versions": [
+                {
+                    "version": 1,
+                    "submission" : None,
+                    "directory": "test_data/test_version/test_1_version_1"
+                },
+                {
+                    "version" : 2,
+                    "submission" : None,
+                    "directory": "test_data/test_version/test_1_version_2"
+                }
+            ]
+        },
+        {
+            "title": "Submission2",
+            "recid": None,
+            "data_dir": None,
+            "inspire_id": 25,
+            "versions": [
+                {
+                    "version": 1,
+                    "submission": None,
+                    "directory": "test_data/test_version/test_2_version_1"
+                },
+                {
+                    "version": 2,
+                    "submission": None,
+                    "directory": "test_data/test_version/test_2_version_2"
+                }
+            ]
+        }
+    ]
+
+    # Insert the data
+    for test in test_data:
+        for version in test["versions"]:
+            if version["version"] == 1:
+                version["submission"] = process_submission_payload(**record)
+                version["submission"].overall_status = "finished"
+                test["recid"] = version["submission"].publication_recid
+            else:
+                version["submission"] = HEPSubmission(
+                    publication_recid=test["recid"],
+                    inspire_id=test["inspire_id"],
+                    version=version["version"],
+                    overall_status='finished')
+                db.session.add(version["submission"])
+                db.session.commit()
+
+            data_dir = get_data_path_for_record(test["recid"], str(int(round(time.time())+version["version"])) )
+            shutil.copytree(os.path.abspath(version["directory"]), data_dir)
+            process_submission_directory(
+                data_dir,
+                os.path.join(data_dir, 'submission.yaml'),
+                test["recid"]
+            )
+
+    for test in test_data:
+        for version in test["versions"]:
+            record_url = flask.url_for('hepdata_records.get_metadata_by_alternative_id',
+                                       recid=version["submission"].publication_recid, _external=True)
+            browser.get(record_url)
 
 def test_sandbox(live_server, logged_in_browser):
     """

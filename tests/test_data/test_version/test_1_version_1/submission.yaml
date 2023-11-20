@@ -1,0 +1,14 @@
+---
+description: "TestSubmission1-V1"
+comment: TestComment1-V1
+related_to_hepdata_records:
+- 74
+---
+name: "TestTable1-V1"
+description: TestTable1-description-V1
+keywords:
+- {name: cmenergies, values: [0]}
+data_file: data1.yaml
+related_to_table_dois:
+- "10.17182/hepdata.74.v1/t1"
+- "10.17182/hepdata.74.v2/t1"
