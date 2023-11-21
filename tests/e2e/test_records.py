@@ -366,9 +366,10 @@ def test_related_records(live_server, logged_in_browser):
                 # Check the expected title of the related table DOI tag
                 assert url_tag.get_attribute('title') == f"Test Description {test['expected_number']}"
 
-def test_version_related(live_server, logged_in_browser):
+def test_version_related_table(live_server, logged_in_browser):
     """
-    Tests the related version
+    Tests the related table data on the records page.
+    Checks that the tooltip and description are correct.
     """
     browser = logged_in_browser
     browser.file_detector = LocalFileDetector()
@@ -377,11 +378,16 @@ def test_version_related(live_server, logged_in_browser):
                   'uploader': {'name': 'Testy McTester', 'email': 'test@test.com'},
                   'message': 'This is ready',
                   'user_id': 1}
+    """
+        Test data and the expected test outcomes
+        Expected data is only checked on the second version
+        Each version relates to both version 1 and 2 of the other submission
+    """
     test_data = [
         {
             "title": "Submission1",
             "recid" : None,
-            "data_dir": None,
+            "other_recid": None,
             "inspire_id": 1,
             "versions": [
                 {
@@ -392,14 +398,22 @@ def test_version_related(live_server, logged_in_browser):
                 {
                     "version" : 2,
                     "submission" : None,
-                    "directory": "test_data/test_version/test_1_version_2"
+                    "directory": "test_data/test_version/test_1_version_2",
+                    "expected_data": [{
+                        "url_text": "TestTable2-V1",
+                        "url_title": "TestTable2-description-V1"
+                    },
+                    {
+                        "url_text": "TestTable2-V2",
+                        "url_title": "TestTable2-description-V2"
+                    }]
                 }
             ]
         },
         {
             "title": "Submission2",
             "recid": None,
-            "data_dir": None,
+            "other_recid" : None,
             "inspire_id": 25,
             "versions": [
                 {
@@ -410,7 +424,15 @@ def test_version_related(live_server, logged_in_browser):
                 {
                     "version": 2,
                     "submission": None,
-                    "directory": "test_data/test_version/test_2_version_2"
+                    "directory": "test_data/test_version/test_2_version_2",
+                    "expected_data": [{
+                        "url_text": "TestTable1-V1",
+                        "url_title": "TestTable1-description-V1"
+                    },
+                    {
+                        "url_text": "TestTable1-V2",
+                        "url_title": "TestTable1-description-V2"
+                    }]
                 }
             ]
         }
@@ -419,11 +441,13 @@ def test_version_related(live_server, logged_in_browser):
     # Insert the data
     for test in test_data:
         for version in test["versions"]:
+            # Version 1 needs a different submission setup to v2
             if version["version"] == 1:
                 version["submission"] = process_submission_payload(**record)
                 version["submission"].overall_status = "finished"
                 test["recid"] = version["submission"].publication_recid
             else:
+                # Creates a new version of the submission and inserts it.
                 version["submission"] = HEPSubmission(
                     publication_recid=test["recid"],
                     inspire_id=test["inspire_id"],
@@ -432,19 +456,34 @@ def test_version_related(live_server, logged_in_browser):
                 db.session.add(version["submission"])
                 db.session.commit()
 
+            # Insertion of data, this is done for both versiions
             data_dir = get_data_path_for_record(test["recid"], str(int(round(time.time())+version["version"])) )
-            shutil.copytree(os.path.abspath(version["directory"]), data_dir)
+            shutil.copytree(os.path.join("..", version["directory"]), data_dir)
             process_submission_directory(
                 data_dir,
                 os.path.join(data_dir, 'submission.yaml'),
                 test["recid"]
             )
+    # Set the expected recids for the test data
+    test_data[0]["other_recid"] = test_data[1]["recid"]
+    test_data[1]["other_recid"] = test_data[0]["recid"]
 
+    # The checks
     for test in test_data:
-        for version in test["versions"]:
-            record_url = flask.url_for('hepdata_records.get_metadata_by_alternative_id',
-                                       recid=version["submission"].publication_recid, _external=True)
-            browser.get(record_url)
+        # We only need to use one submission version from each record for testing, so we're using the most recent
+        version = test["versions"][1]
+        record_url = flask.url_for('hepdata_records.get_metadata_by_alternative_id',
+                                   recid=version["submission"].publication_recid, _external=True)
+        browser.get(record_url)
+        related_area = browser.find_element(By.ID, "related-tables")
+        # Get the related data list html based on the current element
+        data_list = related_area.find_element(By.CLASS_NAME, "related-list-container").find_element(By.CLASS_NAME, "related-list").find_elements(By.TAG_NAME, "li")
+        for d in data_list:
+            tag = d.find_element(By.TAG_NAME, "a")
+            # Set the found attributes and check against the expected data
+            data = { "url_text" : tag.text, "url_title": tag.get_attribute("title")}
+            assert data in version["expected_data"]
+
 
 def test_sandbox(live_server, logged_in_browser):
     """
