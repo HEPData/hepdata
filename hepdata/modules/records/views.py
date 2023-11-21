@@ -40,7 +40,7 @@ from sqlalchemy.orm import joinedload
 import yaml
 from yaml import CBaseLoader as Loader
 
-from hepdata.config import CFG_DATA_TYPE, CFG_PUB_TYPE, SITE_URL
+from hepdata.config import CFG_DATA_TYPE, CFG_PUB_TYPE, SITE_URL, ADDITIONAL_SIZE_LOAD_CHECK_THRESHOLD
 from hepdata.ext.opensearch.api import get_records_matching_field, get_count_for_collection, get_n_latest_records, \
     index_record_ids
 from hepdata.modules.email.api import send_notification_email, send_new_review_message_email, NoParticipantsException, \
@@ -712,7 +712,13 @@ def get_resource(resource_id):
                 print("Resource is at: " + resource_obj.file_location)
                 try:
                     with open(resource_obj.file_location, 'r', encoding='utf-8') as resource_file:
-                        contents = resource_file.read() if mimetypes.guess_type(resource_obj.file_location)[0] != 'application/x-tar' else 'Binary'
+                        if mimetypes.guess_type(resource_obj.file_location)[0] != 'application/x-tar':
+                            # Check against the filesize threshold. Do not set contents if it fails.
+                            filesize = os.path.getsize(resource_obj.file_location)
+                            if filesize < ADDITIONAL_SIZE_LOAD_CHECK_THRESHOLD:
+                                contents = resource_file.read()
+                        else:
+                            contents = 'Binary'
                 except UnicodeDecodeError:
                     contents = 'Binary'
 

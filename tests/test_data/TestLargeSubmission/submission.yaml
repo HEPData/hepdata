@@ -1,7 +1,10 @@
-# Start a new submission. This section is optional for the provision of information about the overall submission.
----
-description: "Test Data"
-comment: Test
+additional_resources:
+- location: "additional1.yaml"
+  description: "Additional1 Description"
+- location: "additional2.yaml"
+  description: "Additional2 Description"
+comment: Comment
+
 ---
 name: "Table 1"
 description: Test Table 1

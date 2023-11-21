@@ -514,7 +514,7 @@ def test_large_file_load(app, live_server, admin_idx, logged_in_browser):
 
         # The required elements for testing/navigation
         table_name = browser.find_element(By.ID, "table_name")
-        table_description =browser.find_element(By.ID, "table_description")
+        table_description = browser.find_element(By.ID, "table_description")
         load_button = browser.find_element(By.ID, "hepdata_filesize_loading_button")
         data_table = browser.find_element(By.ID, "hep_table")
         tables = browser.find_element(By.ID, "table-list").find_elements(By.TAG_NAME, "li")
@@ -553,3 +553,13 @@ def test_large_file_load(app, live_server, admin_idx, logged_in_browser):
         assert table_name.text == "Table 2"
         assert table_description.text == "Test Table 2"
         assert EC.visibility_of(data_table)
+
+        # Test the uploaded resources
+        # Just checking against the existence of the element.
+        for resource, expected in zip(submission.resources, ["code-contents-fail", "code-contents"]):
+            web_url = flask.url_for(
+                'hepdata_records.get_resource',
+                resource_id=resource.id, landing_page=True,
+                _external=True)
+            browser.get(web_url)
+            assert EC.visibility_of(expected)
