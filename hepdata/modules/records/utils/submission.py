@@ -218,6 +218,7 @@ def cleanup_data_keywords(data_submission):
 def cleanup_data_related_recid(recid):
     """
     Deletes all related record ID entries of a HEPSubmission object of a given recid
+
     :param recid: The record ID of the HEPSubmission object to be cleaned
     :return:
     """
