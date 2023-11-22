@@ -456,9 +456,9 @@ def test_version_related_table(live_server, logged_in_browser):
                 db.session.add(version["submission"])
                 db.session.commit()
 
-            # Insertion of data, this is done for both versiions
+            # Insertion of data, this is done for both versions
             data_dir = get_data_path_for_record(test["recid"], str(int(round(time.time())+version["version"])) )
-            shutil.copytree(os.path.join("..", version["directory"]), data_dir)
+            shutil.copytree(os.path.abspath(version["directory"]), data_dir)
             process_submission_directory(
                 data_dir,
                 os.path.join(data_dir, 'submission.yaml'),
