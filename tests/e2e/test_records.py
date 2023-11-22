@@ -393,12 +393,12 @@ def test_version_related_table(live_server, logged_in_browser):
                 {
                     "version": 1,
                     "submission" : None,
-                    "directory": "test_data/test_version/test_1_version_1"
+                    "directory": "tests/test_data/test_version/test_1_version_1"
                 },
                 {
                     "version" : 2,
                     "submission" : None,
-                    "directory": "test_data/test_version/test_1_version_2",
+                    "directory": "tests/test_data/test_version/test_1_version_2",
                     "expected_data": [{
                         "url_text": "TestTable2-V1",
                         "url_title": "TestTable2-description-V1"
@@ -419,12 +419,12 @@ def test_version_related_table(live_server, logged_in_browser):
                 {
                     "version": 1,
                     "submission": None,
-                    "directory": "test_data/test_version/test_2_version_1"
+                    "directory": "tests/test_data/test_version/test_2_version_1"
                 },
                 {
                     "version": 2,
                     "submission": None,
-                    "directory": "test_data/test_version/test_2_version_2",
+                    "directory": "tests/test_data/test_version/test_2_version_2",
                     "expected_data": [{
                         "url_text": "TestTable1-V1",
                         "url_title": "TestTable1-description-V1"
