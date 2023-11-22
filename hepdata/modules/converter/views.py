@@ -456,7 +456,7 @@ def download_datatable(datasubmission, file_format, *args, **kwargs):
 
     try:
         successful = convert(
-            CFG_CONVERTER_URL,
+            current_app.config.get('CFG_CONVERTER_URL', CFG_CONVERTER_URL),
             record_path,
             output=output_path + '-dir',
             options=options,
