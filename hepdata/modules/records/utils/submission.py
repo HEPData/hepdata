@@ -272,6 +272,7 @@ def process_data_file(recid, version, basepath, data_obj, datasubmission, main_f
                 datasubmission.keywords.append(keyword)
 
     if overall_status not in ("sandbox", "sandbox_processing"):
+        # Process the related doi data (only if not in sandbox mode)
         if "related_to_table_dois" in data_obj:
             for related_doi in data_obj["related_to_table_dois"]:
                 this_doi = f"{HEPDATA_DOI_PREFIX}/hepdata.{recid}.v{version}/t{tablenum}"

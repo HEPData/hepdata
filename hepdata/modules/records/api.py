@@ -1091,7 +1091,7 @@ def get_related_datasubmissions(data_submission):
     Only returns an object if associated HEPSubmission status is 'finished'
     (All submissions this one is relating to)
 
-    :param data_submission: TODO
+    :param data_submission: The datasubmission object to find related data for.
     :return: [list] A list of DataSubmission objects
     """
     related_submissions = []
@@ -1112,7 +1112,7 @@ def get_related_to_this_datasubmissions(data_submission):
         Get the DataSubmission Objects with a RelatedTable entry
         where this doi is referred to in related_doi.
 
-        :param data_submission: TODO
+        :param data_submission: The datasubmission to find the related entries for.
         :return: [List] List of DataSubmission objects.
     """
     related_submissions = (
@@ -1132,10 +1132,11 @@ def get_record_data_list(record, data_type):
     Generates a dictionary (title/recid) from a list of record IDs.
     This must be done as the record contents are not stored within the hepsubmission object.
 
-    :param record: TODO
-    :param data_type: TODO
-    :return: List: A list of dictionary objects containing record ID and title pairs
+    :param record: The record used for the query.
+    :param data_type: Either the related, or related to this data.
+    :return: [list] A list of dictionary objects containing record ID and title pairs
     """
+    # Selects the related data based on the data_type flag
     data = []
     if data_type == "related":
         data = get_related_hepsubmissions(record)
