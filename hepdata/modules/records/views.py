@@ -292,12 +292,12 @@ def get_latest():
 @blueprint.route('/data/<int:recid>/<int:data_recid>/<int:version>/<int:load_all>', methods=['GET'])
 def get_table_details(recid, data_recid, version, load_all=1):
     """
-    Get the table details.
+    Get the table details of a given datasubmission.
 
     :param recid:
     :param data_recid:
     :param version:
-    :param load_all:
+    :param load_all: Whether to perform the filesize check or not when loading (1 will always load the file)
     :return:
     """
     # joinedload allows query of data in another table without a second database access.
@@ -314,6 +314,7 @@ def get_table_details(recid, data_recid, version, load_all=1):
             file_location = data_record.file_location
             load_fail = True
 
+            # Perform filesize check, returns the status and size of the file
             size_check = file_size_check(file_location, load_all)
             if size_check["status"]:
                 attempts = 0

@@ -102,7 +102,10 @@ HEPDATA.switch_table = function (listId, table_requested, table_name, status) {
 
 HEPDATA.table_renderer = {
   display_table_headers: function(url, load_all) {
-    // Render only the main table information (name, details, etc.) at the top
+    /*
+      Render only the main table information (name, details, etc.) at the top,
+      then decides whether to trigger render of the table or not.
+    */
     $.ajax({
       dataType: "json",
       url: url + load_all,
@@ -153,7 +156,9 @@ HEPDATA.table_renderer = {
     });
   },
   display_table: function (url, table_placement, visualization_placement, load_all) {
-    // Renders the table data section of a record page.
+    /*
+      Triggers the table (bottom section) render of the records table table section.
+    */
     $.ajax({
       dataType: "json",
       url: url + load_all,
@@ -194,6 +199,7 @@ HEPDATA.table_renderer = {
           HEPDATA.table_renderer.update_reviewer_button(table_data.review);
         }
 
+        // Hide error/loading elements
         $("#hep_table").removeClass("hidden");
         $("#hepdata_filesize_loader").addClass("hidden");
         HEPDATA.typeset($("#hepdata_table_content").get());
