@@ -39,7 +39,7 @@
           <textarea id="code-contents" height="70%">{{ ctx.contents }}</textarea>
         {% else %}
         <div id="code-contents-fail" height="70%">
-          <p style="font-weight:bolder">This file is too large, and is only available for download below.</p>
+          <p style="font-weight:bolder">This file is larger than our loading threshold, and is only available for download below.</p>
         </div>
         {% endif %}
       {% endif %}
