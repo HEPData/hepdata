@@ -705,6 +705,7 @@ def get_resource(resource_id):
     view_mode = bool(request.args.get('view', False))
     landing_page = bool(request.args.get('landing_page', False))
     output_format = 'html'
+    filesize = None
 
     if resource_obj:
         contents = ''
@@ -766,6 +767,7 @@ def get_resource(resource_id):
                     status_code = 404 if 'error' in ctx['json_ld'] else 200
                     return jsonify(ctx['json_ld']), status_code
                 else:
+                    if filesize: ctx['filesize'] = '%.2f'%((filesize / 1024) / 1024) # Set filesize if exists
                     return render_template('hepdata_records/related_record.html', ctx=ctx)
 
             else:
