@@ -718,6 +718,8 @@ def get_resource(resource_id):
                             filesize = os.path.getsize(resource_obj.file_location)
                             if filesize < ADDITIONAL_SIZE_LOAD_CHECK_THRESHOLD:
                                 contents = resource_file.read()
+                            else:
+                                contents = 'Large text file'
                         else:
                             contents = 'Binary'
                 except UnicodeDecodeError:
