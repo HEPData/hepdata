@@ -132,16 +132,16 @@ HEPDATA.table_renderer = {
         // We also need to clear the figure
         $("#figures").html('');
 
-        // If there is no table, the table is too big
-        if(table_data.values.length == 0) {
+        // Check that the table is both empty, and is larger than an empty table (bytes)
+        if(table_data.values.length == 0 && table_data.size > 300) {
           // Set up filesize attempt section
           $("#hepdata_table_loader").addClass("hidden");
           var megabyte_size = (table_data.size / (1024 * 1024)).toFixed(2);
           d3.select("#filesize_table_size").html("Table size is: " + megabyte_size + " MB");
           $("#hepdata_filesize_loader").removeClass("hidden");
           $("filesize_table_confirm").removeClass("hidden");
-        }
-        else {
+        } // If it is larger than an empty table (bytes)
+        else if(table_data.size > 300) {
           HEPDATA.table_renderer.display_table(url,
             '#data_table_region',
             '#data_visualization_region', load_all);
