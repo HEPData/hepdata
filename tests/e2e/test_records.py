@@ -459,6 +459,10 @@ def test_version_related_table(live_server, logged_in_browser):
                 db.session.add(version["submission"])
                 db.session.commit()
 
+            # Fixes pathing when tests are ran together as it could not be figured out at the time
+            if not os.path.exists(version["directory"]):
+                version["directory"] = "tests/" + version["directory"]
+
             # Insertion of data, this is done for both versions
             data_dir = get_data_path_for_record(test["recid"], str(int(round(time.time())+version["version"])) )
             shutil.copytree(os.path.abspath(version["directory"]), data_dir)
