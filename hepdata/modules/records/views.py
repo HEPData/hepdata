@@ -767,7 +767,9 @@ def get_resource(resource_id):
                     status_code = 404 if 'error' in ctx['json_ld'] else 200
                     return jsonify(ctx['json_ld']), status_code
                 else:
-                    if filesize: ctx['filesize'] = '%.2f'%((filesize / 1024) / 1024) # Set filesize if exists
+                    if filesize:
+                        ctx['filesize'] = '%.2f'%((filesize / 1024) / 1024) # Set filesize if exists
+                        ctx['ADDITIONAL_SIZE_LOAD_CHECK_THRESHOLD'] = '%.2f'%((ADDITIONAL_SIZE_LOAD_CHECK_THRESHOLD / 1024) / 1024)
                     return render_template('hepdata_records/related_record.html', ctx=ctx)
 
             else:
