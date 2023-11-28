@@ -133,7 +133,7 @@ HEPDATA.table_renderer = {
         $("#figures").html('');
 
         // Check that the table is both empty, and is larger than an empty table (bytes)
-        if(table_data.values.length == 0 && table_data.size > 300) {
+        if(table_data.size > HEPDATA.size_load_check_threshold) {
           // Set up filesize attempt section
           $("#hepdata_table_loader").addClass("hidden");
           var megabyte_size = (table_data.size / (1024 * 1024)).toFixed(2);
@@ -169,36 +169,34 @@ HEPDATA.table_renderer = {
         HEPDATA.render_associated_files(table_data.associated_files, '#support-files');
 
         // If it is larger than an empty table (bytes)
-        if(table_data.size > 300) {
-          HEPDATA.table_renderer.render_qualifiers(table_data, table_placement);
-          HEPDATA.table_renderer.render_headers(table_data, table_placement);
-          HEPDATA.table_renderer.render_data(table_data, table_placement);
+        HEPDATA.table_renderer.render_qualifiers(table_data, table_placement);
+        HEPDATA.table_renderer.render_headers(table_data, table_placement);
+        HEPDATA.table_renderer.render_data(table_data, table_placement);
 
-          if (table_data["x_count"] > 1) {
-            HEPDATA.visualization.heatmap.reset();
-            HEPDATA.visualization.heatmap.render(table_data, visualization_placement, {
-              width: 300,
-              height: 300
-            });
-            HEPDATA.table_renderer.attach_row_listener(table_placement, 'heatmap');
-          } else if (table_data["values"].length == 0) {
-            // No data to display
-            d3.select(visualization_placement).html("");
-            d3.select("#legend").html("");
-            var no_data_info = d3.select(visualization_placement).append("div").style("text-align","center");
-            no_data_info.append("img").attr("src", "/static/img/nodata.svg").attr({"width": 100, height: 100});
-            no_data_info.append("p").text("No data to display...").style({"font-size": 14, "color": "#aaa"})
-          } else if (table_data["x_count"] === 1) {
-            HEPDATA.visualization.histogram.render(table_data, visualization_placement, {
-              width: 300,
-              height: 300,
-              "mode": "histogram"
-            });
-            HEPDATA.table_renderer.attach_row_listener(table_placement, 'histogram');
-          }
-          // Show the table finally
-          $("#hep_table").removeClass("hidden");
+        if (table_data["x_count"] > 1) {
+          HEPDATA.visualization.heatmap.reset();
+          HEPDATA.visualization.heatmap.render(table_data, visualization_placement, {
+            width: 300,
+            height: 300
+          });
+          HEPDATA.table_renderer.attach_row_listener(table_placement, 'heatmap');
+        } else if (table_data["values"].length == 0) {
+          // No data to display
+          d3.select(visualization_placement).html("");
+          d3.select("#legend").html("");
+          var no_data_info = d3.select(visualization_placement).append("div").style("text-align","center");
+          no_data_info.append("img").attr("src", "/static/img/nodata.svg").attr({"width": 100, height: 100});
+          no_data_info.append("p").text("No data to display...").style({"font-size": 14, "color": "#aaa"})
+        } else if (table_data["x_count"] === 1) {
+          HEPDATA.visualization.histogram.render(table_data, visualization_placement, {
+            width: 300,
+            height: 300,
+            "mode": "histogram"
+          });
+          HEPDATA.table_renderer.attach_row_listener(table_placement, 'histogram');
         }
+        // Show the table finally
+        $("#hep_table").removeClass("hidden");
 
         if (HEPDATA.show_review) {
           HEPDATA.table_renderer.update_reviewer_button(table_data.review);
