@@ -393,20 +393,21 @@ def test_version_related_table(live_server, logged_in_browser):
                 {
                     "version": 1,
                     "submission" : None,
-                    "directory": "tests/test_data/test_version/test_1_version_1"
+                    "directory": "test_data/test_version/test_1_version_1"
                 },
                 {
                     "version" : 2,
                     "submission" : None,
-                    "directory": "tests/test_data/test_version/test_1_version_2",
-                    "expected_data": [{
+                    "directory": "test_data/test_version/test_1_version_2",
+                    "related_to_expected": [{
                         "url_text": "TestTable2-V1",
                         "url_title": "TestTable2-description-V1"
                     },
                     {
                         "url_text": "TestTable2-V2",
                         "url_title": "TestTable2-description-V2"
-                    }]
+                    }],
+                    "related_to_this_expected": "TestTable2-V2"
                 }
             ]
         },
@@ -419,20 +420,22 @@ def test_version_related_table(live_server, logged_in_browser):
                 {
                     "version": 1,
                     "submission": None,
-                    "directory": "tests/test_data/test_version/test_2_version_1"
+                    "directory": "test_data/test_version/test_2_version_1"
                 },
                 {
                     "version": 2,
                     "submission": None,
-                    "directory": "tests/test_data/test_version/test_2_version_2",
-                    "expected_data": [{
+                    "directory": "test_data/test_version/test_2_version_2",
+                    "related_to_expected": [
+                    {
                         "url_text": "TestTable1-V1",
                         "url_title": "TestTable1-description-V1"
                     },
                     {
                         "url_text": "TestTable1-V2",
                         "url_title": "TestTable1-description-V2"
-                    }]
+                    }],
+                    "related_to_this_expected": "TestTable1-V2"
                 }
             ]
         }
@@ -477,12 +480,22 @@ def test_version_related_table(live_server, logged_in_browser):
         browser.get(record_url)
         related_area = browser.find_element(By.ID, "related-tables")
         # Get the related data list html based on the current element
-        data_list = related_area.find_element(By.CLASS_NAME, "related-list-container").find_element(By.CLASS_NAME, "related-list").find_elements(By.TAG_NAME, "li")
+        data_list = (related_area.find_element(By.CLASS_NAME, "related-list-container")
+                     .find_element(By.CLASS_NAME, "related-list")
+                     .find_elements(By.TAG_NAME, "li"))
         for d in data_list:
             tag = d.find_element(By.TAG_NAME, "a")
             # Set the found attributes and check against the expected data
             data = { "url_text" : tag.text, "url_title": tag.get_attribute("title")}
-            assert data in version["expected_data"]
+            assert data in version["related_to_expected"]
+
+        # Related to this
+        related_to_this_area = browser.find_element(By.ID, "related-to-this-tables")
+        related_to_this_list = (related_to_this_area.find_element(By.CLASS_NAME, "related-list-container")
+                                .find_element(By.CLASS_NAME, "related-list")
+                                .find_elements(By.TAG_NAME, "li"))
+        assert len(related_to_this_list) == 1
+        assert related_to_this_list[0].text == version["related_to_this_expected"]
 
 
 def test_sandbox(live_server, logged_in_browser):
