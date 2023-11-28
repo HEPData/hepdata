@@ -208,7 +208,7 @@ HEPDATA.table_renderer = {
         var related_object = relatedDois[i];
         // Create the the `li` tag, setting the text to the table name and DOI
         // Adds a `title` tag containing the table's description
-        // Example: "Table 1 - (10.17182/hepdata.322.v1/t1)"
+        // Example: "Table 1"
         var relatedItem = $('<li>').append($('<a>'
         ).text(related_object.name
         ).attr('href', 'https://doi.org/' + related_object.doi).attr('title', related_object.description));
