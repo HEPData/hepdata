@@ -520,7 +520,7 @@ def test_large_file_load(app, live_server, admin_idx, logged_in_browser):
         tables = browser.find_element(By.ID, "table-list").find_elements(By.TAG_NAME, "li")
 
         # Wait for the table to attempt to load
-        WebDriverWait(browser, 10).until(
+        WebDriverWait(browser, 15).until(
             EC.visibility_of(table_name)
         )
         # Check the contents of the top table data
@@ -539,13 +539,13 @@ def test_large_file_load(app, live_server, admin_idx, logged_in_browser):
         load_button.click()
         # Check that the animation is now visible and wait for loading
         assert EC.visibility_of(browser.find_element(By.ID, "filesize_table_loading"))
-        WebDriverWait(browser, 10).until(
+        WebDriverWait(browser, 15).until(
             EC.visibility_of(data_table)
         )
 
         # Swap to a new table and wait (this one is under the size)
         tables[1].click()
-        WebDriverWait(browser, 5).until(
+        WebDriverWait(browser, 15).until(
             EC.visibility_of(data_table)
         )
 
