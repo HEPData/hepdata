@@ -34,8 +34,7 @@ from flask import redirect, request, render_template, jsonify, current_app, Resp
 from flask_login import current_user
 from invenio_accounts.models import User
 from invenio_db import db
-from sqlalchemy import and_
-from sqlalchemy.orm import aliased
+from sqlalchemy import and_, func
 from sqlalchemy.orm.exc import NoResultFound
 from werkzeug.utils import secure_filename
 
