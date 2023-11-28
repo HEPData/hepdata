@@ -1080,9 +1080,8 @@ def get_related_to_this_hepsubmissions(submission):
         .all())
 
     # Filter out the non-unique submission results returned by different versions
-    unique_set = set()
-    unique_ids = [sub for sub in related_sub_ids if not (sub in unique_set or unique_set.add(sub))]
-    return [get_latest_hepsubmission(publication_recid=sub[0], overall_status='finished') for sub in unique_ids]
+    unique_recids =  set(sub[0] for sub in related_sub_ids)
+    return [get_latest_hepsubmission(publication_recid=recid, overall_status='finished') for recid in unique_recids]
 
 
 def get_related_datasubmissions(data_submission):
