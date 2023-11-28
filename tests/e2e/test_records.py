@@ -393,12 +393,12 @@ def test_version_related_table(live_server, logged_in_browser):
                 {
                     "version": 1,
                     "submission" : None,
-                    "directory": "tests/test_data/test_version/test_1_version_1"
+                    "directory": "test_data/test_version/test_1_version_1"
                 },
                 {
                     "version" : 2,
                     "submission" : None,
-                    "directory": "tests/test_data/test_version/test_1_version_2",
+                    "directory": "test_data/test_version/test_1_version_2",
                     "related_to_expected": [{
                         "url_text": "TestTable2-V1",
                         "url_title": "TestTable2-description-V1"
@@ -420,12 +420,12 @@ def test_version_related_table(live_server, logged_in_browser):
                 {
                     "version": 1,
                     "submission": None,
-                    "directory": "tests/test_data/test_version/test_2_version_1"
+                    "directory": "test_data/test_version/test_2_version_1"
                 },
                 {
                     "version": 2,
                     "submission": None,
-                    "directory": "tests/test_data/test_version/test_2_version_2",
+                    "directory": "test_data/test_version/test_2_version_2",
                     "related_to_expected": [
                     {
                         "url_text": "TestTable1-V1",
@@ -471,9 +471,25 @@ def test_version_related_table(live_server, logged_in_browser):
                 os.path.join(data_dir, 'submission.yaml'),
                 test["recid"]
             )
+
     # Set the expected recids for the test data
     test_data[0]["other_recid"] = test_data[1]["recid"]
     test_data[1]["other_recid"] = test_data[0]["recid"]
+
+    # Insert related data dynamically to ensure the ids are correct
+    # Ids differ when ran alongside other tests due to the test database having extra submissions
+    for test in test_data:
+        for v in test["versions"]:
+            sub = v["submission"]
+            related_recid = RelatedRecid(this_recid=test["recid"], related_recid=test["other_recid"])
+            related_table_one = RelatedTable(table_doi=f"10.17182/hepdata.{test['recid']}.v1/t1", related_doi=f"10.17182/hepdata.{test['other_recid']}.v1/t1")
+            related_table_two = RelatedTable(table_doi=f"10.17182/hepdata.{test['recid']}.v2/t1", related_doi=f"10.17182/hepdata.{test['other_recid']}.v2/t1")
+            sub.related_recids.append(related_recid)
+            datasub = DataSubmission.query.filter_by(doi=f"10.17182/hepdata.{test['recid']}.v{v['version']}/t1").first()
+            datasub.related_tables.append(related_table_one)
+            datasub.related_tables.append(related_table_two)
+            db.session.add_all([related_recid, related_table_one, related_table_two])
+            db.session.commit()
 
     # The checks
     for test in test_data:
