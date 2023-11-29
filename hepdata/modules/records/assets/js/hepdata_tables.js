@@ -137,9 +137,9 @@ HEPDATA.table_renderer = {
           // Set up filesize attempt section
           $("#hepdata_table_loader").addClass("hidden");
           var megabyte_size = (table_data.size / (1024 * 1024)).toFixed(2);
-          var additional_size = (HEPDATA.size_load_check_threshold / (1024 * 1024)).toFixed(2);
-          var message = "Table size is: " + megabyte_size + " MB, which is larger than our threshold of " + additional_size + " MB.";
-          d3.select("#filesize_table_size").html(message);
+          var threshold_size = (HEPDATA.size_load_check_threshold / (1024 * 1024)).toFixed(2);
+          d3.select("#file_size").html(megabyte_size);
+          d3.select("#threshold_size").html(threshold_size);
           $("#hepdata_filesize_loader").removeClass("hidden");
           $("filesize_table_confirm").removeClass("hidden");
         }
