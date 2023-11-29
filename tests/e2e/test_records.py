@@ -527,8 +527,9 @@ def test_large_file_load(app, live_server, admin_idx, logged_in_browser):
         assert table_name.text == "Table 1"
         assert table_description.text == "Test Table 1"
         # Check that the filesize error message and size has displayed
+        pattern = r"The table size is (\d+(\.\d+)?) MB, which is greater than our threshold of (\d+(\.\d+)?) MB."
         assert re.match(
-            r"Table size is: (\d+(\.\d+)?) MB",
+            pattern,
             browser.find_element(By.ID, "filesize_table_size").text
         )
         # Check for load button/contents
