@@ -1072,12 +1072,14 @@ def get_related_to_this_hepsubmissions(submission):
 
     :return: [list] List containing related records.
     """
-    related_sub_ids = (HEPSubmission.query
-        .join(RelatedRecid, RelatedRecid.this_recid == HEPSubmission.publication_recid)
-        .filter(RelatedRecid.related_recid == submission.publication_recid)
-        .filter(HEPSubmission.overall_status == 'finished')  # Only finished submissions
-        .with_entities(HEPSubmission.publication_recid)
-        .all())
+    related_sub_ids = (
+        HEPSubmission.query
+            .join(RelatedRecid, RelatedRecid.this_recid == HEPSubmission.publication_recid)
+            .filter(RelatedRecid.related_recid == submission.publication_recid)
+            .filter(HEPSubmission.overall_status == 'finished')  # Only finished submissions
+            .with_entities(HEPSubmission.publication_recid)
+            .all()
+    )
 
     # Filter out the non-unique submission results returned by different versions
     unique_recids =  set(sub[0] for sub in related_sub_ids)
@@ -1097,7 +1099,8 @@ def get_related_datasubmissions(data_submission):
     related_submissions = []
     for related in data_submission.related_tables:
         submission = (
-            DataSubmission.query.filter(DataSubmission.doi == related.related_doi)
+            DataSubmission.query
+                .filter(DataSubmission.doi == related.related_doi)
                 .join(HEPSubmission, HEPSubmission.publication_recid == DataSubmission.publication_recid)
                 .filter(HEPSubmission.overall_status == 'finished')
                 .first()
@@ -1116,13 +1119,14 @@ def get_related_to_this_datasubmissions(data_submission):
         :return: [List] List of DataSubmission objects.
     """
     related_submissions = (
-        DataSubmission.query.join(RelatedTable, RelatedTable.table_doi == DataSubmission.doi)
-        .join(HEPSubmission,(HEPSubmission.publication_recid == DataSubmission.publication_recid))
-        .group_by(DataSubmission.id)
-        .having(func.max(HEPSubmission.version) == DataSubmission.version)
-        .filter(RelatedTable.related_doi == data_submission.doi)
-        .filter(HEPSubmission.overall_status == 'finished')
-        .all()
+        DataSubmission.query
+            .join(RelatedTable, RelatedTable.table_doi == DataSubmission.doi)
+            .join(HEPSubmission,(HEPSubmission.publication_recid == DataSubmission.publication_recid))
+            .group_by(DataSubmission.id)
+            .having(func.max(HEPSubmission.version) == DataSubmission.version)
+            .filter(RelatedTable.related_doi == data_submission.doi)
+            .filter(HEPSubmission.overall_status == 'finished')
+            .all()
     )
     return related_submissions
 
