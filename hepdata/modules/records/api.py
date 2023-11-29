@@ -56,8 +56,14 @@ from hepdata.modules.records.utils.users import get_coordinators_in_system, has_
 from hepdata.modules.records.utils.workflow import update_action_for_submission_participant
 from hepdata.modules.records.utils.yaml_utils import split_files
 from hepdata.modules.stats.views import increment, get_count
-from hepdata.modules.submission.models import RecordVersionCommitMessage, DataSubmission, HEPSubmission, DataReview, \
-    RelatedRecid, RelatedTable
+from hepdata.modules.submission.models import (
+    DataReview,
+    DataSubmission,
+    HEPSubmission,
+    RecordVersionCommitMessage,
+    RelatedRecid,
+    RelatedTable
+)
 from hepdata.utils.file_extractor import extract
 from hepdata.utils.miscellaneous import sanitize_html
 from hepdata.utils.users import get_user_from_id

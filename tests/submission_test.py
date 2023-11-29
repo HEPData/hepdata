@@ -33,9 +33,17 @@ import pytest
 
 from hepdata.ext.opensearch.api import get_records_matching_field
 from hepdata.modules.permissions.models import SubmissionParticipant
-from hepdata.modules.records.api import format_submission, process_saved_file, create_new_version, get_record_data_list, \
-    get_related_hepsubmissions, get_related_datasubmissions, get_related_to_this_datasubmissions, get_table_data_list, \
-    get_related_to_this_hepsubmissions
+from hepdata.modules.records.api import (
+    create_new_version,
+    format_submission,
+    get_record_data_list,
+    get_related_datasubmissions,
+    get_related_hepsubmissions,
+    get_related_to_this_datasubmissions,
+    get_related_to_this_hepsubmissions,
+    get_table_data_list,
+    process_saved_file
+)
 from hepdata.modules.records.utils.common import infer_file_type, contains_accepted_url, allowed_file, record_exists, \
     get_record_contents, is_histfactory
 from hepdata.modules.records.utils.data_files import get_data_path_for_record
