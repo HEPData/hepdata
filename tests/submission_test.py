@@ -343,6 +343,7 @@ def test_related_records(app, admin_idx):
             {"dir": "related_submission_4", "related": None, "record_title": "Title 4"}
         ]
         # Dummy record data
+        # The title will be set later based on test_data values
         record = {'title': None,
                   'reviewer': {'name': 'Testy McTester', 'email': 'test@test.com'},
                   'uploader': {'name': 'Testy McTester', 'email': 'test@test.com'},
