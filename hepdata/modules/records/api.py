@@ -27,7 +27,6 @@ import os
 from collections import OrderedDict
 from functools import wraps
 import mimetypes
-import requests
 import time
 
 from celery import shared_task
@@ -35,7 +34,7 @@ from flask import redirect, request, render_template, jsonify, current_app, Resp
 from flask_login import current_user
 from invenio_accounts.models import User
 from invenio_db import db
-from sqlalchemy import and_
+from sqlalchemy import and_, func
 from sqlalchemy.orm.exc import NoResultFound
 from werkzeug.utils import secure_filename
 
@@ -57,7 +56,14 @@ from hepdata.modules.records.utils.users import get_coordinators_in_system, has_
 from hepdata.modules.records.utils.workflow import update_action_for_submission_participant
 from hepdata.modules.records.utils.yaml_utils import split_files
 from hepdata.modules.stats.views import increment, get_count
-from hepdata.modules.submission.models import RecordVersionCommitMessage, DataSubmission, HEPSubmission, DataReview
+from hepdata.modules.submission.models import (
+    DataReview,
+    DataSubmission,
+    HEPSubmission,
+    RecordVersionCommitMessage,
+    RelatedRecid,
+    RelatedTable
+)
 from hepdata.utils.file_extractor import extract
 from hepdata.utils.miscellaneous import sanitize_html
 from hepdata.utils.users import get_user_from_id
@@ -262,8 +268,8 @@ def format_resource(resource, contents, content_url):
     ctx['file_mimetype'] = get_resource_mimetype(resource, contents)
     ctx['resource_filename'] = os.path.basename(resource.file_location)
     ctx['resource_filetype'] = f'{resource.file_type} File'
-    ctx['related_recids'] = [r.related_recid for r in hepsubmission.related_recids]
-    ctx['related_to_this_recids'] = [s.publication_recid for s in hepsubmission.get_related_hepsubmissions()]
+    ctx['related_recids'] = get_record_data_list(hepsubmission, "related")
+    ctx['related_to_this_recids'] = get_record_data_list(hepsubmission, "related_to_this")
 
     if resource.file_type in IMAGE_TYPES:
         ctx['display_type'] = 'image'
@@ -401,8 +407,8 @@ def render_record(recid, record, version, output_format, light_mode=False):
         elif not hepdata_submission.overall_status.startswith('sandbox'):
             ctx = format_submission(recid, record, version, version_count, hepdata_submission)
             ctx['record_type'] = 'publication'
-            ctx['related_recids'] = [r.related_recid for r in hepdata_submission.related_recids]
-            ctx['related_to_this_recids'] = [s.publication_recid for s in hepdata_submission.get_related_hepsubmissions()]
+            ctx['related_recids'] = get_record_data_list(hepdata_submission, "related")
+            ctx['related_to_this_recids'] = get_record_data_list(hepdata_submission, "related_to_this")
 
             increment(recid)
 
@@ -457,9 +463,8 @@ def render_record(recid, record, version, output_format, light_mode=False):
             ctx['record_type'] = 'table'
             ctx['related_publication_id'] = publication_recid
             ctx['table_name'] = record['title']
-            ctx['related_recids'] = [r.related_recid for r in hepdata_submission.related_recids]
-            ctx['related_to_this_recids'] = [s.publication_recid for s in
-                                             hepdata_submission.get_related_hepsubmissions()]
+            ctx['related_recids'] = get_record_data_list(hepdata_submission, "related")
+            ctx['related_to_this_recids'] = get_record_data_list(hepdata_submission, "related_to_this")
 
             if output_format == 'html' or output_format == 'json_ld':
                 ctx['json_ld'] = get_json_ld(
@@ -1043,3 +1048,144 @@ def get_all_ids(index=None, id_field='recid', last_updated=None, latest_first=Fa
     else:
         query = query.order_by(HEPSubmission.publication_recid).distinct()
         return [int(x[0]) for x in query.all()]
+
+
+def get_related_hepsubmissions(submission):
+    """
+    Queries the database for all HEPSubmission objects contained in
+    this object's related record ID list.
+    (All submissions this one is relating to)
+
+    :return: [list] A list of HEPSubmission objects
+    """
+    related_submissions = []
+    for related in submission.related_recids:
+        data_submission = get_latest_hepsubmission(
+            publication_recid=related.related_recid,
+            overall_status='finished'
+        )
+        if data_submission:
+            related_submissions.append(data_submission)
+    return related_submissions
+
+
+def get_related_to_this_hepsubmissions(submission):
+    """
+    Queries the database for all records in the RelatedRecId table
+    that have THIS record's id as a related record.
+    Then returns the HEPSubmission object marked in the RelatedRecid table.
+    Returns only submissions marked as 'finished'
+
+    :return: [list] List containing related records.
+    """
+    related_sub_ids = (
+        HEPSubmission.query
+            .join(RelatedRecid, RelatedRecid.this_recid == HEPSubmission.publication_recid)
+            .filter(RelatedRecid.related_recid == submission.publication_recid)
+            .filter(HEPSubmission.overall_status == 'finished')  # Only finished submissions
+            .with_entities(HEPSubmission.publication_recid)
+            .all()
+    )
+
+    # Filter out the non-unique submission results returned by different versions
+    unique_recids =  set(sub[0] for sub in related_sub_ids)
+    return [get_latest_hepsubmission(publication_recid=recid, overall_status='finished') for recid in unique_recids]
+
+
+def get_related_datasubmissions(data_submission):
+    """
+    Queries the database for all DataSubmission objects contained in
+    this object's related DOI list.
+    Only returns an object if associated HEPSubmission status is 'finished'
+    (All submissions this one is relating to)
+
+    :param data_submission: The datasubmission object to find related data for.
+    :return: [list] A list of DataSubmission objects
+    """
+    related_submissions = []
+    for related in data_submission.related_tables:
+        submission = (
+            DataSubmission.query
+                .filter(DataSubmission.doi == related.related_doi)
+                .join(HEPSubmission, HEPSubmission.publication_recid == DataSubmission.publication_recid)
+                .filter(HEPSubmission.overall_status == 'finished')
+                .first()
+        )
+        if submission:
+            related_submissions.append(submission)
+    return related_submissions
+
+
+def get_related_to_this_datasubmissions(data_submission):
+    """
+        Get the DataSubmission Objects with a RelatedTable entry
+        where this doi is referred to in related_doi.
+
+        :param data_submission: The datasubmission to find the related entries for.
+        :return: [List] List of DataSubmission objects.
+    """
+    related_submissions = (
+        DataSubmission.query
+            .join(RelatedTable, RelatedTable.table_doi == DataSubmission.doi)
+            .join(HEPSubmission,(HEPSubmission.publication_recid == DataSubmission.publication_recid))
+            .group_by(DataSubmission.id)
+            .having(func.max(HEPSubmission.version) == DataSubmission.version)
+            .filter(RelatedTable.related_doi == data_submission.doi)
+            .filter(HEPSubmission.overall_status == 'finished')
+            .all()
+    )
+    return related_submissions
+
+
+def get_record_data_list(record, data_type):
+    """
+    Generates a dictionary (title/recid) from a list of record IDs.
+    This must be done as the record contents are not stored within the hepsubmission object.
+
+    :param record: The record used for the query.
+    :param data_type: Either the related, or related to this data.
+    :return: [list] A list of dictionary objects containing record ID and title pairs
+    """
+    # Selects the related data based on the data_type flag
+    data = []
+    if data_type == "related":
+        data = get_related_hepsubmissions(record)
+    elif data_type == "related_to_this":
+        data = get_related_to_this_hepsubmissions(record)
+
+    record_data = []
+    for datum in data:
+        record_data.append(
+        {
+            "recid": datum.publication_recid,
+            "title": get_record_contents(datum.publication_recid)["title"],
+            "version": datum.version
+        })
+    return record_data
+
+
+def get_table_data_list(table, data_type):
+    """
+    Generates a list of general information (name, doi, desc) dictionaries of related DataSubmission objects.
+    Will either use the related data list (get_related_data_submissions)
+    OR the `related to this` list (generated by get_related_to_this_datasubmissions)
+
+    :param table: The DataSubmission object used for querying.
+    :param data_type: The flag to decide which relation data to use.
+    :return: [list] A list of dictionaries with the name, doi and description of the object.
+    """
+    # Selects the related data based on the data_type flag
+    if data_type == "related":
+        data = get_related_datasubmissions(table)
+    elif data_type == "related_to_this":
+        data = get_related_to_this_datasubmissions(table)
+
+    record_data = []
+    if data:
+        for datum in data:
+            record_data.append({
+                "name": datum.name,
+                "doi": datum.doi,
+                "description": datum.description
+            })
+    return record_data

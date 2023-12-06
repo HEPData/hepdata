@@ -1,0 +1,10 @@
+dependent_variables:
+- header: {name: TestData2-dependent-V2, units: NA}
+  qualifiers:
+  - {name: TestData2-qualifier-V2, value: 0}
+  values:
+    - {value: 0}
+independent_variables:
+- header: {name: TestData2-independent-V2, units: NA}
+  values:
+  - value: 0

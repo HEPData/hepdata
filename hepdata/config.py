@@ -141,7 +141,7 @@ SECURITY_POST_CONFIRM_VIEW = "/dashboard/"
 SECURITY_POST_REGISTER_VIEW = "/signup/"
 
 SECURITY_CONFIRM_SALT = "CHANGE_ME"
-SECURITY_EMAIL_SENDER = "info@hepdata.net"
+SECURITY_EMAIL_SENDER = "hepdata-staff@cern.ch"
 SECURITY_EMAIL_SUBJECT_REGISTER = "[HEPData] Welcome to HEPData!"
 SECURITY_EMAIL_SUBJECT_PASSWORD_NOTICE = "[HEPData] Your password has been reset"
 SECURITY_EMAIL_SUBJECT_PASSWORD_RESET = "[HEPData] Password reset instructions"
@@ -195,7 +195,7 @@ CFG_DATADIR = tempfile.gettempdir()
 
 MAIL_SERVER = 'cernmx.cern.ch'
 MAIL_PORT = ''
-MAIL_DEFAULT_SENDER = 'submissions@hepdata.net'
+MAIL_DEFAULT_SENDER = 'hepdata-staff@cern.ch'
 SMTP_NO_PASSWORD = True
 SMTP_ENCRYPTION = False
 MAIL_USERNAME = ''

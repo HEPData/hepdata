@@ -24,6 +24,8 @@
 """HEPData end to end testing of updating/reviewing records"""
 
 import os.path
+import shutil
+import time
 
 import flask
 import os
@@ -35,15 +37,17 @@ from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
 from hepdata.config import HEPDATA_DOI_PREFIX
+from hepdata.modules.records.utils.data_files import get_data_path_for_record
 from hepdata.modules.submission.models import HEPSubmission, RelatedRecid, DataSubmission, RelatedTable
 from hepdata.modules.dashboard.api import create_record_for_dashboard
 from hepdata.modules.records.utils.common import get_record_by_id
-from hepdata.modules.records.utils.submission import get_or_create_hepsubmission
+from hepdata.modules.records.utils.submission import get_or_create_hepsubmission, process_submission_directory
 from hepdata.modules.records.utils.workflow import create_record
 
 from invenio_accounts.models import User
 from invenio_db import db
 
+from hepdata.modules.submission.views import process_submission_payload
 from .conftest import e2e_assert_url
 from ..conftest import create_blank_test_record, create_test_record
 
@@ -258,18 +262,29 @@ def test_related_records(live_server, logged_in_browser):
     # Dictionary to store the generated data.
     # The two objects should have flipped recid/expected values
     # i.e. Related to each other
+    # TODO - Maybe make expected_number a list, to allow for testing of multiple expected values.
     test_data = [
-        {"submission": None, "related_recid": None},
-        {"submission": None, "related_recid": None}
+        {"recid": None,  "submission": None, "related_recid": None, "submission_number": 1, "expected_number": 2},
+        {"recid": None,  "submission": None, "related_recid": None, "submission_number": 2, "expected_number": 1}
     ]
-
-    # Creates two blank records.
+    # Creates two records.
     for test in test_data:
-        test['submission'] = create_blank_test_record()
+        record_information = create_record(
+            {'journal_info': 'Journal', 'title': f"Test Record {test['submission_number']}"})
+        test['submission'] = get_or_create_hepsubmission(record_information['recid'])
+        # Set overall status to finished so related data appears on dashboard
+        test['submission'].overall_status = 'finished'
+        test['recid'] = record_information['recid']
+        record = get_record_by_id(test['recid'])
+        user = User(email=f'test@test.com', password='hello1', active=True,
+                    id=1)
+        test_submissions = {}
+        create_record_for_dashboard(record['recid'], test_submissions, user)
 
     # Recids for the test are set dynamically, based on what comes out of the minter
-    test_data[0]['related_recid'] = test_data[1]['submission'].publication_recid
-    test_data[1]['related_recid'] = test_data[0]['submission'].publication_recid
+    # TODO - Would need to be changed to extend for more than one-to-one cases
+    test_data[0]['related_recid'] = test_data[1]['recid']
+    test_data[1]['related_recid'] = test_data[0]['recid']
 
     for test in test_data:
         recid = test['submission'].publication_recid
@@ -283,14 +298,14 @@ def test_related_records(live_server, logged_in_browser):
 
         # Create a test DataSubmission object
         datasubmission = DataSubmission(
-            name="Test",
+            name=f"Test Table {test['submission_number']}",
             location_in_publication="Somewhere",
             data_file=1,
             publication_recid=recid,
             associated_recid=recid,
             doi=doi_string,
             version=1,
-            description="Test")
+            description=f"Test Description {test['submission_number']}")
 
         # Generate the test DOI string for the related DOI
         related_doi_string = f"{HEPDATA_DOI_PREFIX}/hepdata.{test['related_recid']}.v1/t1"
@@ -311,38 +326,198 @@ def test_related_records(live_server, logged_in_browser):
         browser.get(record_url)
         # The page elements to test and their type (Record/Data)
         related_elements = [
-            {'element':'related-recids', 'type':'recid'},
-            {'element':'related-to-this-recids', 'type':'recid'},
-            {'element':'related-tables', 'type':'doi'},
-            {'element':'related-to-this-tables', 'type':'doi'}
+            {'id':'related-recids', 'type':'recid'},
+            {'id':'related-to-this-recids', 'type':'recid'},
+            {'id':'related-tables', 'type':'doi'},
+            {'id':'related-to-this-tables', 'type':'doi'}
         ]
+
         for element in related_elements:
-            html_element = browser.find_element(By.ID, element['element'])
+            html_element = browser.find_element(By.ID, element['id'])
+            # Get the related data list html based on the current element
             data_list = html_element.find_element(By.CLASS_NAME, 'related-list')
             list_items = data_list.find_elements(By.TAG_NAME, 'li')
 
             # There should be only one entry for each related test category
             assert len(list_items) == 1
 
+            url_tag = list_items[0].find_element(By.TAG_NAME, 'a')
             # Get the URL of the found `li` tag.
-            url_text = list_items[0].find_element(By.TAG_NAME, 'a').get_attribute('href')
-
+            url_loc = url_tag.get_attribute('href')
             # Expected ul and a tag contents differ based on which elements are tested
             # Records expect a link to the HEPData site. Tables link to doi.org
             if element['type'] == 'recid':
                 # Check the URL against the regex
-                assert f"/record/{test['related_recid']}" in url_text
-                # Check that the tag text is the expected record ID number
+                pattern = rf"^.+/record/{test['related_recid']}$"
+                assert re.match(pattern, url_loc)
+                # Check that the tag text is the expected string
+                # The result will be the string "Test Paper(X)" Where X is the ID.
                 assert list_items[0].text == str(test['related_recid'])
+                # Check the expected title of the related record tag
+                assert url_tag.get_attribute('title') == f"Test Record {test['expected_number']}"
 
             elif element['type'] == 'doi':
                 # Generate the test DOI string
+                # Currently only testing v1/t1, maybe needs to be extended.
                 related_doi_check = f"{HEPDATA_DOI_PREFIX}/hepdata.{test['related_recid']}.v1/t1"
                 # Generate expected DOI URL (linking to doi.org/DOI)
                 doi_url = "https://doi.org/" + related_doi_check
-                assert url_text == doi_url
-                # Check that the tag text is the expected DOI string
-                assert list_items[0].text == related_doi_check
+                assert url_loc == doi_url
+                # Check the expected text of the related table DOI tag
+                assert url_tag.text == f"Test Table {test['expected_number']}"
+                # Check the expected title of the related table DOI tag
+                assert url_tag.get_attribute('title') == f"Test Description {test['expected_number']}"
+
+def test_version_related_table(live_server, logged_in_browser):
+    """
+    Tests the related table data on the records page.
+    Checks that the tooltip and description are correct.
+    """
+    browser = logged_in_browser
+    browser.file_detector = LocalFileDetector()
+    record = {'title': "Test Title",
+                  'reviewer': {'name': 'Testy McTester', 'email': 'test@test.com'},
+                  'uploader': {'name': 'Testy McTester', 'email': 'test@test.com'},
+                  'message': 'This is ready',
+                  'user_id': 1}
+    """
+        Test data and the expected test outcomes
+        Expected data is only checked on the second version
+        Each version relates to both version 1 and 2 of the other submission
+    """
+    test_data = [
+        {
+            "title": "Submission1",
+            "recid" : None,
+            "other_recid": None,
+            "inspire_id": 1,
+            "versions": [
+                {
+                    "version": 1,
+                    "submission" : None,
+                    "directory": "test_data/test_version/test_1_version_1"
+                },
+                {
+                    "version" : 2,
+                    "submission" : None,
+                    "directory": "test_data/test_version/test_1_version_2",
+                    "related_to_expected": [{
+                        "url_text": "TestTable2-V1",
+                        "url_title": "TestTable2-description-V1"
+                    },
+                    {
+                        "url_text": "TestTable2-V2",
+                        "url_title": "TestTable2-description-V2"
+                    }],
+                    "related_to_this_expected": "TestTable2-V2"
+                }
+            ]
+        },
+        {
+            "title": "Submission2",
+            "recid": None,
+            "other_recid" : None,
+            "inspire_id": 25,
+            "versions": [
+                {
+                    "version": 1,
+                    "submission": None,
+                    "directory": "test_data/test_version/test_2_version_1"
+                },
+                {
+                    "version": 2,
+                    "submission": None,
+                    "directory": "test_data/test_version/test_2_version_2",
+                    "related_to_expected": [
+                    {
+                        "url_text": "TestTable1-V1",
+                        "url_title": "TestTable1-description-V1"
+                    },
+                    {
+                        "url_text": "TestTable1-V2",
+                        "url_title": "TestTable1-description-V2"
+                    }],
+                    "related_to_this_expected": "TestTable1-V2"
+                }
+            ]
+        }
+    ]
+
+    # Insert the data
+    for test in test_data:
+        for version in test["versions"]:
+            # Version 1 needs a different submission setup to v2
+            if version["version"] == 1:
+                version["submission"] = process_submission_payload(**record)
+                version["submission"].overall_status = "finished"
+                test["recid"] = version["submission"].publication_recid
+            else:
+                # Creates a new version of the submission and inserts it.
+                version["submission"] = HEPSubmission(
+                    publication_recid=test["recid"],
+                    inspire_id=test["inspire_id"],
+                    version=version["version"],
+                    overall_status='finished')
+                db.session.add(version["submission"])
+                db.session.commit()
+
+            # Fixes pathing when tests are ran together as it could not be figured out at the time
+            if not os.path.exists(version["directory"]):
+                version["directory"] = "tests/" + version["directory"]
+
+            # Insertion of data, this is done for both versions
+            data_dir = get_data_path_for_record(test["recid"], str(int(round(time.time())+version["version"])) )
+            shutil.copytree(os.path.abspath(version["directory"]), data_dir)
+            process_submission_directory(
+                data_dir,
+                os.path.join(data_dir, 'submission.yaml'),
+                test["recid"]
+            )
+
+    # Set the expected recids for the test data
+    test_data[0]["other_recid"] = test_data[1]["recid"]
+    test_data[1]["other_recid"] = test_data[0]["recid"]
+
+    # Insert related data dynamically to ensure the ids are correct
+    # Ids differ when ran alongside other tests due to the test database having extra submissions
+    for test in test_data:
+        for v in test["versions"]:
+            sub = v["submission"]
+            related_recid = RelatedRecid(this_recid=test["recid"], related_recid=test["other_recid"])
+            related_table_one = RelatedTable(table_doi=f"10.17182/hepdata.{test['recid']}.v1/t1", related_doi=f"10.17182/hepdata.{test['other_recid']}.v1/t1")
+            related_table_two = RelatedTable(table_doi=f"10.17182/hepdata.{test['recid']}.v2/t1", related_doi=f"10.17182/hepdata.{test['other_recid']}.v2/t1")
+            sub.related_recids.append(related_recid)
+            datasub = DataSubmission.query.filter_by(doi=f"10.17182/hepdata.{test['recid']}.v{v['version']}/t1").first()
+            datasub.related_tables.append(related_table_one)
+            datasub.related_tables.append(related_table_two)
+            db.session.add_all([related_recid, related_table_one, related_table_two])
+            db.session.commit()
+
+    # The checks
+    for test in test_data:
+        # We only need to use one submission version from each record for testing, so we're using the most recent
+        version = test["versions"][1]
+        record_url = flask.url_for('hepdata_records.get_metadata_by_alternative_id',
+                                   recid=version["submission"].publication_recid, _external=True)
+        browser.get(record_url)
+        related_area = browser.find_element(By.ID, "related-tables")
+        # Get the related data list html based on the current element
+        data_list = (related_area.find_element(By.CLASS_NAME, "related-list-container")
+                     .find_element(By.CLASS_NAME, "related-list")
+                     .find_elements(By.TAG_NAME, "li"))
+        for d in data_list:
+            tag = d.find_element(By.TAG_NAME, "a")
+            # Set the found attributes and check against the expected data
+            data = { "url_text" : tag.text, "url_title": tag.get_attribute("title")}
+            assert data in version["related_to_expected"]
+
+        # Related to this
+        related_to_this_area = browser.find_element(By.ID, "related-to-this-tables")
+        related_to_this_list = (related_to_this_area.find_element(By.CLASS_NAME, "related-list-container")
+                                .find_element(By.CLASS_NAME, "related-list")
+                                .find_elements(By.TAG_NAME, "li"))
+        assert len(related_to_this_list) == 1
+        assert related_to_this_list[0].text == version["related_to_this_expected"]
 
 
 def test_sandbox(live_server, logged_in_browser):
