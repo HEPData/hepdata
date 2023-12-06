@@ -71,7 +71,6 @@ var submissions_vis = (function () {
   }
 
   function resetCharts(charts) {
-    console.log("Aaargh");
     charts.forEach(function (c) {
       c.filterAll();
     });

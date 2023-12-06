@@ -25,6 +25,8 @@
 """HEPData Test Fixtures"""
 
 import os
+import shutil
+import time
 from unittest import mock
 
 from invenio_accounts.models import Role, User
@@ -34,7 +36,12 @@ import pytest
 from hepdata.ext.opensearch.admin_view.api import AdminIndexer
 from hepdata.ext.opensearch.api import reindex_all
 from hepdata.factory import create_app
+from hepdata.modules.dashboard.api import create_record_for_dashboard
 from hepdata.modules.records.importer.api import import_records, _download_file
+from hepdata.modules.records.utils.data_files import get_data_path_for_record
+from hepdata.modules.records.utils.submission import get_or_create_hepsubmission, process_submission_directory
+from hepdata.modules.records.utils.workflow import create_record
+from hepdata.modules.submission.views import process_submission_payload
 
 TEST_EMAIL = 'test@hepdata.net'
 TEST_PWD = 'hello1'
@@ -155,3 +162,43 @@ def get_identifiers():
 @pytest.fixture()
 def load_submission(app, load_default_data):
     import_records(['ins1487726'], synchronous=True)
+
+
+def create_blank_test_record():
+    """
+    Helper function to create a single, blank, finished submission
+    :returns submission: The newly created submission object
+    """
+    record_information = create_record(
+        {'journal_info': 'Journal', 'title': 'Test Paper'})
+    recid = record_information['recid']
+    submission = get_or_create_hepsubmission(recid)
+    # Set overall status to finished so related data appears on dashboard
+    submission.overall_status = 'finished'
+    user = User(email=f'test@test.com', password='hello1', active=True,
+                id=1)
+    test_submissions = {}
+    create_record_for_dashboard(recid, test_submissions, user)
+    return submission
+
+
+def create_test_record(file_location):
+    """
+    Helper function to create a dummy record with data.
+    :param file_location: Path to the data directory.
+    :returns test_submission: The newly created submission object
+    """
+    record = {'title': 'HEPData Testing',
+                  'reviewer': {'name': 'Testy McTester', 'email': 'test@test.com'},
+                  'uploader': {'name': 'Testy McTester', 'email': 'test@test.com'},
+                  'message': 'This is ready',
+                  'user_id': 1}
+    # Set up a new test submission
+    test_submission = process_submission_payload(**record)
+    # Ensure the status is set to `finished` so the related data can be accessed.
+    test_submission.overall_status = 'finished'
+    record_dir = get_data_path_for_record(test_submission.publication_recid, str(int(round(time.time()))))
+    shutil.copytree(file_location, record_dir)
+    process_submission_directory(record_dir, os.path.join(record_dir, 'submission.yaml'),
+                                 test_submission.publication_recid)
+    return test_submission

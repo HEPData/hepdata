@@ -28,7 +28,7 @@ from invenio_records.api import Record
 import os
 from sqlalchemy.orm.exc import NoResultFound
 
-from hepdata.config import HISTFACTORY_FILE_TYPE
+from hepdata.config import HISTFACTORY_FILE_TYPE, SIZE_LOAD_CHECK_THRESHOLD
 from hepdata.ext.opensearch.api import get_record
 from hepdata.modules.submission.models import HEPSubmission, License
 
@@ -253,3 +253,17 @@ def record_exists(*args, **kwargs):
     return count > 0
 
 
+def file_size_check(file_location, load_all):
+    """
+        Decides if a file breaks the maximum size threshold
+            for immediate loading on the records page.
+
+        :param file_location: Location of the data file on disk
+        :param load_all: If the check should be run
+        :return bool: Pass or fail
+    """
+    size_check = { "status": True, "size": os.path.getsize(file_location) }
+    # We do the check only if told to, otherwise we just pass as true
+    if load_all == 0:
+        size_check["status"] = size_check["size"] <= SIZE_LOAD_CHECK_THRESHOLD
+    return size_check

@@ -53,6 +53,7 @@ from hepdata.modules.submission.api import get_latest_hepsubmission, get_submiss
 from hepdata.modules.submission.models import DataSubmission, HEPSubmission, RelatedRecid
 from hepdata.modules.submission.views import process_submission_payload
 from hepdata.config import HEPDATA_DOI_PREFIX
+from tests.conftest import create_test_record
 
 
 def test_submission_endpoint(app, client):

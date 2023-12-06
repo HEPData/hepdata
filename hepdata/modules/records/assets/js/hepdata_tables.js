@@ -15,7 +15,17 @@ HEPDATA.switch_table = function (listId, table_requested, table_name, status) {
   $('#' + table_requested).addClass("active");
 
 
-  HEPDATA.render_loader("#table_loader", [
+  HEPDATA.render_loader("#main_table_loader", [
+      {x: 26, y: 30, color: "#955BA5"},
+      {x: -60, y: 55, color: "#2C3E50"},
+      {x: 37, y: -10, color: "#955BA5"},
+      {x: -60, y: 10, color: "#955BA5"},
+      {x: -27, y: -30, color: "#955BA5"},
+      {x: 60, y: -55, color: "#2C3E50"}],
+    {"width": 200, "height": 200}
+  );
+
+  HEPDATA.render_loader("#filesize_table_loader", [
       {x: 26, y: 30, color: "#955BA5"},
       {x: -60, y: 55, color: "#2C3E50"},
       {x: 37, y: -10, color: "#955BA5"},
@@ -42,10 +52,17 @@ HEPDATA.switch_table = function (listId, table_requested, table_name, status) {
   $(".copy-btn").attr('data-clipboard-text', direct_link);
   HEPDATA.setup_clipboard();
 
+  // Reset the table loading section
   $("#hepdata_table_loading").removeClass("hidden");
   $("#hepdata_table_loading_failed").addClass("hidden");
   $("#hepdata_table_loader").removeClass("hidden");
   $("#hepdata_table_content").addClass("hidden");
+  // Reset filesize loader state
+  $("#hepdata_filesize_loader").addClass("hidden");
+  $("#filesize_table_confirm").removeClass("hidden");
+  $("#filesize_table_loading").addClass("hidden");
+  $("#filesize_table_loading_failed").addClass("hidden");
+  $("#hep_table").addClass("hidden");
 
   HEPDATA.current_table_id = table_requested;
 
@@ -54,9 +71,20 @@ HEPDATA.switch_table = function (listId, table_requested, table_name, status) {
       HEPDATA.current_record_id,
       HEPDATA.current_table_id);
   }
-  HEPDATA.table_renderer.display_table('/record/data/' + HEPDATA.current_record_id + '/' + table_requested + "/" + HEPDATA.current_table_version,
-    '#data_table_region',
-    '#data_visualization_region');
+
+  var web_url = '/record/data/' + HEPDATA.current_record_id + '/' + table_requested + "/" + HEPDATA.current_table_version + "/";
+  HEPDATA.table_renderer.display_table_headers(web_url, 0);
+
+  // Function to initiate the button to attempt loading of the table
+  $("#hepdata_filesize_loading_button").on('click', function() {
+    $("#filesize_table_confirm").addClass("hidden");
+    $("#filesize_table_loading").removeClass("hidden");
+    HEPDATA.table_renderer.display_table(
+      web_url,
+      '#data_table_region',
+      '#data_visualization_region', 1
+    );
+  });
 
   $(".data_download_link").each(function () {
     var data_format = $(this).text().toLowerCase();
@@ -73,16 +101,19 @@ HEPDATA.switch_table = function (listId, table_requested, table_name, status) {
 };
 
 HEPDATA.table_renderer = {
-  display_table: function (url, table_placement, visualization_placement) {
-
+  display_table_headers: function(url, load_all) {
+    /*
+      Render only the main table information (name, details, etc.) at the top,
+      then decides whether to trigger render of the table or not.
+    */
     $.ajax({
       dataType: "json",
-      url: url,
+      url: url + load_all,
       processData: false,
       cache: true,
       success: function (table_data) {
-        // display the table
-        d3.select(table_placement).html('');
+        HEPDATA.reset_stats();
+        d3.select('#data_table_region').html('');
         d3.select("#table_options_region").html('');
 
         HEPDATA.current_table_name = table_data.name;
@@ -95,16 +126,54 @@ HEPDATA.table_renderer = {
         // Initiates rendering of both related DOI table areas
         HEPDATA.table_renderer.render_related_dois(table_data.related_tables, "#related-tables");
         HEPDATA.table_renderer.render_related_dois(table_data.related_to_this, "#related-to-this-tables");
-
         HEPDATA.table_renderer.render_keywords(table_data.keywords, "#table_keywords");
+        $("#hepdata_table_loader").addClass("hidden");
+        $("#hepdata_table_content").removeClass("hidden");
+        // We also need to clear the figure
+        $("#figures").html('');
 
+        // Check that the table is both empty, and is larger than an empty table (bytes)
+        if(table_data.size > HEPDATA.size_load_check_threshold) {
+          // Set up filesize attempt section
+          $("#hepdata_table_loader").addClass("hidden");
+          var megabyte_size = (table_data.size / (1024 * 1024)).toFixed(2);
+          var threshold_size = (HEPDATA.size_load_check_threshold / (1024 * 1024)).toFixed(2);
+          d3.select("#file_size").html(megabyte_size);
+          d3.select("#threshold_size").html(threshold_size);
+          $("#hepdata_filesize_loader").removeClass("hidden");
+          $("filesize_table_confirm").removeClass("hidden");
+        }
+        else {
+          HEPDATA.table_renderer.display_table(url,
+            '#data_table_region',
+            '#data_visualization_region', load_all);
+        }
+      },
+      error: function (data, error) {
+        console.error(error);
+        d3.select("#hepdata_table_loading_failed_text").html('Failed to load table defined by ' + url);
+        $("#hepdata_table_loading").addClass("hidden");
+        $("#hepdata_table_loading_failed").removeClass("hidden");
+      }
+    });
+  },
+  display_table: function (url, table_placement, visualization_placement, load_all) {
+    /*
+      Triggers the table (bottom section) render of the records table table section.
+    */
+    $.ajax({
+      dataType: "json",
+      url: url + load_all,
+      processData: false,
+      cache: true,
+      success: function (table_data) {
         HEPDATA.reset_stats();
+        HEPDATA.render_associated_files(table_data.associated_files, '#support-files');
 
+        // If it is larger than an empty table (bytes)
         HEPDATA.table_renderer.render_qualifiers(table_data, table_placement);
         HEPDATA.table_renderer.render_headers(table_data, table_placement);
         HEPDATA.table_renderer.render_data(table_data, table_placement);
-
-        HEPDATA.render_associated_files(table_data.associated_files, '#support-files');
 
         if (table_data["x_count"] > 1) {
           HEPDATA.visualization.heatmap.reset();
@@ -128,24 +197,24 @@ HEPDATA.table_renderer = {
           });
           HEPDATA.table_renderer.attach_row_listener(table_placement, 'histogram');
         }
+        // Show the table finally
+        $("#hep_table").removeClass("hidden");
+
         if (HEPDATA.show_review) {
           HEPDATA.table_renderer.update_reviewer_button(table_data.review);
         }
 
-        $("#hepdata_table_loader").addClass("hidden");
-        $("#hepdata_table_content").removeClass("hidden");
-
+        // Hide error element
+        $("#hepdata_filesize_loader").addClass("hidden");
         HEPDATA.typeset($("#hepdata_table_content").get());
       },
       error: function (data, error) {
         console.error(error);
-        d3.select("#hepdata_table_loading_failed_text").html('Failed to load table defined by ' + url);
-        $("#hepdata_table_loading").addClass("hidden");
-        $("#hepdata_table_loading_failed").removeClass("hidden");
+        $("#filesize_table_loading_failed").removeClass("hidden");
+        d3.select("#filesize_table_failed_text").html('Failed to load table data defined by ' + url + load_all);
       }
     });
   },
-
   attach_row_listener: function (table_placement, type) {
 
     $(table_placement + ' tr').mouseover(function (e) {

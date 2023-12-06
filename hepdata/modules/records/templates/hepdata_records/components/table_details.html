@@ -17,7 +17,7 @@
 
     <div id="hepdata_table_loader" style="width: 200px; height: 200px; margin: 0 auto">
         <div id="hepdata_table_loading">
-            <div id="table_loader"></div>
+            <div id="main_table_loader"></div>
             <p align="center" style="font-weight: bolder; color: #2C3E50; padding-top: 0px">Loading Data...</p>
         </div>
         <div id="hepdata_table_loading_failed" class="hidden">
@@ -131,8 +131,22 @@
 
         <div class="clearfix"></div>
 
-        <div class="row">
-
+        <div id="hepdata_filesize_loader" class="hidden">
+            <div id="filesize_table_confirm" align="center">
+                <p align="center" style="font-weight: bolder; color: #2C3E50; padding-top: 0px">This table is too large to load automatically.</p>
+                <p id="filesize_table_size">The table size is <span id="file_size"></span> MB, which is greater than our threshold of <span id="threshold_size"></span> MB.</p>
+                <button id="hepdata_filesize_loading_button" class="btn btn-primary btn-sm">Load Table</button>
+            </div>
+            <div id="filesize_table_loading" class="hidden" align="center">
+                <div id="filesize_table_loader"></div>
+                <p align="center" style="font-weight: bolder; color: #2C3E50; padding-top: 0px">Loading Data...</p>
+            </div>
+            <div id="filesize_table_loading_failed" class="hidden">
+                <p id="filesize_table_failed_text" align="center" style="font-weight: bolder; color: #2C3E50; padding-top: 0px"></p>
+                <p align="center">Please try again later, or email info@hepdata.net if this error persists.</p>
+            </div>
+        </div>
+        <div id="hep_table" class="row">
             <div id="hep_table_data" class="col-md-7 hidden-xs">
                 <div id="table_options_region"></div>
                 <div id="table_section">

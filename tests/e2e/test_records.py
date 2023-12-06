@@ -49,6 +49,7 @@ from invenio_db import db
 
 from hepdata.modules.submission.views import process_submission_payload
 from .conftest import e2e_assert_url
+from ..conftest import create_blank_test_record, create_test_record
 
 
 def test_record_update(live_server, logged_in_browser):
@@ -286,21 +287,22 @@ def test_related_records(live_server, logged_in_browser):
     test_data[1]['related_recid'] = test_data[0]['recid']
 
     for test in test_data:
+        recid = test['submission'].publication_recid
         # Create the mock related record ID data
-        related = RelatedRecid(this_recid=test['recid'],
+        related = RelatedRecid(this_recid=recid,
             related_recid=test['related_recid'])
         test['submission'].related_recids.append(related)
 
         # Generate the DOI for the test DataSubmission object
-        doi_string = f"{HEPDATA_DOI_PREFIX}/hepdata.{test['recid']}.v1/t1"
+        doi_string = f"{HEPDATA_DOI_PREFIX}/hepdata.{recid}.v1/t1"
 
         # Create a test DataSubmission object
         datasubmission = DataSubmission(
             name=f"Test Table {test['submission_number']}",
             location_in_publication="Somewhere",
             data_file=1,
-            publication_recid=test['recid'],
-            associated_recid=test['recid'],
+            publication_recid=recid,
+            associated_recid=recid,
             doi=doi_string,
             version=1,
             description=f"Test Description {test['submission_number']}")
@@ -320,7 +322,7 @@ def test_related_records(live_server, logged_in_browser):
     for test in test_data:
         # Load up the Record page.
         record_url = flask.url_for('hepdata_records.get_metadata_by_alternative_id',
-                                   recid=test['recid'], _external=True)
+                                   recid=test['submission'].publication_recid, _external=True)
         browser.get(record_url)
         # The page elements to test and their type (Record/Data)
         related_elements = [
@@ -666,3 +668,74 @@ def _check_record_common(browser):
     )
     alert = browser.find_element(By.CLASS_NAME, 'alert-info')
     assert alert.text == "File saved. You will receive an email when the file has been processed."
+
+
+def test_large_file_load(app, live_server, admin_idx, logged_in_browser):
+    """
+    Tests the loading of a large (over 1mb) file to the database.
+    Used for testing the load button on the records page that appears when a file is
+    too large for immediate loading.
+    """
+    browser = logged_in_browser
+    with app.app_context():
+        admin_idx.recreate_index()
+
+        # Create the test record
+        submission = create_test_record(os.path.abspath("tests/test_data/TestLargeSubmission"))
+        # Load the webpage
+        record_url = flask.url_for('hepdata_records.get_metadata_by_alternative_id',
+                                   recid=submission.publication_recid, _external=True)
+        browser.get(record_url)
+
+        # The required elements for testing/navigation
+        table_name = browser.find_element(By.ID, "table_name")
+        table_description = browser.find_element(By.ID, "table_description")
+        load_button = browser.find_element(By.ID, "hepdata_filesize_loading_button")
+        data_table = browser.find_element(By.ID, "hep_table")
+        tables = browser.find_element(By.ID, "table-list").find_elements(By.TAG_NAME, "li")
+
+        # Wait for the table to attempt to load
+        WebDriverWait(browser, 15).until(
+            EC.visibility_of(table_name)
+        )
+        # Check the contents of the top table data
+        assert table_name.text == "Table 1"
+        assert table_description.text == "Test Table 1"
+        # Check that the filesize error message and size has displayed
+        pattern = r"The table size is (\d+(\.\d+)?) MB, which is greater than our threshold of (\d+(\.\d+)?) MB."
+        assert re.match(
+            pattern,
+            browser.find_element(By.ID, "filesize_table_size").text
+        )
+        # Check for load button/contents
+        assert EC.visibility_of(load_button)
+        assert EC.visibility_of(browser.find_element(By.ID, "hepdata_filesize_loader"))
+
+        # Click to load the table
+        load_button.click()
+        # Check that the animation is now visible and wait for loading
+        assert EC.visibility_of(browser.find_element(By.ID, "filesize_table_loading"))
+        WebDriverWait(browser, 15).until(
+            EC.visibility_of(data_table)
+        )
+
+        # Swap to a new table and wait (this one is under the size)
+        tables[1].click()
+        WebDriverWait(browser, 15).until(
+            EC.visibility_of(data_table)
+        )
+
+        # Check that the table is now visible
+        assert table_name.text == "Table 2"
+        assert table_description.text == "Test Table 2"
+        assert EC.visibility_of(data_table)
+
+        # Test the uploaded resources
+        # Just checking against the existence of the element.
+        for resource, expected in zip(submission.resources, ["code-contents-fail", "code-contents"]):
+            web_url = flask.url_for(
+                'hepdata_records.get_resource',
+                resource_id=resource.id, landing_page=True,
+                _external=True)
+            browser.get(web_url)
+            assert EC.visibility_of(expected)
