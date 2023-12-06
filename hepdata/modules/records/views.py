@@ -803,7 +803,7 @@ def cli_upload():
     invitation_cookie = request.form['invitation_cookie'] if 'invitation_cookie' in request.form.keys() else None
 
     # Check the user has upload permissions for this record
-    if not has_upload_permissions(recid, user, is_sandbox):
+    if recid and not has_upload_permissions(recid, user, is_sandbox):
         return jsonify({
             "message": "Email {} does not correspond to a confirmed uploader for this record.".format(str(user_email))
         }), 403
