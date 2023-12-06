@@ -28,7 +28,7 @@ from invenio_records.api import Record
 import os
 from sqlalchemy.orm.exc import NoResultFound
 
-from hepdata.config import CFG_PUB_TYPE, HISTFACTORY_FILE_TYPE
+from hepdata.config import HISTFACTORY_FILE_TYPE
 from hepdata.ext.opensearch.api import get_record
 from hepdata.modules.submission.models import HEPSubmission, License
 
@@ -251,3 +251,5 @@ def get_record_by_id(recid):
 def record_exists(*args, **kwargs):
     count = HEPSubmission.query.filter_by(**kwargs).count()
     return count > 0
+
+

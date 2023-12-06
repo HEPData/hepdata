@@ -121,23 +121,6 @@ class HEPSubmission(db.Model):
                                cascade="all,delete")
 
 
-    def get_related_hepsubmissions(self):
-        """
-        Queries the database for all records in the RelatedRecId table
-        that have THIS record's id as a related record.
-        Then returns the HEPSubmission object marked in the RelatedRecid table.
-        Returns only submissions marked as 'finished'
-        :return: [list] List containing related records.
-        """
-        related_submissions = (
-            HEPSubmission.query
-            .join(RelatedRecid, RelatedRecid.this_recid == HEPSubmission.publication_recid)
-            .filter(RelatedRecid.related_recid == self.publication_recid)
-            .filter(HEPSubmission.overall_status == 'finished') # Only finished submissions
-            .all())
-        return related_submissions
-
-
 # Declarations of the helper tables used to manage many-to-many relationships.
 datafile_identifier = db.Table(
     'datafile_identifier',
@@ -207,22 +190,6 @@ class DataSubmission(db.Model):
     # maintained so people can go back in time
     # through a submissions review stages.
     version = db.Column(db.Integer, default=0)
-
-    def get_related_datasubmissions(self):
-        """
-            Get the DataSubmission Objects with a RelatedTable entry
-            where this doi is referred to in related_doi.
-
-            :return: [List] List of DataSubmission objects.
-        """
-        related_submissions = (
-            DataSubmission.query.join(RelatedTable, RelatedTable.table_doi == DataSubmission.doi)
-            .join(HEPSubmission, HEPSubmission.publication_recid == DataSubmission.publication_recid)
-            .filter(RelatedTable.related_doi == self.doi)
-            .filter(HEPSubmission.overall_status == 'finished')
-            .all()
-        )
-        return related_submissions
 
 
 class RelatedTable(db.Model):

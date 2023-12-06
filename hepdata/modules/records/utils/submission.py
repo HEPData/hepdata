@@ -218,13 +218,15 @@ def cleanup_data_keywords(data_submission):
 def cleanup_data_related_recid(recid):
     """
     Deletes all related record ID entries of a HEPSubmission object of a given recid
+
     :param recid: The record ID of the HEPSubmission object to be cleaned
     :return:
     """
-    hepsubmission = HEPSubmission.query.filter_by(publication_recid=recid).first()
-    for related in hepsubmission.related_recids:
-        db.session.delete(related)
-    db.session.commit()
+    hepsubmission = get_latest_hepsubmission(publication_recid=recid)
+    if hepsubmission:
+        for related in hepsubmission.related_recids:
+            db.session.delete(related)
+        db.session.commit()
 
 
 def process_data_file(recid, version, basepath, data_obj, datasubmission, main_file_path, tablenum, overall_status):
@@ -270,6 +272,7 @@ def process_data_file(recid, version, basepath, data_obj, datasubmission, main_f
                 datasubmission.keywords.append(keyword)
 
     if overall_status not in ("sandbox", "sandbox_processing"):
+        # Process the related doi data (only if not in sandbox mode)
         if "related_to_table_dois" in data_obj:
             for related_doi in data_obj["related_to_table_dois"]:
                 this_doi = f"{HEPDATA_DOI_PREFIX}/hepdata.{recid}.v{version}/t{tablenum}"

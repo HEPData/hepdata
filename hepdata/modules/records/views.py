@@ -49,7 +49,7 @@ from hepdata.modules.records.api import request, determine_user_privileges, rend
     render_record, current_user, db, jsonify, get_user_from_id, get_record_contents, extract_journal_info, \
     user_allowed_to_perform_action, NoResultFound, OrderedDict, query_messages_for_data_review, returns_json, \
     process_payload, has_upload_permissions, has_coordinator_permissions, create_new_version, format_resource, \
-    should_send_json_ld, JSON_LD_MIMETYPES, get_resource_mimetype
+    should_send_json_ld, JSON_LD_MIMETYPES, get_resource_mimetype, get_table_data_list
 from hepdata.modules.submission.api import get_submission_participants_for_record
 from hepdata.modules.submission.models import HEPSubmission, DataSubmission, \
     DataResource, DataReview, Message, Question
@@ -325,9 +325,8 @@ def get_table_details(recid, data_recid, version):
             table_contents["name"] = datasub_record.name
             table_contents["title"] = datasub_record.description
             table_contents["keywords"] = datasub_record.keywords
-            # The functions used only return the objects themselves.
-            table_contents["related_tables"] = [r.related_doi for r in datasub_record.related_tables]
-            table_contents["related_to_this"] = [r.doi for r in datasub_record.get_related_datasubmissions()]
+            table_contents["related_tables"] = get_table_data_list(datasub_record, "related")
+            table_contents["related_to_this"] = get_table_data_list(datasub_record, "related_to_this")
             table_contents["doi"] = datasub_record.doi
             table_contents["location"] = datasub_record.location_in_publication
 

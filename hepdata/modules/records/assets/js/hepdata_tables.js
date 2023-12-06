@@ -195,6 +195,8 @@ HEPDATA.table_renderer = {
       The `placement` argument is used to specify between
         both related record types.
         The records `this is relating to`, and records `that relate to this` record.
+
+      This function also toggles visibility of the related object area.
     */
     var relatedTablesWrapper = $(placement);
     relatedTablesWrapper.find("ul").empty();
@@ -203,13 +205,21 @@ HEPDATA.table_renderer = {
       var relatedList = relatedTablesWrapper.find(".related-list")
 
       for (var i = 0; i < relatedDois.length; i++) {
-        var doi = relatedDois[i];
-        var relatedItem = $('<li>').append($('<a>').text(doi).attr('href', "https://doi.org/" + doi));
+        var related_object = relatedDois[i];
+        // Create the the `li` tag, setting the text to the table name and DOI
+        // Adds a `title` tag containing the table's description
+        // Example: "Table 1"
+        var relatedItem = $('<li>').append($('<a>'
+        ).text(related_object.name
+        ).attr('href', 'https://doi.org/' + related_object.doi).attr('title', related_object.description));
+        // Add the `li` tag to the list
         relatedList.append(relatedItem);
       }
+      // Ensure that the container is visible.
       relatedTablesWrapper.show();
     }
     else {
+      // Hide the container if there is no information.
       relatedTablesWrapper.hide();
     }
   },
