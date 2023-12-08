@@ -22,6 +22,7 @@
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
 """Enhancers for the document sent to opensearch """
+import os
 import re
 import datetime
 import logging
@@ -106,7 +107,8 @@ def add_analyses(doc):
             elif reference.file_type == HISTFACTORY_FILE_TYPE:
                 SITE_URL = current_app.config.get('SITE_URL', 'https://www.hepdata.net')
                 landing_page_url = f"{SITE_URL}/record/resource/{reference.id}?landing_page=true"
-                doc["analyses"].append({'type': reference.file_type, 'analysis': landing_page_url})
+                doc["analyses"].append({'type': reference.file_type, 'analysis': landing_page_url,
+                                        'filename': os.path.basename(reference.file_location)})
 
 
 def add_data_keywords(doc):

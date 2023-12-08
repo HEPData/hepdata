@@ -28,4 +28,4 @@ This file is imported by ``HEPData.__init__``,
 and parsed by ``setup.py``.
 """
 
-__version__ = "0.9.4dev20231207"
+__version__ = "0.9.4dev20231208"
