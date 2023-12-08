@@ -95,7 +95,10 @@ mapping = {
             },
             "analysis": {
                 "type": "text"
-            }
+            },
+            "filename": {
+                "type": "text"
+            },
         },
         "include_in_parent": "true"
     },

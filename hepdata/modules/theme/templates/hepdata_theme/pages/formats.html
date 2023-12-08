@@ -186,7 +186,9 @@
               <h3>Direct download of resource files from DOI</h3>
               <p>
                 DOIs for resource files relating to a HEPData submission direct users to a landing page such as
-                <a href="{{ ctx.sample_resource_url }}">{{ ctx.sample_resource_url }}</a>.
+                <a href="{{ ctx.sample_resource_url|lower }}">{{ ctx.sample_resource_url|lower }}</a>.
+                Omitting the <code>landing_page=true</code> URL argument will return JSON metadata for the resource file,
+                while replacing it with <code>view=true</code> will download the resource file.
               </p>
               <p>
                 To download a resource file directly from its DOI, pass the relevant
