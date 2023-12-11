@@ -209,6 +209,7 @@ def generate_table_structure(table_contents):
 
     record = {"name": table_contents["name"], "doi": table_contents["doi"],
               "location": table_contents["location"],
+              "table_license": table_contents["table_license"],
               "related_tables" : table_contents["related_tables"],
               "related_to_this" : table_contents["related_to_this"],
               "qualifiers": {},

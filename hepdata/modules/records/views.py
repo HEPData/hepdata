@@ -55,7 +55,7 @@ from hepdata.modules.submission.api import get_submission_participants_for_recor
 from hepdata.modules.submission.models import HEPSubmission, DataSubmission, \
     DataResource, DataReview, Message, Question
 from hepdata.modules.records.utils.common import get_record_by_id, \
-    default_time, IMAGE_TYPES, decode_string, file_size_check
+    default_time, IMAGE_TYPES, decode_string, file_size_check, generate_licence_data_by_id
 from hepdata.modules.records.utils.data_processing_utils import \
     generate_table_structure, process_ctx
 from hepdata.modules.records.utils.submission import create_data_review, \
@@ -338,6 +338,7 @@ def get_table_details(recid, data_recid, version, load_all=1):
             table_contents["name"] = datasub_record.name
             table_contents["title"] = datasub_record.description
             table_contents["keywords"] = datasub_record.keywords
+            table_contents["table_license"] = generate_licence_data_by_id(data_record.file_license)
             table_contents["related_tables"] = get_table_data_list(datasub_record, "related")
             table_contents["related_to_this"] = get_table_data_list(datasub_record, "related_to_this")
             table_contents["doi"] = datasub_record.doi
@@ -683,6 +684,7 @@ def process_resource(reference):
 
     _reference_data = {'id': reference.id, 'file_type': reference.file_type,
                        'file_description': reference.file_description,
+                       'data_license' : generate_licence_data_by_id(reference.file_license),
                        'location': _location, 'doi': reference.doi}
 
     if reference.file_type.lower() in IMAGE_TYPES:
