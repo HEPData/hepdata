@@ -44,6 +44,19 @@ HEPDATA.hepdata_resources = (function () {
       return d['file_description'];
     });
 
+    // Manage rendering of the data license value
+    // Uses url, description and name from data_licence for anchor url, title, and text respectively
+    resource_item.append("a")
+      .attr('href', function(d) {
+        return d['data_license'] ? d['data_license'].url : null;
+      })
+      .attr('title', function(d) {
+        return d['data_license'] ? d['data_license'].description : null;
+      })
+      .text(function(d) {
+        return d['data_license'] ? d['data_license'].name : null;
+      });
+
     resource_item.append("p")
       .attr('display', function(d){
         return d['doi'] == null ? 'none' : 'block';
