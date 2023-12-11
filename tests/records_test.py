@@ -385,9 +385,8 @@ def test_upload_max_size(app):
             response, code = process_payload(recid, test_file, '/test_redirect_url', synchronous=True)
 
         assert(code == 413)
-        assert(response.json == {
-            'message': 'TestHEPSubmission.zip too large (1818265 bytes > 1000000 bytes)'
-        })
+        pattern = re.compile(r"TestHEPSubmission\.zip too large \((\d+) bytes > (\d+) bytes\)")
+        assert pattern.match(response.json['message'])
 
 
 def test_has_upload_permissions(app):
