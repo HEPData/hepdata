@@ -771,6 +771,7 @@ def get_resource(resource_id):
                     if filesize:
                         ctx['filesize'] = '%.2f'%((filesize / 1024) / 1024) # Set filesize if exists
                         ctx['ADDITIONAL_SIZE_LOAD_CHECK_THRESHOLD'] = '%.2f'%((ADDITIONAL_SIZE_LOAD_CHECK_THRESHOLD / 1024) / 1024)
+                    ctx['data_licence'] = generate_licence_data_by_id(resource_obj.file_license)
                     return render_template('hepdata_records/related_record.html', ctx=ctx)
 
             else:
