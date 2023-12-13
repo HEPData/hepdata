@@ -26,7 +26,11 @@
 {% if ctx.record.year %}
   {% set title = title + ' | ' + ctx.record.year|string %}
 {% endif %}
-{% set title = title + ' | ' + ctx.record.title %}
+{% if ctx.record.title %}
+  {% set title = title + ' | ' + ctx.record.title %}
+{% else %}
+  {% set title = title + ' Sandbox | ' + ctx.recid|string %}
+{% endif %}
 {% if ctx.record_type == 'resource' %}
   {% set title = title + ' | ' + ctx.resource_filename %}
 {% else %}
