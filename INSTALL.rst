@@ -135,6 +135,7 @@ use a local converter URL, and specify custom temporary and data directories:
 .. code-block:: python
 
    SITE_URL = "http://localhost:5000"
+   SERVER_NAME = "localhost"
    TESTING = True
    NO_DOI_MINTING = True
    USE_TWITTER = False
