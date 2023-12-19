@@ -119,11 +119,10 @@ def test_home(app, live_server, env_browser, e2e_identifiers):
     python_resources = [e for e in submission_resources if e.find_element(By.TAG_NAME, 'h4').text == 'Python File']
     assert len(python_resources) == 1
     python_resource = python_resources[0]
-    download_btn = python_resource.find_element(By.CSS_SELECTOR, 'a.btn-sm')
-    assert download_btn.text == 'Download'
+    download_btns = [btn for btn in python_resource.find_elements(By.CSS_SELECTOR, 'a.btn-sm')]
+    assert download_btns[1].text == 'Download'
     # Get landing page URL from download link and load
-    landing_page_url = download_btn.get_attribute("href").replace('view=true', 'landing_page=true')
-    browser.get(landing_page_url)
+    browser.get(download_btns[0].get_attribute("href"))
     # Check landing page has appropriate elements
     header_h4 = browser.find_element(By.CSS_SELECTOR, ".hepdata_table_detail_header h4")
     assert header_h4.find_element(By.CLASS_NAME, "pull-left").text.strip() == \
