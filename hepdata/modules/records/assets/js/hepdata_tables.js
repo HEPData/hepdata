@@ -134,9 +134,8 @@ HEPDATA.table_renderer = {
             .attr("href", table_data.table_license.url)
             .attr('title', table_data.table_license.description)
           // Add the anchor to the section, and show it
-          $("#table_data_license")
-            .append(licence_url)
-            .removeClass("hidden");
+          $("#table_data_license_url").append(licence_url);
+          $("#table_data_license").removeClass("hidden");
         }
 
         // Initiates rendering of both related DOI table areas
