@@ -63,8 +63,9 @@ HEPDATA.switch_table = function (listId, table_requested, table_name, status) {
   $("#filesize_table_loading").addClass("hidden");
   $("#filesize_table_loading_failed").addClass("hidden");
   $("#hep_table").addClass("hidden");
-  // Hide the license information section
+  // Hide and clear the license information section
   $("#table_data_license").addClass("hidden");
+  $("#table_data_license_url").html("");
 
   HEPDATA.current_table_id = table_requested;
 
