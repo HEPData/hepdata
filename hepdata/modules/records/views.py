@@ -711,7 +711,9 @@ def get_resource(resource_id):
     if resource_obj:
         contents = ''
         if landing_page or not view_mode:
-            if resource_obj.file_type.lower() not in IMAGE_TYPES and 'http' not in resource_obj.file_location.lower():
+            if resource_obj.file_location.lower().startswith('http'):
+                contents = resource_obj.file_location
+            elif resource_obj.file_type.lower() not in IMAGE_TYPES:
                 print("Resource is at: " + resource_obj.file_location)
                 try:
                     with open(resource_obj.file_location, 'r', encoding='utf-8') as resource_file:
@@ -752,7 +754,10 @@ def get_resource(resource_id):
                     }), 406
 
         if view_mode:
-            return send_file(resource_obj.file_location, as_attachment=True)
+            if resource_obj.file_location.lower().startswith('http'):
+                return redirect(resource_obj.file_location)
+            else:
+                return send_file(resource_obj.file_location, as_attachment=True)
         elif 'html' in resource_obj.file_location and 'http' not in resource_obj.file_location.lower() and not landing_page:
             with open(resource_obj.file_location, 'r') as resource_file:
                 return contents
