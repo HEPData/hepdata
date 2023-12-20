@@ -1,4 +1,5 @@
-SITE_URL = "http://localhost:5000"
+SERVER_NAME = "localhost:5000"
+SITE_URL = "http://" + SERVER_NAME
 TESTING = True
 NO_DOI_MINTING = True
 USE_TWITTER = False
@@ -8,5 +9,4 @@ CFG_DATADIR = '/Users/watt/tmp/hepdata/data'  # replace with a suitable existing
 MAIL_SERVER = '127.0.0.1'
 MAIL_PORT = 1025
 CELERY_BEAT_SCHEDULE = {}
-SERVER_NAME = "localhost"
 # RUN_SELENIUM_LOCALLY = True

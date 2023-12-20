@@ -23,7 +23,6 @@
 import datetime
 import time
 
-from flask import session
 from flask_login import current_user, login_user
 from invenio_db import db
 from werkzeug.exceptions import Forbidden
@@ -31,7 +30,7 @@ from hepdata.modules.dashboard.api import add_user_to_metadata, \
     create_record_for_dashboard, prepare_submissions, \
     get_pending_invitations_for_user, get_submission_count, \
     list_submission_titles, get_dashboard_current_user, \
-    set_dashboard_current_user, VIEW_AS_USER_ID_KEY, \
+    set_dashboard_current_user, \
     get_submissions_csv
 from hepdata.modules.permissions.models import SubmissionParticipant
 from hepdata.modules.permissions.views import manage_participant_status
@@ -39,7 +38,6 @@ from hepdata.modules.records.utils.common import get_record_by_id
 from hepdata.modules.records.utils.submission import get_or_create_hepsubmission
 from hepdata.modules.records.utils.workflow import create_record
 from invenio_accounts.models import User, Role
-from pytest_mock import mocker
 from . import conftest
 import pytest
 
@@ -475,13 +473,14 @@ def test_submissions_csv(app, admin_idx, load_default_data, identifiers):
         time.sleep(1)
 
         user = User.query.first()
+        site_url = app.config.get('SITE_URL', 'https://www.hepdata.net')
         csv_data = get_submissions_csv(user, include_imported=True)
         csv_lines = csv_data.splitlines()
         assert len(csv_lines) == 3
         assert csv_lines[0] == 'hepdata_id,version,url,inspire_id,arxiv_id,title,collaboration,creation_date,last_updated,status,uploaders,reviewers'
         today = datetime.datetime.utcnow().date().isoformat()
-        assert csv_lines[1] == f'16,1,http://localhost/record/16,1245023,arXiv:1307.7457,High-statistics study of $K^0_S$ pair production in two-photon collisions,Belle,{today},2013-12-17,finished,,'
-        assert csv_lines[2] == f'1,1,http://localhost/record/1,1283842,arXiv:1403.1294,Measurement of the forward-backward asymmetry in the distribution of leptons in $t\\bar{{t}}$ events in the lepton+jets channel,D0,{today},2014-08-11,finished,,'
+        assert csv_lines[1] == f'16,1,{site_url}/record/16,1245023,arXiv:1307.7457,High-statistics study of $K^0_S$ pair production in two-photon collisions,Belle,{today},2013-12-17,finished,,'
+        assert csv_lines[2] == f'1,1,{site_url}/record/1,1283842,arXiv:1403.1294,Measurement of the forward-backward asymmetry in the distribution of leptons in $t\\bar{{t}}$ events in the lepton+jets channel,D0,{today},2014-08-11,finished,,'
 
         # Get data without imported records - should be empty (headers only)
         csv_data = get_submissions_csv(user, include_imported=False)
@@ -526,4 +525,4 @@ def test_submissions_csv(app, admin_idx, load_default_data, identifiers):
         csv_data = get_submissions_csv(user, include_imported=True)
         csv_lines = csv_data.splitlines()
         assert len(csv_lines) == 3
-        assert csv_lines[2] == f'1,1,http://localhost/record/1,1283842,arXiv:1403.1294,Measurement of the forward-backward asymmetry in the distribution of leptons in $t\\bar{{t}}$ events in the lepton+jets channel,D0,{today},2014-08-11,finished,test@test.com (Una Uploader),test2@test.com (Rowan Reviewer) | test@hepdata.net'
+        assert csv_lines[2] == f'1,1,{site_url}/record/1,1283842,arXiv:1403.1294,Measurement of the forward-backward asymmetry in the distribution of leptons in $t\\bar{{t}}$ events in the lepton+jets channel,D0,{today},2014-08-11,finished,test@test.com (Una Uploader),test2@test.com (Rowan Reviewer) | test@hepdata.net'
