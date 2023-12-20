@@ -8,4 +8,5 @@ CFG_DATADIR = '/Users/watt/tmp/hepdata/data'  # replace with a suitable existing
 MAIL_SERVER = '127.0.0.1'
 MAIL_PORT = 1025
 CELERY_BEAT_SCHEDULE = {}
+SERVER_NAME = "localhost"
 # RUN_SELENIUM_LOCALLY = True

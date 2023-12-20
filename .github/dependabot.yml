@@ -21,4 +21,3 @@ updates:
     ignore:
       - dependency-name: "pytest-cov"  # see https://github.com/HEPData/hepdata/issues/580
       - dependency-name: "Sphinx"  # see https://github.com/HEPData/hepdata/issues/594
-      - dependency-name: "responses"  # see https://github.com/HEPData/hepdata/issues/680
