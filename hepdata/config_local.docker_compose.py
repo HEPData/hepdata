@@ -1,5 +1,5 @@
-SITE_URL = "http://localhost:5000"
-SERVER_NAME = "localhost"
+SERVER_NAME = "localhost:5000"
+SITE_URL = "http://" + SERVER_NAME
 TESTING = True
 NO_DOI_MINTING = True
 USE_TWITTER = False

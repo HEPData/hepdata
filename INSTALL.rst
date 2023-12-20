@@ -134,8 +134,8 @@ use a local converter URL, and specify custom temporary and data directories:
 
 .. code-block:: python
 
-   SITE_URL = "http://localhost:5000"
-   SERVER_NAME = "localhost"
+   SERVER_NAME = "localhost:5000"
+   SITE_URL = "http://" + SERVER_NAME
    TESTING = True
    NO_DOI_MINTING = True
    USE_TWITTER = False
@@ -262,6 +262,7 @@ Running the tests
 
 Some of the tests run using `Selenium <https://selenium.dev>`_ on `Sauce Labs <https://saucelabs.com>`_.
 Note that some of the end-to-end tests currently fail when run individually rather than all together.
+If you have a local development server running, shut it down before running the tests.
 
 To run the tests locally you have several options:
 
