@@ -76,7 +76,7 @@ HEPDATA.hepdata_resources = (function () {
       .attr("href", function(d) {
         return '/record/resource/' + d.id + '?landing_page=true';
       })
-      .text("Resource Page");
+      .text("Landing Page");
 
     resource_item.append("a")
       .attr('target', '_new')
