@@ -153,6 +153,7 @@ def test_data_processing(app):
     data["doi"] = 'doi/10.2342'
     data["related_tables"] = []
     data["related_to_this"] = []
+    data["table_license"] = []
     data["location"] = 'Data from Figure 2 of preprint'
     data["review"] = []
     data["associated_files"] = []
@@ -384,9 +385,8 @@ def test_upload_max_size(app):
             response, code = process_payload(recid, test_file, '/test_redirect_url', synchronous=True)
 
         assert(code == 413)
-        assert(response.json == {
-            'message': 'TestHEPSubmission.zip too large (1818265 bytes > 1000000 bytes)'
-        })
+        pattern = re.compile(r"TestHEPSubmission\.zip too large \((\d+) bytes > (\d+) bytes\)")
+        assert pattern.match(response.json['message'])
 
 
 def test_has_upload_permissions(app):

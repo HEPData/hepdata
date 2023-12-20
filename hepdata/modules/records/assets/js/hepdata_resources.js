@@ -44,12 +44,40 @@ HEPDATA.hepdata_resources = (function () {
       return d['file_description'];
     });
 
+    // Render the licence header text if required
+    resource_item.append("span").text(function(d) {
+      return d['data_license'] && d['data_license'].url ? "Licence: " : "";
+    });
+
+    // Manage rendering of the data license value
+    // Uses url, description and name from data_licence for anchor url, title, and text respectively
+    resource_item.append("a")
+      .attr('href', function(d) {
+        return d['data_license'] ? d['data_license'].url : null;
+      })
+      .attr('title', function(d) {
+        return d['data_license'] ? d['data_license'].description : null;
+      })
+      .text(function(d) {
+        return d['data_license'] ? d['data_license'].name : null;
+      })
+      .attr("class", "licence-url");
+
     resource_item.append("p")
       .attr('display', function(d){
         return d['doi'] == null ? 'none' : 'block';
       }).html(function (d) {
         return d['doi'] == null ? '' : '<a href="https://doi.org/' + d['doi'] + '" class="resource-doi">' + d['doi'] + '</a>';
       });
+
+    // Add the landing page button
+    resource_item.append("a")
+      .attr('target', '_new')
+      .attr("class", "btn btn-primary btn-sm")
+      .attr("href", function(d) {
+        return '/record/resource/' + d.id + '?landing_page=true';
+      })
+      .text("Landing Page");
 
     resource_item.append("a")
       .attr('target', '_new')

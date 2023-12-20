@@ -63,6 +63,9 @@ HEPDATA.switch_table = function (listId, table_requested, table_name, status) {
   $("#filesize_table_loading").addClass("hidden");
   $("#filesize_table_loading_failed").addClass("hidden");
   $("#hep_table").addClass("hidden");
+  // Hide and clear the license information section
+  $("#table_data_license").addClass("hidden");
+  $("#table_data_license_url").html("");
 
   HEPDATA.current_table_id = table_requested;
 
@@ -122,6 +125,18 @@ HEPDATA.table_renderer = {
         $("#table_location").html(table_data.location);
         $("#table_doi_contents").html('<a href="https://doi.org/' + table_data.doi + '" target="_blank">' + table_data.doi + '</a>');
         $("#table_description").html((table_data.description.indexOf('.') == 0) ? '' : table_data.description.trim());
+
+        // Handle rendering of a licence if it exists
+        if(table_data.table_license) {
+          // Set up anchor with url, text, and title/tooltip
+          var licence_url = $("<a>")
+            .text(table_data.table_license.name)
+            .attr("href", table_data.table_license.url)
+            .attr('title', table_data.table_license.description)
+          // Add the anchor to the section, and show it
+          $("#table_data_license_url").append(licence_url);
+          $("#table_data_license").removeClass("hidden");
+        }
 
         // Initiates rendering of both related DOI table areas
         HEPDATA.table_renderer.render_related_dois(table_data.related_tables, "#related-tables");

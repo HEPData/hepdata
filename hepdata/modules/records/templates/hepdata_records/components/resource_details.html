@@ -35,6 +35,12 @@
         <p><a href="{{ ctx.resource.file_location }}">{{ ctx.resource.file_location }}</a></p>
       {% elif ctx.display_type == 'code' %}
 
+      {% if ctx.data_licence %}
+        <div id="resource-data-licence">
+          Licence: <a href="{{ ctx.data_licence.url }}" title="{{ ctx.data_licence.description }}">{{ ctx.data_licence.name }}</a>
+        </div>
+      {% endif %}
+
         {% if ctx.contents and ctx.contents != 'Large text file' %}
           <textarea id="code-contents" height="70%">{{ ctx.contents }}</textarea>
         {% else %}

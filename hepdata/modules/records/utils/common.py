@@ -267,3 +267,23 @@ def file_size_check(file_location, load_all):
     if load_all == 0:
         size_check["status"] = size_check["size"] <= SIZE_LOAD_CHECK_THRESHOLD
     return size_check
+
+def generate_licence_data_by_id(licence_id):
+    """
+    Generates a dictionary from a Licence class selected by
+    its ID from the database.
+
+    :param licence_id:
+    :return dict: Returns the licence_data dictionary, or None
+    """
+    license_data = License.query.filter_by(id=licence_id).first()
+    if license_data:
+        # Generate and return the dictionary
+        return {
+            "name": license_data.name,
+            "url": license_data.url,
+            "description": license_data.description
+        }
+    else:
+        # Return None if not found
+        return None
