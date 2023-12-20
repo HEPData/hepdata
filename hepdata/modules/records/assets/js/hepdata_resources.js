@@ -60,7 +60,8 @@ HEPDATA.hepdata_resources = (function () {
       })
       .text(function(d) {
         return d['data_license'] ? d['data_license'].name : null;
-      });
+      })
+      .attr("class", "licence-url");
 
     resource_item.append("p")
       .attr('display', function(d){
