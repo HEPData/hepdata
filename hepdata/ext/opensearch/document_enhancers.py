@@ -127,6 +127,18 @@ def add_data_keywords(doc):
     doc['data_keywords'] = dict(agg_keywords)
 
 
+def add_data_abstract(doc):
+    """
+    Adds the data abstract from its associated HEPSubmission to the document object
+
+    :param doc: The document object
+    :return:
+    """
+
+    submission = get_latest_hepsubmission(publication_recid=doc['recid'], overall_status='finished')
+    doc['data_abstract'] = submission.data_abstract
+
+
 def process_cmenergies(keywords):
     cmenergies = []
     if keywords['cmenergies']:
@@ -188,6 +200,7 @@ def enhance_publication_document(doc):
     add_id(doc)
     add_doc_type(doc, CFG_PUB_TYPE)
     add_data_submission_urls(doc)
+    add_data_abstract(doc)
     add_shortened_authors(doc)
     process_last_updates(doc)
     add_analyses(doc)
