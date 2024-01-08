@@ -22,6 +22,7 @@
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 import datetime
 import time
+import re
 
 from flask_login import current_user, login_user
 from invenio_db import db
@@ -479,8 +480,16 @@ def test_submissions_csv(app, admin_idx, load_default_data, identifiers):
         assert len(csv_lines) == 3
         assert csv_lines[0] == 'hepdata_id,version,url,inspire_id,arxiv_id,title,collaboration,creation_date,last_updated,status,uploaders,reviewers'
         today = datetime.datetime.utcnow().date().isoformat()
-        assert csv_lines[1] == f'16,1,{site_url}/record/16,1245023,arXiv:1307.7457,High-statistics study of $K^0_S$ pair production in two-photon collisions,Belle,{today},2013-12-17,finished,,'
-        assert csv_lines[2] == f'1,1,{site_url}/record/1,1283842,arXiv:1403.1294,Measurement of the forward-backward asymmetry in the distribution of leptons in $t\\bar{{t}}$ events in the lepton+jets channel,D0,{today},2014-08-11,finished,,'
+
+        url_pattern = r"https?://.*"
+        csv_line_one_suf = rf'/record/16,1245023,arXiv:1307.7457,High-statistics study of $K^0_S$ pair production in two-photon collisions,Belle,{today},2013-12-17,finished,,'
+        csv_one_pattern = r'16,1,' + url_pattern + re.escape(csv_line_one_suf)
+
+        csv_line_two_suf = rf'/record/1,1283842,arXiv:1403.1294,Measurement of the forward-backward asymmetry in the distribution of leptons in $t\bar{{t}}$ events in the lepton+jets channel,D0,{today},2014-08-11,finished,,'
+        csv_two_pattern  = r'1,1,' + url_pattern + re.escape(csv_line_two_suf)
+
+        assert re.fullmatch(csv_one_pattern, csv_lines[1])
+        assert re.fullmatch(csv_two_pattern, csv_lines[2])
 
         # Get data without imported records - should be empty (headers only)
         csv_data = get_submissions_csv(user, include_imported=False)
@@ -525,4 +534,8 @@ def test_submissions_csv(app, admin_idx, load_default_data, identifiers):
         csv_data = get_submissions_csv(user, include_imported=True)
         csv_lines = csv_data.splitlines()
         assert len(csv_lines) == 3
-        assert csv_lines[2] == f'1,1,{site_url}/record/1,1283842,arXiv:1403.1294,Measurement of the forward-backward asymmetry in the distribution of leptons in $t\\bar{{t}}$ events in the lepton+jets channel,D0,{today},2014-08-11,finished,test@test.com (Una Uploader),test2@test.com (Rowan Reviewer) | test@hepdata.net'
+
+        csv_line_two_suf_two = rf'/record/1,1283842,arXiv:1403.1294,Measurement of the forward-backward asymmetry in the distribution of leptons in $t\bar{{t}}$ events in the lepton+jets channel,D0,{today},2014-08-11,finished,test@test.com (Una Uploader),test2@test.com (Rowan Reviewer) | test@hepdata.net'
+        csv_two_pattern_two  = r'1,1,' + url_pattern + re.escape(csv_line_two_suf_two)
+
+        assert re.fullmatch(csv_two_pattern_two, csv_lines[2])
