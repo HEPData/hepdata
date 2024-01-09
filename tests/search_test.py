@@ -221,6 +221,12 @@ def test_search(app, load_default_data, identifiers):
     for author in expected:
         assert(author in results)
 
+    # Test searching of the data_abstract value
+    abstract_text = 'Fermilab-Tevatron.' # Some text from a data abstract
+    results = os_api.search(abstract_text, index=index)
+    assert len(results['results']) == 1
+    assert abstract_text in results['results'][0]['data_abstract']
+
     # Test search queries that OS can't parse
     results = os_api.search('/', index=index)
     assert results == {'error': 'Failed to parse query [/]'}
