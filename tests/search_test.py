@@ -33,7 +33,7 @@ from hepdata.ext.opensearch.query_builder import QueryBuilder, HEPDataQueryParse
 from hepdata.ext.opensearch.utils import flip_sort_order, parse_and_format_date, prepare_author_for_indexing, \
     calculate_sort_order, push_keywords
 from hepdata.modules.records.importer.api import import_records
-from hepdata.modules.submission.models import HEPSubmission
+from hepdata.modules.submission.models import HEPSubmission, DataSubmission
 from invenio_search import current_search_client as os
 
 from hepdata.modules.search.config import LIMIT_MAX_RESULTS_PER_PAGE, \
@@ -226,6 +226,18 @@ def test_search(app, load_default_data, identifiers):
     results = os_api.search(abstract_text, index=index)
     assert len(results['results']) == 1
     assert abstract_text in results['results'][0]['data_abstract']
+
+    # Test searching for a table using very specific text
+    # Some description text from the test data
+    description_text = 'Observed ASYMFB(LEPTON) as a function of PT(LEPTON) at reconstruction level.'
+    results = os_api.search(description_text, index=index)
+
+    # Create the table doi. We are expecting the first table to contain this data
+    result_doi = results['results'][0]["hepdata_doi"] + ".v1/t1"
+
+    # Load DataSubmission object to verify description vs query
+    verify_submission = DataSubmission.query.filter_by(doi=result_doi).first()
+    assert description_text in verify_submission.description
 
     # Test search queries that OS can't parse
     results = os_api.search('/', index=index)
