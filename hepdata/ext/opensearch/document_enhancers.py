@@ -34,6 +34,7 @@ from hepdata.config import CFG_PUB_TYPE, CFG_DATA_TYPE, HISTFACTORY_FILE_TYPE
 from hepdata.ext.opensearch.config.record_mapping import mapping as os_mapping
 from hepdata.modules.permissions.models import SubmissionParticipant
 from hepdata.modules.submission.api import get_latest_hepsubmission
+from hepdata.modules.submission.models import DataSubmission
 
 FORMATS = ['json', 'root', 'yaml', 'csv', 'yoda']
 
@@ -127,6 +128,18 @@ def add_data_keywords(doc):
     doc['data_keywords'] = dict(agg_keywords)
 
 
+def add_data_description(doc):
+    """
+    Retrieve the description of the associated DataSubmission
+    object and add it to the doc for indexing.
+
+    :param doc: The document object
+    :return:
+    """
+    submission = DataSubmission.query.filter_by(doi=doc["doi"]).one()
+    doc["description"] = submission.description
+
+
 def add_data_abstract(doc):
     """
     Adds the data abstract from its associated HEPSubmission to the document object
@@ -194,6 +207,7 @@ def enhance_data_document(doc):
     add_data_table_urls(doc)
     add_parent_publication(doc)
     add_data_keywords(doc)
+    add_data_description(doc)
 
 
 def enhance_publication_document(doc):
