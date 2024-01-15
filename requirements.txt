@@ -8,7 +8,7 @@ invenio-access==2.0.0     # Indirect (needed by invenio-admin)
 invenio-accounts==3.5.1
 invenio-admin==1.4.0
 invenio-app==1.4.0
-invenio-assets==3.0.1
+invenio-assets==3.0.2
 invenio-config==1.0.3
 invenio-db[postgresql]==1.1.5
 invenio-logging[sentry_sdk]==2.1.0
