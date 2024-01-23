@@ -115,7 +115,7 @@ jobs:
       with:
         node-version: ${{ env.node-version }}
     - name: Cache pip modules
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       if: ${{ !env.ACT }}
       env:
         cache-name: cache-pip-modules
@@ -125,7 +125,7 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-test-${{ env.cache-name }}-
     - name: Cache node modules
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       if: ${{ !env.ACT }}
       env:
         cache-name: cache-node-modules
