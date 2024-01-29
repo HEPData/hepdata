@@ -9,7 +9,7 @@ invenio-accounts==3.5.1
 invenio-admin==1.4.0
 invenio-app==1.4.0
 invenio-assets==3.0.2
-invenio-config==1.0.3
+invenio-config==1.0.4
 invenio-db[postgresql]==1.1.5
 invenio-logging[sentry_sdk]==2.1.0
 invenio-oauthclient==3.5.1
