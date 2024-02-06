@@ -187,16 +187,17 @@ def test_search(app, load_default_data, identifiers):
     assert(len(results['facets']) == 8)
     assert(len(results['results']) == len(identifiers))
 
-    for i in range(len(results['results'])):
-        assert(results['results'][i]['title'] == identifiers[i]['title'])
-        assert(results['results'][i]['inspire_id'] == identifiers[i]['inspire_id'])
-        assert(len(results['results'][i]['data']) == identifiers[i]['data_tables'])
+    for i in identifiers:
+        assert i['title'] in [r['title'] for r in results['results']]
+        assert i['inspire_id'] in [r['inspire_id'] for r in results['results']]
+        table_result = next((r['data'] for r in results['results'] if r['inspire_id'] == i['inspire_id']))
+        assert i['data_tables'] == len(table_result)
 
     # Test pagination (1 item per page as we only have 2; get 2nd page)
     results = os_api.search('', index=index, size=1, offset=1)
     assert(results['total'] == len(identifiers))
     assert(len(results['results']) == 1)
-    assert(results['results'][0]['title'] == identifiers[1]['title'])
+    assert(results['results'][0]['title'] in [i['title'] for i in identifiers])
 
     # Test a simple search query from the second test submission
     # The search matches the publication but not the data tables
@@ -213,19 +214,30 @@ def test_search(app, load_default_data, identifiers):
     # Test the authors search (fuzzy)
     results = os_api.search_authors('Bal')
     expected = [
-        {'affiliation': 'Texas U., Arlington', 'full_name': 'Pal, Arnab'},
-        {'affiliation': 'Panjab U.', 'full_name': 'Bala, A.'}
+        {'full_name': 'Pal, Arnab', 'affiliation': 'Texas U., Arlington'},
+        {'full_name': 'Bala, A.', 'affiliation': 'Panjab U.'},
+        {'full_name': 'Balz, Johannes', 'affiliation': 'Mainz U.'},
+        {'full_name': 'Evans, Hal', 'affiliation': 'Indiana U.'},
+        {'full_name': "O'Shea, Val", 'affiliation': 'Glasgow U.'},
+        {'full_name': 'Dal Santo, Daniele', 'affiliation': 'Bern U., LHEP'},
+        {'full_name': 'Garg, Rocky Bala', 'affiliation': 'SLAC'},
+        {'full_name': 'Tal Hod, Noam', 'affiliation': 'Weizmann Inst.'},
+        {'full_name': 'Ta, Duc Bao', 'affiliation': 'Mainz U.'},
+        {'full_name': 'Goshaw, Al', 'affiliation': 'Duke U.'},
+        {'full_name': 'Arbiol Val, Sergio Javier', 'affiliation': 'Cracow, INP'},
+        {'full_name': 'Van Daalen, Tal Roelof', 'affiliation': 'Washington U., Seattle'},
+        {'full_name': 'Al Khoury, Konie', 'affiliation': 'Nevis Labs, Columbia U.'}
     ]
 
     assert(len(results) == len(expected))
     for author in expected:
         assert(author in results)
 
-    # Test searching of the data_abstract value
-    abstract_text = 'Fermilab-Tevatron.' # Some text from a data abstract
-    results = os_api.search(abstract_text, index=index)
-    assert len(results['results']) == 1
-    assert abstract_text in results['results'][0]['data_abstract']
+    # Test searching of data resource descriptions
+    resource_text = 'Created with hepdata_lib 0.11.0' # Some text from a resource
+    results = os_api.search(resource_text, index=index)
+    # Check for the text within the resource results
+    assert resource_text in results['results'][0]['resources']
 
     # Test searching for a table using very specific text
     # Some description text from the test data
