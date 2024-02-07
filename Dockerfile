@@ -1,4 +1,4 @@
-FROM python:3.9
+FROM python:3.9 as web
 
 WORKDIR /usr/src/app
 
@@ -52,3 +52,7 @@ RUN bash -c "set -x; [[ ${APP_ENVIRONMENT:-prod} = local-web ]] && (cd /usr/loca
 WORKDIR /code
 
 ENTRYPOINT []
+
+FROM nginx as statics
+COPY --from=web /usr/local/var/hepdata-instance /usr/share/nginx/html
+COPY robots.txt /usr/share/nginx/html/robots.txt
