@@ -514,7 +514,7 @@ def test_reindex_all(app, load_default_data, identifiers, mocker):
     os_api.reindex_all(index=index, start=1, batch=2, synchronous=True)
     m.assert_has_calls([
         call([1, 2], index),
-        call([3], index)
+        call([3, 4], index)
     ])
     m.reset_mock()
 
@@ -527,7 +527,7 @@ def test_reindex_all(app, load_default_data, identifiers, mocker):
     # Start at publication_recid 16, end at 100:
     # should call with submission ids [2, 3]
     os_api.reindex_all(index=index, start=16, end=100, synchronous=True)
-    m.assert_called_once_with([2, 3], index)
+    m.assert_called_once_with([2, 3, 4], index)
     m.reset_mock()
 
     # Start at publication_recid 16, end at 1, batch size 10:
@@ -540,11 +540,11 @@ def test_reindex_all(app, load_default_data, identifiers, mocker):
     new_submission = HEPSubmission(publication_recid=57, inspire_id='1478981', version=2, overall_status='todo')
     db.session.add(new_submission)
     db.session.commit()
-    # New id should be 4
-    assert(new_submission.id == 4)
-    # Reindex should still index submission 3 as 4 is not finished
+    # New id should be 5
+    assert(new_submission.id == 5)
+    # Reindex should still index submission 3 and 4 as 5 is not finished
     os_api.reindex_all(index=index, synchronous=True)
-    m.assert_called_once_with([1, 2, 3], index)
+    m.assert_called_once_with([1, 2, 3, 4], index)
     m.reset_mock()
 
     # Update submission to have status finished
@@ -553,18 +553,18 @@ def test_reindex_all(app, load_default_data, identifiers, mocker):
     db.session.commit()
     # Reindex should now index 4 instead of 3
     os_api.reindex_all(index=index, synchronous=True)
-    m.assert_called_once_with([1, 2, 4], index)
+    m.assert_called_once_with([1, 2, 4, 5], index)
     m.reset_mock()
 
     # Create a further new version for ins1478981
     new_submission2 = HEPSubmission(publication_recid=57, inspire_id='1478981', version=3, overall_status='todo')
     db.session.add(new_submission2)
     db.session.commit()
-    # New id should be 5
-    assert(new_submission2.id == 5)
-    # Reindex should still index submission 4 as 5 is not finished
+    # New id should be 6
+    assert(new_submission2.id == 6)
+    # Reindex should still index submission 4 as 6 is not finished
     os_api.reindex_all(index=index, synchronous=True)
-    m.assert_called_once_with([1, 2, 4], index)
+    m.assert_called_once_with([1, 2, 4, 5], index)
     m.reset_mock()
 
     # Update submission to have status finished
@@ -573,7 +573,7 @@ def test_reindex_all(app, load_default_data, identifiers, mocker):
     db.session.commit()
     # Reindex should now index 5 instead of 4
     os_api.reindex_all(index=index, synchronous=True)
-    m.assert_called_once_with([1, 2, 5], index)
+    m.assert_called_once_with([1, 2, 4, 6], index)
 
 
 def test_reindex_batch(app, load_default_data, mocker):
@@ -645,10 +645,12 @@ def test_get_record(app, load_default_data, identifiers):
 
 
 def test_get_all_ids(app, load_default_data, identifiers):
-    expected_record_ids = [1, 16]
+    expected_record_ids = [1, 16, 57]
+    # Pre-sorted based on the last_updated (today, 2016-07-13 and 2013-12-17)
+    sorted_expected_record_ids = [57, 1, 16]
     # Order is not guaranteed by OS unless we use latest_first,
     # so sort the results before checking
-    assert(os_api.get_all_ids() == expected_record_ids)
+    assert(set(os_api.get_all_ids()) == set(expected_record_ids))
 
     # Check id_field works
     assert(os_api.get_all_ids(id_field='recid') == expected_record_ids)
@@ -664,12 +666,12 @@ def test_get_all_ids(app, load_default_data, identifiers):
     date_2013_2 = datetime.datetime(year=2013, month=12, day=17)
     assert(os_api.get_all_ids(last_updated=date_2013_2) == expected_record_ids)
     date_2013_3 = datetime.datetime(year=2013, month=12, day=18)
-    assert(os_api.get_all_ids(last_updated=date_2013_3) == [1])
-    date_2020 = datetime.datetime(year=2020, month=1, day=1)
-    assert(os_api.get_all_ids(last_updated=date_2020) == [])
+    assert(os_api.get_all_ids(last_updated=date_2013_3) == [1, 57])
+    date_2120 = datetime.datetime(year=2120, month=1, day=1)
+    assert(os_api.get_all_ids(last_updated=date_2120) == [])
 
     # Check sort by latest works - first record is newer than previous
-    assert(os_api.get_all_ids(latest_first=True) == expected_record_ids)
+    assert(os_api.get_all_ids(latest_first=True) == sorted_expected_record_ids)
 
 
 @pytest.mark.parametrize("input_size, output_size",

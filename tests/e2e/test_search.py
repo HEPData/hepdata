@@ -53,7 +53,7 @@ def test_search_from_home(live_server, env_browser, search_tests):
     # Check result count
     sleep(1)
     results = browser.find_elements(By.CLASS_NAME, 'search-result-item')
-    assert(len(results) == 3)
+    assert(len(results) == 4)
 
     # Check "More" link works
     table_list = results[0].find_elements(By.CSS_SELECTOR, '.data-brief:not(.hidden)')
@@ -64,11 +64,11 @@ def test_search_from_home(live_server, env_browser, search_tests):
 
     # Check facet filtering for each facet
     facets = [
-        {'class_prefix': 'collaboration', 'exp_filter_count': 3, 'exp_first_result_count': 1},
-        {'class_prefix': 'subject_areas', 'exp_filter_count': 1, 'exp_first_result_count': 3},
+        {'class_prefix': 'collaboration', 'exp_filter_count': 4, 'exp_first_result_count': 1},
+        {'class_prefix': 'subject_areas', 'exp_filter_count': 1, 'exp_first_result_count': 4},
         {'class_prefix': 'phrases', 'exp_filter_count': 10, 'exp_first_result_count': 1},
         {'class_prefix': 'reactions', 'exp_filter_count': 10, 'exp_first_result_count': 1},
-        {'class_prefix': 'observables', 'exp_filter_count': 6, 'exp_first_result_count': 1},
+        {'class_prefix': 'observables', 'exp_filter_count':8, 'exp_first_result_count': 2},
         {'class_prefix': 'cmenergies', 'exp_filter_count': 10, 'exp_first_result_count': None}
     ]
 
@@ -122,9 +122,9 @@ def test_search_from_home(live_server, env_browser, search_tests):
             assert (publication)
 
             # Check the expected collaboration facets appear in the filters
-            collab_facets = browser.find_element(By.CSS_SELECTOR, '#collaboration-facet ul.list-group li.list-group-item a')
-            assert(collab_facets.text.startswith(search_config['exp_collab_facet']))
-            assert(collab_facets.text.endswith('1'))
+            collab_facets = browser.find_elements(By.CSS_SELECTOR, '#collaboration-facet ul.list-group li.list-group-item a')
+            all_facets = [c.text for c in collab_facets]
+            assert f"{search_config['exp_collab_facet']}\n{'1'}" in all_facets
 
             # Check the first result has the expected number of data tables
             data_table_count_span = browser.find_element(By.CSS_SELECTOR, '.search-result-item .record-brief div:nth-child(3) span')
@@ -190,11 +190,11 @@ def test_author_search(live_server, env_browser):
     # Check author results are as we expect
     search_results = browser.find_elements(By.CLASS_NAME, 'tt-suggestion')
     expected_authors = [
+        'Farilla, Ada',
         'Solano, Ada',
         'Falkowski, Adam',
-        'Adam, Wolfgang',
-        'Eskut, Eda',
-        'Lyon, Adam Leonard'
+        'Aad, Georges',
+        'Bailey, Adam'
     ]
 
     assert(len(search_results) == len(expected_authors))

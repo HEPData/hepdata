@@ -57,13 +57,13 @@ def test_home(app, live_server, env_browser, e2e_identifiers):
 
     # 3. check that there are three submissions in the latest submissions section
     assert len(browser.find_elements(By.CSS_SELECTOR, '.latest-record .title')) == 3
-    # 4. click on the second submission (should be one in e2e_identifiers)
-    second_item = browser.find_elements(By.CSS_SELECTOR, '.latest-record .title')[1]
+    # 4. click on the third submission (should be one in e2e_identifiers)
+    third_item = browser.find_elements(By.CSS_SELECTOR, '.latest-record .title')[2]
     actions = ActionChains(browser)
-    actions.move_to_element(second_item).perform()
-    href = second_item.get_attribute("href")
+    actions.move_to_element(third_item).perform()
+    href = third_item.get_attribute("href")
     hepdata_id = href[href.rfind("/")+1:]
-    second_item.click()
+    third_item.click()
 
     # 5. assert that the submission is what we expected it to be.
 
@@ -272,8 +272,8 @@ def test_accept_headers(app, live_server, e2e_identifiers):
         {'@type': 'DataDownload', 'contentUrl': 'http://localhost:5000/download/table/1/yoda', 'description': 'YODA file', 'encodingFormat': 'https://yoda.hepforge.org'}
     ]
 
-    # Data resource landing page (use 3rd submission which has resources)
-    submission = get_latest_hepsubmission(inspire_id=e2e_identifiers[2]["inspire_id"])
+    # Data resource landing page (use last submission, which has resources)
+    submission = get_latest_hepsubmission(inspire_id=e2e_identifiers[-1]["inspire_id"])
     resource_url = flask.url_for(
         'hepdata_records.get_resource',
         resource_id=submission.resources[0].id,
@@ -283,10 +283,10 @@ def test_accept_headers(app, live_server, e2e_identifiers):
     assert response.status_code == 200
     json_ld4 = response.json()
     # Check some fields to make sure it's json for right record
-    assert json_ld4['@id'] == 'https://doi.org/10.17182/hepdata.57.v1/r1'
-    assert json_ld4['url'] == 'http://localhost:5000/record/resource/55?landing_page=true'
+    assert json_ld4['@id'] == 'https://doi.org/10.17182/hepdata.124.v1/r1'
+    assert json_ld4['url'] == 'http://localhost:5000/record/resource/262?landing_page=true'
     assert json_ld4['@type'] == 'CreativeWork'
-    assert json_ld4['contentUrl'] == 'http://localhost:5000/record/resource/55?view=true'
+    assert json_ld4['contentUrl'] == 'http://localhost:5000/record/resource/262?view=true'
 
     # JSON-LD for submission without DOI
     submission.doi = ''
@@ -294,7 +294,7 @@ def test_accept_headers(app, live_server, e2e_identifiers):
     db.session.commit()
     record_url = flask.url_for(
         'hepdata_records.get_metadata_by_alternative_id',
-        recid=e2e_identifiers[2]["hepdata_id"],
+        recid=e2e_identifiers[-1]["hepdata_id"],
         _external=True
     )
     response = requests.get(record_url, headers={'Accept': 'application/ld+json'})

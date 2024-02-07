@@ -664,7 +664,10 @@ def test_set_review_status(app, load_default_data):
 
 
 def test_get_all_ids(app, load_default_data, identifiers):
-    expected_record_ids = [1, 16]
+    expected_record_ids = [1, 16, 57]
+    # Pre-sorted based on the last_updated (today, 2016-07-13 and 2013-12-17)
+    sorted_expected_record_ids = [57, 1, 16]
+    sorted_expected_inspire_ids = [2751932, 1283842, 1245023]
     # Order is not guaranteed unless we use latest_first,
     # so sort the results before checking
     assert(get_all_ids() == expected_record_ids)
@@ -683,14 +686,15 @@ def test_get_all_ids(app, load_default_data, identifiers):
     date_2013_2 = datetime.datetime(year=2013, month=12, day=17)
     assert(sorted(get_all_ids(last_updated=date_2013_2)) == expected_record_ids)
     date_2013_3 = datetime.datetime(year=2013, month=12, day=18)
-    assert(get_all_ids(last_updated=date_2013_3) == [1])
-    date_2020 = datetime.datetime(year=2020, month=1, day=1)
-    assert(get_all_ids(last_updated=date_2020) == [])
+    assert(get_all_ids(last_updated=date_2013_3) == [1, 57])
+
+    # A date very far away
+    date_2120 = datetime.datetime(year=2120, month=1, day=1)
+    assert(get_all_ids(last_updated=date_2120) == [])
 
     # Check sort by latest works
-    assert(get_all_ids(latest_first=True) == expected_record_ids)
-    assert(get_all_ids(id_field='inspire_id', latest_first=True)
-           == [int(x["inspire_id"]) for x in identifiers])
+    assert(get_all_ids(latest_first=True) == sorted_expected_record_ids)
+    assert(get_all_ids(id_field='inspire_id', latest_first=True) == sorted_expected_inspire_ids)
 
 
 def test_create_new_version(app, load_default_data, identifiers, mocker):

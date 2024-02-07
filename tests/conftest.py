@@ -157,12 +157,11 @@ def get_identifiers():
              "title": "High-statistics study of $K^0_S$ pair production in two-photon collisions",
              "data_tables": 40,
              "arxiv": "arXiv:1307.7457"},
-
             {"hepdata_id": "ins2751932", "inspire_id": '2751932',
              "title": "Search for pair production of higgsinos in events with two Higgs bosons and missing "
                       "transverse momentum in $\\sqrt{s}=13$ TeV $pp$ collisions at the ATLAS experiment",
              "data_tables": 66,
-             "arxiv": ""}
+             "arxiv": "arXiv:2401.14922"}
             ]
 
 @pytest.fixture()
