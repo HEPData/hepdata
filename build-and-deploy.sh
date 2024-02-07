@@ -12,11 +12,11 @@ retry docker login \
     "--username=${DOCKERHUB_USER}" \
     "--password=${DOCKERHUB_TOKEN}"
 
-for stage in ("web" "statics"); do
+for stage in "web" "statics"; do
   stage_image="${IMAGE}-${stage}"
   echo "Building stage ${stage_image}"
   retry docker build \
-    --stage "${stage}" \
+    --target "${stage}" \
     --build-arg VERSION="${TAG}" \
     -t "${stage_image}:${TAG}" \
     -t "${stage_image}" \
