@@ -1,4 +1,4 @@
-FROM python:3.9 as web
+FROM python:3.9 as build
 
 WORKDIR /usr/src/app
 
@@ -54,5 +54,5 @@ WORKDIR /code
 ENTRYPOINT []
 
 FROM nginx as statics
-COPY --from=web /usr/local/var/hepdata-instance /usr/share/nginx/html
+COPY --from=build /usr/local/var/hepdata-instance /usr/share/nginx/html
 COPY robots.txt /usr/share/nginx/html/robots.txt
