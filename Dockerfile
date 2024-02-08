@@ -53,7 +53,10 @@ WORKDIR /code
 
 ENTRYPOINT []
 
+# Copy "static" directory from "build" image to "statics" image, using "tar -h" to dereference symlinks.
+RUN bash -c "cd /usr/local/var/hepdata-instance; tar -czhf /tmp/static.tar.gz static"
+
 FROM nginx as statics
-COPY --from=build /usr/local/var/hepdata-instance /usr/share/nginx/html
-COPY --from=build /code/hepdata/modules/theme/static/img /usr/share/nginx/html/static/img
+COPY --from=build /tmp/static.tar.gz /tmp/static.tar.gz
+RUN bash -c "tar -xzf /tmp/static.tar.gz -C /usr/share/nginx/html"
 COPY robots.txt /usr/share/nginx/html/robots.txt
