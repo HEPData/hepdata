@@ -55,4 +55,5 @@ ENTRYPOINT []
 
 FROM nginx as statics
 COPY --from=build /usr/local/var/hepdata-instance /usr/share/nginx/html
+COPY --from=build /code/hepdata/modules/theme/static/img /usr/share/nginx/html/static/img
 COPY robots.txt /usr/share/nginx/html/robots.txt
