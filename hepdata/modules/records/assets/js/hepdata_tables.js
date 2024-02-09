@@ -486,6 +486,8 @@ HEPDATA.table_renderer = {
     }
 
     if (table_data.values.length > HEPDATA.default_row_limit) {
+      // Clear the element first
+      d3.select("#table_options_region").html('');
       d3.select("#table_options_region").append('span').text('Showing ' + HEPDATA.default_row_limit + ' of ' + table_data.values.length + ' values');
       var btn = d3.select("#table_options_region").append('a')
         .attr('class', 'btn-show-all-rows pull-right')
