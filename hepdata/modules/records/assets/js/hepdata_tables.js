@@ -142,6 +142,8 @@ HEPDATA.table_renderer = {
         HEPDATA.table_renderer.render_related_dois(table_data.related_tables, "#related-tables");
         HEPDATA.table_renderer.render_related_dois(table_data.related_to_this, "#related-to-this-tables");
         HEPDATA.table_renderer.render_keywords(table_data.keywords, "#table_keywords");
+        // Render any LaTeX in the table description element.
+        HEPDATA.typeset($("#table_description").get());
         $("#hepdata_table_loader").addClass("hidden");
         $("#hepdata_table_content").removeClass("hidden");
         // We also need to clear the figure
