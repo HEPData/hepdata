@@ -80,7 +80,8 @@ HEPDATA.switch_table = function (listId, table_requested, table_name, status) {
   HEPDATA.table_renderer.display_table_headers(header_url, data_url);
 
   // Function to initiate the button to attempt loading of the table
-  $("#hepdata_filesize_loading_button").on('click', function() {
+  // We also clear the event listeners
+  $("#hepdata_filesize_loading_button").off('click').on('click', function() {
     $("#filesize_table_confirm").addClass("hidden");
     $("#filesize_table_loading").removeClass("hidden");
     HEPDATA.table_renderer.get_and_display_table(data_url);
