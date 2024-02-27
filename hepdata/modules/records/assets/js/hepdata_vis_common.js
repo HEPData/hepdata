@@ -321,8 +321,23 @@ HEPDATA.dataprocessing = {
 
         if (processed_value_obj[key + '_max'] > HEPDATA.stats['max_' + key]) HEPDATA.stats['max_' + key] = processed_value_obj[key + '_max'];
         if (processed_value_obj[key + '_min'] < HEPDATA.stats['min_' + key] &&
-            (options[key + '_scale'] != 'log' || processed_value_obj[key + '_min'] > 0)) {
+          (options[key + '_scale'] != 'log' || processed_value_obj[key + '_min'] > 0)) {
           HEPDATA.stats['min_' + key] = processed_value_obj[key + '_min'];
+        }
+
+      } else if (!isNaN(parseFloat(val["high"])) || !isNaN(parseFloat(val["low"]))) {
+
+        var high = parseFloat(val["high"]);
+        var low = parseFloat(val["low"]);
+
+        if (isNaN(high)) {  // overflow bin
+          processed_value_obj[key + '_max'] = low;
+          processed_value_obj[key + '_min'] = low;
+          processed_value_obj[key] = low;
+        } else {  // underflow bin
+          processed_value_obj[key + '_max'] = high;
+          processed_value_obj[key + '_min'] = high;
+          processed_value_obj[key] = high;
         }
 
       } else if (typeof(val["value"]) == 'string' && val["value"].split('-').length > 1 && val["value"].split('-')[0] && !isNaN(val["value"].split('-')[1]) && !isNaN(val["value"].split('-')[0])) {
@@ -347,7 +362,7 @@ HEPDATA.dataprocessing = {
           HEPDATA.stats['min_' + key] = processed_value_obj[key];
         }
 
-      } else if (typeof val == 'object' && (isNaN(val["value"]) || val["value"] == '')) {
+      } else if (typeof val == 'object' && val["value"] && (isNaN(val["value"]) || val["value"] == '')) {
         processed_value_obj[key] = val["value"];
         var re_matheq = new RegExp('\\$', 'g');
         processed_value_obj[key] = processed_value_obj[key].replace(re_matheq, '');

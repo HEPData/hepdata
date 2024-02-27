@@ -5,7 +5,7 @@ gunicorn==21.2.0
 hepdata-converter-ws-client==0.2.2
 hepdata-validator==0.3.5
 invenio-access==2.0.0     # Indirect (needed by invenio-admin)
-invenio-accounts==4.0.1
+invenio-accounts==4.0.2
 invenio-admin==1.4.0
 invenio-app==1.4.0
 invenio-assets==3.0.2
@@ -14,10 +14,10 @@ invenio-db[postgresql]==1.1.5
 invenio-logging[sentry_sdk]==2.1.0
 invenio-oauthclient==3.5.1
 invenio-pidstore==1.3.1
-invenio-records==2.2.2
-invenio-search[opensearch2]==2.2.0
+invenio-records==2.3.0
+invenio-search[opensearch2]==2.2.1
 invenio-theme==2.5.10
 invenio-userprofiles==2.3.1
 python-twitter-v2==0.9.0
-responses==0.24.1
+responses==0.25.0
 unicodeit==0.7.5

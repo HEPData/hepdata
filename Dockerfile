@@ -1,4 +1,4 @@
-FROM python:3.9
+FROM python:3.9 as build
 
 WORKDIR /usr/src/app
 
@@ -52,3 +52,11 @@ RUN bash -c "set -x; [[ ${APP_ENVIRONMENT:-prod} = local-web ]] && (cd /usr/loca
 WORKDIR /code
 
 ENTRYPOINT []
+
+# Copy "static" directory from "build" image to "statics" image, using "tar -h" to dereference symlinks.
+RUN bash -c "cd /usr/local/var/hepdata-instance; tar -czhf /tmp/static.tar.gz static"
+
+FROM nginx as statics
+COPY --from=build /tmp/static.tar.gz /tmp/static.tar.gz
+RUN bash -c "tar -xzf /tmp/static.tar.gz -C /usr/share/nginx/html"
+COPY robots.txt /usr/share/nginx/html/robots.txt

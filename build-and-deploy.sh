@@ -1,60 +1,40 @@
 #!/bin/bash -e
 
+IMAGE="hepdata/hepdata"
 TAG="${CI_TAG:-$(git describe --always --tags)}"
 
 retry() {
     "${@}" || "${@}" || exit 2
 }
 
-login() {
-  echo "Logging into Docker Hub"
-  retry docker login \
-      "--username=${DOCKERHUB_USER}" \
-      "--password=${DOCKERHUB_TOKEN}"
-}
+echo "Logging into Docker Hub"
+retry docker login \
+    "--username=${DOCKERHUB_USER}" \
+    "--password=${DOCKERHUB_TOKEN}"
 
-buildPush() {
-  context="${1}"
-  image="${2}"
-  echo "Building docker image for ${context}"
-  retry docker pull "${image}"
-  if docker pull "${image}:build-stage"; then
-    retry docker build \
-    --build-arg VERSION="${TAG}" \
-    -t "${image}:build-stage" \
-    "${context}" \
-    --cache-from "${image}:build-stage" \
-    --target "build-stage"
-    retry docker push "${image}:build-stage"
-    retry docker build \
-      --build-arg VERSION="${TAG}" \
-      -t "${image}:${TAG}" \
-      -t "${image}" \
-      "${context}" \
-      --cache-from "${image}:build-stage" \
-      --cache-from "${image}"
-  else
-    retry docker build \
-      --build-arg VERSION="${TAG}" \
-      -t "${image}:${TAG}" \
-      -t "${image}" \
-      "${context}" \
-      --cache-from "${image}"
-  fi
+echo "Building ${IMAGE}"
+retry docker build \
+  --target "build" \
+  --build-arg VERSION="${TAG}" \
+  -t "${IMAGE}:${TAG}" \
+  -t "${IMAGE}" \
+  .
 
-  echo "Pushing image to ${image}:${TAG}"
-  retry docker push "${image}:${TAG}"
-  retry docker push "${image}"
-}
+echo "Building ${IMAGE}-statics"
+retry docker build \
+  --target "statics" \
+  --build-arg VERSION="${TAG}" \
+  -t "${IMAGE}-statics:${TAG}" \
+  -t "${IMAGE}-statics" \
+  .
 
-logout() {
-  echo "Logging out""${@}"
-  retry docker logout
-}
+echo "Pushing ${IMAGE}"
+retry docker push "${IMAGE}:${TAG}"
+retry docker push "${IMAGE}"
 
-main() {
-  login
-  buildPush "." "hepdata/hepdata"
-  logout
-}
-main
+echo "Pushing ${IMAGE}-statics"
+retry docker push "${IMAGE}-statics:${TAG}"
+retry docker push "${IMAGE}-statics"
+
+echo "Logging out""${@}"
+retry docker logout
