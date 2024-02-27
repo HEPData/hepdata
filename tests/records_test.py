@@ -49,7 +49,7 @@ from hepdata.modules.records.importer.api import import_records
 from hepdata.modules.records.utils.analyses import update_analyses
 from hepdata.modules.records.utils.submission import get_or_create_hepsubmission, process_submission_directory, do_finalise, unload_submission
 from hepdata.modules.records.utils.common import get_record_by_id, get_record_contents
-from hepdata.modules.records.utils.data_processing_utils import generate_table_headers, generate_table_data
+from hepdata.modules.records.utils.data_processing_utils import generate_table_structure
 from hepdata.modules.records.utils.data_files import get_data_path_for_record
 from hepdata.modules.records.utils.json_ld import get_json_ld
 from hepdata.modules.records.utils.users import get_coordinators_in_system, has_role
@@ -158,9 +158,8 @@ def test_data_processing(app):
     data["review"] = []
     data["associated_files"] = []
     data["size"] = 0
-    data["size_check"] = True
 
-    table_structure = generate_table_data(data)
+    table_structure = generate_table_structure(data)
 
     assert(table_structure["x_count"] == 1)
     assert(len(table_structure["headers"]) == 2)
