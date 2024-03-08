@@ -270,7 +270,7 @@ def file_size_check(file_location, load_all):
 
 def generate_license_data_by_id(license_id):
     """
-    Generates a dictionary from a license class selected by
+    Generates a dictionary from a License class selected by
     its ID from the database.
 
     :param license_id:

@@ -44,9 +44,9 @@ HEPDATA.hepdata_resources = (function () {
       return d['file_description'];
     });
 
-    // Render the licence header text if required
+    // Render the license header text if required
     resource_item.append("span").text(function(d) {
-      return d['data_license'] && d['data_license'].url ? "license: " : "";
+      return d['data_license'] && d['data_license'].url ? "License: " : "";
     });
 
     // Manage rendering of the data license value
