@@ -276,8 +276,9 @@ def process_data_file(recid, version, basepath, data_obj, datasubmission, main_f
         if "related_to_table_dois" in data_obj:
             for related_doi in data_obj["related_to_table_dois"]:
                 this_doi = f"{HEPDATA_DOI_PREFIX}/hepdata.{recid}.v{version}/t{tablenum}"
-                related_table = RelatedTable(table_doi=this_doi, related_doi=related_doi)
-                datasubmission.related_tables.append(related_table)
+                if this_doi != related_doi:
+                    related_table = RelatedTable(table_doi=this_doi, related_doi=related_doi)
+                    datasubmission.related_tables.append(related_table)
 
     cleanup_data_resources(datasubmission)
 
@@ -328,8 +329,9 @@ def process_general_submission_info(basepath, submission_info_document, recid):
     if hepsubmission.overall_status not in ("sandbox", "sandbox_processing"):
         if 'related_to_hepdata_records' in submission_info_document:
             for related_id in submission_info_document['related_to_hepdata_records']:
-                related = RelatedRecid(this_recid=hepsubmission.publication_recid, related_recid=related_id)
-                hepsubmission.related_recids.append(related)
+                if hepsubmission.publication_recid != related_id:
+                    related = RelatedRecid(this_recid=hepsubmission.publication_recid, related_recid=related_id)
+                    hepsubmission.related_recids.append(related)
 
     db.session.add(hepsubmission)
     db.session.commit()
