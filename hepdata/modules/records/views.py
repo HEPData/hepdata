@@ -55,9 +55,9 @@ from hepdata.modules.submission.api import get_submission_participants_for_recor
 from hepdata.modules.submission.models import HEPSubmission, DataSubmission, \
     DataResource, DataReview, Message, Question
 from hepdata.modules.records.utils.common import get_record_by_id, \
-    default_time, IMAGE_TYPES, decode_string, file_size_check, generate_license_data_by_id
+    default_time, IMAGE_TYPES, decode_string, file_size_check, generate_license_data_by_id, load_table_data
 from hepdata.modules.records.utils.data_processing_utils import \
-    generate_table_structure, process_ctx
+    generate_table_headers, process_ctx, generate_table_data
 from hepdata.modules.records.utils.submission import create_data_review, \
     get_or_create_hepsubmission
 from hepdata.modules.submission.api import get_latest_hepsubmission
@@ -289,8 +289,23 @@ def get_latest():
     return jsonify(result)
 
 
-@blueprint.route('/data/<int:recid>/<int:data_recid>/<int:version>/<int:load_all>', methods=['GET'])
-def get_table_details(recid, data_recid, version, load_all=1):
+@blueprint.route('/data/tabledata/<int:data_recid>/<int:version>', methods=['GET'])
+def get_table_data(data_recid, version):
+    """
+    Gets the table data only for a specific recid/version.
+
+    :param data_recid: The data recid used for retrieval
+    :param version: The data version to retrieve
+    :return:
+    """
+    # Run the function to load table data and return
+    table_contents = load_table_data(data_recid, version)
+    return jsonify(generate_table_data(table_contents))
+
+
+@blueprint.route('/data/<int:recid>/<int:data_recid>/<int:version>/', defaults={'load_all': 1})
+@blueprint.route('/data/<int:recid>/<int:data_recid>/<int:version>/<int:load_all>')
+def get_table_details(recid, data_recid, version, load_all):
     """
     Get the table details of a given datasubmission.
 
@@ -312,28 +327,8 @@ def get_table_details(recid, data_recid, version, load_all=1):
         if data_query.count() > 0:
             data_record = data_query.one()
             file_location = data_record.file_location
-            load_fail = True
 
-            # Perform filesize check, returns the status and size of the file
             size_check = file_size_check(file_location, load_all)
-            if size_check["status"]:
-                attempts = 0
-                while True:
-                    try:
-                        with open(file_location, 'r') as table_file:
-                            table_contents = yaml.load(table_file, Loader=Loader)
-                            if table_contents:
-                                load_fail = False
-
-                    except (FileNotFoundError, PermissionError) as e:
-                        attempts += 1
-                    # allow multiple attempts to read file in case of temporary disk problems
-                    if (table_contents and table_contents is not None) or attempts > 5:
-                        break
-            if load_fail:
-                # TODO - Needs to be initialised for later
-                table_contents["dependent_variables"] = []
-                table_contents["independent_variables"] = []
 
             table_contents["name"] = datasub_record.name
             table_contents["title"] = datasub_record.description
@@ -344,6 +339,7 @@ def get_table_details(recid, data_recid, version, load_all=1):
             table_contents["doi"] = datasub_record.doi
             table_contents["location"] = datasub_record.location_in_publication
             table_contents["size"] = size_check["size"]
+            table_contents["size_check"] = size_check["status"]
 
         # we create a map of files mainly to accommodate the use of thumbnails for images where possible.
         tmp_assoc_files = {}
@@ -397,7 +393,15 @@ def get_table_details(recid, data_recid, version, load_all=1):
     # x and y headers (should not require a colspan)
     # values, that also encompass the errors
 
-    return jsonify(generate_table_structure(table_contents))
+    fixed_table = generate_table_headers(table_contents)
+
+    # If the size is below the threshold, we just pass the table contents now
+    if size_check["status"] or load_all == 1:
+        table_data = generate_table_data(load_table_data(data_recid, version))
+        # Combine the dictionaries if required
+        fixed_table = {**fixed_table, **table_data}
+
+    return jsonify(fixed_table)
 
 
 @blueprint.route('/coordinator/view/<int:recid>', methods=['GET', ])
