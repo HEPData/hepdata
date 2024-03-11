@@ -127,12 +127,12 @@ HEPDATA.table_renderer = {
         // Handle rendering of a licence if it exists
         if(table_data.table_license) {
           // Set up anchor with url, text, and title/tooltip
-          var licence_url = $("<a>")
+          var license_url = $("<a>")
             .text(table_data.table_license.name)
             .attr("href", table_data.table_license.url)
             .attr('title', table_data.table_license.description)
           // Add the anchor to the section, and show it
-          $("#table_data_license_url").append(licence_url);
+          $("#table_data_license_url").append(license_url);
           $("#table_data_license").removeClass("hidden");
         }
 

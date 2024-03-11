@@ -616,7 +616,7 @@ def _check_record_common(browser):
     # Collect text of all a tags found within the resource-items
     resource_elements = browser.find_elements(By.CLASS_NAME, "resource-item")
     links = [x.text for e in resource_elements for x in e.find_elements(By.TAG_NAME, "a")]
-    # Check to see if the licence text appears within
+    # Check to see if the license text appears within
     assert "GPL2" not in links
 
     # Check we can select a different table/common resources

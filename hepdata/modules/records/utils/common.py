@@ -301,15 +301,15 @@ def file_size_check(file_location, load_all):
     status = True if load_all == 1 else size <= SIZE_LOAD_CHECK_THRESHOLD
     return { "size": size, "status": status}
 
-def generate_licence_data_by_id(licence_id):
+def generate_license_data_by_id(license_id):
     """
-    Generates a dictionary from a Licence class selected by
+    Generates a dictionary from a License class selected by
     its ID from the database.
 
-    :param licence_id:
-    :return dict: Returns the licence_data dictionary, or None
+    :param license_id:
+    :return dict: Returns the license_data dictionary, or None
     """
-    license_data = License.query.filter_by(id=licence_id).first()
+    license_data = License.query.filter_by(id=license_id).first()
     if license_data:
         # Generate and return the dictionary
         return {
