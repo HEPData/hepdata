@@ -7,7 +7,7 @@ hepdata-validator==0.3.5
 invenio-access==2.0.0     # Indirect (needed by invenio-admin)
 invenio-accounts==4.0.2
 invenio-admin==1.4.0
-invenio-app==1.4.0
+invenio-app==1.5.0
 invenio-assets==3.0.3
 invenio-config==1.0.4
 invenio-db[postgresql]==1.1.5
