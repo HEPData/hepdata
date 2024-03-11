@@ -21,6 +21,8 @@
 # In applying this license, CERN does not
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
+import yaml
+from yaml import CBaseLoader as Loader
 from invenio_db import db
 from invenio_pidstore.errors import PIDDoesNotExistError
 from invenio_pidstore.resolver import Resolver
@@ -30,7 +32,7 @@ from sqlalchemy.orm.exc import NoResultFound
 
 from hepdata.config import HISTFACTORY_FILE_TYPE, SIZE_LOAD_CHECK_THRESHOLD
 from hepdata.ext.opensearch.api import get_record
-from hepdata.modules.submission.models import HEPSubmission, License
+from hepdata.modules.submission.models import HEPSubmission, License, DataSubmission, DataResource
 
 FILE_TYPES = {
     "py": "Python",
@@ -252,21 +254,52 @@ def record_exists(*args, **kwargs):
     count = HEPSubmission.query.filter_by(**kwargs).count()
     return count > 0
 
+def load_table_data(recid, version):
+    """
+    Loads a specfic data file's yaml file data.
+
+    :param recid: The recid used for the query
+    :param version: The data version to select
+    :return table_contents: A dict containing the table data
+    """
+
+    datasub_query = DataSubmission.query.filter_by(id=recid, version=version)
+    table_contents = {}
+    if datasub_query.count() > 0:
+        datasub_record = datasub_query.one()
+        data_query = db.session.query(DataResource).filter(
+            DataResource.id == datasub_record.data_file)
+
+        if data_query.count() > 0:
+            data_record = data_query.one()
+            file_location = data_record.file_location
+
+            attempts = 0
+            while True:
+                try:
+                    with open(file_location, 'r') as table_file:
+                        table_contents = yaml.load(table_file, Loader=Loader)
+                except (FileNotFoundError, PermissionError) as e:
+                    attempts += 1
+                # allow multiple attempts to read file in case of temporary disk problems
+                if (table_contents and table_contents is not None) or attempts > 5:
+                    break
+
+    return table_contents
+
 
 def file_size_check(file_location, load_all):
     """
-        Decides if a file breaks the maximum size threshold
-            for immediate loading on the records page.
+    Decides if a file breaks the maximum size threshold
+        for immediate loading on the records page.
 
-        :param file_location: Location of the data file on disk
-        :param load_all: If the check should be run
-        :return bool: Pass or fail
+    :param file_location: Location of the data file on disk
+    :param load_all: If the check should be run
+    :return bool: Pass or fail
     """
-    size_check = { "status": True, "size": os.path.getsize(file_location) }
-    # We do the check only if told to, otherwise we just pass as true
-    if load_all == 0:
-        size_check["status"] = size_check["size"] <= SIZE_LOAD_CHECK_THRESHOLD
-    return size_check
+    size = os.path.getsize(file_location)
+    status = True if load_all == 1 else size <= SIZE_LOAD_CHECK_THRESHOLD
+    return { "size": size, "status": status}
 
 def generate_license_data_by_id(license_id):
     """

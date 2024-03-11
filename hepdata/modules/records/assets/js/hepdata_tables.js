@@ -75,18 +75,16 @@ HEPDATA.switch_table = function (listId, table_requested, table_name, status) {
       HEPDATA.current_table_id);
   }
 
-  var web_url = '/record/data/' + HEPDATA.current_record_id + '/' + table_requested + "/" + HEPDATA.current_table_version + "/";
-  HEPDATA.table_renderer.display_table_headers(web_url, 0);
+  var header_url = '/record/data/' + HEPDATA.current_record_id + '/' + table_requested + "/" + HEPDATA.current_table_version + "/" + 0;
+  var data_url = '/record/data/tabledata/' + table_requested + "/" + HEPDATA.current_table_version;
+  HEPDATA.table_renderer.display_table_headers(header_url, data_url);
 
   // Function to initiate the button to attempt loading of the table
-  $("#hepdata_filesize_loading_button").on('click', function() {
+  // We also clear the event listeners
+  $("#hepdata_filesize_loading_button").off('click').on('click', function() {
     $("#filesize_table_confirm").addClass("hidden");
     $("#filesize_table_loading").removeClass("hidden");
-    HEPDATA.table_renderer.display_table(
-      web_url,
-      '#data_table_region',
-      '#data_visualization_region', 1
-    );
+    HEPDATA.table_renderer.get_and_display_table(data_url);
   });
 
   $(".data_download_link").each(function () {
@@ -104,14 +102,14 @@ HEPDATA.switch_table = function (listId, table_requested, table_name, status) {
 };
 
 HEPDATA.table_renderer = {
-  display_table_headers: function(url, load_all) {
+  display_table_headers: function(url, data_url) {
     /*
       Render only the main table information (name, details, etc.) at the top,
       then decides whether to trigger render of the table or not.
     */
     $.ajax({
       dataType: "json",
-      url: url + load_all,
+      url: url,
       processData: false,
       cache: true,
       success: function (table_data) {
@@ -142,13 +140,19 @@ HEPDATA.table_renderer = {
         HEPDATA.table_renderer.render_related_dois(table_data.related_tables, "#related-tables");
         HEPDATA.table_renderer.render_related_dois(table_data.related_to_this, "#related-to-this-tables");
         HEPDATA.table_renderer.render_keywords(table_data.keywords, "#table_keywords");
+        // Render any LaTeX in the table description element.
+        HEPDATA.typeset($("#table_description").get());
         $("#hepdata_table_loader").addClass("hidden");
         $("#hepdata_table_content").removeClass("hidden");
         // We also need to clear the figure
         $("#figures").html('');
 
+        if (HEPDATA.show_review) {
+          HEPDATA.table_renderer.update_reviewer_button(table_data.review);
+        }
+
         // Check that the table is both empty, and is larger than an empty table (bytes)
-        if(table_data.size > HEPDATA.size_load_check_threshold) {
+        if(table_data.size_check == false) {
           // Set up filesize attempt section
           $("#hepdata_table_loader").addClass("hidden");
           var megabyte_size = (table_data.size / (1024 * 1024)).toFixed(2);
@@ -159,9 +163,7 @@ HEPDATA.table_renderer = {
           $("filesize_table_confirm").removeClass("hidden");
         }
         else {
-          HEPDATA.table_renderer.display_table(url,
-            '#data_table_region',
-            '#data_visualization_region', load_all);
+          HEPDATA.table_renderer.display_table(table_data, '#data_table_region', '#data_visualization_region');
         }
       },
       error: function (data, error) {
@@ -172,63 +174,67 @@ HEPDATA.table_renderer = {
       }
     });
   },
-  display_table: function (url, table_placement, visualization_placement, load_all) {
-    /*
-      Triggers the table (bottom section) render of the records table table section.
-    */
+  get_and_display_table: function(url) {
     $.ajax({
       dataType: "json",
-      url: url + load_all,
+      url: url,
       processData: false,
       cache: true,
       success: function (table_data) {
-        HEPDATA.reset_stats();
-        HEPDATA.render_associated_files(table_data.associated_files, '#support-files');
-
-        // If it is larger than an empty table (bytes)
-        HEPDATA.table_renderer.render_qualifiers(table_data, table_placement);
-        HEPDATA.table_renderer.render_headers(table_data, table_placement);
-        HEPDATA.table_renderer.render_data(table_data, table_placement);
-
-        if (table_data["x_count"] > 1) {
-          HEPDATA.visualization.heatmap.reset();
-          HEPDATA.visualization.heatmap.render(table_data, visualization_placement, {
-            width: 300,
-            height: 300
-          });
-          HEPDATA.table_renderer.attach_row_listener(table_placement, 'heatmap');
-        } else if (table_data["values"].length == 0) {
-          // No data to display
-          d3.select(visualization_placement).html("");
-          d3.select("#legend").html("");
-          var no_data_info = d3.select(visualization_placement).append("div").style("text-align","center");
-          no_data_info.append("img").attr("src", "/static/img/nodata.svg").attr({"width": 100, height: 100});
-          no_data_info.append("p").text("No data to display...").style({"font-size": 14, "color": "#aaa"})
-        } else if (table_data["x_count"] === 1) {
-          HEPDATA.visualization.histogram.render(table_data, visualization_placement, {
-            width: 300,
-            height: 300,
-            "mode": "histogram"
-          });
-          HEPDATA.table_renderer.attach_row_listener(table_placement, 'histogram');
-        }
-        // Show the table finally
-        $("#hep_table").removeClass("hidden");
-
-        if (HEPDATA.show_review) {
-          HEPDATA.table_renderer.update_reviewer_button(table_data.review);
-        }
-
-        // Hide error element
-        $("#hepdata_filesize_loader").addClass("hidden");
-        HEPDATA.typeset($("#hepdata_table_content").get());
+        HEPDATA.table_renderer.display_table(
+          table_data,
+          '#data_table_region',
+          '#data_visualization_region'
+        );
       },
       error: function (data, error) {
         console.error(error);
         $("#filesize_table_loading_failed").removeClass("hidden");
-        d3.select("#filesize_table_failed_text").html('Failed to load table data defined by ' + url + load_all);
+        d3.select("#filesize_table_failed_text").html('Failed to load table data defined by ' + url);
       }
     });
+  },
+  display_table: function (table_data, table_placement, visualization_placement) {
+    /*
+      Triggers the table (bottom section) render of the records table table section.
+    */
+    HEPDATA.reset_stats();
+    HEPDATA.render_associated_files(table_data.associated_files, '#support-files');
+
+    // If it is larger than an empty table (bytes)
+    HEPDATA.table_renderer.render_qualifiers(table_data, table_placement);
+    HEPDATA.table_renderer.render_headers(table_data, table_placement);
+    HEPDATA.table_renderer.render_data(table_data, table_placement);
+
+    if (table_data["x_count"] > 1) {
+      HEPDATA.visualization.heatmap.reset();
+      HEPDATA.visualization.heatmap.render(table_data, visualization_placement, {
+        width: 300,
+        height: 300
+      });
+      HEPDATA.table_renderer.attach_row_listener(table_placement, 'heatmap');
+    } else if (table_data["values"].length == 0) {
+      // No data to display
+      d3.select(visualization_placement).html("");
+      d3.select("#legend").html("");
+      var no_data_info = d3.select(visualization_placement).append("div").style("text-align","center");
+      no_data_info.append("img").attr("src", "/static/img/nodata.svg").attr({"width": 100, height: 100});
+      no_data_info.append("p").text("No data to display...").style({"font-size": 14, "color": "#aaa"})
+    } else if (table_data["x_count"] === 1) {
+      HEPDATA.visualization.histogram.render(table_data, visualization_placement, {
+        width: 300,
+        height: 300,
+        "mode": "histogram"
+      });
+      HEPDATA.table_renderer.attach_row_listener(table_placement, 'histogram');
+    }
+    // Show the table finally
+    $("#hep_table").removeClass("hidden");
+
+    // Hide error element
+    $("#hepdata_filesize_loader").addClass("hidden");
+    $("#filesize_table_loading").addClass("hidden");
+    HEPDATA.typeset($("#hepdata_table_content").get());
   },
   attach_row_listener: function (table_placement, type) {
 
@@ -482,6 +488,8 @@ HEPDATA.table_renderer = {
     }
 
     if (table_data.values.length > HEPDATA.default_row_limit) {
+      // Clear the element first
+      d3.select("#table_options_region").html('');
       d3.select("#table_options_region").append('span').text('Showing ' + HEPDATA.default_row_limit + ' of ' + table_data.values.length + ' values');
       var btn = d3.select("#table_options_region").append('a')
         .attr('class', 'btn-show-all-rows pull-right')
