@@ -18,7 +18,7 @@ HEPDATA.current_table_id = undefined;
 HEPDATA.current_table_name = undefined;
 HEPDATA.current_table_version = undefined;
 HEPDATA.clipboard = undefined;
-HEPDATA.selected = undefined;
+HEPDATA.selected = {};
 HEPDATA.site_url = "https://www.hepdata.net";
 
 HEPDATA.current_filters = {
