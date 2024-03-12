@@ -53,6 +53,13 @@
                     </a>
 
                 </li>
+
+            {% if ctx.record.last_updated %}
+              <li class="pull-right" style="padding:10px;">
+                Last updated on {{ ctx.record.last_updated.strftime('%Y-%m-%d %H:%M') }}
+              </li>
+            {% endif %}
+
             {% endif %}
         </ul>
     </div>
