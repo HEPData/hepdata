@@ -289,7 +289,8 @@ def get_latest():
     return jsonify(result)
 
 
-@blueprint.route('/data/<int:recid>/<int:data_recid>/<int:version>/<int:load_all>', methods=['GET'])
+@blueprint.route('/data/<int:recid>/<int:data_recid>/<int:version>/')
+@blueprint.route('/data/<int:recid>/<int:data_recid>/<int:version>/<int:load_all>')
 def get_table_details(recid, data_recid, version, load_all=1):
     """
     Get the table details of a given datasubmission.
