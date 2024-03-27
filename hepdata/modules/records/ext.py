@@ -33,7 +33,6 @@ from hepdata.modules.theme.views import page_not_found
 from hepdata.modules.theme.views import redirect_nonwww
 from flask_login import current_user
 from invenio_db import db
-from invenio_accounts.ext import set_default_config
 
 from hepdata.utils.users import user_is_admin_or_coordinator, user_is_admin
 from . import config
@@ -62,7 +61,6 @@ class HEPDataRecords(object):
 
     def init_config(self, app):
         """Initialize configuration."""
-        set_default_config(app)
         for k in dir(config):
             if k.startswith('HEPDATA_'):
                 app.config.setdefault(k, getattr(config, k))
