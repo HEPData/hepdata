@@ -20,8 +20,8 @@ def test_cleanup_index_all(app, load_default_data, identifiers, mocker):
     new_submission = HEPSubmission(publication_recid=1, inspire_id=identifiers[0]["inspire_id"], version=2, overall_status='finished')
     db.session.add(new_submission)
     db.session.commit()
-    # New id should be 3
-    assert(new_submission.id == 3)
+    # New id should be 4
+    assert(new_submission.id == 4)
 
     # Cleanup should now clean up id 1
     cleanup_index_all(index=index, synchronous=True)
@@ -36,20 +36,20 @@ def test_cleanup_index_all(app, load_default_data, identifiers, mocker):
     new_submission3 = HEPSubmission(publication_recid=16, inspire_id=identifiers[1]["inspire_id"], version=2, overall_status='finished')
     db.session.add(new_submission3)
     db.session.commit()
-    assert(new_submission1.id == 4)
-    assert(new_submission2.id == 5)
-    assert(new_submission3.id == 6)
+    assert(new_submission1.id == 5)
+    assert(new_submission2.id == 6)
+    assert(new_submission3.id == 7)
 
-    # Cleanup should now clean up ids 1, 2 and 3 (ie versions lower than the highest finished version)
+    # Cleanup should now clean up ids 1, 2 and 4 (ie versions lower than the highest finished version)
     cleanup_index_all(index=index, synchronous=True)
-    m.assert_called_once_with([1, 2, 3], index)
+    m.assert_called_once_with([1, 2, 4], index)
     m.reset_mock()
 
     # Check batch size works
     cleanup_index_all(index=index, batch=2, synchronous=True)
     m.assert_has_calls([
         call([1, 2], index),
-        call([3], index)
+        call([4], index)
     ])
     m.reset_mock()
 
@@ -57,7 +57,7 @@ def test_cleanup_index_all(app, load_default_data, identifiers, mocker):
     m.assert_has_calls([
         call([1], index),
         call([2], index),
-        call([3], index)
+        call([4], index)
     ])
 
 
@@ -84,7 +84,7 @@ def test_cleanup_index_batch(app, load_default_data, identifiers, mocker):
         db.session.commit()
         assert [x.id for x in new_data_submissions] == expected_range
 
-    _create_new_versions(2, list(range(55, 60)))
+    _create_new_versions(2, list(range(121, 126)))
 
     # Mock methods called so we can check they're called with correct parameters
     from invenio_search import RecordsSearch
@@ -100,10 +100,10 @@ def test_cleanup_index_batch(app, load_default_data, identifiers, mocker):
     mock_records_search.reset_mock()
 
     # Create more new versions
-    _create_new_versions(3, list(range(60, 65)))
+    _create_new_versions(3, list(range(126, 131)))
     cleanup_index_batch([1], index)
     assert mock_records_search.has_calls([
-        call('terms', _id=list(range(2,16)) + list(range(55, 60)))
+        call('terms', _id=list(range(2,16)) + list(range(126, 131)))
     ])
     mock_records_search.reset_mock()
 

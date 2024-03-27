@@ -34,6 +34,7 @@ from hepdata.config import CFG_PUB_TYPE, CFG_DATA_TYPE, HISTFACTORY_FILE_TYPE
 from hepdata.ext.opensearch.config.record_mapping import mapping as os_mapping
 from hepdata.modules.permissions.models import SubmissionParticipant
 from hepdata.modules.submission.api import get_latest_hepsubmission
+from hepdata.modules.submission.models import DataSubmission
 
 FORMATS = ['json', 'root', 'yaml', 'csv', 'yoda']
 
@@ -127,6 +128,44 @@ def add_data_keywords(doc):
     doc['data_keywords'] = dict(agg_keywords)
 
 
+def add_data_resources(doc):
+    """
+    Gets and adds additional resource descriptions for a DataSubmission object,
+    and adds it to the document object.
+
+    :param doc: The document object
+    :return:
+    """
+
+    submission = DataSubmission.query.filter_by(doi=doc["doi"]).one()
+    doc["resources"] = [s.file_description for s in submission.resources]
+
+
+def add_data_abstract(doc):
+    """
+    Adds the data abstract from its associated HEPSubmission to the document object
+
+    :param doc: The document object
+    :return:
+    """
+
+    submission = get_latest_hepsubmission(publication_recid=doc['recid'], overall_status='finished')
+    doc['data_abstract'] = submission.data_abstract
+
+
+def add_submission_resources(doc):
+    """
+    Gets and adds additional resource descriptions for a HEPSubmission object,
+    and adds it to the document object.
+
+    :param doc: The document object
+    :return:
+    """
+
+    submission = get_latest_hepsubmission(publication_recid=doc['recid'], overall_status='finished')
+    doc['resources'] = [s.file_description for s in submission.resources]
+
+
 def process_cmenergies(keywords):
     cmenergies = []
     if keywords['cmenergies']:
@@ -182,13 +221,16 @@ def enhance_data_document(doc):
     add_data_table_urls(doc)
     add_parent_publication(doc)
     add_data_keywords(doc)
+    add_data_resources(doc)
 
 
 def enhance_publication_document(doc):
     add_id(doc)
     add_doc_type(doc, CFG_PUB_TYPE)
     add_data_submission_urls(doc)
+    add_data_abstract(doc)
     add_shortened_authors(doc)
     process_last_updates(doc)
     add_analyses(doc)
     add_parent_child_info(doc)
+    add_submission_resources(doc)
