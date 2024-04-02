@@ -23,6 +23,7 @@
 import re
 
 import bleach
+from hepdata.config import SITE_URL
 
 
 def splitter(data, predicate):
@@ -70,3 +71,22 @@ def sanitize_html(value, tags=None, attributes=None, strip=False):
     )
 
     return cleaned
+
+def generate_resource_url(resource):
+    """
+    Uses the file_location/ID of a submission object to generate a resource url.
+    If "http" is at the beginning, will return file_location
+    Otherwise, will generate a HEPData resource URL
+
+    :param resource: DataResource object for generation
+    :return: The generated URL string
+    """
+    # Determine if file_location is url or not
+    if resource.file_location.startswith("http"):
+        # Set url value if it's an external location
+        url_string = resource.file_location
+    else:
+        # If not url, create hepdata.net url using resource ID
+        url_string = f"{SITE_URL}/record/resource/{resource.id}?landing_page=true"
+
+    return url_string
