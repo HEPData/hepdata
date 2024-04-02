@@ -237,9 +237,54 @@ def test_search(app, load_default_data, identifiers):
 
     # Test searching of data resource descriptions
     resource_text = 'Created with hepdata_lib 0.11.0' # Some text from a resource
-    results = os_api.search(resource_text, index=index)
+    results = os_api.search(f'resources.description:"{resource_text}"', index=index)
     # Check for the text within the resource results
-    assert resource_text in results['results'][0]['resources']
+    assert resource_text in results['results'][0]['resources'][0]["description"]
+
+    # Test searching of the resources field by type.
+    # A bunch of different types to be checked for
+    resource_types = ["png", "html", "zenodo", "dat", "C++", None]
+    for res_type in resource_types:
+        # Execute search for the current type
+        results = os_api.search(f"resources.type:{res_type}", index=index)
+
+        if res_type:
+            result_resources = results['results'][0]['resources']
+            # Compile all resource types for the first result
+            result_data = [res['type'] for res in result_resources]
+            assert res_type in result_data
+        else:
+            # Confirming that a blank entry (None) does not yield results
+            assert len(results['results']) == 0
+
+    # Search query string for the url search
+    url_texts = ["https://zenodo.org/", None]
+
+    for url_text in url_texts:
+        # Execute the url search
+        results = os_api.search(f'resources.url:"{url_text}"', index=index)
+
+        if url_text:
+            # Generate the urls from the result submission
+            result_data = [res['url'] for res in results['results'][0]['resources']]
+            # Confirm that at least one of the resources in result matches
+            assert any(url.startswith(url_text) for url in result_data)
+        else:
+            # Confirming that a blank entry (None) does not yield results
+            assert len(results['results']) == 0
+
+    # Abstract text searching
+    abstracts = ['This paper presents a search for pair production of higgsinos', None]
+    for abstract_text in abstracts:
+        # Execute the data_abstract search
+        results = os_api.search(f'data_abstract:{abstract_text}', index=index)
+
+        # If it is not a None
+        if abstract_text:
+            assert abstract_text in results['results'][0]['abstract']
+        else:
+            # Confirming that a blank entry (None) does not yield results
+            assert len(results['results']) == 0
 
     # Test searching for a table using very specific text
     # Some description text from the test data
