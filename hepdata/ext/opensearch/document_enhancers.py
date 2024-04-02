@@ -35,6 +35,7 @@ from hepdata.ext.opensearch.config.record_mapping import mapping as os_mapping
 from hepdata.modules.permissions.models import SubmissionParticipant
 from hepdata.modules.submission.api import get_latest_hepsubmission
 from hepdata.modules.submission.models import DataSubmission
+from hepdata.utils.miscellaneous import get_resource_data
 
 FORMATS = ['json', 'root', 'yaml', 'csv', 'yoda']
 
@@ -128,19 +129,6 @@ def add_data_keywords(doc):
     doc['data_keywords'] = dict(agg_keywords)
 
 
-def add_data_resources(doc):
-    """
-    Gets and adds additional resource descriptions for a DataSubmission object,
-    and adds it to the document object.
-
-    :param doc: The document object
-    :return:
-    """
-
-    submission = DataSubmission.query.filter_by(doi=doc["doi"]).one()
-    doc["resources"] = [s.file_description for s in submission.resources]
-
-
 def add_data_abstract(doc):
     """
     Adds the data abstract from its associated HEPSubmission to the document object
@@ -153,17 +141,30 @@ def add_data_abstract(doc):
     doc['data_abstract'] = submission.data_abstract
 
 
+def add_data_resources(doc):
+    """
+    Triggers resource data generation of a DataSubmission object.
+    Gets the DataSubmission object, then passes it off for data retrival.
+
+    :param doc: The document object
+    :return:
+    """
+
+    submission = DataSubmission.query.filter_by(doi=doc["doi"]).one()
+    doc['resources'] = get_resource_data(submission)
+
+
 def add_submission_resources(doc):
     """
-    Gets and adds additional resource descriptions for a HEPSubmission object,
-    and adds it to the document object.
+    Triggers resource data generation of a HEPSubmission object.
+    Gets the HEPSubmission object, then passes it off for data retrival.
 
     :param doc: The document object
     :return:
     """
 
     submission = get_latest_hepsubmission(publication_recid=doc['recid'], overall_status='finished')
-    doc['resources'] = [s.file_description for s in submission.resources]
+    doc['resources'] = get_resource_data(submission)
 
 
 def process_cmenergies(keywords):
