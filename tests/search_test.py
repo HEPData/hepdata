@@ -22,18 +22,20 @@ import pytest
 from invenio_db import db
 from unittest.mock import call
 
+from hepdata.config import SITE_URL
 from hepdata.ext.opensearch.config.os_config import \
     add_default_aggregations, sort_fields_mapping
 from hepdata.ext.opensearch import api as os_api
 from hepdata.ext.opensearch.config.os_config import get_filter_field
 from hepdata.ext.opensearch.document_enhancers import add_data_keywords, process_cmenergies
+from hepdata.utils.miscellaneous import get_resource_data
 from hepdata.ext.opensearch.process_results import merge_results, match_tables_to_papers, \
     get_basic_record_information, is_datatable
 from hepdata.ext.opensearch.query_builder import QueryBuilder, HEPDataQueryParser
 from hepdata.ext.opensearch.utils import flip_sort_order, parse_and_format_date, prepare_author_for_indexing, \
     calculate_sort_order, push_keywords
 from hepdata.modules.records.importer.api import import_records
-from hepdata.modules.submission.models import HEPSubmission, DataSubmission
+from hepdata.modules.submission.models import HEPSubmission, DataSubmission, DataResource
 from invenio_search import current_search_client as os
 
 from hepdata.modules.search.config import LIMIT_MAX_RESULTS_PER_PAGE, \
@@ -688,3 +690,63 @@ def test_check_max_results(input_size, output_size):
     args = {'size': input_size} if input_size is not None else {}
     check_max_results(args)
     assert args['size'] == output_size
+
+
+def test_get_resource_data():
+    """
+        Tests the get_resource_data document_enhancers function.
+        Ensures correct generation of resource dictionary from
+            a given HEPSubmission object.
+    """
+
+    test_data = [
+        # Each dictionary represents one HEPSubmission object
+        # containing the resources
+        {
+            "resources": [
+                DataResource(
+                    file_description="Test",
+                    file_type="html",
+                    file_location="http://www.google.com/"
+                ),
+                DataResource(
+                    id=1,
+                    file_description="Test",
+                    file_type="type",
+                    file_location="Some kind of text"
+                )
+            ]
+        },
+        {  # Testing against a blank entry
+            "resources": []
+        }
+    ]
+
+    # Create test HEPSubmission object
+    test_submission = HEPSubmission()
+    for test in test_data:
+        # Set the resources value upon each iteration
+        test_submission.resources = test["resources"]
+
+        # Run the test function to generate dictionary
+        result = get_resource_data(test_submission)
+
+        # Generate the expected results
+        expected_results = []
+        for test_res in test_submission.resources:
+            expected = {
+                "description": test_res.file_description,
+                "type": test_res.file_type
+            }
+
+            # We only expect the original file_location to be returned
+            # If it starts with http, otherwise generated URL is expected
+            if test_res.file_location.startswith("http"):
+                expected["url"] = test_res.file_location
+            else:
+                expected["url"] = f"{SITE_URL}/record/resource/{test_res.id}?landing_page=true"
+
+            expected_results.append(expected)
+
+        # Confirm expected_results match the actual results
+        assert result == expected_results

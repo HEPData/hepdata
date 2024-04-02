@@ -90,3 +90,27 @@ def generate_resource_url(resource):
         url_string = f"{SITE_URL}/record/resource/{resource.id}?landing_page=true"
 
     return url_string
+
+
+def get_resource_data(submission):
+    """
+    Function to create a dictionary of description, type and url for resources objects.
+    This dictionary is to be added to the OpenSearch index.
+    Uses either a DataSubmission, or HEPSubmission, which both contain resource objects.
+
+    :param submission: HEPSubmission/DataSubmission object
+    :return: The resources list (of dictionaries)
+    """
+    resources = []
+
+    # Create a dictionary entry for every resource
+    for s in submission.resources:
+        resource_data = {
+            "description": s.file_description,
+            "type": s.file_type,
+            "url": generate_resource_url(s)
+        }
+
+        resources.append(resource_data)
+
+    return resources
