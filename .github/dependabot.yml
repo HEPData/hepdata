@@ -11,13 +11,12 @@ updates:
     # Workflow files stored in the default location of `.github/workflows`
     directory: "/"
     schedule:
-      interval: "weekly"
+      interval: "monthly"
 
   # Maintain dependencies for pip
   - package-ecosystem: "pip"
     directory: "/"
     schedule:
-      interval: "weekly"
+      interval: "monthly"
     ignore:
       - dependency-name: "pytest-cov"  # see https://github.com/HEPData/hepdata/issues/580
-      - dependency-name: "Sphinx"  # see https://github.com/HEPData/hepdata/issues/594

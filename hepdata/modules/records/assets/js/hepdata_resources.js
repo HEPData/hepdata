@@ -44,13 +44,13 @@ HEPDATA.hepdata_resources = (function () {
       return d['file_description'];
     });
 
-    // Render the licence header text if required
+    // Render the license header text if required
     resource_item.append("span").text(function(d) {
-      return d['data_license'] && d['data_license'].url ? "Licence: " : "";
+      return d['data_license'] && d['data_license'].url ? "License: " : "";
     });
 
     // Manage rendering of the data license value
-    // Uses url, description and name from data_licence for anchor url, title, and text respectively
+    // Uses url, description and name from data_license for anchor url, title, and text respectively
     resource_item.append("a")
       .attr('href', function(d) {
         return d['data_license'] ? d['data_license'].url : null;
@@ -61,7 +61,7 @@ HEPDATA.hepdata_resources = (function () {
       .text(function(d) {
         return d['data_license'] ? d['data_license'].name : null;
       })
-      .attr("class", "licence-url");
+      .attr("class", "license-url");
 
     resource_item.append("p")
       .attr('display', function(d){

@@ -2,6 +2,8 @@
 ---
 description: "Test Data"
 comment: Test
+related_to_hepdata_records:
+- 4
 ---
 name: "Table 1"
 description: Test Table 1
@@ -9,4 +11,5 @@ keywords:
 - {name: cmenergies, values: [0]}
 data_file: data1.yaml
 related_to_table_dois:
+- "10.17182/hepdata.4.v1/t1"
 - "10.17182/hepdaaaaaaaata.25.v1/t1"
