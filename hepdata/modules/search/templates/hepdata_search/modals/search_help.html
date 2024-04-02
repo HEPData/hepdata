@@ -21,7 +21,7 @@
                      target="_new">Elasticsearch documentation</a>.</p>
 
                 <div class="well well-small">
-                    <h4>Search on title or abstract</h4>
+                    <h4>Search on title, abstract, or record abstract</h4>
                     <ul>
                         <li>Find all data with <em>collisions</em> in the <strong>title</strong>
                             <br/>
@@ -41,6 +41,15 @@
                                 </li>
                             </ul>
                         </li>
+                      <br>
+
+                      <li>Find all data in a RECORD's <b>data abstract</b>
+                        <ul>
+                          <li>
+                            <a href='/search?q=data_abstract:CERN-LHC' target="_new">data_abstract:CERN-LHC</a>
+                          </li>
+                        </ul>
+                      </li>
 
                     </ul>
                 </div>
@@ -99,6 +108,43 @@
                                 <li><a href='/search?q=observables:ASYM'>observables:ASYM</a></li>
                             </ul>
                         </li>
+                    </ul>
+                </div>
+
+                <div class="clearfix"></div>
+
+                <div class="well well-small">
+                  <h4>Searching resources by field</h4>
+                    <ul>
+                      <li>Text-based description searching:
+                        <ul>
+                          <li>
+                            <a href='/search?q=resources.description:"Created with hepdata_lib"' target="_new">resources.description:"Created with hepdata_lib"</a>
+                          </li>
+                        </ul>
+                      </li>
+                      <br>
+
+                      <li>Resource-type searching
+                        <ul>
+                          <li>
+                            <a href='/search?q=resources.type:png' target="_new">resources.type:png</a>
+                          </li>
+                          <li>Examples: png, html, github, zenodo etc.</li>
+                        </ul>
+                      </li>
+                      <br>
+
+                      <li>Searching for specific URLs
+                        <ul>
+                          <li>
+                            <a href='/search?q=resources.url:atlas.web.cern.ch' target="_new">resources.url:atlas.web.cern.ch</a>
+                          </li>
+                        </ul>
+                      </li>
+                      <li>
+                        <span class="text-muted">Quotes force a full match.</span>
+                      </li>
                     </ul>
                 </div>
 
