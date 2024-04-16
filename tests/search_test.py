@@ -236,16 +236,20 @@ def test_search(app, load_default_data, identifiers):
 
     # Test searching of data resource descriptions
     resource_text = 'Created with hepdata_lib 0.11.0' # Some text from a resource
-    results = os_api.search(f'resources.description:"{resource_text}"', index=index)
-    # Check for the text within the resource results
-    assert resource_text in results['results'][0]['resources'][0]["description"]
+    # Test alias for the resource searching
+    resource_aliases = ['resources', 'resources.description']
+    for alias in resource_aliases:
+        search_query = f'{alias}:"{resource_text}"'
+        results = os_api.search(search_query, index=index)
+        # Check for the text within the resource results
+        assert resource_text in results['results'][0]['resources'][0]['description']
 
     # Test searching of the resources field by type.
     # A bunch of different types to be checked for
-    resource_types = ["png", "html", "zenodo", "dat", "C++", None]
+    resource_types = ['png', 'html', 'zenodo', 'dat', 'C++', None]
     for res_type in resource_types:
         # Execute search for the current type
-        results = os_api.search(f"resources.type:{res_type}", index=index)
+        results = os_api.search(f'resources.type:{res_type}', index=index)
 
         if res_type:
             result_resources = results['results'][0]['resources']

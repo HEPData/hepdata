@@ -51,7 +51,8 @@ class HEPDataQueryParser(object):
                 "cmenergies": "data_keywords.cmenergies",
                 "phrases": "data_keywords.phrases",
                 "reactions": "data_keywords.reactions",
-                "analysis": "analyses.type"
+                "analysis": "analyses.type",
+                "resources": "resources.description"  # Add shorthand for resource description
             }
         }
 
