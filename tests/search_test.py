@@ -740,7 +740,7 @@ def test_check_max_results(input_size, output_size):
     assert args['size'] == output_size
 
 
-def test_get_resource_data():
+def test_get_resource_data(app):
     """
         Tests the get_resource_data document_enhancers function.
         Ensures correct generation of resource dictionary from

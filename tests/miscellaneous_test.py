@@ -112,7 +112,7 @@ SRs</a> </li><li><a href=\"89413?version=1&amp;table=Backgroundfit3\">inclusive 
                == "Dphi correlation functions for 0.15&lt;pT&lt;4 GEV/c and 4&lt;p_T^trig&lt;6 GEV/c.")
 
 
-def test_generate_resource_url():
+def test_generate_resource_url(app):
     """
         Tests the function that handles the resource URL generation
         for DataResource
