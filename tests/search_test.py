@@ -22,7 +22,6 @@ import pytest
 from invenio_db import db
 from unittest.mock import call
 
-from hepdata.config import SITE_URL
 from hepdata.ext.opensearch.config.os_config import \
     add_default_aggregations, sort_fields_mapping
 from hepdata.ext.opensearch import api as os_api
@@ -789,7 +788,8 @@ def test_get_resource_data():
             if test_res.file_location.startswith("http"):
                 expected["url"] = test_res.file_location
             else:
-                expected["url"] = f"{SITE_URL}/record/resource/{test_res.id}?landing_page=true"
+                site_url = app.config.get('SITE_URL', 'https://www.hepdata.net')
+                expected["url"] = f"{site_url}/record/resource/{test_res.id}?landing_page=true"
 
             expected_results.append(expected)
 

@@ -24,7 +24,6 @@
 """HEPData utils test cases."""
 import os
 
-from hepdata.config import SITE_URL
 from hepdata.modules.submission.models import DataResource
 from hepdata.utils.file_extractor import extract, get_file_in_directory
 from hepdata.utils.miscellaneous import sanitize_html, splitter, generate_resource_url
@@ -121,7 +120,7 @@ def test_generate_resource_url():
         Determines whether an url requires a link to HEPData to be generated,
         or just to pass back the location
     """
-
+    site_url = app.config.get('SITE_URL', 'https://www.hepdata.net')
     test_data = [
         {  # Testing a normal web URL
             "input_string": "https://www.google.co.uk",
@@ -130,7 +129,7 @@ def test_generate_resource_url():
         {  # String contents should not matter as it is not an external source.
             "input_string": "TestString",
             # We set the resource ID to 1 in the test
-            "output_string": f"{SITE_URL}/record/resource/1?landing_page=true"
+            "output_string": f"{site_url}/record/resource/1?landing_page=true"
         }
     ]
 
