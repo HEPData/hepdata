@@ -23,7 +23,7 @@
 import re
 
 import bleach
-from hepdata.config import SITE_URL
+from flask import current_app
 
 
 def splitter(data, predicate):
@@ -87,7 +87,8 @@ def generate_resource_url(resource):
         url_string = resource.file_location
     else:
         # If not url, create hepdata.net url using resource ID
-        url_string = f"{SITE_URL}/record/resource/{resource.id}?landing_page=true"
+        site_url = current_app.config.get('SITE_URL', 'https://www.hepdata.net')
+        url_string = f"{site_url}/record/resource/{resource.id}?landing_page=true"
 
     return url_string
 

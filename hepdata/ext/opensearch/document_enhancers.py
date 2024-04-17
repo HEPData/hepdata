@@ -107,8 +107,8 @@ def add_analyses(doc):
             if reference.file_type in current_app.config['ANALYSES_ENDPOINTS']:
                 doc["analyses"].append({'type': reference.file_type, 'analysis': reference.file_location})
             elif reference.file_type == HISTFACTORY_FILE_TYPE:
-                SITE_URL = current_app.config.get('SITE_URL', 'https://www.hepdata.net')
-                landing_page_url = f"{SITE_URL}/record/resource/{reference.id}?landing_page=true"
+                site_url = current_app.config.get('SITE_URL', 'https://www.hepdata.net')
+                landing_page_url = f"{site_url}/record/resource/{reference.id}?landing_page=true"
                 doc["analyses"].append({'type': reference.file_type, 'analysis': landing_page_url,
                                         'filename': os.path.basename(reference.file_location)})
 
