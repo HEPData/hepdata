@@ -261,6 +261,7 @@ def generate_table_headers(table_contents):
         "table_license": table_contents["table_license"],
         "related_tables" : table_contents["related_tables"],
         "related_to_this" : table_contents["related_to_this"],
+        "resources" : table_contents["resources"],
         "review": table_contents["review"],
         "associated_files": table_contents["associated_files"],
         "keywords": {},

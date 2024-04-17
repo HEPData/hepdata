@@ -65,6 +65,7 @@ from hepdata.modules.records.utils.workflow import \
     update_action_for_submission_participant
 from hepdata.modules.stats.views import increment
 from hepdata.modules.permissions.models import SubmissionParticipant
+from hepdata.utils.miscellaneous import get_resource_data
 
 logging.basicConfig()
 log = logging.getLogger(__name__)
@@ -336,6 +337,7 @@ def get_table_details(recid, data_recid, version, load_all=1):
             table_contents["table_license"] = generate_license_data_by_id(data_record.file_license)
             table_contents["related_tables"] = get_table_data_list(datasub_record, "related")
             table_contents["related_to_this"] = get_table_data_list(datasub_record, "related_to_this")
+            table_contents["resources"] = get_resource_data(datasub_record)
             table_contents["doi"] = datasub_record.doi
             table_contents["location"] = datasub_record.location_in_publication
             table_contents["size"] = size_check["size"]
