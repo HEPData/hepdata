@@ -1,7 +1,7 @@
 beautifulsoup4==4.12.3
 bleach==6.1.0
 datacite==1.1.4
-gunicorn==21.2.0
+gunicorn==22.0.0
 hepdata-converter-ws-client==0.2.2
 hepdata-validator==0.3.5
 invenio-access==2.0.0     # Indirect (needed by invenio-admin)
