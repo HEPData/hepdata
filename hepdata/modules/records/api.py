@@ -65,7 +65,7 @@ from hepdata.modules.submission.models import (
     RelatedTable
 )
 from hepdata.utils.file_extractor import extract
-from hepdata.utils.miscellaneous import sanitize_html
+from hepdata.utils.miscellaneous import sanitize_html, get_resource_data
 from hepdata.utils.users import get_user_from_id
 from bs4 import BeautifulSoup
 from hepdata_converter_ws_client import Error
@@ -993,6 +993,8 @@ def process_data_tables(ctx, data_record_query, first_data_id,
                 "id": submission_record.id, "processed_name": processed_name,
                 "name": submission_record.name,
                 "location": submission_record.location_in_publication,
+                # Generate resource metadata
+                "resources": get_resource_data(submission_record),
                 "doi": submission_record.doi,
                 "description": sanitize_html(
                     truncate_string(submission_record.description, 20),

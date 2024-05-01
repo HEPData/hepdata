@@ -198,6 +198,22 @@ mapping = {
             }
         }
     },
+    "resources": {
+        "properties": {
+            "description": {
+                "type": "text"
+            },
+            "type": {
+                "type": "text"
+            },
+            "url": {
+                "type": "text"
+            }
+        }
+    },
+    "data_abstract": {
+      "type": "text"
+    },
     "parent_child_join": {
         "type": "join",
         "relations": {

@@ -34,6 +34,8 @@ from hepdata.config import CFG_PUB_TYPE, CFG_DATA_TYPE, HISTFACTORY_FILE_TYPE
 from hepdata.ext.opensearch.config.record_mapping import mapping as os_mapping
 from hepdata.modules.permissions.models import SubmissionParticipant
 from hepdata.modules.submission.api import get_latest_hepsubmission
+from hepdata.modules.submission.models import DataSubmission
+from hepdata.utils.miscellaneous import get_resource_data
 
 FORMATS = ['json', 'root', 'yaml', 'csv', 'yoda']
 
@@ -105,8 +107,8 @@ def add_analyses(doc):
             if reference.file_type in current_app.config['ANALYSES_ENDPOINTS']:
                 doc["analyses"].append({'type': reference.file_type, 'analysis': reference.file_location})
             elif reference.file_type == HISTFACTORY_FILE_TYPE:
-                SITE_URL = current_app.config.get('SITE_URL', 'https://www.hepdata.net')
-                landing_page_url = f"{SITE_URL}/record/resource/{reference.id}?landing_page=true"
+                site_url = current_app.config.get('SITE_URL', 'https://www.hepdata.net')
+                landing_page_url = f"{site_url}/record/resource/{reference.id}?landing_page=true"
                 doc["analyses"].append({'type': reference.file_type, 'analysis': landing_page_url,
                                         'filename': os.path.basename(reference.file_location)})
 
@@ -125,6 +127,44 @@ def add_data_keywords(doc):
 
     agg_keywords = process_cmenergies(agg_keywords)
     doc['data_keywords'] = dict(agg_keywords)
+
+
+def add_data_abstract(doc):
+    """
+    Adds the data abstract from its associated HEPSubmission to the document object
+
+    :param doc: The document object
+    :return:
+    """
+
+    submission = get_latest_hepsubmission(publication_recid=doc['recid'], overall_status='finished')
+    doc['data_abstract'] = submission.data_abstract
+
+
+def add_data_resources(doc):
+    """
+    Triggers resource data generation of a DataSubmission object.
+    Gets the DataSubmission object, then passes it off for data retrival.
+
+    :param doc: The document object
+    :return:
+    """
+
+    submission = DataSubmission.query.filter_by(doi=doc["doi"]).one()
+    doc['resources'] = get_resource_data(submission)
+
+
+def add_submission_resources(doc):
+    """
+    Triggers resource data generation of a HEPSubmission object.
+    Gets the HEPSubmission object, then passes it off for data retrival.
+
+    :param doc: The document object
+    :return:
+    """
+
+    submission = get_latest_hepsubmission(publication_recid=doc['recid'], overall_status='finished')
+    doc['resources'] = get_resource_data(submission)
 
 
 def process_cmenergies(keywords):
@@ -182,13 +222,16 @@ def enhance_data_document(doc):
     add_data_table_urls(doc)
     add_parent_publication(doc)
     add_data_keywords(doc)
+    add_data_resources(doc)
 
 
 def enhance_publication_document(doc):
     add_id(doc)
     add_doc_type(doc, CFG_PUB_TYPE)
     add_data_submission_urls(doc)
+    add_data_abstract(doc)
     add_shortened_authors(doc)
     process_last_updates(doc)
     add_analyses(doc)
     add_parent_child_info(doc)
+    add_submission_resources(doc)

@@ -27,13 +27,14 @@ from hepdata.ext.opensearch.config.os_config import \
 from hepdata.ext.opensearch import api as os_api
 from hepdata.ext.opensearch.config.os_config import get_filter_field
 from hepdata.ext.opensearch.document_enhancers import add_data_keywords, process_cmenergies
+from hepdata.utils.miscellaneous import get_resource_data
 from hepdata.ext.opensearch.process_results import merge_results, match_tables_to_papers, \
     get_basic_record_information, is_datatable
 from hepdata.ext.opensearch.query_builder import QueryBuilder, HEPDataQueryParser
 from hepdata.ext.opensearch.utils import flip_sort_order, parse_and_format_date, prepare_author_for_indexing, \
     calculate_sort_order, push_keywords
 from hepdata.modules.records.importer.api import import_records
-from hepdata.modules.submission.models import HEPSubmission
+from hepdata.modules.submission.models import HEPSubmission, DataSubmission, DataResource
 from invenio_search import current_search_client as os
 
 from hepdata.modules.search.config import LIMIT_MAX_RESULTS_PER_PAGE, \
@@ -187,16 +188,17 @@ def test_search(app, load_default_data, identifiers):
     assert(len(results['facets']) == 8)
     assert(len(results['results']) == len(identifiers))
 
-    for i in range(len(results['results'])):
-        assert(results['results'][i]['title'] == identifiers[i]['title'])
-        assert(results['results'][i]['inspire_id'] == identifiers[i]['inspire_id'])
-        assert(len(results['results'][i]['data']) == identifiers[i]['data_tables'])
+    for i in identifiers:
+        assert i['title'] in [r['title'] for r in results['results']]
+        assert i['inspire_id'] in [r['inspire_id'] for r in results['results']]
+        table_result = next((r['data'] for r in results['results'] if r['inspire_id'] == i['inspire_id']))
+        assert i['data_tables'] == len(table_result)
 
     # Test pagination (1 item per page as we only have 2; get 2nd page)
     results = os_api.search('', index=index, size=1, offset=1)
     assert(results['total'] == len(identifiers))
     assert(len(results['results']) == 1)
-    assert(results['results'][0]['title'] == identifiers[1]['title'])
+    assert(results['results'][0]['title'] in [i['title'] for i in identifiers])
 
     # Test a simple search query from the second test submission
     # The search matches the publication but not the data tables
@@ -213,13 +215,91 @@ def test_search(app, load_default_data, identifiers):
     # Test the authors search (fuzzy)
     results = os_api.search_authors('Bal')
     expected = [
-        {'affiliation': 'Texas U., Arlington', 'full_name': 'Pal, Arnab'},
-        {'affiliation': 'Panjab U.', 'full_name': 'Bala, A.'}
+        {'full_name': 'Pal, Arnab', 'affiliation': 'Texas U., Arlington'},
+        {'full_name': 'Bala, A.', 'affiliation': 'Panjab U.'},
+        {'full_name': 'Balz, Johannes', 'affiliation': 'Mainz U.'},
+        {'full_name': 'Evans, Hal', 'affiliation': 'Indiana U.'},
+        {'full_name': "O'Shea, Val", 'affiliation': 'Glasgow U.'},
+        {'full_name': 'Dal Santo, Daniele', 'affiliation': 'Bern U., LHEP'},
+        {'full_name': 'Garg, Rocky Bala', 'affiliation': 'SLAC'},
+        {'full_name': 'Tal Hod, Noam', 'affiliation': 'Weizmann Inst.'},
+        {'full_name': 'Ta, Duc Bao', 'affiliation': 'Mainz U.'},
+        {'full_name': 'Goshaw, Al', 'affiliation': 'Duke U.'},
+        {'full_name': 'Arbiol Val, Sergio Javier', 'affiliation': 'Cracow, INP'},
+        {'full_name': 'Van Daalen, Tal Roelof', 'affiliation': 'Washington U., Seattle'},
+        {'full_name': 'Al Khoury, Konie', 'affiliation': 'Nevis Labs, Columbia U.'}
     ]
 
     assert(len(results) == len(expected))
     for author in expected:
         assert(author in results)
+
+    # Test searching of data resource descriptions
+    resource_text = 'Created with hepdata_lib 0.11.0' # Some text from a resource
+    # Test alias for the resource searching
+    resource_aliases = ['resources', 'resources.description']
+    for alias in resource_aliases:
+        search_query = f'{alias}:"{resource_text}"'
+        results = os_api.search(search_query, index=index)
+        # Check for the text within the resource results
+        assert resource_text in results['results'][0]['resources'][0]['description']
+
+    # Test searching of the resources field by type.
+    # A bunch of different types to be checked for
+    resource_types = ['png', 'html', 'zenodo', 'dat', 'C++', None]
+    for res_type in resource_types:
+        # Execute search for the current type
+        results = os_api.search(f'resources.type:{res_type}', index=index)
+
+        if res_type:
+            result_resources = results['results'][0]['resources']
+            # Compile all resource types for the first result
+            result_data = [res['type'] for res in result_resources]
+            assert res_type in result_data
+        else:
+            # Confirming that a blank entry (None) does not yield results
+            assert len(results['results']) == 0
+
+    # Search query string for the url search
+    url_texts = ["https://zenodo.org/", None]
+
+    for url_text in url_texts:
+        # Execute the url search
+        results = os_api.search(f'resources.url:"{url_text}"', index=index)
+
+        if url_text:
+            # Generate the urls from the result submission
+            result_data = [res['url'] for res in results['results'][0]['resources']]
+            # Confirm that at least one of the resources in result matches
+            assert any(url.startswith(url_text) for url in result_data)
+        else:
+            # Confirming that a blank entry (None) does not yield results
+            assert len(results['results']) == 0
+
+    # Abstract text searching
+    abstracts = ['This paper presents a search for pair production of higgsinos', None]
+    for abstract_text in abstracts:
+        # Execute the data_abstract search
+        results = os_api.search(f'data_abstract:{abstract_text}', index=index)
+
+        # If it is not a None
+        if abstract_text:
+            assert abstract_text in results['results'][0]['abstract']
+        else:
+            # Confirming that a blank entry (None) does not yield results
+            assert len(results['results']) == 0
+
+    # Test searching for a table using very specific text
+    # Some description text from the test data
+    description_text = 'Observed ASYMFB(LEPTON) as a function of PT(LEPTON) at reconstruction level.'
+    results = os_api.search(description_text, index=index)
+
+    # Create the table doi. We are expecting the first table to contain this data
+    result_doi = results['results'][0]["hepdata_doi"] + ".v1/t1"
+
+    # Load DataSubmission object to verify description vs query
+    verify_submission = DataSubmission.query.filter_by(doi=result_doi).first()
+    assert description_text in verify_submission.description
 
     # Test search queries that OS can't parse
     results = os_api.search('/', index=index)
@@ -484,7 +564,7 @@ def test_reindex_all(app, load_default_data, identifiers, mocker):
     os_api.reindex_all(index=index, start=1, batch=2, synchronous=True)
     m.assert_has_calls([
         call([1, 2], index),
-        call([3], index)
+        call([3, 4], index)
     ])
     m.reset_mock()
 
@@ -497,7 +577,7 @@ def test_reindex_all(app, load_default_data, identifiers, mocker):
     # Start at publication_recid 16, end at 100:
     # should call with submission ids [2, 3]
     os_api.reindex_all(index=index, start=16, end=100, synchronous=True)
-    m.assert_called_once_with([2, 3], index)
+    m.assert_called_once_with([2, 3, 4], index)
     m.reset_mock()
 
     # Start at publication_recid 16, end at 1, batch size 10:
@@ -510,11 +590,11 @@ def test_reindex_all(app, load_default_data, identifiers, mocker):
     new_submission = HEPSubmission(publication_recid=57, inspire_id='1478981', version=2, overall_status='todo')
     db.session.add(new_submission)
     db.session.commit()
-    # New id should be 4
-    assert(new_submission.id == 4)
-    # Reindex should still index submission 3 as 4 is not finished
+    # New id should be 5
+    assert(new_submission.id == 5)
+    # Reindex should still index submission 3 and 4 as 5 is not finished
     os_api.reindex_all(index=index, synchronous=True)
-    m.assert_called_once_with([1, 2, 3], index)
+    m.assert_called_once_with([1, 2, 3, 4], index)
     m.reset_mock()
 
     # Update submission to have status finished
@@ -523,18 +603,18 @@ def test_reindex_all(app, load_default_data, identifiers, mocker):
     db.session.commit()
     # Reindex should now index 4 instead of 3
     os_api.reindex_all(index=index, synchronous=True)
-    m.assert_called_once_with([1, 2, 4], index)
+    m.assert_called_once_with([1, 2, 4, 5], index)
     m.reset_mock()
 
     # Create a further new version for ins1478981
     new_submission2 = HEPSubmission(publication_recid=57, inspire_id='1478981', version=3, overall_status='todo')
     db.session.add(new_submission2)
     db.session.commit()
-    # New id should be 5
-    assert(new_submission2.id == 5)
-    # Reindex should still index submission 4 as 5 is not finished
+    # New id should be 6
+    assert(new_submission2.id == 6)
+    # Reindex should still index submission 4 as 6 is not finished
     os_api.reindex_all(index=index, synchronous=True)
-    m.assert_called_once_with([1, 2, 4], index)
+    m.assert_called_once_with([1, 2, 4, 5], index)
     m.reset_mock()
 
     # Update submission to have status finished
@@ -543,7 +623,7 @@ def test_reindex_all(app, load_default_data, identifiers, mocker):
     db.session.commit()
     # Reindex should now index 5 instead of 4
     os_api.reindex_all(index=index, synchronous=True)
-    m.assert_called_once_with([1, 2, 5], index)
+    m.assert_called_once_with([1, 2, 4, 6], index)
 
 
 def test_reindex_batch(app, load_default_data, mocker):
@@ -615,10 +695,12 @@ def test_get_record(app, load_default_data, identifiers):
 
 
 def test_get_all_ids(app, load_default_data, identifiers):
-    expected_record_ids = [1, 16]
+    expected_record_ids = [1, 16, 57]
+    # Pre-sorted based on the last_updated (today, 2016-07-13 and 2013-12-17)
+    sorted_expected_record_ids = [57, 1, 16]
     # Order is not guaranteed by OS unless we use latest_first,
     # so sort the results before checking
-    assert(os_api.get_all_ids() == expected_record_ids)
+    assert(set(os_api.get_all_ids()) == set(expected_record_ids))
 
     # Check id_field works
     assert(os_api.get_all_ids(id_field='recid') == expected_record_ids)
@@ -634,12 +716,12 @@ def test_get_all_ids(app, load_default_data, identifiers):
     date_2013_2 = datetime.datetime(year=2013, month=12, day=17)
     assert(os_api.get_all_ids(last_updated=date_2013_2) == expected_record_ids)
     date_2013_3 = datetime.datetime(year=2013, month=12, day=18)
-    assert(os_api.get_all_ids(last_updated=date_2013_3) == [1])
-    date_2020 = datetime.datetime(year=2020, month=1, day=1)
-    assert(os_api.get_all_ids(last_updated=date_2020) == [])
+    assert(os_api.get_all_ids(last_updated=date_2013_3) == [1, 57])
+    date_2120 = datetime.datetime(year=2120, month=1, day=1)
+    assert(os_api.get_all_ids(last_updated=date_2120) == [])
 
     # Check sort by latest works - first record is newer than previous
-    assert(os_api.get_all_ids(latest_first=True) == expected_record_ids)
+    assert(os_api.get_all_ids(latest_first=True) == sorted_expected_record_ids)
 
 
 @pytest.mark.parametrize("input_size, output_size",
@@ -656,3 +738,64 @@ def test_check_max_results(input_size, output_size):
     args = {'size': input_size} if input_size is not None else {}
     check_max_results(args)
     assert args['size'] == output_size
+
+
+def test_get_resource_data(app):
+    """
+        Tests the get_resource_data document_enhancers function.
+        Ensures correct generation of resource dictionary from
+            a given HEPSubmission object.
+    """
+
+    test_data = [
+        # Each dictionary represents one HEPSubmission object
+        # containing the resources
+        {
+            "resources": [
+                DataResource(
+                    file_description="Test",
+                    file_type="html",
+                    file_location="http://www.google.com/"
+                ),
+                DataResource(
+                    id=1,
+                    file_description="Test",
+                    file_type="type",
+                    file_location="Some kind of text"
+                )
+            ]
+        },
+        {  # Testing against a blank entry
+            "resources": []
+        }
+    ]
+
+    # Create test HEPSubmission object
+    test_submission = HEPSubmission()
+    for test in test_data:
+        # Set the resources value upon each iteration
+        test_submission.resources = test["resources"]
+
+        # Run the test function to generate dictionary
+        result = get_resource_data(test_submission)
+
+        # Generate the expected results
+        expected_results = []
+        for test_res in test_submission.resources:
+            expected = {
+                "description": test_res.file_description,
+                "type": test_res.file_type
+            }
+
+            # We only expect the original file_location to be returned
+            # If it starts with http, otherwise generated URL is expected
+            if test_res.file_location.startswith("http"):
+                expected["url"] = test_res.file_location
+            else:
+                site_url = app.config.get('SITE_URL', 'https://www.hepdata.net')
+                expected["url"] = f"{site_url}/record/resource/{test_res.id}?landing_page=true"
+
+            expected_results.append(expected)
+
+        # Confirm expected_results match the actual results
+        assert result == expected_results
