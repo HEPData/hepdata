@@ -14,11 +14,11 @@
 
 
                 <p>When you search on a word, e.g. 'collisions', we will automatically search across everything we store
-                  about a record. But, sometimes you may wish to be more specific. Here we show you how.</p>
+                  about a record. But sometimes you may wish to be more specific. Here we show you how.</p>
 
-                <p>Guidance and examples on the query string syntax can be found in the
-                  <a href='https://www.elastic.co/guide/en/elasticsearch/reference/7.10/query-dsl-query-string-query.html#query-string-syntax'
-                     target="_new">Elasticsearch documentation</a>.</p>
+                <p>Guidance on the query string syntax can also be found in the
+                  <a href='https://opensearch.org/docs/latest/query-dsl/full-text/query-string/#query-string-syntax'
+                     target="_new">OpenSearch documentation</a>.</p>
 
                 <div class="well well-small">
                     <h4>Search on title, abstract, or record abstract</h4>
@@ -44,7 +44,7 @@
                       <br>
 
                         <li>Find all data with <em>"CERN-LHC"</em> in the <strong>data abstract</strong>
-                          <li><i>"Comment" in the submission.yaml file</i></li>
+                          <br/>(i.e. the <em>"comment"</em> in the <em>submission.yaml</em> file)
                         <ul>
                           <li>
                             <a href='/search?q=data_abstract:CERN-LHC' target="_new">data_abstract:CERN-LHC</a>
@@ -121,20 +121,21 @@
                         <ul>
                           <li>
                             <a href='/search?q=resources.description:"Created with hepdata_lib"' target="_new">resources:"Created with hepdata_lib"</a>
+                            <br/><span class="text-muted">Quotes force a full match.</span>
                           </li>
                         </ul>
                       </li>
-                      <br>
+                      <br/>
 
                       <li>Resource-type searching:
                         <ul>
                           <li>
                             <a href='/search?q=resources.type:png' target="_new">resources.type:png</a>
                           </li>
-                          <li>Examples: png, html, github, zenodo etc.</li>
                         </ul>
+                        Examples: png, html, github, zenodo etc.
                       </li>
-                      <br>
+                      <br/>
 
                       <li>Searching for specific URLs:
                         <ul>
@@ -142,9 +143,6 @@
                             <a href='/search?q=resources.url:atlas.web.cern.ch' target="_new">resources.url:atlas.web.cern.ch</a>
                           </li>
                         </ul>
-                      </li>
-                      <li>
-                        <span class="text-muted">Quotes force a full match.</span>
                       </li>
                     </ul>
                 </div>
