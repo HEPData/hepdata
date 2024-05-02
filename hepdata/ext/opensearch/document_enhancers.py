@@ -150,7 +150,7 @@ def add_data_resources(doc):
     :return:
     """
 
-    submission = DataSubmission.query.filter_by(doi=doc["doi"]).one()
+    submission = DataSubmission.query.filter_by(doi=doc["doi"]).order_by(DataSubmission.id.desc()).first()
     doc['resources'] = get_resource_data(submission)
 
 
