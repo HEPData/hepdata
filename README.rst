@@ -2,27 +2,29 @@
 HEPData
 =======
 
-.. image:: https://github.com/HEPData/hepdata/actions/workflows/ci.yml/badge.svg?branch=main
+|GitHub Actions Build Status| |Coveralls Status| |License| |Docker Image Size| |GitHub Issues| |Documentation Status|
+
+.. |GitHub Actions Build Status| image:: https://github.com/HEPData/hepdata/actions/workflows/ci.yml/badge.svg?branch=main
    :target: https://github.com/HEPData/hepdata/actions?query=branch%3Amain
    :alt: GitHub Actions Build Status
 
-.. image:: https://coveralls.io/repos/github/HEPData/hepdata/badge.svg?branch=main
+.. |Coveralls Status| image:: https://coveralls.io/repos/github/HEPData/hepdata/badge.svg?branch=main
    :target: https://coveralls.io/github/HEPData/hepdata?branch=main
    :alt: Coveralls Status
 
-.. image:: https://img.shields.io/github/license/HEPData/hepdata.svg
+.. |License| image:: https://img.shields.io/github/license/HEPData/hepdata.svg
    :target: https://github.com/HEPData/hepdata/blob/main/LICENSE
    :alt: License
 
-.. image:: https://img.shields.io/docker/image-size/hepdata/hepdata/latest
+.. |Docker Image Size| image:: https://img.shields.io/docker/image-size/hepdata/hepdata/latest
    :target: https://hub.docker.com/r/hepdata/hepdata/tags
    :alt: Docker Image Size
 
-.. image:: https://img.shields.io/github/issues/hepdata/hepdata.svg?maxAge=2592000
+.. |GitHub Issues| image:: https://img.shields.io/github/issues/hepdata/hepdata.svg?maxAge=2592000
    :target: https://github.com/HEPData/hepdata/issues
    :alt: GitHub Issues
 
-.. image:: https://readthedocs.org/projects/hepdata/badge/?version=latest
+.. |Documentation Status| image:: https://readthedocs.org/projects/hepdata/badge/?version=latest
    :target: http://hepdata.readthedocs.io/en/latest/?badge=latest
    :alt: Documentation Status
 
