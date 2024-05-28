@@ -47,8 +47,9 @@ from hepdata.modules.records.api import process_payload, process_zip_archive, \
     format_resource
 from hepdata.modules.records.importer.api import import_records
 from hepdata.modules.records.utils.analyses import update_analyses
-from hepdata.modules.records.utils.submission import get_or_create_hepsubmission, process_submission_directory, do_finalise, unload_submission
-from hepdata.modules.records.utils.common import get_record_by_id, get_record_contents
+from hepdata.modules.records.utils.submission import get_or_create_hepsubmission, process_submission_directory, \
+    do_finalise, unload_submission
+from hepdata.modules.records.utils.common import get_record_by_id, get_record_contents, generate_license_data_by_id
 from hepdata.modules.records.utils.data_processing_utils import generate_table_headers, generate_table_data
 from hepdata.modules.records.utils.data_files import get_data_path_for_record
 from hepdata.modules.records.utils.json_ld import get_json_ld
@@ -56,7 +57,7 @@ from hepdata.modules.records.utils.users import get_coordinators_in_system, has_
 from hepdata.modules.records.utils.workflow import update_record, create_record
 from hepdata.modules.records.views import set_data_review_status
 from hepdata.modules.submission.models import HEPSubmission, DataReview, \
-    DataSubmission, DataResource
+    DataSubmission, DataResource, License
 from hepdata.modules.submission.views import process_submission_payload
 from hepdata.modules.submission.api import get_latest_hepsubmission
 from tests.conftest import TEST_EMAIL
@@ -1054,3 +1055,56 @@ def test_update_analyses(app):
     analysis_resources = DataResource.query.filter_by(file_type='MadAnalysis').all()
     assert len(analysis_resources) == 1
     assert analysis_resources[0].file_location == 'https://doi.org/10.14428/DVN/I2CZWU'
+
+
+def test_generate_license_data_by_id(app):
+    """
+    Tests the generate_license_data_by_id function which
+    queries the database for licence information and returns it.
+    Also confirms that the default CC0 license will be returned if missing.
+    """
+
+    test_cases = [
+        {  # Test licence containing junk data
+            "id": 1,
+            "name": "test_license",
+            "url": "test_url",
+            "description": "test_description"
+        },
+        {  # Licence which doesnt exist
+            "id": 2,
+            "name": None
+        }
+    ]
+
+    for test in test_cases:
+        # If the license is supposed to exist.
+        if test["name"] is not None:
+            test_license = License(
+                id=test["id"],
+                name=test["name"],
+                url=test["url"],
+                description=test["description"]
+            )
+            db.session.add(test_license)
+            db.session.commit()
+
+        # Run the function based on the ID from the test
+        check_license = generate_license_data_by_id(test["id"])
+
+        # If test was supposed to insert, confirm return is the same as insertion
+        if test["name"] is not None:
+            assert check_license == {
+                "name": test["name"],
+                "url": test["url"],
+                "description": test["description"]
+            }
+        else:
+            # Confirm default CC0 text is returned by default
+            assert check_license == {
+                "name": "CC0",
+                "url": "https://creativecommons.org/publicdomain/zero/1.0/",
+                "description": """CC0 enables reusers to distribute, remix,
+                                adapt, and build upon the material in any
+                                medium or format, with no conditions."""
+            }
