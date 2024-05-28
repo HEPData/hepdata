@@ -312,7 +312,7 @@ def generate_license_data_by_id(license_id):
     :return dict: Returns the license_data dictionary
     """
     license_data = License.query.filter_by(id=license_id).first()
-    if license_data:
+    if license_data and license_data.name is not None:
         # Generate and return the dictionary
         return {
             "name": license_data.name,

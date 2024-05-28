@@ -1067,19 +1067,27 @@ def test_generate_license_data_by_id(app):
     test_cases = [
         {  # Test licence containing junk data
             "id": 1,
+            "insert": True,
             "name": "test_license",
             "url": "test_url",
             "description": "test_description"
         },
         {  # Licence which doesnt exist
             "id": 2,
-            "name": None
-        }
+            "insert": True,
+            "name": None,
+            "url": None,
+            "description": None
+        },
+        {  # Licence which doesnt exist
+            "id": 3,
+            "insert": False
+        },
     ]
 
     for test in test_cases:
         # If the license is supposed to exist.
-        if test["name"] is not None:
+        if test["insert"]:
             test_license = License(
                 id=test["id"],
                 name=test["name"],
@@ -1093,7 +1101,7 @@ def test_generate_license_data_by_id(app):
         check_license = generate_license_data_by_id(test["id"])
 
         # If test was supposed to insert, confirm return is the same as insertion
-        if test["name"] is not None:
+        if test["insert"] and test.get("name") is not None:
             assert check_license == {
                 "name": test["name"],
                 "url": test["url"],
