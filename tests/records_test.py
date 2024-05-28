@@ -1104,7 +1104,7 @@ def test_generate_license_data_by_id(app):
             assert check_license == {
                 "name": "CC0",
                 "url": "https://creativecommons.org/publicdomain/zero/1.0/",
-                "description": """CC0 enables reusers to distribute, remix,
-                                adapt, and build upon the material in any
-                                medium or format, with no conditions."""
+                "description": ("CC0 enables reusers to distribute, remix, "
+                                "adapt, and build upon the material in any "
+                                "medium or format, with no conditions.")
             }
