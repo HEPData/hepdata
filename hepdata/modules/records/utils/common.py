@@ -306,7 +306,7 @@ def file_size_check(file_location, load_all):
 def generate_license_data_by_id(license_id):
     """
     Generates a dictionary from a License class selected by
-    its ID from the database or returns the default CC0 licence information.
+    its ID from the database or returns the default CC0 license information.
 
     :param license_id:
     :return dict: Returns the license_data dictionary
@@ -320,7 +320,7 @@ def generate_license_data_by_id(license_id):
             "description": license_data.description
         }
     else:
-        # If none, we return the default CC0 licence data
+        # If none, we return the default CC0 license data
         return {
             "name": "CC0",
             "url": "https://creativecommons.org/publicdomain/zero/1.0/",

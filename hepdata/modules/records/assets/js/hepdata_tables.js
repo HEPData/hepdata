@@ -124,7 +124,7 @@ HEPDATA.table_renderer = {
         $("#table_doi_contents").html('<a href="https://doi.org/' + table_data.doi + '" target="_blank">' + table_data.doi + '</a>');
         $("#table_description").html((table_data.description.indexOf('.') == 0) ? '' : table_data.description.trim());
 
-        // Handle rendering of a licence if it exists
+        // Handle rendering of a license if it exists
         if(table_data.table_license) {
           // Set up anchor with url, text, and title/tooltip
           var license_url = $("<a>")
