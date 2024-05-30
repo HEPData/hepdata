@@ -27,6 +27,13 @@
   </div>
 
   <div class="resource-details">
+
+      {% if ctx.data_license %}
+        <div id="resource-data-license">
+          <p>License: <a href="{{ ctx.data_license.url }}" title="{{ ctx.data_license.description }}">{{ ctx.data_license.name }}</a></p>
+        </div>
+      {% endif %}
+
       <p>{{ctx.resource.file_description}}</p>
 
       {% if ctx.display_type == 'image' %}
@@ -34,13 +41,6 @@
       {% elif ctx.display_type == 'link' %}
         <p><a href="{{ ctx.resource.file_location }}">{{ ctx.resource.file_location }}</a></p>
       {% elif ctx.display_type == 'code' %}
-
-      {% if ctx.data_license %}
-        <div id="resource-data-license">
-          Licence: <a href="{{ ctx.data_license.url }}" title="{{ ctx.data_license.description }}">{{ ctx.data_license.name }}</a>
-        </div>
-      {% endif %}
-
         {% if ctx.contents and ctx.contents != 'Large text file' %}
           <textarea id="code-contents" height="70%">{{ ctx.contents }}</textarea>
         {% else %}

@@ -254,6 +254,7 @@ def record_exists(*args, **kwargs):
     count = HEPSubmission.query.filter_by(**kwargs).count()
     return count > 0
 
+
 def load_table_data(recid, version):
     """
     Loads a specfic data file's yaml file data.
@@ -301,16 +302,17 @@ def file_size_check(file_location, load_all):
     status = True if load_all == 1 else size <= SIZE_LOAD_CHECK_THRESHOLD
     return { "size": size, "status": status}
 
+
 def generate_license_data_by_id(license_id):
     """
     Generates a dictionary from a License class selected by
-    its ID from the database.
+    its ID from the database or returns the default CC0 license information.
 
     :param license_id:
-    :return dict: Returns the license_data dictionary, or None
+    :return dict: Returns the license_data dictionary
     """
     license_data = License.query.filter_by(id=license_id).first()
-    if license_data:
+    if license_data and license_data.name is not None:
         # Generate and return the dictionary
         return {
             "name": license_data.name,
@@ -318,5 +320,11 @@ def generate_license_data_by_id(license_id):
             "description": license_data.description
         }
     else:
-        # Return None if not found
-        return None
+        # If none, we return the default CC0 license data
+        return {
+            "name": "CC0",
+            "url": "https://creativecommons.org/publicdomain/zero/1.0/",
+            "description": ("CC0 enables reusers to distribute, remix, "
+                            "adapt, and build upon the material in any "
+                            "medium or format, with no conditions.")
+        }
