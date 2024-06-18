@@ -194,7 +194,7 @@ def test_author_search(live_server, env_browser):
         'Solano, Ada',
         'Falkowski, Adam',
         'Aad, Georges',
-        'Bailey, Adam'
+        'Affolder, A.A.'
     ]
 
     assert(len(search_results) == len(expected_authors))

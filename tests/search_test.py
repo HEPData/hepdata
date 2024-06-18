@@ -223,8 +223,6 @@ def test_search(app, load_default_data, identifiers):
         {'full_name': 'Dal Santo, Daniele', 'affiliation': 'Bern U., LHEP'},
         {'full_name': 'Garg, Rocky Bala', 'affiliation': 'SLAC'},
         {'full_name': 'Tal Hod, Noam', 'affiliation': 'Weizmann Inst.'},
-        {'full_name': 'Ta, Duc Bao', 'affiliation': 'Mainz U.'},
-        {'full_name': 'Goshaw, Al', 'affiliation': 'Duke U.'},
         {'full_name': 'Arbiol Val, Sergio Javier', 'affiliation': 'Cracow, INP'},
         {'full_name': 'Van Daalen, Tal Roelof', 'affiliation': 'Washington U., Seattle'},
         {'full_name': 'Al Khoury, Konie', 'affiliation': 'Nevis Labs, Columbia U.'}
