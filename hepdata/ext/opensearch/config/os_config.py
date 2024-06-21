@@ -20,20 +20,22 @@ import math
 
 from hepdata.config import CFG_DATA_KEYWORDS
 
+# https://opensearch.org/docs/2.14/aggregations/bucket/terms/#size-and-shard-size-parameters
+TERMS_SIZE = 20
 
 def add_default_aggregations(search, filters=[]):
     """ Default aggregations used for computing facets """
     # Add authors field first, chaining to ensure it's nested
     search.aggs.bucket('nested_authors', 'nested', path='authors')\
-        .bucket('author_full_names', 'terms', field='authors.full_name.raw')
+        .bucket('author_full_names', 'terms', field='authors.full_name.raw', size=TERMS_SIZE)
 
     # Add remaining fields separately so they're added to the list
-    search.aggs.bucket('collaboration', 'terms', field='collaborations.raw')
-    search.aggs.bucket('subject_areas', 'terms', field='subject_area.raw')
+    search.aggs.bucket('collaboration', 'terms', field='collaborations.raw', size=TERMS_SIZE)
+    search.aggs.bucket('subject_areas', 'terms', field='subject_area.raw', size=TERMS_SIZE)
     search.aggs.bucket('dates', 'date_histogram', field='publication_date', interval='year')
-    search.aggs.bucket('reactions', 'terms', field='data_keywords.reactions.raw')
-    search.aggs.bucket('observables', 'terms', field='data_keywords.observables.raw')
-    search.aggs.bucket('phrases', 'terms', field='data_keywords.phrases.raw')
+    search.aggs.bucket('reactions', 'terms', field='data_keywords.reactions.raw', size=TERMS_SIZE)
+    search.aggs.bucket('observables', 'terms', field='data_keywords.observables.raw', size=TERMS_SIZE)
+    search.aggs.bucket('phrases', 'terms', field='data_keywords.phrases.raw', size=TERMS_SIZE)
 
     # Don't add cmenergies aggregations for now as they're unsupported in ES 7.1
     # (added in ES 7.4)
