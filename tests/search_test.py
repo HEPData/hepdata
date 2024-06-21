@@ -40,6 +40,7 @@ from invenio_search import current_search_client as os
 from hepdata.modules.search.config import LIMIT_MAX_RESULTS_PER_PAGE, \
     HEPDATA_CFG_DEFAULT_RESULTS_PER_PAGE
 from hepdata.modules.search.views import check_max_results
+from hepdata.ext.opensearch.config.os_config import TERMS_SIZE
 
 def test_query_builder_add_aggregations():
     s = Search()
@@ -47,16 +48,16 @@ def test_query_builder_add_aggregations():
     assert(s.to_dict() == {
         "aggs": {
             # "cmenergies": {"histogram": {"field": "data_keywords.cmenergies", "interval": 10, "offset": 0, "min_doc_count": 10}},
-            "collaboration": {"terms": {"field": "collaborations.raw"}},
+            "collaboration": {"terms": {"field": "collaborations.raw", "size": TERMS_SIZE}},
             "dates": {"date_histogram": {"field": "publication_date",  "interval": "year"}},
             "nested_authors": {"aggs": {
-                "author_full_names": {"terms": {"field": "authors.full_name.raw"}}},
+                "author_full_names": {"terms": {"field": "authors.full_name.raw", "size": TERMS_SIZE}}},
                 "nested": {"path": "authors"}
             },
-            "observables": {"terms": {"field": "data_keywords.observables.raw"}},
-            "phrases": {"terms": {"field": "data_keywords.phrases.raw"}},
-            "reactions": {"terms": {"field": "data_keywords.reactions.raw"}},
-            "subject_areas": {"terms": {"field": "subject_area.raw"}}
+            "observables": {"terms": {"field": "data_keywords.observables.raw", "size": TERMS_SIZE}},
+            "phrases": {"terms": {"field": "data_keywords.phrases.raw", "size": TERMS_SIZE}},
+            "reactions": {"terms": {"field": "data_keywords.reactions.raw", "size": TERMS_SIZE}},
+            "subject_areas": {"terms": {"field": "subject_area.raw", "size": TERMS_SIZE}}
         }
     })
 
