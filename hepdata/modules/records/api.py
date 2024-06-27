@@ -1134,7 +1134,7 @@ def get_related_to_this_datasubmissions(data_submission):
         Get the DataSubmission Objects with a RelatedTable entry
         where this doi is referred to in related_doi.
         Only returns where associated HEPSubmission object is `finished`,
-            OR where it is within the same HEPSubmission
+        OR where it is within the same HEPSubmission
 
         :param data_submission: The datasubmission to find the related entries for.
         :return: [List] List of DataSubmission objects.
