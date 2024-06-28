@@ -315,16 +315,19 @@ def should_send_json_ld(request):
 def get_commit_message(ctx, recid):
     """
     Returns a commit message for the current version if present.
+    Will return the highest ID of a version-recid pairing.
 
     :param ctx:
     :param recid:
     """
     try:
+        # Select the most recent commit (greatest ID)
         commit_message_query = RecordVersionCommitMessage.query \
-            .filter_by(version=ctx["version"], recid=recid)
+            .filter_by(version=ctx["version"], recid=recid) \
+            .order_by(RecordVersionCommitMessage.id.desc())
 
         if commit_message_query.count() > 0:
-            commit_message = commit_message_query.one()
+            commit_message = commit_message_query.first()
             ctx["revision_message"] = {
                 'version': commit_message.version,
                 'message': commit_message.message}
