@@ -35,6 +35,7 @@ import datetime
 from flask_login import login_user
 from invenio_accounts.models import User
 from invenio_db import db
+from sqlalchemy.exc import MultipleResultsFound
 import pytest
 from werkzeug.datastructures import FileStorage
 import requests_mock
@@ -44,7 +45,7 @@ from hepdata.modules.records.api import process_payload, process_zip_archive, \
     move_files, get_all_ids, has_upload_permissions, \
     has_coordinator_permissions, create_new_version, \
     get_resource_mimetype, create_breadcrumb_text, format_submission, \
-    format_resource
+    format_resource, get_commit_message
 from hepdata.modules.records.importer.api import import_records
 from hepdata.modules.records.utils.analyses import update_analyses
 from hepdata.modules.records.utils.submission import get_or_create_hepsubmission, process_submission_directory, \
@@ -57,7 +58,7 @@ from hepdata.modules.records.utils.users import get_coordinators_in_system, has_
 from hepdata.modules.records.utils.workflow import update_record, create_record
 from hepdata.modules.records.views import set_data_review_status
 from hepdata.modules.submission.models import HEPSubmission, DataReview, \
-    DataSubmission, DataResource, License
+    DataSubmission, DataResource, License, RecordVersionCommitMessage
 from hepdata.modules.submission.views import process_submission_payload
 from hepdata.modules.submission.api import get_latest_hepsubmission
 from tests.conftest import TEST_EMAIL
@@ -1116,3 +1117,39 @@ def test_generate_license_data_by_id(app):
                                 "adapt, and build upon the material in any "
                                 "medium or format, with no conditions.")
             }
+
+
+def test_get_commit_message(app):
+    """
+        Tests functionality of the get_commit_message function.
+        Ensures that no instances of none, and duplicate commit messages
+        are handled correctly.
+    """
+    # We want to ensure duplicate entries
+    test_version, test_recid = 1, 1
+
+    # First we check no insertion, then we check insertion
+    for should_insert in [False, True]:
+        # Only insert on the second go
+        if should_insert:
+            # Insert a bunch of duplicate entries
+            for i in range(0, 5):
+                new_record = RecordVersionCommitMessage(
+                    recid=test_recid,
+                    version=test_version,
+                    message="Test Message"
+                )
+                db.session.add(new_record)
+                db.session.commit()
+
+        # Result of get_commit_message is added to ctx as revision_message
+        ctx = {"version": test_version}
+
+        # We always want to check that duplicates are not returned
+        try:
+            get_commit_message(ctx, test_recid)
+        except MultipleResultsFound as e:
+            raise AssertionError(e)
+
+        # revision_message only exists if we should insert
+        assert ("revision_message" in ctx) == should_insert
