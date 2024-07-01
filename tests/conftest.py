@@ -187,10 +187,11 @@ def create_blank_test_record():
     return submission
 
 
-def create_test_record(file_location):
+def create_test_record(file_location, overall_status='finished'):
     """
     Helper function to create a dummy record with data.
     :param file_location: Path to the data directory.
+    :param overall_status: Allows setting of custom overall status. Defaults to 'finished'.
     :returns test_submission: The newly created submission object
     """
     record = {'title': 'HEPData Testing',
@@ -201,7 +202,7 @@ def create_test_record(file_location):
     # Set up a new test submission
     test_submission = process_submission_payload(**record)
     # Ensure the status is set to `finished` so the related data can be accessed.
-    test_submission.overall_status = 'finished'
+    test_submission.overall_status = overall_status
     record_dir = get_data_path_for_record(test_submission.publication_recid, str(int(round(time.time()))))
     shutil.copytree(file_location, record_dir)
     process_submission_directory(record_dir, os.path.join(record_dir, 'submission.yaml'),
