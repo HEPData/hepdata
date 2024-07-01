@@ -1127,20 +1127,23 @@ def test_get_commit_message(app):
     """
     # We want to ensure duplicate entries
     test_version, test_recid = 1, 1
+    # How many records we want to insert
+    insert_amount = 5
 
     # First we check no insertion, then we check insertion
     for should_insert in [False, True]:
         # Only insert on the second go
         if should_insert:
             # Insert a bunch of duplicate entries
-            for i in range(0, 5):
+            for i in range(0, insert_amount):
                 new_record = RecordVersionCommitMessage(
                     recid=test_recid,
                     version=test_version,
-                    message="Test Message"
+                    # Setting message to a unique value
+                    message=str(insert_amount)
                 )
                 db.session.add(new_record)
-                db.session.commit()
+            db.session.commit()
 
         # Result of get_commit_message is added to ctx as revision_message
         ctx = {"version": test_version}
@@ -1153,3 +1156,9 @@ def test_get_commit_message(app):
 
         # revision_message only exists if we should insert
         assert ("revision_message" in ctx) == should_insert
+
+        # Check the most recent has been retrieved
+        if should_insert:
+            # We know it's the most recent as message
+            # is set to the highest inserted range, equal to insert_amount.
+            ctx["revision_message"]["message"] = str(insert_amount)
