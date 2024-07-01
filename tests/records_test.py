@@ -1122,8 +1122,9 @@ def test_generate_license_data_by_id(app):
 def test_get_commit_message(app):
     """
         Tests functionality of the get_commit_message function.
-        Ensures that no instances of none, and duplicate commit messages
-        are handled correctly.
+        Ensures no instances of None, that duplicate commit messages
+        are handled correctly, and only the most recent
+        RecordVersionCommitMessage is returned.
     """
     # We want to ensure duplicate entries
     test_version, test_recid = 1, 1
