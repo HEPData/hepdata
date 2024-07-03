@@ -118,7 +118,8 @@ def test_is_histfactory(filename, description, type, expected):
         ("test.docx", "", None, "docx"),
         ("test", "", None, "resource"),
         ("pyhf.tgz", "File containing likelihoods", None, "HistFactory"),
-        ("test.zip", "Some sort of file", "HistFactory", "HistFactory")
+        ("test.zip", "Some sort of file", "HistFactory", "HistFactory"),
+        ("snippet.cxx", "ProSelecta analysis", "ProSelecta", "ProSelecta")
     ]
 )
 def test_infer_file_type(filename, description, type, expected):
