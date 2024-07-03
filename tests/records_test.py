@@ -22,6 +22,7 @@
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
 """HEPData records test cases."""
+import random
 from io import open, StringIO
 import os
 import re
@@ -44,7 +45,8 @@ from hepdata.modules.records.api import process_payload, process_zip_archive, \
     move_files, get_all_ids, has_upload_permissions, \
     has_coordinator_permissions, create_new_version, \
     get_resource_mimetype, create_breadcrumb_text, format_submission, \
-    format_resource
+    format_resource, get_related_to_this_hepsubmissions, get_related_hepsubmissions, get_related_datasubmissions, \
+    get_related_to_this_datasubmissions
 from hepdata.modules.records.importer.api import import_records
 from hepdata.modules.records.utils.analyses import update_analyses
 from hepdata.modules.records.utils.submission import get_or_create_hepsubmission, process_submission_directory, \
@@ -57,7 +59,7 @@ from hepdata.modules.records.utils.users import get_coordinators_in_system, has_
 from hepdata.modules.records.utils.workflow import update_record, create_record
 from hepdata.modules.records.views import set_data_review_status
 from hepdata.modules.submission.models import HEPSubmission, DataReview, \
-    DataSubmission, DataResource, License
+    DataSubmission, DataResource, License, RelatedRecid, RelatedTable
 from hepdata.modules.submission.views import process_submission_payload
 from hepdata.modules.submission.api import get_latest_hepsubmission
 from tests.conftest import TEST_EMAIL
@@ -1116,3 +1118,168 @@ def test_generate_license_data_by_id(app):
                                 "adapt, and build upon the material in any "
                                 "medium or format, with no conditions.")
             }
+
+
+def test_version_related_functions(app):
+    """
+    Attempts to bulk test the related functions for both data tables and submissions (records/api):
+    Tests the functions:
+        - get_related_hepsubmissions
+        - get_related_to_this_hepsubmissions
+        - get_related_datasubmissions
+        - get_related_to_this_datasubmissions
+    Tests forward and backward relation for both HEPSubmission and DataSubmission objects, through
+    testing the RelatedRecId and RelatedTable relations and querying functions respectively.
+
+    Very similar to e2e/test_records::test_version_related_table, but tests core functionality.
+    """
+
+    # Set some random integers to use for record IDs
+    random_ints = [random.randint(300, 2147483648) for _ in range(0, 3)]
+    # We set alternating record IDs
+    test_data = [
+        {  # Record 1, which relates to 2
+            "recid": random_ints[0],  # This record ID
+            "other_recid": random_ints[1],  # Record to relate to
+            "overall_status": "finished"  # Chosen HEPSubmission status
+        },
+        {  # Record 2, which relates to 3
+            "recid": random_ints[1],
+            "other_recid": random_ints[0],
+            "overall_status": "finished"
+        },
+        {  # Record 3, which relates to 1, but is unfinished
+            "recid": random_ints[2],
+            "other_recid": random_ints[0],
+            "overall_status": "todo"
+        }
+    ]
+
+    # Insertion of test data
+    for test in test_data:
+        # We store any HEPSubmission versions in the `test` object
+        test["submissions"] = []
+        # We also store any related tables data
+        test["related_table_data"] = None
+        # For each version per test
+        for version in range(1, 3):
+            new_submission_data = {
+                "version": version,
+                "submission": HEPSubmission(
+                    publication_recid=test["recid"],
+                    version=version,
+                    overall_status=test["overall_status"]
+                ),
+                "data_submissions": []
+            }
+
+            for table_number in range(1, 3):
+                new_datasubmission = {
+                    "submission": DataSubmission(
+                        doi=f"10.17182/hepdata.{test['recid']}.v{version}/t{table_number}",
+                        publication_recid=new_submission_data["submission"].publication_recid,
+                        version=new_submission_data["submission"].version  # Also 'v'
+                    ),
+                    "number": table_number
+                }
+
+                new_submission_data["data_submissions"].append(new_datasubmission)
+                db.session.add(new_datasubmission["submission"])
+            db.session.add(new_submission_data["submission"])
+            test["submissions"].append(new_submission_data)
+
+    # Commit now as we need this data for more insertion
+    db.session.commit()
+
+    # Now we handle the related data insertion
+    for test in test_data:
+        latest_submission = test["submissions"][-1]["submission"]
+        related_recid = RelatedRecid(this_recid=test["recid"], related_recid=test["other_recid"])
+        latest_submission.related_recids.append(related_recid)
+        db.session.add_all([related_recid, latest_submission])
+
+        related_table_data = [
+            {
+                "table_doi": f"10.17182/hepdata.{test['recid']}.v2/t1",
+                "related_doi": f"10.17182/hepdata.{test['other_recid']}.v2/t1"
+            },
+            {
+                "table_doi": f"10.17182/hepdata.{test['recid']}.v2/t2",
+                "related_doi": f"10.17182/hepdata.{test['other_recid']}.v2/t2"
+            },
+            {
+                "table_doi": f"10.17182/hepdata.{test['recid']}.v2/t2",
+                "related_doi": f"10.17182/hepdata.{test['recid']}.v2/t1"
+            }
+        ]
+        test["related_table_data"] = related_table_data
+
+        for related in related_table_data:
+            datasub = DataSubmission.query.filter_by(
+                doi=related["table_doi"]
+            ).first()
+
+            related_datasub = RelatedTable(
+                table_doi=related["table_doi"],
+                related_doi=related["related_doi"]
+            )
+            datasub.related_tables.append(related_datasub)
+            db.session.add_all([related_datasub, datasub])
+
+    # Finally, we commit all the new data
+    db.session.commit()
+
+    # Test case checking
+    for test in test_data:
+        latest_submission = test["submissions"][-1]
+        # Get the HEPSubmission and DataSubmission objects for the test
+        test_submission = latest_submission["submission"]
+        test_datasubmissions = latest_submission["data_submissions"]
+
+        # Run the HEPSubmission functions to test
+        forward_sub_relations = get_related_hepsubmissions(test_submission)
+        backward_sub_relations = get_related_to_this_hepsubmissions(test_submission)
+
+        # This record should be referenced by the OTHER record,
+        #   and this record should reference the OTHER record
+        assert [sub.publication_recid for sub in forward_sub_relations] == [test["other_recid"]]
+
+        expected_backward_sub_relations = []
+
+        # Finished records will have other record references appear
+        if test["overall_status"] is not "todo":
+            expected_backward_sub_relations.append(test["other_recid"])
+
+        assert [sub.publication_recid for sub in backward_sub_relations] == expected_backward_sub_relations
+
+        for test_datasub in test_datasubmissions:
+            table_number = test_datasub["number"]
+            submission = test_datasub["submission"]
+
+            # Execute the DataSubmission functions to test
+            forward_dt_relations = [sub.doi for sub in get_related_datasubmissions(submission)]
+            backward_dt_relations = [sub.doi for sub in get_related_to_this_datasubmissions(submission)]
+
+            # The number of entries happens to match the table number
+            assert len(forward_dt_relations) == table_number
+
+            # This record should be referenced by the OTHER table,
+            #   and this table should reference the OTHER table
+            #   (matching the same table number)
+            expected_forward_dt_relations = [f"10.17182/hepdata.{test['other_recid']}.v2/t{table_number}"]
+            expected_backward_dt_relations = []
+
+            # We expect unfinished records to NOT have `other_recid` tables
+            if test["overall_status"] is not "todo":
+                expected_backward_dt_relations.append(f"10.17182/hepdata.{test['other_recid']}.v2/t{table_number}")
+
+            # Here we expect the second table to reference ITS OWN table one
+            if table_number == 2:
+                expected_forward_dt_relations.append(f"10.17182/hepdata.{test['recid']}.v2/t1")
+            else:
+                # For table 1, we expect it to be referenced by the table 2
+                expected_backward_dt_relations.append(f"10.17182/hepdata.{test['recid']}.v2/t2")
+
+            # Test that the forward/backward datatable relations work as expected
+            assert set(forward_dt_relations) == set(expected_forward_dt_relations)
+            assert set(backward_dt_relations) == set(expected_backward_dt_relations)
