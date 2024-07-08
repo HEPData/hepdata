@@ -30,7 +30,7 @@ from invenio_records.api import Record
 import os
 from sqlalchemy.orm.exc import NoResultFound
 
-from hepdata.config import HISTFACTORY_FILE_TYPE, SIZE_LOAD_CHECK_THRESHOLD
+from hepdata.config import HISTFACTORY_FILE_TYPE, NUISANCE_FILE_TYPE, SIZE_LOAD_CHECK_THRESHOLD
 from hepdata.ext.opensearch.api import get_record
 from hepdata.modules.submission.models import HEPSubmission, License, DataSubmission, DataResource
 
@@ -117,6 +117,8 @@ def infer_file_type(file, description, type=None):
         else:
             if is_histfactory(file, description, type):
                 return HISTFACTORY_FILE_TYPE
+            elif type and type.lower() == NUISANCE_FILE_TYPE.lower():
+                return NUISANCE_FILE_TYPE
             extension = file.rsplit(".", 1)[1]
             if extension in FILE_TYPES:
                 return FILE_TYPES[extension]

@@ -326,6 +326,7 @@ ANALYSES_ENDPOINTS = {
 }
 
 HISTFACTORY_FILE_TYPE = 'HistFactory'
+NUISANCE_FILE_TYPE = 'ProSelecta'
 
 ADMIN_EMAIL = 'info@hepdata.net'
 SUBMISSION_FILE_NAME_PATTERN = 'HEPData-{}-v{}-yaml.zip'
