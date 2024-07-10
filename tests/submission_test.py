@@ -732,7 +732,7 @@ def test_do_finalise_commit_message(app, admin_idx):
         admin_idx.recreate_index()
         # Create test submission/record
         hepdata_submission = create_test_record(
-            'test_data/test_submission',
+            os.path.abspath('tests/test_data/test_submission'),
             overall_status='todo'
         )
 
