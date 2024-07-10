@@ -22,11 +22,15 @@
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
+import json
 import logging
 import os
 import shutil
 import time
+from datetime import datetime
 from time import sleep
+from unittest.mock import patch, MagicMock
+from sqlalchemy.exc import NoResultFound
 
 from invenio_db import db
 import pytest
@@ -42,15 +46,15 @@ from hepdata.modules.records.api import (
     get_related_to_this_datasubmissions,
     get_related_to_this_hepsubmissions,
     get_table_data_list,
-    process_saved_file
+    process_saved_file, get_commit_message
 )
 from hepdata.modules.records.utils.common import infer_file_type, contains_accepted_url, allowed_file, record_exists, \
-    get_record_contents, is_histfactory
+    get_record_contents, is_histfactory, get_record_by_id
 from hepdata.modules.records.utils.data_files import get_data_path_for_record
 from hepdata.modules.records.utils.submission import process_submission_directory, do_finalise, unload_submission, \
     cleanup_data_related_recid
 from hepdata.modules.submission.api import get_latest_hepsubmission, get_submission_participants_for_record
-from hepdata.modules.submission.models import DataSubmission, HEPSubmission, RelatedRecid
+from hepdata.modules.submission.models import DataSubmission, HEPSubmission, RelatedRecid, RecordVersionCommitMessage
 from hepdata.modules.submission.views import process_submission_payload
 from hepdata.config import HEPDATA_DOI_PREFIX
 from tests.conftest import create_test_record
@@ -712,3 +716,98 @@ def test_status_reset_error(app, mocker, caplog):
     assert(caplog.records[0].levelname == "ERROR")
     assert(caplog.records[0].msg
            == "Exception while cleaning up: Could not clean up the submission")
+
+
+# Patching to force no-op on function: process_last_updates()
+@patch("hepdata.ext.opensearch.document_enhancers.process_last_updates")
+def test_do_finalise_commit_message(app, admin_idx):
+    """
+    Tests the do_finalise function.
+
+    Here we are testing the commit message functionality, ensuring proper rollback in the event of an error.
+    """
+
+    # Insert the testing record data
+    with app.app_context():
+        admin_idx.recreate_index()
+        # Create test submission/record
+        hepdata_submission = create_test_record(
+            'test_data/test_submission',
+            overall_status='todo'
+        )
+
+        # We're going to add an extra commit message
+        conflicting_record = RecordVersionCommitMessage(
+            recid=hepdata_submission.publication_recid,
+            version=hepdata_submission.version,
+            message="OldMessage"
+        )
+
+        db.session.add(conflicting_record)
+        db.session.commit()
+
+        # Create record data and prepare
+        record = get_record_by_id(hepdata_submission.publication_recid)
+        record["creation_date"] = str(datetime.today().strftime('%Y-%m-%d'))
+
+        # Now we mock the get_record_by_id function to cause an error.
+        with patch("hepdata.modules.records.utils.submission.get_record_by_id") as mock_get_record:
+            class MockRecord(MagicMock, dict):
+                # Mocking the invenio-records Record class
+                # Used to create a mock also of type dict
+                pass
+
+            # Create mock record object, set its value
+            # and set it to cause an error.
+            mock_record = MockRecord()
+            mock_get_record.return_value = mock_record
+            # Set the record to raise exception when commit() is called
+            mock_record.commit.side_effect = NoResultFound()
+            # Injecting specific dictionary keys to avoid error.
+            mock_record.__getitem__.side_effect = lambda key: 1 if key == 'item_doi' else None
+
+            # Now we run the do_finalise function (PATCHED)
+            result = do_finalise(
+                        hepdata_submission.publication_recid,
+                        publication_record=record,
+                        commit_message="NewMessage",
+                        force_finalise=True,
+                        convert=False
+            )
+            # Convert str(json)->dict
+            result = json.loads(result)
+
+        # Get all commit messages
+        commit_messages = RecordVersionCommitMessage.query.filter_by(
+            recid=hepdata_submission.publication_recid
+        ).all()
+
+        # Ensure that no new messages have inserted
+        assert len(commit_messages) == 1
+        assert commit_messages[0].message == "OldMessage"
+
+        # Confirm that the result response exists and is correct
+        assert "errors" in result
+        assert len(result["errors"]) == 1
+        assert result["errors"][0] == "No record found to update. Which is super strange."
+
+        # Run do_finalise again, but UNPATCHED
+        result = do_finalise(
+            hepdata_submission.publication_recid,
+            publication_record=record,
+            commit_message="NewMessage",
+            force_finalise=True,
+            convert=False
+        )
+        # Convert str(json)->dict
+        result = json.loads(result)
+
+        # Get the commit messages
+        commit_messages = RecordVersionCommitMessage.query.filter_by(
+            recid=hepdata_submission.publication_recid
+        ).all()
+
+        # `NewMessage` should have inserted, and no error found.
+        assert len(commit_messages) == 2
+        assert commit_messages[-1].message == "NewMessage"
+        assert "errors" not in result
