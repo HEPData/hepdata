@@ -174,6 +174,65 @@ def test_query_parser():
     assert (parsed_query_string6 == 'analyses.type:rivet')
 
 
+def test_query_parser_is_range_query():
+    """
+`       Tests HEPDataQueryParser.is_range_query to verify expected
+          pass/fail results against test range query strings.
+    """
+    test_data = [
+        {  # Expected success cases
+            "expected_result": True,
+            "query_strings": [
+                "publication_recid:46:46",
+                "publication_recid:0:10001"
+            ]
+        },
+        {  # Expected failure cases
+            "expected_result": False,
+            "query_strings": [
+                "publication_recid:-46:46",  # Negative number
+                "INCORRECT:46:46",  # Mismatched term
+                "publication_recid:NOTINT:46",  # Mismatched int left
+                "publication_recid:46:NOTINT",  # Mismatched int right
+                "publication_recid:46!46",  # Mismatched symbols
+                [],  # TypeError - Should return False
+                {}   # TypeError
+            ]
+        }
+    ]
+
+    for test in test_data:
+        # For each batch of expected successes/failures
+        for qs in test['query_strings']:
+            # Run range query check for each string
+            is_range = HEPDataQueryParser.is_range_query(qs)
+            assert is_range == test['expected_result']
+
+
+def test_query_parser_parse_range_query():
+    """
+    Tests HEPDataQueryParser.parse_range_query to verify correct
+      return of integer/None values from valid/invalid range query strings.
+    """
+    test_data = [
+        {  # Valid
+            "query_string": "publication_recid:46:46",
+            "expected_result": (46, 46)
+        },
+        {  # Valid
+            "query_string": "publication_recid:0:100",
+            "expected_result": (0, 100)
+        },
+        {  # Invalid - Incorrect format
+            "query_string": "publication_recid4646",
+            "expected_result": None
+        }
+    ]
+
+    for test in test_data:
+        result = HEPDataQueryParser.parse_range_query(test['query_string'])
+        assert result == test['expected_result']
+
 
 def test_search(app, load_default_data, identifiers):
     """
