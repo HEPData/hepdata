@@ -81,3 +81,42 @@ class HEPDataQueryParser(object):
         if '"' not in phrase and pattern.fullmatch(phrase):
             return f'"{phrase}"'
         return phrase
+
+    @staticmethod
+    def is_range_query(query):
+        """
+        Simple function to do a regex match against the expected range query
+        pattern.
+
+        :param query: The query string to check.
+        :return: True if the query string matches the expected range query.
+        """
+        try:
+            result = re.match(r"publication_recid:\d+:\d+", query)
+            return bool(result)
+        except TypeError:
+            # We just return False if there is a TypeError.
+            return False
+
+    @staticmethod
+    def parse_range_query(query_string):
+        """
+        Parses a given range query string in an expected format
+          found in HEPDataQueryParser.is_range_query
+          to determine the integers used for the ranges
+
+        :param query_string: The range query string.
+        :return: A tuple of the upper and lower range bounds from the query string, or None.
+        """
+
+        try:
+            # Split string and determine where ranges are
+            ranges = query_string.split(":")
+            # Check type and return
+            lower_range = int(ranges[1])
+            upper_range = int(ranges[2])
+            return lower_range, upper_range
+        except (ValueError, IndexError):
+            # If there's something wrong with the string, return None
+            return None
+
