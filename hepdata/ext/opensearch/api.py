@@ -108,17 +108,36 @@ def search(query,
     if query == '' and not sort_field:
         sort_field = 'date'
 
-    query = HEPDataQueryParser.parse_query(query)
     # Create search with preference param to ensure consistency of results across shards
     search = RecordsSearch(using=os, index=index).with_preference_param()
 
-    if query:
-        fuzzy_query = QueryString(query=query, fuzziness='AUTO')
-        search.query = fuzzy_query | \
-                       Q('has_child', type="child_datatable", query=fuzzy_query)
+    # Determine if the query is range-based
+    is_range_query = HEPDataQueryParser.is_range_query(query)
 
+    # If not, we do a normal parse and setup the query
+    if not is_range_query:
+        query = HEPDataQueryParser.parse_query(query)
+
+        if query:
+            fuzzy_query = QueryString(query=query, fuzziness='AUTO')
+            search.query = fuzzy_query | \
+                           Q('has_child', type="child_datatable", query=fuzzy_query)
+
+    # Add filter to search for only "publication" objects
     search = search.filter("term", doc_type=CFG_PUB_TYPE)
     search = QueryBuilder.add_filters(search, filters)
+
+    # We need to add the range filter to the query
+    if is_range_query:
+        ranges = HEPDataQueryParser.parse_range_query(query)
+
+        # If something goes wrong here (None), we just return an error and log it.
+        if not ranges:
+            error_string = "An unexpected error occurred when range searching"
+            log.error(error_string + f": {query}")
+            return {'error': error_string}
+
+        search = search.filter('range', recid={'gte': ranges[0], 'lte': ranges[1]})
 
     try:
         mapped_sort_field = sort_fields_mapping(sort_field)
@@ -135,23 +154,24 @@ def search(query,
 
     try:
         pub_result = search.execute().to_dict()
-
-        parent_filter = {
-            "terms": {
-                        "_id": [hit["_id"] for hit in pub_result['hits']['hits']]
+        data_result = None
+        # We don't want data tables if we're searching by publication range only.
+        if not is_range_query:
+            parent_filter = {
+                "terms": {
+                            "_id": [hit["_id"] for hit in pub_result['hits']['hits']]
+                }
             }
-        }
 
-        data_search = RecordsSearch(using=os, index=index)
-        data_search = data_search.query('has_parent',
-                                        parent_type="parent_publication",
-                                        query=parent_filter)
-        if query:
+            data_search = RecordsSearch(using=os, index=index)
+            data_search = data_search.query('has_parent',
+                                            parent_type="parent_publication",
+                                            query=parent_filter)
             data_search = data_search.query(QueryString(query=query))
 
-        data_search_size = size * OPENSEARCH_MAX_RESULT_WINDOW // LIMIT_MAX_RESULTS_PER_PAGE
-        data_search = data_search[0:data_search_size]
-        data_result = data_search.execute().to_dict()
+            data_search_size = size * OPENSEARCH_MAX_RESULT_WINDOW // LIMIT_MAX_RESULTS_PER_PAGE
+            data_search = data_search[0:data_search_size]
+            data_result = data_search.execute().to_dict()
 
         merged_results = merge_results(pub_result, data_result)
         return map_result(merged_results, filters)
@@ -165,7 +185,7 @@ def search(query,
         else:
             log.error(f'An unexpected error occurred when searching: {e}')
             reason = f'An unexpected error occurred: {e.error}'
-        return { 'error': reason }
+        return {'error': reason}
 
 
 @author_index
