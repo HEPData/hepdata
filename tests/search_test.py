@@ -183,18 +183,18 @@ def test_query_parser_is_range_query():
         {  # Expected success cases
             "expected_result": True,
             "query_strings": [
-                "publication_recid:46:46",
-                "publication_recid:0:10001"
+                "publication_recid:[46 TO 46]",
+                "publication_recid:[0 TO 10001]"
             ]
         },
         {  # Expected failure cases
             "expected_result": False,
             "query_strings": [
-                "publication_recid:-46:46",  # Negative number
-                "INCORRECT:46:46",  # Mismatched term
-                "publication_recid:NOTINT:46",  # Mismatched int left
-                "publication_recid:46:NOTINT",  # Mismatched int right
-                "publication_recid:46!46",  # Mismatched symbols
+                "publication_recid:[-46 TO 46]",  # Negative number
+                "INCORRECT:[46 TO 46]",  # Mismatched term
+                "publication_recid:[NOTINT TO 46]",  # Mismatched int left
+                "publication_recid:[46 TO NOTINT]",  # Mismatched int right
+                "publication_recid:[46 to 46]",  # Incorrect case
                 [],  # TypeError - Should return False
                 {}   # TypeError
             ]
@@ -216,16 +216,16 @@ def test_query_parser_parse_range_query():
     """
     test_data = [
         {  # Valid
-            "query_string": "publication_recid:46:46",
-            "expected_result": (46, 46)
+            "query_string": "publication_recid:[46 TO 46]",
+            "expected_result": ((46, 46), "recid")
         },
         {  # Valid
-            "query_string": "publication_recid:0:100",
-            "expected_result": (0, 100)
+            "query_string": "publication_recid:[0 TO 100]",
+            "expected_result": ((0, 100), "recid")
         },
         {  # Invalid - Incorrect format
-            "query_string": "publication_recid4646",
-            "expected_result": None
+            "query_string": "publication_recid:[46 to 46]",
+            "expected_result": (None, None)
         }
     ]
 
