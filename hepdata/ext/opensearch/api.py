@@ -143,7 +143,14 @@ def search(query,
         mapped_sort_field = sort_fields_mapping(sort_field)
     except ValueError as ve:
         return {'error': str(ve)}
-    search = search.sort({mapped_sort_field : {"order" : calculate_sort_order(sort_order, sort_field)}})
+
+    # Enable ordering by ID if it is a range query
+    if is_range_query:
+        search = search.sort({term: {'order': 'desc'}})
+    else:
+        # Otherwise, normal sort
+        search = search.sort({mapped_sort_field : {"order" : calculate_sort_order(sort_order, sort_field)}})
+
     search = add_default_aggregations(search, filters)
 
     if post_filter:
