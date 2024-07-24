@@ -167,7 +167,9 @@ def search(query,
             data_search = data_search.query('has_parent',
                                             parent_type="parent_publication",
                                             query=parent_filter)
-            data_search = data_search.query(QueryString(query=query))
+
+            if query:
+                data_search = data_search.query(QueryString(query=query))
 
             data_search_size = size * OPENSEARCH_MAX_RESULT_WINDOW // LIMIT_MAX_RESULTS_PER_PAGE
             data_search = data_search[0:data_search_size]
