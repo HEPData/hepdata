@@ -23,6 +23,8 @@
 import re
 from opensearch_dsl import Q
 
+from hepdata.config import CFG_SEARCH_RANGE_TERMS
+
 
 class QueryBuilder:
 
@@ -93,7 +95,9 @@ class HEPDataQueryParser(object):
         :return: True if the query string matches the expected range query.
         """
         try:
-            result = re.match(r"publication_recid:\d+:\d+", query)
+            result = any(
+                [re.match(rf"{pt}:\[\d+ TO \d+]", query) for pt in CFG_SEARCH_RANGE_TERMS]
+            )
             return bool(result)
         except TypeError:
             # We just return False if there is a TypeError.
@@ -104,20 +108,32 @@ class HEPDataQueryParser(object):
         """
         Parses a given range query string in an expected format
           found in HEPDataQueryParser.is_range_query
-          to determine the integers used for the ranges
+          to determine the integers used for the ranges.
+        Also returns the base term like "publication_recid"
 
         :param query_string: The range query string.
-        :return: A tuple of the upper and lower range bounds from the query string, or None.
+        :return: A tuple of the upper and lower range bounds from the query string,
+            as well as the split off "term" value, or None for both.
         """
+
+        # Contains shorthand variables/mapping for term conversion to
+        #   OpenSearch usable term
+        term_mapping = {
+            "publication_recid": "recid",
+        }
 
         try:
             # Split string and determine where ranges are
-            ranges = query_string.split(":")
+            ranges = query_string.split("[")[1].split("]")[0]
             # Check type and return
-            lower_range = int(ranges[1])
-            upper_range = int(ranges[2])
-            return lower_range, upper_range
+            range_split = ranges.split(" TO ")
+            lower_range, upper_range = int(range_split[0]), int(range_split[1])
+
+            # Get corresponding term from the mapping
+            term = term_mapping[query_string.split(":[")[0]]
+
+            return (lower_range, upper_range), term
         except (ValueError, IndexError):
             # If there's something wrong with the string, return None
-            return None
+            return None, None
 

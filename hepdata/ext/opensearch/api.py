@@ -114,7 +114,7 @@ def search(query,
     # Determine if the query is range-based
     is_range_query = HEPDataQueryParser.is_range_query(query)
 
-    # If not, we do a normal parse and setup the query
+    # If not, we do a normal parse and set up the query
     if not is_range_query:
         query = HEPDataQueryParser.parse_query(query)
 
@@ -129,15 +129,15 @@ def search(query,
 
     # We need to add the range filter to the query
     if is_range_query:
-        ranges = HEPDataQueryParser.parse_range_query(query)
+        ranges, term = HEPDataQueryParser.parse_range_query(query)
 
-        # If something goes wrong here (None), we just return an error and log it.
+        # If something goes wrong here (returns None), we just return an error and log it.
         if not ranges:
             error_string = "An unexpected error occurred when range searching"
             log.error(error_string + f": {query}")
             return {'error': error_string}
 
-        search = search.filter('range', recid={'gte': ranges[0], 'lte': ranges[1]})
+        search = search.filter('range', **{term: {'gte': str(ranges[0]), 'lte': str(ranges[1])}})
 
     try:
         mapped_sort_field = sort_fields_mapping(sort_field)
