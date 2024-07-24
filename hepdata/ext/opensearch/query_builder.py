@@ -52,7 +52,8 @@ class HEPDataQueryParser(object):
                 "phrases": "data_keywords.phrases",
                 "reactions": "data_keywords.reactions",
                 "analysis": "analyses.type",
-                "resources": "resources.description"  # Add shorthand for resource description
+                "resources": "resources.description",  # Add shorthand for resource description
+                "publication_recid": "recid"
             }
         }
 
