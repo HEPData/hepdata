@@ -19,5 +19,6 @@ updates:
     schedule:
       interval: "monthly"
     ignore:
+      - dependency-name: "invenio-accounts"  # see https://github.com/HEPData/hepdata/issues/816
       - dependency-name: "pytest"  # see https://github.com/HEPData/hepdata/issues/815
       - dependency-name: "pytest-cov"  # see https://github.com/HEPData/hepdata/issues/580
