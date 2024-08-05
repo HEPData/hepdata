@@ -111,7 +111,7 @@ CACHE_TYPE = "redis"
 
 # Session
 SESSION_REDIS = "redis://localhost:6379/0"
-PERMANENT_SESSION_LIFETIME = timedelta(days=1)
+PERMANENT_SESSION_LIFETIME = timedelta(hours=12)
 
 # OpenSearch
 OPENSEARCH_HOST = "localhost"
