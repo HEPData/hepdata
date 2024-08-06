@@ -173,6 +173,10 @@ def test_query_parser():
 
     assert (parsed_query_string6 == 'analyses.type:rivet')
 
+    _test_query7 = 'publication_recid:1'
+    parsed_query_string7 = HEPDataQueryParser.parse_query(_test_query7)
+    assert (parsed_query_string7 == 'recid:1')
+
 
 def test_query_parser_is_range_query():
     """
