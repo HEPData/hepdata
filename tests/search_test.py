@@ -189,7 +189,8 @@ def test_query_parser_is_range_query():
             "query_strings": [
                 "publication_recid:[46 TO 46]",
                 "publication_recid:[0 TO 10001]",
-                "inspire_id:[0 TO 10000]"
+                "inspire_id:[0 TO 10000]",
+                "inspire_id: [0  TO  10000]"  # Extra valid whitespace
             ]
         },
         {  # Expected failure cases
@@ -201,6 +202,10 @@ def test_query_parser_is_range_query():
                 "publication_recid:[46 TO NOTINT]",  # Mismatched int right
                 "publication_recid:[46 to 46]",  # Incorrect case
                 "inspire_idd:[0 TO 10000]",  # Misspelling
+                "inspire_id:[0 TO 10000 ]",  # Invalid whitespace
+                "inspire_id:[ 0 TO 10000]",  # Invalid whitespace
+                "inspire_id :[0 TO 10000]",  # Invalid whitespace
+                " inspire_id:[0 TO 10000]",  # Invalid whitespace
                 [],  # TypeError - Should return False
                 {}   # TypeError
             ]
