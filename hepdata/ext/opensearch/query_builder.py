@@ -55,7 +55,7 @@ class HEPDataQueryParser(object):
                 "reactions": "data_keywords.reactions",
                 "analysis": "analyses.type",
                 "resources": "resources.description",  # Add shorthand for resource description
-                "publication_recid": "recid"
+                "publication_recid": "recid"  # Shorthand for HEPData record ID
             }
         }
 
