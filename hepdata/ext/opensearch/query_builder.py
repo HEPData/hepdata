@@ -120,6 +120,7 @@ class HEPDataQueryParser(object):
         #   OpenSearch usable term
         term_mapping = {
             "publication_recid": "recid",
+            "inspire_id": "inspire_id"  # Leave unchanged
         }
 
         try:

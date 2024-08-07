@@ -188,7 +188,8 @@ def test_query_parser_is_range_query():
             "expected_result": True,
             "query_strings": [
                 "publication_recid:[46 TO 46]",
-                "publication_recid:[0 TO 10001]"
+                "publication_recid:[0 TO 10001]",
+                "inspire_id:[0 TO 10000]"
             ]
         },
         {  # Expected failure cases
@@ -199,6 +200,7 @@ def test_query_parser_is_range_query():
                 "publication_recid:[NOTINT TO 46]",  # Mismatched int left
                 "publication_recid:[46 TO NOTINT]",  # Mismatched int right
                 "publication_recid:[46 to 46]",  # Incorrect case
+                "inspire_idd:[0 TO 10000]",  # Misspelling
                 [],  # TypeError - Should return False
                 {}   # TypeError
             ]
@@ -226,6 +228,10 @@ def test_query_parser_parse_range_query():
         {  # Valid
             "query_string": "publication_recid:[0 TO 100]",
             "expected_result": ((0, 100), "recid")
+        },
+        {
+            "query_string": "inspire_id:[0 TO 10000]",
+            "expected_result": ((0, 10000), "inspire_id")
         },
         {  # Invalid - Incorrect format
             "query_string": "publication_recid:[46 to 46]",
