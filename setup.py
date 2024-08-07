@@ -25,17 +25,15 @@
 """hepdata - Research. Shared."""
 
 import os
-import sys
 
 from setuptools import find_packages, setup
-from setuptools.command.test import test as TestCommand
 
 readme = open('README.rst').read()
 history = open('CHANGES.rst').read()
 
 tests_require = [
-    'pytest>=6.0.2',
-    'pytest-cov>=2.9.0,<4.0.0',
+    'pytest>=6.0.2,<8.0.0',  # see https://github.com/HEPData/hepdata/issues/815
+    'pytest-cov>=2.9.0,<4.0.0',  # see https://github.com/HEPData/hepdata/issues/580
     'pytest-flask>=1.0.0',
     'pytest-mock>=3.1.0',
     'pytest-timeout>=1.4.2',
@@ -56,46 +54,10 @@ extras_require = {
 for name, reqs in extras_require.items():
     extras_require['all'].extend(reqs)
 
-setup_requires = [
-    'Babel>=1.3',
-]
-
 # Packages moved to requirements.txt with specific versions
 install_requires = []
 
 packages = find_packages()
-
-
-class PyTest(TestCommand):
-    """PyTest Test."""
-
-    user_options = [('pytest-args=', 'a', "Arguments to pass to pytest")]
-
-    def initialize_options(self):
-        """Init pytest."""
-        TestCommand.initialize_options(self)
-        self.pytest_args = []
-        try:
-            from ConfigParser import ConfigParser
-        except ImportError:
-            from configparser import ConfigParser
-        config = ConfigParser()
-        config.read('pytest.ini')
-        self.pytest_args = config.get('pytest', 'addopts').split(' ')
-
-    def finalize_options(self):
-        """Finalize pytest."""
-        TestCommand.finalize_options(self)
-        self.test_args = []
-        self.test_suite = True
-
-    def run_tests(self):
-        """Run tests."""
-        # import here, cause outside the eggs aren't loaded
-        import pytest
-        errno = pytest.main(self.pytest_args)
-        sys.exit(errno)
-
 
 # Get the version string. Cannot be done with import!
 g = {}
@@ -170,8 +132,6 @@ setup(
     },
     extras_require=extras_require,
     install_requires=install_requires,
-    setup_requires=setup_requires,
-    tests_require=tests_require,
     classifiers=[
         'Environment :: Web Environment',
         'Intended Audience :: Developers',
@@ -185,6 +145,5 @@ setup(
         'Programming Language :: Python :: 3.9',
         'Development Status :: Production',
     ],
-    cmdclass={'test': PyTest},
     python_requires='>=3.8, <3.10',
 )
