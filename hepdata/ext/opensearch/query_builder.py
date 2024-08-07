@@ -96,7 +96,7 @@ class HEPDataQueryParser(object):
         """
         try:
             result = any(
-                [re.match(rf"{pt}:\[\d+ TO \d+]", query) for pt in CFG_SEARCH_RANGE_TERMS]
+                [re.match(rf"{pt}:\s*\[\d+\s+TO\s+\d+]", query) for pt in CFG_SEARCH_RANGE_TERMS]
             )
             return bool(result)
         except TypeError:
@@ -124,10 +124,12 @@ class HEPDataQueryParser(object):
         }
 
         try:
+            # Remove all whitespace before splitting.
+            query_string = query_string.replace(" ", "")
             # Split string and determine where ranges are
             ranges = query_string.split("[")[1].split("]")[0]
             # Check type and return
-            range_split = ranges.split(" TO ")
+            range_split = ranges.split("TO")
             lower_range, upper_range = int(range_split[0]), int(range_split[1])
 
             # Get corresponding term from the mapping
