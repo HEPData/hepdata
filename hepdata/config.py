@@ -110,7 +110,7 @@ CACHE_REDIS_URL = "redis://localhost:6379/0"
 CACHE_TYPE = "redis"
 
 # Session
-SESSION_REDIS = "redis://localhost:6379/0"
+ACCOUNTS_SESSION_REDIS_URL = CACHE_REDIS_URL
 PERMANENT_SESSION_LIFETIME = timedelta(hours=12)
 
 # OpenSearch
@@ -205,6 +205,7 @@ if not MAIL_PASSWORD:
     MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD', '')
 
 ACCOUNTS_USE_CELERY = False
+ACCOUNTS_SESSION_ACTIVITY_ENABLED = False
 
 RECORDS_REST_ENDPOINTS = dict(
     recid=dict(

@@ -18,8 +18,7 @@ services:
     - "APP_CELERY_RESULT_BACKEND=redis://cache:6379/2"
     - "APP_OPENSEARCH_HOST=os:9200"
     - "APP_SECRET_KEY=CHANGE_ME"
-    - "APP_SESSION_TYPE=redis"
-    - "APP_SESSION_REDIS_URL=redis://cache:6379/1"
+    - "APP_ACCOUNTS_SESSION_REDIS_URL=redis://cache:6379/1"
     - "APP_SQLALCHEMY_DATABASE_URI=postgresql://hepdata:hepdata@db/hepdata"
     - "SAUCE_USERNAME=${SAUCE_USERNAME}"
     - "SAUCE_ACCESS_KEY=${SAUCE_ACCESS_KEY}"
@@ -38,8 +37,7 @@ services:
     - "APP_CELERY_RESULT_BACKEND=redis://cache:6379/2"
     - "APP_OPENSEARCH_HOST=os:9200"
     - "APP_SECRET_KEY=CHANGE_ME"
-    - "APP_SESSION_TYPE=redis"
-    - "APP_SESSION_REDIS_URL=redis://cache:6379/1"
+    - "APP_ACCOUNTS_SESSION_REDIS_URL=redis://cache:6379/1"
     - "APP_SQLALCHEMY_DATABASE_URI=postgresql://hepdata:hepdata@db/hepdata"
     read_only: false
     volumes:
