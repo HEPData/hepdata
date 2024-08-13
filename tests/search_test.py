@@ -389,6 +389,38 @@ def test_search(app, load_default_data, identifiers):
     assert results == {'error': 'An unexpected error occurred: index_not_found_exception'}
 
 
+def test_search_range_ids(app, load_default_data, identifiers):
+    """
+    Tests range-based searching where ID-like entries are used
+    First checks whole range, then single entry
+    e.g. inspire_id and recid NOT cmenergies etc.
+    """
+
+    # Test the parsed entries in config.CFG_SEARCH_RANGE_TERMS
+    test_queries = [
+        "inspire_id",
+        "recid"
+    ]
+
+    for test in test_queries:
+        # Create the range query formatting the keyword per query
+        range_query = f"{test}:[%s TO %s]"
+
+        # Just do a huge range, to see if everything appears
+        results = os_api.search(range_query % ("0", "100000000"))
+        # Result count should equal maximum number of entries
+        assert len(results['results']) == len(identifiers)
+
+        # Do a range search for a single result, for each result of the 'all' search above.
+        for result in results['results']:
+            # We get the inspire/recid from the current result
+            identifier_id = result[test]
+            # Do a search, formatting the query to find a single result
+            specific_result = os_api.search(range_query % (identifier_id, identifier_id))
+            # Check ID of single result
+            assert specific_result['results'][0][test] == identifier_id
+
+
 def test_merge_results():
     pub_result = {
         "hits": {
