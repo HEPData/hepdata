@@ -73,6 +73,11 @@ venv/
 
 # Celery Beat
 celerybeat-schedule.db
+celerybeat-schedule
 
 # Ignore Ds_Store for finder
 .DS_Store
+
+# Secrets files
+.secrets
+.env

@@ -1,14 +1,16 @@
 {%- extends "hepdata_theme/page.html" %}
 
+{% set title = _(config.THEME_SITENAME) + ' Submission Help' %}
+
 {% block page_body %}
 
-    {{ webpack['hepdata-info.css'] }}
+  {{ webpack['hepdata-info.css'] }}
 
-    <div id="steps" class="row" style="margin: 0; padding:2% 10% 2% 5%; background-color: #894B9D">
-        <div class="section-header" style="width:185px; padding-bottom: 2em"><p>Submission Steps</p></div>
+  <div id="steps" class="row" style="margin: 0; padding:2% 10% 2% 5%; background-color: #894B9D">
+    <div class="section-header" style="width:185px; padding-bottom: 2em"><p>Submission Steps</p></div>
 
-        <div class="col-md-6">
-            <div id="hepdata-loading" style="width:330px; margin: 0 auto;">
+    <div class="col-md-6">
+      <div id="hepdata-loading" style="width:330px; margin: 0 auto;">
                 <img src="{{ url_for('static', filename='img/submission/submission-steps.svg') }}" width="330">
             </div>
         </div>
@@ -67,25 +69,25 @@
                 <a href="https://github.com/HEPData/hepdata_lib/" class="btn btn-primary" target="_blank">
                     hepdata_lib</a>
 
-                <br/><br/><br/><br/>
+              <br/><br/><br/><br/>
 
-                <p>The GitHub repositories linked below provide more details on the submission format and some examples,
-                    together with tools to convert from the old HepData input format to the new HEPData YAML format and
-                    to validate the HEPData YAML format offline.  These conversion and validation tools are automatically
-                    invoked from the web interface when an Uploader uploads their submission files.</p><br/>
+              <p>The GitHub repositories linked below provide more details on the submission format and some examples,
+                together with tools to convert from the old HepData input format to the new HEPData YAML format and
+                to validate the HEPData YAML format offline. These conversion and validation tools are automatically
+                invoked from the web interface when an Uploader uploads their submission files.</p><br/>
 
-                <a href="https://github.com/HEPData/hepdata-submission" class="btn btn-primary" target="_blank">
-                    Submission Format</a>
-                <a href="https://github.com/HEPData/hepdata-submission/tree/master/examples" class="btn btn-primary"
-                   target="_blank">Example Files</a>
-                <a href="https://github.com/HEPData/hepdata-converter" class="btn btn-primary" target="_blank">
-                    Conversion Tools</a>
-                <a href="https://github.com/HEPData/hepdata-validator" class="btn btn-primary" target="_blank">
-                    Validation Tools</a>
+              <a href="https://github.com/HEPData/hepdata-submission" class="btn btn-primary" target="_blank">
+                Submission Format</a>
+              <a href="https://github.com/HEPData/hepdata-submission/tree/main/examples" class="btn btn-primary"
+                 target="_blank">Example Files</a>
+              <a href="https://github.com/HEPData/hepdata-converter" class="btn btn-primary" target="_blank">
+                Conversion Tools</a>
+              <a href="https://github.com/HEPData/hepdata-validator" class="btn btn-primary" target="_blank">
+                Validation Tools</a>
 
-                <br/><br/><br/><br/>
+              <br/><br/><br/><br/>
 
-                <p>The link below gives more older documentation on the submission process and also provides some C++
+              <p>The link below gives more older documentation on the submission process and also provides some C++
                 code to convert .txt files to .yaml files.</p><br/>
                 <a href="https://doi.org/10.5281/zenodo.197109">
                     <img src="https://zenodo.org/badge/DOI/10.5281/zenodo.197109.svg" alt="DOI"></a>

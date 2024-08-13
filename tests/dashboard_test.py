@@ -23,7 +23,6 @@
 import datetime
 import time
 
-from flask import session
 from flask_login import current_user, login_user
 from invenio_db import db
 from werkzeug.exceptions import Forbidden
@@ -31,7 +30,7 @@ from hepdata.modules.dashboard.api import add_user_to_metadata, \
     create_record_for_dashboard, prepare_submissions, \
     get_pending_invitations_for_user, get_submission_count, \
     list_submission_titles, get_dashboard_current_user, \
-    set_dashboard_current_user, VIEW_AS_USER_ID_KEY, \
+    set_dashboard_current_user, \
     get_submissions_csv
 from hepdata.modules.permissions.models import SubmissionParticipant
 from hepdata.modules.permissions.views import manage_participant_status
@@ -39,14 +38,15 @@ from hepdata.modules.records.utils.common import get_record_by_id
 from hepdata.modules.records.utils.submission import get_or_create_hepsubmission
 from hepdata.modules.records.utils.workflow import create_record
 from invenio_accounts.models import User, Role
-from pytest_mock import mocker
 from . import conftest
 import pytest
 
-dashboardTestMockObjects = {
-    'user': User(email='test@test.com', password='hello1', active=True, id=101),
-    'user2': User(email='test2@test.com', password='hello2', active=True, id=202)
-}
+def get_mock_user_object():
+    """Returns a mock user object for use in tests."""
+    return {
+        'user': User(email='test@test.com', password='hello1', active=True, id=101),
+        'user2': User(email='test2@test.com', password='hello2', active=True, id=202)
+    }
 
 def test_add_user_to_metadata():
     test_submissions = {
@@ -295,6 +295,7 @@ def test_submissions_participant(app, load_submission):
 
 def test_get_pending_invitations_for_user_empty(app):
     with app.app_context():
+        dashboardTestMockObjects = get_mock_user_object()
         user = dashboardTestMockObjects['user']
         pending = get_pending_invitations_for_user(user)
         assert(pending == [])
@@ -302,34 +303,34 @@ def test_get_pending_invitations_for_user_empty(app):
 
 @pytest.fixture()
 def mocked_submission_participant_app(request, mocker):
-    global dashboardTestMockObjects
-
     # Create the flask app
     app = conftest.create_basic_app()
+    with app.app_context():
+        dashboardTestMockObjects = get_mock_user_object()
 
-    # Create some mock objects and chain the mock calls
-    def mock_all():
-        return [
-            mocker.MagicMock(publication_recid=1, invitation_cookie='c00kie1', role='TestRole1'),
-            mocker.MagicMock(publication_recid=2, invitation_cookie='c00kie2', role='TestRole2')
-        ]
+        # Create some mock objects and chain the mock calls
+        def mock_all():
+            return [
+                mocker.MagicMock(publication_recid=1, invitation_cookie='c00kie1', role='TestRole1'),
+                mocker.MagicMock(publication_recid=2, invitation_cookie='c00kie2', role='TestRole2')
+            ]
 
-    mockFilter = mocker.Mock(all=mock_all)
-    mockQuery = mocker.Mock(filter=lambda a, b, c, d: mockFilter)
-    mockSubmissionParticipant = mocker.Mock(query=mockQuery)
+        mockFilter = mocker.Mock(all=mock_all)
+        mockQuery = mocker.Mock(filter=lambda a, b, c, d: mockFilter)
+        mockSubmissionParticipant = mocker.Mock(query=mockQuery)
 
-    # Patch some methods called from hepdata.modules.dashboard.api so they return mock values
-    dashboardTestMockObjects['submission'] = \
-        mocker.patch('hepdata.modules.dashboard.api.SubmissionParticipant',
-                     mockSubmissionParticipant)
-    mocker.patch('hepdata.modules.dashboard.api.get_record_by_id',
-                 lambda x: {'title': 'Test Title 1' if x <= 1 else 'Test Title 2'})
-    mocker.patch('hepdata.modules.dashboard.api.get_latest_hepsubmission',
-                 mocker.Mock(coordinator=101))
-    mocker.patch('hepdata.modules.dashboard.api.get_user_from_id',
-                 mocker.Mock(return_value=dashboardTestMockObjects['user']))
-    mocker.patch('hepdata.modules.dashboard.api.decode_string',
-                 lambda x: "decoded " + str(x))
+        # Patch some methods called from hepdata.modules.dashboard.api so they return mock values
+        dashboardTestMockObjects['submission'] = \
+            mocker.patch('hepdata.modules.dashboard.api.SubmissionParticipant',
+                        mockSubmissionParticipant)
+        mocker.patch('hepdata.modules.dashboard.api.get_record_by_id',
+                    lambda x: {'title': 'Test Title 1' if x <= 1 else 'Test Title 2'})
+        mocker.patch('hepdata.modules.dashboard.api.get_latest_hepsubmission',
+                    mocker.Mock(coordinator=101))
+        mocker.patch('hepdata.modules.dashboard.api.get_user_from_id',
+                    mocker.Mock(return_value=dashboardTestMockObjects['user']))
+        mocker.patch('hepdata.modules.dashboard.api.decode_string',
+                    lambda x: "decoded " + str(x))
 
     # Do the rest of the app setup
     app_generator = conftest.setup_app(app)
@@ -338,9 +339,8 @@ def mocked_submission_participant_app(request, mocker):
 
 
 def test_get_pending_invitations_for_user(mocked_submission_participant_app, mocker):
-    global dashboardTestMockObjects
-
     with mocked_submission_participant_app.app_context():
+        dashboardTestMockObjects = get_mock_user_object()
         user = dashboardTestMockObjects['user']
         pending = get_pending_invitations_for_user(user)
 
@@ -412,6 +412,7 @@ def test_manage_participant_status(app):
 
 def test_dashboard_current_user(app):
     with app.app_context():
+        dashboardTestMockObjects = get_mock_user_object()
         # Add test users to db
         user1 = dashboardTestMockObjects['user']
         user2 = dashboardTestMockObjects['user2']
@@ -468,17 +469,19 @@ def test_submissions_csv(app, admin_idx, load_default_data, identifiers):
     with app.app_context():
         # Recreate the admin index so we know which records it contains
         admin_idx.reindex(recreate=True, include_imported=True)
-        # Make sure ES search catches up with the reindex
+        # Make sure OS search catches up with the reindex
         time.sleep(1)
 
         user = User.query.first()
+        site_url = app.config.get('SITE_URL', 'https://www.hepdata.net')
         csv_data = get_submissions_csv(user, include_imported=True)
         csv_lines = csv_data.splitlines()
-        assert len(csv_lines) == 3
+        assert len(csv_lines) == 4
         assert csv_lines[0] == 'hepdata_id,version,url,inspire_id,arxiv_id,title,collaboration,creation_date,last_updated,status,uploaders,reviewers'
-        today = datetime.date.today().isoformat()
-        assert csv_lines[1] == f'16,1,http://localhost/record/16,1245023,arXiv:1307.7457,High-statistics study of $K^0_S$ pair production in two-photon collisions,Belle,{today},2013-12-17,finished,,'
-        assert csv_lines[2] == f'1,1,http://localhost/record/1,1283842,arXiv:1403.1294,Measurement of the forward-backward asymmetry in the distribution of leptons in $t\\bar{{t}}$ events in the lepton$+$jets channel,D0,{today},2014-08-11,finished,,'
+        today = datetime.datetime.utcnow().date().isoformat()
+        assert csv_lines[1] == f'16,1,{site_url}/record/16,1245023,arXiv:1307.7457,High-statistics study of $K^0_S$ pair production in two-photon collisions,Belle,{today},2013-12-17,finished,,'
+        assert csv_lines[2] == f'1,1,{site_url}/record/1,1283842,arXiv:1403.1294,Measurement of the forward-backward asymmetry in the distribution of leptons in $t\\bar{{t}}$ events in the lepton+jets channel,D0,{today},2014-08-11,finished,,'
+        assert csv_lines[3] == f'57,1,{site_url}/record/57,2751932,arXiv:2401.14922,Search for pair production of higgsinos in events with two Higgs bosons and missing transverse momentum in $\sqrt{{s}}=13$ TeV $pp$ collisions at the ATLAS experiment,ATLAS,{today},{today},finished,,'
 
         # Get data without imported records - should be empty (headers only)
         csv_data = get_submissions_csv(user, include_imported=False)
@@ -522,5 +525,5 @@ def test_submissions_csv(app, admin_idx, load_default_data, identifiers):
         # Get CSV again - should be uploader and reviewers in line 2 now
         csv_data = get_submissions_csv(user, include_imported=True)
         csv_lines = csv_data.splitlines()
-        assert len(csv_lines) == 3
-        assert csv_lines[2] == f'1,1,http://localhost/record/1,1283842,arXiv:1403.1294,Measurement of the forward-backward asymmetry in the distribution of leptons in $t\\bar{{t}}$ events in the lepton$+$jets channel,D0,{today},2014-08-11,finished,test@test.com (Una Uploader),test2@test.com (Rowan Reviewer) | test@hepdata.net'
+        assert len(csv_lines) == 4
+        assert csv_lines[2] == f'1,1,{site_url}/record/1,1283842,arXiv:1403.1294,Measurement of the forward-backward asymmetry in the distribution of leptons in $t\\bar{{t}}$ events in the lepton+jets channel,D0,{today},2014-08-11,finished,test@test.com (Una Uploader),test2@test.com (Rowan Reviewer) | test@hepdata.net'

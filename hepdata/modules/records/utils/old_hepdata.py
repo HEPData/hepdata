@@ -39,7 +39,7 @@ mock_inspire_ids = ['753951', '1299143', '1320775']
 
 def mock_import_old_record(inspire_id=mock_inspire_ids[1], send_email=False):
     """Creates a submission but mimics the old migrated paths. (See hepdata
-    master branch at ccd691b for old migrator module.)
+    main branch at ccd691b for old migrator module.)
     """
     if inspire_id not in mock_inspire_ids:
         raise ValueError('Invalid inspire id %s. Accepted values are: %s'

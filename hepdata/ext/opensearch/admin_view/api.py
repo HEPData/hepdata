@@ -22,12 +22,12 @@
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
-from datetime import datetime, timedelta
+from datetime import datetime
 import logging
 
-from elasticsearch import Elasticsearch
-from elasticsearch_dsl import Document, Text, Keyword, Date, Integer, Nested, InnerDoc, Q, Index, Search
-from elasticsearch_dsl.connections import connections
+from opensearchpy import OpenSearch
+from opensearch_dsl import Document, Text, Keyword, Date, Integer, Nested, Q, Index
+from opensearch_dsl.connections import connections
 from flask import current_app
 
 from hepdata.modules.permissions.models import CoordinatorRequest
@@ -39,7 +39,7 @@ logging.basicConfig()
 log = logging.getLogger(__name__)
 
 
-class ESSubmission(Document):
+class OSSubmission(Document):
     recid = Integer()
     inspire_id = Text()
     arxiv_id = Text()
@@ -92,8 +92,8 @@ class AdminIndexer:
     EXCLUDE_BEFORE_DATE = datetime(2017, 1, 1)
 
     def __init__(self, *args, **kwargs):
-        self.client = Elasticsearch(
-            hosts=current_app.config['SEARCH_ELASTIC_HOSTS']) if 'client' not in kwargs else kwargs.get('client')
+        self.client = OpenSearch(
+            hosts=current_app.config['SEARCH_HOSTS']) if 'client' not in kwargs else kwargs.get('client')
 
         self.index = kwargs.get('index', current_app.config['SUBMISSION_INDEX'])
 
@@ -103,7 +103,7 @@ class AdminIndexer:
                                         ['title', 'inspire_id', 'recid', 'collaboration', 'participants.full_name'])
 
     def search(self, term=None, fields=None):
-        search = ESSubmission.search(using=self.client, index=self.index)[0:10000]
+        search = OSSubmission.search(using=self.client, index=self.index)[0:10000]
 
         if term is not None:
             if fields is None:
@@ -115,7 +115,7 @@ class AdminIndexer:
         return result
 
     def get_summary(self, coordinator_id=None, include_imported=False, flatten_participants=True):
-        s = ESSubmission.search(using=self.client, index=self.index)[0:10000]
+        s = OSSubmission.search(using=self.client, index=self.index)[0:10000]
 
         # Exclude items migrated from hepdata.cedar.ac.uk by filtering on coordinator
         # (coordinator 1 is the default user used for imports) and removing items
@@ -151,7 +151,9 @@ class AdminIndexer:
     def index_submission(self, submission):
         participants = []
 
-        for sub_participant in get_submission_participants_for_record(submission.publication_recid, roles=['uploader', 'reviewer']):
+        for sub_participant in get_submission_participants_for_record(submission.publication_recid,
+                                                                      roles=['uploader', 'reviewer'],
+                                                                      status='primary'):
             participants.append({
                 'full_name': sub_participant.full_name,
                 'role': sub_participant.role,
@@ -229,7 +231,7 @@ class AdminIndexer:
         submission = Index(self.index)
         submission.delete(ignore=404)
 
-        ESSubmission.init(self.index)
+        OSSubmission.init(self.index)
 
     def add_to_index(self, *args, **kwargs):
         """
@@ -237,7 +239,7 @@ class AdminIndexer:
         :param kwargs:
         :return:
         """
-        new_sub = ESSubmission(index=self.index, **kwargs)
+        new_sub = OSSubmission(index=self.index, **kwargs)
         return new_sub.save(index=self.index)
 
     def delete_from_index(self, *args, **kwargs):
@@ -251,5 +253,5 @@ class AdminIndexer:
             raise Exception('delete_from_index expects id as a parameter. '
                             'e,g delete_from_index(id=23)')
 
-        obj = ESSubmission.get(**kwargs)
+        obj = OSSubmission.get(**kwargs)
         obj.delete()

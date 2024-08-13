@@ -53,6 +53,9 @@ class LargeBinaryString(TypeDecorator):
     impl = types.LargeBinary
 
     def process_literal_param(self, value, dialect):
+        """
+        Encodes and returns string object.
+        """
         if isinstance(value, str):
             value = value.encode('utf-8', errors='replace')
 
@@ -61,6 +64,9 @@ class LargeBinaryString(TypeDecorator):
     process_bind_param = process_literal_param
 
     def process_result_value(self, value, dialect):
+        """
+        Encodes and returns string object.
+        """
         if isinstance(value, bytes):
             value = value.decode('utf-8', errors='replace')
 
@@ -79,7 +85,7 @@ class HEPSubmission(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
 
     # publication_recid remains the same for each version of a submission
-    # and is used as the document id in elasticsearch and as the record id
+    # and is used as the document id in opensearch and as the record id
     publication_recid = db.Column(db.Integer)
     inspire_id = db.Column(db.String(128))
 
@@ -111,7 +117,11 @@ class HEPSubmission(db.Model):
 
     reviewers_notified = db.Column(db.Boolean, default=False)
 
+    related_recids = db.relationship("RelatedRecid", secondary="relatedrecid_identifier",
+                               cascade="all,delete")
 
+
+# Declarations of the helper tables used to manage many-to-many relationships.
 datafile_identifier = db.Table(
     'datafile_identifier',
     db.Column('submission_id', db.Integer,
@@ -123,8 +133,22 @@ keyword_identifier = db.Table(
     'keyword_submission',
     db.Column('submission_id', db.Integer,
               db.ForeignKey('datasubmission.id')),
+    db.Column('keyword_id', db.Integer, db.ForeignKey('keyword.id', ondelete='CASCADE'))
+)
 
-    db.Column('keyword_id', db.Integer, db.ForeignKey('keyword.id', ondelete='CASCADE')))
+relatedtable_identifier = db.Table(
+    'relatedtable_identifier',
+    db.Column('submission_id', db.Integer,
+              db.ForeignKey('datasubmission.id')),
+    db.Column('relatedtable_id', db.Integer, db.ForeignKey('relatedtable.id', ondelete='CASCADE'))
+)
+
+relatedrecid_identifier = db.Table(
+    'relatedrecid_identifier',
+    db.Column('submission_id', db.Integer,
+              db.ForeignKey('hepsubmission.id')),
+    db.Column('relatedrecid_id', db.Integer, db.ForeignKey('relatedrecid.id', ondelete='CASCADE'))
+)
 
 
 class DataSubmission(db.Model):
@@ -155,6 +179,10 @@ class DataSubmission(db.Model):
 
     doi = db.Column(db.String(128), nullable=True)
 
+    # A list of objects containing DOI values of related tables defined in the submission file.
+    related_tables = db.relationship("RelatedTable", secondary="relatedtable_identifier",
+                               cascade="all,delete")
+
     # the record ID for the resulting record created on finalisation.
     associated_recid = db.Column(db.Integer)
 
@@ -162,6 +190,28 @@ class DataSubmission(db.Model):
     # maintained so people can go back in time
     # through a submissions review stages.
     version = db.Column(db.Integer, default=0)
+
+
+class RelatedTable(db.Model):
+    """
+    The submission object associated with a related table entry.
+    """
+    __tablename__ = "relatedtable"
+    id = db.Column(db.Integer, primary_key=True, nullable=False,
+                autoincrement=True)
+    table_doi = db.Column(db.String(128), nullable=True)
+    related_doi = db.Column(db.String(128), nullable=True)
+
+
+class RelatedRecid(db.Model):
+    """
+    The submission object associated with a related record entry.
+    """
+    __tablename__ = "relatedrecid"
+    id = db.Column(db.Integer, primary_key=True, nullable=False,
+                autoincrement=True)
+    this_recid = db.Column(db.Integer, nullable=True)
+    related_recid = db.Column(db.Integer, nullable=True)
 
 
 @event.listens_for(db.Session, 'before_flush')

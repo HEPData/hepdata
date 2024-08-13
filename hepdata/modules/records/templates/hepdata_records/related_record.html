@@ -19,19 +19,30 @@
 
 {% extends "hepdata_theme/page.html" %}
 
-{#
-{% set title = title %}
-#}
-{% block title %}
-    HEPData | {{ ctx.record.title }}
-{% endblock %}
+{% set title = _(config.THEME_SITENAME) %}
+{% if ctx.record.collaborations %}
+  {% set title = title + ' | ' + ctx.record.collaborations|join(' & ') %}
+{% endif %}
+{% if ctx.record.year %}
+  {% set title = title + ' | ' + ctx.record.year|string %}
+{% endif %}
+{% if ctx.record.title %}
+  {% set title = title + ' | ' + ctx.record.title %}
+{% else %}
+  {% set title = title + ' Sandbox | ' + ctx.recid|string %}
+{% endif %}
+{% if ctx.record_type == 'resource' %}
+  {% set title = title + ' | ' + ctx.resource_filename %}
+{% else %}
+  {% set title = title + ' | ' + ctx.table_name %}
+{% endif %}
 
 {%- block json_ld %}
-   {% if ctx.json_ld  and 'error' not in ctx.json_ld %}
-       <script type="application/ld+json">
-         {{ ctx.json_ld|tojson }}
-       </script>
-   {% endif %}
+  {% if ctx.json_ld  and 'error' not in ctx.json_ld %}
+    <script type="application/ld+json">
+      {{ ctx.json_ld|tojson }}
+    </script>
+  {% endif %}
 {%- endblock json_ld %}
 
 {%- block additional_assets %}
@@ -99,7 +110,11 @@
                         {% include "hepdata_records/components/journal_info.html" %}
                     </div>
 
-                    <br/>
+                    {% if not (ctx.related_recids or ctx.related_to_this_recids) %}
+                        <br/>
+                    {% else %}
+                        {% include 'hepdata_records/components/related_recids.html' %}
+                    {% endif %}
 
                     <div class="record-links">
                         <ul>
@@ -131,7 +146,7 @@
                         <ul>
                           {% for analysis in ctx.record.analyses %}
                             <li><div class="analysis"><a href="{{ analysis.analysis }}" target="_blank"><span
-                              class="fa fa-line-chart"></span> {{ analysis.type }}{% if analysis.type != config.HISTFACTORY_FILE_TYPE %} Analysis{% endif %}</a></div></li>
+                              class="fa fa-line-chart"></span> {{ analysis.type }}{% if analysis.type == 'rivet' %} Analysis{% endif %}</a></div></li>
                           {% endfor %}
                         </ul>
                     </div>

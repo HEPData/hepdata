@@ -1,8 +1,8 @@
 Contributing
 ============
 
-Contributions are welcome, and they are greatly appreciated! Every
-little bit helps, and credit will always be given.
+Contributions are welcome, and they are greatly appreciated!
+Every little bit helps, and credit will always be given.
 
 Types of Contributions
 ----------------------
@@ -10,18 +10,18 @@ Types of Contributions
 Report Bugs
 ~~~~~~~~~~~
 
-Report bugs by sending an email to ``info@hepdata.net``.
+Report bugs by opening a GitHub issue or by sending an email to ``info@hepdata.net``.
 
 Fix Bugs
 ~~~~~~~~
 
-Look through the GitHub issues for bugs. Anything tagged with "bug"
+Look through the GitHub issues for bugs. Anything tagged with "type: bug"
 is open to whoever wants to implement it.
 
 Implement Features
 ~~~~~~~~~~~~~~~~~~
 
-Look through the GitHub issues for features. Anything tagged with "feature"
+Look through the GitHub issues for features. Anything tagged with "type: enhancement"
 is open to whoever wants to implement it.
 
 Write Documentation
@@ -35,7 +35,8 @@ Submit Feedback
 ~~~~~~~~~~~~~~~
 
 The best way to send feedback is to send an email to ``info@hepdata.net``.
-Alternatively, open an issue at https://github.com/HEPData/hepdata/issues.
+Alternatively, open an issue at https://github.com/HEPData/hepdata/issues
+or post in the `HEPData Forum <https://hepdata-forum.cern.ch>`_.
 
 If you are proposing a feature:
 
@@ -53,7 +54,7 @@ Ready to contribute? Here's how to set up ``hepdata`` for local development.
 
    .. code-block:: console
 
-      $ git clone git@github.com:your_name_here/hepdata.git
+      $ git clone https://github.com/your_name_here/hepdata.git
 
 3. Install your local copy into a virtualenv as described in :ref:`installation`.
 
@@ -65,7 +66,7 @@ Ready to contribute? Here's how to set up ``hepdata`` for local development.
 
    Now you can make your changes locally.
 
-5. When you're done making changes, check that your changes pass tests:
+5. When you're done making changes, check that your changes pass tests as described in :ref:`running-the-tests`:
 
    .. code-block:: console
 
@@ -79,7 +80,9 @@ Ready to contribute? Here's how to set up ``hepdata`` for local development.
       $ git commit -s -m "Your detailed description of your changes."
       $ git push origin name-of-your-bugfix-or-feature
 
-7. Submit a pull request through the GitHub website.
+7. Submit a pull request through the GitHub website, perhaps initially as a
+`draft pull request <https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-pull-requests#draft-pull-requests>`_
+until you make sure that all checks have passed.
 
 Pull Request Guidelines
 -----------------------
@@ -89,6 +92,9 @@ Before you submit a pull request, check that it meets these guidelines:
 1. The pull request should include tests and must not decrease test coverage.
 2. If the pull request adds functionality, the docs should be updated. Put
    your new functionality into a function with a docstring.
-3. The pull request should work for Python 3.6. Check
+3. The pull request should work for Python 3.8 and 3.9. Check
    https://github.com/HEPData/hepdata/actions?query=event%3Apull_request
-   and make sure that the tests pass.
+   and make sure that the tests pass.  Sometimes there are temporary failures,
+   for example, due to unavailability of an external service or the test infrastructure.
+   If you have sufficient permissions for the repository, you can restart failed jobs by
+   clicking on "Re-run jobs" then "Re-run failed jobs".

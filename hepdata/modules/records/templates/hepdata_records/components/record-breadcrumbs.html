@@ -29,11 +29,13 @@
 
                 <div class="cite">
 
-                    <button id="citeLabel" type="button" data-toggle="modal" data-target="#citeModal"
-                            class="btn btn-sm btn-primary"
-                            aria-haspopup="true" aria-expanded="false">
-                        <i class="fa fa-quote-right"></i> Cite
-                    </button>
+                    {% if ctx.record.title %}
+                        <button id="citeLabel" type="button" data-toggle="modal" data-target="#citeModal"
+                                class="btn btn-sm btn-primary"
+                                aria-haspopup="true" aria-expanded="false">
+                            <i class="fa fa-quote-right"></i> Cite
+                        </button>
+                    {% endif %}
 
                     {% if current_user.is_authenticated and ctx.status == 'finished' %}
                         <button id="watch_btn" type="button" data-toggle="modal"

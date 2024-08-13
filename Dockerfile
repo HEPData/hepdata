@@ -1,4 +1,4 @@
-FROM python:3.9
+FROM python:3.9 as build
 
 WORKDIR /usr/src/app
 
@@ -16,10 +16,14 @@ ENTRYPOINT [ "python3" ]
 CMD [ "--version" ]
 
 ARG APP_ENVIRONMENT
+ARG SAUCE_OS
 
-RUN curl -sL https://deb.nodesource.com/setup_14.x | bash -
-RUN apt-get update
-RUN apt-get install -y nodejs
+# https://github.com/nodesource/distributions#deb
+ENV NODE_MAJOR=18
+RUN curl -SLO https://deb.nodesource.com/nsolid_setup_deb.sh
+RUN chmod 500 nsolid_setup_deb.sh
+RUN ./nsolid_setup_deb.sh ${NODE_MAJOR}
+RUN apt-get install nodejs -y
 
 WORKDIR /code
 
@@ -42,9 +46,17 @@ RUN hepdata collect -v  && \
 
 RUN bash -c "echo $APP_ENVIRONMENT"
 
-RUN bash -c "set -x; [[ ${APP_ENVIRONMENT:-prod} = local-web ]] && (cd /usr/local/var && wget https://saucelabs.com/downloads/sc-4.7.1-linux.tar.gz && \
-  tar -xvf sc-4.7.1-linux.tar.gz) || echo 'Not installing SC on prod or worker build'"
+RUN bash -c "set -x; [[ ${APP_ENVIRONMENT:-prod} = local-web ]] && (cd /usr/local/var && wget https://saucelabs.com/downloads/sc-4.9.1-${SAUCE_OS:-linux}.tar.gz && \
+  tar -xvf sc-4.9.1-${SAUCE_OS:-linux}.tar.gz) || echo 'Not installing SC on prod or worker build'"
 
 WORKDIR /code
 
 ENTRYPOINT []
+
+# Copy "static" directory from "build" image to "statics" image, using "tar -h" to dereference symlinks.
+RUN bash -c "cd /usr/local/var/hepdata-instance; tar -czhf /tmp/static.tar.gz static"
+
+FROM nginx as statics
+COPY --from=build /tmp/static.tar.gz /tmp/static.tar.gz
+RUN bash -c "tar -xzf /tmp/static.tar.gz -C /usr/share/nginx/html"
+COPY robots.txt /usr/share/nginx/html/robots.txt

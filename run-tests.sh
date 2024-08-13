@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# This file is part of Zenodo.
+# This file is part of HEPData.
 # Copyright (C) 2015 CERN.
 #
 # HEPData is free software; you can redistribute it

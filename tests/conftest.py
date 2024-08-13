@@ -25,16 +25,23 @@
 """HEPData Test Fixtures"""
 
 import os
+import shutil
+import time
 from unittest import mock
 
 from invenio_accounts.models import Role, User
 from invenio_db import db
 import pytest
 
-from hepdata.ext.elasticsearch.admin_view.api import AdminIndexer
-from hepdata.ext.elasticsearch.api import reindex_all
+from hepdata.ext.opensearch.admin_view.api import AdminIndexer
+from hepdata.ext.opensearch.api import reindex_all
 from hepdata.factory import create_app
+from hepdata.modules.dashboard.api import create_record_for_dashboard
 from hepdata.modules.records.importer.api import import_records, _download_file
+from hepdata.modules.records.utils.data_files import get_data_path_for_record
+from hepdata.modules.records.utils.submission import get_or_create_hepsubmission, process_submission_directory
+from hepdata.modules.records.utils.workflow import create_record
+from hepdata.modules.submission.views import process_submission_payload
 
 TEST_EMAIL = 'test@hepdata.net'
 TEST_PWD = 'hello1'
@@ -51,7 +58,7 @@ def create_basic_app():
         CELERY_CACHE_BACKEND="memory",
         MAIL_SUPPRESS_SEND=True,
         CELERY_TASK_EAGER_PROPAGATES=True,
-        ELASTICSEARCH_INDEX="hepdata-main-test",
+        OPENSEARCH_INDEX="hepdata-main-test",
         SUBMISSION_INDEX='hepdata-submission-test',
         AUTHOR_INDEX='hepdata-authors-test',
         SQLALCHEMY_DATABASE_URI=os.environ.get(
@@ -142,16 +149,62 @@ def get_identifiers():
     return [{"hepdata_id": "ins1283842", "inspire_id": '1283842',
              "title": "Measurement of the forward-backward asymmetry "
                       "in the distribution of leptons in $t\\bar{t}$ "
-                      "events in the lepton$+$jets channel",
+                      "events in the lepton+jets channel",
              "data_tables": 14,
              "arxiv": "arXiv:1403.1294"},
 
             {"hepdata_id": "ins1245023", "inspire_id": '1245023',
              "title": "High-statistics study of $K^0_S$ pair production in two-photon collisions",
              "data_tables": 40,
-             "arxiv": "arXiv:1307.7457"}
+             "arxiv": "arXiv:1307.7457"},
+            {"hepdata_id": "ins2751932", "inspire_id": '2751932',
+             "title": "Search for pair production of higgsinos in events with two Higgs bosons and missing "
+                      "transverse momentum in $\\sqrt{s}=13$ TeV $pp$ collisions at the ATLAS experiment",
+             "data_tables": 66,
+             "arxiv": "arXiv:2401.14922"}
             ]
 
 @pytest.fixture()
 def load_submission(app, load_default_data):
     import_records(['ins1487726'], synchronous=True)
+
+
+def create_blank_test_record():
+    """
+    Helper function to create a single, blank, finished submission
+    :returns submission: The newly created submission object
+    """
+    record_information = create_record(
+        {'journal_info': 'Journal', 'title': 'Test Paper'})
+    recid = record_information['recid']
+    submission = get_or_create_hepsubmission(recid)
+    # Set overall status to finished so related data appears on dashboard
+    submission.overall_status = 'finished'
+    user = User(email=f'test@test.com', password='hello1', active=True,
+                id=1)
+    test_submissions = {}
+    create_record_for_dashboard(recid, test_submissions, user)
+    return submission
+
+
+def create_test_record(file_location, overall_status='finished'):
+    """
+    Helper function to create a dummy record with data.
+    :param file_location: Path to the data directory.
+    :param overall_status: Allows setting of custom overall status. Defaults to 'finished'.
+    :returns test_submission: The newly created submission object
+    """
+    record = {'title': 'HEPData Testing',
+                  'reviewer': {'name': 'Testy McTester', 'email': 'test@test.com'},
+                  'uploader': {'name': 'Testy McTester', 'email': 'test@test.com'},
+                  'message': 'This is ready',
+                  'user_id': 1}
+    # Set up a new test submission
+    test_submission = process_submission_payload(**record)
+    # Ensure the status is set to `finished` so the related data can be accessed.
+    test_submission.overall_status = overall_status
+    record_dir = get_data_path_for_record(test_submission.publication_recid, str(int(round(time.time()))))
+    shutil.copytree(file_location, record_dir)
+    process_submission_directory(record_dir, os.path.join(record_dir, 'submission.yaml'),
+                                 test_submission.publication_recid)
+    return test_submission

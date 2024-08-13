@@ -17,7 +17,7 @@ set -e
 # You should have received a copy of the GNU General Public License
 # along with HEPData. If not, see <http://www.gnu.org/licenses/>.
 #
-# In applying this licence, CERN does not waive the privileges and immunities
+# In applying this license, CERN does not waive the privileges and immunities
 # granted to it by virtue of its status as an Intergovernmental Organization
 # or submit itself to any jurisdiction.
 
@@ -33,9 +33,4 @@ fi
 
 hepdata webpack clean
 hepdata collect -v
-# Use separate webpack commands rather than buildall so we can pass
-# --legacy-peer-deps to npm install. Once invenio-assets is upgraded
-# to work with npm 7 this should no longer be necessary.
-hepdata webpack create
-hepdata webpack install --legacy-peer-deps
-hepdata webpack build
+hepdata webpack buildall

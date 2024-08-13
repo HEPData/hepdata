@@ -1,11 +1,11 @@
 [run]
 source = hepdata
-omit = *hepdata/wsgi.py
-       *hepdata/cli.py
-       *hepdata/celery.py
-       *hepdata/utils/url.py
-       *hepdata/utils/twitter.py
-       *hepdata/config*
-       *hepdata/modules/email/*
-       *hepdata/modules/*/webpack.py
-       *hepdata/utils/celery.py
+omit = */hepdata/wsgi.py
+       */hepdata/cli.py
+       */hepdata/celery.py
+       */hepdata/utils/url.py
+       */hepdata/utils/twitter.py
+       */hepdata/config*
+       */hepdata/modules/email/*
+       */hepdata/modules/*/webpack.py
+       */hepdata/utils/celery.py

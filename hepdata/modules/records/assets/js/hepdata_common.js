@@ -18,7 +18,7 @@ HEPDATA.current_table_id = undefined;
 HEPDATA.current_table_name = undefined;
 HEPDATA.current_table_version = undefined;
 HEPDATA.clipboard = undefined;
-HEPDATA.selected = undefined;
+HEPDATA.selected = {};
 HEPDATA.site_url = "https://www.hepdata.net";
 
 HEPDATA.current_filters = {
@@ -44,13 +44,14 @@ HEPDATA.file_type_to_details = {
   "bitbucket": {"icon": "bitbucket", "description": "Bitbucket Repository"},
   "fastnlo": {"icon": "area-chart", "description": "fastNLO Analysis"},
   "rivet": {"icon": "area-chart", "description": "Rivet Analysis"},
-  "madanalysis": {"icon": "area-chart", "description": "MadAnalysis5 Analysis"},
+  "madanalysis": {"icon": "area-chart", "description": "MadAnalysis 5 Analysis"},
   "xfitter": {"icon": "area-chart", "description": "xFitter Analysis"},
   "applgrid": {"icon": "area-chart", "description": "APPLgrid Analysis"},
   "ufo": {"icon": "rocket", "description": "Universal Feynrules Output (UFO)"},
   "html": {"icon": "code", "description": "External Link"},
   "oldhepdata": {"icon": "file-text-o", "description": "Legacy HEPData Format"},
-  "root": {"icon": "line-chart", "description": "ROOT File"}
+  "root": {"icon": "line-chart", "description": "ROOT File"},
+  "zenodo": {"icon": "code", "description": "Zenodo Record"}
 };
 
 HEPDATA.stats = {
@@ -76,15 +77,18 @@ HEPDATA.delete_submission = function (record_id, redirect_url) {
     dataType: "json",
     url: '/dashboard/delete/' + window.recid,
     success: function (data) {
-      if (data.success) {
-        $("#deleteDialogLabel").text("Submission Deleted");
         $("#progress").addClass("hidden");
-        $("#delete-success").removeClass("hidden");
+        if (data.success) {
+          $("#delete-success").removeClass("hidden");
+        } else {
+          $("#delete-failure").removeClass("hidden");
+          $("#deleteDialogMessage").text(data.message);
+        }
 
         var count = 5;
         setInterval(function () {
           count -= 1;
-          $("#timer").text(count);
+          $(".timer").text(count);
           if (count == 0) {
             $("#deleteWidget").modal('hide');
           }
@@ -94,10 +98,6 @@ HEPDATA.delete_submission = function (record_id, redirect_url) {
           window.location = redirect_url;
         }, 5500);
 
-
-      } else {
-        alert("Error! " + data.message)
-      }
     }
   })
 };

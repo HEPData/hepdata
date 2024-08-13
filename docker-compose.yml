@@ -5,6 +5,7 @@ services:
       context: .
       args:
         - "APP_ENVIRONMENT=local-web"
+        - "SAUCE_OS=${SAUCE_OS:-linux}"
     command: hepdata run -h 0.0.0.0 -p 5000 --debugger --reload
     ports:
     - "5000:5000"
@@ -15,7 +16,7 @@ services:
     - "APP_CACHE_REDIS_URL=redis://cache:6379/0"
     - "APP_CACHE_TYPE=redis"
     - "APP_CELERY_RESULT_BACKEND=redis://cache:6379/2"
-    - "APP_ELASTICSEARCH_HOST=es:9200"
+    - "APP_OPENSEARCH_HOST=os:9200"
     - "APP_SECRET_KEY=CHANGE_ME"
     - "APP_SESSION_TYPE=redis"
     - "APP_SESSION_REDIS_URL=redis://cache:6379/1"
@@ -23,6 +24,7 @@ services:
     - "SAUCE_USERNAME=${SAUCE_USERNAME}"
     - "SAUCE_ACCESS_KEY=${SAUCE_ACCESS_KEY}"
     - "FLASK_ENV=development"
+    - "FLASK_DEBUG=1"
     read_only: false
     volumes:
     - ".:/code"
@@ -30,11 +32,11 @@ services:
     build: .
     command: "celery -A hepdata.celery worker -l info -E -B -Q celery,priority,datacite"
     environment:
-    - "APP_CELERY_BROKER_URL=redis://cache:6379/0"
+    - "APP_BROKER_URL=redis://cache:6379/0"
     - "APP_CACHE_REDIS_URL=redis://cache:6379/0"
     - "APP_CACHE_TYPE=redis"
     - "APP_CELERY_RESULT_BACKEND=redis://cache:6379/2"
-    - "APP_ELASTICSEARCH_HOST=es:9200"
+    - "APP_OPENSEARCH_HOST=os:9200"
     - "APP_SECRET_KEY=CHANGE_ME"
     - "APP_SESSION_TYPE=redis"
     - "APP_SESSION_REDIS_URL=redis://cache:6379/1"
@@ -58,17 +60,18 @@ services:
     ports:
     - "5432:5432"
     read_only: false
-  es:
-    image: amazon/opendistro-for-elasticsearch:1.13.2
+  os:
+    image: opensearchproject/opensearch:2.11.0
     read_only: false
     environment:
-      - node.name=es01
+      - node.name=os01
       - cluster.name=hepdata
-      - cluster.initial_master_nodes=es01
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-      - opendistro_security.disabled=true
+      - cluster.initial_master_nodes=os01
+      - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m"
+      - plugins.security.disabled=true
     ports:
     - "9200:9200"
+    - "9600:9600"
   converter:
     image: hepdata/hepdata-converter-ws
     ports:

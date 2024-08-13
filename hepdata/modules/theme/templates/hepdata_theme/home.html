@@ -1,5 +1,7 @@
 {% extends "hepdata_theme/page.html" %}
 
+{% set title = _(config.THEME_SITENAME) + ' Homepage' %}
+
 {%- set html_css_classes=['home-page'] %}
 {%- set body_css_classes=['home-page'] %}
 {%- set messages = get_flashed_messages(with_categories=true) -%}
@@ -25,7 +27,7 @@
           "@type": "SearchAction",
           "target": {
             "@type": "EntryPoint",
-            "urlTemplate": "{{ url_for('es_search.search', _external=True) }}?q={query}"
+            "urlTemplate": "{{ url_for('os_search.search', _external=True) }}?q={query}"
           },
           "query-input": "required name=query"
         }
@@ -154,13 +156,21 @@
 
             </div>
 
-            <div class="twitter-area">
-                <a class="twitter-timeline" data-width="800" data-height="200" data-dnt="true"
-                   href="https://twitter.com/HEPData?ref_src=twsrc%5Etfw">
-                    Tweets by HEPData
-                </a>
-                <script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
-            </div>
+            {% if not config['TESTING'] %}
+              <div class="twitter-area">
+                <p>
+                  <a class="twitter-timeline" data-width="800" data-height="200" data-dnt="true"
+                     href="https://twitter.com/HEPData?ref_src=twsrc%5Etfw">Tweets by HEPData</a>
+                </p>
+                <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+              </div>
+              <div class="twitter-area">
+                <p>
+                  Tweets are not displayed unless you are logged into <a href="https://X.com" target="_blank">X (Twitter)</a>
+                  and your browser settings allow cross-site tracking.
+                </p>
+              </div>
+            {% endif %}
 
             {% include "hepdata_search/modals/search_help.html" %}
 

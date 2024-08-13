@@ -22,7 +22,6 @@
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
 """HEPData end to end testing of record submission."""
-import flask
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
@@ -43,21 +42,21 @@ def test_create_submission(live_server, logged_in_browser):
     assert len(submissions) == 0
 
     # Click "submit"
-    submit_link = browser.find_element_by_link_text('Submit')
+    submit_link = browser.find_element(By.LINK_TEXT, 'Submit')
     submit_link.click()
 
     # Check we're at the submission page
     e2e_assert_url(browser, 'submission.submit_ui')
-    inspire_details_div = browser.find_element_by_id('inspire_details')
+    inspire_details_div = browser.find_element(By.ID, 'inspire_details')
     assert "Do you have an Inspire record associated with your submission?" \
         in inspire_details_div.text
     # Click "Yes" and check continue button appears
-    browser.find_element_by_id('has_inspire').click()
-    continue_button = browser.find_element_by_id('continue_btn')
+    browser.find_element(By.ID, 'has_inspire').click()
+    continue_button = browser.find_element(By.ID, 'continue_btn')
     e2e_assert(browser, not continue_button.is_enabled())
 
     # Fill in inspire id and check continue button is now enabled
-    browser.find_element_by_id('inspire_id').send_keys(inspire_id)
+    browser.find_element(By.ID, 'inspire_id').send_keys(inspire_id)
     e2e_assert(browser, continue_button.is_enabled())
 
     # Click 'continue'
@@ -69,42 +68,39 @@ def test_create_submission(live_server, logged_in_browser):
     )
 
     # Click continue and wait for animation to finish
-    browser.find_element_by_id('preview_continue_btn').click()
+    browser.find_element(By.ID, 'preview_continue_btn').click()
     WebDriverWait(browser, 10).until(
         EC.visibility_of_element_located((By.CSS_SELECTOR, "#reviewers_uploaders h4"))
     )
 
     # Check for reviewer/uploader form
-    reviewers_uploaders_title = browser.find_element_by_css_selector('#reviewers_uploaders h4')
+    reviewers_uploaders_title = browser.find_element(By.CSS_SELECTOR, '#reviewers_uploaders h4')
     assert "Please specify the Uploader and Reviewer for this submission" \
         in reviewers_uploaders_title.text
 
     # Fill in uploader/reviewer and submit
-    browser.find_element_by_id('uploader_name').send_keys('Ursula Uploader')
-    browser.find_element_by_id('uploader_email').send_keys('uu@hepdata.net')
-    browser.find_element_by_id('reviewer_name').send_keys('Rachel Reviewer')
-    browser.find_element_by_id('reviewer_email').send_keys('rr@hepdata.net')
+    browser.find_element(By.ID, 'uploader_name').send_keys('Ursula Uploader')
+    browser.find_element(By.ID, 'uploader_email').send_keys('uu@hepdata.net')
+    browser.find_element(By.ID, 'reviewer_name').send_keys('Rachel Reviewer')
+    browser.find_element(By.ID, 'reviewer_email').send_keys('rr@hepdata.net')
 
     # Click continue and wait for animation to finish
-    browser.find_element_by_id('people_continue_btn').click()
-    WebDriverWait(browser, 10).until(
-        EC.visibility_of_element_located((By.CSS_SELECTOR, "#uploader_message h4"))
-    )
+    browser.find_element(By.ID, 'people_continue_btn').click()
 
     # Add message for uploader
-    browser.find_element_by_id('uploader-message-input').send_keys('Please could you upload something?')
+    browser.find_element(By.ID, 'uploader-message-input').send_keys('Please could you upload something?')
 
     # Click continue and wait for animation to finish
-    browser.find_element_by_id('message_continue_btn').click()
-    submission_state_p = WebDriverWait(browser, 10).until(
+    browser.find_element(By.ID, 'message_continue_btn').click()
+    WebDriverWait(browser, 10).until(
         EC.text_to_be_present_in_element(
             (By.CSS_SELECTOR, "#submission_state p"),
             "You are about to create a submission for")
     )
 
     # Click continue and wait for animation to finish
-    browser.find_element_by_id('submit_btn').click()
-    submission_state_p = WebDriverWait(browser, 10).until(
+    browser.find_element(By.ID, 'submit_btn').click()
+    WebDriverWait(browser, 10).until(
         EC.text_to_be_present_in_element(
             (By.CSS_SELECTOR, "#submission_state p"),
             "Submission Complete!"
@@ -129,17 +125,14 @@ def test_create_submission(live_server, logged_in_browser):
     assert participants[1].status == "primary"
 
     # Try to create another submission with the same inspire id
-    browser.find_element_by_id('another_submission').click()
+    browser.find_element(By.ID, 'another_submission').click()
     e2e_assert_url(browser, 'submission.submit_ui')
-    browser.find_element_by_id('has_inspire').click()
-    browser.find_element_by_id('inspire_id').send_keys(inspire_id)
-    continue_button = browser.find_element_by_id('continue_btn')
+    browser.find_element(By.ID, 'has_inspire').click()
+    browser.find_element(By.ID, 'inspire_id').send_keys(inspire_id)
+    continue_button = browser.find_element(By.ID, 'continue_btn')
     continue_button.click()
     # Wait for alert to appear
-    WebDriverWait(browser, 10).until(
-        EC.presence_of_element_located((By.CSS_SELECTOR, "#inspire-result .alert-danger"))
-    )
-    alert = browser.find_element_by_css_selector("#inspire-result .alert-danger")
+    alert = browser.find_element(By.CSS_SELECTOR, "#inspire-result .alert-danger")
     assert alert.text == 'A record with this Inspire ID already exists in HEPData.'
-    record_link = alert.find_element_by_tag_name('a')
+    record_link = alert.find_element(By.TAG_NAME, 'a')
     assert record_link.get_attribute('href').endswith(f'/record/{submissions[0].publication_recid}')

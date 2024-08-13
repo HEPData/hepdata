@@ -27,7 +27,6 @@ import os
 from collections import OrderedDict
 from functools import wraps
 import mimetypes
-import requests
 import time
 
 from celery import shared_task
@@ -35,7 +34,7 @@ from flask import redirect, request, render_template, jsonify, current_app, Resp
 from flask_login import current_user
 from invenio_accounts.models import User
 from invenio_db import db
-from sqlalchemy import and_
+from sqlalchemy import and_, func
 from sqlalchemy.orm.exc import NoResultFound
 from werkzeug.utils import secure_filename
 
@@ -57,9 +56,16 @@ from hepdata.modules.records.utils.users import get_coordinators_in_system, has_
 from hepdata.modules.records.utils.workflow import update_action_for_submission_participant
 from hepdata.modules.records.utils.yaml_utils import split_files
 from hepdata.modules.stats.views import increment, get_count
-from hepdata.modules.submission.models import RecordVersionCommitMessage, DataSubmission, HEPSubmission, DataReview
+from hepdata.modules.submission.models import (
+    DataReview,
+    DataSubmission,
+    HEPSubmission,
+    RecordVersionCommitMessage,
+    RelatedRecid,
+    RelatedTable
+)
 from hepdata.utils.file_extractor import extract
-from hepdata.utils.miscellaneous import sanitize_html
+from hepdata.utils.miscellaneous import sanitize_html, get_resource_data
 from hepdata.utils.users import get_user_from_id
 from bs4 import BeautifulSoup
 from hepdata_converter_ws_client import Error
@@ -262,6 +268,8 @@ def format_resource(resource, contents, content_url):
     ctx['file_mimetype'] = get_resource_mimetype(resource, contents)
     ctx['resource_filename'] = os.path.basename(resource.file_location)
     ctx['resource_filetype'] = f'{resource.file_type} File'
+    ctx['related_recids'] = get_record_data_list(hepsubmission, "related")
+    ctx['related_to_this_recids'] = get_record_data_list(hepsubmission, "related_to_this")
 
     if resource.file_type in IMAGE_TYPES:
         ctx['display_type'] = 'image'
@@ -293,30 +301,33 @@ def get_resource_mimetype(resource, contents):
 
 
 def should_send_json_ld(request):
-    """Determine whether to send json-ld instead of HTML for this request
+    """Determine whether to send JSON-LD instead of HTML for this request
 
     :param type request: flask.Request object
     :return: True if request accepts JSON-LD; False otherwise
     :rtype: bool
 
     """
-    # Determine whether to send json-ld
+    # Determine whether to send JSON-LD
     return any([request.accept_mimetypes.quality(m) >= 1 for m in JSON_LD_MIMETYPES])
 
 
 def get_commit_message(ctx, recid):
     """
     Returns a commit message for the current version if present.
+    Will return the highest ID of a version-recid pairing.
 
     :param ctx:
     :param recid:
     """
     try:
+        # Select the most recent commit (greatest ID)
         commit_message_query = RecordVersionCommitMessage.query \
-            .filter_by(version=ctx["version"], recid=recid)
+            .filter_by(version=ctx["version"], recid=recid) \
+            .order_by(RecordVersionCommitMessage.id.desc())
 
         if commit_message_query.count() > 0:
-            commit_message = commit_message_query.one()
+            commit_message = commit_message_query.first()
             ctx["revision_message"] = {
                 'version': commit_message.version,
                 'message': commit_message.message}
@@ -382,7 +393,7 @@ def render_record(recid, record, version, output_format, light_mode=False):
             redirect_url_after_login = '%2Frecord%2F{0}%3Fversion%3D{1}%26format%3D{2}'.format(recid, version, output_format)
             if 'table' in request.args:
                 redirect_url_after_login += '%26table%3D{0}'.format(request.args['table'])
-            if output_format == 'yoda' and 'rivet' in request.args:
+            if output_format.startswith('yoda') and 'rivet' in request.args:
                 redirect_url_after_login += '%26rivet%3D{0}'.format(request.args['rivet'])
             return redirect('/login/?next={0}'.format(redirect_url_after_login))
         else:
@@ -399,6 +410,9 @@ def render_record(recid, record, version, output_format, light_mode=False):
         elif not hepdata_submission.overall_status.startswith('sandbox'):
             ctx = format_submission(recid, record, version, version_count, hepdata_submission)
             ctx['record_type'] = 'publication'
+            ctx['related_recids'] = get_record_data_list(hepdata_submission, "related")
+            ctx['related_to_this_recids'] = get_record_data_list(hepdata_submission, "related_to_this")
+
             increment(recid)
 
             if output_format == 'html' or output_format == 'json_ld':
@@ -418,14 +432,14 @@ def render_record(recid, record, version, output_format, light_mode=False):
                 if output_format == 'json':
                     ctx = process_ctx(ctx, light_mode)
                     return jsonify(ctx)
-                elif output_format == 'yoda' and 'rivet' in request.args:
+                elif output_format.startswith('yoda') and 'rivet' in request.args:
                     return redirect('/download/submission/{0}/{1}/{2}/{3}'.format(recid, version, output_format,
                                                                               request.args['rivet']))
                 else:
                     return redirect('/download/submission/{0}/{1}/{2}'.format(recid, version, output_format))
             else:
                 file_identifier = 'ins{}'.format(hepdata_submission.inspire_id) if hepdata_submission.inspire_id else recid
-                if output_format == 'yoda' and 'rivet' in request.args:
+                if output_format.startswith('yoda') and 'rivet' in request.args:
                     return redirect('/download/table/{0}/{1}/{2}/{3}/{4}'.format(
                         file_identifier, request.args['table'].replace('%', '%25').replace('\\', '%5C'), version, output_format,
                         request.args['rivet']))
@@ -443,7 +457,8 @@ def render_record(recid, record, version, output_format, light_mode=False):
             publication_record = get_record_contents(publication_recid)
 
             datasubmission = DataSubmission.query.filter_by(associated_recid=recid).one()
-            hepdata_submission = get_latest_hepsubmission(publication_recid=publication_recid, version=datasubmission.version)
+            hepdata_submission = get_latest_hepsubmission(publication_recid=publication_recid,
+                                                          version=datasubmission.version)
 
             ctx = format_submission(publication_recid, publication_record,
                                     datasubmission.version, 1, hepdata_submission,
@@ -451,6 +466,8 @@ def render_record(recid, record, version, output_format, light_mode=False):
             ctx['record_type'] = 'table'
             ctx['related_publication_id'] = publication_recid
             ctx['table_name'] = record['title']
+            ctx['related_recids'] = get_record_data_list(hepdata_submission, "related")
+            ctx['related_to_this_recids'] = get_record_data_list(hepdata_submission, "related_to_this")
 
             if output_format == 'html' or output_format == 'json_ld':
                 ctx['json_ld'] = get_json_ld(
@@ -465,7 +482,7 @@ def render_record(recid, record, version, output_format, light_mode=False):
 
                 return render_template('hepdata_records/related_record.html', ctx=ctx)
 
-            elif output_format == 'yoda' and 'rivet' in request.args:
+            elif output_format.startswith('yoda') and 'rivet' in request.args:
                 return redirect('/download/table/{0}/{1}/{2}/{3}/{4}'.format(
                     publication_recid, ctx['table_name'].replace('%', '%25').replace('\\', '%5C'), datasubmission.version, output_format,
                     request.args['rivet']))
@@ -625,7 +642,8 @@ def process_saved_file(file_path, recid, userid, redirect_url, previous_status):
                                            name=full_name,
                                            article=recid,
                                            link=redirect_url.format(recid),
-                                           site_url=site_url)
+                                           site_url=site_url,
+                                           overall_status=hepsubmission.overall_status)
 
             create_send_email_task(uploader.email,
                                    '[HEPData] Submission {0} upload succeeded'.format(recid),
@@ -978,10 +996,12 @@ def process_data_tables(ctx, data_record_query, first_data_id,
                 "id": submission_record.id, "processed_name": processed_name,
                 "name": submission_record.name,
                 "location": submission_record.location_in_publication,
+                # Generate resource metadata
+                "resources": get_resource_data(submission_record),
                 "doi": submission_record.doi,
                 "description": sanitize_html(
                     truncate_string(submission_record.description, 20),
-                    tags=[],
+                    tags={},
                     strip=True
                 )
             }
@@ -1033,3 +1053,160 @@ def get_all_ids(index=None, id_field='recid', last_updated=None, latest_first=Fa
     else:
         query = query.order_by(HEPSubmission.publication_recid).distinct()
         return [int(x[0]) for x in query.all()]
+
+
+def get_related_hepsubmissions(submission):
+    """
+    Queries the database for all HEPSubmission objects contained in
+    this object's related record ID list.
+    (All submissions this one is relating to)
+
+    :return: [list] A list of HEPSubmission objects
+    """
+    related_submissions = []
+    for related in submission.related_recids:
+        data_submission = get_latest_hepsubmission(
+            publication_recid=related.related_recid
+        )
+        if data_submission:
+            related_submissions.append(data_submission)
+    return related_submissions
+
+
+def get_related_to_this_hepsubmissions(submission):
+    """
+    Queries the database for all records in the RelatedRecId table
+    that have THIS record's id as a related record.
+    Then returns the HEPSubmission object marked in the RelatedRecid table.
+    Returns only submissions marked as 'finished'
+
+    :return: [list] List containing related records.
+    """
+
+    # We use a subquery to get the max version/recid pairing
+    subquery = (
+        HEPSubmission.query
+        .with_entities(
+            HEPSubmission.publication_recid,
+            func.max(HEPSubmission.version).label('max_version')
+        )
+        .group_by(HEPSubmission.publication_recid)
+        .subquery()
+    )
+
+    # Use result of subquery to join and select the max submission where related
+    related_submissions = (
+        HEPSubmission.query
+        .join(subquery, (HEPSubmission.publication_recid == subquery.c.publication_recid) & (
+                HEPSubmission.version == subquery.c.max_version))
+        .join(RelatedRecid, RelatedRecid.this_recid == HEPSubmission.publication_recid)
+        .filter(RelatedRecid.related_recid == submission.publication_recid)
+        .all()
+    )
+
+    # Set comprehension to determine unique IDs where the max version object is 'finished'
+    unique_recids = {sub.publication_recid for sub in related_submissions if sub.overall_status == 'finished'}
+
+    return [get_latest_hepsubmission(publication_recid=recid, overall_status='finished') for recid in unique_recids]
+
+
+def get_related_datasubmissions(data_submission):
+    """
+    Queries the database for all DataSubmission objects contained in
+    this object's related DOI list.
+    (All submissions this one is relating to)
+
+    :param data_submission: The datasubmission object to find related data for.
+    :return: [list] A list of DataSubmission objects
+    """
+    related_submissions = []
+    for related in data_submission.related_tables:
+        submission = (
+            DataSubmission.query
+            .filter(DataSubmission.doi == related.related_doi)
+            .join(HEPSubmission, HEPSubmission.publication_recid == DataSubmission.publication_recid)
+            .first()
+        )
+        if submission:
+            related_submissions.append(submission)
+    return related_submissions
+
+
+def get_related_to_this_datasubmissions(data_submission):
+    """
+        Get the DataSubmission Objects with a RelatedTable entry
+        where this doi is referred to in related_doi.
+        Only returns where associated HEPSubmission object is `finished`,
+        OR where it is within the same HEPSubmission
+
+        :param data_submission: The datasubmission to find the related entries for.
+        :return: [List] List of DataSubmission objects.
+    """
+    related_submissions = (
+        DataSubmission.query
+        .join(RelatedTable, RelatedTable.table_doi == DataSubmission.doi)
+        .join(HEPSubmission, (HEPSubmission.publication_recid == DataSubmission.publication_recid))
+        .group_by(DataSubmission.id)
+        .having(func.max(HEPSubmission.version) == DataSubmission.version)
+        .filter(RelatedTable.related_doi == data_submission.doi)
+        # If finished, OR is part of the same submission
+        .filter(
+            (HEPSubmission.overall_status == 'finished') | (
+                HEPSubmission.publication_recid == data_submission.publication_recid))
+        .all()
+    )
+    return related_submissions
+
+
+def get_record_data_list(record, data_type):
+    """
+    Generates a dictionary (title/recid) from a list of record IDs.
+    This must be done as the record contents are not stored within the hepsubmission object.
+
+    :param record: The record used for the query.
+    :param data_type: Either the related, or related to this data.
+    :return: [list] A list of dictionary objects containing record ID and title pairs
+    """
+    # Selects the related data based on the data_type flag
+    data = []
+    if data_type == "related":
+        data = get_related_hepsubmissions(record)
+    elif data_type == "related_to_this":
+        data = get_related_to_this_hepsubmissions(record)
+
+    record_data = []
+    for datum in data:
+        record_data.append(
+        {
+            "recid": datum.publication_recid,
+            "title": get_record_contents(datum.publication_recid)["title"],
+            "version": datum.version
+        })
+    return record_data
+
+
+def get_table_data_list(table, data_type):
+    """
+    Generates a list of general information (name, doi, desc) dictionaries of related DataSubmission objects.
+    Will either use the related data list (get_related_data_submissions)
+    OR the `related to this` list (generated by get_related_to_this_datasubmissions)
+
+    :param table: The DataSubmission object used for querying.
+    :param data_type: The flag to decide which relation data to use.
+    :return: [list] A list of dictionaries with the name, doi and description of the object.
+    """
+    # Selects the related data based on the data_type flag
+    if data_type == "related":
+        data = get_related_datasubmissions(table)
+    elif data_type == "related_to_this":
+        data = get_related_to_this_datasubmissions(table)
+
+    record_data = []
+    if data:
+        for datum in data:
+            record_data.append({
+                "name": datum.name,
+                "doi": datum.doi,
+                "description": datum.description
+            })
+    return record_data

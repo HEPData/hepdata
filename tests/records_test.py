@@ -22,6 +22,7 @@
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
 """HEPData records test cases."""
+import random
 from io import open, StringIO
 import os
 import re
@@ -35,6 +36,7 @@ import datetime
 from flask_login import login_user
 from invenio_accounts.models import User
 from invenio_db import db
+from sqlalchemy.exc import MultipleResultsFound
 import pytest
 from werkzeug.datastructures import FileStorage
 import requests_mock
@@ -44,19 +46,21 @@ from hepdata.modules.records.api import process_payload, process_zip_archive, \
     move_files, get_all_ids, has_upload_permissions, \
     has_coordinator_permissions, create_new_version, \
     get_resource_mimetype, create_breadcrumb_text, format_submission, \
-    format_resource
+    format_resource, get_commit_message, get_related_to_this_hepsubmissions, \
+    get_related_hepsubmissions, get_related_datasubmissions, get_related_to_this_datasubmissions
 from hepdata.modules.records.importer.api import import_records
 from hepdata.modules.records.utils.analyses import update_analyses
-from hepdata.modules.records.utils.submission import get_or_create_hepsubmission, process_submission_directory, do_finalise, unload_submission
-from hepdata.modules.records.utils.common import get_record_by_id, get_record_contents
-from hepdata.modules.records.utils.data_processing_utils import generate_table_structure
+from hepdata.modules.records.utils.submission import get_or_create_hepsubmission, process_submission_directory, \
+    do_finalise, unload_submission
+from hepdata.modules.records.utils.common import get_record_by_id, get_record_contents, generate_license_data_by_id
+from hepdata.modules.records.utils.data_processing_utils import generate_table_headers, generate_table_data
 from hepdata.modules.records.utils.data_files import get_data_path_for_record
 from hepdata.modules.records.utils.json_ld import get_json_ld
 from hepdata.modules.records.utils.users import get_coordinators_in_system, has_role
 from hepdata.modules.records.utils.workflow import update_record, create_record
 from hepdata.modules.records.views import set_data_review_status
 from hepdata.modules.submission.models import HEPSubmission, DataReview, \
-    DataSubmission, DataResource
+    DataSubmission, DataResource, License, RecordVersionCommitMessage, RelatedRecid, RelatedTable
 from hepdata.modules.submission.views import process_submission_payload
 from hepdata.modules.submission.api import get_latest_hepsubmission
 from tests.conftest import TEST_EMAIL
@@ -97,7 +101,7 @@ def test_get_record(app, client):
 
 
 def test_get_record_contents(app, load_default_data, identifiers):
-    # Status finished - should use ES to get results
+    # Status finished - should use OS to get results
     record1 = get_record_contents(1, status='finished')
     for key in ["inspire_id", "title"]:
         assert (record1[key] == identifiers[0][key])
@@ -105,7 +109,7 @@ def test_get_record_contents(app, load_default_data, identifiers):
     # Status todo - should use DB for result
     record2 = get_record_contents(1, status='todo')
     # DB returns data from an Invenio RecordMetadata obj so has fewer fields
-    # than the ES dict
+    # than the OS dict
     for key in record2.keys():
         if key == 'last_updated':
             # Date format is slightly different for DB vs ES
@@ -151,11 +155,16 @@ def test_data_processing(app):
     data["title"] = 'test'
     data["keywords"] = None
     data["doi"] = 'doi/10.2342'
+    data["related_tables"] = []
+    data["related_to_this"] = []
+    data["table_license"] = []
     data["location"] = 'Data from Figure 2 of preprint'
     data["review"] = []
     data["associated_files"] = []
+    data["size"] = 0
+    data["size_check"] = True
 
-    table_structure = generate_table_structure(data)
+    table_structure = generate_table_data(data)
 
     assert(table_structure["x_count"] == 1)
     assert(len(table_structure["headers"]) == 2)
@@ -381,9 +390,8 @@ def test_upload_max_size(app):
             response, code = process_payload(recid, test_file, '/test_redirect_url', synchronous=True)
 
         assert(code == 413)
-        assert(response.json == {
-            'message': 'TestHEPSubmission.zip too large (1818265 bytes > 1000000 bytes)'
-        })
+        pattern = re.compile(r"TestHEPSubmission\.zip too large \((\d+) bytes > (\d+) bytes\)")
+        assert pattern.match(response.json['message'])
 
 
 def test_has_upload_permissions(app):
@@ -537,12 +545,13 @@ def test_move_files_invalid_path():
 
 
 def test_get_updated_records_since_date(app):
+    ids_since = get_inspire_records_updated_since(3)
     ids_on = get_inspire_records_updated_on(0)
     ids_on += get_inspire_records_updated_on(1)
     ids_on += get_inspire_records_updated_on(2)
     ids_on += get_inspire_records_updated_on(3)
-    ids_since = get_inspire_records_updated_since(3)
-    assert set(ids_on) == set(ids_since)
+    if ids_since == get_inspire_records_updated_since(3):  # check no further updates
+        assert set(ids_on) == set(ids_since)
 
 
 def test_get_updated_records_on_date(app):
@@ -660,7 +669,10 @@ def test_set_review_status(app, load_default_data):
 
 
 def test_get_all_ids(app, load_default_data, identifiers):
-    expected_record_ids = [1, 16]
+    expected_record_ids = [1, 16, 57]
+    # Pre-sorted based on the last_updated (today, 2016-07-13 and 2013-12-17)
+    sorted_expected_record_ids = [57, 1, 16]
+    sorted_expected_inspire_ids = [2751932, 1283842, 1245023]
     # Order is not guaranteed unless we use latest_first,
     # so sort the results before checking
     assert(get_all_ids() == expected_record_ids)
@@ -679,14 +691,15 @@ def test_get_all_ids(app, load_default_data, identifiers):
     date_2013_2 = datetime.datetime(year=2013, month=12, day=17)
     assert(sorted(get_all_ids(last_updated=date_2013_2)) == expected_record_ids)
     date_2013_3 = datetime.datetime(year=2013, month=12, day=18)
-    assert(get_all_ids(last_updated=date_2013_3) == [1])
-    date_2020 = datetime.datetime(year=2020, month=1, day=1)
-    assert(get_all_ids(last_updated=date_2020) == [])
+    assert(get_all_ids(last_updated=date_2013_3) == [1, 57])
+
+    # A date very far away
+    date_2120 = datetime.datetime(year=2120, month=1, day=1)
+    assert(get_all_ids(last_updated=date_2120) == [])
 
     # Check sort by latest works
-    assert(get_all_ids(latest_first=True) == expected_record_ids)
-    assert(get_all_ids(id_field='inspire_id', latest_first=True)
-           == [int(x["inspire_id"]) for x in identifiers])
+    assert(get_all_ids(latest_first=True) == sorted_expected_record_ids)
+    assert(get_all_ids(id_field='inspire_id', latest_first=True) == sorted_expected_inspire_ids)
 
 
 def test_create_new_version(app, load_default_data, identifiers, mocker):
@@ -800,7 +813,7 @@ def test_get_json_ld(app, load_default_data, identifiers):
         '@id': 'https://doi.org/10.17182/hepdata.1',
         'url': 'http://localhost:5000/record/ins1283842?version=1',
         'description': 'Fermilab-Tevatron.  We present measurements of the forward-backward asymmetry, ASYMFB(LEPTON) in the angular distribution of leptons (electrons and muons) from decays of top quarks and antiquarks produced in proton-antiproton collisions. We consider the final state containing a lepton and at least three jets. The entire sample of data collected by the D0 experiment during Run II (2001 - 2011) of the Fermilab Tevatron Collider, corresponding to 9.7 inverse fb of integrated luminosity, is used. We also examine the dependence of ASYMFB(LEPTON) on the transverse momentum, PT(LEPTON), and rapidity, YRAP(LEPTON), of the lepton.',
-        'name': 'Measurement of the forward-backward asymmetry in the distribution of leptons in $t\\bar{t}$ events in the lepton$+$jets channel',
+        'name': 'Measurement of the forward-backward asymmetry in the distribution of leptons in $t\\bar{t}$ events in the lepton+jets channel',
         'hasPart': [
             {'@id': 'https://doi.org/10.17182/hepdata.1.v1/t1',
             '@type': 'Dataset',
@@ -1026,13 +1039,294 @@ def test_update_analyses(app):
     assert analysis_resources[0].file_location == 'http://rivet.hepforge.org/analyses#ATLAS_2012_I1203852'
 
     # Call update_analyses(): should add new resource and delete existing one
-    update_analyses()
+    update_analyses('rivet')
     analysis_resources = DataResource.query.filter_by(file_type='rivet').all()
     assert len(analysis_resources) == 1
     assert analysis_resources[0].file_location == 'http://rivet.hepforge.org/analyses/ATLAS_2012_I1203852'
 
     # Call update_analyses() again: should be no further changes (but covers more lines of code)
-    update_analyses()
+    update_analyses('rivet')
     analysis_resources = DataResource.query.filter_by(file_type='rivet').all()
     assert len(analysis_resources) == 1
     assert analysis_resources[0].file_location == 'http://rivet.hepforge.org/analyses/ATLAS_2012_I1203852'
+
+    # Import a record that has an associated MadAnalysis 5 analysis
+    import_records(['ins1811596'], synchronous=True)
+    analysis_resources = DataResource.query.filter_by(file_type='MadAnalysis').all()
+    assert len(analysis_resources) == 0
+    update_analyses('MadAnalysis')
+    analysis_resources = DataResource.query.filter_by(file_type='MadAnalysis').all()
+    assert len(analysis_resources) == 1
+    assert analysis_resources[0].file_location == 'https://doi.org/10.14428/DVN/I2CZWU'
+
+
+def test_generate_license_data_by_id(app):
+    """
+    Tests the generate_license_data_by_id function which
+    queries the database for licence information and returns it.
+    Also confirms that the default CC0 license will be returned if missing.
+    """
+
+    test_cases = [
+        {  # Test licence containing junk data
+            "id": 1,
+            "insert": True,
+            "name": "test_license",
+            "url": "test_url",
+            "description": "test_description"
+        },
+        {  # Licence which doesnt exist
+            "id": 2,
+            "insert": True,
+            "name": None,
+            "url": None,
+            "description": None
+        },
+        {  # Licence which doesnt exist
+            "id": 3,
+            "insert": False
+        },
+    ]
+
+    for test in test_cases:
+        # If the license is supposed to exist.
+        if test["insert"]:
+            test_license = License(
+                id=test["id"],
+                name=test["name"],
+                url=test["url"],
+                description=test["description"]
+            )
+            db.session.add(test_license)
+            db.session.commit()
+
+        # Run the function based on the ID from the test
+        check_license = generate_license_data_by_id(test["id"])
+
+        # If test was supposed to insert, confirm return is the same as insertion
+        if test["insert"] and test.get("name") is not None:
+            assert check_license == {
+                "name": test["name"],
+                "url": test["url"],
+                "description": test["description"]
+            }
+        else:
+            # Confirm default CC0 text is returned by default
+            assert check_license == {
+                "name": "CC0",
+                "url": "https://creativecommons.org/publicdomain/zero/1.0/",
+                "description": ("CC0 enables reusers to distribute, remix, "
+                                "adapt, and build upon the material in any "
+                                "medium or format, with no conditions.")
+            }
+
+
+def test_get_commit_message(app):
+    """
+        Tests functionality of the get_commit_message function.
+        Ensures no instances of None, that duplicate commit messages
+        are handled correctly, and only the most recent
+        RecordVersionCommitMessage is returned.
+    """
+    # We want to ensure duplicate entries
+    test_version, test_recid = 1, 1
+    # How many records we want to insert
+    insert_amount = 5
+
+    # First we check no insertion, then we check insertion
+    for should_insert in [False, True]:
+        # Only insert on the second go
+        if should_insert:
+            # Insert a bunch of duplicate entries
+            for i in range(0, insert_amount):
+                new_record = RecordVersionCommitMessage(
+                    recid=test_recid,
+                    version=test_version,
+                    # Setting message to a unique value
+                    message=str(insert_amount)
+                )
+                db.session.add(new_record)
+            db.session.commit()
+
+        # Result of get_commit_message is added to ctx as revision_message
+        ctx = {"version": test_version}
+
+        # We always want to check that duplicates are not returned
+        try:
+            get_commit_message(ctx, test_recid)
+        except MultipleResultsFound as e:
+            raise AssertionError(e)
+
+        # revision_message only exists if we should insert
+        assert ("revision_message" in ctx) == should_insert
+
+        # Check the most recent has been retrieved
+        if should_insert:
+            # We know it's the most recent as message
+            # is set to the highest inserted range, equal to insert_amount.
+            ctx["revision_message"]["message"] = str(insert_amount)
+
+
+def test_version_related_functions(app):
+    """
+    Attempts to bulk test the related functions for both data tables and submissions (records/api):
+    Tests the functions:
+        - get_related_hepsubmissions
+        - get_related_to_this_hepsubmissions
+        - get_related_datasubmissions
+        - get_related_to_this_datasubmissions
+    Tests forward and backward relation for both HEPSubmission and DataSubmission objects, through
+    testing the RelatedRecId and RelatedTable relations and querying functions respectively.
+
+    Very similar to e2e/test_records::test_version_related_table, but tests core functionality.
+    """
+
+    # Set some random integers to use for record IDs
+    random_ints = [random.randint(300, 2147483648) for _ in range(0, 3)]
+    # We set alternating record IDs
+    test_data = [
+        {  # Record 1, which relates to 2
+            "recid": random_ints[0],  # This record ID
+            "other_recid": random_ints[1],  # Record to relate to
+            "overall_status": "finished"  # Chosen HEPSubmission status
+        },
+        {  # Record 2, which relates to 3
+            "recid": random_ints[1],
+            "other_recid": random_ints[0],
+            "overall_status": "finished"
+        },
+        {  # Record 3, which relates to 1, but is unfinished
+            "recid": random_ints[2],
+            "other_recid": random_ints[0],
+            "overall_status": "todo"
+        }
+    ]
+
+    # Insertion of test data
+    for test in test_data:
+        # We store any HEPSubmission versions in the `test` object
+        test["submissions"] = []
+        # We also store any related tables data
+        test["related_table_data"] = None
+        # For each version per test
+        for version in range(1, 3):
+            new_submission_data = {
+                "version": version,
+                "submission": HEPSubmission(
+                    publication_recid=test["recid"],
+                    version=version,
+                    overall_status=test["overall_status"]
+                ),
+                "data_submissions": []
+            }
+
+            for table_number in range(1, 3):
+                new_datasubmission = {
+                    "submission": DataSubmission(
+                        doi=f"10.17182/hepdata.{test['recid']}.v{version}/t{table_number}",
+                        publication_recid=new_submission_data["submission"].publication_recid,
+                        version=new_submission_data["submission"].version  # Also 'v'
+                    ),
+                    "number": table_number
+                }
+
+                new_submission_data["data_submissions"].append(new_datasubmission)
+                db.session.add(new_datasubmission["submission"])
+            db.session.add(new_submission_data["submission"])
+            test["submissions"].append(new_submission_data)
+
+    # Commit now as we need this data for more insertion
+    db.session.commit()
+
+    # Now we handle the related data insertion
+    for test in test_data:
+        latest_submission = test["submissions"][-1]["submission"]
+        related_recid = RelatedRecid(this_recid=test["recid"], related_recid=test["other_recid"])
+        latest_submission.related_recids.append(related_recid)
+        db.session.add_all([related_recid, latest_submission])
+
+        related_table_data = [
+            {
+                "table_doi": f"10.17182/hepdata.{test['recid']}.v2/t1",
+                "related_doi": f"10.17182/hepdata.{test['other_recid']}.v2/t1"
+            },
+            {
+                "table_doi": f"10.17182/hepdata.{test['recid']}.v2/t2",
+                "related_doi": f"10.17182/hepdata.{test['other_recid']}.v2/t2"
+            },
+            {
+                "table_doi": f"10.17182/hepdata.{test['recid']}.v2/t2",
+                "related_doi": f"10.17182/hepdata.{test['recid']}.v2/t1"
+            }
+        ]
+        test["related_table_data"] = related_table_data
+
+        for related in related_table_data:
+            datasub = DataSubmission.query.filter_by(
+                doi=related["table_doi"]
+            ).first()
+
+            related_datasub = RelatedTable(
+                table_doi=related["table_doi"],
+                related_doi=related["related_doi"]
+            )
+            datasub.related_tables.append(related_datasub)
+            db.session.add_all([related_datasub, datasub])
+
+    # Finally, we commit all the new data
+    db.session.commit()
+
+    # Test case checking
+    for test in test_data:
+        latest_submission = test["submissions"][-1]
+        # Get the HEPSubmission and DataSubmission objects for the test
+        test_submission = latest_submission["submission"]
+        test_datasubmissions = latest_submission["data_submissions"]
+
+        # Run the HEPSubmission functions to test
+        forward_sub_relations = get_related_hepsubmissions(test_submission)
+        backward_sub_relations = get_related_to_this_hepsubmissions(test_submission)
+
+        # This record should be referenced by the OTHER record,
+        #   and this record should reference the OTHER record
+        assert [sub.publication_recid for sub in forward_sub_relations] == [test["other_recid"]]
+
+        expected_backward_sub_relations = []
+
+        # Finished records will have other record references appear
+        if test["overall_status"] is not "todo":
+            expected_backward_sub_relations.append(test["other_recid"])
+
+        assert [sub.publication_recid for sub in backward_sub_relations] == expected_backward_sub_relations
+
+        for test_datasub in test_datasubmissions:
+            table_number = test_datasub["number"]
+            submission = test_datasub["submission"]
+
+            # Execute the DataSubmission functions to test
+            forward_dt_relations = [sub.doi for sub in get_related_datasubmissions(submission)]
+            backward_dt_relations = [sub.doi for sub in get_related_to_this_datasubmissions(submission)]
+
+            # The number of entries happens to match the table number
+            assert len(forward_dt_relations) == table_number
+
+            # This record should be referenced by the OTHER table,
+            #   and this table should reference the OTHER table
+            #   (matching the same table number)
+            expected_forward_dt_relations = [f"10.17182/hepdata.{test['other_recid']}.v2/t{table_number}"]
+            expected_backward_dt_relations = []
+
+            # We expect unfinished records to NOT have `other_recid` tables
+            if test["overall_status"] is not "todo":
+                expected_backward_dt_relations.append(f"10.17182/hepdata.{test['other_recid']}.v2/t{table_number}")
+
+            # Here we expect the second table to reference ITS OWN table one
+            if table_number == 2:
+                expected_forward_dt_relations.append(f"10.17182/hepdata.{test['recid']}.v2/t1")
+            else:
+                # For table 1, we expect it to be referenced by the table 2
+                expected_backward_dt_relations.append(f"10.17182/hepdata.{test['recid']}.v2/t2")
+
+            # Test that the forward/backward datatable relations work as expected
+            assert set(forward_dt_relations) == set(expected_forward_dt_relations)
+            assert set(backward_dt_relations) == set(expected_backward_dt_relations)

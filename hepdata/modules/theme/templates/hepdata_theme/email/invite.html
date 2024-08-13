@@ -39,18 +39,31 @@
       <p>
         Note that you first need to <a href="{{ site_url }}/signup/">sign up</a> for a HEPData account associated with email address {{ email }},
         confirm your email address, and assign permissions by clicking the link above containing your invitation cookie.
-        If you have signed up with CERN/ORCID authentication, you will also need to <a href="{{ site_url }}/lost-password/">set a password</a>.
+        If you have signed up with CERN/ORCID authentication, you will also need to <a
+        href="{{ site_url }}/lost-password/">set a password</a>.
       </p>
       {% endif %}
 
+      <p>
+        Click the "Notify Participants" button after uploading if the record is ready for review.
+        This action will email all primary Uploaders and Reviewers.
+      </p>
+
+    {% else %}
+
+      <p>
+        Click the "Notify Coordinator" button after approving all tables if the record is ready to be finalised and made
+        public.
+      </p>
+
     {% endif %}
 
-    {% if message %}
-        <p>
-            <b>A message has been supplied by the Coordinator ({{ coordinator_email }}). </b>
-        </p>
-        <pre style="white-space:pre-wrap;padding-left:20px;font-family:'Lato',sans-serif;">{{ message }}</pre>
-    {% endif %}
+  {% if message %}
+    <p>
+      <b>A message has been supplied by the Coordinator ({{ coordinator_email }}). </b>
+    </p>
+    <pre style="white-space:pre-wrap;padding-left:20px;font-family:'Lato',sans-serif;">{{ message }}</pre>
+  {% endif %}
 
     <p>
         The <a href="{{ site_url }}" style="color: #9b59b6">HEPData</a> team

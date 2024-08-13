@@ -27,9 +27,9 @@ from flask import Blueprint, jsonify, request, render_template, abort, \
 from flask_login import login_required, current_user
 from invenio_accounts.models import User, Role
 
-from hepdata.ext.elasticsearch.admin_view.api import AdminIndexer
-from hepdata.ext.elasticsearch.api import reindex_all
-from hepdata.ext.elasticsearch.api import push_data_keywords
+from hepdata.ext.opensearch.admin_view.api import AdminIndexer
+from hepdata.ext.opensearch.api import reindex_all
+from hepdata.ext.opensearch.api import push_data_keywords
 from hepdata.modules.dashboard.api import prepare_submissions, get_pending_invitations_for_user, get_submission_count, \
     list_submission_titles, get_dashboard_current_user, set_dashboard_current_user, get_submissions_summary, \
     get_submissions_csv
@@ -75,9 +75,9 @@ def dashboard():
         user_to_display = get_dashboard_current_user(current_user)
 
     if user_to_display == current_user:
-        user_profile = current_userprofile.query.filter_by(user_id=user_to_display.get_id()).first()
+        user_profile = current_userprofile
     else:
-        user_profile = UserProfile.query.filter_by(user_id=user_to_display.get_id()).first()
+        user_profile = UserProfile.get_by_userid(user_to_display.get_id())
 
 
     ctx = {'user_is_admin': has_role(user_to_display, 'admin'),
@@ -183,25 +183,21 @@ def delete_submission(recid):
     :param recid:
     :return:
     """
-    if has_role(current_user, 'admin') or has_role(current_user, 'coordinator') \
-        or check_is_sandbox_record(recid):
-
+    if has_role(current_user, 'admin') or has_role(current_user, 'coordinator') or check_is_sandbox_record(recid):
         submission = get_latest_hepsubmission(publication_recid=recid)
-        unload_submission(recid, submission.version)
-
-        admin_idx = AdminIndexer()
-        admin_idx.delete_by_id(submission.id)
-
-        return json.dumps({"success": True,
-                           "recid": recid,
-                           "errors": [
-                               "Record successfully removed!"]})
+        if submission:
+            unload_submission.delay(recid, submission.version)
+            admin_idx = AdminIndexer()
+            admin_idx.delete_by_id(submission.id)
+            return json.dumps({"success": True})
+        else:
+            return json.dumps({"success": False, "message": "This submission has already been deleted."})
     else:
         return json.dumps(
-            {"success": False, "recid": recid,
-             "errors": [
+            {"success": False,
+             "message":
                  "You do not have permission to delete this submission. "
-                 "Only coordinators can do that."]})
+                 "Only coordinators can do that."})
 
 
 @blueprint.route('/manage/reindex/', methods=['POST'])
@@ -248,7 +244,7 @@ def submissions():
         user = get_dashboard_current_user(current_user)
 
     if has_role(user, 'admin') or has_role(user, 'coordinator'):
-        user_profile = UserProfile.query.filter_by(user_id=user.get_id()).first()
+        user_profile = UserProfile.get_by_userid(user.get_id())
         url_for_params = { 'view_as_user': user.id } if user != current_user else {}
         dashboard_url = url_for('hep_dashboard.dashboard', **url_for_params)
 

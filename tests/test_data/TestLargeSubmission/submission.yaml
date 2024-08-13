@@ -1,0 +1,20 @@
+additional_resources:
+- location: "additional1.yaml"
+  description: "Additional1 Description"
+- location: "additional2.yaml"
+  description: "Additional2 Description"
+comment: Comment
+
+---
+name: "Table 1"
+description: Test Table 1
+keywords:
+- {name: cmenergies, values: [0]}
+data_file: data1.yaml
+---
+name: "Table 2"
+description: Test Table 2
+keywords:
+- {name: cmenergies, values: [0]}
+data_file: data2.yaml
+---

@@ -15,7 +15,17 @@ HEPDATA.switch_table = function (listId, table_requested, table_name, status) {
   $('#' + table_requested).addClass("active");
 
 
-  HEPDATA.render_loader("#table_loader", [
+  HEPDATA.render_loader("#main_table_loader", [
+      {x: 26, y: 30, color: "#955BA5"},
+      {x: -60, y: 55, color: "#2C3E50"},
+      {x: 37, y: -10, color: "#955BA5"},
+      {x: -60, y: 10, color: "#955BA5"},
+      {x: -27, y: -30, color: "#955BA5"},
+      {x: 60, y: -55, color: "#2C3E50"}],
+    {"width": 200, "height": 200}
+  );
+
+  HEPDATA.render_loader("#filesize_table_loader", [
       {x: 26, y: 30, color: "#955BA5"},
       {x: -60, y: 55, color: "#2C3E50"},
       {x: 37, y: -10, color: "#955BA5"},
@@ -42,10 +52,20 @@ HEPDATA.switch_table = function (listId, table_requested, table_name, status) {
   $(".copy-btn").attr('data-clipboard-text', direct_link);
   HEPDATA.setup_clipboard();
 
+  // Reset the table loading section
   $("#hepdata_table_loading").removeClass("hidden");
   $("#hepdata_table_loading_failed").addClass("hidden");
   $("#hepdata_table_loader").removeClass("hidden");
   $("#hepdata_table_content").addClass("hidden");
+  // Reset filesize loader state
+  $("#hepdata_filesize_loader").addClass("hidden");
+  $("#filesize_table_confirm").removeClass("hidden");
+  $("#filesize_table_loading").addClass("hidden");
+  $("#filesize_table_loading_failed").addClass("hidden");
+  $("#hep_table").addClass("hidden");
+  // Hide and clear the license information section
+  $("#table_data_license").addClass("hidden");
+  $("#table_data_license_url").html("");
 
   HEPDATA.current_table_id = table_requested;
 
@@ -54,9 +74,18 @@ HEPDATA.switch_table = function (listId, table_requested, table_name, status) {
       HEPDATA.current_record_id,
       HEPDATA.current_table_id);
   }
-  HEPDATA.table_renderer.display_table('/record/data/' + HEPDATA.current_record_id + '/' + table_requested + "/" + HEPDATA.current_table_version,
-    '#data_table_region',
-    '#data_visualization_region');
+
+  var header_url = '/record/data/' + HEPDATA.current_record_id + '/' + table_requested + "/" + HEPDATA.current_table_version + "/" + 0;
+  var data_url = '/record/data/tabledata/' + table_requested + "/" + HEPDATA.current_table_version;
+  HEPDATA.table_renderer.display_table_headers(header_url, data_url);
+
+  // Function to initiate the button to attempt loading of the table
+  // We also clear the event listeners
+  $("#hepdata_filesize_loading_button").off('click').on('click', function() {
+    $("#filesize_table_confirm").addClass("hidden");
+    $("#filesize_table_loading").removeClass("hidden");
+    HEPDATA.table_renderer.get_and_display_table(data_url);
+  });
 
   $(".data_download_link").each(function () {
     var data_format = $(this).text().toLowerCase();
@@ -73,16 +102,19 @@ HEPDATA.switch_table = function (listId, table_requested, table_name, status) {
 };
 
 HEPDATA.table_renderer = {
-  display_table: function (url, table_placement, visualization_placement) {
-
+  display_table_headers: function(url, data_url) {
+    /*
+      Render only the main table information (name, details, etc.) at the top,
+      then decides whether to trigger render of the table or not.
+    */
     $.ajax({
       dataType: "json",
       url: url,
       processData: false,
       cache: true,
       success: function (table_data) {
-        // display the table
-        d3.select(table_placement).html('');
+        HEPDATA.reset_stats();
+        d3.select('#data_table_region').html('');
         d3.select("#table_options_region").html('');
 
         HEPDATA.current_table_name = table_data.name;
@@ -90,49 +122,49 @@ HEPDATA.table_renderer = {
         $("#table_name").text(table_data.name);
         $("#table_location").html(table_data.location);
         $("#table_doi_contents").html('<a href="https://doi.org/' + table_data.doi + '" target="_blank">' + table_data.doi + '</a>');
-
         $("#table_description").html((table_data.description.indexOf('.') == 0) ? '' : table_data.description.trim());
 
-        HEPDATA.table_renderer.render_keywords(table_data.keywords, "#table_keywords");
-
-        HEPDATA.reset_stats();
-
-        HEPDATA.table_renderer.render_qualifiers(table_data, table_placement);
-        HEPDATA.table_renderer.render_headers(table_data, table_placement);
-        HEPDATA.table_renderer.render_data(table_data, table_placement);
-
-        HEPDATA.render_associated_files(table_data.associated_files, '#support-files');
-
-        if (table_data["x_count"] > 1) {
-          HEPDATA.visualization.heatmap.reset();
-          HEPDATA.visualization.heatmap.render(table_data, visualization_placement, {
-            width: 300,
-            height: 300
-          });
-          HEPDATA.table_renderer.attach_row_listener(table_placement, 'heatmap');
-        } else if (table_data["values"].length == 0) {
-          // No data to display
-          d3.select(visualization_placement).html("");
-          d3.select("#legend").html("");
-          var no_data_info = d3.select(visualization_placement).append("div").style("text-align","center");
-          no_data_info.append("img").attr("src", "/static/img/nodata.svg").attr({"width": 100, height: 100});
-          no_data_info.append("p").text("No data to display...").style({"font-size": 14, "color": "#aaa"})
-        } else if (table_data["x_count"] === 1) {
-          HEPDATA.visualization.histogram.render(table_data, visualization_placement, {
-            width: 300,
-            height: 300,
-            "mode": "histogram"
-          });
-          HEPDATA.table_renderer.attach_row_listener(table_placement, 'histogram');
+        // Handle rendering of a license if it exists
+        if(table_data.table_license) {
+          // Set up anchor with url, text, and title/tooltip
+          var license_url = $("<a>")
+            .text(table_data.table_license.name)
+            .attr("href", table_data.table_license.url)
+            .attr('title', table_data.table_license.description)
+          // Add the anchor to the section, and show it
+          $("#table_data_license_url").append(license_url);
+          $("#table_data_license").removeClass("hidden");
         }
+
+        // Initiates rendering of both related DOI table areas
+        HEPDATA.table_renderer.render_related_dois(table_data.related_tables, "#related-tables");
+        HEPDATA.table_renderer.render_related_dois(table_data.related_to_this, "#related-to-this-tables");
+        HEPDATA.table_renderer.render_keywords(table_data.keywords, "#table_keywords");
+        // Render any LaTeX in the table description element.
+        HEPDATA.typeset($("#table_description").get());
+        $("#hepdata_table_loader").addClass("hidden");
+        $("#hepdata_table_content").removeClass("hidden");
+        // We also need to clear the figure
+        $("#figures").html('');
+
         if (HEPDATA.show_review) {
           HEPDATA.table_renderer.update_reviewer_button(table_data.review);
         }
 
-        $("#hepdata_table_loader").addClass("hidden");
-        $("#hepdata_table_content").removeClass("hidden");
-
-        HEPDATA.typeset($("#hepdata_table_content").get());
+        // Check that the table is both empty, and is larger than an empty table (bytes)
+        if(table_data.size_check == false) {
+          // Set up filesize attempt section
+          $("#hepdata_table_loader").addClass("hidden");
+          var megabyte_size = (table_data.size / (1024 * 1024)).toFixed(2);
+          var threshold_size = (HEPDATA.size_load_check_threshold / (1024 * 1024)).toFixed(2);
+          d3.select("#file_size").html(megabyte_size);
+          d3.select("#threshold_size").html(threshold_size);
+          $("#hepdata_filesize_loader").removeClass("hidden");
+          $("filesize_table_confirm").removeClass("hidden");
+        }
+        else {
+          HEPDATA.table_renderer.display_table(table_data, '#data_table_region', '#data_visualization_region');
+        }
       },
       error: function (data, error) {
         console.error(error);
@@ -142,7 +174,68 @@ HEPDATA.table_renderer = {
       }
     });
   },
+  get_and_display_table: function(url) {
+    $.ajax({
+      dataType: "json",
+      url: url,
+      processData: false,
+      cache: true,
+      success: function (table_data) {
+        HEPDATA.table_renderer.display_table(
+          table_data,
+          '#data_table_region',
+          '#data_visualization_region'
+        );
+      },
+      error: function (data, error) {
+        console.error(error);
+        $("#filesize_table_loading_failed").removeClass("hidden");
+        d3.select("#filesize_table_failed_text").html('Failed to load table data defined by ' + url);
+      }
+    });
+  },
+  display_table: function (table_data, table_placement, visualization_placement) {
+    /*
+      Triggers the table (bottom section) render of the records table table section.
+    */
+    HEPDATA.reset_stats();
+    HEPDATA.render_associated_files(table_data.associated_files, '#support-files');
 
+    // If it is larger than an empty table (bytes)
+    HEPDATA.table_renderer.render_qualifiers(table_data, table_placement);
+    HEPDATA.table_renderer.render_headers(table_data, table_placement);
+    HEPDATA.table_renderer.render_data(table_data, table_placement);
+
+    if (table_data["x_count"] > 1) {
+      HEPDATA.visualization.heatmap.reset();
+      HEPDATA.visualization.heatmap.render(table_data, visualization_placement, {
+        width: 300,
+        height: 300
+      });
+      HEPDATA.table_renderer.attach_row_listener(table_placement, 'heatmap');
+    } else if (table_data["values"].length == 0) {
+      // No data to display
+      d3.select(visualization_placement).html("");
+      d3.select("#legend").html("");
+      var no_data_info = d3.select(visualization_placement).append("div").style("text-align","center");
+      no_data_info.append("img").attr("src", "/static/img/nodata.svg").attr({"width": 100, height: 100});
+      no_data_info.append("p").text("No data to display...").style({"font-size": 14, "color": "#aaa"})
+    } else if (table_data["x_count"] === 1) {
+      HEPDATA.visualization.histogram.render(table_data, visualization_placement, {
+        width: 300,
+        height: 300,
+        "mode": "histogram"
+      });
+      HEPDATA.table_renderer.attach_row_listener(table_placement, 'histogram');
+    }
+    // Show the table finally
+    $("#hep_table").removeClass("hidden");
+
+    // Hide error element
+    $("#hepdata_filesize_loader").addClass("hidden");
+    $("#filesize_table_loading").addClass("hidden");
+    HEPDATA.typeset($("#hepdata_table_content").get());
+  },
   attach_row_listener: function (table_placement, type) {
 
     $(table_placement + ' tr').mouseover(function (e) {
@@ -184,6 +277,41 @@ HEPDATA.table_renderer = {
       value = ""
     }
     return value;
+  },
+
+  render_related_dois: function(relatedDois, placement) {
+    /*
+      Renders the related_doi sections of the records page.
+      The `placement` argument is used to specify between
+        both related record types.
+        The records `this is relating to`, and records `that relate to this` record.
+
+      This function also toggles visibility of the related object area.
+    */
+    var relatedTablesWrapper = $(placement);
+    relatedTablesWrapper.find("ul").empty();
+
+    if (relatedDois.length > 0) {
+      var relatedList = relatedTablesWrapper.find(".related-list")
+
+      for (var i = 0; i < relatedDois.length; i++) {
+        var related_object = relatedDois[i];
+        // Create the the `li` tag, setting the text to the table name and DOI
+        // Adds a `title` tag containing the table's description
+        // Example: "Table 1"
+        var relatedItem = $('<li>').append($('<a>'
+        ).text(related_object.name
+        ).attr('href', 'https://doi.org/' + related_object.doi).attr('title', related_object.description));
+        // Add the `li` tag to the list
+        relatedList.append(relatedItem);
+      }
+      // Ensure that the container is visible.
+      relatedTablesWrapper.show();
+    }
+    else {
+      // Hide the container if there is no information.
+      relatedTablesWrapper.hide();
+    }
   },
 
   render_keywords: function (keywords, placement) {
@@ -360,6 +488,8 @@ HEPDATA.table_renderer = {
     }
 
     if (table_data.values.length > HEPDATA.default_row_limit) {
+      // Clear the element first
+      d3.select("#table_options_region").html('');
       d3.select("#table_options_region").append('span').text('Showing ' + HEPDATA.default_row_limit + ' of ' + table_data.values.length + ' values');
       var btn = d3.select("#table_options_region").append('a')
         .attr('class', 'btn-show-all-rows pull-right')

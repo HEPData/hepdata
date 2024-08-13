@@ -21,7 +21,7 @@ from flask import Blueprint, render_template, request, jsonify, abort
 from flask_login import login_required, current_user
 from invenio_db import db
 
-from hepdata.ext.elasticsearch.admin_view.api import AdminIndexer
+from hepdata.ext.opensearch.admin_view.api import AdminIndexer
 from hepdata.modules.email.api import send_cookie_email, notify_submission_created
 from hepdata.modules.inspire_api.views import get_inspire_record_information
 from hepdata.modules.permissions.models import SubmissionParticipant

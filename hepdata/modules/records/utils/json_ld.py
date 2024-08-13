@@ -147,10 +147,11 @@ def _add_publication_info(data, ctx):
     has_part = []
 
     for table in ctx['data_tables']:
+        description = table['description'] or "No description available"
         has_part.append({
             "@id": f"https://doi.org/{table['doi']}",
             "@type": "Dataset",
-            "description": truncate_string(table['description'], max_chars=5000),
+            "description": truncate_string(description, max_chars=5000),
             "name": table['name']
         })
 

@@ -1,14 +1,16 @@
 {%- extends "hepdata_theme/page.html" %}
 
+{% set title = _(config.THEME_SITENAME) + ' File Formats' %}
+
 {% block page_body %}
 
-    {{ webpack['hepdata-info.css'] }}
+  {{ webpack['hepdata-info.css'] }}
 
-    {% set search_url = url_for('es_search.search', q='') %}
-    {% set atlas_search_url = url_for('es_search.search', q='', page=1, collaboration='ATLAS', _external=True) %}
-    {% set record_url = url_for('hepdata_records.get_metadata_by_alternative_id', recid='ins1419244', _external=True) %}
+  {% set search_url = url_for('os_search.search', q='') %}
+  {% set atlas_search_url = url_for('os_search.search', q='', page=1, collaboration='ATLAS', _external=True) %}
+  {% set record_url = url_for('hepdata_records.get_metadata_by_alternative_id', recid='ins1419244', _external=True) %}
 
-    <div class="row" style="margin: 0; padding:2% 10% 2% 5%;">
+  <div class="row" style="margin: 0; padding:2% 10% 2% 5%;">
         <div class="section-header" style="width:185px; padding-bottom: 2em"><p>HEPData Output Formats</p></div>
         <div class="col-md-6">
           <div style="width:330px; margin: 0 auto;">
@@ -104,9 +106,9 @@
                   </li>
                   <li>
                     <b>YODA</b>: The data analysis classes used in the <a href="https://rivet.hepforge.org" target="_blank" style="text-decoration: underline">Rivet</a>
-                    toolkit. Again, the appropriate <a href="https://yoda.hepforge.org" target="_blank" style="text-decoration: underline">YODA</a> object (<code>Scatter1D</code>,
-                    <code>Scatter2D</code>, <code>Scatter3D</code>) is written according to the number of independent
-                    variables in a table.
+                    toolkit. Again, the appropriate <a href="https://yoda.hepforge.org" target="_blank" style="text-decoration: underline">YODA</a> object
+                    is written according to the number of independent variables in a table. The default <code>yoda</code> output is now
+                    in the YODA2 format, but there is still an option <code>yoda1</code> to output the legacy YODA1 format.
                   </li>
                 </ul>
                 <p>
@@ -120,6 +122,7 @@
                   <li><code>?format=csv</code></li>
                   <li><code>?format=root</code></li>
                   <li><code>?format=yoda</code></li>
+                  <li><code>?format=yoda1</code></li>
                 </ul>
                 <p>Optional parameters can also be added (separated by a <code>&</code> symbol):</p>
                 <ul>
@@ -137,7 +140,7 @@
                     the data tables from the response.
                   </li>
                   <li>
-                    <code>rivet=ALICE_2016_I1419244</code>: when using <code>format=yoda</code>, specify the desired
+                    <code>rivet=ALICE_2016_I1419244</code>: when using <code>format=yoda</code> or <code>format=yoda1</code>, specify the desired
                     Rivet analysis name to be written in the YODA files if it does not match the automatically generated name.
                   </li>
                 </ul>
@@ -154,7 +157,7 @@
     </div>
 
 
-    <div class="row light-bg" style="margin: 0; padding: 3% 10% 2% 5%; background-color: #f6f6f6; color: #2c3e50" id="content-negotiation">
+    <div class="row light-bg" style="margin: 0; padding: 3% 10% 2% 5%; background-color: #f6f6f6; color: #2c3e50" id="content_negotiation">
         <div class="col-md-12">
             <div class="section-header" style="width:190px;padding-bottom: 2em"><p>Content Negotiation</p></div>
 
@@ -183,7 +186,9 @@
               <h3>Direct download of resource files from DOI</h3>
               <p>
                 DOIs for resource files relating to a HEPData submission direct users to a landing page such as
-                <a href="{{ ctx.sample_resource_url }}">{{ ctx.sample_resource_url }}</a>.
+                <a href="{{ ctx.sample_resource_url|lower }}">{{ ctx.sample_resource_url|lower }}</a>.
+                Omitting the <code>landing_page=true</code> URL argument will return JSON metadata for the resource file,
+                while replacing it with <code>view=true</code> will download the resource file.
               </p>
               <p>
                 To download a resource file directly from its DOI, pass the relevant

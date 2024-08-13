@@ -34,7 +34,7 @@ from sqlalchemy import func
 
 from flask import Blueprint, jsonify, url_for, redirect, request, abort, render_template
 
-from hepdata.ext.elasticsearch.admin_view.api import AdminIndexer
+from hepdata.ext.opensearch.admin_view.api import AdminIndexer
 from hepdata.modules.dashboard.api import get_dashboard_current_user
 from hepdata.modules.email.api import send_coordinator_request_mail, send_coordinator_approved_email, \
     send_cookie_email, send_reserve_email, send_reminder_email

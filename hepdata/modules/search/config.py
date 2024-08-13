@@ -17,7 +17,7 @@
 # 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
 #
 
-ELASTICSEARCH_MAX_RESULT_WINDOW = 10000  # default Elasticsearch value
+OPENSEARCH_MAX_RESULT_WINDOW = 10000  # default OpenSearch value
 LIMIT_MAX_RESULTS_PER_PAGE = 100  # maximum value of 'size' parameter
 
 HEPDATA_CFG_DEFAULT_RESULTS_PER_PAGE = 10

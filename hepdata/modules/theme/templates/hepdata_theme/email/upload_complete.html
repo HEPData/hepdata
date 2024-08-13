@@ -1,6 +1,6 @@
 {% extends 'hepdata_theme/email/email_container.html' %}
 {% block email_type %}
-    Upload for Record {{ article }} Succeeded
+  Upload for Record {{ article }} Succeeded
 {% endblock %}
 
 {% block email_content %}
@@ -9,7 +9,14 @@
 
   <p>Your upload for record <a href="{{ link }}" style="color: #9b59b6">{{ article }}</a> was successful.</p>
 
+  {% if overall_status != 'sandbox_processing' %}
+    <p>
+      Click the "Notify Participants" button if the record is ready for review.
+      This action will email all primary Uploaders and Reviewers.
+    </p>
+  {% endif %}
+
   <p>
-      The <a href="{{ site_url }}" style="color: #9b59b6">HEPData</a> team
+    The <a href="{{ site_url }}" style="color: #9b59b6">HEPData</a> team
   </p>
 {% endblock %}

@@ -1,4 +1,5 @@
-SITE_URL = "http://localhost:5000"
+SERVER_NAME = "localhost:5000"
+SITE_URL = "http://" + SERVER_NAME
 TESTING = True
 NO_DOI_MINTING = True
 USE_TWITTER = False
@@ -11,9 +12,9 @@ CELERY_RESULT_BACKEND = "redis://cache:6379/1"
 CACHE_REDIS_URL = "redis://cache:6379/0"
 SESSION_REDIS = "redis://cache:6379/0"
 TEST_DB_HOST = "db"
-ELASTICSEARCH_HOST = "es"
-SEARCH_ELASTIC_HOSTS = [
-    'es:9200'
+OPENSEARCH_HOST = "os"
+SEARCH_HOSTS = [
+    'os:9200'
 ]
 CELERY_BEAT_SCHEDULE = {}
 # RUN_SELENIUM_LOCALLY = True

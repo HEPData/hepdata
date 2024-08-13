@@ -11,8 +11,6 @@
                     Submission</h4>
             </div>
 
-            <!--todo: add option to finalise submission. this means the creation of data records. Can also be updated in theory...? -->
-
             <div class="modal-body" id="delete-body" style="color: white">
 
                 <div align="center" id="delete-confirm">
@@ -40,12 +38,27 @@
                               style="font-size: 3em"></span><br/>
 
                         <p>
-                            Submission deleted.
+                        Submission will be deleted.
                             <br/>
-                            This window will close in <span id="timer"
+                            This window will close in <span class="timer"
                                                             style="color: white">5</span>
-                            seconds and refresh
-                            the dashboard page.
+                            seconds and refresh the page.
+                        </p>
+                    </div>
+                </div>
+
+                <div align="center" class="hidden" id="delete-failure"
+                     style="padding: 40px">
+                    <div style="color: #C03A2B; font-weight: bolder">
+                        <span class="fa fa-times"
+                              style="font-size: 3em"></span><br/>
+
+                        <p>
+                            <div id="deleteDialogMessage"></div>
+                            <br/>
+                            This window will close in <span class="timer"
+                                                            style="color: white">5</span>
+                            seconds and refresh the page.
                         </p>
                     </div>
                 </div>

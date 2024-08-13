@@ -23,6 +23,7 @@
 import re
 
 import bleach
+from flask import current_app
 
 
 def splitter(data, predicate):
@@ -58,7 +59,7 @@ def sanitize_html(value, tags=None, attributes=None, strip=False):
     escaped = p.sub(r'&lt;\1&lt;', value)
 
     tags = tags if tags is not None \
-        else current_app.config.get('ALLOWED_HTML_TAGS', [])
+        else current_app.config.get('ALLOWED_HTML_TAGS', {})
     attributes = attributes if attributes is not None \
         else current_app.config.get('ALLOWED_HTML_ATTRS', {})
 
@@ -70,3 +71,47 @@ def sanitize_html(value, tags=None, attributes=None, strip=False):
     )
 
     return cleaned
+
+def generate_resource_url(resource):
+    """
+    Uses the file_location/ID of a submission object to generate a resource url.
+    If "http" is at the beginning, will return file_location
+    Otherwise, will generate a HEPData resource URL
+
+    :param resource: DataResource object for generation
+    :return: The generated URL string
+    """
+    # Determine if file_location is url or not
+    if resource.file_location.startswith("http"):
+        # Set url value if it's an external location
+        url_string = resource.file_location
+    else:
+        # If not url, create hepdata.net url using resource ID
+        site_url = current_app.config.get('SITE_URL', 'https://www.hepdata.net')
+        url_string = f"{site_url}/record/resource/{resource.id}?landing_page=true"
+
+    return url_string
+
+
+def get_resource_data(submission):
+    """
+    Function to create a dictionary of description, type and url for resources objects.
+    This dictionary is to be added to the OpenSearch index.
+    Uses either a DataSubmission, or HEPSubmission, which both contain resource objects.
+
+    :param submission: HEPSubmission/DataSubmission object
+    :return: The resources list (of dictionaries)
+    """
+    resources = []
+
+    # Create a dictionary entry for every resource
+    for s in submission.resources:
+        resource_data = {
+            "description": s.file_description,
+            "type": s.file_type,
+            "url": generate_resource_url(s)
+        }
+
+        resources.append(resource_data)
+
+    return resources

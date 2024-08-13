@@ -1,10 +1,12 @@
 {%- extends "hepdata_theme/page.html" %}
 
+{% set title = _(config.THEME_SITENAME) + ' Dashboard' %}
+
 {% set body_css_classes = ["dashboard"] %}
 {%- set messages = get_flashed_messages(with_categories=true) -%}
 
 {%- block additional_assets %}
-    {{ webpack['hepdata-info.css'] }}
+  {{ webpack['hepdata-info.css'] }}
 {%- endblock additional_assets %}
 
 
@@ -240,22 +242,32 @@
                                 <div id="permissions_container">
 
                                     {% if ctx.user_is_coordinator_or_admin %}
-                                        <div class="alert alert-info"><i class="fa fa-gavel"></i> <strong>You are a
-                                            HEPData
-                                            coordinator</strong>.<br/> <span class="text-muted">You are able to create and manage HEPData submissions.</span>
-                                        </div>
+                                      <div class="alert alert-info"><i class="fa fa-gavel"></i> <strong>You are a
+                                        HEPData
+                                        Coordinator</strong>.<br/>
+                                        <span class="text-muted">You are able to
+                                            <a href="/submit" target="_blank" style="color: #95a5a6">create</a>
+                                            and manage HEPData submissions.</span>
+                                      </div>
                                     {% elif not ctx.user_to_display.confirmed_at %}
-                                        <div class="alert alert-info">
-                                            You are not able to request coordinator privileges until your email address
-                                            is confirmed.
-                                        </div>
+                                      <div class="alert alert-info">
+                                        You are not able to request Coordinator privileges until your email address
+                                        is confirmed.
+                                      </div>
                                     {% else %}
-                                        <p class="text-small text-muted">You are not able to create or manage HEPData
-                                            submissions without coordinator access. If you want to submit on behalf of
-                                            your
-                                            project, request privilege by clicking the button below.</p>
+                                      <p class="text-small text-muted">You are not able to create or manage HEPData
+                                        submissions without Coordinator access. Request Coordinator privileges by
+                                        clicking the button below. Do <strong>not</strong> send this request if
+                                        there is already a
+                                        <a href="/permissions/coordinators" target="_blank">Coordinator</a>
+                                        listed for your experiment/group.<br/><br/>
+                                        If you only want to request Uploader or Reviewer permissions for a specific
+                                        publication, please email the relevant
+                                        <a href="/permissions/coordinators" target="_blank">Coordinator</a>
+                                        and do <strong>not</strong> send a Coordinator request.
+                                      </p>
 
-                                        {% if not ctx.user_has_coordinator_request %}
+                                      {% if not ctx.user_has_coordinator_request %}
                                             <a id="reindex-button" class="btn btn-md btn-primary{% if ctx.view_as_mode %} disabled{% endif %}"
                                                data-toggle="modal"
                                                data-target="#requestCoordinatorDialog"><i class="fa fa-gavel"></i>
@@ -264,20 +276,20 @@
                                             </a>
                                             <br/><br/>
                                         {% else %}
-                                            <div class="alert alert-info">
-                                                A pending coordinator request is in the system.
-                                            </div>
-                                        {% endif %}
+                                        <div class="alert alert-info">
+                                          A pending Coordinator request is in the system.
+                                        </div>
+                                      {% endif %}
 
                                     {% endif %}
 
 
 
-                                    <p class="text-small" style="font-weight: normal;">You can see papers you have
-                                        coordinator, uploader, or reviewer
-                                        rights to here: </p>
-                                    <div id="permissions">
-                                        {# automatically populated from api endpoint#}
+                                  <p class="text-small" style="font-weight: normal;">You can see papers you have
+                                    Coordinator, Uploader, or Reviewer
+                                    rights to here: </p>
+                                  <div id="permissions">
+                                    {# automatically populated from api endpoint#}
                                     </div>
                                 </div>
                             </div>

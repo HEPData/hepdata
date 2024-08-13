@@ -19,22 +19,23 @@
 
 {% extends "hepdata_theme/page.html" %}
 
-{#
-{% set title = title %}
-#}
+{% set title = _(config.THEME_SITENAME) %}
+{% if ctx.record.collaborations %}
+  {% set title = title + ' | ' + ctx.record.collaborations|join(' & ') %}
+{% endif %}
+{% if ctx.record.year %}
+  {% set title = title + ' | ' + ctx.record.year|string %}
+{% endif %}
+{% set title = title + ' | ' + ctx.record.title %}
 
 {%- set messages = get_flashed_messages(with_categories=true) -%}
 
-{% block title %}
-    HEPData | {{ ctx.record.title }}
-{% endblock %}
-
 {%- block json_ld %}
-   {% if ctx.json_ld and 'error' not in ctx.json_ld %}
-       <script type="application/ld+json">
-         {{ ctx.json_ld|tojson }}
-       </script>
-   {% endif %}
+  {% if ctx.json_ld and 'error' not in ctx.json_ld %}
+    <script type="application/ld+json">
+      {{ ctx.json_ld|tojson }}
+    </script>
+  {% endif %}
 {%- endblock json_ld %}
 
 {%- block additional_assets %}
@@ -108,14 +109,17 @@
                             {% include "hepdata_records/components/journal_info.html" %}
                         </div>
 
-
                         <div class="record-doi">
                             {% set hepdata_doi = ctx.record.hepdata_doi|replace('None', '10.17182/hepdata.' + ctx.record.recid|string) %}
                             <a href="https://doi.org/{{ hepdata_doi }}"
                                target="_blank">https://doi.org/{{ hepdata_doi }}</a>
                         </div>
 
-                        <br/>
+                        {% if not (ctx.related_recids or ctx.related_to_this_recids) %}
+                            <br/>
+                        {% else %}
+                            {% include 'hepdata_records/components/related_recids.html' %}
+                        {% endif %}
 
                         <div class="record-links">
                             <ul>
@@ -149,7 +153,7 @@
                             <ul>
                               {% for analysis in ctx.record.analyses %}
                                 <li><div class="analysis"><a href="{{ analysis.analysis }}" target="_blank"><span
-                                  class="fa fa-line-chart"></span> {{ analysis.type }}{% if analysis.type != config.HISTFACTORY_FILE_TYPE %} Analysis{% endif %}</a></div></li>
+                                  class="fa fa-line-chart"></span> {{ analysis.type }}{% if analysis.type == 'rivet' %} Analysis{% endif %}</a></div></li>
                               {% endfor %}
                             </ul>
                         </div>

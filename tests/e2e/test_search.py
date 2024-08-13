@@ -42,54 +42,54 @@ def test_search_from_home(live_server, env_browser, search_tests):
             browser.current_url)
 
     # Click 'View all'
-    search_all_link = browser.find_element_by_css_selector('#latest_records_section').find_element_by_tag_name('a')
+    search_all_link = browser.find_element(By.CSS_SELECTOR, '#latest_records_section').find_element(By.TAG_NAME, 'a')
     search_all_link.click()
-    element = WebDriverWait(browser, 10).until(
+    WebDriverWait(browser, 10).until(
         EC.url_contains('search')
     )
-    assert (flask.url_for('es_search.search', _external=True) in
+    assert (flask.url_for('os_search.search', _external=True) in
             browser.current_url)
 
     # Check result count
     sleep(1)
-    results = browser.find_elements_by_class_name('search-result-item')
-    assert(len(results) == 3)
+    results = browser.find_elements(By.CLASS_NAME, 'search-result-item')
+    assert(len(results) == 4)
 
     # Check "More" link works
-    table_list = results[0].find_elements_by_css_selector('.data-brief:not(.hidden)')
+    table_list = results[0].find_elements(By.CSS_SELECTOR, '.data-brief:not(.hidden)')
     assert len(table_list) == 3
-    results[0].find_element_by_class_name('data-more').click()
-    table_list = results[0].find_elements_by_css_selector('.data-brief:not(.hidden)')
+    results[0].find_element(By.CLASS_NAME, 'data-more').click()
+    table_list = results[0].find_elements(By.CSS_SELECTOR, '.data-brief:not(.hidden)')
     assert len(table_list) == 6
 
     # Check facet filtering for each facet
     facets = [
-        {'class_prefix': 'collaboration', 'exp_filter_count': 3, 'exp_first_result_count': 1},
-        {'class_prefix': 'subject_areas', 'exp_filter_count': 1, 'exp_first_result_count': 3},
-        {'class_prefix': 'phrases', 'exp_filter_count': 10, 'exp_first_result_count': 1},
-        {'class_prefix': 'reactions', 'exp_filter_count': 10, 'exp_first_result_count': 1},
-        {'class_prefix': 'observables', 'exp_filter_count': 6, 'exp_first_result_count': 1},
+        {'class_prefix': 'collaboration', 'exp_filter_count': 4, 'exp_first_result_count': 1},
+        {'class_prefix': 'subject_areas', 'exp_filter_count': 1, 'exp_first_result_count': 4},
+        {'class_prefix': 'phrases', 'exp_filter_count': 20, 'exp_first_result_count': 1},
+        {'class_prefix': 'reactions', 'exp_filter_count': 12, 'exp_first_result_count': 1},
+        {'class_prefix': 'observables', 'exp_filter_count': 8, 'exp_first_result_count': 2},
         {'class_prefix': 'cmenergies', 'exp_filter_count': 10, 'exp_first_result_count': None}
     ]
 
     for facet in facets:
         # Check the number of filters for the facet
-        facet_filters = browser.find_elements_by_css_selector('#' + facet['class_prefix'] + '-facet li.list-group-item a')
+        facet_filters = browser.find_elements(By.CSS_SELECTOR, '#' + facet['class_prefix'] + '-facet li.list-group-item a')
         assert(len(facet_filters) == facet['exp_filter_count'])
 
         if len(facet_filters) > 0 and facet['exp_first_result_count'] is not None:
             # Check the number of results for first filter in the facet
-            result_count = int(facet_filters[0].find_element_by_class_name('facet-count').text.strip())
+            result_count = int(facet_filters[0].find_element(By.CLASS_NAME, 'facet-count').text.strip())
             assert(result_count == facet['exp_first_result_count'])
 
             # Move to the first filter and click
             ActionChains(browser).move_to_element(facet_filters[0])
             facet_filters[0].click()
-            assert (flask.url_for('es_search.search', _external=True) in
+            assert (flask.url_for('os_search.search', _external=True) in
                     browser.current_url)
 
             # Check the number of search results matches the number given in the filter
-            results = browser.find_elements_by_class_name('search-result-item')
+            results = browser.find_elements(By.CLASS_NAME, 'search-result-item')
             assert(len(results) == facet['exp_first_result_count'])
 
             # Go back to the previous search results
@@ -103,31 +103,31 @@ def test_search_from_home(live_server, env_browser, search_tests):
                     browser.current_url)
 
             # Find the search form, input the query and submit
-            search_form = browser.find_element_by_class_name('main-search-form')
-            search_input = search_form.find_element_by_name('q')
+            search_form = browser.find_element(By.CLASS_NAME, 'main-search-form')
+            search_input = search_form.find_element(By.NAME, 'q')
 
             search_term = search_config['search_term']
             search_input.send_keys(search_term)
 
             search_form.submit()
-            element = WebDriverWait(browser, 10).until(
+            WebDriverWait(browser, 10).until(
                 EC.presence_of_element_located((By.CLASS_NAME, 'search-result-item'))
             )
 
-            assert (flask.url_for('es_search.search', _external=True) in
+            assert (flask.url_for('os_search.search', _external=True) in
                     browser.current_url)
 
             # Check the expected publication appears in the search results
-            publication = browser.find_element_by_class_name(search_config['exp_hepdata_id'])
+            publication = browser.find_element(By.CLASS_NAME, search_config['exp_hepdata_id'])
             assert (publication)
 
             # Check the expected collaboration facets appear in the filters
-            collab_facets = browser.find_element_by_css_selector('#collaboration-facet ul.list-group li.list-group-item a')
-            assert(collab_facets.text.startswith(search_config['exp_collab_facet']))
-            assert(collab_facets.text.endswith('1'))
+            collab_facets = browser.find_elements(By.CSS_SELECTOR, '#collaboration-facet ul.list-group li.list-group-item a')
+            all_facets = [c.text for c in collab_facets]
+            assert f"{search_config['exp_collab_facet']}\n{'1'}" in all_facets
 
             # Check the first result has the expected number of data tables
-            data_table_count_span = browser.find_element_by_css_selector('.search-result-item .record-brief div:nth-child(3) span')
+            data_table_count_span = browser.find_element(By.CSS_SELECTOR, '.search-result-item .record-brief div:nth-child(3) span')
             assert(data_table_count_span.text == str(search_config['exp_table_count']))
 
             # Click on the link to the publication details
@@ -152,8 +152,8 @@ def test_search_from_home(live_server, env_browser, search_tests):
             browser.current_url)
 
     # Find the search form, input the query and submit
-    search_form = browser.find_element_by_class_name('main-search-form')
-    search_input = search_form.find_element_by_name('q')
+    search_form = browser.find_element(By.CLASS_NAME, 'main-search-form')
+    search_input = search_form.find_element(By.NAME, 'q')
 
     search_input.send_keys('/')
     search_form.submit()
@@ -163,16 +163,23 @@ def test_search_from_home(live_server, env_browser, search_tests):
     )
     assert 'Unable to search for /: Failed to parse query [/]' in element.text
 
+    # Test passing an invalid sort_by value as a URL argument to a search query
+    browser.get(flask.url_for('os_search.search', _external=True) + '?q=collisions&sort_by=invalid_field')
+    element = WebDriverWait(browser, 10).until(
+        EC.presence_of_element_located((By.CLASS_NAME, 'search-results'))
+    )
+    assert 'Unable to search for collisions: Sorting on field invalid_field is not supported' in element.text
+
 
 def test_author_search(live_server, env_browser):
     """Test the author search"""
     browser = env_browser
 
     # Go to the search page
-    browser.get(flask.url_for('es_search.search', _external=True))
+    browser.get(flask.url_for('os_search.search', _external=True))
 
     # Find the author search box
-    search_input = browser.find_element_by_css_selector('#author-suggest')
+    search_input = browser.find_element(By.CSS_SELECTOR, '#author-suggest')
     search_input.send_keys('ada')
 
     # Wait for search results to appear
@@ -181,13 +188,13 @@ def test_author_search(live_server, env_browser):
     )
 
     # Check author results are as we expect
-    search_results = browser.find_elements_by_class_name('tt-suggestion')
+    search_results = browser.find_elements(By.CLASS_NAME, 'tt-suggestion')
     expected_authors = [
+        'Farilla, Ada',
         'Solano, Ada',
         'Falkowski, Adam',
-        'Adam, Wolfgang',
-        'Eskut, Eda',
-        'Lyon, Adam Leonard'
+        'Aad, Georges',
+        'Affolder, A.A.'
     ]
 
     assert(len(search_results) == len(expected_authors))

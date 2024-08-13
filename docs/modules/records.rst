@@ -15,6 +15,7 @@ contains the JavaScript code that renders the tables and plots in a web browser 
    hepdata.modules.records.subscribers.api
    hepdata.modules.records.subscribers.models
    hepdata.modules.records.subscribers.rest
+   hepdata.modules.records.utils.analyses
    hepdata.modules.records.utils.common
    hepdata.modules.records.utils.data_processing_utils
    hepdata.modules.records.utils.doi_minter
@@ -59,6 +60,11 @@ hepdata.modules.records.subscribers.rest
 ----------------------------------------
 
 .. automodule:: hepdata.modules.records.subscribers.rest
+
+hepdata.modules.records.utils.analyses
+--------------------------------------
+
+.. automodule:: hepdata.modules.records.utils.analyses
 
 hepdata.modules.records.utils.common
 ------------------------------------

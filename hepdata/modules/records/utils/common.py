@@ -21,6 +21,8 @@
 # In applying this license, CERN does not
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
+import yaml
+from yaml import CBaseLoader as Loader
 from invenio_db import db
 from invenio_pidstore.errors import PIDDoesNotExistError
 from invenio_pidstore.resolver import Resolver
@@ -28,9 +30,9 @@ from invenio_records.api import Record
 import os
 from sqlalchemy.orm.exc import NoResultFound
 
-from hepdata.config import CFG_PUB_TYPE, HISTFACTORY_FILE_TYPE
-from hepdata.ext.elasticsearch.api import get_record
-from hepdata.modules.submission.models import HEPSubmission, License
+from hepdata.config import HISTFACTORY_FILE_TYPE, NUISANCE_FILE_TYPE, SIZE_LOAD_CHECK_THRESHOLD
+from hepdata.ext.opensearch.api import get_record
+from hepdata.modules.submission.models import HEPSubmission, License, DataSubmission, DataResource
 
 FILE_TYPES = {
     "py": "Python",
@@ -115,6 +117,8 @@ def infer_file_type(file, description, type=None):
         else:
             if is_histfactory(file, description, type):
                 return HISTFACTORY_FILE_TYPE
+            elif type and type.lower() == NUISANCE_FILE_TYPE.lower():
+                return NUISANCE_FILE_TYPE
             extension = file.rsplit(".", 1)[1]
             if extension in FILE_TYPES:
                 return FILE_TYPES[extension]
@@ -215,10 +219,10 @@ def truncate_string(string, max_words=None, max_chars=None):
 
 def get_record_contents(recid, status=None):
     """
-    Tries to get record from Elasticsearch first. Failing that, it tries from the database.
+    Tries to get record from OpenSearch first. Failing that, it tries from the database.
 
     :param recid: Record ID to get.
-    :param status: Status of submission. If provided and not 'finished', will not check elasticsearch first.
+    :param status: Status of submission. If provided and not 'finished', will not check opensearch first.
     :return: a dictionary containing the record contents if the recid exists, None otherwise.
     """
     record = None
@@ -251,3 +255,78 @@ def get_record_by_id(recid):
 def record_exists(*args, **kwargs):
     count = HEPSubmission.query.filter_by(**kwargs).count()
     return count > 0
+
+
+def load_table_data(recid, version):
+    """
+    Loads a specfic data file's yaml file data.
+
+    :param recid: The recid used for the query
+    :param version: The data version to select
+    :return table_contents: A dict containing the table data
+    """
+
+    datasub_query = DataSubmission.query.filter_by(id=recid, version=version)
+    table_contents = {}
+    if datasub_query.count() > 0:
+        datasub_record = datasub_query.one()
+        data_query = db.session.query(DataResource).filter(
+            DataResource.id == datasub_record.data_file)
+
+        if data_query.count() > 0:
+            data_record = data_query.one()
+            file_location = data_record.file_location
+
+            attempts = 0
+            while True:
+                try:
+                    with open(file_location, 'r') as table_file:
+                        table_contents = yaml.load(table_file, Loader=Loader)
+                except (FileNotFoundError, PermissionError) as e:
+                    attempts += 1
+                # allow multiple attempts to read file in case of temporary disk problems
+                if (table_contents and table_contents is not None) or attempts > 5:
+                    break
+
+    return table_contents
+
+
+def file_size_check(file_location, load_all):
+    """
+    Decides if a file breaks the maximum size threshold
+        for immediate loading on the records page.
+
+    :param file_location: Location of the data file on disk
+    :param load_all: If the check should be run
+    :return bool: Pass or fail
+    """
+    size = os.path.getsize(file_location)
+    status = True if load_all == 1 else size <= SIZE_LOAD_CHECK_THRESHOLD
+    return { "size": size, "status": status}
+
+
+def generate_license_data_by_id(license_id):
+    """
+    Generates a dictionary from a License class selected by
+    its ID from the database or returns the default CC0 license information.
+
+    :param license_id:
+    :return dict: Returns the license_data dictionary
+    """
+    license_data = License.query.filter_by(id=license_id).first()
+    if license_data and license_data.name is not None:
+        # Generate and return the dictionary
+        return {
+            "name": license_data.name,
+            "url": license_data.url,
+            "description": license_data.description
+        }
+    else:
+        # If none, we return the default CC0 license data
+        return {
+            "name": "CC0",
+            "url": "https://creativecommons.org/publicdomain/zero/1.0/",
+            "description": ("CC0 enables reusers to distribute, remix, "
+                            "adapt, and build upon the material in any "
+                            "medium or format, with no conditions.")
+        }

@@ -22,25 +22,42 @@
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
+import json
 import logging
 import os
 import shutil
 import time
+from datetime import datetime
 from time import sleep
+from unittest.mock import patch, MagicMock
+from sqlalchemy.exc import NoResultFound
 
 from invenio_db import db
 import pytest
 
-from hepdata.ext.elasticsearch.api import get_records_matching_field
+from hepdata.ext.opensearch.api import get_records_matching_field
 from hepdata.modules.permissions.models import SubmissionParticipant
-from hepdata.modules.records.api import format_submission, process_saved_file, create_new_version
+from hepdata.modules.records.api import (
+    create_new_version,
+    format_submission,
+    get_record_data_list,
+    get_related_datasubmissions,
+    get_related_hepsubmissions,
+    get_related_to_this_datasubmissions,
+    get_related_to_this_hepsubmissions,
+    get_table_data_list,
+    process_saved_file, get_commit_message
+)
 from hepdata.modules.records.utils.common import infer_file_type, contains_accepted_url, allowed_file, record_exists, \
-    get_record_contents, is_histfactory
+    get_record_contents, is_histfactory, get_record_by_id
 from hepdata.modules.records.utils.data_files import get_data_path_for_record
-from hepdata.modules.records.utils.submission import process_submission_directory, do_finalise, unload_submission
+from hepdata.modules.records.utils.submission import process_submission_directory, do_finalise, unload_submission, \
+    cleanup_data_related_recid
 from hepdata.modules.submission.api import get_latest_hepsubmission, get_submission_participants_for_record
-from hepdata.modules.submission.models import DataSubmission, HEPSubmission
+from hepdata.modules.submission.models import DataSubmission, HEPSubmission, RelatedRecid, RecordVersionCommitMessage
 from hepdata.modules.submission.views import process_submission_payload
+from hepdata.config import HEPDATA_DOI_PREFIX
+from tests.conftest import create_test_record
 
 
 def test_submission_endpoint(app, client):
@@ -105,7 +122,8 @@ def test_is_histfactory(filename, description, type, expected):
         ("test.docx", "", None, "docx"),
         ("test", "", None, "resource"),
         ("pyhf.tgz", "File containing likelihoods", None, "HistFactory"),
-        ("test.zip", "Some sort of file", "HistFactory", "HistFactory")
+        ("test.zip", "Some sort of file", "HistFactory", "HistFactory"),
+        ("snippet.cxx", "ProSelecta analysis", "ProSelecta", "ProSelecta")
     ]
 )
 def test_infer_file_type(filename, description, type, expected):
@@ -307,6 +325,169 @@ def test_create_submission(app, admin_idx):
 
         # Check file dir has been deleted
         assert(not os.path.exists(directory))
+
+
+def test_related_records(app, admin_idx):
+    """
+    Test uploading of submission directories with values
+    for related record IDs and data table entries with related
+    doi entries.
+    Checks submissions are correctly inserted, and linking
+    occurs.
+    :return:
+    """
+    with app.app_context():
+        admin_idx.recreate_index()
+        # The directories containing the test data
+        test_dir = "test_data/related_submission_test/"
+        # First two are valid, and relate to each other
+        # 3 has invalid record entry (a string), 4 has invalid data DOI string (doesn't match regex)
+        test_data = [
+            {"dir": "related_submission_1",
+                "related": 2,
+                "record_title": "Title 1",
+                "expected_title": "Title 2",
+                "expected_version": 1},
+            {"dir": "related_submission_2",
+                "related": 1,
+                "record_title": "Title 2",
+                "expected_title": "Title 1",
+                "expected_version": 1},
+            {"dir": "related_submission_3", "related": None, "record_title": "Title 3"},
+            {"dir": "related_submission_4", "related": None, "record_title": "Title 4"}
+        ]
+        # Dummy record data
+        # The title will be set later based on test_data values
+        record = {'title': None,
+                  'reviewer': {'name': 'Testy McTester', 'email': 'test@test.com'},
+                  'uploader': {'name': 'Testy McTester', 'email': 'test@test.com'},
+                  'message': 'This is ready',
+                  'user_id': 1}
+        base_dir = os.path.dirname(os.path.realpath(__file__))
+
+        # Begin submission of test submissions
+        for data in test_data:
+            # Set up a new test submission
+            record['title'] = data['record_title']
+            data['sub'] = process_submission_payload(**record)
+            test_sub = data['sub']
+            # Ensure the status is set to `finished` so the related data can be accessed.
+            test_sub.overall_status = 'finished'
+            test_directory = os.path.join(base_dir, test_dir, data['dir'])
+            record_dir = get_data_path_for_record(test_sub.publication_recid, str(int(round(time.time()))))
+            shutil.copytree(test_directory, record_dir)
+            process_submission_directory(record_dir, os.path.join(record_dir, 'submission.yaml'),
+                                test_sub.publication_recid)
+
+        # Checking against results in test_data
+        for data in test_data:
+            submission = data['sub']
+            # Set some test criteria based on the current data.
+            # If related_id is None, then some tests should yield empty lists.
+            submission_count, table_count = (1, 3) if data['related'] is not None else (0, 0)
+
+            related_hepsubmissions = get_related_hepsubmissions(submission)
+            related_to_this_hepsubmissions = get_related_to_this_hepsubmissions(submission)
+
+            # Check that the correct amount of objects are returned from the queries.
+            assert len(submission.related_recids) == submission_count
+            assert len(related_to_this_hepsubmissions) == submission_count
+            assert len(related_hepsubmissions) == submission_count
+
+            related_record_data = get_record_data_list(submission, "related")
+            related_to_this_record_data = get_record_data_list(submission, "related_to_this")
+
+            assert len(related_record_data) == submission_count
+            assert len(related_to_this_record_data) == submission_count
+
+            if data['related']:
+                assert int(related_hepsubmissions[0].publication_recid) == data['related']
+                assert int(related_to_this_hepsubmissions[0].publication_recid) == data['related']
+
+                expected_record_data = [{
+                    "recid": data['related'],
+                     "title": data['expected_title'],
+                     "version": data['expected_version']
+                }]
+                assert related_record_data == expected_record_data
+                assert related_to_this_record_data == expected_record_data
+
+            for related_table in submission.related_recids:
+                # Get all other RelatedTable entries related to this one
+                # and check against the expected value in `data`
+                assert related_table.related_recid == data['related']
+            for related_hepsub in related_to_this_hepsubmissions:
+                # Get all other submissions related to this one
+                # and check against the expected value in `data`
+                assert related_hepsub.publication_recid == data['related']
+
+            # DataSubmission DOI checking
+            # Get the data for the current test DataSubmission object
+            data_submissions = DataSubmission.query.filter_by(publication_recid=submission.publication_recid).all()
+            # Check against the expected amount of related objects as defined above
+            assert len(data_submissions) == table_count
+            for s in range(0, len(data_submissions)):
+                data_submission = data_submissions[s]
+                # Set the current table number for checking
+                tablenum = s + 1
+                # Generate the test DOI
+                doi_check = f"{HEPDATA_DOI_PREFIX}/hepdata.{data['related']}.v1/t{tablenum}"
+                # Generate the expected table data
+                expected_table_data = [{"name": f"Table {tablenum}",
+                                        "doi": doi_check,
+                                        "description": f"Test Table {tablenum}"}]
+
+                # Execute the related data functions
+                # The table data functions generate a dictionary for tooltip data for each contained entry.
+                # The submission.get_related functions test that the related objects are found as expected.
+                related_datasubmissions = get_related_datasubmissions(data_submission)
+                related_to_this_datasubmissions = get_related_to_this_datasubmissions(data_submission)
+                related_table_data = get_table_data_list(data_submission, "related")
+                related_to_this_table_data = get_table_data_list(data_submission,"related_to_this")
+
+                # Check that the get related functions are returning the correct amount of objects.
+                # Based on the current tests, this is either 0, or 3
+                assert len(related_datasubmissions) == submission_count
+                assert len(related_to_this_datasubmissions) == submission_count
+                assert len(related_table_data) == submission_count
+                assert len(related_to_this_table_data) == submission_count
+
+                if data['related']:
+                    assert related_table_data == expected_table_data
+                    assert related_to_this_table_data == expected_table_data
+
+                # Test doi_check against the related DOI list.
+                for related in related_datasubmissions:
+                    assert doi_check == related.doi
+
+
+def test_cleanup_data_related_recid(app, admin_idx):
+    """
+    Insert a related record ID entry and test that the cleanup function will
+    remove all RelatedRecid objects.
+    :return:
+    """
+    # The test record ID to use
+    recid = 123123
+    # Creating the dummy submission and related record ID entry
+    hepsubmission = HEPSubmission(publication_recid=recid,
+                                  overall_status='todo',
+                                  version=1)
+    related = RelatedRecid(this_recid=recid, related_recid=1)
+    hepsubmission.related_recids.append(related)
+    db.session.add_all([related, hepsubmission])
+    db.session.commit()
+
+    # Check that there is one related record ID
+    check_submission = HEPSubmission.query.filter_by(publication_recid=recid).first()
+    assert len(check_submission.related_recids) == 1
+
+    # Run the cleanup function to test
+    cleanup_data_related_recid(recid)
+
+    # Query and check that there are no submissions
+    check_submission = HEPSubmission.query.filter_by(publication_recid=recid).first()
+    assert len(check_submission.related_recids) == 0
 
 
 def test_old_submission_yaml(app, admin_idx):
@@ -536,3 +717,98 @@ def test_status_reset_error(app, mocker, caplog):
     assert(caplog.records[0].levelname == "ERROR")
     assert(caplog.records[0].msg
            == "Exception while cleaning up: Could not clean up the submission")
+
+
+# Patching to force no-op on function: process_last_updates()
+@patch("hepdata.ext.opensearch.document_enhancers.process_last_updates")
+def test_do_finalise_commit_message(app, admin_idx):
+    """
+    Tests the do_finalise function.
+
+    Here we are testing the commit message functionality, ensuring proper rollback in the event of an error.
+    """
+
+    # Insert the testing record data
+    with app.app_context():
+        admin_idx.recreate_index()
+        # Create test submission/record
+        hepdata_submission = create_test_record(
+            os.path.abspath('tests/test_data/test_submission'),
+            overall_status='todo'
+        )
+
+        # We're going to add an extra commit message
+        conflicting_record = RecordVersionCommitMessage(
+            recid=hepdata_submission.publication_recid,
+            version=hepdata_submission.version,
+            message="OldMessage"
+        )
+
+        db.session.add(conflicting_record)
+        db.session.commit()
+
+        # Create record data and prepare
+        record = get_record_by_id(hepdata_submission.publication_recid)
+        record["creation_date"] = str(datetime.today().strftime('%Y-%m-%d'))
+
+        # Now we mock the get_record_by_id function to cause an error.
+        with patch("hepdata.modules.records.utils.submission.get_record_by_id") as mock_get_record:
+            class MockRecord(MagicMock, dict):
+                # Mocking the invenio-records Record class
+                # Used to create a mock also of type dict
+                pass
+
+            # Create mock record object, set its value
+            # and set it to cause an error.
+            mock_record = MockRecord()
+            mock_get_record.return_value = mock_record
+            # Set the record to raise exception when commit() is called
+            mock_record.commit.side_effect = NoResultFound()
+            # Injecting specific dictionary keys to avoid error.
+            mock_record.__getitem__.side_effect = lambda key: 1 if key == 'item_doi' else None
+
+            # Now we run the do_finalise function (PATCHED)
+            result = do_finalise(
+                        hepdata_submission.publication_recid,
+                        publication_record=record,
+                        commit_message="NewMessage",
+                        force_finalise=True,
+                        convert=False
+            )
+            # Convert str(json)->dict
+            result = json.loads(result)
+
+        # Get all commit messages
+        commit_messages = RecordVersionCommitMessage.query.filter_by(
+            recid=hepdata_submission.publication_recid
+        ).all()
+
+        # Ensure that no new messages have inserted
+        assert len(commit_messages) == 1
+        assert commit_messages[0].message == "OldMessage"
+
+        # Confirm that the result response exists and is correct
+        assert "errors" in result
+        assert len(result["errors"]) == 1
+        assert result["errors"][0] == "No record found to update. Which is super strange."
+
+        # Run do_finalise again, but UNPATCHED
+        result = do_finalise(
+            hepdata_submission.publication_recid,
+            publication_record=record,
+            commit_message="NewMessage",
+            force_finalise=True,
+            convert=False
+        )
+        # Convert str(json)->dict
+        result = json.loads(result)
+
+        # Get the commit messages
+        commit_messages = RecordVersionCommitMessage.query.filter_by(
+            recid=hepdata_submission.publication_recid
+        ).all()
+
+        # `NewMessage` should have inserted, and no error found.
+        assert len(commit_messages) == 2
+        assert commit_messages[-1].message == "NewMessage"
+        assert "errors" not in result

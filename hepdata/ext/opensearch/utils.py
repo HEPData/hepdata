@@ -71,7 +71,7 @@ def prepare_author_for_indexing(document):
 def calculate_sort_order(is_reversed, sorting_field):
     """ Take the default sort order for a given field and an information
      whether to flip it and compute the final sorting order. """
-    from .config.es_config import default_sort_order_for_field
+    from .config.os_config import default_sort_order_for_field
     default_sort_order = default_sort_order_for_field(sorting_field)
     if is_reversed == 'rev':
         return flip_sort_order(default_sort_order)

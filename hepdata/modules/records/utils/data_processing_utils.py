@@ -199,33 +199,19 @@ def process_dependent_variables(group_count, record, table_contents,
         group_count += 1
 
 
-def generate_table_structure(table_contents):
+def generate_table_data(table_contents):
     """
-    Creates a renderable structure from the table structure we've defined.
+    Creates a renderable data table structure.
 
     :param table_contents:
-    :return: a dictionary encompassing the qualifiers, headers and values
+    :return: A dictionary containing the table headers/values
     """
-
-    record = {"name": table_contents["name"], "doi": table_contents["doi"],
-              "location": table_contents["location"],
-              "qualifiers": {},
-              "qualifier_order": [], "headers": [],
-              "review": table_contents["review"],
-              "associated_files": table_contents["associated_files"],
-              "keywords": {},
-              "values": []}
-
-    record["description"] = sanitize_html(table_contents["title"])
-
-    # add in keywords
-    if table_contents['keywords'] is not None:
-        for keyword in table_contents['keywords']:
-            if keyword.name not in record['keywords']:
-                record['keywords'][keyword.name] = []
-
-            if keyword.value not in record['keywords'][keyword.name]:
-                record['keywords'][keyword.name].append(keyword.value)
+    record = {
+        "qualifier_order": [],
+        "headers": [],
+        "values": [],
+        "qualifiers": {}
+    }
 
     tmp_values = {}
     x_axes = OrderedDict()
@@ -256,6 +242,43 @@ def generate_table_structure(table_contents):
 
     for tmp_value in tmp_values:
         record["values"].append(tmp_values[tmp_value])
+
+    return record
+
+
+def generate_table_headers(table_contents):
+    """
+    Prepares the table header data for rendering
+
+    :param table_contents:
+    :return: a dictionary encompassing the qualifiers, headers and values
+    """
+
+    record = {
+        "name": table_contents["name"],
+        "doi": table_contents["doi"],
+        "location": table_contents["location"],
+        "table_license": table_contents["table_license"],
+        "related_tables" : table_contents["related_tables"],
+        "related_to_this" : table_contents["related_to_this"],
+        "resources" : table_contents["resources"],
+        "review": table_contents["review"],
+        "associated_files": table_contents["associated_files"],
+        "keywords": {},
+        "size": table_contents["size"],
+        "size_check": table_contents["size_check"]
+    }
+
+    record["description"] = sanitize_html(table_contents["title"])
+
+    # add in keywords
+    if table_contents['keywords'] is not None:
+        for keyword in table_contents['keywords']:
+            if keyword.name not in record['keywords']:
+                record['keywords'][keyword.name] = []
+
+            if keyword.value not in record['keywords'][keyword.name]:
+                record['keywords'][keyword.name].append(keyword.value)
 
     return record
 
@@ -296,6 +319,8 @@ def process_ctx(ctx, light_mode=False):
                     'csv': '{0}/download/table/{1}/{2}/csv'.format(
                         site_url, _recid, _cleaned_table_name),
                     'yoda': '{0}/download/table/{1}/{2}/yoda'.format(
+                        site_url, _recid, _cleaned_table_name),
+                    'yoda1': '{0}/download/table/{1}/{2}/yoda1'.format(
                         site_url, _recid, _cleaned_table_name),
                     'yaml': '{0}/download/table/{1}/{2}/yaml'.format(
                         site_url, _recid, _cleaned_table_name)}

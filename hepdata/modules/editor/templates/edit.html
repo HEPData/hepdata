@@ -1,11 +1,11 @@
 {% extends "hepdata_theme/page.html" %}
 
-{% block title %}
-    HEPData | Edit {{ ctx.record.title }}
+{% block head_title %}
+  <title>HEPData | Edit {{ ctx.record.title }}</title>
 {% endblock %}
 
 {%- block additional_assets %}
-    {{ webpack['hepdata-record.css'] }}
+  {{ webpack['hepdata-record.css'] }}
 {%- endblock additional_assets %}
 
 {% block page_description %}{{ ctx.record.title }}{% endblock %}

@@ -307,7 +307,7 @@ def test_generate_dois_for_submission(mock_data_cite_provider, identifiers):
     mock_data_cite_provider.reset_mock()
     record_information = create_record({})
     recid = record_information['recid']
-    assert recid == 106
+    assert recid == 173
     hep_submission = get_or_create_hepsubmission(recid)
     generate_dois_for_submission(recid, recid)
     mock_data_cite_provider.assert_not_called()
@@ -334,9 +334,9 @@ def test_generate_dois_for_submission(mock_data_cite_provider, identifiers):
     # Generate DOIs again - should work and call `create` for record, v1, table
     generate_dois_for_submission(recid, recid)
     mock_data_cite_provider.create.assert_has_calls([
-        call('10.17182/hepdata.106'),
-        call('10.17182/hepdata.106.v1'),
-        call('10.17182/hepdata.106.v1/t1')
+        call('10.17182/hepdata.173'),
+        call('10.17182/hepdata.173.v1'),
+        call('10.17182/hepdata.173.v1/t1')
     ])
     # Should have twice as many get calls as register calls (because get is called by create)
     assert mock_data_cite_provider.get.call_count == 6

@@ -23,8 +23,8 @@ import sys
 
 from flask import Blueprint, request, render_template, jsonify
 from hepdata.config import CFG_DATA_KEYWORDS
-from hepdata.ext.elasticsearch.api import search as es_search, \
-    search_authors as es_search_authors, get_all_ids as es_get_all_ids
+from hepdata.ext.opensearch.api import search as os_search, \
+    search_authors as os_search_authors, get_all_ids as os_get_all_ids
 from hepdata.modules.records.utils.common import decode_string
 from hepdata.modules.records.api import get_all_ids as db_get_all_ids
 from hepdata.utils.session import get_session_item, set_session_item
@@ -32,7 +32,7 @@ from hepdata.utils.url import modify_query
 from .config import HEPDATA_CFG_DEFAULT_RESULTS_PER_PAGE, HEPDATA_CFG_FACETS
 from .config import LIMIT_MAX_RESULTS_PER_PAGE
 
-blueprint = Blueprint('es_search',
+blueprint = Blueprint('os_search',
                       __name__,
                       url_prefix='/search',
                       template_folder='templates',
@@ -201,7 +201,7 @@ def parse_query_parameters(request_args):
 @blueprint.route('/authors', methods=['GET', 'POST'])
 def search_authors():
     author_name = request.args.get('q', '')
-    results = es_search_authors(author_name)
+    results = os_search_authors(author_name)
     return jsonify({'results': results})
 
 
@@ -237,7 +237,7 @@ def search():
     """
     query_params = parse_query_parameters(request.args)
 
-    query_result = es_search(query_params['q'],
+    query_result = os_search(query_params['q'],
                              filters=query_params['filters'],
                              size=query_params['size'],
                              sort_field=query_params['sorting_field'],
@@ -300,7 +300,7 @@ def all_ids():
     - ``inspire_ids``: if set to a truthy value, return inspire IDs rather than HEPData record IDs
     - ``last_updated``: return IDs updated since given date (in format YYYY-mm-dd)
     - ``sort_by``: if set to ``latest``, sort the results latest first
-    - ``use_es``: if set to a truthy values, use ElasticSearch rather than the database to return the ids
+    - ``use_es``: if set to a truthy values, use OpenSearch rather than the database to return the ids
     """
     id_field = 'recid'
     if _get_bool_parameter(request, 'inspire_ids'):
@@ -323,7 +323,7 @@ def all_ids():
 
     try:
         if _get_bool_parameter(request, 'use_es'):
-            ids = es_get_all_ids(id_field=id_field, last_updated=last_updated, latest_first=sort_latest_first)
+            ids = os_get_all_ids(id_field=id_field, last_updated=last_updated, latest_first=sort_latest_first)
         else:
             ids = db_get_all_ids(id_field=id_field, last_updated=last_updated, latest_first=sort_latest_first)
     except ValueError as e:

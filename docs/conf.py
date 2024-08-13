@@ -25,8 +25,16 @@
 from __future__ import print_function
 
 import os
+import sys
 
 import sphinx.environment
+
+def setup(app):
+    argv = ' '.join(sys.argv)
+    if '-b html' in argv:
+        app.add_config_value('buildername', 'html', 'env')
+    else:
+        app.add_config_value('buildername', 'not-html', 'env')
 
 
 # -- General configuration ------------------------------------------------
@@ -45,6 +53,7 @@ extensions = [
     'sphinx.ext.autosummary',
     'sphinx.ext.coverage',
     'sphinx.ext.doctest',
+    'sphinx.ext.ifconfig',
     'sphinx.ext.intersphinx',
     'sphinx.ext.viewcode',
     'sphinx_click.ext',
@@ -60,13 +69,13 @@ templates_path = ['_templates']
 source_suffix = '.rst'
 
 # The encoding of source files.
-#source_encoding = 'utf-8-sig'
+# source_encoding = 'utf-8-sig'
 
-# The master toctree document.
-master_doc = 'index'
+# The root toctree document.
+root_doc = 'index'
 
 # General information about the project.
-project = u''
+project = u'HEPData'
 copyright = u'2016, CERN'
 author = u'CERN'
 
@@ -90,7 +99,7 @@ release = version
 #
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
-language = None
+language = 'en'
 
 # There are two options for replacing |today|: either, you set today to some
 # non-false value, then it is used:
@@ -268,8 +277,8 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-  (master_doc, 'HEPData.tex', u'HEPData Documentation',
-   u'CERN', 'manual'),
+    (root_doc, 'HEPData.tex', u'HEPData Documentation',
+     u'CERN', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -298,7 +307,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'HEPData', u'HEPData Documentation',
+    (root_doc, 'HEPData', u'HEPData Documentation',
      [author], 1)
 ]
 
@@ -312,9 +321,9 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  (master_doc, 'HEPData', u'HEPData Documentation',
-   author, 'HEPData', 'HEPData - Repository for publication-related High-Energy Physics data.',
-   'Miscellaneous'),
+    (root_doc, 'HEPData', u'HEPData Documentation',
+     author, 'HEPData', 'HEPData - Repository for publication-related High-Energy Physics data.',
+     'Miscellaneous'),
 ]
 
 # Documents to append as an appendix to all manuals.
@@ -331,7 +340,7 @@ texinfo_documents = [
 
 
 # Example configuration for intersphinx: refer to the Python standard library.
-intersphinx_mapping = {'https://docs.python.org/2/': None}
+intersphinx_mapping = {'python': ('https://docs.python.org/3.9', None)}
 
 # If you’d like to change the prefix for tasks in reference documentation
 # then you can change the celery_task_prefix configuration value.

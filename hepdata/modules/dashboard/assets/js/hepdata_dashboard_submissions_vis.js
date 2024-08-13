@@ -71,7 +71,6 @@ var submissions_vis = (function () {
   }
 
   function resetCharts(charts) {
-    console.log("Aaargh");
     charts.forEach(function (c) {
       c.filterAll();
     });
@@ -228,7 +227,7 @@ var submissions_vis = (function () {
             },
 
             function (d) {
-              var link_id = d.inspire_id ? 'ins' + d.inspire_id : d.recid;
+              var link_id = d.inspire_id && d.status == 'finished' ? 'ins' + d.inspire_id : d.recid;
               return '<div class="label version">Version ' + d.version + '</div>' +
                 '<a href="/record/' + link_id + '" target="_blank">' + d.title + '</a>';
             },
@@ -244,6 +243,12 @@ var submissions_vis = (function () {
               if (d.collaboration) {
                 return '<a href="/search/?q=&collaboration=' +
                   d.collaboration + '" target="_blank">' + '<span class="label ' + d.collaboration + '">' + d.collaboration + '</span>' + '</a>';
+              }
+            },
+            function (d) {
+              if (d.participants) {
+                // Add in a space after each comma (end of participant).
+                return '<span>' + String(d.participants).replaceAll(',', ', ') + '</span>';
               }
             }
           ]).sortBy(function (d) {

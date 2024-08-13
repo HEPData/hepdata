@@ -111,10 +111,10 @@ CACHE_TYPE = "redis"
 
 # Session
 SESSION_REDIS = "redis://localhost:6379/0"
-PERMANENT_SESSION_LIFETIME = timedelta(days=1)
+PERMANENT_SESSION_LIFETIME = timedelta(hours=12)
 
-# ElasticSearch
-ELASTICSEARCH_HOST = "localhost"
+# OpenSearch
+OPENSEARCH_HOST = "localhost"
 
 # Accounts
 RECAPTCHA_PUBLIC_KEY = None
@@ -141,14 +141,14 @@ SECURITY_POST_CONFIRM_VIEW = "/dashboard/"
 SECURITY_POST_REGISTER_VIEW = "/signup/"
 
 SECURITY_CONFIRM_SALT = "CHANGE_ME"
-SECURITY_EMAIL_SENDER = "info@hepdata.net"
+SECURITY_EMAIL_SENDER = "hepdata-staff@cern.ch"
 SECURITY_EMAIL_SUBJECT_REGISTER = "[HEPData] Welcome to HEPData!"
 SECURITY_EMAIL_SUBJECT_PASSWORD_NOTICE = "[HEPData] Your password has been reset"
 SECURITY_EMAIL_SUBJECT_PASSWORD_RESET = "[HEPData] Password reset instructions"
 SECURITY_EMAIL_SUBJECT_PASSWORD_CHANGE_NOTICE = "[HEPData] Your password has been changed"
 SECURITY_EMAIL_SUBJECT_CONFIRM = "[HEPData] Please confirm your email"
 SECURITY_LOGIN_SALT = "CHANGE_ME"
-SECURITY_PASSWORD_SALT = "CHANGE_ME"
+SECURITY_PASSWORD_SINGLE_HASH = True
 SECURITY_REMEMBER_SALT = "CHANGE_ME"
 SECURITY_RESET_SALT = "CHANGE_ME"
 
@@ -165,10 +165,10 @@ BASE_TEMPLATE = "hepdata_theme/page.html"
 COVER_TEMPLATE = "hepdata_theme/page_cover.html"
 SETTINGS_TEMPLATE = "invenio_theme/page_settings.html"
 
-ELASTICSEARCH_INDEX = 'hepdata-main'
+OPENSEARCH_INDEX = 'hepdata-main'
 SUBMISSION_INDEX = 'hepdata-submission'
 AUTHOR_INDEX = 'hepdata-authors'
-SEARCH_ELASTIC_HOSTS = [
+SEARCH_HOSTS = [
     'localhost:9200'
 ]
 
@@ -178,6 +178,8 @@ UPLOAD_MAX_SIZE = 52000000  # Upload limit in bytes
 MAX_CONTENT_LENGTH = UPLOAD_MAX_SIZE  # Flask: don’t read more than this many bytes from the incoming request data
 CONVERT_MAX_SIZE = sys.maxsize  # Limit on payload sent to converter (checked at submission)
 CLIENT_TIMEOUT = 298  # Client-side timeout in s (should be slightly smaller than server timeout)
+SIZE_LOAD_CHECK_THRESHOLD = 1 * (1024 * 1024) # Size (bytes) threshold for immediate loading of a table on the records page.
+ADDITIONAL_SIZE_LOAD_CHECK_THRESHOLD = 1 * (1024 * 1024) # Size (bytes) threshold  for disallowing render of additional res files
 
 CFG_PUB_TYPE = 'publication'
 CFG_DATA_TYPE = 'datatable'
@@ -185,15 +187,15 @@ CFG_SUBMISSIONS_TYPE = 'submission'
 CFG_DATA_KEYWORDS = ['observables', 'reactions', 'cmenergies', 'phrases']
 
 CFG_CONVERTER_URL = 'https://converter.hepdata.net'
-CFG_SUPPORTED_FORMATS = ['yaml', 'root', 'csv', 'yoda', 'original']
-CFG_CONVERTER_TIMEOUT = CLIENT_TIMEOUT # timeout in seconds
+CFG_SUPPORTED_FORMATS = ['yaml', 'root', 'csv', 'yoda', 'yoda1', 'original']
+CFG_CONVERTER_TIMEOUT = 220  # timeout in seconds
 
 CFG_TMPDIR = tempfile.gettempdir()
 CFG_DATADIR = tempfile.gettempdir()
 
 MAIL_SERVER = 'cernmx.cern.ch'
 MAIL_PORT = ''
-MAIL_DEFAULT_SENDER = 'submissions@hepdata.net'
+MAIL_DEFAULT_SENDER = 'hepdata-staff@cern.ch'
 SMTP_NO_PASSWORD = True
 SMTP_ENCRYPTION = False
 MAIL_USERNAME = ''
@@ -266,6 +268,7 @@ TWITTER_HANDLE_MAPPINGS = {
     "bicep2": "@BICEPTWO",
     "xenon": "@Xenon1T",
     "microboone": "@Microboone",
+    "belle-ii": "@belle2collab",
 }
 
 INVALID_DOI_TEMPLATE = "hepdata_theme/invalid_doi.html"
@@ -309,40 +312,40 @@ SPECIAL_VALUES = ['inf', '+inf', '-inf', 'nan']
 # ANALYSES_ENDPOINTS
 ANALYSES_ENDPOINTS = {
     'rivet': {
-        'endpoint_url': 'http://rivet.hepforge.org/analyses.json',
+        'endpoint_url': 'https://cedar-tools.web.cern.ch/rivet/analyses.json',
         'url_template': 'http://rivet.hepforge.org/analyses/{0}'
+    },
+    'MadAnalysis': {
+        'endpoint_url': 'https://madanalysis.irmp.ucl.ac.be/raw-attachment/wiki/MA5SandBox/analyses.json',
+        'url_template': 'https://doi.org/{0}'
     },
     #'ufo': {},
     #'xfitter': {},
     #'applgrid': {},
     #'fastnlo': {},
-    #'madanalysis': {},
 }
 
 HISTFACTORY_FILE_TYPE = 'HistFactory'
+NUISANCE_FILE_TYPE = 'ProSelecta'
 
 ADMIN_EMAIL = 'info@hepdata.net'
 SUBMISSION_FILE_NAME_PATTERN = 'HEPData-{}-v{}-yaml.zip'
 
-# For ignoring URLLIB3 errors on the server where we use https for elastic search,
+# For ignoring URLLIB3 errors on the server where we use https for opensearch,
 # but the certificate is generated on our side.
 PYTHONWARNINGS="ignore:Unverified HTTPS request"
 
 PRODUCTION_MODE = False
 
 RUN_SELENIUM_LOCALLY = False
-
-# This is needed for invenio-oauthclient==1.1.3.
-# Default value of None gives an exception.
-# It can be removed for invenio-oauthclient>=1.3.0.
-APP_ALLOWED_HOSTS = []
+RATELIMIT_ENABLED = False
 
 LOGGING_SENTRY_CELERY = True  # for invenio-logging
 
 # HTML attributes and tags allowed in record descriptions
 # If these are modified, update tips.rst in hepdata-submission
 ALLOWED_HTML_ATTRS = {'a': ['href', 'title', 'name', 'rel'], 'abbr': ['title'], 'acronym': ['title']}
-ALLOWED_HTML_TAGS = ['a', 'abbr', 'acronym', 'b', 'blockquote', 'br', 'code', 'div', 'em', 'i', 'li', 'ol', 'p', 'pre', 'span', 'strike', 'strong', 'sub', 'sup', 'u', 'ul']
+ALLOWED_HTML_TAGS = {'a', 'abbr', 'acronym', 'b', 'blockquote', 'br', 'code', 'div', 'em', 'i', 'li', 'ol', 'p', 'pre', 'span', 'strike', 'strong', 'sub', 'sup', 'u', 'ul'}
 
 # Talisman settings (see https://github.com/GoogleCloudPlatform/flask-talisman).
 # We don't want the web pods to use https.

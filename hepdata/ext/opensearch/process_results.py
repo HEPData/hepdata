@@ -111,7 +111,7 @@ def get_basic_record_information(record):
 
 
 def fetch_remaining_papers(tables, papers):
-    from hepdata.ext.elasticsearch.api import fetch_record
+    from hepdata.ext.opensearch.api import fetch_record
     hit_papers = list(map(lambda x: int(x['_id']), papers))
     for table in tables:
         paper_id = table['_source'].get('related_publication')

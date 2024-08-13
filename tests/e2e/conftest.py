@@ -39,12 +39,11 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from sqlalchemy_utils.functions import create_database, database_exists, \
-    drop_database
+from sqlalchemy_utils.functions import create_database, database_exists
 from time import sleep
 
 from hepdata.config import CFG_TMPDIR, RUN_SELENIUM_LOCALLY
-from hepdata.ext.elasticsearch.api import reindex_all
+from hepdata.ext.opensearch.api import reindex_all
 from hepdata.factory import create_app
 from tests.conftest import get_identifiers, import_default_data
 
@@ -54,9 +53,10 @@ from tests.conftest import get_identifiers, import_default_data
 class SQLAlchemy(InvenioSQLAlchemy):
     def apply_pool_defaults(self, app, options):
         # See https://github.com/pallets/flask-sqlalchemy/issues/589#issuecomment-361075700
-        # Will need updating if we move to flask-sqlalchemy >= 2.5
-        super().apply_pool_defaults(app, options)
+        options = super().apply_pool_defaults(app, options)
         options["pool_pre_ping"] = True
+        return options
+
 
 
 db = SQLAlchemy(metadata=metadata)
@@ -82,7 +82,7 @@ def app(request):
         CELERY_RESULT_BACKEND="cache",
         CELERY_CACHE_BACKEND="memory",
         CELERY_TASK_EAGER_PROPAGATES=True,
-        ELASTICSEARCH_INDEX="hepdata-main-test",
+        OPENSEARCH_INDEX="hepdata-main-test",
         SUBMISSION_INDEX='hepdata-submission-test',
         AUTHOR_INDEX='hepdata-authors-test',
         SQLALCHEMY_DATABASE_URI=os.environ.get(
@@ -196,44 +196,41 @@ def env_browser(request):
 
     timeout_process = multiprocessing.Process(target=wait_kill)
 
-    sauce_username = os.environ.get('SAUCE_USERNAME', '')
-    sauce_access_key = os.environ.get('SAUCE_ACCESS_KEY', '')
-    remote_url = \
-        "https://%s:%s@ondemand.eu-central-1.saucelabs.com:443/wd/hub" \
-        % (sauce_username, sauce_access_key)
-
-    # the desired_capabilities parameter tells us which browsers and OS to spin up.
-    desired_cap = {
-        'browserName': 'chrome',
-        'browserVersion': '99',
-        'platformName': 'Windows 11',
-        'build': os.environ.get('GITHUB_RUN_ID',
-                                datetime.utcnow().strftime("%Y-%m-%d %H:00ish")),
-        'username': sauce_username,
-        'accessKey': sauce_access_key,
-        'sauce:options': {
-            'screenResolution': '1280x1024',
-            'tunnelIdentifier': os.environ.get('GITHUB_RUN_ID', ''),
-            'name': request.node.name,
-        },
-        'extendedDebugging': True
-    }
-
     if not RUN_SELENIUM_LOCALLY:
+        remote_url = "https://ondemand.eu-central-1.saucelabs.com:443/wd/hub"
+        options = webdriver.ChromeOptions()
+        options.browser_version = '114'
+        options.platform_name = 'Windows 10'
+        sauce_options = {
+            'extendedDebugging': True,
+            'screenResolution': '1280x1024',
+            'name': request.node.name,
+            'build': os.environ.get('GITHUB_RUN_ID', datetime.utcnow().strftime("%Y-%m-%d %H:00ish")),
+            'username': os.environ.get('SAUCE_USERNAME', ''),
+            'accessKey': os.environ.get('SAUCE_ACCESS_KEY', ''),
+            'tunnelName': os.environ.get('GITHUB_RUN_ID', ''),
+        }
+
+        for key in ['username', 'accessKey']:
+            if sauce_options[key] == '':
+                raise Exception(f"Sauce {key} is not in Environment")
+
+        options.set_capability('sauce:options', sauce_options)
         # This creates a webdriver object to send to Sauce Labs including the desired capabilities
-        browser = webdriver.Remote(remote_url, desired_capabilities=desired_cap)
+        browser = webdriver.Remote(remote_url, options=options)
     else:
         # Run tests locally instead of on Sauce Labs (requires local chromedriver installation).
         browser = getattr(webdriver, request.param)()
 
-    browser.set_window_size(1280,1024)
+    browser.set_window_size(1280, 1024)
+    browser.implicitly_wait(10)  # seconds
 
     # Go to homepage and click cookie accept button so cookie bar is out of the way
     browser.get(flask.url_for('hepdata_theme.index', _external=True))
     wait = WebDriverWait(browser, 10)
     wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, ".cc_btn_accept_all")))
     sleep(1)
-    cookie_accept_btn = browser.find_element_by_css_selector(".cc_btn_accept_all")
+    cookie_accept_btn = browser.find_element(By.CSS_SELECTOR, ".cc_btn_accept_all")
     cookie_accept_btn.click()
 
     # Add finalizer to quit the webdriver instance
@@ -244,9 +241,15 @@ def env_browser(request):
 
     # Check browser logs before quitting
     log = browser.get_log('browser')
-    assert len(log) == 0, \
+
+    # Filter out error message for:
+    # WARNING: security - Error with Permissions-Policy header:
+    # Origin trial controlled feature not enabled: 'interest-cohort'
+    temp_log = [t for t in log if 'interest-cohort' not in t['message']]
+
+    assert len(temp_log) == 0, \
         "Errors in browser log:\n" + \
-        "\n".join([f"{line['level']}: {line['message']}" for line in log])
+        "\n".join([f"{line['level']}: {line['message']}" for line in temp_log])
 
 
 @pytest.fixture()
@@ -255,9 +258,9 @@ def logged_in_browser(env_browser):
     env_browser.get(flask.url_for('security.login', _external=True))
     e2e_assert_url(env_browser, 'security.login')
 
-    login_form = env_browser.find_element_by_name('login_user_form')
-    login_form.find_element_by_name('email').send_keys('test@hepdata.net')
-    login_form.find_element_by_name('password').send_keys('hello1')
+    login_form = env_browser.find_element(By.NAME, 'login_user_form')
+    login_form.find_element(By.NAME, 'email').send_keys('test@hepdata.net')
+    login_form.find_element(By.NAME, 'password').send_keys('hello1')
     login_form.submit()
 
     # Check we're back at the homepage
@@ -284,7 +287,7 @@ def e2e_assert(driver, assertion, message = None):
             print('Assertion message: ' + message + '\n')
 
         print('Browser body text was:\n')
-        print(driver.find_element_by_tag_name('body').text)
+        print(driver.find_element(By.TAG_NAME, 'body').text)
         print('\n================================================================================')
 
     assert assertion, message

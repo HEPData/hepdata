@@ -38,7 +38,7 @@ def test_date_expansion(test, expected):
 @pytest.mark.parametrize(
     "inspire_id, title, creation_date, year, subject_area",
     [("1245023", "High-statistics study of $K^0_S$ pair production in two-photon collisions", "2013-07-29", 2013, ['hep-ex']),
-     ("1183818", "Measurements of the pseudorapidity dependence of the total transverse energy in proton-proton collisions at $\sqrt{s}=7$ TeV with ATLAS",
+     ("1183818", "Measurements of the pseudorapidity dependence of the total transverse energy in proton-proton collisions at sqrt(s) = 7 TeV with ATLAS",
       "2012-08-01", 2012, ["hep-ex"]),
      ("1407276", "Elastic scattering of negative pions by protons at 2 BeV/c", "1963-01-01", 1963, None),
      ("44234", "DIFFERENTIAL ELASTIC PION-PROTON SCATTERING AT 600-MEV, 650-MEV and 750-MEV", "2006-04-11", 2006, None),

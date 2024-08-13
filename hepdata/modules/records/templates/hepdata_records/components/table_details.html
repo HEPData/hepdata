@@ -17,7 +17,7 @@
 
     <div id="hepdata_table_loader" style="width: 200px; height: 200px; margin: 0 auto">
         <div id="hepdata_table_loading">
-            <div id="table_loader"></div>
+            <div id="main_table_loader"></div>
             <p align="center" style="font-weight: bolder; color: #2C3E50; padding-top: 0px">Loading Data...</p>
         </div>
         <div id="hepdata_table_loading_failed" class="hidden">
@@ -63,6 +63,11 @@
                             <li>
                                 <a href="#"
                                    class="data_download_link"
+                                   id="download_yoda1_data">YODA1</a>
+                            </li>
+                            <li>
+                                <a href="#"
+                                   class="data_download_link"
                                    id="download_root_data">ROOT</a>
                             </li>
                             <li>
@@ -82,11 +87,34 @@
 
                     <span class="pull-right" id="support-files" style="margin-right: 20px; margin-top:1px"></span>
                 </h4>
+
                 <div class="clearfix"></div>
+
+                <p id="table_data_license" class="hidden">License: <span id="table_data_license_url"></span></p>
+
+                <div class="clearfix"></div>
+
                 <p id="table_location"></p>
+
+                <div class="clearfix"></div>
+
+                <div id="related-tables">
+                    <h5>This table is related to:</h5>
+                    <div class="related-list-container">
+                        <ul class="related-list"></ul>
+                    </div>
+                </div>
+
+                <div class="clearfix"></div>
+
+                <div id="related-to-this-tables">
+                    <h5>This table is referred to by:</h5>
+                    <div class="related-list-container">
+                        <ul class="related-list"></ul>
+                    </div>
+                </div>
             </div>
             <div class="clearfix"></div>
-            <br/>
             <div class="row">
                 <div class="col-md-9 col-sm-10">
                     <p id="table_description"></p>
@@ -107,8 +135,22 @@
 
         <div class="clearfix"></div>
 
-        <div class="row">
-
+        <div id="hepdata_filesize_loader" class="hidden">
+            <div id="filesize_table_confirm" align="center">
+                <p align="center" style="font-weight: bolder; color: #2C3E50; padding-top: 0px">This table is too large to load automatically.</p>
+                <p id="filesize_table_size">The table size is <span id="file_size"></span> MB, which is greater than our threshold of <span id="threshold_size"></span> MB.</p>
+                <button id="hepdata_filesize_loading_button" class="btn btn-primary btn-sm">Load Table</button>
+            </div>
+            <div id="filesize_table_loading" class="hidden" align="center">
+                <div id="filesize_table_loader"></div>
+                <p align="center" style="font-weight: bolder; color: #2C3E50; padding-top: 0px">Loading Data...</p>
+            </div>
+            <div id="filesize_table_loading_failed" class="hidden">
+                <p id="filesize_table_failed_text" align="center" style="font-weight: bolder; color: #2C3E50; padding-top: 0px"></p>
+                <p align="center">Please try again later, or email info@hepdata.net if this error persists.</p>
+            </div>
+        </div>
+        <div id="hep_table" class="row">
             <div id="hep_table_data" class="col-md-7 hidden-xs">
                 <div id="table_options_region"></div>
                 <div id="table_section">

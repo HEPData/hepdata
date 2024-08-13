@@ -1,5 +1,6 @@
 {%- extends "hepdata_theme/page.html" %}
 
+{% set title = 'About ' + _(config.THEME_SITENAME) %}
 
 {% block page_body %}
 
@@ -68,7 +69,7 @@
                 comprises the data points from plots and tables related to
                 several thousand publications including those
                 from the Large Hadron Collider (LHC). HEPData is funded by a
-                 <a href="http://gtr.ukri.org/projects?ref=ST/T001011/1" target="_blank"
+                 <a href="https://gtr.ukri.org/projects?ref=ST/X003167/1" target="_blank"
                     style="text-decoration: underline">grant</a> from the UK
                 <a href="https://www.ukri.org/councils/stfc/" target="_blank">STFC</a> and
                 is based at the
@@ -108,21 +109,6 @@
             <div class="col-md-3">
                 <div class="team-member">
                     <div class="team-member-image"
-                         style="background-image: url(static/img/people/alison_clarke.jpg)">
-
-                    </div>
-                    <div class="team-member-detail">
-                        <a href="https://www.dur.ac.uk/directory/profile/?id=18738"
-                           target="_blank">Alison Clarke</a><br/>
-                        <span>ARC, Durham University</span><br/>
-                        <span class="role">Software Engineer (2019-)</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-3">
-                <div class="team-member">
-                    <div class="team-member-image"
                          style="background-image: url(static/img/people/michael_spannowsky.jpg)">
 
                     </div>
@@ -142,22 +128,6 @@
 
         <div class="col-md-12">
             <h4 class="text-center"><img src="static/img/about/cern-logo.svg" width="130px"></h4>
-            <br/>
-            <div class="col-md-3" style="margin: 0 auto;">
-                <div class="team-member">
-                    <div class="team-member-image"
-                         style="background-image: url(static/img/people/eamonn.jpg)">
-
-                    </div>
-                    <div class="team-member-detail">
-                        <a href="https://uk.linkedin.com/in/eamonnmaguire1986"
-                           target="_blank">Eamonn Maguire</a><br/>
-                        <span>CERN</span><br/>
-                        <span class="role">Lead Developer (2015-2016)</span>
-                    </div>
-                </div>
-            </div>
-
         </div>
 
     </div>
@@ -168,19 +138,23 @@
             <div class="section-header" style="width:250px"><p>Other Contributors</p></div>
             <br/>
             <ul style="list-style: none; -webkit-padding-start: 0">
+                <li>Eamonn Maguire (Lead Developer @ CERN, 2015-2016)</li>
                 <li>Jan Stypka (Technical Student @ CERN, 2015-2016)</li>
                 <li>Laura Rueda (CERN, 2014-2015)</li>
                 <li>Michał Szostak (Summer Student @ CERN, 2015)</li>
                 <li>Alicia Boya García (University of Salamanca, Spain, 2015-2016)</li>
                 <li>Mike Whalley (Database Manager @ Durham, 1982-2016)</li>
                 <li>Frank Krauss (Principal Investigator @ Durham, 2014-2017)</li>
-                <li>Lukas Heinrich (NYU, New York, USA, 2015-)</li>
+                <li>Lukas Heinrich (NYU, New York, USA, 2015-2020)</li>
                 <li>David Caro (CERN, 2016-2018)</li>
                 <li>Keith Ellis (Principal Investigator @ Durham, 2017-2019)</li>
                 <li>Joanne Bentham (Data Entry Assistant @ Durham, 1995-2018)</li>
                 <li>Benjamin Bergia (CERN, 2019-)</li>
-                <li>Harris Tzovanakis (CERN, 2020-)</li>
+                <li>Harris Tzovanakis (CERN, 2020)</li>
                 <li>Giuseppe De Laurentis (IPPP Durham, 2020)</li>
+                <li>Alison Clarke (Software Engineer @ Durham, 2019-2022)</li>
+                <li>Zeynep Akı (Software Engineer @ Durham, 2022)</li>
+                <li>Jordan Byers (Software Engineer @ Durham, 2022-)</li>
             </ul>
         </div>
 
@@ -225,7 +199,7 @@
     <div class="clearfix"></div><br/>
 
     <div class="row-fluid" >
-        <div id="papers" class="col-md-6 text-center" style="padding-top: 5%">
+        <div id="papers" class="list-container col-md-6 text-center" style="padding-top: 5%">
             <div class="section-header" style="width:250px"><p>HEPData Papers</p></div>
             <br/>
 
@@ -263,12 +237,52 @@
             </ul>
 
         </div>
-        <div id="presentations" class="col-md-6 text-center" style="padding-top: 5%">
+        <div id="presentations" class="list-container col-md-6 text-center" style="padding-top: 5%">
             <div class="section-header" style="width:250px"><p>HEPData Presentations</p></div>
             <br/>
 
             <ul class="talks">
                 {% with talks = [
+                {'meeting': 'Reinterpretation & OpenMAPP',
+                 'location': 'LPSC Grenoble (remote by Zoom)',
+                 'speaker': 'Graeme Watt',
+                 'date': 'Jun 2024',
+                 'link': 'https://indico.cern.ch/event/1420197/contributions/5988232/attachments/2879085/5043272/watt_hepdata_jun2024.pdf'},
+                {'meeting': 'Invisibles Data Days',
+                 'location': 'Max-Planck Institute for Physics (MPP), Munich',
+                 'speaker': 'Graeme Watt',
+                 'date': 'May 2024',
+                 'link': 'https://indico.ph.tum.de/event/7592/contributions/9102/attachments/6157/8294/watt_hepdata_may2024.pdf'},
+                {'meeting': 'IPPP Computing',
+                 'location': 'IPPP, Durham',
+                 'speaker': 'Graeme Watt',
+                 'date': 'Feb 2024',
+                 'link': 'https://www.ippp.dur.ac.uk/~watt/watt_hepdata_feb2024.pdf'},
+                {'meeting': 'pyhf Users and Developers Workshop 2023',
+                 'location': 'CERN, Geneva (remote by Zoom)',
+                 'speaker': 'Graeme Watt',
+                 'date': 'Dec 2023',
+                 'link': 'https://indico.cern.ch/event/1294577/contributions/5677125/attachments/2765378/4816772/watt_hepdata_dec2023.pdf'},
+                {'meeting': '(Re)interpretation of the LHC results for new physics',
+                 'location': 'IPPP, Durham',
+                 'speaker': 'Jordan Byers',
+                 'date': 'Aug 2023',
+                 'link': 'https://conference.ippp.dur.ac.uk/event/1178/contributions/6467/attachments/5016/6441/bidirectional_linking_in_hepdata.pdf'},
+                {'meeting': '12th MBDAV meeting',
+                 'location': 'Nuclear Energy Agency, Paris (remote by Zoom)',
+                 'speaker': 'Graeme Watt',
+                 'date': 'May 2023',
+                 'link': 'https://www.ippp.dur.ac.uk/~watt/watt_hepdata_may2023.pdf'},
+                {'meeting': '(Re)interpreting the results of new physics searches at the LHC',
+                 'location': 'CERN, Geneva (remote by Zoom)',
+                 'speaker': 'Graeme Watt',
+                 'date': 'Dec 2022',
+                 'link': 'https://indico.cern.ch/event/1197680/contributions/5127287/attachments/2565045/4421950/watt_hepdata_dec2022.pdf'},
+                {'meeting': 'Belle II Data Preservation Workshop',
+                'location': 'Roma Tre University, Rome',
+                'speaker': 'Graeme Watt',
+                'date': 'Oct 2022',
+                'link': 'https://indico.belle2.org/event/7653/contributions/44066/attachments/18872/28052/watt_hepdata_oct2022.pdf'},
                 {'meeting': 'STRONG-2020 meeting on database for hadronic cross sections',
                  'location': 'Virtual Zoom',
                  'speaker': 'Graeme Watt',

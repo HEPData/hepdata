@@ -29,17 +29,19 @@ import logging
 import json
 import time
 import mimetypes
+import os
 from dateutil import parser
 from invenio_accounts.models import User
 from flask_login import login_required, login_user
 from flask import Blueprint, send_file, abort, redirect
 from flask_security.utils import verify_password
 from sqlalchemy import or_, func
+from sqlalchemy.orm import joinedload
 import yaml
 from yaml import CBaseLoader as Loader
 
-from hepdata.config import CFG_DATA_TYPE, CFG_PUB_TYPE, SITE_URL
-from hepdata.ext.elasticsearch.api import get_records_matching_field, get_count_for_collection, get_n_latest_records, \
+from hepdata.config import CFG_DATA_TYPE, CFG_PUB_TYPE, SITE_URL, ADDITIONAL_SIZE_LOAD_CHECK_THRESHOLD
+from hepdata.ext.opensearch.api import get_records_matching_field, get_count_for_collection, get_n_latest_records, \
     index_record_ids
 from hepdata.modules.email.api import send_notification_email, send_new_review_message_email, NoParticipantsException, \
     send_question_email, send_coordinator_notification_email
@@ -48,14 +50,14 @@ from hepdata.modules.records.api import request, determine_user_privileges, rend
     render_record, current_user, db, jsonify, get_user_from_id, get_record_contents, extract_journal_info, \
     user_allowed_to_perform_action, NoResultFound, OrderedDict, query_messages_for_data_review, returns_json, \
     process_payload, has_upload_permissions, has_coordinator_permissions, create_new_version, format_resource, \
-    should_send_json_ld, JSON_LD_MIMETYPES, get_resource_mimetype
+    should_send_json_ld, JSON_LD_MIMETYPES, get_resource_mimetype, get_table_data_list
 from hepdata.modules.submission.api import get_submission_participants_for_record
 from hepdata.modules.submission.models import HEPSubmission, DataSubmission, \
     DataResource, DataReview, Message, Question
 from hepdata.modules.records.utils.common import get_record_by_id, \
-    default_time, IMAGE_TYPES, decode_string
+    default_time, IMAGE_TYPES, decode_string, file_size_check, generate_license_data_by_id, load_table_data
 from hepdata.modules.records.utils.data_processing_utils import \
-    generate_table_structure, process_ctx
+    generate_table_headers, process_ctx, generate_table_data
 from hepdata.modules.records.utils.submission import create_data_review, \
     get_or_create_hepsubmission
 from hepdata.modules.submission.api import get_latest_hepsubmission
@@ -63,6 +65,7 @@ from hepdata.modules.records.utils.workflow import \
     update_action_for_submission_participant
 from hepdata.modules.stats.views import increment
 from hepdata.modules.permissions.models import SubmissionParticipant
+from hepdata.utils.miscellaneous import get_resource_data
 
 logging.basicConfig()
 log = logging.getLogger(__name__)
@@ -101,7 +104,7 @@ def sandbox_display(id):
             if output_format == 'html':
                 return render_template('hepdata_records/sandbox.html', ctx=ctx)
             elif 'table' in request.args:
-                if output_format == 'yoda' and 'rivet' in request.args:
+                if output_format.startswith('yoda') and 'rivet' in request.args:
                     return redirect('/download/table/{0}/{1}/{2}/{3}/{4}'.format(
                         id,
                         request.args['table'].replace('%', '%25').replace('\\', '%5C'),
@@ -114,7 +117,7 @@ def sandbox_display(id):
             elif output_format == 'json':
                 ctx = process_ctx(ctx, light_mode)
                 return jsonify(ctx)
-            elif output_format == 'yoda' and 'rivet' in request.args:
+            elif output_format.startswith('yoda') and 'rivet' in request.args:
                 return redirect('/download/submission/{0}/{1}/{2}/{3}'.format(
                     id, 1, output_format, request.args['rivet']))
             else:
@@ -143,8 +146,8 @@ def get_metadata_by_alternative_id(recid):
             output_format = request.args.get('format', 'html')
             light_mode = bool(request.args.get('light', False))
 
-            # Check the Accept header to determine whether to send json-ld
-            if should_send_json_ld(request):
+            # Check the Accept header to determine whether to send JSON-LD
+            if output_format == 'html' and should_send_json_ld(request):
                 output_format = 'json_ld'
 
             return render_record(recid=record['recid'], record=record, version=version, output_format=output_format,
@@ -241,8 +244,8 @@ def metadata(recid):
     except Exception as e:
         record = None
 
-    # Check the Accept header to determine whether to send json-ld
-    if should_send_json_ld(request):
+    # Check the Accept header to determine whether to send JSON-LD
+    if output_format == 'html' and should_send_json_ld(request):
         output_format = 'json_ld'
 
     return render_record(recid=recid, record=record, version=version, output_format=output_format,
@@ -287,23 +290,37 @@ def get_latest():
     return jsonify(result)
 
 
-@blueprint.route('/data/<int:recid>/<int:data_recid>/<int:version>', methods=['GET', ])
-def get_table_details(recid, data_recid, version):
+@blueprint.route('/data/tabledata/<int:data_recid>/<int:version>', methods=['GET'])
+def get_table_data(data_recid, version):
     """
-    Get the table details.
+    Gets the table data only for a specific recid/version.
+
+    :param data_recid: The data recid used for retrieval
+    :param version: The data version to retrieve
+    :return:
+    """
+    # Run the function to load table data and return
+    table_contents = load_table_data(data_recid, version)
+    return jsonify(generate_table_data(table_contents))
+
+
+@blueprint.route('/data/<int:recid>/<int:data_recid>/<int:version>/')
+@blueprint.route('/data/<int:recid>/<int:data_recid>/<int:version>/<int:load_all>')
+def get_table_details(recid, data_recid, version, load_all=1):
+    """
+    Get the table details of a given datasubmission.
 
     :param recid:
     :param data_recid:
     :param version:
+    :param load_all: Whether to perform the filesize check or not when loading (1 will always load the file)
     :return:
     """
-
-    datasub_query = DataSubmission.query.filter_by(id=data_recid,
-                                                   version=version)
+    # joinedload allows query of data in another table without a second database access.
+    datasub_query = DataSubmission.query.options(joinedload('related_tables')).filter_by(id=data_recid, version=version)
     table_contents = {}
 
     if datasub_query.count() > 0:
-
         datasub_record = datasub_query.one()
         data_query = db.session.query(DataResource).filter(
             DataResource.id == datasub_record.data_file)
@@ -312,22 +329,19 @@ def get_table_details(recid, data_recid, version):
             data_record = data_query.one()
             file_location = data_record.file_location
 
-            attempts = 0
-            while True:
-                try:
-                    with open(file_location, 'r') as table_file:
-                        table_contents = yaml.load(table_file, Loader=Loader)
-                except:
-                    attempts += 1
-                # allow multiple attempts to read file in case of temporary disk problems
-                if (table_contents and table_contents is not None) or attempts > 5:
-                    break
+            size_check = file_size_check(file_location, load_all)
 
             table_contents["name"] = datasub_record.name
             table_contents["title"] = datasub_record.description
             table_contents["keywords"] = datasub_record.keywords
+            table_contents["table_license"] = generate_license_data_by_id(data_record.file_license)
+            table_contents["related_tables"] = get_table_data_list(datasub_record, "related")
+            table_contents["related_to_this"] = get_table_data_list(datasub_record, "related_to_this")
+            table_contents["resources"] = get_resource_data(datasub_record)
             table_contents["doi"] = datasub_record.doi
             table_contents["location"] = datasub_record.location_in_publication
+            table_contents["size"] = size_check["size"]
+            table_contents["size_check"] = size_check["status"]
 
         # we create a map of files mainly to accommodate the use of thumbnails for images where possible.
         tmp_assoc_files = {}
@@ -381,7 +395,15 @@ def get_table_details(recid, data_recid, version):
     # x and y headers (should not require a colspan)
     # values, that also encompass the errors
 
-    return jsonify(generate_table_structure(table_contents))
+    fixed_table = generate_table_headers(table_contents)
+
+    # If the size is below the threshold, we just pass the table contents now
+    if size_check["status"] or load_all == 1:
+        table_data = generate_table_data(load_table_data(data_recid, version))
+        # Combine the dictionaries if required
+        fixed_table = {**fixed_table, **table_data}
+
+    return jsonify(fixed_table)
 
 
 @blueprint.route('/coordinator/view/<int:recid>', methods=['GET', ])
@@ -436,8 +458,9 @@ def set_data_review_status():
 
     if user_allowed_to_perform_action(recid):
         if all_tables:
-            data_ids = db.session.query(DataSubmission.id) \
+            data_id_rows = db.session.query(DataSubmission.id) \
                 .filter_by(publication_recid=recid, version=version).distinct()
+            data_ids = [i[0] for i in data_id_rows]
         else:
             data_ids = [int(request.form['data_recid'])]
 
@@ -667,6 +690,7 @@ def process_resource(reference):
 
     _reference_data = {'id': reference.id, 'file_type': reference.file_type,
                        'file_description': reference.file_description,
+                       'data_license': generate_license_data_by_id(reference.file_license),
                        'location': _location, 'doi': reference.doi}
 
     if reference.file_type.lower() in IMAGE_TYPES:
@@ -688,15 +712,26 @@ def get_resource(resource_id):
     view_mode = bool(request.args.get('view', False))
     landing_page = bool(request.args.get('landing_page', False))
     output_format = 'html'
+    filesize = None
 
     if resource_obj:
         contents = ''
         if landing_page or not view_mode:
-            if resource_obj.file_type.lower() not in IMAGE_TYPES and 'http' not in resource_obj.file_location.lower():
+            if resource_obj.file_location.lower().startswith('http'):
+                contents = resource_obj.file_location
+            elif resource_obj.file_type.lower() not in IMAGE_TYPES:
                 print("Resource is at: " + resource_obj.file_location)
                 try:
                     with open(resource_obj.file_location, 'r', encoding='utf-8') as resource_file:
-                        contents = resource_file.read() if mimetypes.guess_type(resource_obj.file_location)[0] != 'application/x-tar' else 'Binary'
+                        if mimetypes.guess_type(resource_obj.file_location)[0] != 'application/x-tar':
+                            # Check against the filesize threshold. Do not set contents if it fails.
+                            filesize = os.path.getsize(resource_obj.file_location)
+                            if filesize < ADDITIONAL_SIZE_LOAD_CHECK_THRESHOLD:
+                                contents = resource_file.read()
+                            else:
+                                contents = 'Large text file'
+                        else:
+                            contents = 'Binary'
                 except UnicodeDecodeError:
                     contents = 'Binary'
 
@@ -725,7 +760,10 @@ def get_resource(resource_id):
                     }), 406
 
         if view_mode:
-            return send_file(resource_obj.file_location, as_attachment=True)
+            if resource_obj.file_location.lower().startswith('http'):
+                return redirect(resource_obj.file_location)
+            else:
+                return send_file(resource_obj.file_location, as_attachment=True)
         elif 'html' in resource_obj.file_location and 'http' not in resource_obj.file_location.lower() and not landing_page:
             with open(resource_obj.file_location, 'r') as resource_file:
                 return contents
@@ -741,6 +779,10 @@ def get_resource(resource_id):
                     status_code = 404 if 'error' in ctx['json_ld'] else 200
                     return jsonify(ctx['json_ld']), status_code
                 else:
+                    if filesize:
+                        ctx['filesize'] = '%.2f'%((filesize / 1024) / 1024) # Set filesize if exists
+                        ctx['ADDITIONAL_SIZE_LOAD_CHECK_THRESHOLD'] = '%.2f'%((ADDITIONAL_SIZE_LOAD_CHECK_THRESHOLD / 1024) / 1024)
+                    ctx['data_license'] = generate_license_data_by_id(resource_obj.file_license)
                     return render_template('hepdata_records/related_record.html', ctx=ctx)
 
             else:
@@ -801,7 +843,7 @@ def cli_upload():
     invitation_cookie = request.form['invitation_cookie'] if 'invitation_cookie' in request.form.keys() else None
 
     # Check the user has upload permissions for this record
-    if not has_upload_permissions(recid, user, is_sandbox):
+    if recid and not has_upload_permissions(recid, user, is_sandbox):
         return jsonify({
             "message": "Email {} does not correspond to a confirmed uploader for this record.".format(str(user_email))
         }), 403
