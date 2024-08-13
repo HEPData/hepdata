@@ -404,21 +404,29 @@ def test_search_range_ids(app, load_default_data, identifiers):
 
     for test in test_queries:
         # Create the range query formatting the keyword per query
-        range_query = f"{test}:[%s TO %s]"
+        range_query = f"{test}:[%d TO %d]"
 
         # Just do a huge range, to see if everything appears
-        results = os_api.search(range_query % ("0", "100000000"))
+        results = os_api.search(range_query % (0, 100000000))
         # Result count should equal maximum number of entries
         assert len(results['results']) == len(identifiers)
+
+        # Testing a range query we know shouldn't work
+        zero_result = os_api.search(range_query % (0, 0))
+        assert not zero_result.get('results')
 
         # Do a range search for a single result, for each result of the 'all' search above.
         for result in results['results']:
             # We get the inspire/recid from the current result
-            identifier_id = result[test]
+            identifier_id = int(result[test])
             # Do a search, formatting the query to find a single result
             specific_result = os_api.search(range_query % (identifier_id, identifier_id))
             # Check ID of single result
-            assert specific_result['results'][0][test] == identifier_id
+            assert int(specific_result['results'][0][test]) == int(identifier_id)
+
+            # Testing another bad result, where the numbers are completely invalid
+            bad_result = os_api.search(range_query % (identifier_id+1, identifier_id-1))
+            assert not bad_result.get('results')
 
 
 def test_merge_results():
