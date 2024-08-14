@@ -133,14 +133,14 @@ def test_dashboard(live_server, logged_in_browser):
     assert manage_widget.find_element(By.CLASS_NAME,'modal-title').text == 'Manage Submission'
 
     # Check reminder email button works
-    reminder_button = manage_widget.find_element_by_css_selector('.trigger-actions .btn-primary')
+    reminder_button = manage_widget.find_element(By.CSS_SELECTOR, '.trigger-actions .btn-primary')
     assert reminder_button.get_attribute('data-action') == 'email'
     reminder_button.click()
-    confirmation_message = manage_widget.find_element_by_id('confirmation_message').text
+    confirmation_message = manage_widget.find_element(By.ID, 'confirmation_message').text
     assert confirmation_message == 'Are you sure you want to email this uploader?'
-    confirmation_button = manage_widget.find_element_by_css_selector('.confirm-move-action')
+    confirmation_button = manage_widget.find_element(By.CSS_SELECTOR, '.confirm-move-action')
     confirmation_button.click()
-    assert not manage_widget.find_element_by_id('confirmation').is_displayed()
+    assert not manage_widget.find_element(By.ID, 'confirmation').is_displayed()
 
     # Close modal
     manage_widget.find_element(By.CSS_SELECTOR, '.modal-footer .btn-default').click()
