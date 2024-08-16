@@ -310,8 +310,16 @@ def send_cookie_email(submission_participant,
                            message_body,
                            reply_to_address=coordinator.email)
 
-def send_reminder_email(submission_participant, record_information, version, show_detail=False):
+def send_reminder_email(submission_participant, record_information, version, show_detail=False, message=None):
+    """
+    Sends an email reminder to either an uploader, or reviewer.
 
+    :param submission_participant: A SubmissionParticipant object, to receive the email reminder
+    :param record_information: Record object containing record information
+    :param version: The record version
+    :param show_detail: Optionally includes specific detail for each table in the submission (default is False)
+    :param message: Any specific message text input into the form (Default is None)
+    """
     site_url = current_app.config.get('SITE_URL', 'https://www.hepdata.net')
     tables = []
     hepsubmission = get_latest_hepsubmission(
@@ -325,7 +333,7 @@ def send_reminder_email(submission_participant, record_information, version, sho
                                    name=submission_participant.full_name,
                                    actor=coordinator.email,
                                    article=record_information['recid'],
-                                   message=None,
+                                   message=message,
                                    invite_token=submission_participant.invitation_cookie,
                                    role=submission_participant.role,
                                    show_detail=show_detail,
