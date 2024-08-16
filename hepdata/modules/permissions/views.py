@@ -56,16 +56,23 @@ blueprint = Blueprint('hep_permissions', __name__, url_prefix="/permissions",
 @blueprint.route(
     '/manage/<int:recid>/<string:action>/<string:status_action>/<int:participant_id>', methods=['POST', 'GET'])
 @login_required
-def manage_participant_status(recid, action, status_action,
-                              participant_id):
+def manage_participant_status(recid, action, status_action, participant_id):
     """
-    Can promote or demote a participant to/from primary reviewer/uploader, or
-    remove the participant from the record.
+    Handles actions received from the "Manage Submission" widget window buttons.
+    Manages user promotion/demotion for uploader and reviewer roles,
+    removal of reserve users, and email reminders to primary uploaders/reviewers
+    Request can contain a message for reminder email.
 
-    :param recid: record id that the user will be promoted or demoted for
-    :param action: upload or review
-    :param status_action: demote, promote or remove
-    :param participant_id: id of user from the SubmissionParticipant table.
+    status_action possibilities are:
+        promote: Promote a reserve uploader/reviewer to primary position
+        demote: Demote a reserve uploader/reviewer from primary position
+        email: Send reminder email to primary uploader/reviewer
+        remove: Remove a reserve uploader/reviewer from the submission
+
+    :param recid: ID of target record to manage
+    :param action: (Unused) Target of the action ('upload', OR 'review')
+    :param status_action: The status of which action button was clicked.
+    :param participant_id: ID of target participant to update
     :return:
     """
     try:
@@ -97,7 +104,7 @@ def manage_participant_status(recid, action, status_action,
             admin_idx = AdminIndexer()
             admin_idx.index_submission(hepsubmission)
         else:
-            send_reminder_email(participant, record, version=hepsubmission.version)
+            send_reminder_email(participant, record, version=hepsubmission.version, message=request.form['review_message'])
 
 
 
