@@ -49,6 +49,10 @@ $(document).ready(function() {
       $.ajax({
           dataType: "json",
           url: '/permissions/manage/' + window.recid + '/' + window.data_person_type + '/' + window.action + '/' + window.userid,
+          type: 'POST',
+          data: {
+              review_message: $("#review-message").val()
+          },
           success: function (data) {
               if (data.success) {
                   process_reviews(data['recid']);
