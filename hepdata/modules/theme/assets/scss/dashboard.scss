@@ -977,4 +977,11 @@ body, html {
     height: 100vh;
   }
 
+  #review-message-container {
+    text-align: left;
+  }
+
+  #review-message-container label {
+    display: block;
+  }
 }
