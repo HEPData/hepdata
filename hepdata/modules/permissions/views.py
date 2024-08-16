@@ -54,7 +54,7 @@ blueprint = Blueprint('hep_permissions', __name__, url_prefix="/permissions",
 
 
 @blueprint.route(
-    '/manage/<int:recid>/<string:action>/<string:status_action>/<int:participant_id>')
+    '/manage/<int:recid>/<string:action>/<string:status_action>/<int:participant_id>', methods=['POST', 'GET'])
 @login_required
 def manage_participant_status(recid, action, status_action,
                               participant_id):
