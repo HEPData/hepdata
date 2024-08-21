@@ -310,51 +310,6 @@ def send_cookie_email(submission_participant,
                            message_body,
                            reply_to_address=coordinator.email)
 
-def send_reminder_email(submission_participant, record_information, version, show_detail=False, message=None):
-    """
-    Sends an email reminder to either an uploader, or reviewer.
-
-    :param submission_participant: A SubmissionParticipant object, to receive the email reminder
-    :param record_information: Record object containing record information
-    :param version: The record version
-    :param show_detail: Optionally includes specific detail for each table in the submission (default is False)
-    :param message: Any specific message text input into the form (Default is None)
-    """
-    site_url = current_app.config.get('SITE_URL', 'https://www.hepdata.net')
-    tables = []
-    hepsubmission = get_latest_hepsubmission(
-        publication_recid=record_information['recid']
-    )
-    coordinator = User.query.get(hepsubmission.coordinator)
-
-    reviewers_notified = submission_participant.user_account is not None
-
-    message_body = render_template('hepdata_theme/email/submission_status.html',
-                                   name=submission_participant.full_name,
-                                   actor=coordinator.email,
-                                   article=record_information['recid'],
-                                   message=message,
-                                   invite_token=submission_participant.invitation_cookie,
-                                   role=submission_participant.role,
-                                   show_detail=show_detail,
-                                   data_tables=tables,
-                                   reviewers_notified=reviewers_notified,
-                                   title=record_information['title'],
-                                   site_url=site_url,
-                                   reminder=True,
-                                   link=site_url + "/record/{0}"
-                                   .format(record_information['recid']))
-
-    if submission_participant.role == 'reviewer':
-        message_subject = '[HEPData] Reminder to review submission {0}'.format(record_information['recid'])
-    else:
-        message_subject = '[HEPData] Reminder about submission {0}'.format(record_information['recid'])
-
-    create_send_email_task(submission_participant.email,
-                           message_subject,
-                           message_body,
-                           reply_to_address=coordinator.email)
-
 
 def send_reserve_email(submission_participant, record_information):
 
