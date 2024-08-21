@@ -157,7 +157,6 @@ def send_notification_email(recid, version, user, reviewers_notified, message=No
                                        reviewers_notified=reviewers_notified,
                                        title=record['title'],
                                        site_url=site_url,
-                                       reminder=False,
                                        link=site_url + "/record/{0}"
                                        .format(recid))
 
