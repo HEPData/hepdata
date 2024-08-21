@@ -345,7 +345,7 @@ def send_reminder_email(submission_participant, record_information, version, sho
                                    link=site_url + "/record/{0}"
                                    .format(record_information['recid']))
 
-    if not reviewers_notified:
+    if submission_participant.role == 'reviewer':
         message_subject = '[HEPData] Reminder to review submission {0}'.format(record_information['recid'])
     else:
         message_subject = '[HEPData] Reminder about submission {0}'.format(record_information['recid'])
