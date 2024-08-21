@@ -104,7 +104,11 @@ def manage_participant_status(recid, action, status_action, participant_id):
             admin_idx = AdminIndexer()
             admin_idx.index_submission(hepsubmission)
         else:
-            send_cookie_email(participant, record, version=hepsubmission.version, message=request.form['review_message'])
+            send_cookie_email(participant,
+                              record,
+                              version=hepsubmission.version,
+                              message=request.form['review_message'],
+                              reminder=True)
 
 
 
