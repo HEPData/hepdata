@@ -50,9 +50,13 @@ def test_send_cookie_email(app):
     db.session.add(test_participant)
     db.session.commit()
 
+    # Correctly set up the test_submission folder path
+    base_directory = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+    test_directory = os.path.join(base_directory, 'tests', 'test_data', 'test_submission')
+
     # Create and upload the submission
     # and set the coordinator
-    test_submission = create_test_record(os.path.abspath('test_data/test_submission'), "todo")
+    test_submission = create_test_record(test_directory, "todo")
     test_submission.coordinator = 1
     db.session.add(test_participant)
     db.session.commit()
