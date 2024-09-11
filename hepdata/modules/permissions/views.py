@@ -54,47 +54,63 @@ blueprint = Blueprint('hep_permissions', __name__, url_prefix="/permissions",
 
 
 @blueprint.route(
-    '/manage/<int:recid>/<string:action>/<string:status_action>/<int:participant_id>')
+    '/manage/<int:recid>/<string:action>/<string:status_action>/<int:participant_id>', methods=['POST', 'GET'])
 @login_required
-def manage_participant_status(recid, action, status_action,
-                              participant_id):
+def manage_participant_status(recid, action, status_action, participant_id):
     """
-    Can promote or demote a participant to/from primary reviewer/uploader, or
-    remove the participant from the record.
+    Handles actions received from the "Manage Submission" widget window buttons.
+    Manages user promotion/demotion for uploader and reviewer roles,
+    removal of reserve users, and email reminders to primary uploaders/reviewers
+    Request can contain a message for reminder email.
 
-    :param recid: record id that the user will be promoted or demoted for
-    :param action: upload or review
-    :param status_action: demote, promote or remove
-    :param participant_id: id of user from the SubmissionParticipant table.
+    status_action possibilities are:
+        promote: Promote a reserve uploader/reviewer to primary position
+        demote: Demote a reserve uploader/reviewer from primary position
+        email: Send reminder email to primary uploader/reviewer
+        remove: Remove a reserve uploader/reviewer from the submission
+
+    :param recid: ID of target record to manage
+    :param action: (Unused) Target of the action ('upload', OR 'review')
+    :param status_action: The status of which action button was clicked.
+    :param participant_id: ID of target participant to update
     :return:
     """
     try:
         participant = SubmissionParticipant.query.filter_by(
             id=participant_id).one()
 
-        if status_action == 'remove':
-            db.session.delete(participant)
-        else:
-            status = 'reserve'
-            if status_action == 'promote':
-                status = 'primary'
+        if status_action != 'email':
+            if status_action == 'remove':
+                db.session.delete(participant)
+            else:
+                status = 'reserve'
+                if status_action == 'promote':
+                    status = 'primary'
 
-            participant.status = status
-            db.session.add(participant)
+                participant.status = status
+                db.session.add(participant)
 
-        db.session.commit()
+            db.session.commit()
 
         record = get_record_by_id(recid)
 
         # now send the email telling the user of their new status!
         hepsubmission = get_latest_hepsubmission(publication_recid=recid)
-        if status_action == 'promote':
-            send_cookie_email(participant, record, version=hepsubmission.version)
-        elif status_action == 'demote':
-            send_reserve_email(participant, record)
+        if status_action != 'email':
+            if status_action == 'promote':
+                send_cookie_email(participant, record, version=hepsubmission.version)
+            elif status_action == 'demote':
+                send_reserve_email(participant, record)
+            admin_idx = AdminIndexer()
+            admin_idx.index_submission(hepsubmission)
+        else:
+            send_cookie_email(participant,
+                              record,
+                              version=hepsubmission.version,
+                              message=request.form['review_message'],
+                              reminder=True)
 
-        admin_idx = AdminIndexer()
-        admin_idx.index_submission(hepsubmission)
+
 
         return json.dumps({"success": True, "recid": recid})
     except Exception as e:

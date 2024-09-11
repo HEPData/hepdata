@@ -277,8 +277,17 @@ def notify_subscribers(hepsubmission, record):
 
 
 def send_cookie_email(submission_participant,
-                      record_information, message=None, version=1):
+                      record_information, message=None, version=1, reminder=False):
+    """
+    Sends an email to either an uploader, or reviewer containing their invitation cookie/token
+    and any custom messaging.
 
+    :param submission_participant: A SubmissionParticipant object, to receive the email reminder
+    :param record_information: Record object containing record information
+    :param version: The record version (Default is 1)
+    :param message: Any specific message text input into the form (Default is None)
+    :param reminder: Whether the reminder should be sent or not
+    """
     hepsubmission = get_latest_hepsubmission(
         publication_recid=record_information['recid']
     )
@@ -295,6 +304,7 @@ def send_cookie_email(submission_participant,
         invite_token=submission_participant.invitation_cookie,
         status=submission_participant.status,
         recid=submission_participant.publication_recid,
+        reminder=reminder,
         version=version,
         email=submission_participant.email,
         coordinator_email=coordinator.email,
