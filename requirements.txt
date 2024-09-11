@@ -1,11 +1,11 @@
 beautifulsoup4==4.12.3
 bleach==6.1.0
 datacite==1.1.4
-gunicorn==22.0.0
+gunicorn==23.0.0
 hepdata-converter-ws-client==0.2.2
 hepdata-validator==0.3.5
 invenio-access==2.0.0     # Indirect (needed by invenio-admin)
-invenio-accounts==5.0.1  # https://github.com/HEPData/hepdata/issues/816
+invenio-accounts==5.1.1
 invenio-admin==1.5.0
 invenio-assets==3.0.3
 invenio-config==1.0.4
@@ -14,7 +14,7 @@ invenio-logging[sentry_sdk]==2.1.1
 invenio-oauthclient==4.0.0
 invenio-pidstore==1.3.1
 invenio-records==2.3.0
-invenio-search[opensearch2]==2.3.1
+invenio-search[opensearch2]==2.4.1
 invenio-theme==3.3.0
 invenio-userprofiles==3.0.0
 python-twitter-v2==0.9.1

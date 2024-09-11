@@ -80,6 +80,14 @@ CELERY_BEAT_SCHEDULE = {
         'schedule': crontab(minute=0, hour=1),  # execute daily at 1am UTC
         'args': (1,),  # INSPIRE records (with HEPData) updated yesterday
     },
+    'session_cleaner': {
+        'task': 'invenio_accounts.tasks.clean_session_table',
+        'schedule': timedelta(days=1),
+    },
+    'delete_login_ips': {
+        'task': 'invenio_accounts.tasks.delete_ips',
+        'schedule': timedelta(days=30),
+    },
 }
 
 # Number of workers running the datacite queue
@@ -110,7 +118,7 @@ CACHE_REDIS_URL = "redis://localhost:6379/0"
 CACHE_TYPE = "redis"
 
 # Session
-SESSION_REDIS = "redis://localhost:6379/0"
+ACCOUNTS_SESSION_REDIS_URL = CACHE_REDIS_URL
 PERMANENT_SESSION_LIFETIME = timedelta(hours=12)
 
 # OpenSearch
