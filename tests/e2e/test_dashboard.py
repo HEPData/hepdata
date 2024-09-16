@@ -129,7 +129,19 @@ def test_dashboard(live_server, logged_in_browser):
     manage_widget = WebDriverWait(browser, 10).until(
         EC.visibility_of_element_located((By.ID, 'manageWidget'))
     )
-    assert manage_widget.find_element(By.CLASS_NAME, 'modal-title').text == 'Manage Submission'
+    
+    assert manage_widget.find_element(By.CLASS_NAME,'modal-title').text == 'Manage Submission'
+
+    # Check reminder email button works
+    reminder_button = manage_widget.find_element(By.CSS_SELECTOR, '.trigger-actions .btn-primary')
+    assert reminder_button.get_attribute('data-action') == 'email'
+    reminder_button.click()
+    confirmation_message = manage_widget.find_element(By.ID, 'confirmation_message').text
+    assert confirmation_message == 'Are you sure you want to email this uploader?'
+    confirmation_button = manage_widget.find_element(By.CSS_SELECTOR, '.confirm-move-action')
+    confirmation_button.click()
+    assert not manage_widget.find_element(By.ID, 'confirmation').is_displayed()
+
     # Close modal
     manage_widget.find_element(By.CSS_SELECTOR, '.modal-footer .btn-default').click()
     WebDriverWait(browser, 10).until(
