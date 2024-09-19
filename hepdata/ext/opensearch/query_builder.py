@@ -86,30 +86,35 @@ class HEPDataQueryParser(object):
         return phrase
 
     @staticmethod
-    def is_range_query(query):
+    def get_range_queries(query):
         """
         Simple function to do a regex match against the expected range query
         pattern.
 
+        Expected format: (tolerates extra whitespace)
+            publication_recid:[0 TO 25000]
+            inspire_id:[476476 TO 476476]
+
         :param query: The query string to check.
         :return: True if the query string matches the expected range query.
         """
-        try:
-            result = any(
-                [re.match(rf"{pt}:\s*\[\d+\s+TO\s+\d+]", query) for pt in CFG_SEARCH_RANGE_TERMS]
-            )
-            return bool(result)
-        except TypeError:
-            # We just return False if there is a TypeError.
-            return False
+        range_queries = []
+        for rt in CFG_SEARCH_RANGE_TERMS:
+            # Take the first instance?
+            result = re.findall(rf"{rt}:\s*\[\d+\s+TO\s+\d+]", query)
+            if result:
+                query = re.sub(rf"{rt}:\s*\[\d+\s+TO\s+\d+]", "", query)
+                query = query.strip()
+                range_queries.append(result[0])
+
+        return query, range_queries
 
     @staticmethod
     def parse_range_query(query_string):
         """
-        Parses a given range query string in an expected format
-          found in HEPDataQueryParser.is_range_query
-          to determine the integers used for the ranges.
-        Also returns the base term like "publication_recid"
+        Returns the upper and lower range of a given range query string in an expected format.
+          Expected format in: found in HEPDataQueryParser.is_range_query
+        Also returns the base term like "publication_recid".
 
         :param query_string: The range query string.
         :return: A tuple of the upper and lower range bounds from the query string,
@@ -123,20 +128,19 @@ class HEPDataQueryParser(object):
             "inspire_id": "inspire_id"  # Leave unchanged
         }
 
-        try:
-            # Remove all whitespace before splitting.
-            query_string = query_string.replace(" ", "")
-            # Split string and determine where ranges are
-            ranges = query_string.split("[")[1].split("]")[0]
-            # Check type and return
-            range_split = ranges.split("TO")
-            lower_range, upper_range = int(range_split[0]), int(range_split[1])
+        # Remove all whitespace before splitting.
+        query_string = query_string.replace(" ", "")
+        # Split string and determine where ranges are
+        ranges = query_string.split("[")[1].split("]")[0]
+        # Check type and return
+        range_split = ranges.split("TO")
+        lower_range, upper_range = int(range_split[0]), int(range_split[1])
 
-            # Get corresponding term from the mapping
-            term = term_mapping[query_string.split(":[")[0]]
+        if upper_range < lower_range or upper_range < 0 or lower_range < 0:
+            raise ValueError
 
-            return (lower_range, upper_range), term
-        except (ValueError, IndexError):
-            # If there's something wrong with the string, return None
-            return None, None
+        # Get corresponding term from the mapping
+        term = term_mapping[query_string.split(":[")[0]]
+
+        return (lower_range, upper_range), term
 

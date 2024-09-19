@@ -112,43 +112,49 @@ def search(query,
     search = RecordsSearch(using=os, index=index).with_preference_param()
 
     # Determine if the query is range-based
-    is_range_query = HEPDataQueryParser.is_range_query(query)
+    # Will also remove range queries from the query string
+    try:
+        query, range_queries = HEPDataQueryParser.get_range_queries(query)
+    except TypeError:
+        return { 'error': 'Invalid query string' }
 
-    # If not, we do a normal parse and set up the query
-    if not is_range_query:
-        query = HEPDataQueryParser.parse_query(query)
+    query = HEPDataQueryParser.parse_query(query)
 
-        if query:
-            fuzzy_query = QueryString(query=query, fuzziness='AUTO')
-            search.query = fuzzy_query | \
-                           Q('has_child', type="child_datatable", query=fuzzy_query)
+    if query:
+        fuzzy_query = QueryString(query=query, fuzziness='AUTO')
+        search.query = fuzzy_query | \
+                       Q('has_child', type="child_datatable", query=fuzzy_query)
 
     # Add filter to search for only "publication" objects
     search = search.filter("term", doc_type=CFG_PUB_TYPE)
     search = QueryBuilder.add_filters(search, filters)
 
-    # We need to add the range filter to the query
-    if is_range_query:
-        ranges, term = HEPDataQueryParser.parse_range_query(query)
+    if range_queries:
+        for rq in range_queries:
+            # Try to get lower and upper bound, and search term from the range query
+            try:
+                ranges, term = HEPDataQueryParser.parse_range_query(rq)
+            except ValueError:
+                return {'error': 'Invalid numerical values in range query.'}
 
-        # If something goes wrong here (returns None), we just return an error and log it.
-        if not ranges:
-            error_string = "An unexpected error occurred when range searching"
-            log.error(error_string + f": {query}")
-            return {'error': error_string}
+            # If something goes wrong here (returns None), we just return an error and log it.
+            if not ranges:
+                error_string = "An unexpected error occurred when range searching"
+                log.error(error_string + f": {query}")
+                return {'error': error_string}
+            else:
+                search = search.filter('range', **{term: {'gte': str(ranges[0]), 'lte': str(ranges[1])}})
 
-        search = search.filter('range', **{term: {'gte': str(ranges[0]), 'lte': str(ranges[1])}})
-
-    try:
-        mapped_sort_field = sort_fields_mapping(sort_field)
-    except ValueError as ve:
-        return {'error': str(ve)}
-
-    # Enable ordering by ID if it is a range query
-    if is_range_query:
+    # Enable ordering by ID if there is a range query, and there is no sort set by the user
+    if range_queries and not sort_field:
         search = search.sort({term: {'order': 'desc'}})
     else:
         # Otherwise, normal sort
+        try:
+            mapped_sort_field = sort_fields_mapping(sort_field)
+        except ValueError as ve:
+            return {'error': str(ve)}
+
         search = search.sort({mapped_sort_field : {"order" : calculate_sort_order(sort_order, sort_field)}})
 
     search = add_default_aggregations(search, filters)
@@ -163,7 +169,7 @@ def search(query,
         pub_result = search.execute().to_dict()
         data_result = None
         # We don't want data tables if we're searching by publication range only.
-        if not is_range_query:
+        if not range_queries:
             parent_filter = {
                 "terms": {
                             "_id": [hit["_id"] for hit in pub_result['hits']['hits']]
