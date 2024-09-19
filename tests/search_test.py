@@ -15,9 +15,11 @@
 # You should have received a copy of the GNU General Public License
 # along with HEPData; if not, write to the Free Software Foundation, Inc.,
 # 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
+import unittest
+
 from opensearchpy.exceptions import NotFoundError
 from opensearch_dsl import Search, Index
-import datetime
+from datetime import datetime
 import pytest
 from invenio_db import db
 from unittest.mock import call
@@ -178,23 +180,24 @@ def test_query_parser():
     assert (parsed_query_string7 == 'recid:1')
 
 
-def test_query_parser_is_range_query():
+def test_query_parser_get_range_queries():
     """
 `       Tests HEPDataQueryParser.is_range_query to verify expected
           pass/fail results against test range query strings.
     """
     test_data = [
         {  # Expected success cases
-            "expected_result": True,
+            "expected_result": "SUCCESS",
             "query_strings": [
                 "publication_recid:[46 TO 46]",
                 "publication_recid:[0 TO 10001]",
                 "inspire_id:[0 TO 10000]",
-                "inspire_id: [0  TO  10000]"  # Extra valid whitespace
+                "inspire_id: [0  TO  10000]",  # Extra valid whitespace
+                " inspire_id:[0 TO 10000] ",  # Left and right whitespace
             ]
         },
         {  # Expected failure cases
-            "expected_result": False,
+            "expected_result": "RETURNS",
             "query_strings": [
                 "publication_recid:[-46 TO 46]",  # Negative number
                 "INCORRECT:[46 TO 46]",  # Mismatched term
@@ -205,7 +208,13 @@ def test_query_parser_is_range_query():
                 "inspire_id:[0 TO 10000 ]",  # Invalid whitespace
                 "inspire_id:[ 0 TO 10000]",  # Invalid whitespace
                 "inspire_id :[0 TO 10000]",  # Invalid whitespace
-                " inspire_id:[0 TO 10000]",  # Invalid whitespace
+
+            ]
+        },
+        {  # Some TypeError cases
+            "expected_result": "ERROR",
+            "expected_error": TypeError,
+            "query_strings": [
                 [],  # TypeError - Should return False
                 {}   # TypeError
             ]
@@ -216,8 +225,19 @@ def test_query_parser_is_range_query():
         # For each batch of expected successes/failures
         for qs in test['query_strings']:
             # Run range query check for each string
-            is_range = HEPDataQueryParser.is_range_query(qs)
-            assert is_range == test['expected_result']
+            if test['expected_result'] == "ERROR":
+                with unittest.TestCase().assertRaises(test['expected_error']):
+                    query_result = HEPDataQueryParser.get_range_queries(qs)
+            else:
+                query_result = HEPDataQueryParser.get_range_queries(qs)
+                # The returned string is stripped
+                qs = qs.strip()
+
+            if test['expected_result'] == "SUCCESS":
+                assert query_result == ('', [qs])
+            elif test['expected_result'] == "RETURNS" :
+                # Returned query is stripped
+                assert  query_result == (qs, [])
 
 
 def test_query_parser_parse_range_query():
@@ -238,15 +258,27 @@ def test_query_parser_parse_range_query():
             "query_string": "inspire_id:[0 TO 10000]",
             "expected_result": ((0, 10000), "inspire_id")
         },
-        {  # Invalid - Incorrect format
-            "query_string": "publication_recid:[46 to 46]",
-            "expected_result": (None, None)
+        {  # Invalid - Negative number
+            "query_string": "publication_recid:[2 TO 1]",
+            "expected_result": ValueError
+        },
+        {  # Invalid - Negative number
+            "query_string": "publication_recid:[-2 TO 1]",
+            "expected_result": ValueError
+        },
+        {  # Invalid - Negative number
+            "query_string": "publication_recid:[2 TO -1]",
+            "expected_result": ValueError
         }
     ]
 
     for test in test_data:
-        result = HEPDataQueryParser.parse_range_query(test['query_string'])
-        assert result == test['expected_result']
+        if test['expected_result'] == ValueError:
+            with unittest.TestCase().assertRaises(test['expected_result']):
+                HEPDataQueryParser.parse_range_query(test['query_string'])
+        else:
+            result = HEPDataQueryParser.parse_range_query(test['query_string'])
+            assert result == test['expected_result']
 
 
 def test_search(app, load_default_data, identifiers):
@@ -427,6 +459,86 @@ def test_search_range_ids(app, load_default_data, identifiers):
             # Testing another bad result, where the numbers are completely invalid
             bad_result = os_api.search(range_query % (identifier_id+1, identifier_id-1))
             assert not bad_result.get('results')
+
+def test_composite_range_queries(app, load_default_data, identifiers):
+    """
+    Tests search functionality to ensure range queries are functional, together
+     and alongside other search types
+    """
+    current_year = datetime.today().year
+
+    test_data = [
+        {  # Should cover every ID in the range, and equal the length of identifiers
+            "test_query": "inspire_id:[0 TO 10000000] publication_recid:[0 TO 10000000]",
+            "expected_result": {
+                "count": len(identifiers),
+                "expected_inspire_ids": [2751932, 1283842, 1245023],
+                "expected_rec_ids": [57, 1, 16]
+            }
+        },
+        {  # Valid search for a specific entry
+            "test_query": "inspire_id:[2751932 TO 2751932] publication_recid:[57 TO 57]",
+            "expected_result": {
+                "count": 1,
+                "expected_inspire_ids": [2751932],
+                "expected_rec_ids": [57]
+            }
+        },
+        {  # Testing adding year to the range
+            "test_query": f"inspire_id:[2751932 TO 2751932] publication_recid:[57 TO 57] year:{current_year}",
+            "expected_result": {
+                "count": 1,
+                "expected_inspire_ids": [2751932],
+                "expected_rec_ids": [57]
+            }
+        },
+        {  # Should be invalid as all entries are set to current year
+            "test_query": f"inspire_id:[2751932 TO 2751932] publication_recid:[57 TO 57] year:{current_year - 1}",
+            "expected_result": {
+                "count": 0,
+                "expected_inspire_ids": [],
+                "expected_rec_ids": []
+            }
+        },
+        {  # Search text is valid here
+            "test_query": "inspire_id:[2751932 TO 2751932] publication_recid:[57 TO 57] Production of higgsinos",
+            "expected_result": {
+                "count": 1, "expected_inspire_ids": [2751932], "expected_rec_ids": [57]
+            }
+        },
+        {  # No result as the search string is invalid
+            "test_query": "inspire_id:[2751932 TO 2751932] publication_recid:[57 TO 57] abcdefghijklmnopqrstuvwxyz",
+            "expected_result": {
+                "count": 0, "expected_inspire_ids": [], "expected_rec_ids": []
+            }
+        },
+        {  # No result expected as inspire_id should not be matched
+            "test_query": "inspire_id:[2751933 TO 2751933] publication_recid:[57 TO 57]",
+            "expected_result": {
+                "count": 0, "expected_inspire_ids": [], "expected_rec_ids": []
+            }
+        },
+        {  # No result expected as recid should not be matched
+            "test_query": "inspire_id:[2751932 TO 2751932] publication_recid:[58 TO 58]",
+            "expected_result": {
+                "count": 0, "expected_inspire_ids": [], "expected_rec_ids": []
+            }
+        }
+    ]
+
+    for test in test_data:
+        # Execute the search
+        results = os_api.search(test['test_query'])
+
+        # Gather the recid and inspire_id results
+        recid_results = [result['recid'] for result in results['results']]
+        inspire_results = [int(result['inspire_id']) for result in results['results']]
+
+        # Confirm expected count
+        assert len(results['results']) == test['expected_result']['count']
+        # Confirm recid and inspire_id results are as expected
+        assert test['expected_result']["expected_inspire_ids"] == inspire_results
+        assert test['expected_result']["expected_rec_ids"] == recid_results
 
 
 def test_merge_results():
@@ -824,13 +936,13 @@ def test_get_all_ids(app, load_default_data, identifiers):
 
     # Check last_updated works
     # Default records were last updated on 2016-07-13 and 2013-12-17
-    date_2013_1 = datetime.datetime(year=2013, month=12, day=16)
+    date_2013_1 = datetime(year=2013, month=12, day=16)
     assert(os_api.get_all_ids(last_updated=date_2013_1) == expected_record_ids)
-    date_2013_2 = datetime.datetime(year=2013, month=12, day=17)
+    date_2013_2 = datetime(year=2013, month=12, day=17)
     assert(os_api.get_all_ids(last_updated=date_2013_2) == expected_record_ids)
-    date_2013_3 = datetime.datetime(year=2013, month=12, day=18)
+    date_2013_3 = datetime(year=2013, month=12, day=18)
     assert(os_api.get_all_ids(last_updated=date_2013_3) == [1, 57])
-    date_2120 = datetime.datetime(year=2120, month=1, day=1)
+    date_2120 = datetime(year=2120, month=1, day=1)
     assert(os_api.get_all_ids(last_updated=date_2120) == [])
 
     # Check sort by latest works - first record is newer than previous
