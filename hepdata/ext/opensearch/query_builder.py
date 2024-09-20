@@ -88,15 +88,14 @@ class HEPDataQueryParser(object):
     @staticmethod
     def get_range_queries(query):
         """
-        Simple function to do a regex match against the expected range query
-        pattern.
+        Gets and removes the range queries from the base query string if any exist.
 
         Expected format: (tolerates extra whitespace)
             publication_recid:[0 TO 25000]
             inspire_id:[476476 TO 476476]
 
         :param query: The query string to check.
-        :return: True if the query string matches the expected range query.
+        :return: (Str, List) The query string without the range queries, and the range queries.
         """
         range_queries = []
         for rt in CFG_SEARCH_RANGE_TERMS:

@@ -96,7 +96,7 @@ def search(query,
                     ('collaboration', collaboration_name), ('date', date)
     :param size: [int] max number of hits that should be returned
     :param offset: [int] offset for the results (used for pagination)
-    :param sort_by: [string] sorting field. Currently supported fields:
+    :param sort_field: [string] sorting field. Currently supported fields:
                     "title", "collaboration", "date", "relevance"
     :param sort_order: [string] order of the sorting either original
                     (for a particular field) or reversed. Supported:

@@ -182,8 +182,8 @@ def test_query_parser():
 
 def test_query_parser_get_range_queries():
     """
-`       Tests HEPDataQueryParser.is_range_query to verify expected
-          pass/fail results against test range query strings.
+`       Tests HEPDataQueryParser.get_range_queries to verify that range query getting function
+            can properly detect and split off range queries.
     """
     test_data = [
         {  # Expected success cases
