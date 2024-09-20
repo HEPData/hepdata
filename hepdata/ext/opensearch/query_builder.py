@@ -98,12 +98,18 @@ class HEPDataQueryParser(object):
         :return: (Str, List) The query string without the range queries, and the range queries.
         """
         range_queries = []
-        for rt in CFG_SEARCH_RANGE_TERMS:
-            # Take the first instance?
-            result = re.findall(rf"{rt}:\s*\[\d+\s+TO\s+\d+]", query)
+        # Pattern matching docstring example with placeholder
+        pattern = rf"%s:\s*\[\d+\s+TO\s+\d+]"
+        # For all terms that can be range searched
+        for term in CFG_SEARCH_RANGE_TERMS:
+            # Find all instances matching the query string, containing the range term
+            result = re.findall(pattern % term, query)
             if result:
-                query = re.sub(rf"{rt}:\s*\[\d+\s+TO\s+\d+]", "", query)
+                # Remove the matched pattern from the query
+                query = re.sub(pattern % term, "", query)
+                # Strip whitespace from query before return
                 query = query.strip()
+                # Append the first range query found
                 range_queries.append(result[0])
 
         return query, range_queries
