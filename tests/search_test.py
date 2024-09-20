@@ -197,8 +197,9 @@ def test_query_parser_get_range_queries():
             ]
         },
         {  # Expected failure cases
-            "expected_result": "RETURNS",
+            "expected_result": "RETURNS_EMPTY",
             "query_strings": [
+                "query",  # Just some text
                 "publication_recid:[-46 TO 46]",  # Negative number
                 "INCORRECT:[46 TO 46]",  # Mismatched term
                 "publication_recid:[NOTINT TO 46]",  # Mismatched int left
@@ -221,23 +222,29 @@ def test_query_parser_get_range_queries():
         }
     ]
 
+    # Testing the case where two duplicate range queries are used
+    # Only the first to be used
+    double_query = "publication_recid:[1 TO 1] publication_recid:[2 TO 2] abc"
+    double_result = HEPDataQueryParser.get_range_queries(double_query)
+    assert double_result == ("abc", ["publication_recid:[1 TO 1]"])
+
     for test in test_data:
         # For each batch of expected successes/failures
-        for qs in test['query_strings']:
-            # Run range query check for each string
+        for query_string in test['query_strings']:
             if test['expected_result'] == "ERROR":
                 with unittest.TestCase().assertRaises(test['expected_error']):
-                    query_result = HEPDataQueryParser.get_range_queries(qs)
+                    query_result = HEPDataQueryParser.get_range_queries(query_string)
             else:
-                query_result = HEPDataQueryParser.get_range_queries(qs)
+                # query_string = "".join(query_list)
+                query_result = HEPDataQueryParser.get_range_queries(query_string)
                 # The returned string is stripped
-                qs = qs.strip()
+                query_string = query_string.strip()
 
             if test['expected_result'] == "SUCCESS":
-                assert query_result == ('', [qs])
-            elif test['expected_result'] == "RETURNS" :
+                assert query_result == ('', [query_string])
+            elif test['expected_result'] == "RETURNS_EMPTY" :
                 # Returned query is stripped
-                assert  query_result == (qs, [])
+                assert  query_result == (query_string, [])
 
 
 def test_query_parser_parse_range_query():
@@ -254,8 +261,12 @@ def test_query_parser_parse_range_query():
             "query_string": "publication_recid:[0 TO 100]",
             "expected_result": ((0, 100), "recid")
         },
-        {
+        {  # Valid
             "query_string": "inspire_id:[0 TO 10000]",
+            "expected_result": ((0, 10000), "inspire_id")
+        },
+        {  # Valid - With extra whitespace
+            "query_string": "inspire_id: [0  TO  10000]",
             "expected_result": ((0, 10000), "inspire_id")
         },
         {  # Invalid - Negative number
@@ -273,10 +284,12 @@ def test_query_parser_parse_range_query():
     ]
 
     for test in test_data:
+        # If it should raise an error, we check
         if test['expected_result'] == ValueError:
             with unittest.TestCase().assertRaises(test['expected_result']):
                 HEPDataQueryParser.parse_range_query(test['query_string'])
         else:
+            # If no error, check result matches expected
             result = HEPDataQueryParser.parse_range_query(test['query_string'])
             assert result == test['expected_result']
 
