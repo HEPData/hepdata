@@ -19,6 +19,7 @@ from opensearchpy.exceptions import NotFoundError
 from opensearch_dsl import Search, Index
 import datetime
 import pytest
+import os as op_s
 from invenio_db import db
 from unittest.mock import call
 
@@ -26,7 +27,8 @@ from hepdata.ext.opensearch.config.os_config import \
     add_default_aggregations, sort_fields_mapping
 from hepdata.ext.opensearch import api as os_api
 from hepdata.ext.opensearch.config.os_config import get_filter_field
-from hepdata.ext.opensearch.document_enhancers import add_data_keywords, process_cmenergies
+from hepdata.ext.opensearch.document_enhancers import add_data_keywords, process_cmenergies, add_analyses
+from hepdata.modules.records.utils.submission import process_submission_directory
 from hepdata.utils.miscellaneous import get_resource_data
 from hepdata.ext.opensearch.process_results import merge_results, match_tables_to_papers, \
     get_basic_record_information, is_datatable
@@ -417,6 +419,68 @@ def test_add_data_keywords():
         set(['Asymmetry Measurement', 'Inclusive', 'Jet Production'])
     assert doc['data_keywords']['cmenergies'] == [{'gte': 1960.0, 'lte': 1960.0}]
     assert 'NOTAREALKEYWORD' not in doc['data_keywords']
+
+
+def test_add_analyses(app):
+    """
+    Tests the add_analyses function to ensure that DataSubmission data
+        is properly added to the doc object during document enhancement.
+
+    Currently testing against: NUISANCE, HistFactory
+    """
+    # Here, test_data should match the contents of the test_folder
+    test_folder = "test_data/test_analysis_submission"
+    test_data = [
+        {  # ProSelecta/NUISANCE
+            "type": "NUISANCE",
+            "filename": "test.cxx"
+        },
+        {  # HistFactory entry
+            "type": "HistFactory",
+            "filename": "test.cxx"
+        }
+    ]
+    analysis_url = "http://localhost:5000/record/resource/%s?landing_page=true"
+
+    with app.app_context():
+        # Creating and submitting the test submission containing resources
+        # op_s is os module
+        base_dir = op_s.path.dirname(op_s.path.realpath(__file__))
+
+        hepsubmission = HEPSubmission(publication_recid=123456,
+                                      overall_status="finished",
+                                      version=1,
+                                      doi="10.17182/hepdata.123456")
+        db.session.add(hepsubmission)
+        db.session.commit()
+
+        # Setting directory and executing processing
+        directory = op_s.path.join(base_dir, test_folder)
+        errors = process_submission_directory(
+            directory,
+            op_s.path.join(directory, "submission.yaml"),
+            hepsubmission.publication_recid
+        )
+
+        # No errors should happen
+        assert not errors
+
+        # Set up a generic doc object to match what add_analyses expects
+        test_doc = {"analyses": [], "recid": hepsubmission.publication_recid}
+        # Run the test add_analyses function
+        add_analyses(test_doc)
+
+        # A sorted list of all DataResource object IDs from subm,ission
+        data_ids = sorted([r.id for r in hepsubmission.resources])
+
+        assert len(data_ids) == len(test_doc["analyses"]) == len(test_data)
+        # There should be one entry into test_data per resource ID
+        # Looping through the test, resource IDs and the analysis outputs
+        for test, d_id, analysis in zip(test_data, data_ids, test_doc["analyses"]):
+            # Set the expected ID in the url to the sorted data_id entry
+            test["analysis"] = (analysis_url % d_id)
+            # Confirm data has been added to
+            assert analysis == test
 
 
 def test_process_cmenergies():
