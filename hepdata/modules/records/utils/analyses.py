@@ -87,9 +87,10 @@ def update_analyses(endpoint=None):
 
                             else:
 
-                                # Remove resource from 'analysis_resources' list.
-                                resource = list(filter(lambda a: a.file_location == _resource_url, analysis_resources))[0]
-                                analysis_resources.remove(resource)
+                                # Remove resources from 'analysis_resources' list.
+                                resources = list(filter(lambda a: a.file_location == _resource_url, analysis_resources))
+                                for resource in resources:
+                                    analysis_resources.remove(resource)
 
                         if num_new_resources:
 
