@@ -111,13 +111,6 @@ def search(query,
     # Create search with preference param to ensure consistency of results across shards
     search = RecordsSearch(using=os, index=index).with_preference_param()
 
-    # Determine if the query is range-based
-    # Will also remove range queries from the query string
-    try:
-        query, range_queries = HEPDataQueryParser.get_range_queries(query)
-    except TypeError:
-        return { 'error': 'Invalid query string' }
-
     query = HEPDataQueryParser.parse_query(query)
 
     if query:
@@ -129,33 +122,20 @@ def search(query,
     search = search.filter("term", doc_type=CFG_PUB_TYPE)
     search = QueryBuilder.add_filters(search, filters)
 
-    if range_queries:
-        for rq in range_queries:
-            # Try to get lower and upper bound, and search term from the range query
-            try:
-                ranges, term = HEPDataQueryParser.parse_range_query(rq)
-            except ValueError:
-                return {'error': 'Invalid numerical values in range query.'}
+    # Determine if the query is range-based, and get it, or the default search order
+    range_term = HEPDataQueryParser.verify_range_query_term(query)
 
-            # If something goes wrong here (returns None), we just return an error and log it.
-            if not ranges:
-                error_string = "An unexpected error occurred when range searching"
-                log.error(error_string + f": {query}")
-                return {'error': error_string}
-            else:
-                search = search.filter('range', **{term: {'gte': str(ranges[0]), 'lte': str(ranges[1])}})
+    if range_term and not sort_field and not sort_order:
+        # Set default search keyword, and set default sort to desc
+        sort_field = range_term
+        sort_order = 'desc'
 
-    # Enable ordering by ID if there is a range query, and there is no sort set by the user
-    if range_queries and not sort_field:
-        search = search.sort({term: {'order': 'desc'}})
-    else:
-        # Otherwise, normal sort
-        try:
-            mapped_sort_field = sort_fields_mapping(sort_field)
-        except ValueError as ve:
-            return {'error': str(ve)}
+    try:
+        mapped_sort_field = sort_fields_mapping(sort_field)
+    except ValueError as ve:
+        return {'error': str(ve)}
 
-        search = search.sort({mapped_sort_field : {"order" : calculate_sort_order(sort_order, sort_field)}})
+    search = search.sort({mapped_sort_field : {"order" : calculate_sort_order(sort_order, sort_field)}})
 
     search = add_default_aggregations(search, filters)
 
@@ -168,8 +148,8 @@ def search(query,
     try:
         pub_result = search.execute().to_dict()
         data_result = None
-        # We don't want data tables if we're searching by publication range only.
-        if not range_queries:
+        # We don't want data tables if we're searching by publication range.
+        if not range_term:
             parent_filter = {
                 "terms": {
                             "_id": [hit["_id"] for hit in pub_result['hits']['hits']]

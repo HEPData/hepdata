@@ -86,66 +86,23 @@ class HEPDataQueryParser(object):
         return phrase
 
     @staticmethod
-    def get_range_queries(query):
+    def verify_range_query_term(query):
         """
-        Gets and removes the range queries from the base query string if any exist.
+            Verifies whether a query string contains a range-based query.
+            If it does, return either that search keyword,
+            or the "default" keyword for default search ordering.
 
-        Expected format: (tolerates extra whitespace)
-            publication_recid:[0 TO 25000]
-            inspire_id:[476476 TO 476476]
+            Examples: publication_recid:[321 TO 321] inspire_id:[123 TO 123]
 
-        :param query: The query string to check.
-        :return: (Str, List) The query string without the range queries, and the range queries.
+            :param query: The full query string
+            :return: Either the range search term: inspire_id/publication_recid, or false
         """
-        range_queries = []
         # Pattern matching docstring example with placeholder
         pattern = rf"%s:\s*\[\d+\s+TO\s+\d+]"
         # For all terms that can be range searched
         for term in CFG_SEARCH_RANGE_TERMS:
-            # Find all instances matching the query string, containing the range term
             result = re.findall(pattern % term, query)
             if result:
-                # Remove the matched pattern from the query
-                query = re.sub(pattern % term, "", query)
-                # Strip whitespace from query before return
-                query = query.strip()
-                # Append the first range query found
-                range_queries.append(result[0])
-
-        return query, range_queries
-
-    @staticmethod
-    def parse_range_query(query_string):
-        """
-        Returns the upper and lower range of a given range query string in an expected format.
-          Expected format in: found in HEPDataQueryParser.is_range_query
-        Also returns the base term like "publication_recid".
-
-        :param query_string: The range query string.
-        :return: A tuple of the upper and lower range bounds from the query string,
-            as well as the split off "term" value, or None for both.
-        """
-
-        # Contains shorthand variables/mapping for term conversion to
-        #   OpenSearch usable term
-        term_mapping = {
-            "publication_recid": "recid",
-            "inspire_id": "inspire_id"  # Leave unchanged
-        }
-
-        # Remove all whitespace before splitting.
-        query_string = query_string.replace(" ", "")
-        # Split string and determine where ranges are
-        ranges = query_string.split("[")[1].split("]")[0]
-        # Check type and return
-        range_split = ranges.split("TO")
-        lower_range, upper_range = int(range_split[0]), int(range_split[1])
-
-        if upper_range < lower_range or upper_range < 0 or lower_range < 0:
-            raise ValueError
-
-        # Get corresponding term from the mapping
-        term = term_mapping[query_string.split(":[")[0]]
-
-        return (lower_range, upper_range), term
-
+                return term
+        # If no matches were ever found then we return False
+        return False
