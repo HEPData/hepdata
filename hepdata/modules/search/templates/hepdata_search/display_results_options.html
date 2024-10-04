@@ -1,7 +1,7 @@
 {% set flipped_sort_order = '' if request.args.get('sort_order', '') else 'rev' %}
 {% set sorted_by = request.args.get('sort_by', 'relevance') %}
 {% set possible_max_results = [10, 25, 50] %}
-{% set possible_sorting_fields = ['relevance', 'collaborations', 'title', 'date', 'latest'] %}
+{% set possible_sorting_fields = ['relevance', 'collaborations', 'title', 'date', 'latest', 'publication_recid', 'inspire_id'] %}
 
 <div class="col-md-12">
 
