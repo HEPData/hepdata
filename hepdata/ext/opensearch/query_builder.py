@@ -88,7 +88,7 @@ class HEPDataQueryParser(object):
     @staticmethod
     def verify_range_query_term(query):
         """
-            Verifies whether a query string contains a range-based query.
+            Verifies whether a parsed query string contains a range-based query.
             If it does, return either that search keyword,
             or the "default" keyword for default search ordering.
 
