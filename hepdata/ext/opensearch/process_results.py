@@ -27,10 +27,26 @@ from hepdata.config import CFG_DATA_TYPE, CFG_PUB_TYPE
 from hepdata.utils.miscellaneous import splitter
 
 
-def merge_results(pub_result, data_result):
+def merge_results(pub_result, data_result=None):
+    """
+    Merge results dictionaries of publication and data table
+      search result data.
+    Data result does not exist in publication-only searches,
+      so defaults to None.
+
+    :param pub_result: Publication search data.
+    :param data_result: Data table search data.
+    :return: Merged search results dictionary.
+    """
     merge_dict = dict()
-    merge_dict['hits'] = pub_result['hits']['hits'] + \
-        data_result['hits']['hits']
+
+    # We don't need to merge if there is no data.
+    if data_result:
+        merge_dict['hits'] = pub_result['hits']['hits'] + \
+            data_result['hits']['hits']
+    else:
+        merge_dict['hits'] = pub_result['hits']['hits']
+
     merge_dict['total'] = pub_result['hits']['total']['value']
     merge_dict['aggregations'] = pub_result.get('aggregations', {})
     return merge_dict

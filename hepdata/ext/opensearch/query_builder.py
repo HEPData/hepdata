@@ -23,6 +23,8 @@
 import re
 from opensearch_dsl import Q
 
+from hepdata.config import CFG_SEARCH_RANGE_TERMS
+
 
 class QueryBuilder:
 
@@ -52,7 +54,8 @@ class HEPDataQueryParser(object):
                 "phrases": "data_keywords.phrases",
                 "reactions": "data_keywords.reactions",
                 "analysis": "analyses.type",
-                "resources": "resources.description"  # Add shorthand for resource description
+                "resources": "resources.description",  # Add shorthand for resource description
+                "publication_recid": "recid"  # Shorthand for HEPData record ID
             }
         }
 
@@ -81,3 +84,25 @@ class HEPDataQueryParser(object):
         if '"' not in phrase and pattern.fullmatch(phrase):
             return f'"{phrase}"'
         return phrase
+
+    @staticmethod
+    def verify_range_query_term(query):
+        """
+            Verifies whether a parsed query string contains a range-based query.
+            If it does, return either that search keyword,
+            or the "default" keyword for default search ordering.
+
+            Examples: publication_recid:[321 TO 321] inspire_id:[123 TO 123]
+
+            :param query: The full query string
+            :return: Either the range search term: inspire_id/publication_recid, or false
+        """
+        # Pattern matching docstring example with placeholder
+        pattern = rf"%s:\s*\[\d+\s+TO\s+\d+]"
+        # For all terms that can be range searched
+        for term in CFG_SEARCH_RANGE_TERMS:
+            result = re.findall(pattern % term, query)
+            if result:
+                return term
+        # If no matches were ever found then we return False
+        return False
