@@ -97,7 +97,8 @@ def search(query,
     :param size: [int] max number of hits that should be returned
     :param offset: [int] offset for the results (used for pagination)
     :param sort_field: [string] sorting field. Currently supported fields:
-                    "title", "collaboration", "date", "relevance"
+                    "title", "collaboration", "date", "relevance",
+                    "recid", "inspire_id"
     :param sort_order: [string] order of the sorting either original
                     (for a particular field) or reversed. Supported:
                     '' or 'rev'
