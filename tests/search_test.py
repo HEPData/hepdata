@@ -414,7 +414,7 @@ def test_search_range_ids(app, load_default_data, identifiers):
             bad_result = os_api.search(range_query % (identifier_id+1, identifier_id-1))
             assert not bad_result.get('results')
 
-def test_composite_range_queries(app, load_default_data, identifiers):
+def test_range_queries(app, load_default_data, identifiers):
     """
     Tests search functionality to ensure range queries are functional, together
      and alongside other search types
@@ -422,12 +422,28 @@ def test_composite_range_queries(app, load_default_data, identifiers):
     current_year = datetime.today().year
 
     test_data = [
-        {  # Should cover every ID in the range, and equal the length of identifiers
-            "test_query": "inspire_id:[0 TO 10000000] AND publication_recid:[0 TO 10000000]",
+        {  # Check all results are returned, and is sorted by inspire_id
+            "test_query": "inspire_id:[0 TO 10000000]",
             "expected_result": {
                 "count": len(identifiers),
                 "expected_inspire_ids": [2751932, 1283842, 1245023],
                 "expected_rec_ids": [57, 1, 16]
+            }
+        },
+        {  # Check all results are returned, and is sorted by recid
+            "test_query": "publication_recid:[0 TO 10000000]",
+            "expected_result": {
+                "count": len(identifiers),
+                "expected_inspire_ids": [2751932, 1245023, 1283842],
+                "expected_rec_ids": [57, 16, 1]
+            }
+        },
+        {  # Should cover every ID in the range, and equal the length of identifiers, sorted by recid
+            "test_query": "inspire_id:[0 TO 10000000] AND publication_recid:[0 TO 10000000]",
+            "expected_result": {
+                "count": len(identifiers),
+                "expected_inspire_ids": [2751932, 1245023, 1283842],
+                "expected_rec_ids": [57, 16, 1]
             }
         },
         {  # Valid search for a specific entry
