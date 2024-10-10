@@ -181,20 +181,20 @@ def test_query_parser():
 
 def test_verify_range_query_term():
     """
-    Tests the range query verification function to ensure
+    Tests the range query verification function to ensure that parsed queries are
     correct return of the individual keyword, default, or a False return.
     """
     test_data =[
         {  # Expected to return publication_recid as it is default.
-            "expected_result": "publication_recid",
+            "expected_result": "recid",
             "query_strings": [
-                "publication_recid:[0 TO 10000]",
-                "publication_recid: [0  TO  10000]",  # Extra valid whitespace
-                " publication_recid:[0 TO 10000] ",  # Left and right whitespace
-                "publication_recid:[0 TO 10000] AND year:2024",
-                "publication_recid:[0 TO 10000] OR inspire_id:[123 TO 123]",
-                "publication_recid:[0 TO 10000] AND inspire_id:[123 TO 123]",
-                "publication_recid: [0  TO  10000] AND inspire_id: [123  TO  123]"
+                "recid:[0 TO 10000]",
+                "recid: [0  TO  10000]",  # Extra valid whitespace
+                " recid:[0 TO 10000] ",  # Left and right whitespace
+                "recid:[0 TO 10000] AND year:2024",
+                "recid:[0 TO 10000] OR inspire_id:[123 TO 123]",
+                "recid:[0 TO 10000] AND inspire_id:[123 TO 123]",
+                "recid: [0  TO  10000] AND inspire_id: [123  TO  123]"
             ]
         },
         {  # Expected to return with inspire_id keyword
@@ -210,12 +210,13 @@ def test_verify_range_query_term():
             "expected_result": False,
             "query_strings": [
                 "query",  # Just some text
-                "publication_recid:[-46 TO 46]",  # Negative number
-                "publication_recid:[46 TO-46]",  # Negative number
+                "recid:[-46 TO 46]",  # Negative number
+                "recid:[46 TO-46]",  # Negative number
                 "INCORRECT:[46 TO 46]",  # Mismatched term
-                "publication_recid:[NOTINT TO 46]",  # Mismatched int left
-                "publication_recid:[46 TO NOTINT]",  # Mismatched int right
-                "publication_recid:[46 to 46]",  # Incorrect case
+                "recid:[NOTINT TO 46]",  # Mismatched int left
+                "recid:[46 TO NOTINT]",  # Mismatched int right
+                "recid:[46 to 46]",  # Incorrect case
+                "recidd:[0 TO 10000]",  # Misspelling
                 "inspire_idd:[0 TO 10000]",  # Misspelling
                 "inspire_id:[0 TO 10000 ]",  # Invalid whitespace
                 "inspire_id:[ 0 TO 10000]",  # Invalid whitespace
