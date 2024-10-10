@@ -113,10 +113,10 @@ def sort_fields_mapping(sort_by):
         return 'creation_date'
     elif sort_by == 'latest':
         return 'last_updated'
-    elif sort_by == 'publication_recid':
-        return 'recid'
+    elif sort_by == 'recid':
+        return 'recid'  # No change required
     elif sort_by == 'inspire_id':
-        return 'inspire_id'
+        return 'inspire_id'  # No change required
     elif not sort_by or sort_by == 'relevance':
         return '_score'
     else:
