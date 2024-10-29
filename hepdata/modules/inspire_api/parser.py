@@ -202,7 +202,8 @@ def updated_parsed_content_for_thesis(content, parsed_content):
     if 'date' in content['metadata']['thesis_info'].keys():
         parsed_content['year'] = content['metadata']['thesis_info']['date']
         if parsed_content['year'] is not None:
-            if content['metadata']['legacy_creation_date'][:4] == parsed_content['year']:
+            if ('legacy_creation_date' in content['metadata'].keys() and
+                    content['metadata']['legacy_creation_date'][:4] == parsed_content['year']):
                 parsed_content['creation_date'] = content['metadata']['legacy_creation_date']
             else:
                 parsed_content['creation_date'] = expand_date(parsed_content['year'])
