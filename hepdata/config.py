@@ -327,6 +327,11 @@ ANALYSES_ENDPOINTS = {
         'endpoint_url': 'https://madanalysis.irmp.ucl.ac.be/raw-attachment/wiki/MA5SandBox/analyses.json',
         'url_template': 'https://doi.org/{0}'
     },
+    'SModelS': {
+        'endpoint_url': 'https://zenodo.org/records/13952092/files/smodels-analyses.hepdata.json?download=1',
+        'url_template': '{0}',
+        'subscribe_user_id': 7766
+    }
     #'ufo': {},
     #'xfitter': {},
     #'applgrid': {},
