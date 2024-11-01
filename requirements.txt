@@ -17,6 +17,6 @@ invenio-records==2.3.0
 invenio-search[opensearch2]==2.4.1
 invenio-theme==3.4.1
 invenio-userprofiles==3.0.0
-python-twitter-v2==0.9.1
+python-twitter-v2==0.9.2
 responses==0.25.3
 unicodeit==0.7.5
