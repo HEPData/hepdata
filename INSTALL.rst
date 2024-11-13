@@ -29,7 +29,7 @@ Running services locally
 Prerequisites
 =============
 
-HEPData runs with Python 3.8 or 3.9. It also uses several services, which you will need to install before running HEPData.
+HEPData runs with Python 3.9. It also uses several services, which you will need to install before running HEPData.
 
 These services can be installed using the relevant package manager for your system,
 for example, using ``yum`` or ``apt-get`` for Linux or ``brew`` for macOS:
@@ -84,7 +84,7 @@ Installation
 
 Python
 ------
-The HEPData code is only compatible with Python 3.8 or 3.9 (not Python 2 or other 3.x versions).  We recommend Python 3.9.
+The HEPData code is only compatible with Python 3.9 (not Python 2 or other 3.x versions).
 
 First install all requirements in a Python virtual environment.
 (Use `virtualenv <https://virtualenv.pypa.io/en/stable/installation.html>`_ or
