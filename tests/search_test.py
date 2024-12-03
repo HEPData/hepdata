@@ -182,47 +182,73 @@ def test_query_parser():
 def test_verify_range_query_term():
     """
     Tests the range query verification function to ensure that parsed queries are
-    correct return of the individual keyword, default, or a False return.
+    correctly returning the range term list, and the data search table exclusion status.
     """
     test_data =[
         {  # Expected to return publication_recid as it is default.
-            "expected_result": "recid",
+            "expected_result": ["recid"],
+            "exclude_tables": False, # Recid should include tables in search
             "query_strings": [
-                "recid:[0 TO 10000]",
+                "recid:[0 TO 10000]", # Correct
                 "recid: [0  TO  10000]",  # Extra valid whitespace
                 " recid:[0 TO 10000] ",  # Left and right whitespace
-                "recid:[0 TO 10000] AND year:2024",
-                "recid:[0 TO 10000] OR inspire_id:[123 TO 123]",
-                "recid:[0 TO 10000] AND inspire_id:[123 TO 123]",
-                "recid: [0  TO  10000] AND inspire_id: [123  TO  123]"
+                "recid:[0 TO 10000] AND year:2024"
             ]
         },
-        {  # Expected to return with inspire_id keyword
-            "expected_result": "inspire_id",
+        {  # Expected to return publication_recid as it is default.
+            "expected_result": ["publication_recid"],
+            "exclude_tables": True, # publication_recid should exclude tables
             "query_strings": [
-                "inspire_id:[0 TO 10000]",
-                "inspire_id:[0 TO 10000] AND year:2024",
-                "inspire_id: [0  TO  10000]",  # Extra valid whitespace
-                " inspire_id:[0 TO 10000] ",  # Left and right whitespace
+                "publication_recid:[0 TO 10000]",
+                "publication_recid: [0  TO  10000]",  # Extra valid whitespace
+                " publication_recid:[0 TO 10000] ",  # Left and right whitespace
+                "publication_recid:[0 TO 10000] AND year:2024"
             ]
         },
-        {  # A range of incorrect formats
-            "expected_result": False,
+        { # Test proper exclusion value of publication_recid and inspire_id
+            "expected_result": ["publication_recid", "inspire_id"],
+            "exclude_tables": True,
             "query_strings": [
-                "query",  # Just some text
-                "recid:[-46 TO 46]",  # Negative number
-                "recid:[46 TO-46]",  # Negative number
+                "publication_recid:[0 TO 10000] AND inspire_id:[0 TO 10000]",  # Correct
+                "publication_recid: [0  TO  10000] AND inspire_id: [0  TO  10000]",  # Extra valid whitespace
+                " publication_recid:[0 TO 10000] AND  inspire_id: [0  TO  10000]",  # Left and right whitespace
+            ]
+        },
+        {
+            "expected_result": ["recid", "inspire_id"],
+            "exclude_tables": False,
+            "query_strings": [
+                "recid:[0 TO 10000] AND inspire_id:[0 TO 10000]",
+                "recid: [0  TO  10000] AND inspire_id: [0  TO  10000]",  # Extra valid whitespace
+                " recid:[0 TO 10000] AND  inspire_id: [0  TO  10000]",  # Left and right whitespace
+            ]
+        },
+        {
+            "expected_result": ["recid", "publication_recid"],
+            "exclude_tables": False,
+            "query_strings": [
+                "recid:[0 TO 10000] AND publication_recid:[0 TO 10000]",
+                "recid: [0  TO  10000] AND publication_recid: [0  TO  10000]",  # Extra valid whitespace
+                " recid:[0 TO 10000] AND  publication_recid: [0  TO  10000]",  # Left and right whitespace
+            ]
+        },
+        {  # Some incorrect cases
+            "expected_result": [],
+            "exclude_tables": False,
+            "query_strings": [
+                " recid[0 TO 10000] ",
+                "recsid:[0 TO 10000]",
                 "INCORRECT:[46 TO 46]",  # Mismatched term
+                "recid:[-0 TO 10000] OR inspire_id:[-123 TO -123]", # Negative numbers
                 "recid:[NOTINT TO 46]",  # Mismatched int left
                 "recid:[46 TO NOTINT]",  # Mismatched int right
-                "recid:[46 to 46]",  # Incorrect case
-                "recidd:[0 TO 10000]",  # Misspelling
                 "inspire_idd:[0 TO 10000]",  # Misspelling
                 "inspire_id:[0 TO 10000 ]",  # Invalid whitespace
                 "inspire_id:[ 0 TO 10000]",  # Invalid whitespace
                 "inspire_id :[0 TO 10000]",  # Invalid whitespace
             ]
-        }
+        },
+
     ]
 
     # Each test dictionary in the list has a different expected_result value
@@ -230,9 +256,9 @@ def test_verify_range_query_term():
         # For each query string for the current expected_result
         for query in test["query_strings"]:
             # Execute the verification with current string
-            result = HEPDataQueryParser.verify_range_query_term(query)
+            result = HEPDataQueryParser.parse_range_query(query)
             # Expected result based on which test object we are on
-            assert result == test["expected_result"]
+            assert result == (test["expected_result"], test["exclude_tables"])
 
 
 def test_search(app, load_default_data, identifiers):

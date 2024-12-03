@@ -91,15 +91,15 @@ class HEPDataQueryParser(object):
             Parses and verifies whether a parsed query string contains a range-based query.
             If it does, return either that search keyword,
             or the "default" keyword for default search ordering.
-
             Also determines if the query is a publication-only search, where tables are excluded.
+            Returns the query with publication_recid replaced with 'recid' for opensearch.
 
             Examples: publication_recid:[321 TO 321] inspire_id:[123 TO 123]
 
             :param query: The full query string
             :return: A tuple containing a list of parsed range terms,
                 and a boolean determining whether table exclusion should occur (if range term is publication_recid,
-                or inspire_id)
+                or inspire_id), and the query with term replaced.
         """
         # Pattern matching docstring example with placeholder
         pattern = rf"(?:^|\s)%s:\s*\[\d+\s+TO\s+\d+]"
