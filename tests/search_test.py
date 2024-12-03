@@ -179,7 +179,7 @@ def test_query_parser():
     parsed_query_string7 = HEPDataQueryParser.parse_query(_test_query7)
     assert (parsed_query_string7 == 'recid:1')
 
-def test_verify_range_query_term():
+def test_parse_range_query():
     """
     Tests the range query verification function to ensure that parsed queries are
     correctly returning the range term list, and the data search table exclusion status.
@@ -257,8 +257,10 @@ def test_verify_range_query_term():
         for query in test["query_strings"]:
             # Execute the verification with current string
             result = HEPDataQueryParser.parse_range_query(query)
+            # Doing the same term replacement required for OpenSearch
+            parsed_query = query.replace("publication_recid", "recid")
             # Expected result based on which test object we are on
-            assert result == (test["expected_result"], test["exclude_tables"])
+            assert result == (test["expected_result"], test["exclude_tables"], parsed_query)
 
 
 def test_search(app, load_default_data, identifiers):
