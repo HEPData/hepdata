@@ -452,8 +452,8 @@ def test_range_queries(app, load_default_data, identifiers):
             "test_query": "inspire_id:[0 TO 10000000]",
             "expected_result": {
                 "count": len(identifiers),
-                "expected_inspire_ids": [2751932, 1283842, 1245023],
-                "expected_rec_ids": [57, 1, 16]
+                "expected_inspire_ids": [2751932, 1245023,  1283842],
+                "expected_rec_ids": [57, 16, 1]
             }
         },
         {  # Check all results are returned, and is sorted by recid
@@ -543,7 +543,7 @@ def test_range_queries(app, load_default_data, identifiers):
             }
         },
         {  # Result expected as inner resource recid is searched matched
-            "test_query": "inspire_id:[2751932 TO 2751932] AND publication_recid:[58 TO 58]",
+            "test_query": "inspire_id:[2751932 TO 2751932] AND recid:[58 TO 58]",
             "expected_result": {
                 "count": 1, "expected_inspire_ids": [2751932], "expected_rec_ids": [57]
             }
