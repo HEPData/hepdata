@@ -2,8 +2,8 @@
 description: "TestSubmission1-V1"
 comment: TestComment1-V1
 additional_resources:
-- {description: Test, location: test.cxx, type: ProSelecta }
-- {description: Test, location: test.cxx, type: HistFactory }
+- {description: Test, location: test.ProSelecta,  type: ProSelecta }
+- {description: Test, location: test.tar.gz, type: HistFactory }
 ---
 name: "TestTable1-V1"
 description: TestTable1-description-V1

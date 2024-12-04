@@ -433,13 +433,14 @@ def test_add_analyses(app):
     test_data = [
         {  # ProSelecta/NUISANCE
             "type": "NUISANCE",
-            "filename": "test.cxx"
+            "filename": "test.ProSelecta"
         },
         {  # HistFactory entry
             "type": "HistFactory",
-            "filename": "test.cxx"
-        }
+            "filename": "test.tar.gz"
+        },
     ]
+    # This should probably be changed to use SITE_URL or some similar concept
     analysis_url = "http://localhost:5000/record/resource/%s?landing_page=true"
 
     with app.app_context():
@@ -465,15 +466,29 @@ def test_add_analyses(app):
         # No errors should happen
         assert not errors
 
+        # Add MadAnalysis DataResource object separately
+        mad_analysis = DataResource(
+            file_location = "placeholder",
+            file_type = "MadAnalysis",
+            file_description = "placeholder"
+        )
+
+        # Adding object to database
+        hepsubmission.resources.append(mad_analysis)
+        db.session.add(mad_analysis)
+        db.session.add(hepsubmission)
+
         # Set up a generic doc object to match what add_analyses expects
         test_doc = {"analyses": [], "recid": hepsubmission.publication_recid}
         # Run the test add_analyses function
         add_analyses(test_doc)
 
-        # A sorted list of all DataResource object IDs from subm,ission
+        # A sorted list of all DataResource object IDs from submission
         data_ids = sorted([r.id for r in hepsubmission.resources])
 
-        assert len(data_ids) == len(test_doc["analyses"]) == len(test_data)
+        # There should be 3 analyses and 3 resources
+        assert len(data_ids) == len(test_doc["analyses"]) == 3
+
         # There should be one entry into test_data per resource ID
         # Looping through the test, resource IDs and the analysis outputs
         for test, d_id, analysis in zip(test_data, data_ids, test_doc["analyses"]):
