@@ -833,8 +833,8 @@ def test_add_analyses(app):
             assert analysis == test
 
         # Checking MadAnalysis added after submission
-        mad_analysis = hepsubmission.resources[-1]
-        assert mad_analysis.file_type == "MadAnalysis"
+        mad_analysis = test_doc["analyses"][-1]
+        assert mad_analysis["type"] == "MadAnalysis"
 
 
 def test_process_cmenergies():
