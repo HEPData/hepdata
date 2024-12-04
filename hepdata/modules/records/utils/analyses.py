@@ -35,6 +35,7 @@ from hepdata.modules.submission.models import DataResource, HEPSubmission, data_
 from hepdata.utils.users import get_user_from_id
 from hepdata.modules.records.subscribers.rest import subscribe
 from hepdata.modules.records.subscribers.api import is_current_user_subscribed_to_record
+from hepdata.modules.records.utils.common import get_license
 
 logging.basicConfig()
 log = logging.getLogger(__name__)
@@ -43,10 +44,11 @@ log = logging.getLogger(__name__)
 @shared_task
 def update_analyses(endpoint=None):
     """
-    Update (Rivet, MadAnalysis 5 and SModelS) analyses and remove outdated resources.
+    Update (Rivet, MadAnalysis 5, SModelS and Combine) analyses and remove outdated resources.
     Allow bulk subscription to record update notifications if "subscribe_user_id" in endpoint.
+    Add optional "description" and "license" fields if present in endpoint.
 
-    :param endpoint: either "rivet" or "MadAnalysis" or "SModelS" or None (default) for both
+    :param endpoint: either "rivet" or "MadAnalysis" or "SModelS" or "Combine" or None (default) for both
     """
     endpoints = current_app.config["ANALYSES_ENDPOINTS"]
     for analysis_endpoint in endpoints:
@@ -85,6 +87,13 @@ def update_analyses(endpoint=None):
                                 new_resource = DataResource(
                                     file_location=_resource_url,
                                     file_type=analysis_endpoint)
+
+                                if "description" in endpoints[analysis_endpoint]:
+                                    new_resource.file_description = str(endpoints[analysis_endpoint]["description"])
+
+                                if "license" in endpoints[analysis_endpoint]:
+                                    resource_license = get_license(endpoints[analysis_endpoint]["license"])
+                                    new_resource.file_license = resource_license.id
 
                                 submission.resources.append(new_resource)
                                 num_new_resources += 1
