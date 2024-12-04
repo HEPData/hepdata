@@ -32,6 +32,9 @@ import requests
 from hepdata.ext.opensearch.api import index_record_ids
 from hepdata.modules.submission.api import get_latest_hepsubmission, is_resource_added_to_submission
 from hepdata.modules.submission.models import DataResource, HEPSubmission, data_reference_link
+from hepdata.utils.users import get_user_from_id
+from hepdata.modules.records.subscribers.rest import subscribe
+from hepdata.modules.records.subscribers.api import is_current_user_subscribed_to_record
 
 logging.basicConfig()
 log = logging.getLogger(__name__)
@@ -40,9 +43,10 @@ log = logging.getLogger(__name__)
 @shared_task
 def update_analyses(endpoint=None):
     """
-    Update (Rivet and MadAnalysis 5) analyses and remove outdated resources.
+    Update (Rivet, MadAnalysis 5 and SModelS) analyses and remove outdated resources.
+    Allow bulk subscription to record update notifications if "subscribe_user_id" in endpoint.
 
-    :param endpoint: either "Rivet" or "MadAnalysis" or None (default) for both
+    :param endpoint: either "rivet" or "MadAnalysis" or "SModelS" or None (default) for both
     """
     endpoints = current_app.config["ANALYSES_ENDPOINTS"]
     for analysis_endpoint in endpoints:
@@ -87,9 +91,10 @@ def update_analyses(endpoint=None):
 
                             else:
 
-                                # Remove resource from 'analysis_resources' list.
-                                resource = list(filter(lambda a: a.file_location == _resource_url, analysis_resources))[0]
-                                analysis_resources.remove(resource)
+                                # Remove resources from 'analysis_resources' list.
+                                resources = list(filter(lambda a: a.file_location == _resource_url, analysis_resources))
+                                for resource in resources:
+                                    analysis_resources.remove(resource)
 
                         if num_new_resources:
 
@@ -135,6 +140,15 @@ def update_analyses(endpoint=None):
                     except Exception as e:
                         db.session.rollback()
                         log.error(e)
+
+                # Allow bulk subscription to record update notifications.
+                if "subscribe_user_id" in endpoints[analysis_endpoint]:
+                    user = get_user_from_id(endpoints[analysis_endpoint]["subscribe_user_id"])
+                    if user:
+                        for record in analyses:
+                            submission = get_latest_hepsubmission(inspire_id=record, overall_status='finished')
+                            if submission and not is_current_user_subscribed_to_record(submission.publication_recid, user):
+                                subscribe(submission.publication_recid, user)
 
         else:
             log.debug("No endpoint url configured for {0}".format(analysis_endpoint))

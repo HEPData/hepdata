@@ -92,7 +92,7 @@ Before you submit a pull request, check that it meets these guidelines:
 1. The pull request should include tests and must not decrease test coverage.
 2. If the pull request adds functionality, the docs should be updated. Put
    your new functionality into a function with a docstring.
-3. The pull request should work for Python 3.8 and 3.9. Check
+3. The pull request should work for Python 3.9. Check
    https://github.com/HEPData/hepdata/actions?query=event%3Apull_request
    and make sure that the tests pass.  Sometimes there are temporary failures,
    for example, due to unavailability of an external service or the test infrastructure.

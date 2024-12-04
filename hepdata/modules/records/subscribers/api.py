@@ -31,12 +31,14 @@ from hepdata.modules.records.utils.common import get_record_contents
 from .models import Subscribers
 
 
-def is_current_user_subscribed_to_record(recid):
-    if not current_user.is_authenticated:
-        return False
+def is_current_user_subscribed_to_record(recid, user=None):
+    if not user:
+        user = current_user
+        if not current_user.is_authenticated:
+            return False
 
     return Subscribers.query.filter(Subscribers.publication_recid == recid,
-                                    Subscribers.subscribers.contains(current_user)).count() > 0
+                                    Subscribers.subscribers.contains(user)).count() > 0
 
 
 def get_users_subscribed_to_record(recid):

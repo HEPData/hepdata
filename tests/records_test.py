@@ -68,6 +68,7 @@ from hepdata.modules.records.utils.records_update_utils import get_inspire_recor
     get_inspire_records_updated_on, update_record_info, RECORDS_PER_PAGE
 from hepdata.modules.inspire_api.views import get_inspire_record_information
 from hepdata.config import CFG_TMPDIR
+from hepdata.modules.records.subscribers.api import is_current_user_subscribed_to_record
 
 
 def test_record_creation(app):
@@ -1030,7 +1031,7 @@ def test_create_breadcrumb_text():
 
 
 def test_update_analyses(app):
-    """ Test update of Rivet analyses """
+    """ Test update of Rivet, MadAnalyses 5 and SModelS analyses """
 
     # Import a record that already has a Rivet analysis attached (but with '#' in the URL)
     import_records(['ins1203852'], synchronous=True)
@@ -1058,6 +1059,20 @@ def test_update_analyses(app):
     analysis_resources = DataResource.query.filter_by(file_type='MadAnalysis').all()
     assert len(analysis_resources) == 1
     assert analysis_resources[0].file_location == 'https://doi.org/10.14428/DVN/I2CZWU'
+
+    # Import a record that has an associated SModelS analysis
+    import_records(['ins1847779'], synchronous=True)
+    analysis_resources = DataResource.query.filter_by(file_type='SModelS').all()
+    assert len(analysis_resources) == 0
+    user = User(email='test@test.com', password='hello1', active=True, id=7766)
+    db.session.add(user)
+    db.session.commit()
+    update_analyses('SModelS')
+    analysis_resources = DataResource.query.filter_by(file_type='SModelS').all()
+    assert len(analysis_resources) == 1
+    assert analysis_resources[0].file_location == 'https://smodels.github.io/docs/ListOfAnalyses#ATLAS-EXOT-2018-06'
+    submission = get_latest_hepsubmission(inspire_id='1847779', overall_status='finished')
+    assert is_current_user_subscribed_to_record(submission.publication_recid, user)
 
 
 def test_generate_license_data_by_id(app):

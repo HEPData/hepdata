@@ -193,6 +193,7 @@ CFG_PUB_TYPE = 'publication'
 CFG_DATA_TYPE = 'datatable'
 CFG_SUBMISSIONS_TYPE = 'submission'
 CFG_DATA_KEYWORDS = ['observables', 'reactions', 'cmenergies', 'phrases']
+CFG_SEARCH_RANGE_TERMS = ["recid", "publication_recid", "inspire_id"]  # Possible terms used to OpenSearch API range searches
 
 CFG_CONVERTER_URL = 'https://converter.hepdata.net'
 CFG_SUPPORTED_FORMATS = ['yaml', 'root', 'csv', 'yoda', 'yoda1', 'original']
@@ -327,6 +328,11 @@ ANALYSES_ENDPOINTS = {
         'endpoint_url': 'https://madanalysis.irmp.ucl.ac.be/raw-attachment/wiki/MA5SandBox/analyses.json',
         'url_template': 'https://doi.org/{0}'
     },
+    'SModelS': {
+        'endpoint_url': 'https://zenodo.org/records/13952092/files/smodels-analyses.hepdata.json?download=1',
+        'url_template': '{0}',
+        'subscribe_user_id': 7766
+    }
     #'ufo': {},
     #'xfitter': {},
     #'applgrid': {},

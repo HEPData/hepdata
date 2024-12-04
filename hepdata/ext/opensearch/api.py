@@ -96,8 +96,9 @@ def search(query,
                     ('collaboration', collaboration_name), ('date', date)
     :param size: [int] max number of hits that should be returned
     :param offset: [int] offset for the results (used for pagination)
-    :param sort_by: [string] sorting field. Currently supported fields:
-                    "title", "collaboration", "date", "relevance"
+    :param sort_field: [string] sorting field. Currently supported fields:
+                    "title", "collaboration", "date", "relevance",
+                    "recid", "inspire_id"
     :param sort_order: [string] order of the sorting either original
                     (for a particular field) or reversed. Supported:
                     '' or 'rev'
@@ -108,23 +109,41 @@ def search(query,
     if query == '' and not sort_field:
         sort_field = 'date'
 
-    query = HEPDataQueryParser.parse_query(query)
     # Create search with preference param to ensure consistency of results across shards
     search = RecordsSearch(using=os, index=index).with_preference_param()
 
+    # Determine if the query is range-based, and get it, or the default search order
+    range_terms, exclude_tables, parsed_query = HEPDataQueryParser.parse_range_query(query)
+
+    # We passed the newly range-parsed query to be parsed
+    query = HEPDataQueryParser.parse_query(parsed_query)
+    fuzzy_query = QueryString(query=query, fuzziness='AUTO')
+
     if query:
-        fuzzy_query = QueryString(query=query, fuzziness='AUTO')
+        if exclude_tables:
+            search.query = fuzzy_query
+
+    if query and not exclude_tables:
         search.query = fuzzy_query | \
                        Q('has_child', type="child_datatable", query=fuzzy_query)
 
+    # Add filter to search for only "publication" objects
     search = search.filter("term", doc_type=CFG_PUB_TYPE)
     search = QueryBuilder.add_filters(search, filters)
+
+
+    if range_terms and not sort_field and not sort_order:
+        # Set default search keyword, and set default sort to desc
+        sort_field = 'recid'
+        sort_order = 'desc'
 
     try:
         mapped_sort_field = sort_fields_mapping(sort_field)
     except ValueError as ve:
         return {'error': str(ve)}
+
     search = search.sort({mapped_sort_field : {"order" : calculate_sort_order(sort_order, sort_field)}})
+
     search = add_default_aggregations(search, filters)
 
     if post_filter:
@@ -135,23 +154,25 @@ def search(query,
 
     try:
         pub_result = search.execute().to_dict()
-
-        parent_filter = {
-            "terms": {
-                        "_id": [hit["_id"] for hit in pub_result['hits']['hits']]
+        data_result = {}
+        if not exclude_tables:
+            parent_filter = {
+                "terms": {
+                            "_id": [hit["_id"] for hit in pub_result['hits']['hits']]
+                }
             }
-        }
 
-        data_search = RecordsSearch(using=os, index=index)
-        data_search = data_search.query('has_parent',
-                                        parent_type="parent_publication",
-                                        query=parent_filter)
-        if query:
-            data_search = data_search.query(QueryString(query=query))
+            data_search = RecordsSearch(using=os, index=index)
+            data_search = data_search.query('has_parent',
+                                                parent_type="parent_publication",
+                                                query=parent_filter)
 
-        data_search_size = size * OPENSEARCH_MAX_RESULT_WINDOW // LIMIT_MAX_RESULTS_PER_PAGE
-        data_search = data_search[0:data_search_size]
-        data_result = data_search.execute().to_dict()
+            if query:
+                data_search = data_search.query(QueryString(query=query))
+
+            data_search_size = size * OPENSEARCH_MAX_RESULT_WINDOW // LIMIT_MAX_RESULTS_PER_PAGE
+            data_search = data_search[0:data_search_size]
+            data_result = data_search.execute().to_dict()
 
         merged_results = merge_results(pub_result, data_result)
         return map_result(merged_results, filters)
@@ -165,7 +186,7 @@ def search(query,
         else:
             log.error(f'An unexpected error occurred when searching: {e}')
             reason = f'An unexpected error occurred: {e.error}'
-        return { 'error': reason }
+        return {'error': reason}
 
 
 @author_index

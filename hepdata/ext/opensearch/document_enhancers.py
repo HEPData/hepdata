@@ -94,7 +94,7 @@ def add_shortened_authors(doc):
 
 def add_analyses(doc):
     """
-    Add analyses links such as Rivet, MadAnalysis 5, HistFactory and NUISANCE to the index.
+    Add analyses links such as Rivet, MadAnalysis 5, SModelS, HistFactory and NUISANCE to the index.
 
     :param doc:
     :return:
