@@ -171,7 +171,7 @@ mapping = {
         }
     },
     "inspire_id": {
-        "type": "text"
+        "type": "integer"
     },
     "keywords": {
         "properties": {
