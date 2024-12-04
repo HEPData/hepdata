@@ -1031,7 +1031,7 @@ def test_create_breadcrumb_text():
 
 
 def test_update_analyses(app):
-    """ Test update of Rivet, MadAnalyses 5 and SModelS analyses """
+    """ Test update of Rivet, MadAnalyses 5, SModelS and Combine analyses """
 
     # Import a record that already has a Rivet analysis attached (but with '#' in the URL)
     import_records(['ins1203852'], synchronous=True)
@@ -1073,6 +1073,23 @@ def test_update_analyses(app):
     assert analysis_resources[0].file_location == 'https://smodels.github.io/docs/ListOfAnalyses#ATLAS-EXOT-2018-06'
     submission = get_latest_hepsubmission(inspire_id='1847779', overall_status='finished')
     assert is_current_user_subscribed_to_record(submission.publication_recid, user)
+
+    # Import a record that has an associated Combine analysis
+    import_records(['ins2796231'], synchronous=True)
+    analysis_resources = DataResource.query.filter_by(file_type='Combine').all()
+    assert len(analysis_resources) == 0
+    analysis_resources = DataResource.query.filter_by(file_location='https://doi.org/10.17181/bp9fx-6qs64').all()
+    assert len(analysis_resources) == 1
+    db.session.delete(analysis_resources[0])  # delete resource so it can be re-added in next step
+    db.session.commit()
+    update_analyses('Combine')
+    analysis_resources = DataResource.query.filter_by(file_type='Combine').all()
+    assert len(analysis_resources) == 1
+    assert analysis_resources[0].file_location == 'https://doi.org/10.17181/bp9fx-6qs64'
+    assert analysis_resources[0].file_description == 'Statistical models'
+    license_data = License.query.filter_by(id=analysis_resources[0].file_license).first()
+    assert license_data.name == 'cc-by-4.0'
+    assert license_data.url == 'https://creativecommons.org/licenses/by/4.0'
 
 
 def test_generate_license_data_by_id(app):
