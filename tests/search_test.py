@@ -466,6 +466,28 @@ def test_range_queries(app, load_default_data, identifiers):
                 "expected_rec_ids": [57, 16, 1]
             }
         },
+        {  # Check all results are returned, and is sorted by recid
+            "test_query": "recid:[0 TO 10000000]",
+            "expected_result": {
+                "count": len(identifiers),
+                "expected_inspire_ids": [2751932, 1245023, 1283842],
+                "expected_rec_ids": [57, 16, 1]
+            }
+        },
+        {  # Full boolean search
+            "test_query": "inspire_id:[1283842 TO 1283842] AND publication_recid:[1 TO 1] AND recid:[1 TO 1]",
+            "expected_result": {
+                "count": 1, "expected_inspire_ids": [1283842], "expected_rec_ids": [1]
+            }
+        },
+        {  # Check all results are returned, and is sorted by recid
+            "test_query": "publication_recid:[0 TO 10000000] AND recid:[0 TO 10000000]",
+            "expected_result": {
+                "count": len(identifiers),
+                "expected_inspire_ids": [2751932, 1245023, 1283842],
+                "expected_rec_ids": [57, 16, 1]
+            }
+        },
         {  # Should cover every ID in the range, and equal the length of identifiers, sorted by recid
             "test_query": "inspire_id:[0 TO 10000000] AND publication_recid:[0 TO 10000000]",
             "expected_result": {
@@ -554,6 +576,60 @@ def test_range_queries(app, load_default_data, identifiers):
             "test_query": "inspire_id:[2751932 TO 2751932] AND publication_recid:[5000 TO 5000]",
             "expected_result": {
                 "count": 0, "expected_inspire_ids": [], "expected_rec_ids": []
+            }
+        },
+        {  # Test specific selection of table by recid
+            "test_query": "recid:[58 TO 58]",
+            "expected_result": {
+                "count": 1, "expected_inspire_ids": [2751932], "expected_rec_ids": [57]
+            }
+        },
+        { # Test range selection of table by recid, including table
+            "test_query": "recid:[57 TO 58]",
+            "expected_result": {
+                "count": 1, "expected_inspire_ids": [2751932], "expected_rec_ids": [57]
+            }
+        },
+        {  # Test specific selection of publication by recid
+            "test_query": "publication_recid:[57 TO 57]",
+            "expected_result": {
+                "count": 1, "expected_inspire_ids": [2751932], "expected_rec_ids": [57]
+            }
+        },
+        {  # Test specific selection of publication by publication
+            "test_query": "publication_recid:[57 TO 58]",
+            "expected_result": {
+                "count": 1, "expected_inspire_ids": [2751932], "expected_rec_ids": [57]
+            }
+        },
+        {  # ID 58 is included within 57, but not marked
+            "test_query": "publication_recid:[58 TO 58]",
+            "expected_result": {
+                "count": 0, "expected_inspire_ids": [], "expected_rec_ids": []
+            }
+        },
+        {  # Searching for a specific inspire_id
+            "test_query": "inspire_id:[2751932 TO 2751932]",
+            "expected_result": {
+                "count": 1, "expected_inspire_ids": [2751932], "expected_rec_ids": [57]
+            }
+        },
+        {  # Test selection of a failed case
+            "test_query": "inspire_id:[2751933 TO 2751933]",
+            "expected_result": {
+                "count": 0, "expected_inspire_ids": [], "expected_rec_ids": []
+            }
+        },
+        {  # Test selection of just the middle value
+            "test_query": "inspire_id:[1245024 TO 2751931]",
+            "expected_result": {
+                "count": 1, "expected_inspire_ids": [1283842], "expected_rec_ids": [1]
+            }
+        },
+        {  # Test selection of all inspire_id values
+            "test_query": "inspire_id:[1245023 TO 2751932]",
+            "expected_result": {
+                "count": 3, "expected_inspire_ids": [2751932, 1245023, 1283842], "expected_rec_ids": [57, 16, 1]
             }
         }
     ]
