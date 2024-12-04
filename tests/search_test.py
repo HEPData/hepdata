@@ -760,7 +760,7 @@ def test_add_analyses(app):
     Tests the add_analyses function to ensure that DataSubmission data
         is properly added to the doc object during document enhancement.
 
-    Currently testing against: NUISANCE, HistFactory
+    Currently testing against: NUISANCE, HistFactory, MadAnalysis
     """
     # Here, test_data should match the contents of the test_folder
     test_folder = "test_data/test_analysis_submission"
@@ -801,16 +801,17 @@ def test_add_analyses(app):
         assert not errors
 
         # Add MadAnalysis DataResource object separately
-        mad_analysis = DataResource(
+        mad_analysis_resource = DataResource(
             file_location = "placeholder",
             file_type = "MadAnalysis",
             file_description = "placeholder"
         )
 
         # Adding object to database
-        hepsubmission.resources.append(mad_analysis)
-        db.session.add(mad_analysis)
+        hepsubmission.resources.append(mad_analysis_resource)
+        db.session.add(mad_analysis_resource)
         db.session.add(hepsubmission)
+        db.session.commit()
 
         # Set up a generic doc object to match what add_analyses expects
         test_doc = {"analyses": [], "recid": hepsubmission.publication_recid}
@@ -828,8 +829,12 @@ def test_add_analyses(app):
         for test, d_id, analysis in zip(test_data, data_ids, test_doc["analyses"]):
             # Set the expected ID in the url to the sorted data_id entry
             test["analysis"] = (analysis_url % d_id)
-            # Confirm data has been added to
+            # Confirm data has been added to the doc
             assert analysis == test
+
+        # Checking MadAnalysis added after submission
+        mad_analysis = hepsubmission.resources[-1]
+        assert mad_analysis.file_type == "MadAnalysis"
 
 
 def test_process_cmenergies():
