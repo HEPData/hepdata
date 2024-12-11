@@ -199,8 +199,9 @@ def env_browser(request):
     if not RUN_SELENIUM_LOCALLY:
         remote_url = "https://ondemand.eu-central-1.saucelabs.com:443/wd/hub"
         options = webdriver.ChromeOptions()
-        options.browser_version = '114'
-        options.platform_name = 'Windows 10'
+        options.browser_version = '131'
+        options.platform_name = 'Windows 11'
+        local_tunnel_name = os.environ.get('SAUCE_USERNAME', '') + '_tunnel_name'
         sauce_options = {
             'extendedDebugging': True,
             'screenResolution': '1280x1024',
@@ -208,7 +209,7 @@ def env_browser(request):
             'build': os.environ.get('GITHUB_RUN_ID', datetime.utcnow().strftime("%Y-%m-%d %H:00ish")),
             'username': os.environ.get('SAUCE_USERNAME', ''),
             'accessKey': os.environ.get('SAUCE_ACCESS_KEY', ''),
-            'tunnelName': os.environ.get('GITHUB_RUN_ID', ''),
+            'tunnelName': os.environ.get('GITHUB_RUN_ID', local_tunnel_name),
         }
 
         for key in ['username', 'accessKey']:

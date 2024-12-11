@@ -5,7 +5,7 @@ services:
       context: .
       args:
         - "APP_ENVIRONMENT=local-web"
-        - "SAUCE_OS=${SAUCE_OS:-linux}"
+        - "SAUCE_OS=${SAUCE_OS:-linux.x86_64}"
     command: hepdata run -h 0.0.0.0 -p 5000 --debugger --reload
     ports:
     - "5000:5000"
@@ -22,8 +22,12 @@ services:
     - "APP_SQLALCHEMY_DATABASE_URI=postgresql://hepdata:hepdata@db/hepdata"
     - "SAUCE_USERNAME=${SAUCE_USERNAME}"
     - "SAUCE_ACCESS_KEY=${SAUCE_ACCESS_KEY}"
+    - "SAUCE_REGION=eu-central"
+    - "SAUCE_TUNNEL_NAME=${SAUCE_USERNAME}_tunnel_name"
+    - "SAUCE_PROXY_LOCALHOST=direct"
     - "FLASK_ENV=development"
     - "FLASK_DEBUG=1"
+    - "SQLALCHEMY_WARN_20=1"
     read_only: false
     volumes:
     - ".:/code"
@@ -59,7 +63,7 @@ services:
     - "5432:5432"
     read_only: false
   os:
-    image: opensearchproject/opensearch:2.11.0
+    image: opensearchproject/opensearch:2.15.0
     read_only: false
     environment:
       - node.name=os01
