@@ -75,7 +75,15 @@ Alternatively, run OpenSearch after `installing Docker <https://docs.docker.com/
 .. code-block:: console
 
     $ docker pull opensearchproject/opensearch:2.15.0
-    $ docker run -d -p 9200:9200 -p 9600:9600 -e "discovery.type=single-node" -e "plugins.security.disabled=true" opensearchproject/opensearch:2.15.0
+    $ docker run -d -p 9200:9200 -p 9600:9600 -e "discovery.type=single-node" -e "plugins.security.disabled=true" -e "OPENSEARCH_INITIAL_ADMIN_PASSWORD=<custom-admin-password>" opensearchproject/opensearch:2.15.0
+
+The custom admin password is required for OpenSearch 2.12 or greater.  The requirements for ``<custom-admin-password>``
+are "a minimum 8 character password and must contain at least one uppercase letter, one lowercase letter, one digit,
+and one special character that is strong".  You can test that the container is running with:
+
+.. code-block:: console
+
+    $ curl http://localhost:9200 -ku admin:<custom-admin-password>
 
 .. _installation:
 
@@ -345,6 +353,8 @@ Copy the file ``config_local.docker_compose.py`` to ``config_local.py``.
 
 In order to run the tests via Sauce Labs, ensure you have the variables ``$SAUCE_USERNAME`` and ``$SAUCE_ACCESS_KEY``
 set in your environment (see :ref:`running-the-tests`) **before** starting the containers.
+
+Add ``export OPENSEARCH_INITIAL_ADMIN_PASSWORD=<custom-admin-password>`` to your bash or zsh profile for OpenSearch.
 
 If using an M1 MacBook, also add ``export SAUCE_OS=linux.aarch64`` to your bash or zsh profile. This is necessary to
 download the correct `Sauce Connect Proxy
