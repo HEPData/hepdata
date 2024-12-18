@@ -232,6 +232,8 @@ def metadata(recid):
     :return: renders the record template
     """
 
+    observer_key = request.args.get('observer_key')
+
     try:
         version = int(request.args.get('version', -1))
     except ValueError:
@@ -249,7 +251,7 @@ def metadata(recid):
         output_format = 'json_ld'
 
     return render_record(recid=recid, record=record, version=version, output_format=output_format,
-                         light_mode=light_mode)
+                         light_mode=light_mode, observer_key=observer_key)
 
 
 @blueprint.route('/count')
