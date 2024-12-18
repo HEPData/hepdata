@@ -249,7 +249,7 @@ Now start the HEPData web application in debug mode:
 
 Then open your preferred web browser (Chrome, Firefox, Safari, etc.) at http://localhost:5000/ .
 
-On macOS Monterey you might find that ControlCenter is already listening to port 5000
+On macOS Monterey (and later) you might find that ControlCenter is already listening to port 5000
 (check with ``lsof -i -P | grep 5000``).  If this is the case,
 `turn off AirPlay Receiver <https://support.apple.com/en-gb/guide/mac-help/mchl15c9e4b5/12.0/mac/12.0>`_.
 
