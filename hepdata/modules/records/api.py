@@ -62,7 +62,8 @@ from hepdata.modules.submission.models import (
     HEPSubmission,
     RecordVersionCommitMessage,
     RelatedRecid,
-    RelatedTable
+    RelatedTable,
+    SubmissionObserver
 )
 from hepdata.utils.file_extractor import extract
 from hepdata.utils.miscellaneous import sanitize_html, get_resource_data
@@ -371,7 +372,7 @@ def extract_journal_info(record):
             record['journal_info'] = "Conference Paper"
 
 
-def render_record(recid, record, version, output_format, light_mode=False):
+def render_record(recid, record, version, output_format, light_mode=False, observer_key=None):
 
     # Count number of all versions and number of finished versions of a publication record.
     version_count_all = HEPSubmission.query.filter(HEPSubmission.publication_recid == recid,
@@ -386,18 +387,26 @@ def render_record(recid, record, version, output_format, light_mode=False):
     if version == -1:
         version = version_count if version_count else 1
 
-    # Check for a user trying to access a version of a publication record where they don't have permissions.
-    if version_count < version_count_all and version == version_count_all:
-        # Prompt the user to login if they are not authenticated then redirect, otherwise return a 403 error.
-        if not current_user.is_authenticated:
-            redirect_url_after_login = '%2Frecord%2F{0}%3Fversion%3D{1}%26format%3D{2}'.format(recid, version, output_format)
-            if 'table' in request.args:
-                redirect_url_after_login += '%26table%3D{0}'.format(request.args['table'])
-            if output_format.startswith('yoda') and 'rivet' in request.args:
-                redirect_url_after_login += '%26rivet%3D{0}'.format(request.args['rivet'])
-            return redirect('/login/?next={0}'.format(redirect_url_after_login))
-        else:
-            abort(403)
+    if observer_key:
+        submission = HEPSubmission.query.filter_by(publication_recid=recid).first()
+        key_verified = verify_observer_key(submission.id, observer_key)
+    else:
+        key_verified = False
+
+    # We skip the version check if the access key matches
+    if not key_verified:
+        # Check for a user trying to access a version of a publication record where they don't have permissions.
+        if version_count < version_count_all and version == version_count_all:
+            # Prompt the user to login if they are not authenticated then redirect, otherwise return a 403 error.
+            if not current_user.is_authenticated:
+                redirect_url_after_login = '%2Frecord%2F{0}%3Fversion%3D{1}%26format%3D{2}'.format(recid, version, output_format)
+                if 'table' in request.args:
+                    redirect_url_after_login += '%26table%3D{0}'.format(request.args['table'])
+                if output_format.startswith('yoda') and 'rivet' in request.args:
+                    redirect_url_after_login += '%26rivet%3D{0}'.format(request.args['rivet'])
+                return redirect('/login/?next={0}'.format(redirect_url_after_login))
+            else:
+                abort(403)
 
     hepdata_submission = get_latest_hepsubmission(publication_recid=recid, version=version)
 
@@ -530,6 +539,10 @@ def create_new_version(recid, user, notify_uploader=True, uploader_message=None)
                                            inspire_id=hepsubmission.inspire_id,
                                            coordinator=hepsubmission.coordinator,
                                            version=hepsubmission.version + 1)
+        # Create a new observer key
+        # Delete the old observer key
+        observer_key = SubmissionObserver(publication=_rev_hepsubmission)
+        SubmissionObserver.query.filter_by(publication_recid=hepsubmission.id).delete()
         db.session.add(_rev_hepsubmission)
         db.session.commit()
 
@@ -1210,3 +1223,24 @@ def get_table_data_list(table, data_type):
                 "description": datum.description
             })
     return record_data
+
+
+def verify_observer_key(submission_id, access_key):
+    """
+    Verifies the access key used to access a submission without
+    login requirement.
+
+    :param int submission_id:  The requested HEPSubmission for access
+    :param int access_key: The access key used to access the submission
+    :returns: Bool representing match status against database
+    """
+    # Do a query
+    submission_observer = SubmissionObserver.query.filter_by(
+        id=submission_id,
+        access_key=access_key
+    ).first()
+
+    if submission_observer:
+        return True
+    else:
+        return False

@@ -45,7 +45,7 @@ from hepdata.modules.permissions.models import SubmissionParticipant
 from hepdata.modules.records.utils.workflow import create_record
 from hepdata.modules.submission.api import get_latest_hepsubmission
 from hepdata.modules.submission.models import DataSubmission, DataReview, \
-    DataResource, Keyword, RelatedTable, RelatedRecid, HEPSubmission, RecordVersionCommitMessage
+    DataResource, Keyword, RelatedTable, RelatedRecid, HEPSubmission, RecordVersionCommitMessage, SubmissionObserver
 from hepdata.modules.records.utils.common import \
     get_license, infer_file_type, get_record_by_id, contains_accepted_url
 from hepdata.modules.records.utils.common import get_or_create
@@ -61,7 +61,6 @@ from invenio_pidstore.errors import PIDDoesNotExistError
 import os
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.exc import SQLAlchemyError
-import yaml
 from yaml import CSafeLoader as Loader
 
 def construct_yaml_str(self, node):
@@ -85,6 +84,9 @@ def remove_submission(record_id, version=1):
 
     hepdata_submissions = HEPSubmission.query.filter_by(
         publication_recid=record_id, version=version).all()
+
+    # Delete any existing access key
+    SubmissionObserver.query.filter(id=SubmissionObserver.id).delete()
 
     try:
         try:
@@ -626,7 +628,12 @@ def get_or_create_hepsubmission(recid, coordinator=1, status="todo"):
                                       coordinator=coordinator,
                                       overall_status=status)
 
+        # Create observer access key object
+        observer_key = SubmissionObserver(publication=hepsubmission)
+
+        # Create a new observer key here
         db.session.add(hepsubmission)
+        db.session.add(observer_key)
         db.session.commit()
 
     return hepsubmission
@@ -792,6 +799,9 @@ def do_finalise(recid, publication_record=None, force_finalise=False,
             # Reindex everything.
             index_record_ids([recid] + generated_record_ids)
             push_data_keywords(pub_ids=[recid])
+
+            # Clear any existing SubmissionObserver entry from the database
+            SubmissionObserver.query.filter_by(hep_submission.id).delete()
 
             try:
                 admin_indexer = AdminIndexer()
