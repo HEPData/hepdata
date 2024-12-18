@@ -31,6 +31,7 @@ from invenio_accounts.models import User
 from sqlalchemy import TypeDecorator, types, event
 from invenio_db import db
 from datetime import datetime
+from uuid import uuid4
 
 logging.basicConfig()
 log = logging.getLogger(__name__)
@@ -88,7 +89,6 @@ class HEPSubmission(db.Model):
     # and is used as the document id in opensearch and as the record id
     publication_recid = db.Column(db.Integer)
     inspire_id = db.Column(db.String(128))
-
     data_abstract = db.Column(LargeBinaryString)
 
     resources = db.relationship("DataResource",
@@ -120,6 +120,23 @@ class HEPSubmission(db.Model):
     related_recids = db.relationship("RelatedRecid", secondary="relatedrecid_identifier",
                                cascade="all,delete")
 
+
+class SubmissionObserver(db.Model):
+    """
+    A one-to-one, unique access key used to access a specific
+    HEPSubmission record page without the need for a login.
+
+    """
+    __tablename__ = "submissionobserver"
+    id = db.Column(db.Integer, db.ForeignKey(HEPSubmission.id), primary_key=True, autoincrement=True)
+    access_key = db.Column(db.String(128), nullable=False, unique=True)
+    publication = db.relationship("HEPSubmission")
+    creation_time = db.Column(db.DateTime, nullable=False, default=datetime.utcnow())
+
+    def __init__(self, publication):
+        # Generate random UUID with version 4
+        self.access_key = uuid4()
+        self.publication = publication
 
 # Declarations of the helper tables used to manage many-to-many relationships.
 datafile_identifier = db.Table(
