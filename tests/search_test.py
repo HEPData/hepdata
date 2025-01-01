@@ -449,7 +449,7 @@ def test_range_queries(app, load_default_data, identifiers):
     Tests search functionality to ensure range queries are functional, together
      and alongside other search types
     """
-    current_year = datetime.today().year
+    current_year = 2024
 
     test_data = [
         {  # Check all results are returned, and is sorted by inspire_id
