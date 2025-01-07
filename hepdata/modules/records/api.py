@@ -542,7 +542,7 @@ def create_new_version(recid, user, notify_uploader=True, uploader_message=None)
         # Create a new observer key
         # Delete the old observer key
         observer_key = SubmissionObserver(publication=_rev_hepsubmission)
-        SubmissionObserver.query.filter_by(publication_recid=hepsubmission.id).delete()
+        SubmissionObserver.query.filter_by(id=hepsubmission.id).delete()
         db.session.add(_rev_hepsubmission)
         db.session.commit()
 
