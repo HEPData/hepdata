@@ -422,6 +422,9 @@ def render_record(recid, record, version, output_format, light_mode=False, obser
             ctx['related_recids'] = get_record_data_list(hepdata_submission, "related")
             ctx['related_to_this_recids'] = get_record_data_list(hepdata_submission, "related_to_this")
 
+            if key_verified:
+                ctx['observer_key'] = observer_key
+
             increment(recid)
 
             if output_format == 'html' or output_format == 'json_ld':
