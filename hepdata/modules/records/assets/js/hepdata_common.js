@@ -236,9 +236,10 @@ HEPDATA.render_associated_files = function (associated_files, placement) {
 HEPDATA.setup_clipboard = function () {
   if (HEPDATA.clipboard == undefined) {
     HEPDATA.clipboard = new ClipboardJS('.copy-btn');
+    HEPDATA.observer_clipboard = new ClipboardJS('.observer-copy-btn');
     HEPDATA.cite_clipboard = new ClipboardJS('.cite-copy-btn')
 
-    const clipboards = [HEPDATA.clipboard, HEPDATA.cite_clipboard];
+    const clipboards = [HEPDATA.clipboard, HEPDATA.cite_clipboard, HEPDATA.observer_clipboard];
 
     toastr.options.timeOut = 3000;
 

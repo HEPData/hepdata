@@ -156,6 +156,18 @@
                                   class="fa fa-line-chart"></span> {{ analysis.type }}{% if analysis.type == 'rivet' %} Analysis{% endif %}</a></div></li>
                               {% endfor %}
                             </ul>
+                          {% if ctx.observer_key %}
+                            {% set access_url = ctx.site_url ~ '/record/' ~ ctx.recid ~ '?observer_key=' ~ ctx.observer_key %}
+                            <div class="pull-left">
+                              Access Key URL:
+                              <div id="data_link_container">
+                                <input id="observer_data_link" class="data_link" value="{{ access_url }}" disabled>
+                                <button class="btn btn-small observer-copy-btn copy-btn-style" data-clipboard-text="{{ access_url }}">
+                                    <i class="fa fa-copy" alt="Copy to clipboard"></i>
+                                </button>
+                              </div>
+                            </div>
+                          {% endif %}
                         </div>
                     </div>
 

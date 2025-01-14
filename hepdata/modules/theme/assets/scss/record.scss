@@ -1030,7 +1030,7 @@ g.node {
   border-radius: 3px;
   height: 34px;
 
-  #direct_data_link {
+  .data_link {
     border: none;
     background: transparent;
     padding-left: 10px;
@@ -1038,13 +1038,12 @@ g.node {
     color: $navy;
   }
 
-  .copy-btn {
+  .copy-btn-style {
     background: white;
     border-left: 1px solid #ccc;
     border-radius: 0;
     padding: 5px 12px;
   }
-
 }
 
 .toast-success {
