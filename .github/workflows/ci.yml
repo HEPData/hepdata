@@ -206,3 +206,17 @@ jobs:
         DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
       run: |
         ./build-and-deploy.sh
+        # extract image digest
+        IMAGE="hepdata/hepdata"
+        TAG="${CI_TAG:-$(git describe --always --tags)}"
+        DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' ${IMAGE}:${TAG} | cut -d'@' -f2)
+        echo "Image Digest: $DIGEST"
+        echo "DIGEST=${DIGEST}" >> "$GITHUB_ENV"
+    - name: send event
+      uses: cern-sis/gh-workflows/.github/actions/kubernetes-project-new-images@v6.3.1
+      with:
+        repo: cern-sis/kubernetes-hepdata
+        event-type: update
+        images: |
+          hepdata/hepdata@$DIGEST
+        token: ${{ secrets.PAT_FIRE_EVENTS_ON_CERN_SIS_KUBERNETES }}
