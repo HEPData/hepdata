@@ -28,6 +28,7 @@ from hepdata.modules.permissions.models import SubmissionParticipant
 from hepdata.modules.records.utils.submission import \
     get_or_create_hepsubmission
 from hepdata.modules.records.utils.workflow import create_record
+from hepdata.modules.submission.models import SubmissionObserver
 from hepdata.utils.users import user_is_admin_or_coordinator
 
 blueprint = Blueprint(
@@ -66,7 +67,17 @@ def submit_post():
                                                     uploader=uploader, message=message)
 
     if hepdata_submission:
-        return jsonify({'success': True, 'message': 'Submission successful.'})
+        observer_key = SubmissionObserver.query.filter_by(id=hepdata_submission.id).first()
+        # Default response message
+        result_data = {'success': True, 'message': 'Submission successful.'}
+
+        # If there's an observer key found, return it
+        if observer_key:
+            # Return key and recid for URL generation
+            result_data['observer_key'] = observer_key.access_key
+            result_data['submission_id'] = hepdata_submission.publication_recid
+
+        return jsonify(result_data)
     else:
         return jsonify({'success': False, 'message': 'Submission unsuccessful.'})
 
