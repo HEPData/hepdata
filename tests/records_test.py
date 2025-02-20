@@ -811,7 +811,7 @@ def test_get_json_ld(app, load_default_data, identifiers):
         'creator': {'@type': 'Organization', 'name': 'D0 Collaboration'},
         '@type': 'Dataset',
         'additionalType': 'Collection',
-        '@id': 'https://doi.org/10.17182/hepdata.1',
+        '@id': 'https://doi.org/10.17182/hepdata.1.v1',
         'url': 'http://localhost:5000/record/ins1283842?version=1',
         'description': 'Fermilab-Tevatron.  We present measurements of the forward-backward asymmetry, ASYMFB(LEPTON) in the angular distribution of leptons (electrons and muons) from decays of top quarks and antiquarks produced in proton-antiproton collisions. We consider the final state containing a lepton and at least three jets. The entire sample of data collected by the D0 experiment during Run II (2001 - 2011) of the Fermilab Tevatron Collider, corresponding to 9.7 inverse fb of integrated luminosity, is used. We also examine the dependence of ASYMFB(LEPTON) on the transverse momentum, PT(LEPTON), and rapidity, YRAP(LEPTON), of the lepton.',
         'name': 'Measurement of the forward-backward asymmetry in the distribution of leptons in $t\\bar{t}$ events in the lepton+jets channel',
@@ -922,7 +922,7 @@ def test_get_json_ld(app, load_default_data, identifiers):
         }
     ]
     assert table_data['includedInDataCatalog'] == {
-        '@id': 'https://doi.org/10.17182/hepdata.1',
+        '@id': 'https://doi.org/10.17182/hepdata.1.v1',
         '@type': 'DataCatalog',
         'url': 'http://localhost:5000/record/ins1283842?version=1'
     }
