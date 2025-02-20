@@ -152,7 +152,8 @@ def format_submission(recid, record, version, version_count, hepdata_submission,
 
         ctx['record']['last_updated'] = hepdata_submission.last_updated
         ctx['record']['hepdata_doi'] = "{0}".format(hepdata_submission.doi)
-        ctx['record']['hepdata_doi'] += ".v{0}".format(ctx['version'])
+        if hepdata_submission.doi:
+            ctx['record']['hepdata_doi'] += ".v{0}".format(ctx['version'])
 
         ctx['recid'] = recid
         ctx["status"] = hepdata_submission.overall_status
