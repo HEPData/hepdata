@@ -22,11 +22,7 @@
                         <div class="tab-content">
 
                             {% if ctx.record.hepdata_doi != 'None' %}
-                              {% if ctx.version_count > 1 %}
-                                {% set hepdata_doi = ctx.record.hepdata_doi.rsplit('.', 1)[0] %}
-                              {% else %}
-                                {% set hepdata_doi = ctx.record.hepdata_doi %}
-                              {% endif %}
+                              {% set hepdata_doi = ctx.record.hepdata_doi.rsplit('.', 1)[0] %}
                               {% set key = hepdata_doi.split('/', 1)[1] %}
                             {% else %}
                               {% set key = 'hepdata.' + ctx['recid']|string %}
