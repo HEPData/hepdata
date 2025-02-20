@@ -1031,7 +1031,7 @@ def test_create_breadcrumb_text():
 
 
 def test_update_analyses(app):
-    """ Test update of Rivet, MadAnalyses 5, SModelS and Combine analyses """
+    """ Test update of Rivet, MadAnalyses 5, SModelS, CheckMATE and Combine analyses """
 
     # Import a record that already has a Rivet analysis attached (but with '#' in the URL)
     import_records(['ins1203852'], synchronous=True)
@@ -1064,13 +1064,26 @@ def test_update_analyses(app):
     import_records(['ins1847779'], synchronous=True)
     analysis_resources = DataResource.query.filter_by(file_type='SModelS').all()
     assert len(analysis_resources) == 0
-    user = User(email='test@test.com', password='hello1', active=True, id=7766)
+    user = User(email='test1@test.com', password='hello1', active=True, id=7766)
     db.session.add(user)
     db.session.commit()
     update_analyses('SModelS')
     analysis_resources = DataResource.query.filter_by(file_type='SModelS').all()
     assert len(analysis_resources) == 1
     assert analysis_resources[0].file_location == 'https://smodels.github.io/docs/ListOfAnalyses#ATLAS-EXOT-2018-06'
+    submission = get_latest_hepsubmission(inspire_id='1847779', overall_status='finished')
+    assert is_current_user_subscribed_to_record(submission.publication_recid, user)
+
+    # ins1847779 also has a CheckMATE analysis, so don't need to import another record
+    analysis_resources = DataResource.query.filter_by(file_type='CheckMATE').all()
+    assert len(analysis_resources) == 0
+    user = User(email='test2@test.com', password='hello1', active=True, id=6977)
+    db.session.add(user)
+    db.session.commit()
+    update_analyses('CheckMATE')
+    analysis_resources = DataResource.query.filter_by(file_type='CheckMATE').all()
+    assert len(analysis_resources) == 1
+    assert analysis_resources[0].file_location == 'https://checkmate.hepforge.org/AnalysesList/ATLAS_13TeV.html#atlas_2102_10874'
     submission = get_latest_hepsubmission(inspire_id='1847779', overall_status='finished')
     assert is_current_user_subscribed_to_record(submission.publication_recid, user)
 
