@@ -1,4 +1,4 @@
-beautifulsoup4==4.12.3
+beautifulsoup4==4.13.3
 bleach==6.2.0
 datacite==1.2.0
 gunicorn==23.0.0
