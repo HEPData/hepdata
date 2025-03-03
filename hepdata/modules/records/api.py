@@ -388,8 +388,7 @@ def render_record(recid, record, version, output_format, light_mode=False, obser
         version = version_count if version_count else 1
 
     if observer_key:
-        submission = HEPSubmission.query.filter_by(publication_recid=recid).first()
-        key_verified = verify_observer_key(submission.id, observer_key)
+        key_verified = verify_observer_key(recid, observer_key)
     else:
         key_verified = False
 
@@ -544,8 +543,8 @@ def create_new_version(recid, user, notify_uploader=True, uploader_message=None)
                                            version=hepsubmission.version + 1)
         # Create a new observer key
         # Delete the old observer key
-        observer_key = SubmissionObserver(publication=_rev_hepsubmission)
-        SubmissionObserver.query.filter_by(id=hepsubmission.id).delete()
+        observer_key = SubmissionObserver(_rev_hepsubmission.publication_recid)
+        SubmissionObserver.query.filter_by(publication_recid=hepsubmission.id).delete()
         db.session.add(_rev_hepsubmission)
         db.session.add(observer_key)
         db.session.commit()
@@ -1229,7 +1228,7 @@ def get_table_data_list(table, data_type):
     return record_data
 
 
-def verify_observer_key(submission_id, access_key):
+def verify_observer_key(submission_id, observer_key):
     """
     Verifies the access key used to access a submission without
     login requirement.
@@ -1240,8 +1239,8 @@ def verify_observer_key(submission_id, access_key):
     """
     # Do a query
     submission_observer = SubmissionObserver.query.filter_by(
-        id=submission_id,
-        access_key=access_key
+        publication_recid=submission_id,
+        observer_key=observer_key
     ).first()
 
     if submission_observer:

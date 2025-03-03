@@ -123,20 +123,24 @@ class HEPSubmission(db.Model):
 
 class SubmissionObserver(db.Model):
     """
-    A one-to-one, unique access key used to access a specific
-    HEPSubmission record page without the need for a login.
-
+    Contains observer key entry for access per publication
+    on the publication_recid field.
     """
     __tablename__ = "submissionobserver"
-    id = db.Column(db.Integer, db.ForeignKey(HEPSubmission.id), primary_key=True, autoincrement=True)
-    access_key = db.Column(db.String(128), nullable=False, unique=True)
-    publication = db.relationship("HEPSubmission")
-    creation_time = db.Column(db.DateTime, nullable=False, default=datetime.utcnow())
+    publication_recid = db.Column(db.Integer, primary_key=True)
+    observer_key = db.Column(db.String(36), nullable=False, unique=True)
 
-    def __init__(self, publication):
-        # Generate random UUID with version 4
-        self.access_key = uuid4()
-        self.publication = publication
+    def __init__(self, publication_recid):
+        # Set the publication_recid and generate key
+        self.publication_recid = publication_recid
+        self.generate_observer_key()
+
+    def generate_observer_key(self):
+        """
+        Generates a new observer key (UUID4/random)
+        and sets the observer key.
+        """
+        self.observer_key = uuid4()
 
 # Declarations of the helper tables used to manage many-to-many relationships.
 datafile_identifier = db.Table(

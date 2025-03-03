@@ -86,7 +86,7 @@ def remove_submission(record_id, version=1):
         publication_recid=record_id, version=version).all()
 
     # Delete any existing access key
-    [SubmissionObserver.query.filter_by(id=sub.id).delete() for sub in hepdata_submissions]
+    [SubmissionObserver.query.filter_by(publication_recid=sub.id).delete() for sub in hepdata_submissions]
     try:
         try:
             for hepdata_submission in hepdata_submissions:
@@ -801,7 +801,7 @@ def do_finalise(recid, publication_record=None, force_finalise=False,
             push_data_keywords(pub_ids=[recid])
 
             # Clear any existing SubmissionObserver entry from the database
-            SubmissionObserver.query.filter_by(id=hep_submission.id).delete()
+            SubmissionObserver.query.filter_by(publication_recid=hep_submission.id).delete()
 
             try:
                 admin_indexer = AdminIndexer()

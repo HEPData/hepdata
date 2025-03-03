@@ -67,14 +67,14 @@ def submit_post():
                                                     uploader=uploader, message=message)
 
     if hepdata_submission:
-        observer_key = SubmissionObserver.query.filter_by(id=hepdata_submission.id).first()
+        submission_observer = SubmissionObserver.query.filter_by(publication_recid=hepdata_submission.publication_recid).first()
         # Default response message
         result_data = {'success': True, 'message': 'Submission successful.'}
 
         # If there's an observer key found, return it
-        if observer_key:
+        if submission_observer:
             # Return key and recid for URL generation
-            result_data['observer_key'] = observer_key.access_key
+            result_data['observer_key'] = submission_observer.observer_key
             result_data['submission_id'] = hepdata_submission.publication_recid
 
         return jsonify(result_data)
