@@ -53,7 +53,7 @@ from hepdata.modules.records.api import request, determine_user_privileges, rend
     should_send_json_ld, JSON_LD_MIMETYPES, get_resource_mimetype, get_table_data_list
 from hepdata.modules.submission.api import get_submission_participants_for_record
 from hepdata.modules.submission.models import HEPSubmission, DataSubmission, \
-    DataResource, DataReview, Message, Question
+    DataResource, DataReview, Message, Question, SubmissionObserver
 from hepdata.modules.records.utils.common import get_record_by_id, \
     default_time, IMAGE_TYPES, decode_string, file_size_check, generate_license_data_by_id, load_table_data
 from hepdata.modules.records.utils.data_processing_utils import \
@@ -448,6 +448,36 @@ def get_coordinator_view(recid):
          "reserve-reviewers": participants["reviewer"]["reserve"],
          "primary-uploaders": participants["uploader"]["primary"],
          "reserve-uploaders": participants["uploader"]["reserve"]})
+
+
+@blueprint.route('/coordinator/observer_key/<int:recid>/', methods=['GET', ])
+@login_required
+def get_observer_key(recid):
+    """
+    Returns the observer key for a record, if it exists, and the user
+    has permission.
+
+    :param recid: The publication recid for requested observer key
+    :return: JSON object with observer key and recid/status, or failure message.
+    """
+    response = { "recid": recid }
+
+    if user_allowed_to_perform_action(recid):
+        # Query for the observer key object
+        observer = SubmissionObserver.query.filter_by(publication_recid=recid).first()
+
+        if observer:
+            # If exists, set response value and key
+            response['observer_exists'] = True
+            response['observer_key'] = observer.observer_key
+        else:
+            # Set response object value for status
+            response['observer_exists'] = False
+    else:
+        # Return error message if user does not have relevant permissions
+        response['message'] = "You do not have permission to perform this action."
+
+    return json.dumps(response)
 
 
 @blueprint.route('/data/review/status/', methods=['POST', ])
