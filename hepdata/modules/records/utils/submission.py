@@ -638,6 +638,24 @@ def get_or_create_hepsubmission(recid, coordinator=1, status="todo"):
 
     return hepsubmission
 
+def get_or_create_submission_observer(publication_recid):
+    """
+    Gets or creates a SubmissionObserver object for a given recid.
+    Where an observer does not exist for a recid, it is created and returned
+    instead.
+
+    :param publication_recid: The publication record id
+    :return: Newly created SubmissionObserver object
+    """
+    submission_observer = SubmissionObserver.query.filter_by(publication_recid=publication_recid).first()
+
+    if submission_observer is None:
+        submission_observer = SubmissionObserver(publication_recid=publication_recid)
+        db.session.add(submission_observer)
+        db.session.commit()
+
+    return submission_observer
+
 
 def create_data_review(data_recid, publication_recid, version=1):
     """
