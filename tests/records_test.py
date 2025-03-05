@@ -1383,12 +1383,12 @@ def test_observer_key(app, mocker):
     # Get the test record and
     record = get_record_contents(test_submission.publication_recid)
     submission_observer = SubmissionObserver.query.filter_by(
-        id=test_submission.id
+        publication_recid=test_submission.publication_recid
     ).first()
 
     test_data = [
         {
-            "observer_key": submission_observer.access_key,
+            "observer_key": submission_observer.observer_key,
             "expected_status": 200, # 200/OK as observer key matches
             "expected_data": ""
         },
