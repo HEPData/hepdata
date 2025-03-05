@@ -128,7 +128,7 @@ class SubmissionObserver(db.Model):
     """
     __tablename__ = "submissionobserver"
     publication_recid = db.Column(db.Integer, primary_key=True)
-    observer_key = db.Column(db.String(36), nullable=False, unique=True)
+    observer_key = db.Column(db.String(36), nullable=False)
 
     def __init__(self, publication_recid):
         # Set the publication_recid and generate key
