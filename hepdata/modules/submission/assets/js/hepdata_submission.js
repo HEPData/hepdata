@@ -223,6 +223,7 @@ $(document).ready(function () {
 
               $("#submission_state").html(finished_html);
               $("#submission_observer").html(observer_html);
+              $("#submission_observer_container").removeAttr("hidden");
               $("#another_submission").removeClass("hidden");
 
           }
