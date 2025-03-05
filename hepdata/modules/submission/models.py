@@ -128,7 +128,7 @@ class SubmissionObserver(db.Model):
     """
     __tablename__ = "submissionobserver"
     publication_recid = db.Column(db.Integer, primary_key=True)
-    observer_key = db.Column(db.String(36), nullable=False)
+    observer_key = db.Column(db.String(8), nullable=False)
 
     def __init__(self, publication_recid):
         # Set the publication_recid and generate key
@@ -140,7 +140,11 @@ class SubmissionObserver(db.Model):
         Generates a new observer key (UUID4/random)
         and sets the observer key.
         """
-        self.observer_key = uuid4()
+        # Generate UUID4 and cast to string
+        generated_key = str(uuid4())
+        # Split to desired key length
+        truncated_key = generated_key[:8]
+        self.observer_key = truncated_key
 
 # Declarations of the helper tables used to manage many-to-many relationships.
 datafile_identifier = db.Table(
