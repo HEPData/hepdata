@@ -219,7 +219,7 @@ $(document).ready(function () {
               var finished_html = '<i class="fa fa-check-circle" style="font-size: 5.3em; color: #894B9D; padding-bottom: .4em"></i><br/>' +
                       '<p style="font-size: 1.3em">Submission Complete!</p>';
               var observer_url = '/record/' + response.submission_id + '?observer_key=' + response.observer_key;
-              var observer_html = '<a href="' + observer_url + '">hepdata.net' + observer_url + '</a>';
+              var observer_html = '<a href="' + observer_url + '">' + HEPDATA.site_url + observer_url + '</a>';
 
               $("#submission_state").html(finished_html);
               $("#submission_observer").html(observer_html);
