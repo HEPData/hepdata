@@ -1418,3 +1418,36 @@ def test_observer_key(app, mocker):
 
         assert result.status_code == test["expected_status"]
 
+
+def test_verify_observer_key(app):
+    """
+        Tests the verify_observer_key function to ensure correct boolean result
+        based on expected matching and not matching key inputs.
+    """
+    test_data = [
+        {  # We expect these keys to match
+            "expected": True,  # Expected result boolean
+            "input_key": "12345678",  # Key inserted with the object
+            "test_key": "12345678"  # Key used for test retrieval
+        },
+        {  # Saved key in database should not match test_key used for querying
+            "expected": False,
+            "input_key": "12345678",
+            "test_key": "00000000"
+        }
+    ]
+
+    for test in test_data:
+        # Set a random recid
+        test_recid = random.randint(0, 10000)
+        # Create a new SubmissionObserver object from test data
+        test_observer = SubmissionObserver(test_recid)
+        # Set the key based on the test
+        test_observer.observer_key = test["input_key"]
+        db.session.add(test_observer)
+        db.session.commit()
+
+        # Verify against test data
+        result = verify_observer_key(test_recid, test["test_key"])
+        assert result == test["expected"]
+
