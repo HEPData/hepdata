@@ -176,10 +176,31 @@ $(document).ready(function() {
       });
   }
 
+  function set_observer_key(recid) {
+    $.ajax({
+          dataType: "json",
+          url: '/record/coordinator/observer_key/' + recid,
+          processData: false,
+          cache: true,
+          success: function (data) {
+
+            if(data["observer_exists"]) {
+              let observer_key_div = $("#observer-key-text")
+              let observer_html = "<a href='" + data['observer_key'] + "'>" + data['observer_key'] + "</a>";
+
+              observer_key_div.html(observer_html);
+              observer_key_div.removeAttr("hidden");
+            }
+          }
+      });
+    return false;
+  }
+
   $(document).on('click', '.manage-submission-trigger', function (event) {
       window.recid = $(this).attr('data-recid');
       HEPDATA.load_all_review_messages("#conversation", $(this).attr('data-recid'));
       process_reviews($(this).attr('data-recid'));
+      set_observer_key($(this).attr('data-recid'));
   });
 
   $(document).on('click', '.conversation-trigger', function (event) {

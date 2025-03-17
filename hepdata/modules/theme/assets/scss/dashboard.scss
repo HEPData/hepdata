@@ -985,3 +985,13 @@ body, html {
     display: block;
   }
 }
+
+#manager-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+#observer-key-text, #observer-key-text a {
+  color:black;
+}
