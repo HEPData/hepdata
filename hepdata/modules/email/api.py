@@ -34,7 +34,8 @@ from flask import render_template
 
 from hepdata.modules.permissions.models import CoordinatorRequest
 from hepdata.modules.submission.api import get_latest_hepsubmission, \
-    get_primary_submission_participants_for_record, get_submission_participants_for_record
+    get_primary_submission_participants_for_record, get_submission_participants_for_record, \
+    get_or_create_submission_observer
 from hepdata.modules.submission.models import HEPSubmission, DataSubmission, DataReview
 from hepdata.utils.users import get_user_from_id
 from invenio_accounts.models import User
@@ -452,6 +453,12 @@ def notify_submission_created(record, coordinator_id, uploader, reviewer):
 
     collaboration = _get_collaboration(coordinator_id)
 
+    # Get any SubmissionObserver object entry for this ID
+    submission_observer = get_or_create_submission_observer(record['recid'])
+
+    # Generate the observer access URL with key in
+    observer_url = f"{site_url}/record/{record['recid']}?observer_key={submission_observer.observer_key}"
+
     message_body = render_template('hepdata_theme/email/created.html',
                                    name=name,
                                    actor=coordinator.email,
@@ -461,7 +468,8 @@ def notify_submission_created(record, coordinator_id, uploader, reviewer):
                                    article=record['recid'],
                                    title=record['title'],
                                    site_url=site_url,
-                                   link=site_url + "/record/{0}".format(record['recid']))
+                                   link=site_url + "/record/{0}".format(record['recid']),
+                                   observer_url=observer_url)
 
     create_send_email_task(coordinator.email,
                            '[HEPData] Submission {0} has been created'.format(record['recid']),

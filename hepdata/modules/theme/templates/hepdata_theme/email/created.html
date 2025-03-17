@@ -21,6 +21,13 @@ Record {{ article }} has been created
       <p>Reviewer: {{ reviewer.full_name }} ({{ reviewer.email }})</p>
     {% endif %}
 
+    {% if observer_url %}
+      <p>
+        You can use this URL to allow any user observer access without special permissions:
+        <a href="{{ observer_url }}">{{ observer_url }}</a>
+      </p>
+    {% endif %}
+
     <p>
     Thank you for contributing to HEPData!
     </p>
