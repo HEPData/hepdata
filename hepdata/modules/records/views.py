@@ -33,7 +33,7 @@ import os
 from dateutil import parser
 from invenio_accounts.models import User
 from flask_login import login_required, login_user
-from flask import Blueprint, send_file, abort, redirect
+from flask import Blueprint, send_file, abort, redirect, current_app
 from flask_security.utils import verify_password
 from sqlalchemy import or_, func
 from sqlalchemy.orm import joinedload
@@ -452,13 +452,13 @@ def get_coordinator_view(recid):
 
 @blueprint.route('/coordinator/observer_key/<int:recid>/', methods=['GET', ])
 @login_required
-def get_observer_key(recid):
+def get_observer_url(recid):
     """
-    Returns the observer key for a record, if it exists, and the user
+    Returns the observer url for a record, if it exists, and the user
     has permission.
 
     :param recid: The publication recid for requested observer key
-    :return: JSON object with observer key and recid/status, or failure message.
+    :return: JSON object with observer url and recid/status, or failure message.
     """
     response = { "recid": recid }
 
@@ -469,7 +469,10 @@ def get_observer_key(recid):
         if observer:
             # If exists, set response value and key
             response['observer_exists'] = True
-            response['observer_key'] = observer.observer_key
+            site_url = current_app.config.get('SITE_URL', 'https://www.hepdata.net')
+            observer_url = f"{site_url}/record/{recid}/?observer_key={observer.observer_key}"
+
+            response['observer_key'] = observer_url
         else:
             # Set response object value for status
             response['observer_exists'] = False
