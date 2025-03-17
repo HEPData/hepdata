@@ -41,6 +41,7 @@ import pytest
 from werkzeug.datastructures import FileStorage
 import requests_mock
 
+from hepdata.modules.permissions.api import verify_observer_key
 from hepdata.modules.permissions.models import SubmissionParticipant
 from hepdata.modules.records.api import process_payload, process_zip_archive, \
     move_files, get_all_ids, has_upload_permissions, \
