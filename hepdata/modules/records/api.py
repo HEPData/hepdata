@@ -41,7 +41,7 @@ from werkzeug.utils import secure_filename
 from hepdata.modules.converter import convert_oldhepdata_to_yaml
 from hepdata.modules.email.api import send_cookie_email
 from hepdata.modules.email.utils import create_send_email_task
-from hepdata.modules.permissions.api import user_allowed_to_perform_action
+from hepdata.modules.permissions.api import user_allowed_to_perform_action, verify_observer_key
 from hepdata.modules.permissions.models import SubmissionParticipant
 from hepdata.modules.records.subscribers.api import is_current_user_subscribed_to_record
 from hepdata.modules.records.utils.common import decode_string, find_file_in_directory, allowed_file, \
@@ -1228,23 +1228,3 @@ def get_table_data_list(table, data_type):
             })
     return record_data
 
-
-def verify_observer_key(submission_id, observer_key):
-    """
-    Verifies the access key used to access a submission without
-    login requirement.
-
-    :param int submission_id:  The requested HEPSubmission for access
-    :param int access_key: The access key used to access the submission
-    :returns: Bool representing match status against database
-    """
-    # Do a query
-    submission_observer = SubmissionObserver.query.filter_by(
-        publication_recid=submission_id,
-        observer_key=observer_key
-    ).first()
-
-    if submission_observer:
-        return True
-    else:
-        return False

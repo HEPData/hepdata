@@ -29,7 +29,7 @@ from sqlalchemy import or_
 
 from hepdata.modules.permissions.models import SubmissionParticipant, CoordinatorRequest
 from hepdata.modules.records.utils.common import get_record_contents
-from hepdata.modules.submission.models import HEPSubmission
+from hepdata.modules.submission.models import HEPSubmission, SubmissionObserver
 from hepdata.utils.users import get_user_from_id, user_is_admin
 
 
@@ -194,3 +194,24 @@ def write_submissions_to_files():
 
     csvfile.close()
     csvfile1.close()
+
+
+def verify_observer_key(submission_id, observer_key):
+    """
+    Verifies the access key used to access a submission without
+    login requirement.
+
+    :param int submission_id:  The requested HEPSubmission for access
+    :param int access_key: The access key used to access the submission
+    :returns: Bool representing match status against database
+    """
+    # Do a query
+    submission_observer = SubmissionObserver.query.filter_by(
+        publication_recid=submission_id,
+        observer_key=observer_key
+    ).first()
+
+    if submission_observer:
+        return True
+    else:
+        return False
