@@ -51,7 +51,8 @@ from hepdata.modules.records.utils.data_files import get_data_path_for_record, c
 from hepdata.modules.records.utils.json_ld import get_json_ld
 from hepdata.modules.records.utils.submission import process_submission_directory, \
     create_data_review, cleanup_submission, clean_error_message_for_display
-from hepdata.modules.submission.api import get_latest_hepsubmission, get_submission_participants_for_record
+from hepdata.modules.submission.api import get_latest_hepsubmission, get_submission_participants_for_record, \
+    get_or_create_submission_observer
 from hepdata.modules.records.utils.users import get_coordinators_in_system, has_role
 from hepdata.modules.records.utils.workflow import update_action_for_submission_participant
 from hepdata.modules.records.utils.yaml_utils import split_files
@@ -541,9 +542,9 @@ def create_new_version(recid, user, notify_uploader=True, uploader_message=None)
                                            inspire_id=hepsubmission.inspire_id,
                                            coordinator=hepsubmission.coordinator,
                                            version=hepsubmission.version + 1)
-        # Create a new observer key
-        # Delete the old observer key
-        observer_key = SubmissionObserver(_rev_hepsubmission.publication_recid)
+        
+        observer_key = get_or_create_submission_observer(_rev_hepsubmission.publication_recid)
+
         SubmissionObserver.query.filter_by(publication_recid=hepsubmission.id).delete()
         db.session.add(_rev_hepsubmission)
         db.session.add(observer_key)
