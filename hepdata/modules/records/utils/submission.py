@@ -43,7 +43,7 @@ from hepdata.modules.converter.tasks import convert_and_store
 from hepdata.modules.email.api import send_finalised_email
 from hepdata.modules.permissions.models import SubmissionParticipant
 from hepdata.modules.records.utils.workflow import create_record
-from hepdata.modules.submission.api import get_latest_hepsubmission
+from hepdata.modules.submission.api import get_latest_hepsubmission, get_or_create_submission_observer
 from hepdata.modules.submission.models import DataSubmission, DataReview, \
     DataResource, Keyword, RelatedTable, RelatedRecid, HEPSubmission, RecordVersionCommitMessage, SubmissionObserver
 from hepdata.modules.records.utils.common import \
@@ -629,8 +629,7 @@ def get_or_create_hepsubmission(recid, coordinator=1, status="todo"):
 
         # Create observer access key object
         if status == "todo":
-            observer_key = get_or_create_submission_observer(hepsubmission.publication_recid)
-            db.session.add(observer_key)
+            get_or_create_submission_observer(hepsubmission.publication_recid, regenerate=True)
 
         # Create a new observer key here
         db.session.add(hepsubmission)
@@ -638,23 +637,6 @@ def get_or_create_hepsubmission(recid, coordinator=1, status="todo"):
 
     return hepsubmission
 
-def get_or_create_submission_observer(publication_recid):
-    """
-    Gets or creates a SubmissionObserver object for a given recid.
-    Where an observer does not exist for a recid, it is created and returned
-    instead.
-
-    :param publication_recid: The publication record id
-    :return: Newly created SubmissionObserver object
-    """
-    submission_observer = SubmissionObserver.query.filter_by(publication_recid=publication_recid).first()
-
-    if submission_observer is None:
-        submission_observer = SubmissionObserver(publication_recid=publication_recid)
-        db.session.add(submission_observer)
-        db.session.commit()
-
-    return submission_observer
 
 
 def create_data_review(data_recid, publication_recid, version=1):

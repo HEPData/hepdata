@@ -17,7 +17,8 @@
 # 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
 #
 
-from hepdata.modules.submission.models import DataResource
+from invenio_db import db
+from hepdata.modules.submission.models import DataResource, SubmissionObserver
 from hepdata.modules.permissions.models import SubmissionParticipant
 from hepdata.modules.submission.models import HEPSubmission
 
@@ -80,3 +81,34 @@ def get_submission_participants_for_record(publication_recid, roles=None, **kwar
 def get_primary_submission_participants_for_record(publication_recid):
     submission_participants = get_submission_participants_for_record(publication_recid, status="primary")
     return submission_participants
+
+
+def get_or_create_submission_observer(publication_recid, regenerate=False):
+    """
+    Gets or re/generates a SubmissionObserver key for a given recid.
+    Where an observer does not exist for a recid, it is created and returned
+    instead.
+
+    :param publication_recid: The publication record id
+    :param regenerate: Whether to regenerate the key
+    :return: SubmissionObserver key, created, or None
+    """
+    # TODO - Implement regenerate=False
+    submission_observer = SubmissionObserver.query.filter_by(publication_recid=publication_recid).first()
+    created = False
+
+    if submission_observer is None:
+        submission_observer = SubmissionObserver(publication_recid=publication_recid)
+        created = True
+
+    # If we are to regenerate, and SubmissionObserver was queried and not generated.
+    # If just created, we don't need to generate anything.
+    if not created and regenerate:
+        submission_observer.generate_observer_key()
+
+    # Only commit if we have created or regenerated
+    if created or regenerate:
+        db.session.add(submission_observer)
+        db.session.commit()
+
+    return submission_observer
