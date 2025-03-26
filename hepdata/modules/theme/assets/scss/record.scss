@@ -1030,6 +1030,14 @@ g.node {
   border-radius: 3px;
   height: 34px;
 
+  button {
+    color: #894b9d;
+  }
+
+  button:hover {
+    color: black;
+  }
+
   .data_link {
     border: none;
     background: transparent;
