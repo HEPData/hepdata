@@ -27,11 +27,11 @@ import shutil
 import tempfile
 
 from flask import Blueprint, send_file, render_template, \
-    current_app, redirect, abort
+    current_app, redirect, abort, request
 from hepdata.config import CFG_CONVERTER_URL, CFG_SUPPORTED_FORMATS, CFG_CONVERTER_TIMEOUT
 
 from hepdata_converter_ws_client import convert, Error
-from hepdata.modules.permissions.api import user_allowed_to_perform_action
+from hepdata.modules.permissions.api import user_allowed_to_perform_action, verify_observer_key
 from hepdata.modules.converter import convert_zip_archive
 from hepdata.modules.submission.api import get_latest_hepsubmission
 from hepdata.modules.submission.models import HEPSubmission, DataResource, DataSubmission
@@ -131,6 +131,8 @@ def download_submission_with_recid(*args, **kwargs):
     :return: download_submission
     """
     recid = kwargs.pop('recid')
+    observer_key = request.args.get('observer_key')
+    key_matches = verify_observer_key(recid, observer_key)
 
     version_count, version_count_all = get_version_count(recid)
     if 'version' in kwargs:
@@ -140,7 +142,7 @@ def download_submission_with_recid(*args, **kwargs):
         version = version_count if version_count else 1
 
     # Check for a user trying to access a version of a publication record where they don't have permissions.
-    if version_count < version_count_all and version == version_count_all:
+    if version_count < version_count_all and version == version_count_all and not key_matches:
         abort(403)
 
     submission = HEPSubmission.query.filter_by(publication_recid=recid, version=version).first()
