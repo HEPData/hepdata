@@ -448,29 +448,31 @@ HEPDATA.table_renderer = {
 
             } else if ("symerror" in errors[error_idx]) {
 
-              var sym_error = errors[error_idx]['symerror'];
+              if (!errors[error_idx]["hide"]) {
 
-              // Round errors to same number of decimal places as central value.
-              // Comment out for now: misleading if central value lacks significant trailing zeros.
-              // This is the case for the YAML format used for all records migrated from the old HepData site.
-              /*
-              if (sym_error.toString().toLowerCase().indexOf('e') == -1 && value.toString().toLowerCase().indexOf('e') == -1) {
-                var sym_error_rounded = HEPDATA.visualization.utils.round(sym_error, decimal_places);
-                if (sym_error_rounded != 0)
-                  sym_error = sym_error_rounded;
+                var sym_error = errors[error_idx]['symerror'];
+
+                // Round errors to same number of decimal places as central value.
+                // Comment out for now: misleading if central value lacks significant trailing zeros.
+                // This is the case for the YAML format used for all records migrated from the old HepData site.
+                /*
+                if (sym_error.toString().toLowerCase().indexOf('e') == -1 && value.toString().toLowerCase().indexOf('e') == -1) {
+                  var sym_error_rounded = HEPDATA.visualization.utils.round(sym_error, decimal_places);
+                  if (sym_error_rounded != 0)
+                    sym_error = sym_error_rounded;
+                }
+                */
+
+                var sym_error_num = HEPDATA.dataprocessing.process_error_value(sym_error, value);
+
+                var error = div.append('div').attr('class', err_class + ' sym');
+                error.append('div').attr('class', 'value').html(sym_error_num >= 0 ? '&#177;' + sym_error : '&#8723;' + sym_error.replace('-', ''));
+
+                if (errors[error_idx]["label"] !== undefined)
+                  error.append('div').attr('class', 'label').text(errors[error_idx]["label"] == undefined ? HEPDATA.default_error_label : errors[error_idx]["label"]);
+
               }
-              */
-
-              var sym_error_num = HEPDATA.dataprocessing.process_error_value(sym_error, value);
-
-              var error = div.append('div').attr('class', err_class + ' sym');
-              error.append('div').attr('class', 'value').html(sym_error_num >= 0 ? '&#177;' + sym_error : '&#8723;' + sym_error.replace('-', ''));
-
-              if (errors[error_idx]["label"] !== undefined)
-                error.append('div').attr('class', 'label').text(errors[error_idx]["label"] == undefined ? HEPDATA.default_error_label : errors[error_idx]["label"]);
-
             }
-
           }
 
           if (errors.length > HEPDATA.default_errors_to_show) {
