@@ -106,10 +106,10 @@ def get_creation_date(metadata):
 
 
 def get_arxiv_id(metadata):
-    """Get the arxiv id of the publication from the last value in the list of arxiv eprints."""
+    """Get the arxiv id of the publication from the first value in the list of arxiv eprints."""
     arxiv_id = deepcopy(parsed_content_defaults['arxiv_id'])
     if 'arxiv_eprints' in metadata.keys():
-        arxiv_id = 'arXiv:' + metadata['arxiv_eprints'][-1]['value']
+        arxiv_id = 'arXiv:' + metadata['arxiv_eprints'][0]['value']
     return arxiv_id
 
 
@@ -181,10 +181,12 @@ def get_year(metadata):
 
 def get_subject_area(metadata):
     subject_area = deepcopy(parsed_content_defaults['subject_area'])
-    if 'arxiv_eprints' in metadata.keys():
-        subject_area += metadata['arxiv_eprints'][-1]['categories']
+    if 'arxiv_eprints' in metadata.keys() and 'categories' in metadata['arxiv_eprints'][0]:
+        subject_area += metadata['arxiv_eprints'][0]['categories']
     if ('inspire_categories' in metadata.keys() and len(metadata['inspire_categories']) > 0):
-        subject_area += [entry['term'].replace('Experiment-HEP', 'hep-ex').replace('Experiment-Nucl', 'nucl-ex').replace('Theory-Nucl', 'nucl-th') for
+        subject_area += [entry['term'].replace('Experiment-HEP', 'hep-ex').replace('Experiment-Nucl', 'nucl-ex')
+                         .replace('Theory-Nucl', 'nucl-th').replace('Phenomenology-HEP', 'hep-ph')
+                         .replace('Theory-HEP', 'hep-th') for
                          entry in metadata['inspire_categories'] if 'term' in entry.keys() and entry['term'] != 'Other']
     subject_area = list(set(subject_area))
     return subject_area
