@@ -280,7 +280,7 @@ To run the tests locally you have several options:
     2. Include ``RUN_SELENIUM_LOCALLY = True`` in your ``hepdata/config_local.py`` file.
     3. You might need to close Chrome before running the end-to-end tests.
 
-3. Omit the end-to-end tests when running locally, by running ``pytest tests -k 'not tests/e2e'`` instead of ``run-tests.sh``.
+3. Omit the end-to-end tests when running locally, by running ``pytest tests -k 'not e2e'`` instead of ``run-tests.sh``.
 
 
 Once you have set up Selenium or Sauce Labs, you can run the tests using:
