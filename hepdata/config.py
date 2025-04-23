@@ -333,6 +333,11 @@ ANALYSES_ENDPOINTS = {
         'url_template': '{0}',
         'subscribe_user_id': 7766
     },
+    'CheckMATE': {
+        'endpoint_url': 'https://checkmate.hepforge.org/AnalysesList/analyses.json',
+        'url_template': '{0}',
+        'subscribe_user_id': 6977
+    },
     'Combine': {
         'endpoint_url': 'https://cms-public-likelihoods-list.web.cern.ch/artifacts/output.json',
         'url_template': 'https://doi.org/{0}',

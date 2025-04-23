@@ -64,8 +64,7 @@
                         <li>Find all data with the <strong>phrase</strong> <em>diffractive</em> or <em>elastic</em>
                             <ul>
                                 <li>
-                                    <a href='/search?q=phrases:diffractive OR phrases:elastic' target="_new">phrases:diffractive
-                                        OR phrases:elastic</a>
+                                    <a href='/search?q=phrases:(diffractive OR elastic)' target="_new">phrases:(diffractive OR elastic)</a>
                                 </li>
                             </ul>
                         </li>
@@ -167,8 +166,8 @@
                         <li>Find all data from the <strong>collaborations</strong> <em>D0</em> OR <em>ATLAS</em>
                             <ul>
                                 <li>
-                                    <a href='/search?q=collaborations:"D0" OR collaborations:"ATLAS"'
-                                       target="_new">collaborations:"D0" OR collaborations:"ATLAS"</a>
+                                    <a href='/search?q=collaborations:(D0 OR ATLAS)'
+                                       target="_new">collaborations:(D0 OR ATLAS)</a>
                                 </li>
                             </ul>
                         </li>
@@ -241,6 +240,13 @@
                                        target="_new">analysis:SModelS</a>
                                     <span class="text-muted">
                                        (SModelS analysis)
+                                    </span>
+                                </li>
+                                <li>
+                                    <a href='/search?q=analysis:CheckMATE&sort_by=latest'
+                                       target="_new">analysis:CheckMATE</a>
+                                    <span class="text-muted">
+                                       (CheckMATE analysis)
                                     </span>
                                 </li>
                                 <li>

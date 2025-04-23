@@ -447,7 +447,9 @@ HEPDATA.table_renderer = {
                 value_block.append('div').attr('class', 'label').text(errors[error_idx]["label"] == undefined ? HEPDATA.default_error_label : errors[error_idx]["label"]);
 
             } else if ("symerror" in errors[error_idx]) {
-              if (errors[error_idx]['symerror'] != 0) {
+
+              if (!errors[error_idx]["hide"]) {
+
                 var sym_error = errors[error_idx]['symerror'];
 
                 // Round errors to same number of decimal places as central value.
@@ -461,7 +463,6 @@ HEPDATA.table_renderer = {
                 }
                 */
 
-
                 var sym_error_num = HEPDATA.dataprocessing.process_error_value(sym_error, value);
 
                 var error = div.append('div').attr('class', err_class + ' sym');
@@ -469,6 +470,7 @@ HEPDATA.table_renderer = {
 
                 if (errors[error_idx]["label"] !== undefined)
                   error.append('div').attr('class', 'label').text(errors[error_idx]["label"] == undefined ? HEPDATA.default_error_label : errors[error_idx]["label"]);
+
               }
             }
           }

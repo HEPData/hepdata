@@ -811,7 +811,7 @@ def test_get_json_ld(app, load_default_data, identifiers):
         'creator': {'@type': 'Organization', 'name': 'D0 Collaboration'},
         '@type': 'Dataset',
         'additionalType': 'Collection',
-        '@id': 'https://doi.org/10.17182/hepdata.1',
+        '@id': 'https://doi.org/10.17182/hepdata.1.v1',
         'url': 'http://localhost:5000/record/ins1283842?version=1',
         'description': 'Fermilab-Tevatron.  We present measurements of the forward-backward asymmetry, ASYMFB(LEPTON) in the angular distribution of leptons (electrons and muons) from decays of top quarks and antiquarks produced in proton-antiproton collisions. We consider the final state containing a lepton and at least three jets. The entire sample of data collected by the D0 experiment during Run II (2001 - 2011) of the Fermilab Tevatron Collider, corresponding to 9.7 inverse fb of integrated luminosity, is used. We also examine the dependence of ASYMFB(LEPTON) on the transverse momentum, PT(LEPTON), and rapidity, YRAP(LEPTON), of the lepton.',
         'name': 'Measurement of the forward-backward asymmetry in the distribution of leptons in $t\\bar{t}$ events in the lepton+jets channel',
@@ -922,7 +922,7 @@ def test_get_json_ld(app, load_default_data, identifiers):
         }
     ]
     assert table_data['includedInDataCatalog'] == {
-        '@id': 'https://doi.org/10.17182/hepdata.1',
+        '@id': 'https://doi.org/10.17182/hepdata.1.v1',
         '@type': 'DataCatalog',
         'url': 'http://localhost:5000/record/ins1283842?version=1'
     }
@@ -1031,7 +1031,7 @@ def test_create_breadcrumb_text():
 
 
 def test_update_analyses(app):
-    """ Test update of Rivet, MadAnalyses 5, SModelS and Combine analyses """
+    """ Test update of Rivet, MadAnalyses 5, SModelS, CheckMATE and Combine analyses """
 
     # Import a record that already has a Rivet analysis attached (but with '#' in the URL)
     import_records(['ins1203852'], synchronous=True)
@@ -1064,13 +1064,26 @@ def test_update_analyses(app):
     import_records(['ins1847779'], synchronous=True)
     analysis_resources = DataResource.query.filter_by(file_type='SModelS').all()
     assert len(analysis_resources) == 0
-    user = User(email='test@test.com', password='hello1', active=True, id=7766)
+    user = User(email='test1@test.com', password='hello1', active=True, id=7766)
     db.session.add(user)
     db.session.commit()
     update_analyses('SModelS')
     analysis_resources = DataResource.query.filter_by(file_type='SModelS').all()
     assert len(analysis_resources) == 1
     assert analysis_resources[0].file_location == 'https://smodels.github.io/docs/ListOfAnalyses#ATLAS-EXOT-2018-06'
+    submission = get_latest_hepsubmission(inspire_id='1847779', overall_status='finished')
+    assert is_current_user_subscribed_to_record(submission.publication_recid, user)
+
+    # ins1847779 also has a CheckMATE analysis, so don't need to import another record
+    analysis_resources = DataResource.query.filter_by(file_type='CheckMATE').all()
+    assert len(analysis_resources) == 0
+    user = User(email='test2@test.com', password='hello1', active=True, id=6977)
+    db.session.add(user)
+    db.session.commit()
+    update_analyses('CheckMATE')
+    analysis_resources = DataResource.query.filter_by(file_type='CheckMATE').all()
+    assert len(analysis_resources) == 1
+    assert analysis_resources[0].file_location == 'https://checkmate.hepforge.org/AnalysesList/ATLAS_13TeV.html#atlas_2102_10874'
     submission = get_latest_hepsubmission(inspire_id='1847779', overall_status='finished')
     assert is_current_user_subscribed_to_record(submission.publication_recid, user)
 
