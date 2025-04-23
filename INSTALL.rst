@@ -384,7 +384,7 @@ To run the tests:
 
 .. code-block:: console
 
-   $ docker-compose exec web bash -c "/usr/local/var/sauce-connect-5.2.2_${SAUCE_OS:-linux.x86_64}/sc -u $SAUCE_USERNAME -k $SAUCE_ACCESS_KEY --region eu-central -i ${SAUCE_USERNAME}_tunnel_name --proxy-localhost direct & ./run-tests.sh"
+   $ docker-compose exec web bash -c "/usr/local/var/sauce-connect-5.2.3_${SAUCE_OS:-linux.x86_64}/sc -u $SAUCE_USERNAME -k $SAUCE_ACCESS_KEY --region eu-central -i ${SAUCE_USERNAME}_tunnel_name --proxy-localhost direct & ./run-tests.sh"
 
 .. _docker-compose-tips:
 
