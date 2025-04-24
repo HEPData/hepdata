@@ -54,7 +54,7 @@ jobs:
 
       matrix:
         postgres-version: [ 14 ]
-        os-version: [ '2.15.0' ]
+        os-version: [ '2.18.0' ]
         python-version: [ '3.9' ]
 
     # Service containers to run with `runner-job`
@@ -165,7 +165,7 @@ jobs:
       with:
         username: ${{ secrets.SAUCE_USERNAME }}
         accessKey: ${{ secrets.SAUCE_ACCESS_KEY }}
-        region: eu-central
+        region: eu
         tunnelName: ${{ github.run_id }}
         proxyLocalhost: direct
         scVersion: 5.2.3
