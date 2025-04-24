@@ -36,31 +36,31 @@ for example, using ``yum`` or ``apt-get`` for Linux or ``brew`` for macOS:
 
  * `PostgreSQL <http://www.postgresql.org/>`_ (version 14) database server
  * `Redis <http://redis.io/>`_ for caching
- * `OpenSearch <https://opensearch.org/>`_ (version 2.11.0) for indexing and information retrieval. See below for further instructions.
+ * `OpenSearch <https://opensearch.org/>`_ (version 2.18.0) for indexing and information retrieval. See below for further instructions.
  * `Node.js <https://nodejs.org>`_ (version 18) JavaScript run-time environment and its package manager `npm <https://www.npmjs.com/>`_.
 
-OpenSearch v2.11.0
+OpenSearch v2.18.0
 ------------------
 
-We are currently using OpenSearch v2.11.0. Here, you can find the `download instructions. <https://opensearch.org/versions/opensearch-2-11-0.html>`_
+We are currently using OpenSearch v2.18.0. Here, you can find the `download instructions. <https://opensearch.org/downloads/>`_
 
 There are some examples below:
 
 **MacOS**
 
-Install the latest version (currently, v2.11.0) with ``brew install opensearch``.
-Alternatively, to install a specific version like v2.11.0 via Homebrew (if the latest version is newer), run:
+Install the latest version (currently, v2.19.1) with ``brew install opensearch``.
+Alternatively, to install a specific version like v2.18.0 via Homebrew (if the latest version is newer), run:
 
 .. code-block:: console
 
     $ brew tap-new opensearch/tap
-    $ brew extract --version=2.11.0 opensearch opensearch/tap
-    $ brew install opensearch/tap/opensearch@2.11.0
-    $ brew services restart opensearch/tap/opensearch@2.11.0
+    $ brew extract --version=2.18.0 opensearch opensearch/tap
+    $ brew install opensearch/tap/opensearch@2.18.0
+    $ brew services restart opensearch/tap/opensearch@2.18.0
 
 **Linux**
 
-You can see the tarball instructions on the OpenSearch installation `webpage. <https://opensearch.org/docs/2.11/install-and-configure/install-opensearch/tar/>`_
+You can see the tarball instructions on the OpenSearch installation `webpage. <https://docs.opensearch.org/docs/2.18/install-and-configure/install-opensearch/tar/>`_
 
 To execute, run this command within the extracted folder.
 
@@ -74,8 +74,16 @@ Alternatively, run OpenSearch after `installing Docker <https://docs.docker.com/
 
 .. code-block:: console
 
-    $ docker pull opensearchproject/opensearch:2.11.0
-    $ docker run -d -p 9200:9200 -p 9600:9600 -e "discovery.type=single-node" -e "plugins.security.disabled=true" opensearchproject/opensearch:2.11.0
+    $ docker pull opensearchproject/opensearch:2.18.0
+    $ docker run -d -p 9200:9200 -p 9600:9600 -e "discovery.type=single-node" -e "plugins.security.disabled=true" -e "OPENSEARCH_INITIAL_ADMIN_PASSWORD=<custom-admin-password>" opensearchproject/opensearch:2.18.0
+
+The custom admin password is required for OpenSearch 2.12 or greater.  The requirements for ``<custom-admin-password>``
+are "a minimum 8 character password and must contain at least one uppercase letter, one lowercase letter, one digit,
+and one special character that is strong".  You can test that the container is running with:
+
+.. code-block:: console
+
+    $ curl http://localhost:9200 -ku admin:<custom-admin-password>
 
 .. _installation:
 
@@ -114,13 +122,15 @@ reinstall PyYAML to ensure it's built with LibYAML bindings, e.g. on an M1 MacBo
 
    (venv)$ LDFLAGS="-L$(brew --prefix)/lib" CFLAGS="-I$(brew --prefix)/include" pip install --global-option="--with-libyaml" --force pyyaml==5.4.1
 
-The next line sets environment variables to switch Flask to run in development mode.
+The next lines set environment variables to switch Flask to run in development mode,
+and turns on ``RemovedIn20Warning`` deprecation warnings for SQLAlchemy 1.4.
 You may want to set these automatically in your bash or zsh profile.
 
 .. code-block:: console
 
    (venv)$ export FLASK_ENV=development
    (venv)$ export FLASK_DEBUG=1
+   (venv)$ export SQLALCHEMY_WARN_20=1
 
 Use of config_local.py
 ----------------------
@@ -269,10 +279,10 @@ To run the tests locally you have several options:
 1. Run a Sauce Connect tunnel (recommended).  This is used by GitHub Actions CI.
     1. Create a Sauce Labs account, or ask for the HEPData account details.
     2. Log into Sauce Labs, and go to the "Tunnel Proxies" page.
-    3. Follow the instructions there to install Sauce Connect and start a tunnel.
-       Do not name the tunnel with the ``--tunnel-name`` argument.
+    3. Follow the instructions there to `install Sauce Connect <https://docs.saucelabs.com/secure-connections/sauce-connect-5/installation/>`_.
     4. Create the variables ``SAUCE_USERNAME`` and ``SAUCE_ACCESS_KEY`` in your local environment (and add them to your
-       bash or zsh profile).
+       bash or zsh profile).  Also set ``SAUCE_REGION=eu-central``, ``SAUCE_TUNNEL_NAME=${SAUCE_USERNAME}_tunnel_name`` and ``SAUCE_PROXY_LOCALHOST=direct``.
+    5. Start a tunnel with the command ``sc run`` and wait for the message "Sauce Connect is up, you may start your tests".
 
 2. Run Selenium locally using ChromeDriver.  (Some tests are currently failing with this method.)
     1. Install `ChromeDriver <https://chromedriver.chromium.org>`_
@@ -344,9 +354,11 @@ Copy the file ``config_local.docker_compose.py`` to ``config_local.py``.
 In order to run the tests via Sauce Labs, ensure you have the variables ``$SAUCE_USERNAME`` and ``$SAUCE_ACCESS_KEY``
 set in your environment (see :ref:`running-the-tests`) **before** starting the containers.
 
-If using an M1 MacBook, also add ``export SAUCE_OS=linux-arm64`` to your bash or zsh profile. This is necessary to
+Add ``export OPENSEARCH_INITIAL_ADMIN_PASSWORD=<custom-admin-password>`` to your bash or zsh profile for OpenSearch.
+
+If using an M1 MacBook, also add ``export SAUCE_OS=linux.aarch64`` to your bash or zsh profile. This is necessary to
 download the correct `Sauce Connect Proxy
-<https://docs.saucelabs.com/secure-connections/sauce-connect/installation/#downloading-sauce-connect-proxy>`_
+<https://docs.saucelabs.com/secure-connections/sauce-connect-5/installation/>`_
 client.
 
 Start the containers:
@@ -372,7 +384,7 @@ To run the tests:
 
 .. code-block:: console
 
-   $ docker-compose exec web bash -c "/usr/local/var/sc-4.9.1-${SAUCE_OS:-linux}/bin/sc -u $SAUCE_USERNAME -k $SAUCE_ACCESS_KEY --region eu-central & ./run-tests.sh"
+   $ docker-compose exec web bash -c "/usr/local/var/sauce-connect-5.2.3_${SAUCE_OS:-linux.x86_64}/sc -u $SAUCE_USERNAME -k $SAUCE_ACCESS_KEY --region eu-central -i ${SAUCE_USERNAME}_tunnel_name --proxy-localhost direct & ./run-tests.sh"
 
 .. _docker-compose-tips:
 
