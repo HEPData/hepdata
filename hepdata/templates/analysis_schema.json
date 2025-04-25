@@ -1,0 +1,101 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "HEPData_analysis_tool_schema",
+  "title": "HEPData analysis tool schema",
+  "description": "A JSON schema for tracking implementations of HEPData analyses in different tools",
+  "type": "object",
+  "required": ["tool", "version", "url_templates", "analyses"],
+
+  "properties": {
+    "tool": {
+      "description": "The tool used to implement the analysis",
+      "type": "string"
+    },
+
+    "version": {
+      "description": "The version of the tool used to implement the analysis",
+      "type": "string"
+    },
+
+    "url_templates": {
+      "description": "Templates for URLs to the main repository and important other pages",
+      "type": "object",
+      "required": ["main_url"],
+
+      "properties": {
+        "main_url": {
+          "description": "The URL template for the main repository. Should contain e.g. a {name} placeholder for the analysis name.",
+          "type": "string"
+        },
+        "val_url": {
+          "description": "The URL template for the validation page. Should contain e.g. a {name} placeholder for the analysis name.",
+          "type": "string"
+        }
+      }
+    },
+
+    "analyses": {
+      "description": "The analyses implemented in the tool",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref": "#/$defs/Analysis",
+        "minItems": 1,
+        "uniqueItems": true
+      }
+    }
+  },
+
+  "$defs": {
+
+    "Analysis": {
+      "description": "An analysis, identified by the INSPIRE ID, implemented at least once in a tool",
+      "type": "object",
+      "required": ["inspire_id", "implementations"],
+    
+      "properties": {
+        "inspire_id": {
+          "description": "The INSPIRE ID of the analysis",
+          "type": "number"
+        },
+        "implementations":{
+          "description": "The implementations of the analysis in the tool",
+          "type": "array",
+          "item": {
+            "type": "object",
+            "$ref": "#/$defs/Implementation",
+            "minItems": 1,
+            "uniqueItems": true
+          }
+        },
+        "signature_type": {
+          "description": "The signature of the analysis, e.g. 'prompt', 'displaced'",
+          "type": "string"
+        },
+        "pretty_name": {
+          "description": "A pretty name for the analysis",
+          "type": "string"
+        }
+      }
+    },
+
+    "Implementation": {
+      "description": "An implementation of an analysis in a tool, giving the internal name to retrieve information",
+      "type": "object",
+      "required": ["name"],
+    
+      "properties": {
+        "name": {
+          "description": "Internal name of the implementation",
+          "type": "string"
+        },
+        "path": {
+          "description": "The path to the implementation in the tool",
+          "type": "string"
+        }
+      }
+    }
+
+  }
+
+}

@@ -1,0 +1,32 @@
+{
+    "tool": "SModelS",
+    "version": "3.0.0",
+    "url_templates": {
+        "main_url": "https://github.com/SModelS/smodels-database-release/tree/main/{path}",
+        "val_url": "https://smodels.github.io/docs/Validation#{name}_ul"
+    },
+    "analyses" : [
+      {
+        "inspire_id": 1795075,
+        "implementations": [
+          {
+            "name" : "ATLAS-EXOT-2018-47a"
+          },
+          {
+            "name" : "ATLAS-EXOT-2018-47b"
+          }
+        ]
+      },
+      {
+        "inspire_id": 1795076,
+        "signature_type": "prompt",
+        "pretty_name": "di-top resonance",
+        "implementations": [
+          {
+            "name" : "ATLAS-EXOT-2018-48",
+            "path": "13TeV/ATLAS/{name}/"
+          }
+        ]
+      }
+    ]
+}
