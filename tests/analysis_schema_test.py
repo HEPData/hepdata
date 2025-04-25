@@ -23,10 +23,12 @@
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 import json
 import jsonschema
+import os
 
 def test_analysis_json_schema():
-  schema_file_name = "../hepdata/templates/analysis_schema.json"
-  test_file_name = "test_data/analysis_example.json"
+  base_dir = os.path.dirname(os.path.realpath(__file__))
+  schema_file_name = os.path.join(base_dir, "..", "hepdata", "templates", "analysis_schema.json")
+  test_file_name = os.path.join(base_dir, "test_data", "analysis_example.json")
 
   with open(schema_file_name) as f:
     schema = json.load(f)
