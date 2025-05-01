@@ -51,7 +51,7 @@ def get_title(metadata):
     if title is parsed_content_defaults['title'] and 'titles' in metadata.keys() and len(metadata['titles']) > 0:
         title = metadata['titles'][0]['title']
         for _title in metadata['titles']:
-            if 'title' in _title.keys() and 'source' in _title.keys() and _title['source'] == 'arXiv':
+            if 'title' in _title.keys() and 'source' in _title.keys() and _title['source'] in ['arXiv', 'submitter']:
                 title = _title['title']
                 break
     return title
