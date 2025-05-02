@@ -43,6 +43,23 @@
         "minItems": 1,
         "uniqueItems": true
       }
+    },
+
+    "implementations_license": {
+      "description": "The license for the implementations of the analyses in the tool",
+      "type": "object",
+      "required": ["name", "url"],
+
+      "properties": {
+        "name": {
+          "description": "The name of the license",
+          "type": "string"
+        },
+        "url": {
+          "description": "The URL to the license",
+          "type": "string"
+        }
+      }
     }
   },
 
