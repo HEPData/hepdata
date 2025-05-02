@@ -49,14 +49,21 @@
       "description": "The license for the implementations of the analyses in the tool. Taken to be CC0 if not specified.",
       "type": "object",
       "required": ["name", "url"],
+      "additionalProperties": false,
 
       "properties": {
         "name": {
           "description": "The name of the license",
-          "type": "string"
+          "type": "string",
+          "maxLength": 256
         },
         "url": {
           "description": "The URL to the license",
+          "type": "string",
+          "maxLength": 256
+        },
+        "description": {
+          "description": "A description of the license",
           "type": "string"
         }
       }
