@@ -89,7 +89,7 @@ def get_abstract(metadata):
     if 'abstracts' in metadata.keys():
         abstract = metadata['abstracts'][0]['value']
         for _abstract in metadata['abstracts']:
-            if 'value' in _abstract.keys() and 'source' in _abstract.keys() and _abstract['source'] == 'arXiv':
+            if 'value' in _abstract.keys() and 'source' in _abstract.keys() and _abstract['source'] in ['arXiv', 'submitter']:
                 abstract = _abstract['value']
                 break
     return abstract
