@@ -46,7 +46,7 @@
     },
 
     "implementations_license": {
-      "description": "The license for the implementations of the analyses in the tool",
+      "description": "The license for the implementations of the analyses in the tool. Taken to be CC0 if not specified.",
       "type": "object",
       "required": ["name", "url"],
 
