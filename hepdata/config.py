@@ -322,21 +322,35 @@ SPECIAL_VALUES = ['inf', '+inf', '-inf', 'nan']
 ANALYSES_ENDPOINTS = {
     'rivet': {
         'endpoint_url': 'https://cedar-tools.web.cern.ch/rivet/analyses.json',
-        'url_template': 'http://rivet.hepforge.org/analyses/{0}'
+        'url_template': 'http://rivet.hepforge.org/analyses/{0}',
+        'description': 'Rivet analysis'
     },
     'MadAnalysis': {
         'endpoint_url': 'https://madanalysis.irmp.ucl.ac.be/raw-attachment/wiki/MA5SandBox/analyses.json',
-        'url_template': 'https://doi.org/{0}'
+        'url_template': 'https://doi.org/{0}',
+        'description': 'MadAnalysis 5 analysis'
     },
     'SModelS': {
         'endpoint_url': 'https://zenodo.org/records/13952092/files/smodels-analyses.hepdata.json?download=1',
         'url_template': '{0}',
+        'description': 'SModelS analysis',
         'subscribe_user_id': 7766
     },
     'CheckMATE': {
         'endpoint_url': 'https://checkmate.hepforge.org/AnalysesList/analyses.json',
         'url_template': '{0}',
+        'description': 'CheckMATE analysis',
         'subscribe_user_id': 6977
+    },
+    'HackAnalysis': {
+        'endpoint_url': 'https://goodsell.pages.in2p3.fr/hackanalysis/json/HackAnalysis_HEPData.json',
+        'url_template': '{0}',
+        'description': 'HackAnalysis analysis',
+        'subscribe_user_id': 7919,
+        'license': {
+            'name': 'gnu-gpl-3.0',
+            'url': 'https://www.gnu.org/licenses/gpl-3.0.html'
+        },
     },
     'Combine': {
         'endpoint_url': 'https://cms-public-likelihoods-list.web.cern.ch/artifacts/output.json',
