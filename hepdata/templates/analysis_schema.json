@@ -4,7 +4,7 @@
   "title": "HEPData analysis tool schema",
   "description": "A JSON schema for tracking implementations of HEPData analyses in different tools",
   "type": "object",
-  "required": ["tool", "version", "url_templates", "analyses"],
+  "required": ["tool", "version", "tool_type", "url_templates", "analyses"],
 
   "properties": {
     "tool": {
@@ -15,6 +15,12 @@
     "version": {
       "description": "The version of the tool used to implement the analysis",
       "type": "string"
+    },
+
+    "tool_type":{
+      "description": "The type of the information provided for the analyses by the tool, see enum choices",
+      "type": "string",
+      "enum": ["Statistical model", "Simplified analysis"]
     },
 
     "url_templates": {
