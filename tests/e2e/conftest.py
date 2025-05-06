@@ -37,6 +37,7 @@ from invenio_accounts.models import User, Role
 from invenio_db.shared import metadata, SQLAlchemy as InvenioSQLAlchemy
 from selenium import webdriver
 from selenium.webdriver.common.by import By
+from selenium.webdriver.remote.command import Command
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from sqlalchemy_utils.functions import create_database, database_exists
@@ -241,7 +242,7 @@ def env_browser(request):
     yield browser
 
     # Check browser logs before quitting
-    log = browser.get_log('browser')
+    log = browser.execute(Command.GET_LOG, {"type": "browser"})["value"]
 
     # Filter out error message for:
     # WARNING: security - Error with Permissions-Policy header:
