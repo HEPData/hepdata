@@ -1182,12 +1182,13 @@ def test_generate_license_data_by_id(app):
 def test_get_commit_message(app):
     """
         Tests functionality of the get_commit_message function.
-        Ensures no instances of None, that duplicate commit messages
+        Ensures that duplicate commit messages
         are handled correctly, and only the most recent
         RecordVersionCommitMessage is returned.
     """
     # We want to ensure duplicate entries
-    test_version, test_recid = 1, 1
+    # We insert V2, as V1 should not be inserted
+    test_version, test_recid = 2, 1
     # How many records we want to insert
     insert_amount = 5
 
@@ -1201,7 +1202,7 @@ def test_get_commit_message(app):
                     recid=test_recid,
                     version=test_version,
                     # Setting message to a unique value
-                    message=str(insert_amount)
+                    message=str(i)
                 )
                 db.session.add(new_record)
             db.session.commit()
@@ -1218,11 +1219,11 @@ def test_get_commit_message(app):
         # revision_message only exists if we should insert
         assert ("revision_message" in ctx) == should_insert
 
-        # Check the most recent has been retrieved
         if should_insert:
-            # We know it's the most recent as message
-            # is set to the highest inserted range, equal to insert_amount.
-            ctx["revision_message"]["message"] = str(insert_amount)
+            # Expected value is max range
+            expected_val = insert_amount - 1
+            assert ctx["revision_message"]['message'] == str(expected_val)
+            assert ctx["revision_message"]['version'] == 2
 
 
 def test_version_related_functions(app):
