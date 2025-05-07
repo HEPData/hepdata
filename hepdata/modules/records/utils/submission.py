@@ -762,7 +762,8 @@ def do_finalise(recid, publication_record=None, force_finalise=False,
             if hep_submission.coordinator > 1:
                 hep_submission.last_updated = datetime.utcnow()
 
-            if commit_message:
+            # No commit message required < V2
+            if commit_message and version > 1:
                 commit_record = RecordVersionCommitMessage(
                     recid=recid,
                     version=version,
