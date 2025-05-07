@@ -1174,7 +1174,8 @@ def test_get_commit_message(app):
         RecordVersionCommitMessage is returned.
     """
     # We want to ensure duplicate entries
-    test_version, test_recid = 1, 1
+    # We insert V2, as V1 should not be inserted
+    test_version, test_recid = 2, 1
     # How many records we want to insert
     insert_amount = 5
 
@@ -1188,7 +1189,7 @@ def test_get_commit_message(app):
                     recid=test_recid,
                     version=test_version,
                     # Setting message to a unique value
-                    message=str(insert_amount)
+                    message=str(i)
                 )
                 db.session.add(new_record)
             db.session.commit()
