@@ -1206,11 +1206,11 @@ def test_get_commit_message(app):
         # revision_message only exists if we should insert
         assert ("revision_message" in ctx) == should_insert
 
-        # Check the most recent has been retrieved
         if should_insert:
-            # We know it's the most recent as message
-            # is set to the highest inserted range, equal to insert_amount.
-            ctx["revision_message"]["message"] = str(insert_amount)
+            # Expected value is max range
+            expected_val = insert_amount - 1
+            assert ctx["revision_message"]['message'] == str(expected_val)
+            assert ctx["revision_message"]['version'] == 2
 
 
 def test_version_related_functions(app):
