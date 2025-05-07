@@ -742,7 +742,7 @@ def test_do_finalise_commit_message(app, admin_idx):
         id_range = range(1, 6)
         for i in id_range:
             # We don't create a new version on the first one.
-            if i is not 1:
+            if i > 1:
                 create_new_version(hepdata_submission.publication_recid, None)
 
             # Set the commit_message value to the current number/ID
