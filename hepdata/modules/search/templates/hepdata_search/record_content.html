@@ -52,7 +52,7 @@
 
         {% if record.abstract %}
             <p class="truncated-record-abstract" style="padding-top: 10px;">
-                {{ record.abstract }}
+                {{ record.abstract|safe }}
             </p>
         {% endif %}
 

@@ -44,11 +44,11 @@ log = logging.getLogger(__name__)
 @shared_task
 def update_analyses(endpoint=None):
     """
-    Update (Rivet, MadAnalysis 5, SModelS, CheckMATE and Combine) analyses and remove outdated resources.
+    Update (Rivet, MadAnalysis 5, SModelS, CheckMATE, HackAnalysis and Combine) analyses and remove outdated resources.
     Allow bulk subscription to record update notifications if "subscribe_user_id" in endpoint.
     Add optional "description" and "license" fields if present in endpoint.
 
-    :param endpoint: either "rivet" or "MadAnalysis" or "SModelS" or "CheckMATE" or "Combine" or None (default) for all
+    :param endpoint: either "rivet" or "MadAnalysis" or "SModelS" or "CheckMATE" or "HackAnalysis" or "Combine" or None (default) for all
     """
     endpoints = current_app.config["ANALYSES_ENDPOINTS"]
     for analysis_endpoint in endpoints:

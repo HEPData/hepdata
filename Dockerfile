@@ -46,8 +46,8 @@ RUN hepdata collect -v  && \
 
 RUN bash -c "echo $APP_ENVIRONMENT"
 
-RUN bash -c "set -x; [[ ${APP_ENVIRONMENT:-prod} = local-web ]] && (cd /usr/local/var && wget https://saucelabs.com/downloads/sc-4.9.1-${SAUCE_OS:-linux}.tar.gz && \
-  tar -xvf sc-4.9.1-${SAUCE_OS:-linux}.tar.gz) || echo 'Not installing SC on prod or worker build'"
+RUN bash -c "set -x; [[ ${APP_ENVIRONMENT:-prod} = local-web ]] && (cd /usr/local/var && wget https://saucelabs.com/downloads/sauce-connect/5.2.3/sauce-connect-5.2.3_${SAUCE_OS:-linux.x86_64}.tar.gz && \
+  tar -xvf sauce-connect-5.2.3_${SAUCE_OS:-linux.x86_64}.tar.gz) || echo 'Not installing SC on prod or worker build'"
 
 WORKDIR /code
 

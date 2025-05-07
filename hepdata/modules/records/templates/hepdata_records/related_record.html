@@ -80,7 +80,7 @@
 
                 <div>
                     <div class="record-title">
-                        {{ ctx.record.title }}
+                        {{ ctx.record.title|safe }}
                     </div>
 
                     <br/>
@@ -162,7 +162,7 @@
                         {% if ctx.record.data_abstract %}
                             {{ ctx.record.data_abstract|safe }}
                         {% elif ctx.record.abstract %}
-                            {{ ctx.record.abstract }}
+                            {{ ctx.record.abstract|safe }}
                         {% else %}
                             No abstract available.
                         {% endif %}

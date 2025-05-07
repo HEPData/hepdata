@@ -28,6 +28,7 @@ from pytwitter.error import PyTwitterError
 from hepdata.config import USE_TWITTER, TWITTER_HANDLE_MAPPINGS
 from flask import current_app
 from unicodeit import replace
+from mathml_to_latex.converter import MathMLToLaTeX
 import re
 
 
@@ -58,6 +59,12 @@ def tweet(title, collaborations, url, version=1):
             )
 
             cleaned_title = decode_string(encode_string(title))  # in case of binary characters in title
+
+            # Replace MathML expressions with LaTeX expressions.
+            # Use negative lookahead in regex to match innermost <math>.*</math>.
+            cleaned_title = re.sub(r'(<math>((?!<math>).)*</math>)',
+                                   lambda m: MathMLToLaTeX().convert(m.group()), cleaned_title)
+
             cleaned_title = replace(cleaned_title)  # use UnicodeIt to replace LaTeX expressions
             cleaned_title = cleanup_latex(cleaned_title)  # remove some remaining LaTeX encodings
 

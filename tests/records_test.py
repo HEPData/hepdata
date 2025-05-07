@@ -1031,7 +1031,7 @@ def test_create_breadcrumb_text():
 
 
 def test_update_analyses(app):
-    """ Test update of Rivet, MadAnalyses 5, SModelS, CheckMATE and Combine analyses """
+    """ Test update of Rivet, MadAnalyses 5, SModelS, CheckMATE, HackAnalysis and Combine analyses """
 
     # Import a record that already has a Rivet analysis attached (but with '#' in the URL)
     import_records(['ins1203852'], synchronous=True)
@@ -1084,6 +1084,19 @@ def test_update_analyses(app):
     analysis_resources = DataResource.query.filter_by(file_type='CheckMATE').all()
     assert len(analysis_resources) == 1
     assert analysis_resources[0].file_location == 'https://checkmate.hepforge.org/AnalysesList/ATLAS_13TeV.html#atlas_2102_10874'
+    submission = get_latest_hepsubmission(inspire_id='1847779', overall_status='finished')
+    assert is_current_user_subscribed_to_record(submission.publication_recid, user)
+
+    # ins1847779 also has a HackAnalysis analysis, so don't need to import another record
+    analysis_resources = DataResource.query.filter_by(file_type='HackAnalysis').all()
+    assert len(analysis_resources) == 0
+    user = User(email='test3@test.com', password='hello1', active=True, id=7919)
+    db.session.add(user)
+    db.session.commit()
+    update_analyses('HackAnalysis')
+    analysis_resources = DataResource.query.filter_by(file_type='HackAnalysis').all()
+    assert len(analysis_resources) == 1
+    assert analysis_resources[0].file_location == 'https://goodsell.pages.in2p3.fr/hackanalysis/page/analyses/atlas_exot_2018_06/'
     submission = get_latest_hepsubmission(inspire_id='1847779', overall_status='finished')
     assert is_current_user_subscribed_to_record(submission.publication_recid, user)
 

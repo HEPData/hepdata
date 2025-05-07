@@ -223,9 +223,9 @@ def do_unload(records_to_unload):
 
 @utils.command()
 @with_appcontext
-@click.option('--endpoint', '-e', type=str, help='Specific endpoint to update (e.g. "rivet" or "MadAnalysis" or "SModelS" or "CheckMATE" or "Combine"). Omit for all.')
+@click.option('--endpoint', '-e', type=str, help='Specific endpoint to update (e.g. "rivet" or "MadAnalysis" or "SModelS" or "CheckMATE" or "HackAnalysis" or "Combine"). Omit for all.')
 def find_and_add_record_analyses(endpoint):
-    """Finds analyses such as Rivet, MadAnalysis 5, SModelS, CheckMATE and Combine and adds them to records."""
+    """Finds analyses such as Rivet, MadAnalysis 5, SModelS, CheckMATE, HackAnalysis and Combine and adds them to records."""
     update_analyses(endpoint)
 
 
