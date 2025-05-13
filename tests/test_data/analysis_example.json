@@ -1,7 +1,7 @@
 {
   "tool": "SModelS",
   "version": "3.0.0",
-  "tool_type": "Simplified analysis",
+  "implementations_description": "SModelS analysis",
   "url_templates": {
       "main_url": "https://github.com/SModelS/smodels-database-release/tree/main/{path}",
       "val_url": "https://smodels.github.io/docs/Validation#{name}_ul"
