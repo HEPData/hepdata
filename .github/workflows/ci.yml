@@ -54,7 +54,7 @@ jobs:
 
       matrix:
         postgres-version: [ 14 ]
-        os-version: [ '2.11.0' ]
+        os-version: [ '2.18.0' ]
         python-version: [ '3.9' ]
 
     # Service containers to run with `runner-job`
@@ -89,6 +89,7 @@ jobs:
           cluster.initial_master_nodes: os01
           OPENSEARCH_JAVA_OPTS: -Xms512m -Xmx512m
           plugins.security.disabled: true
+          OPENSEARCH_INITIAL_ADMIN_PASSWORD: ${{ secrets.OPENSEARCH_INITIAL_ADMIN_PASSWORD }}
         ports:
         - "9200:9200"
         - "9600:9600"
@@ -139,11 +140,15 @@ jobs:
         python -m pip install --force-reinstall -r requirements.txt
         python -m pip install -e .[tests]
     - name: Initialise hepdata
+      env:
+        SQLALCHEMY_WARN_20: 1
       run: |
         hepdata db init
         hepdata db create
         hepdata utils reindex -rc True
     - name: Setup npm and build assets
+      env:
+        SQLALCHEMY_WARN_20: 1
       run: |
         hepdata collect -v
         hepdata webpack buildall
@@ -151,24 +156,26 @@ jobs:
     - name: Run tests
       env:
         COVERAGE_FILE: '.coverage_func'
+        SQLALCHEMY_WARN_20: 1
       run: |
         py.test -vv tests/*_test.py
     - name: Setup Sauce Connect
-      uses: saucelabs/sauce-connect-action@v2
+      uses: saucelabs/sauce-connect-action@v3.0.0
       if: startsWith(matrix.python-version, '3.9')
       with:
         username: ${{ secrets.SAUCE_USERNAME }}
         accessKey: ${{ secrets.SAUCE_ACCESS_KEY }}
-        region: eu-central
+        region: eu
         tunnelName: ${{ github.run_id }}
-        scVersion: 4.9.1
-        verbose: true
+        proxyLocalhost: direct
+        scVersion: 5.2.3
     - name: Run end-to-end tests
       if: startsWith(matrix.python-version, '3.9')
       env:
         SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
         SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY }}
         COVERAGE_FILE: '.coverage_e2e'
+        SQLALCHEMY_WARN_20: 1
       run: |
         if [[ -n ${{ secrets.SAUCE_USERNAME }} && -n ${{ secrets.SAUCE_ACCESS_KEY}} ]]; then py.test -vv tests/e2e; fi
     - name: Run coveralls

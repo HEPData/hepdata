@@ -723,9 +723,7 @@ def test_status_reset_error(app, mocker, caplog):
 @patch("hepdata.ext.opensearch.document_enhancers.process_last_updates")
 def test_do_finalise_commit_message(app, admin_idx):
     """
-    Tests the do_finalise function.
-
-    Here we are testing the commit message functionality, ensuring proper rollback in the event of an error.
+    Tests the do_finalise function's commit message insertion
     """
 
     # Insert the testing record data
@@ -737,15 +735,61 @@ def test_do_finalise_commit_message(app, admin_idx):
             overall_status='todo'
         )
 
-        # We're going to add an extra commit message
-        conflicting_record = RecordVersionCommitMessage(
-            recid=hepdata_submission.publication_recid,
-            version=hepdata_submission.version,
-            message="OldMessage"
-        )
+        record = get_record_by_id(hepdata_submission.publication_recid)
+        record["creation_date"] = str(datetime.today().strftime('%Y-%m-%d'))
 
-        db.session.add(conflicting_record)
-        db.session.commit()
+        # Inserting a bunch of IDs
+        id_range = range(1, 6)
+        for i in id_range:
+            # We don't create a new version on the first one.
+            if i > 1:
+                create_new_version(hepdata_submission.publication_recid, None)
+
+            # Set the commit_message value to the current number/ID
+            do_finalise(
+                hepdata_submission.publication_recid,
+                publication_record=record,
+                commit_message=f"{i}",
+                force_finalise=True,
+                convert=False
+            )
+
+        # Get all commit messages
+        commit_messages = RecordVersionCommitMessage.query.filter_by(
+            recid=hepdata_submission.publication_recid
+        ).all()
+
+        # Convert the range to a usable list obj
+        id_range = list(id_range)
+        # Remove 1 as it should not have inserted
+        id_range.remove(1)
+
+        # Ensure message count matches amount inserted.
+        assert len(commit_messages) == len(id_range)
+
+        # Get the versions, and messages (which should be int/str of single value integers (2-4)
+        versions = [commit_message.version for commit_message in commit_messages]
+        messages =  [int(commit_message.message) for commit_message in commit_messages]
+
+        # Should be a range of ints matching the id_range value 2-5
+        assert id_range == versions == messages
+
+
+# Patching to force no-op on function: process_last_updates()
+@patch("hepdata.ext.opensearch.document_enhancers.process_last_updates")
+def test_do_finalise_commit_message_failure(app, admin_idx):
+    """
+    Tests against commit message insertion failure in the do_finalise function.
+    Checks rollback functionality to ensure no messages are inserted.
+    """
+
+    with app.app_context():
+        admin_idx.recreate_index()
+        # Create test submission/record
+        hepdata_submission = create_test_record(
+            os.path.abspath('tests/test_data/test_submission'),
+            overall_status='todo'
+        )
 
         # Create record data and prepare
         record = get_record_by_id(hepdata_submission.publication_recid)
@@ -771,44 +815,50 @@ def test_do_finalise_commit_message(app, admin_idx):
             result = do_finalise(
                         hepdata_submission.publication_recid,
                         publication_record=record,
-                        commit_message="NewMessage",
+                        commit_message="FailedMessage",
                         force_finalise=True,
                         convert=False
             )
             # Convert str(json)->dict
             result = json.loads(result)
 
-        # Get all commit messages
-        commit_messages = RecordVersionCommitMessage.query.filter_by(
-            recid=hepdata_submission.publication_recid
-        ).all()
-
-        # Ensure that no new messages have inserted
-        assert len(commit_messages) == 1
-        assert commit_messages[0].message == "OldMessage"
-
         # Confirm that the result response exists and is correct
         assert "errors" in result
         assert len(result["errors"]) == 1
         assert result["errors"][0] == "No record found to update. Which is super strange."
 
-        # Run do_finalise again, but UNPATCHED
-        result = do_finalise(
+        # Execute again, but unpatched | No failure
+        do_finalise(
             hepdata_submission.publication_recid,
             publication_record=record,
             commit_message="NewMessage",
             force_finalise=True,
             convert=False
         )
-        # Convert str(json)->dict
-        result = json.loads(result)
 
-        # Get the commit messages
         commit_messages = RecordVersionCommitMessage.query.filter_by(
             recid=hepdata_submission.publication_recid
         ).all()
 
-        # `NewMessage` should have inserted, and no error found.
-        assert len(commit_messages) == 2
-        assert commit_messages[-1].message == "NewMessage"
-        assert "errors" not in result
+        # Ensure that no messages have inserted
+        # No messages should be there as we have seen a failure and V1 sub
+        assert len(commit_messages) == 0
+
+        # Create new version, then finalise again
+        # There should now be a message
+        create_new_version(hepdata_submission.publication_recid, None)
+        do_finalise(
+            hepdata_submission.publication_recid,
+            publication_record=record,
+            commit_message="NewMessage",
+            force_finalise=True,
+            convert=False
+        )
+         # Get all commit messages again
+        commit_messages = RecordVersionCommitMessage.query.filter_by(
+            recid=hepdata_submission.publication_recid
+        ).all()
+
+        # We should now have one message in the database.
+        assert len(commit_messages) == 1
+        assert commit_messages[0].message == "NewMessage"

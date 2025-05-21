@@ -46,6 +46,8 @@ HEPDATA.file_type_to_details = {
   "rivet": {"icon": "area-chart", "description": "Rivet Analysis"},
   "madanalysis": {"icon": "area-chart", "description": "MadAnalysis 5 Analysis"},
   "smodels": {"icon": "area-chart", "description": "SModelS Analysis"},
+  "checkmate": {"icon": "area-chart", "description": "CheckMATE Analysis"},
+  "hackanalysis": {"icon": "area-chart", "description": "HackAnalysis Analysis"},
   "combine": {"icon": "area-chart", "description": "Combine Analysis"},
   "xfitter": {"icon": "area-chart", "description": "xFitter Analysis"},
   "applgrid": {"icon": "area-chart", "description": "APPLgrid Analysis"},

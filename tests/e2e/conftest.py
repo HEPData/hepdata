@@ -37,6 +37,7 @@ from invenio_accounts.models import User, Role
 from invenio_db.shared import metadata, SQLAlchemy as InvenioSQLAlchemy
 from selenium import webdriver
 from selenium.webdriver.common.by import By
+from selenium.webdriver.remote.command import Command
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from sqlalchemy_utils.functions import create_database, database_exists
@@ -199,8 +200,9 @@ def env_browser(request):
     if not RUN_SELENIUM_LOCALLY:
         remote_url = "https://ondemand.eu-central-1.saucelabs.com:443/wd/hub"
         options = webdriver.ChromeOptions()
-        options.browser_version = '114'
-        options.platform_name = 'Windows 10'
+        options.browser_version = '131'
+        options.platform_name = 'Windows 11'
+        local_tunnel_name = os.environ.get('SAUCE_USERNAME', '') + '_tunnel_name'
         sauce_options = {
             'extendedDebugging': True,
             'screenResolution': '1280x1024',
@@ -208,7 +210,7 @@ def env_browser(request):
             'build': os.environ.get('GITHUB_RUN_ID', datetime.utcnow().strftime("%Y-%m-%d %H:00ish")),
             'username': os.environ.get('SAUCE_USERNAME', ''),
             'accessKey': os.environ.get('SAUCE_ACCESS_KEY', ''),
-            'tunnelName': os.environ.get('GITHUB_RUN_ID', ''),
+            'tunnelName': os.environ.get('GITHUB_RUN_ID', local_tunnel_name),
         }
 
         for key in ['username', 'accessKey']:
@@ -240,7 +242,7 @@ def env_browser(request):
     yield browser
 
     # Check browser logs before quitting
-    log = browser.get_log('browser')
+    log = browser.execute(Command.GET_LOG, {"type": "browser"})["value"]
 
     # Filter out error message for:
     # WARNING: security - Error with Permissions-Policy header:
