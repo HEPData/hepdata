@@ -311,11 +311,6 @@ def process_ctx(ctx, light_mode=False):
 
                 _cleaned_table_name = data_table['name'].replace('%', '%25').replace('\\', '%5C')
 
-                #data_table['data'] = {}
-                #for format in ['json', 'root', 'csv', 'yoda', 'yoda1', 'yoda.h5', 'yaml']:
-                #    data_table[format] = '{0}/download/table/{1}/{2}/{4}'.format(
-                #        site_url, _recid, _cleaned_table_name, format)
-
                 data_table['data'] = {
                     'json': '{0}/download/table/{1}/{2}/json'.format(
                         site_url, _recid, _cleaned_table_name),
@@ -329,6 +324,5 @@ def process_ctx(ctx, light_mode=False):
                         site_url, _recid, _cleaned_table_name),
                     'yaml': '{0}/download/table/{1}/{2}/yaml'.format(
                         site_url, _recid, _cleaned_table_name)}
-
 
     return ctx
