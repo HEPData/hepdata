@@ -37,7 +37,7 @@ from hepdata.modules.submission.api import get_latest_hepsubmission
 from hepdata.modules.submission.models import DataSubmission
 from hepdata.utils.miscellaneous import get_resource_data
 
-FORMATS = ['json', 'root', 'yaml', 'csv', 'yoda']
+FORMATS = ['json', 'root', 'yaml', 'csv', 'yoda', 'yoda.h5']
 
 logging.basicConfig()
 log = logging.getLogger(__name__)
