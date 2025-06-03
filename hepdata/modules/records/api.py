@@ -387,10 +387,7 @@ def render_record(recid, record, version, output_format, light_mode=False, obser
     if version == -1:
         version = version_count if version_count else 1
 
-    if observer_key:
-        key_verified = verify_observer_key(recid, observer_key)
-    else:
-        key_verified = False
+    key_verified = verify_observer_key(recid, observer_key)
 
     # We skip the version check if the access key matches
     if not key_verified:
