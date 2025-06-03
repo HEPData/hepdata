@@ -538,10 +538,10 @@ def create_new_version(recid, user, notify_uploader=True, uploader_message=None)
                                            inspire_id=hepsubmission.inspire_id,
                                            coordinator=hepsubmission.coordinator,
                                            version=hepsubmission.version + 1)
-        
-        observer_key = get_or_create_submission_observer(_rev_hepsubmission.publication_recid)
 
-        SubmissionObserver.query.filter_by(publication_recid=hepsubmission.id).delete()
+        # Gets a generated or new SubmissionObserver object
+        observer_key = get_or_create_submission_observer(_rev_hepsubmission.publication_recid, regenerate=True)
+
         db.session.add(_rev_hepsubmission)
         db.session.add(observer_key)
         db.session.commit()
