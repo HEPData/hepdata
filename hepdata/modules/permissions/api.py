@@ -202,9 +202,14 @@ def verify_observer_key(submission_id, observer_key):
     login requirement.
 
     :param int submission_id:  The requested HEPSubmission for access
-    :param int access_key: The access key used to access the submission
+    :param str observer_key: The access key used to access the submission
     :returns: Bool representing match status against database
     """
+
+    # If none, or doesn't match expected size
+    if observer_key is None or len(observer_key) != 8:
+        return False
+
     # Do a query
     submission_observer = SubmissionObserver.query.filter_by(
         publication_recid=submission_id,
