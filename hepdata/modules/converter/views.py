@@ -343,6 +343,8 @@ def download_data_table_by_recid(*args, **kwargs):
     recid = kwargs.pop('recid')
     table_name = kwargs.pop('table_name')
     rivet = kwargs.pop('rivet', '')
+    observer_key = request.args.get('observer_key')
+    key_verified = verify_observer_key(recid, observer_key)
 
     version_count, version_count_all = get_version_count(recid)
     if 'version' in kwargs:
@@ -352,7 +354,7 @@ def download_data_table_by_recid(*args, **kwargs):
         version = version_count if version_count else 1
 
     # Check for a user trying to access a version of a publication record where they don't have permissions.
-    if version_count < version_count_all and version == version_count_all:
+    if version_count < version_count_all and version == version_count_all  and not key_verified:
         abort(403)
 
     datasubmission = None
