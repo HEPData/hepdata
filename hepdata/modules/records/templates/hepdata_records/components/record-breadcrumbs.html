@@ -53,7 +53,12 @@
                         </button>
                     {% endif %}
 
-                    <a href="?format=json" id="jsonLabel" type="button"
+                  {% set download_params = "?format=json" %}
+                  {% if ctx.observer_key %}
+                    {% set download_params = download_params + "&observer_key=" + ctx.observer_key %}
+                  {% endif %}
+
+                    <a href="{{ download_params }}" id="jsonLabel" type="button"
                        class="btn btn-sm btn-default"
                        aria-haspopup="true" aria-expanded="false">
                         JSON

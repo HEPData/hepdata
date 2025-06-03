@@ -44,8 +44,15 @@ HEPDATA.switch_table = function (listId, table_requested, table_name, status) {
     direct_link = HEPDATA.site_url + '/record/sandbox/' + _recid
       + '?table=' + encoded_name;
   } else {
+    const params = new URLSearchParams(document.location.search);
+    const observer_key = params.get('observer_key');
+
     direct_link = HEPDATA.site_url + '/record/' + _recid
       + '?version=' + HEPDATA.current_table_version + "&table=" + encoded_name;
+
+    if(observer_key && observer_key.length == 8) {
+      direct_link += '&observer_key=' + observer_key;
+    }
   }
 
   $("#direct_data_link").val(direct_link);
@@ -87,16 +94,36 @@ HEPDATA.switch_table = function (listId, table_requested, table_name, status) {
     HEPDATA.table_renderer.get_and_display_table(data_url);
   });
 
+  const params = new URLSearchParams(document.location.search);
+  var observer_key = params.get('observer_key');
+
+  // If it doesn't match the correct length, we null it.
+  // If yes, create the append string.
+  if(observer_key && observer_key.length == 8) {
+    var observer_append = '?observer_key=' + observer_key;
+  }
+
   $(".data_download_link").each(function () {
     var data_format = $(this).text().toLowerCase();
     var data_url = '/download/table/' + _recid + '/' + encoded_name + '/' + HEPDATA.current_table_version + '/' + data_format;
+
+    if(observer_key) {
+      data_url += observer_append;
+    }
+
     $(this).attr('href', data_url);
   });
 
   if (HEPDATA.current_record_type == 'table') {
     $("#json_link").hide();
   } else {
-    $("#json_link").attr('href', '/download/table/' + _recid + '/' + encoded_name + '/' + HEPDATA.current_table_version + '/json');
+    let json_url = '/download/table/' + _recid + '/' + encoded_name + '/' + HEPDATA.current_table_version + '/json'
+
+    if(observer_key) {
+      json_url += observer_append;
+    }
+
+    $("#json_link").attr('href', json_url);
     $("#json_link").show();
   }
 };
@@ -107,6 +134,14 @@ HEPDATA.table_renderer = {
       Render only the main table information (name, details, etc.) at the top,
       then decides whether to trigger render of the table or not.
     */
+    const params = new URLSearchParams(document.location.search);
+    const observer_key = params.get('observer_key');
+
+    // Add the observer key
+    if(observer_key && observer_key.length == 8) {
+      url += "?observer_key=" + observer_key;
+    }
+
     $.ajax({
       dataType: "json",
       url: url,
