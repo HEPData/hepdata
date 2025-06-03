@@ -18,6 +18,8 @@ HEPDATA.current_table_id = undefined;
 HEPDATA.current_table_name = undefined;
 HEPDATA.current_table_version = undefined;
 HEPDATA.clipboard = undefined;
+// Stores a list of CSS selectors to track added Clipboards
+HEPDATA.clipboard_list = [];
 HEPDATA.selected = {};
 HEPDATA.site_url = "https://www.hepdata.net";
 
@@ -235,31 +237,58 @@ HEPDATA.render_associated_files = function (associated_files, placement) {
   }
 };
 
-HEPDATA.setup_clipboard = function () {
+HEPDATA.setup_default_clipboards = function () {
+  /*
+  Sets up the default clipboards for the base HEPData webpage, and triggers
+  adding associated success/error event listeners.
+  */
   if (HEPDATA.clipboard == undefined) {
-    HEPDATA.clipboard = new ClipboardJS('.copy-btn');
-    HEPDATA.observer_clipboard = new ClipboardJS('.observer-copy-btn');
-    HEPDATA.cite_clipboard = new ClipboardJS('.cite-copy-btn')
-
-    const clipboards = [HEPDATA.clipboard, HEPDATA.cite_clipboard, HEPDATA.observer_clipboard];
+    HEPDATA.clipboard = HEPDATA.setup_clipboard('.copy-btn');
+    HEPDATA.observer_clipboard = HEPDATA.setup_clipboard('.observer-copy-btn');
+    HEPDATA.cite_clipboard = HEPDATA.setup_clipboard('.cite-copy-btn');
 
     toastr.options.timeOut = 3000;
-
-    for (var i in clipboards) {
-
-      clipboards[i].on('success', function (e) {
-        toastr.success(e.text + ' copied to clipboard.')
-      });
-
-      clipboards[i].on('error', function (e) {
-        if (navigator.userAgent.indexOf("Safari") > -1) {
-          toastr.success('Press &#8984; + C to finalise copy');
-        } else {
-          toastr.error('There was a problem copying the link.');
-        }
-      })
-    }
   }
+}
+
+HEPDATA.setup_clipboard = function(selector) {
+  /*
+    Sets up a ClipboardJS object from a CSS selector.
+
+    @param {string} selector - A CSS selector used to select objects for clipboard
+  */
+
+  toastr.options.timeOut = 3000;
+
+  // If we have already set this clipboard up, we return null
+  if(HEPDATA.clipboard_list.includes(selector)) {
+    return null;
+  }
+  else {
+    // Push selector to the list to avoid adding duplicate events
+    HEPDATA.clipboard_list.push(selector);
+  }
+
+  // Select all buttons in the document based on the selector
+  let button_objects = document.querySelectorAll(selector);
+
+  // Get the ClipboardJS object from the objects.
+  let clipboard = new ClipboardJS(button_objects);
+
+  // Add the clipboard's success and error toasts.
+  clipboard.on('success', function (e) {
+    toastr.success(e.text + ' copied to clipboard.')
+  });
+
+  clipboard.on('error', function (e) {
+  if (navigator.userAgent.indexOf("Safari") > -1) {
+    toastr.success('Press &#8984; + C to finalise copy');
+  } else {
+    toastr.error('There was a problem copying the link.');
+  }
+  })
+
+  return clipboard;
 }
 
 window.HEPDATA = HEPDATA;

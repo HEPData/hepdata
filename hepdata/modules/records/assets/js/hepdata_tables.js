@@ -50,7 +50,7 @@ HEPDATA.switch_table = function (listId, table_requested, table_name, status) {
 
   $("#direct_data_link").val(direct_link);
   $(".copy-btn").attr('data-clipboard-text', direct_link);
-  HEPDATA.setup_clipboard();
+  HEPDATA.setup_default_clipboards();
 
   // Reset the table loading section
   $("#hepdata_table_loading").removeClass("hidden");
