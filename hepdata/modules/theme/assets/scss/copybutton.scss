@@ -1,0 +1,78 @@
+/*
+    CSS rules specific to the copy/paste buttons
+    used on separate pages across the site.
+*/
+
+#data_link_container {
+  display: inline-block;
+  margin-right: 10px;
+  border: 1px solid #ccc;
+  background-color: $lightgrey;
+  border-radius: 3px;
+  height: 34px;
+  margin-bottom: 15px;
+
+  button {
+    color: #894b9d;
+  }
+
+  button:hover {
+    color: black;
+  }
+
+  .data_link {
+    border: none;
+    background: transparent;
+    padding-left: 10px;
+    font-weight: bolder;
+    font-size: 0.7em;
+    color: $navy;
+  }
+
+  .data_link:focus {
+    // Hides the outline after copying
+    outline: none;
+  }
+
+  .copy-btn-style {
+    background: white;
+    border-left: 1px solid #ccc;
+    border-radius: 0;
+    padding: 5px 12px;
+  }
+}
+
+#toast-container {
+  text-align: center;
+  top: 20px;
+  right: 20px;
+  bottom: auto;
+}
+
+.toast-success {
+  background-color: $purple !important;
+  z-index: 100;
+}
+
+/*
+*    Boosting the font size a little for the submission and dashboard manager copy button
+*/
+#submission_observer_container #data_link_container .data_link,
+#manager-footer #data_link_container .data_link {
+  font-size: 1.05em;
+}
+
+// Removes highlight colour on the input after copy
+#direct_data_link::selection {
+  background: transparent;
+}
+
+// The accompanying observer key message
+#manager-footer #data_link_message {
+    color: black;
+    padding-bottom: 10px;
+}
+
+#manager-footer #data_link_container {
+  width: fit-content;
+}
