@@ -177,23 +177,30 @@ $(document).ready(function() {
   }
 
   function set_observer_key(recid) {
+    /**
+    * Retrieves and sets the observer key value on the manage submission dashboard widget.
+    *
+    * @param {number} recid - The recid to get observer_key for.
+    */
+
+    // Make the request to retrieve the observer key
     $.ajax({
           dataType: "json",
           url: '/record/coordinator/observer_key/' + recid,
           processData: false,
           cache: true,
           success: function (data) {
-
             if(data["observer_exists"]) {
-              let observer_key_div = $("#observer-key-text")
-              let observer_html = "<a href='" + data['observer_key'] + "'>" + data['observer_key'] + "</a>";
+              // Unhide container, set value and text on the input
+              $('#data_link_container').removeAttr('hidden');
+              $('#direct_data_link').val(data['observer_key']);
+              $('dashboard_button').attr('data-clipboard-text', data['observer_key']);
 
-              observer_key_div.html(observer_html);
-              observer_key_div.removeAttr("hidden");
+              // Attempt to set up the clipboard object for this widget
+              HEPDATA.setup_clipboard("#dashboard_button");
             }
           }
       });
-    return false;
   }
 
   $(document).on('click', '.manage-submission-trigger', function (event) {
