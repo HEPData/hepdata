@@ -218,13 +218,20 @@ $(document).ready(function () {
           success: function (response) {
               var finished_html = '<i class="fa fa-check-circle" style="font-size: 5.3em; color: #894B9D; padding-bottom: .4em"></i><br/>' +
                       '<p style="font-size: 1.3em">Submission Complete!</p>';
-              var observer_url = '/record/' + response.submission_id + '?observer_key=' + response.observer_key;
-              var observer_html = '<a href="' + observer_url + '">' + HEPDATA.site_url + observer_url + '</a>';
+
+              // Generate full URL for observer access
+              let observer_url = '/record/' + response.submission_id + '?observer_key=' + response.observer_key;
+              let full_url = HEPDATA.site_url + observer_url;
 
               $("#submission_state").html(finished_html);
-              $("#submission_observer").html(observer_html);
+              // Set observer key value on the copy button and show widget
+              $("#direct_data_link").val(full_url);
+              $("#so_button").attr('data-clipboard-text', full_url);
               $("#submission_observer_container").removeAttr("hidden");
               $("#another_submission").removeClass("hidden");
+
+              // Ensure Clipboard is properly initialised on modal widget
+              HEPDATA.setup_clipboard("#submit_clipboard");
 
           }
       })
