@@ -986,12 +986,28 @@ body, html {
   }
 }
 
-#manager-footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
 
 #observer-key-text, #observer-key-text a {
   color:black;
+}
+
+/*
+* Rules to configure footer for the copy button
+*/
+
+.modal {
+    z-index: 1500;
+}
+
+#manager-footer {
+  position: relative;
+  // Creating a bit of margin on left/right side
+  width: 90%;
+  margin: 0 auto;
+}
+
+#manager-close {
+  // Forcing to right side of element
+  position: absolute;
+  right: 0;
 }
