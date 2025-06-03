@@ -101,6 +101,9 @@ HEPDATA.switch_table = function (listId, table_requested, table_name, status) {
   // If yes, create the append string.
   if(observer_key && observer_key.length == 8) {
     var observer_append = '?observer_key=' + observer_key;
+  } else {
+    // Null it if unexpected length
+    observer_key = null;
   }
 
   $(".data_download_link").each(function () {
