@@ -43,7 +43,7 @@ record_js = WebpackBundle(
         'hepdata-vis-status-js': './js/hepdata_vis_status.js',
     },
     dependencies={
-        "clipboard": "2.0.11",
+        "clipboard": "~2.0.11",
         "d3": "~3.5.12",
         "d3-tip": "~0.6.7"
     }
