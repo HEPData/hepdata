@@ -93,7 +93,6 @@ def get_or_create_submission_observer(publication_recid, regenerate=False):
     :param regenerate: Whether to regenerate the key
     :return: SubmissionObserver key, created, or None
     """
-    # TODO - Implement regenerate=False
     submission_observer = SubmissionObserver.query.filter_by(publication_recid=publication_recid).first()
     created = False
 
