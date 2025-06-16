@@ -111,3 +111,23 @@ def get_or_create_submission_observer(publication_recid, regenerate=False):
         db.session.commit()
 
     return submission_observer
+
+def delete_submission_observer(recid):
+    """
+    Deletes a SubmissionObserver object from the database
+    based on a given recid value.
+
+    :param: recid: int - The recid to delete on
+    """
+
+    # Verify that recid is an int
+    try:
+        int(recid)
+    except ValueError:
+        raise ValueError(f"Supplied recid value ({recid}) for deletion is not an Integer.")
+
+    submission_observer = SubmissionObserver.query.filter_by(publication_recid=recid).first()
+
+    if submission_observer:
+        db.session.delete(submission_observer)
+        db.session.commit()
