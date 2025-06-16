@@ -43,7 +43,8 @@ from hepdata.modules.converter.tasks import convert_and_store
 from hepdata.modules.email.api import send_finalised_email
 from hepdata.modules.permissions.models import SubmissionParticipant
 from hepdata.modules.records.utils.workflow import create_record
-from hepdata.modules.submission.api import get_latest_hepsubmission, get_or_create_submission_observer
+from hepdata.modules.submission.api import get_latest_hepsubmission, get_or_create_submission_observer, \
+    delete_submission_observer
 from hepdata.modules.submission.models import DataSubmission, DataReview, \
     DataResource, Keyword, RelatedTable, RelatedRecid, HEPSubmission, RecordVersionCommitMessage, SubmissionObserver
 from hepdata.modules.records.utils.common import \
@@ -690,6 +691,8 @@ def unload_submission(record_id, version=1):
         except NotFoundError as nfe:
             print(nfe)
 
+    delete_submission_observer(record_id)
+
     print('Finished unloading record {0} version {1}.'.format(record_id, version))
 
 
@@ -788,6 +791,9 @@ def do_finalise(recid, publication_record=None, force_finalise=False,
             hep_submission.overall_status = "finished"
             db.session.add(hep_submission)
 
+            # Clear any existing SubmissionObserver entry from the database
+            delete_submission_observer(hep_submission.publication_recid)
+
             db.session.commit()
 
             create_celery_app(current_app)
@@ -800,9 +806,6 @@ def do_finalise(recid, publication_record=None, force_finalise=False,
             # Reindex everything.
             index_record_ids([recid] + generated_record_ids)
             push_data_keywords(pub_ids=[recid])
-
-            # Clear any existing SubmissionObserver entry from the database
-            SubmissionObserver.query.filter_by(publication_recid=hep_submission.id).delete()
 
             try:
                 admin_indexer = AdminIndexer()
