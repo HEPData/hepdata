@@ -417,6 +417,7 @@ def render_record(recid, record, version, output_format, light_mode=False, obser
             ctx['record_type'] = 'publication'
             ctx['related_recids'] = get_record_data_list(hepdata_submission, "related")
             ctx['related_to_this_recids'] = get_record_data_list(hepdata_submission, "related_to_this")
+            ctx['overall_status'] = hepdata_submission.overall_status
 
             if key_verified:
                 ctx['observer_key'] = observer_key
