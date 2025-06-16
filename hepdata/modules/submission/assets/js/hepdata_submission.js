@@ -216,12 +216,12 @@ $(document).ready(function () {
           data: payload,
           method: 'POST',
           success: function (response) {
-              var finished_html = '<i class="fa fa-check-circle" style="font-size: 5.3em; color: #894B9D; padding-bottom: .4em"></i><br/>' +
+              let finished_html = '<i class="fa fa-check-circle" style="font-size: 5.3em; color: #894B9D; padding-bottom: .4em"></i><br/>' +
                       '<p style="font-size: 1.3em">Submission Complete!</p>';
 
               // Generate full URL for observer access
               let observer_url = '/record/' + response.submission_id + '?observer_key=' + response.observer_key;
-              let full_url = HEPDATA.site_url + observer_url;
+              let full_url = response.site_url + observer_url;
 
               $("#submission_state").html(finished_html);
               // Set observer key value on the copy button and show widget

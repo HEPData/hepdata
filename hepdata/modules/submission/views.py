@@ -17,7 +17,7 @@
 # 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
 #
 
-from flask import Blueprint, render_template, request, jsonify, abort
+from flask import Blueprint, render_template, request, jsonify, abort, current_app
 from flask_login import login_required, current_user
 from invenio_db import db
 
@@ -76,6 +76,8 @@ def submit_post():
             # Return key and recid for URL generation
             result_data['observer_key'] = submission_observer.observer_key
             result_data['submission_id'] = hepdata_submission.publication_recid
+            # Pass site_url for button display
+            result_data['site_url'] = current_app.config.get('SITE_URL', 'https://www.hepdata.net')
 
         return jsonify(result_data)
     else:
