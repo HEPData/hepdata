@@ -70,12 +70,22 @@ HEPDATA.hepdata_resources = (function () {
         return d['doi'] == null ? '' : '<a href="https://doi.org/' + d['doi'] + '" class="resource-doi">' + d['doi'] + '</a>';
       });
 
+    let append = "";
+    let todo = HEPDATA.current_submission_status == 'todo';
+    if(todo) {
+      append = '&observer_key=' + HEPDATA.current_observer_key;
+    }
+
     // Add the landing page button
     resource_item.append("a")
       .attr('target', '_new')
       .attr("class", "btn btn-primary btn-sm")
       .attr("href", function(d) {
-        return '/record/resource/' + d.id + '?landing_page=true';
+        let landing_page_url = '/record/resource/' + d.id + '?landing_page=true';
+        if(todo) {
+          landing_page_url += append;
+        }
+        return landing_page_url;
       })
       .text("Landing Page");
 
@@ -85,7 +95,11 @@ HEPDATA.hepdata_resources = (function () {
       .attr("href", function (d) {
         var download_location = d.location;
         if (d.location.indexOf('http') == -1) {
-          download_location = '/record/resource/' + d.id + '?view=true';
+          let view_page_url = '/record/resource/' + d.id + '?view=true';
+          if(todo) {
+            view_page_url += append;
+          }
+          download_location = view_page_url;
         }
         return download_location;
       }).text(function (d) {
