@@ -25,6 +25,8 @@
 import json
 import logging
 import os
+import random
+import re
 import shutil
 import time
 from datetime import datetime
@@ -46,18 +48,20 @@ from hepdata.modules.records.api import (
     get_related_to_this_datasubmissions,
     get_related_to_this_hepsubmissions,
     get_table_data_list,
-    process_saved_file, get_commit_message
+    process_saved_file
 )
 from hepdata.modules.records.utils.common import infer_file_type, contains_accepted_url, allowed_file, record_exists, \
     get_record_contents, is_histfactory, get_record_by_id
 from hepdata.modules.records.utils.data_files import get_data_path_for_record
 from hepdata.modules.records.utils.submission import process_submission_directory, do_finalise, unload_submission, \
     cleanup_data_related_recid
-from hepdata.modules.submission.api import get_latest_hepsubmission, get_submission_participants_for_record
-from hepdata.modules.submission.models import DataSubmission, HEPSubmission, RelatedRecid, RecordVersionCommitMessage
+from hepdata.modules.submission.api import get_latest_hepsubmission, get_submission_participants_for_record, \
+    get_or_create_submission_observer, delete_submission_observer
+from hepdata.modules.submission.models import DataSubmission, HEPSubmission, RelatedRecid, RecordVersionCommitMessage, \
+    SubmissionObserver
 from hepdata.modules.submission.views import process_submission_payload
 from hepdata.config import HEPDATA_DOI_PREFIX
-from tests.conftest import create_test_record
+from tests.conftest import create_test_record, create_blank_test_record
 
 
 def test_submission_endpoint(app, client):
@@ -862,3 +866,149 @@ def test_do_finalise_commit_message_failure(app, admin_idx):
         # We should now have one message in the database.
         assert len(commit_messages) == 1
         assert commit_messages[0].message == "NewMessage"
+
+
+def test_get_or_create_submission_observer(app):
+    """
+        Tests the get_or_create_submission_observer function against both
+        its creation and regeneration functionality.
+    """
+
+    test_data = [
+        {
+            "id": 0, "insert": True, "regenerate": True, "generated_key": ""
+        },
+        { # Regenerate value does not matter if insert is set to false, it should just generate.
+            "id": 0, "insert": False, "regenerate": False, "generated_key": ""
+        },
+        {
+            "id": 0, "insert": True, "regenerate": False, "generated_key": ""
+        },
+        {
+            "id": 0, "insert": False, "regenerate": True, "generated_key": ""
+        }
+    ]
+
+    uuid_regex = r"^[0-9a-fA-F]{8}"
+
+    for test in test_data:
+        test["id"] = random.randint(2500, 50000)
+        # Not all cases should insert at first
+        if test["insert"]:
+            observer = get_or_create_submission_observer(test["id"])
+            test["generated_key"] = observer.observer_key
+
+        submission_observer = SubmissionObserver.query.filter_by(publication_recid=test["id"]).first()
+
+        if test["insert"]:
+            assert submission_observer.observer_key == test["generated_key"]
+            assert re.match(test["generated_key"], uuid_regex)
+        else:
+            assert submission_observer == test["generated_key"]
+
+    for test in test_data:
+        new_key = get_or_create_submission_observer(test["id"], regenerate=test["regenerate"])
+
+        assert re.match(new_key.observer_key, uuid_regex)
+
+        # If generated_key is equal to observer key, generated should be false
+        if test["regenerate"] and not test["insert"]:
+            assert test["generated_key"] is None
+        else:
+            # If we regenerate AND insert, then the "generated_key" intially inserted should be refreshed.
+            # If NOT regenerated and inserted, otherwise.
+            assert (test["generated_key"] == new_key.observer_key) == (not test["regenerate"] and test["insert"])
+
+def test_submission_observer_create_delete(app, admin_idx):
+    """
+        Tests creation, new version and deletion cycle of a SubmissionObserver.
+    """
+    # 8 char alpanumeric
+    uuid_regex = r"^[0-9a-fA-F]{8}"
+
+    # Insert the testing record data
+    empty_submission = create_blank_test_record()
+    record = get_record_by_id(empty_submission.publication_recid)
+
+    # Get the submission observer key and verify against regex
+    sub_obs = SubmissionObserver.query.filter_by(publication_recid=empty_submission.publication_recid).first()
+    sub_observer_key = sub_obs.observer_key
+    assert re.match(sub_observer_key, uuid_regex)
+
+    # Patching OpenSearch indexing to avoid setup steps
+    with patch('hepdata.modules.records.utils.submission.index_record_ids', side_effect=None):
+        do_finalise(empty_submission.publication_recid, publication_record=record, force_finalise=True)
+
+    # We finalise the submission, so there should be no SubmissionObserver objects
+    all_obs = SubmissionObserver.query.all()
+    assert len(all_obs) == 0
+
+    # Setting finished status and creating a new version
+    empty_submission.overall_status = 'finished'
+    db.session.add(empty_submission)
+    db.session.commit()
+    create_new_version(empty_submission.publication_recid, None)
+
+    # Get the new SubmissionObserver key and verify
+    sub_obs = SubmissionObserver.query.filter_by(publication_recid=empty_submission.publication_recid).first()
+    new_observer_key = sub_obs.observer_key
+
+    # Ensure the new key both matches the regex, and is a different key
+    assert re.match(new_observer_key, uuid_regex)
+    assert new_observer_key != sub_observer_key
+
+    # Unload the new version object
+    unload_submission(empty_submission.publication_recid, 2)
+
+    # Verify SubmissionObserver deletion
+    all_obs = SubmissionObserver.query.all()
+    assert len(all_obs) == 0
+
+
+def test_delete_submission_observer(app):
+    """
+    Tests the specific deletion of the delete_submission_observer function.
+    Check error return and deletion of an object
+
+    TODO - Doesn't do much with the error
+    """
+
+    test_ids = [{
+        "id": 1, "error": False # Should just insert and delete
+    },
+    {
+        "id": 2, "error": True # Causing an error (checking error handling)
+    }]
+
+    for test in test_ids:
+        # Create a test object
+        test_observer = SubmissionObserver(test["id"])
+        db.session.add(test_observer)
+        db.session.commit()
+
+        # Checking retrieval of newly inserted object
+        submission_observer = SubmissionObserver.query.filter_by(publication_recid=test["id"]).first()
+        assert submission_observer.publication_recid == test["id"]
+
+        if test["error"]:
+            # If we should error, we check for the error
+            with pytest.raises(ValueError):
+                # Pass through a string of some sort
+                delete_submission_observer("a")
+        else:
+            # Run the delete function normally
+            delete_submission_observer(test["id"])
+
+        # Try to get the SubmissionObserver object for this ID
+        submission_observer = SubmissionObserver.query.filter_by(publication_recid=test["id"]).first()
+
+        # If error, item exists.
+        if test["error"]:
+            assert isinstance(submission_observer, SubmissionObserver)
+        else:
+            assert submission_observer is None
+
+    # Ensure count of all objects equal to the data minus the error
+    all_observers = SubmissionObserver.query.all()
+    assert len(all_observers) == (len(test_ids) - 1)
+
