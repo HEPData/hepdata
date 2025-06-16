@@ -17,6 +17,8 @@ HEPDATA.current_record_id = undefined;
 HEPDATA.current_table_id = undefined;
 HEPDATA.current_table_name = undefined;
 HEPDATA.current_table_version = undefined;
+HEPDATA.current_submission_status = undefined;
+HEPDATA.current_observer_key = undefined;
 HEPDATA.clipboard = undefined;
 // Stores a list of CSS selectors to track added Clipboards
 HEPDATA.clipboard_list = [];
