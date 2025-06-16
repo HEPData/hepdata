@@ -357,6 +357,9 @@ def download_data_table_by_recid(*args, **kwargs):
     if version_count < version_count_all and version == version_count_all  and not key_verified:
         abort(403)
 
+    if not key_verified:
+        observer_key = None
+
     datasubmission = None
     original_table_name = table_name
     try:
@@ -382,7 +385,7 @@ def download_data_table_by_recid(*args, **kwargs):
 
     return download_datatable(datasubmission, kwargs.pop('file_format'),
                               submission_id='{0}'.format(recid), table_name=datasubmission.name,
-                              rivet_analysis_name=rivet)
+                              rivet_analysis_name=rivet, observer_key=observer_key)
 
 
 @blueprint.route(f'/table/<int:data_id>/<any({FORMATS}):file_format>')
@@ -411,8 +414,13 @@ def download_datatable(datasubmission, file_format, *args, **kwargs):
     """
 
     if file_format == 'json':
-        return redirect('/record/data/{0}/{1}/{2}'.format(datasubmission.publication_recid,
-                                                   datasubmission.id, datasubmission.version))
+        redirect_url = '/record/data/{0}/{1}/{2}'.format(datasubmission.publication_recid,
+                                                   datasubmission.id, datasubmission.version)
+        observer_key = kwargs.get("observer_key")
+        if observer_key:
+            redirect_url += f"?observer_key={observer_key}"
+        return redirect(redirect_url)
+
     elif file_format not in CFG_SUPPORTED_FORMATS:
         return display_error(
             title="The " + file_format + " output format is not supported",
