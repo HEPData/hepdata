@@ -132,7 +132,7 @@ class SubmissionObserver(db.Model):
 
     def __init__(self, publication_recid):
         # Set the publication_recid and generate key
-        self.publication_recid = publication_recid
+        self.publication_recid = int(publication_recid)
         self.generate_observer_key()
 
     def generate_observer_key(self):
