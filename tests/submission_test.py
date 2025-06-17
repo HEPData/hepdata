@@ -876,16 +876,16 @@ def test_get_or_create_submission_observer(app):
 
     test_data = [
         {
-            "id": 0, "insert": True, "regenerate": True, "generated_key": ""
+            "id": 0, "insert": True, "regenerate": True, "generated_key": None
         },
         { # Regenerate value does not matter if insert is set to false, it should just generate.
-            "id": 0, "insert": False, "regenerate": False, "generated_key": ""
+            "id": 0, "insert": False, "regenerate": False, "generated_key": None
         },
         {
-            "id": 0, "insert": True, "regenerate": False, "generated_key": ""
+            "id": 0, "insert": True, "regenerate": False, "generated_key": None
         },
         {
-            "id": 0, "insert": False, "regenerate": True, "generated_key": ""
+            "id": 0, "insert": False, "regenerate": True, "generated_key": None
         }
     ]
 
@@ -902,14 +902,14 @@ def test_get_or_create_submission_observer(app):
 
         if test["insert"]:
             assert submission_observer.observer_key == test["generated_key"]
-            assert re.match(test["generated_key"], uuid_regex)
+            assert re.match(uuid_regex, test["generated_key"])
         else:
             assert submission_observer == test["generated_key"]
 
     for test in test_data:
         new_key = get_or_create_submission_observer(test["id"], regenerate=test["regenerate"])
 
-        assert re.match(new_key.observer_key, uuid_regex)
+        assert re.match(uuid_regex, new_key.observer_key)
 
         # If generated_key is equal to observer key, generated should be false
         if test["regenerate"] and not test["insert"]:
