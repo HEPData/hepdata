@@ -933,7 +933,7 @@ def test_submission_observer_create_delete(app, admin_idx):
     # Get the submission observer key and verify against regex
     sub_obs = SubmissionObserver.query.filter_by(publication_recid=empty_submission.publication_recid).first()
     sub_observer_key = sub_obs.observer_key
-    assert re.match(sub_observer_key, uuid_regex)
+    assert re.match(uuid_regex, sub_observer_key)
 
     # Patching OpenSearch indexing to avoid setup steps
     with patch('hepdata.modules.records.utils.submission.index_record_ids', side_effect=None):
@@ -954,7 +954,7 @@ def test_submission_observer_create_delete(app, admin_idx):
     new_observer_key = sub_obs.observer_key
 
     # Ensure the new key both matches the regex, and is a different key
-    assert re.match(new_observer_key, uuid_regex)
+    assert re.match(uuid_regex, new_observer_key)
     assert new_observer_key != sub_observer_key
 
     # Unload the new version object
