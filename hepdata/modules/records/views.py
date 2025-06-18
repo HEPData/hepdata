@@ -478,7 +478,7 @@ def get_observer_url(recid):
 
     if user_allowed_to_perform_action(recid):
         # Query for the observer key object
-        observer = SubmissionObserver.query.filter_by(publication_recid=recid).first()
+        observer = get_or_create_submission_observer(recid)
 
         if observer:
             # If exists, set response value and key
