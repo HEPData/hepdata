@@ -4,7 +4,7 @@
   "title": "HEPData analysis tool schema",
   "description": "A JSON schema for tracking implementations of HEPData analyses in different tools",
   "type": "object",
-  "required": ["tool", "version", "implementations_description", "url_templates", "analyses"],
+  "required": ["tool", "version", "date_created", "implementations_description", "url_templates", "analyses"],
 
   "properties": {
     "tool": {
@@ -15,6 +15,12 @@
     "version": {
       "description": "The version of the tool used to implement the analysis",
       "type": "string"
+    },
+
+    "date_created": {
+      "description": "The date at which the JSON file was created, formatted as RFC 3339, section 5.6 (https://json-schema.org/understanding-json-schema/reference/type#dates-and-times), e.g. 2018-11-13T20:20:39+00:00",
+      "type": "string",
+      "format": "date-time"
     },
 
     "implementations_description":{
