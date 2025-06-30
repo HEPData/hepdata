@@ -67,38 +67,28 @@ def update_analyses(endpoint=None):
                 analysis_resources = DataResource.query.filter_by(file_type=analysis_endpoint).all()
 
                 r_json = response.json()
+                new_json = "analyses" in r_json
 
-                if "analyses" in r_json: # new JSON file
-                    print("r_json", r_json)
+                if new_json:
 
                     # Check for missing analyses.
                     for ana in r_json["analyses"]:
-                        print("ana", ana)
                         inspire_id = ana["inspire_id"]
                         submission = get_latest_hepsubmission(inspire_id=str(inspire_id), overall_status='finished') # TODO: make inspire_id an int
 
                         if submission:
-                            print("submission", submission)
                             num_new_resources = 0
 
-                            print("ana['implementations']", [ana["implementations"]])
-
-                            ana["implementations"] = [ana["implementations"]] # hack to get GAMBIT to follow standard
-
                             for implementation in ana["implementations"]:
-                                # 'url_templates': {'main_url': 'https://github.com/GambitBSM/gambit/blob/master/ColliderBit/src/analyses/Analysis_{name}.cpp'
-                                print(implementation)
                                 ana_name = implementation["name"]
                                 ana_path = implementation["path"] if "path" in implementation else ""
                                 _resource_url = r_json["url_templates"]["main_url"]
-                                _resource_url = _resource_url.replace("gambit", "gambit_2.6")
                                 prev_url = None
                                 n_tries, max_tries = 0, 10
                                 while _resource_url!=prev_url and n_tries<max_tries:
                                     prev_url = _resource_url
                                     _resource_url = _resource_url.format(name=ana_name, path=ana_path)
                                     n_tries += 1
-                                print("ana_name, ana_path, _resource_url, n_tries", ana_name, ana_path, _resource_url, n_tries)
 
                                 if not is_resource_added_to_submission(submission.publication_recid, submission.version,
                                                                     _resource_url):
@@ -115,8 +105,6 @@ def update_analyses(endpoint=None):
                                     if "license" in r_json:
                                         resource_license = get_license(r_json["license"])
                                         new_resource.file_license = resource_license.id
-
-                                    print(new_resource)
 
                                     submission.resources.append(new_resource)
                                     num_new_resources += 1
@@ -231,13 +219,10 @@ def update_analyses(endpoint=None):
 
                 # Allow bulk subscription to record update notifications.
                 if "subscribe_user_id" in endpoints[analysis_endpoint]:
-                    print("starting subscription")
                     user = get_user_from_id(endpoints[analysis_endpoint]["subscribe_user_id"])
-                    print("user", user)
                     if user:
                         # Check for missing analyses.
-                        if "analyses" in r_json: # new JSON file
-                            print("subscribing user ID", r_json)
+                        if new_json:
                             for ana in r_json["analyses"]:
                                 submission = get_latest_hepsubmission(inspire_id=str(ana["inspire_id"]), overall_status='finished')
                                 if submission and not is_current_user_subscribed_to_record(submission.publication_recid, user):
