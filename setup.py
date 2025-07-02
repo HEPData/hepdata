@@ -39,7 +39,7 @@ tests_require = [
     'pytest-timeout>=1.4.2',
     'requests-mock>=1.8.0',
     'selenium>=4.0.0',
-    'xmlschema'
+    'xmlschema>=4.0.0'
 ]
 
 extras_require = {
