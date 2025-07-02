@@ -7,7 +7,7 @@ from flask import render_template
 from invenio_db import db
 from invenio_pidstore.models import PersistentIdentifier
 from invenio_pidstore.errors import PIDInvalidAction, PIDDoesNotExistError
-import lxml
+import xmlschema
 import pytest
 
 from hepdata.modules.records.importer.api import import_records
@@ -354,7 +354,7 @@ def test_xml_validates(app, identifiers):
     site_url = app.config.get('SITE_URL', 'https://www.hepdata.net')
 
     # Load schema
-    datacite_schema = lxml.etree.XMLSchema(file = 'http://schema.datacite.org/meta/kernel-4.4/metadata.xsd')
+    datacite_schema = xmlschema.XMLSchema('http://schema.datacite.org/meta/kernel-4.4/metadata.xsd')
 
     base_xml = render_template('hepdata_records/formats/datacite/datacite_container_submission.xml',
                                doi=hep_submission.doi,
@@ -362,8 +362,8 @@ def test_xml_validates(app, identifiers):
                                data_submissions=data_submissions,
                                publication_info=publication_info,
                                site_url=site_url)
-    base_doc = lxml.etree.fromstring(base_xml)
-    datacite_schema.assertValid(base_doc)
+    # Validate the base XML
+    datacite_schema.validate(base_xml)
 
     version_xml = render_template('hepdata_records/formats/datacite/datacite_container_submission.xml',
                                   doi=f"{hep_submission.doi}.v1",
@@ -371,8 +371,8 @@ def test_xml_validates(app, identifiers):
                                   data_submissions=data_submissions,
                                   publication_info=publication_info,
                                   site_url=site_url)
-    version_doc = lxml.etree.fromstring(version_xml)
-    datacite_schema.assertValid(version_doc)
+    # Validate the version XML
+    datacite_schema.validate(version_xml)
 
     for data_submission in data_submissions:
         data_xml = render_template('hepdata_records/formats/datacite/datacite_data_record.xml',
@@ -383,8 +383,8 @@ def test_xml_validates(app, identifiers):
                                    data_submission=data_submission,
                                    publication_info=publication_info,
                                    site_url=site_url)
-        data_doc = lxml.etree.fromstring(data_xml)
-        datacite_schema.assertValid(data_doc)
+        # Validate the data submission XML
+        datacite_schema.validate(data_xml)
 
     # Import a record with a resource file
     import_records(['ins1748602'], synchronous=True)
@@ -408,10 +408,8 @@ def test_xml_validates(app, identifiers):
             publication_info=publication_info,
             site_url=site_url)
 
-        print(resource_xml)
-
-        doc = lxml.etree.fromstring(resource_xml)
-        datacite_schema.assertValid(doc)
+        # Validate the resource XML
+        datacite_schema.validate(resource_xml)
 
 
 def test_get_submission_file_resources(app, identifiers):
