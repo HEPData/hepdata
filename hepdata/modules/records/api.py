@@ -831,7 +831,8 @@ def check_and_convert_from_oldhepdata(input_directory, id, timestamp):
         successful = convert_oldhepdata_to_yaml(oldhepdata_found[1], converted_temp_path)
         if not successful:
             # Parse error message from title of HTML file, removing part of string after final "//".
-            soup = BeautifulSoup(open(converted_temp_path), "lxml")
+            with open(converted_temp_path) as converted_temp_file:
+                soup = BeautifulSoup(converted_temp_file, "html.parser")
             errormsg = soup.title.string.rsplit("//", 1)[0]
 
     except Error as error:  # hepdata_converter_ws_client.Error
