@@ -109,7 +109,11 @@
 
                                         {% set record_link = '/record/ins' + record.inspire_id|string %}
                                         <a href={{ record_link }}>
+                                          {% if "<math>" in record.title %}
                                             {{ record.title|safe }}
+                                          {% else %}
+                                            {{ record.title }}
+                                          {% endif %}
                                         </a>
 
                                     </h4>
