@@ -54,7 +54,7 @@ from hepdata.modules.records.utils.common import infer_file_type, contains_accep
     get_record_contents, is_histfactory, get_record_by_id
 from hepdata.modules.records.utils.data_files import get_data_path_for_record
 from hepdata.modules.records.utils.submission import process_submission_directory, do_finalise, unload_submission, \
-    cleanup_data_related_recid
+    cleanup_data_related_recid, get_or_create_hepsubmission
 from hepdata.modules.submission.api import get_latest_hepsubmission, get_submission_participants_for_record, \
     get_or_create_submission_observer, delete_submission_observer
 from hepdata.modules.submission.models import DataSubmission, HEPSubmission, RelatedRecid, RecordVersionCommitMessage, \
@@ -878,14 +878,18 @@ def test_get_or_create_submission_observer(app):
         {
             "id": 0, "insert": True, "regenerate": True, "generated_key": None
         },
-        { # Regenerate value does not matter if insert is set to false, it should just generate.
-            "id": 0, "insert": False, "regenerate": False, "generated_key": None
-        },
         {
             "id": 0, "insert": True, "regenerate": False, "generated_key": None
         },
         {
             "id": 0, "insert": False, "regenerate": True, "generated_key": None
+        },
+        # Testing against
+        {  # It should not generate here as we have no Submission.
+            "id": 0, "insert": False, "regenerate": False, "generated_key": None, "overall_status": "finsihed"
+        },
+        {  # It should not generate here as we have no Submission.
+            "id": 0, "insert": False, "regenerate": False, "generated_key": None, "overall_status": "todo"
         }
     ]
 
@@ -893,31 +897,59 @@ def test_get_or_create_submission_observer(app):
 
     for test in test_data:
         test["id"] = random.randint(2500, 50000)
+        overall_status = "todo" if (test["insert"] or test["regenerate"]) else test["overall_status"]
+        test_sub = HEPSubmission(publication_recid=test["id"],
+                                      coordinator=1,
+                                      overall_status=overall_status)
+        db.session.add(test_sub)
+        db.session.commit()
+
         # Not all cases should insert at first
         if test["insert"]:
             observer = get_or_create_submission_observer(test["id"])
-            test["generated_key"] = observer.observer_key
+
+            # Setting the test data if there was a key generated
+            if observer:
+                test["generated_key"] = observer.observer_key
+            else:
+                test["generated_key"] = None
 
         submission_observer = SubmissionObserver.query.filter_by(publication_recid=test["id"]).first()
 
+        # If we insert, the SO key should match the generated key, and regex
         if test["insert"]:
             assert submission_observer.observer_key == test["generated_key"]
-            assert re.match(uuid_regex, test["generated_key"])
+            assert re.match(uuid_regex, str(test["generated_key"]))
         else:
+            # If no insert, this is likely checking for equality with None
             assert submission_observer == test["generated_key"]
 
     for test in test_data:
+        # Get the submission observer, and then try to generate a new key
+        submission_observer = SubmissionObserver.query.filter_by(publication_recid=test["id"]).first()
         new_key = get_or_create_submission_observer(test["id"], regenerate=test["regenerate"])
 
-        assert re.match(uuid_regex, new_key.observer_key)
-
-        # If generated_key is equal to observer key, generated should be false
-        if test["regenerate"] and not test["insert"]:
-            assert test["generated_key"] is None
-        else:
-            # If we regenerate AND insert, then the "generated_key" intially inserted should be refreshed.
-            # If NOT regenerated and inserted, otherwise.
+        if test["insert"] or test["regenerate"]:
+            # If we regenerate OR insert, then it should have been generated, and match
+            assert re.match(uuid_regex, new_key.observer_key)
             assert (test["generated_key"] == new_key.observer_key) == (not test["regenerate"] and test["insert"])
+        else:
+            # If we are not inserting, or regenerating (both False)
+            # No There should be no submission observer, and no key generated
+            assert submission_observer is None
+            assert get_latest_hepsubmission(publication_recid=test["id"]).overall_status == test["overall_status"]
+            assert test["generated_key"] is None
+
+            # If the status is to-do, it should be a valid key, or the new key should be None
+            if test["overall_status"] == "todo":
+                assert re.match(uuid_regex, new_key.observer_key)
+            else:
+                assert new_key is None
+
+        # Testing that a completely fake submission observer does not create
+        for regen_bool in [True, False]:
+            blank_observer = get_or_create_submission_observer(23232323, regenerate=regen_bool)
+            assert blank_observer is None
 
 def test_submission_observer_create_delete(app, admin_idx):
     """
@@ -927,7 +959,7 @@ def test_submission_observer_create_delete(app, admin_idx):
     uuid_regex = r"^[0-9a-fA-F]{8}"
 
     # Insert the testing record data
-    empty_submission = create_blank_test_record()
+    empty_submission = create_blank_test_record(status="todo")
     record = get_record_by_id(empty_submission.publication_recid)
 
     # Get the submission observer key and verify against regex
