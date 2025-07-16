@@ -86,19 +86,26 @@ def get_primary_submission_participants_for_record(publication_recid):
 def get_or_create_submission_observer(publication_recid, regenerate=False):
     """
     Gets or re/generates a SubmissionObserver key for a given recid.
-    Where an observer does not exist for a recid, it is created and returned
-    instead.
+    Where an observer does not exist for a recid (with existing sub),
+    it is created and returned instead.
 
     :param publication_recid: The publication record id
-    :param regenerate: Whether to regenerate the key
+    :param regenerate: Whether to regenerate/force generate the key
     :return: SubmissionObserver key, created, or None
     """
     submission_observer = SubmissionObserver.query.filter_by(publication_recid=publication_recid).first()
     created = False
 
     if submission_observer is None:
-        submission_observer = SubmissionObserver(publication_recid=publication_recid)
-        created = True
+        submission = HEPSubmission.query.filter_by(publication_recid=publication_recid).first()
+        if submission:
+            if submission.overall_status == "todo" or regenerate:
+                submission_observer = SubmissionObserver(publication_recid=publication_recid)
+                created = True
+        else:
+            # No submission, no observer, return None
+            return None
+
 
     # If we are to regenerate, and SubmissionObserver was queried and not generated.
     # If just created, we don't need to generate anything.
