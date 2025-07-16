@@ -22,6 +22,7 @@
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
 """HEPData records test cases."""
+import json
 import random
 from io import open, StringIO
 import os
@@ -33,6 +34,7 @@ import shutil
 import tempfile
 import datetime
 
+from flask import current_app
 from flask_login import login_user
 from invenio_accounts.models import User
 from invenio_db import db
@@ -59,7 +61,7 @@ from hepdata.modules.records.utils.data_files import get_data_path_for_record
 from hepdata.modules.records.utils.json_ld import get_json_ld
 from hepdata.modules.records.utils.users import get_coordinators_in_system, has_role
 from hepdata.modules.records.utils.workflow import update_record, create_record
-from hepdata.modules.records.views import set_data_review_status
+from hepdata.modules.records.views import set_data_review_status, get_observer_url
 from hepdata.modules.submission.models import HEPSubmission, DataReview, \
     DataSubmission, DataResource, License, RecordVersionCommitMessage, RelatedRecid, RelatedTable, SubmissionObserver
 from hepdata.modules.submission.views import process_submission_payload
@@ -1479,3 +1481,43 @@ def test_verify_observer_key(app):
         result = verify_observer_key(test_recid, test["test_key"])
         assert result == test["expected"]
 
+
+def test_get_observer_url(app, client, mocker):
+    """
+    Tests the get_observer_url function to ensure valid observer keys are returned
+    or not returned as expected.
+    Tests logged in, out and valid/invalid values.
+    """
+    # Create test data
+    recid = random.randint(0, 10000)
+    test_observer = SubmissionObserver(recid)
+    db.session.add(test_observer)
+    db.session.commit()
+
+    # Failed result with no login
+    failed_result = get_observer_url(0)
+
+    # Check that we've been redirected
+    assert failed_result.status_code == 302
+
+    # Get a user object and log it in
+    login_user(User.query.first())
+
+    # Testing a non-existent recid
+    test_recid = 1000001
+    result = json.loads(get_observer_url(test_recid))
+
+    # Ensure correct error messaging with recid/false
+    assert result["recid"] == test_recid
+    assert result["observer_exists"] == False
+
+    # Make the request and load response to dict
+    result = json.loads(get_observer_url(recid))
+
+    # Get current site_url for generating expected url format for comparison
+    site_url = current_app.config.get('SITE_URL', 'https://www.hepdata.net')
+
+    # Check recid, status message, and observer URL
+    assert result["recid"] == recid
+    assert result["observer_exists"] == True
+    assert result["observer_key"] == f"{site_url}/record/{recid}/?observer_key={test_observer.observer_key}"
