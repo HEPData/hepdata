@@ -627,14 +627,13 @@ def get_or_create_hepsubmission(recid, coordinator=1, status="todo"):
         hepsubmission = HEPSubmission(publication_recid=recid,
                                       coordinator=coordinator,
                                       overall_status=status)
-
-        # Create observer access key object
-        if status == "todo":
-            get_or_create_submission_observer(hepsubmission.publication_recid, regenerate=True)
-
-        # Create a new observer key here
+        # Commit so that the submission exists in the database.
         db.session.add(hepsubmission)
         db.session.commit()
+
+        # Create a new observer key here
+        if status == "todo":
+            get_or_create_submission_observer(hepsubmission.publication_recid, regenerate=True)
 
     return hepsubmission
 
