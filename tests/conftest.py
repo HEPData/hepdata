@@ -169,7 +169,7 @@ def load_submission(app, load_default_data):
     import_records(['ins1487726'], synchronous=True)
 
 
-def create_blank_test_record():
+def create_blank_test_record(status="todo"):
     """
     Helper function to create a single, blank, finished submission
     :returns submission: The newly created submission object
@@ -177,9 +177,9 @@ def create_blank_test_record():
     record_information = create_record(
         {'journal_info': 'Journal', 'title': 'Test Paper'})
     recid = record_information['recid']
-    submission = get_or_create_hepsubmission(recid)
+    submission = get_or_create_hepsubmission(recid, status=status)
     # Set overall status to finished so related data appears on dashboard
-    submission.overall_status = 'finished'
+    submission.overall_status = status
     user = User(email=f'test@test.com', password='hello1', active=True,
                 id=1)
     test_submissions = {}
