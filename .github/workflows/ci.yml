@@ -168,7 +168,7 @@ jobs:
         region: eu
         tunnelName: ${{ github.run_id }}
         proxyLocalhost: direct
-        scVersion: 5.2.3
+        scVersion: 5.3.0
     - name: Run end-to-end tests
       if: startsWith(matrix.python-version, '3.9')
       env:
