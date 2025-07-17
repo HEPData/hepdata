@@ -133,32 +133,28 @@ def sandbox_display(id):
 def get_metadata_by_alternative_id(recid):
 
     try:
-        if "ins" in recid:
-            recid = recid.replace("ins", "")
-            record = get_records_matching_field('inspire_id', recid,
-                                                doc_type=CFG_PUB_TYPE)
-            record = record['hits']['hits'][0].get("_source")
-            try:
-                version = int(request.args.get('version', -1))
-            except ValueError:
-                version = -1
+        inspire_id = int(recid.replace('ins', ''))  # raises ValueError if not integer
+        record = get_records_matching_field('inspire_id', inspire_id,
+                                            doc_type=CFG_PUB_TYPE)
+        record = record['hits']['hits'][0].get("_source")
+        try:
+            version = int(request.args.get('version', -1))
+        except ValueError:
+            version = -1
 
-            output_format = request.args.get('format', 'html')
-            light_mode = bool(request.args.get('light', False))
+        output_format = request.args.get('format', 'html')
+        light_mode = bool(request.args.get('light', False))
 
-            # Check the Accept header to determine whether to send JSON-LD
-            if output_format == 'html' and should_send_json_ld(request):
-                output_format = 'json_ld'
+        # Check the Accept header to determine whether to send JSON-LD
+        if output_format == 'html' and should_send_json_ld(request):
+            output_format = 'json_ld'
 
-            return render_record(recid=record['recid'], record=record, version=version, output_format=output_format,
-                                 light_mode=light_mode)
-        else:
-            log.error("Unable to find %s.", recid)
-            return abort(404)
+        return render_record(recid=record['recid'], record=record, version=version, output_format=output_format,
+                             light_mode=light_mode)
 
     except Exception as e:
-        log.error("Unable to find %s.", recid)
-        log.error(e)
+        log.warning("Unable to find %s.", recid)
+        log.warning(e)
         return abort(404)
 
 

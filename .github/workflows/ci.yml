@@ -158,7 +158,7 @@ jobs:
         COVERAGE_FILE: '.coverage_func'
         SQLALCHEMY_WARN_20: 1
       run: |
-        py.test -vv tests/*_test.py
+        py.test -vv tests/*_test.py tests/test_*.py
     - name: Setup Sauce Connect
       uses: saucelabs/sauce-connect-action@v3.0.0
       if: startsWith(matrix.python-version, '3.9')
@@ -168,7 +168,7 @@ jobs:
         region: eu
         tunnelName: ${{ github.run_id }}
         proxyLocalhost: direct
-        scVersion: 5.2.3
+        scVersion: 5.3.0
     - name: Run end-to-end tests
       if: startsWith(matrix.python-version, '3.9')
       env:
