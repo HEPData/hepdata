@@ -188,7 +188,8 @@ def download_submission(submission, file_format, offline=False, force=False, riv
     if file_format == 'original':
         file_format_and_extension = os.path.splitext(data_filepath)[1]
     else:
-        file_format_and_extension = '-{0}.tar.gz'.format(file_format)
+        file_format_dashed = file_format.replace('.', '-')
+        file_format_and_extension = '-{0}.tar.gz'.format(file_format_dashed)
 
     output_file = 'HEPData-{0}-v{1}{2}'.format(file_identifier, submission.version, file_format_and_extension)
 
@@ -219,10 +220,11 @@ def download_submission(submission, file_format, offline=False, force=False, riv
             print('File created at {0}'.format(output_path))
             return
 
+    file_format_dashed = file_format.replace('.', '-')
     converter_options = {
         'input_format': 'yaml',
         'output_format': file_format,
-        'filename': 'HEPData-{0}-v{1}-{2}'.format(file_identifier, submission.version, file_format),
+        'filename': 'HEPData-{0}-v{1}-{2}'.format(file_identifier, submission.version, file_format_dashed),
         'validator_schema_version': '0.1.0',
     }
 
