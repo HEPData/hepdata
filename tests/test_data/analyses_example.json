@@ -1,4 +1,5 @@
 {
+  "schema_version" : "1.0.0",
   "tool": "SModelS",
   "version": "3.0.0",
   "date_created": "2018-11-13T20:20:39+00:00",

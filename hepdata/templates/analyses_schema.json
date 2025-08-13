@@ -1,12 +1,17 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "HEPData_analysis_tool_schema",
+  "$id": "https://hepdata.net/analyses/schemas/1.0.0/analyses_schema.json",
   "title": "HEPData analysis tool schema",
   "description": "A JSON schema for tracking implementations of HEPData analyses in different tools",
   "type": "object",
-  "required": ["tool", "version", "date_created", "implementations_description", "url_templates", "analyses"],
+  "required": ["schema_version", "tool", "version", "date_created", "implementations_description", "url_templates", "analyses"],
 
   "properties": {
+    "schema_version": {
+      "description": "The version of the JSON schema applying to this file",
+      "const": "1.0.0"
+    },
+
     "tool": {
       "description": "The tool used to implement the analysis",
       "type": "string"
