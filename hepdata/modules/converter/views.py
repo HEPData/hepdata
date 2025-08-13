@@ -27,11 +27,11 @@ import shutil
 import tempfile
 
 from flask import Blueprint, send_file, render_template, \
-    current_app, redirect, abort
+    current_app, redirect, abort, request
 from hepdata.config import CFG_CONVERTER_URL, CFG_SUPPORTED_FORMATS, CFG_CONVERTER_TIMEOUT
 
 from hepdata_converter_ws_client import convert, Error
-from hepdata.modules.permissions.api import user_allowed_to_perform_action
+from hepdata.modules.permissions.api import user_allowed_to_perform_action, verify_observer_key
 from hepdata.modules.converter import convert_zip_archive
 from hepdata.modules.submission.api import get_latest_hepsubmission
 from hepdata.modules.submission.models import HEPSubmission, DataResource, DataSubmission
@@ -131,6 +131,8 @@ def download_submission_with_recid(*args, **kwargs):
     :return: download_submission
     """
     recid = kwargs.pop('recid')
+    observer_key = request.args.get('observer_key')
+    key_verified = verify_observer_key(recid, observer_key)
 
     version_count, version_count_all = get_version_count(recid)
     if 'version' in kwargs:
@@ -140,7 +142,7 @@ def download_submission_with_recid(*args, **kwargs):
         version = version_count if version_count else 1
 
     # Check for a user trying to access a version of a publication record where they don't have permissions.
-    if version_count < version_count_all and version == version_count_all:
+    if version_count < version_count_all and version == version_count_all and not key_verified:
         abort(403)
 
     submission = HEPSubmission.query.filter_by(publication_recid=recid, version=version).first()
@@ -341,6 +343,8 @@ def download_data_table_by_recid(*args, **kwargs):
     recid = kwargs.pop('recid')
     table_name = kwargs.pop('table_name')
     rivet = kwargs.pop('rivet', '')
+    observer_key = request.args.get('observer_key')
+    key_verified = verify_observer_key(recid, observer_key)
 
     version_count, version_count_all = get_version_count(recid)
     if 'version' in kwargs:
@@ -350,8 +354,11 @@ def download_data_table_by_recid(*args, **kwargs):
         version = version_count if version_count else 1
 
     # Check for a user trying to access a version of a publication record where they don't have permissions.
-    if version_count < version_count_all and version == version_count_all:
+    if version_count < version_count_all and version == version_count_all  and not key_verified:
         abort(403)
+
+    if not key_verified:
+        observer_key = None
 
     datasubmission = None
     original_table_name = table_name
@@ -378,7 +385,7 @@ def download_data_table_by_recid(*args, **kwargs):
 
     return download_datatable(datasubmission, kwargs.pop('file_format'),
                               submission_id='{0}'.format(recid), table_name=datasubmission.name,
-                              rivet_analysis_name=rivet)
+                              rivet_analysis_name=rivet, observer_key=observer_key)
 
 
 @blueprint.route(f'/table/<int:data_id>/<any({FORMATS}):file_format>')
@@ -407,8 +414,13 @@ def download_datatable(datasubmission, file_format, *args, **kwargs):
     """
 
     if file_format == 'json':
-        return redirect('/record/data/{0}/{1}/{2}'.format(datasubmission.publication_recid,
-                                                   datasubmission.id, datasubmission.version))
+        redirect_url = '/record/data/{0}/{1}/{2}'.format(datasubmission.publication_recid,
+                                                   datasubmission.id, datasubmission.version)
+        observer_key = kwargs.get("observer_key")
+        if observer_key:
+            redirect_url += f"?observer_key={observer_key}"
+        return redirect(redirect_url)
+
     elif file_format not in CFG_SUPPORTED_FORMATS:
         return display_error(
             title="The " + file_format + " output format is not supported",
