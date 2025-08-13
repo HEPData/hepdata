@@ -13,12 +13,12 @@
     },
 
     "tool": {
-      "description": "The tool used to implement the analysis",
+      "description": "The name of the tool used to implement the analyses",
       "type": "string"
     },
 
     "version": {
-      "description": "The version of the tool used to implement the analysis",
+      "description": "The version of the tool used to implement the analyses",
       "type": "string"
     },
 
@@ -28,7 +28,7 @@
       "format": "date-time"
     },
 
-    "implementations_description":{
+    "implementations_description": {
       "description": "The type of information provided for the analyses by the tool",
       "type": "string"
     },
