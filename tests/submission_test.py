@@ -886,7 +886,7 @@ def test_get_or_create_submission_observer(app):
         },
         # Testing against
         {  # It should not generate here as we have no Submission.
-            "id": 0, "insert": False, "regenerate": False, "generated_key": None, "overall_status": "finsihed"
+            "id": 0, "insert": False, "regenerate": False, "generated_key": None, "overall_status": "finished"
         },
         {  # It should not generate here as we have no Submission.
             "id": 0, "insert": False, "regenerate": False, "generated_key": None, "overall_status": "todo"
