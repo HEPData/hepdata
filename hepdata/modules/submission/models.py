@@ -33,6 +33,8 @@ from invenio_db import db
 from datetime import datetime
 from uuid import uuid4
 
+from hepdata.config import OBSERVER_KEY_LENGTH
+
 logging.basicConfig()
 log = logging.getLogger(__name__)
 
@@ -143,7 +145,7 @@ class SubmissionObserver(db.Model):
         # Generate UUID4 and cast to string
         generated_key = str(uuid4())
         # Split to desired key length
-        truncated_key = generated_key[:8]
+        truncated_key = generated_key[:OBSERVER_KEY_LENGTH]
         self.observer_key = truncated_key
 
 # Declarations of the helper tables used to manage many-to-many relationships.
