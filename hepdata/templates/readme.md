@@ -79,7 +79,7 @@ A minimal example for an analyses JSON adhering to the standard looks like this:
   "date_created": "2018-11-13T20:20:39+00:00",
   "implementations_description": "SModelS analysis",
   "url_templates": {
-    "main_url": "https://github.com/SModelS/smodels-database-release/tree/main/{path}"
+    "main_url": "https://github.com/SModelS/smodels-database-release/tree/main/{name}"
   },
   "analyses" : [
     {
