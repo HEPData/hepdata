@@ -22,11 +22,15 @@
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
+import json
 import logging
 import os
 import shutil
 import time
+from datetime import datetime
 from time import sleep
+from unittest.mock import patch, MagicMock
+from sqlalchemy.exc import NoResultFound
 
 from invenio_db import db
 import pytest
@@ -42,15 +46,15 @@ from hepdata.modules.records.api import (
     get_related_to_this_datasubmissions,
     get_related_to_this_hepsubmissions,
     get_table_data_list,
-    process_saved_file
+    process_saved_file, get_commit_message
 )
 from hepdata.modules.records.utils.common import infer_file_type, contains_accepted_url, allowed_file, record_exists, \
-    get_record_contents, is_histfactory
+    get_record_contents, is_histfactory, get_record_by_id
 from hepdata.modules.records.utils.data_files import get_data_path_for_record
 from hepdata.modules.records.utils.submission import process_submission_directory, do_finalise, unload_submission, \
     cleanup_data_related_recid
 from hepdata.modules.submission.api import get_latest_hepsubmission, get_submission_participants_for_record
-from hepdata.modules.submission.models import DataSubmission, HEPSubmission, RelatedRecid
+from hepdata.modules.submission.models import DataSubmission, HEPSubmission, RelatedRecid, RecordVersionCommitMessage
 from hepdata.modules.submission.views import process_submission_payload
 from hepdata.config import HEPDATA_DOI_PREFIX
 from tests.conftest import create_test_record
@@ -118,7 +122,8 @@ def test_is_histfactory(filename, description, type, expected):
         ("test.docx", "", None, "docx"),
         ("test", "", None, "resource"),
         ("pyhf.tgz", "File containing likelihoods", None, "HistFactory"),
-        ("test.zip", "Some sort of file", "HistFactory", "HistFactory")
+        ("test.zip", "Some sort of file", "HistFactory", "HistFactory"),
+        ("snippet.cxx", "ProSelecta analysis", "ProSelecta", "ProSelecta")
     ]
 )
 def test_infer_file_type(filename, description, type, expected):
@@ -712,3 +717,148 @@ def test_status_reset_error(app, mocker, caplog):
     assert(caplog.records[0].levelname == "ERROR")
     assert(caplog.records[0].msg
            == "Exception while cleaning up: Could not clean up the submission")
+
+
+# Patching to force no-op on function: process_last_updates()
+@patch("hepdata.ext.opensearch.document_enhancers.process_last_updates")
+def test_do_finalise_commit_message(app, admin_idx):
+    """
+    Tests the do_finalise function's commit message insertion
+    """
+
+    # Insert the testing record data
+    with app.app_context():
+        admin_idx.recreate_index()
+        # Create test submission/record
+        hepdata_submission = create_test_record(
+            os.path.abspath('tests/test_data/test_submission'),
+            overall_status='todo'
+        )
+
+        record = get_record_by_id(hepdata_submission.publication_recid)
+        record["creation_date"] = str(datetime.today().strftime('%Y-%m-%d'))
+
+        # Inserting a bunch of IDs
+        id_range = range(1, 6)
+        for i in id_range:
+            # We don't create a new version on the first one.
+            if i > 1:
+                create_new_version(hepdata_submission.publication_recid, None)
+
+            # Set the commit_message value to the current number/ID
+            do_finalise(
+                hepdata_submission.publication_recid,
+                publication_record=record,
+                commit_message=f"{i}",
+                force_finalise=True,
+                convert=False
+            )
+
+        # Get all commit messages
+        commit_messages = RecordVersionCommitMessage.query.filter_by(
+            recid=hepdata_submission.publication_recid
+        ).all()
+
+        # Convert the range to a usable list obj
+        id_range = list(id_range)
+        # Remove 1 as it should not have inserted
+        id_range.remove(1)
+
+        # Ensure message count matches amount inserted.
+        assert len(commit_messages) == len(id_range)
+
+        # Get the versions, and messages (which should be int/str of single value integers (2-4)
+        versions = [commit_message.version for commit_message in commit_messages]
+        messages =  [int(commit_message.message) for commit_message in commit_messages]
+
+        # Should be a range of ints matching the id_range value 2-5
+        assert id_range == versions == messages
+
+
+# Patching to force no-op on function: process_last_updates()
+@patch("hepdata.ext.opensearch.document_enhancers.process_last_updates")
+def test_do_finalise_commit_message_failure(app, admin_idx):
+    """
+    Tests against commit message insertion failure in the do_finalise function.
+    Checks rollback functionality to ensure no messages are inserted.
+    """
+
+    with app.app_context():
+        admin_idx.recreate_index()
+        # Create test submission/record
+        hepdata_submission = create_test_record(
+            os.path.abspath('tests/test_data/test_submission'),
+            overall_status='todo'
+        )
+
+        # Create record data and prepare
+        record = get_record_by_id(hepdata_submission.publication_recid)
+        record["creation_date"] = str(datetime.today().strftime('%Y-%m-%d'))
+
+        # Now we mock the get_record_by_id function to cause an error.
+        with patch("hepdata.modules.records.utils.submission.get_record_by_id") as mock_get_record:
+            class MockRecord(MagicMock, dict):
+                # Mocking the invenio-records Record class
+                # Used to create a mock also of type dict
+                pass
+
+            # Create mock record object, set its value
+            # and set it to cause an error.
+            mock_record = MockRecord()
+            mock_get_record.return_value = mock_record
+            # Set the record to raise exception when commit() is called
+            mock_record.commit.side_effect = NoResultFound()
+            # Injecting specific dictionary keys to avoid error.
+            mock_record.__getitem__.side_effect = lambda key: 1 if key == 'item_doi' else None
+
+            # Now we run the do_finalise function (PATCHED)
+            result = do_finalise(
+                        hepdata_submission.publication_recid,
+                        publication_record=record,
+                        commit_message="FailedMessage",
+                        force_finalise=True,
+                        convert=False
+            )
+            # Convert str(json)->dict
+            result = json.loads(result)
+
+        # Confirm that the result response exists and is correct
+        assert "errors" in result
+        assert len(result["errors"]) == 1
+        assert result["errors"][0] == "No record found to update. Which is super strange."
+
+        # Execute again, but unpatched | No failure
+        do_finalise(
+            hepdata_submission.publication_recid,
+            publication_record=record,
+            commit_message="NewMessage",
+            force_finalise=True,
+            convert=False
+        )
+
+        commit_messages = RecordVersionCommitMessage.query.filter_by(
+            recid=hepdata_submission.publication_recid
+        ).all()
+
+        # Ensure that no messages have inserted
+        # No messages should be there as we have seen a failure and V1 sub
+        assert len(commit_messages) == 0
+
+        # Create new version, then finalise again
+        # There should now be a message
+        create_new_version(hepdata_submission.publication_recid, None)
+        do_finalise(
+            hepdata_submission.publication_recid,
+            publication_record=record,
+            commit_message="NewMessage",
+            force_finalise=True,
+            convert=False
+        )
+         # Get all commit messages again
+        commit_messages = RecordVersionCommitMessage.query.filter_by(
+            recid=hepdata_submission.publication_recid
+        ).all()
+
+        # We should now have one message in the database.
+        assert len(commit_messages) == 1
+        assert commit_messages[0].message == "NewMessage"

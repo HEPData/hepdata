@@ -715,6 +715,7 @@ def do_finalise(recid, publication_record=None, force_finalise=False,
     print('Finalising record {}'.format(recid))
 
     hep_submission = get_latest_hepsubmission(publication_recid=recid)
+    error_message = None
 
     generated_record_ids = []
     if hep_submission \
@@ -761,7 +762,8 @@ def do_finalise(recid, publication_record=None, force_finalise=False,
             if hep_submission.coordinator > 1:
                 hep_submission.last_updated = datetime.utcnow()
 
-            if commit_message:
+            # No commit message required < V2
+            if commit_message and version > 1:
                 commit_record = RecordVersionCommitMessage(
                     recid=recid,
                     version=version,
@@ -809,14 +811,26 @@ def do_finalise(recid, publication_record=None, force_finalise=False,
                 site_url = current_app.config.get('SITE_URL', 'https://www.hepdata.net')
                 tweet(record.get('title'), record.get('collaborations'),
                       site_url + '/record/ins{0}'.format(record.get('inspire_id')), version)
-
             return json.dumps({"success": True, "recid": recid,
                                "data_count": len(submissions),
                                "generated_records": generated_record_ids})
-
         except NoResultFound:
-            print('No record found to update. Which is super strange.')
+            error_message = 'No record found to update. Which is super strange.'
 
+        # If we have not returned, then we set an error message
+        if error_message is None:
+            error_message = "An error occurred, please try again"
+
+        # If we get to here, we have not returned
+        # Do some cleanup (rollback and return error message)
+        if error_message:
+            print(error_message)
+            db.session.rollback()
+            return json.dumps({
+                "success": False,
+                "recid": recid,
+                "errors": [error_message]
+            })
     else:
         return json.dumps(
             {"success": False, "recid": recid,

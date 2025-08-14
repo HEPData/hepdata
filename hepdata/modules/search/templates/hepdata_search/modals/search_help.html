@@ -64,8 +64,7 @@
                         <li>Find all data with the <strong>phrase</strong> <em>diffractive</em> or <em>elastic</em>
                             <ul>
                                 <li>
-                                    <a href='/search?q=phrases:diffractive OR phrases:elastic' target="_new">phrases:diffractive
-                                        OR phrases:elastic</a>
+                                    <a href='/search?q=phrases:(diffractive OR elastic)' target="_new">phrases:(diffractive OR elastic)</a>
                                 </li>
                             </ul>
                         </li>
@@ -167,8 +166,8 @@
                         <li>Find all data from the <strong>collaborations</strong> <em>D0</em> OR <em>ATLAS</em>
                             <ul>
                                 <li>
-                                    <a href='/search?q=collaborations:"D0" OR collaborations:"ATLAS"'
-                                       target="_new">collaborations:"D0" OR collaborations:"ATLAS"</a>
+                                    <a href='/search?q=collaborations:(D0 OR ATLAS)'
+                                       target="_new">collaborations:(D0 OR ATLAS)</a>
                                 </li>
                             </ul>
                         </li>
@@ -237,10 +236,45 @@
                                     </span>
                                 </li>
                                 <li>
+                                    <a href='/search?q=analysis:SModelS&sort_by=latest'
+                                       target="_new">analysis:SModelS</a>
+                                    <span class="text-muted">
+                                       (SModelS analysis)
+                                    </span>
+                                </li>
+                                <li>
+                                    <a href='/search?q=analysis:CheckMATE&sort_by=latest'
+                                       target="_new">analysis:CheckMATE</a>
+                                    <span class="text-muted">
+                                       (CheckMATE analysis)
+                                    </span>
+                                </li>
+                                <li>
+                                    <a href='/search?q=analysis:HackAnalysis&sort_by=latest'
+                                       target="_new">analysis:HackAnalysis</a>
+                                    <span class="text-muted">
+                                       (HackAnalysis analysis)
+                                    </span>
+                                </li>
+                                <li>
+                                    <a href='/search?q=analysis:Combine&sort_by=latest'
+                                       target="_new">analysis:Combine</a>
+                                    <span class="text-muted">
+                                       (CMS statistical models in Combine format)
+                                    </span>
+                                </li>
+                                <li>
                                     <a href='/search?q=analysis:HistFactory&sort_by=latest'
                                        target="_new">analysis:HistFactory</a>
                                     <span class="text-muted">
                                        (likelihoods in HistFactory format)
+                                    </span>
+                                </li>
+                                <li>
+                                    <a href='/search?q=analysis:NUISANCE&sort_by=latest'
+                                       target="_new">analysis:NUISANCE</a>
+                                    <span class="text-muted">
+                                       (ProSelecta analysis for use with NUISANCE)
                                     </span>
                                 </li>
                             </ul>
@@ -259,6 +293,32 @@
                                 <li>
                                     <a href='https://inspirehep.net/literature?q=external_system_identifiers.schema:HEPData'
                                        target="_new">external_system_identifiers.schema:HEPData</a>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="well well-small">
+                    <h4>Range-based Searching</h4>
+                  <p>
+                    We support searching for a range of records using their HEPData record ID or Inspire ID.
+                  </p>
+                    <ul>
+                        <li>Range searching by HEPData record ID:
+                            <ul>
+                                <li>
+                                    <a href='/search?q=publication_recid:[1 TO 10]'
+                                       target="_new">publication_recid:[1 TO 10]</a>
+                                </li>
+                            </ul>
+                        </li>
+                        <br/>
+                        <li>Range searching by Inspire ID:
+                            <ul>
+                                <li>
+                                    <a href='/search?q=inspire_id:[1 TO 10000]'
+                                       target="_new">inspire_id:[1 TO 10000]</a>
                                 </li>
                             </ul>
                         </li>

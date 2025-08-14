@@ -15,10 +15,13 @@
 # You should have received a copy of the GNU General Public License
 # along with HEPData; if not, write to the Free Software Foundation, Inc.,
 # 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
+import unittest
+
 from opensearchpy.exceptions import NotFoundError
 from opensearch_dsl import Search, Index
-import datetime
+from datetime import datetime
 import pytest
+import os as op_s
 from invenio_db import db
 from unittest.mock import call
 
@@ -26,7 +29,8 @@ from hepdata.ext.opensearch.config.os_config import \
     add_default_aggregations, sort_fields_mapping
 from hepdata.ext.opensearch import api as os_api
 from hepdata.ext.opensearch.config.os_config import get_filter_field
-from hepdata.ext.opensearch.document_enhancers import add_data_keywords, process_cmenergies
+from hepdata.ext.opensearch.document_enhancers import add_data_keywords, process_cmenergies, add_analyses
+from hepdata.modules.records.utils.submission import process_submission_directory
 from hepdata.utils.miscellaneous import get_resource_data
 from hepdata.ext.opensearch.process_results import merge_results, match_tables_to_papers, \
     get_basic_record_information, is_datatable
@@ -173,6 +177,92 @@ def test_query_parser():
 
     assert (parsed_query_string6 == 'analyses.type:rivet')
 
+    _test_query7 = 'publication_recid:1'
+    parsed_query_string7 = HEPDataQueryParser.parse_query(_test_query7)
+    assert (parsed_query_string7 == 'recid:1')
+
+def test_parse_range_query():
+    """
+    Tests the range query verification function to ensure that parsed queries are
+    correctly returning the range term list, and the data search table exclusion status.
+    """
+    test_data =[
+        {  # Expected to return publication_recid as it is default.
+            "expected_result": ["recid"],
+            "exclude_tables": False, # Recid should include tables in search
+            "query_strings": [
+                "recid:[0 TO 10000]", # Correct
+                "recid: [0  TO  10000]",  # Extra valid whitespace
+                " recid:[0 TO 10000] ",  # Left and right whitespace
+                "recid:[0 TO 10000] AND year:2024"
+            ]
+        },
+        {  # Expected to return publication_recid as it is default.
+            "expected_result": ["publication_recid"],
+            "exclude_tables": True, # publication_recid should exclude tables
+            "query_strings": [
+                "publication_recid:[0 TO 10000]",
+                "publication_recid: [0  TO  10000]",  # Extra valid whitespace
+                " publication_recid:[0 TO 10000] ",  # Left and right whitespace
+                "publication_recid:[0 TO 10000] AND year:2024"
+            ]
+        },
+        { # Test proper exclusion value of publication_recid and inspire_id
+            "expected_result": ["publication_recid", "inspire_id"],
+            "exclude_tables": True,
+            "query_strings": [
+                "publication_recid:[0 TO 10000] AND inspire_id:[0 TO 10000]",  # Correct
+                "publication_recid: [0  TO  10000] AND inspire_id: [0  TO  10000]",  # Extra valid whitespace
+                " publication_recid:[0 TO 10000] AND  inspire_id: [0  TO  10000]",  # Left and right whitespace
+            ]
+        },
+        {
+            "expected_result": ["recid", "inspire_id"],
+            "exclude_tables": False,
+            "query_strings": [
+                "recid:[0 TO 10000] AND inspire_id:[0 TO 10000]",
+                "recid: [0  TO  10000] AND inspire_id: [0  TO  10000]",  # Extra valid whitespace
+                " recid:[0 TO 10000] AND  inspire_id: [0  TO  10000]",  # Left and right whitespace
+            ]
+        },
+        {
+            "expected_result": ["recid", "publication_recid"],
+            "exclude_tables": False,
+            "query_strings": [
+                "recid:[0 TO 10000] AND publication_recid:[0 TO 10000]",
+                "recid: [0  TO  10000] AND publication_recid: [0  TO  10000]",  # Extra valid whitespace
+                " recid:[0 TO 10000] AND  publication_recid: [0  TO  10000]",  # Left and right whitespace
+            ]
+        },
+        {  # Some incorrect cases
+            "expected_result": [],
+            "exclude_tables": False,
+            "query_strings": [
+                " recid[0 TO 10000] ",
+                "recsid:[0 TO 10000]",
+                "INCORRECT:[46 TO 46]",  # Mismatched term
+                "recid:[-0 TO 10000] OR inspire_id:[-123 TO -123]", # Negative numbers
+                "recid:[NOTINT TO 46]",  # Mismatched int left
+                "recid:[46 TO NOTINT]",  # Mismatched int right
+                "inspire_idd:[0 TO 10000]",  # Misspelling
+                "inspire_id:[0 TO 10000 ]",  # Invalid whitespace
+                "inspire_id:[ 0 TO 10000]",  # Invalid whitespace
+                "inspire_id :[0 TO 10000]",  # Invalid whitespace
+            ]
+        },
+
+    ]
+
+    # Each test dictionary in the list has a different expected_result value
+    for test in test_data:
+        # For each query string for the current expected_result
+        for query in test["query_strings"]:
+            # Execute the verification with current string
+            result = HEPDataQueryParser.parse_range_query(query)
+            # Doing the same term replacement required for OpenSearch
+            parsed_query = query.replace("publication_recid", "recid")
+            # Expected result based on which test object we are on
+            assert result == (test["expected_result"], test["exclude_tables"], parsed_query)
 
 
 def test_search(app, load_default_data, identifiers):
@@ -315,6 +405,252 @@ def test_search(app, load_default_data, identifiers):
     assert results == {'error': 'An unexpected error occurred: index_not_found_exception'}
 
 
+def test_search_range_ids(app, load_default_data, identifiers):
+    """
+    Tests range-based searching where ID-like entries are used
+    First checks whole range, then single entry
+    e.g. inspire_id and recid NOT cmenergies etc.
+    """
+
+    # Test the parsed entries in config.CFG_SEARCH_RANGE_TERMS
+    test_queries = [
+        "inspire_id",
+        "recid"
+    ]
+
+    for test in test_queries:
+        # Create the range query formatting the keyword per query
+        range_query = f"{test}:[%d TO %d]"
+
+        # Just do a huge range, to see if everything appears
+        results = os_api.search(range_query % (0, 100000000))
+        # Result count should equal maximum number of entries
+        assert len(results['results']) == len(identifiers)
+
+        # Testing a range query we know shouldn't work
+        zero_result = os_api.search(range_query % (0, 0))
+        assert not zero_result.get('results')
+
+        # Do a range search for a single result, for each result of the 'all' search above.
+        for result in results['results']:
+            # We get the inspire/recid from the current result
+            identifier_id = int(result[test])
+            # Do a search, formatting the query to find a single result
+            specific_result = os_api.search(range_query % (identifier_id, identifier_id))
+            # Check ID of single result
+            assert int(specific_result['results'][0][test]) == int(identifier_id)
+
+            # Testing another bad result, where the numbers are completely invalid
+            bad_result = os_api.search(range_query % (identifier_id+1, identifier_id-1))
+            assert not bad_result.get('results')
+
+def test_range_queries(app, load_default_data, identifiers):
+    """
+    Tests search functionality to ensure range queries are functional, together
+     and alongside other search types
+    """
+    current_year = 2024
+
+    test_data = [
+        {  # Check all results are returned, and is sorted by inspire_id
+            "test_query": "inspire_id:[0 TO 10000000]",
+            "expected_result": {
+                "count": len(identifiers),
+                "expected_inspire_ids": [2751932, 1245023,  1283842],
+                "expected_rec_ids": [57, 16, 1]
+            }
+        },
+        {  # Check all results are returned, and is sorted by recid
+            "test_query": "publication_recid:[0 TO 10000000]",
+            "expected_result": {
+                "count": len(identifiers),
+                "expected_inspire_ids": [2751932, 1245023, 1283842],
+                "expected_rec_ids": [57, 16, 1]
+            }
+        },
+        {  # Check all results are returned, and is sorted by recid
+            "test_query": "recid:[0 TO 10000000]",
+            "expected_result": {
+                "count": len(identifiers),
+                "expected_inspire_ids": [2751932, 1245023, 1283842],
+                "expected_rec_ids": [57, 16, 1]
+            }
+        },
+        {  # Full boolean search
+            "test_query": "inspire_id:[1283842 TO 1283842] AND publication_recid:[1 TO 1] AND recid:[1 TO 1]",
+            "expected_result": {
+                "count": 1, "expected_inspire_ids": [1283842], "expected_rec_ids": [1]
+            }
+        },
+        {  # Check all results are returned, and is sorted by recid
+            "test_query": "publication_recid:[0 TO 10000000] AND recid:[0 TO 10000000]",
+            "expected_result": {
+                "count": len(identifiers),
+                "expected_inspire_ids": [2751932, 1245023, 1283842],
+                "expected_rec_ids": [57, 16, 1]
+            }
+        },
+        {  # Should cover every ID in the range, and equal the length of identifiers, sorted by recid
+            "test_query": "inspire_id:[0 TO 10000000] AND publication_recid:[0 TO 10000000]",
+            "expected_result": {
+                "count": len(identifiers),
+                "expected_inspire_ids": [2751932, 1245023, 1283842],
+                "expected_rec_ids": [57, 16, 1]
+            }
+        },
+        {  # Valid search for a specific entry
+            "test_query": "inspire_id:[2751932 TO 2751932] AND publication_recid:[57 TO 57]",
+            "expected_result": {
+                "count": 1,
+                "expected_inspire_ids": [2751932],
+                "expected_rec_ids": [57]
+            }
+        },
+        {  # Valid search for a specific entry using OR
+            "test_query": "inspire_id:[2751932 TO 2751932] OR publication_recid:[0 TO 0]",
+            "expected_result": {
+                "count": 1,
+                "expected_inspire_ids": [2751932],
+                "expected_rec_ids": [57]
+            }
+        },
+        {  # Valid search for a specific entry using OR
+            "test_query": "inspire_id:[0 TO 0] OR publication_recid:[57 TO 57]",
+            "expected_result": {
+                "count": 1,
+                "expected_inspire_ids": [2751932],
+                "expected_rec_ids": [57]
+            }
+        },
+        {  # Testing adding year to the range
+            "test_query": f"inspire_id:[2751932 TO 2751932] AND publication_recid:[57 TO 57] AND year:{current_year}",
+            "expected_result": {
+                "count": 1,
+                "expected_inspire_ids": [2751932],
+                "expected_rec_ids": [57]
+            }
+        },
+        {  # Should be invalid as all entries are set to current year
+            "test_query": f"inspire_id:[2751932 TO 2751932] AND publication_recid:[57 TO 57] AND year:{current_year - 1}",
+            "expected_result": {
+                "count": 0,
+                "expected_inspire_ids": [],
+                "expected_rec_ids": []
+            }
+        },
+        {  # Search text is valid here
+            "test_query": "inspire_id:[2751932 TO 2751932] AND publication_recid:[57 TO 57] Production of higgsinos",
+            "expected_result": {
+                "count": 1, "expected_inspire_ids": [2751932], "expected_rec_ids": [57]
+            }
+        },
+        {  # Search text is valid here
+            "test_query": "inspire_id:[2751932 TO 2751932] AND publication_recid:[57 TO 57] AND Production of higgsinos",
+            "expected_result": {
+                "count": 1, "expected_inspire_ids": [2751932], "expected_rec_ids": [57]
+            }
+        },
+        {  # Search text is invalid as it has been garbled slightly
+            "test_query": "inspire_id:[2751932 TO 2751932] AND publication_recid:[57 TO 57] AND Prdction of igsnos",
+            "expected_result": {
+                "count": 0, "expected_inspire_ids": [], "expected_rec_ids": []
+            }
+        },
+        {  # No result as the search string is invalid
+            "test_query": "inspire_id:[2751932 TO 2751932] AND publication_recid:[57 TO 57] AND \"abcdef\"",
+            "expected_result": {
+                "count": 0, "expected_inspire_ids": [], "expected_rec_ids": []
+            }
+        },
+        {  # No result expected as inspire_id should not be matched
+            "test_query": "inspire_id:[2751933 TO 2751933] AND publication_recid:[57 TO 57]",
+            "expected_result": {
+                "count": 0, "expected_inspire_ids": [], "expected_rec_ids": []
+            }
+        },
+        {  # Result expected as inner resource recid is searched matched
+            "test_query": "inspire_id:[2751932 TO 2751932] AND recid:[58 TO 58]",
+            "expected_result": {
+                "count": 1, "expected_inspire_ids": [2751932], "expected_rec_ids": [57]
+            }
+        },
+        {  # No result as publication_recid is incorrect
+            "test_query": "inspire_id:[2751932 TO 2751932] AND publication_recid:[5000 TO 5000]",
+            "expected_result": {
+                "count": 0, "expected_inspire_ids": [], "expected_rec_ids": []
+            }
+        },
+        {  # Test specific selection of table by recid
+            "test_query": "recid:[58 TO 58]",
+            "expected_result": {
+                "count": 1, "expected_inspire_ids": [2751932], "expected_rec_ids": [57]
+            }
+        },
+        { # Test range selection of table by recid, including table
+            "test_query": "recid:[57 TO 58]",
+            "expected_result": {
+                "count": 1, "expected_inspire_ids": [2751932], "expected_rec_ids": [57]
+            }
+        },
+        {  # Test specific selection of publication by recid
+            "test_query": "publication_recid:[57 TO 57]",
+            "expected_result": {
+                "count": 1, "expected_inspire_ids": [2751932], "expected_rec_ids": [57]
+            }
+        },
+        {  # Test specific selection of publication by publication
+            "test_query": "publication_recid:[57 TO 58]",
+            "expected_result": {
+                "count": 1, "expected_inspire_ids": [2751932], "expected_rec_ids": [57]
+            }
+        },
+        {  # ID 58 is included within 57, but not marked
+            "test_query": "publication_recid:[58 TO 58]",
+            "expected_result": {
+                "count": 0, "expected_inspire_ids": [], "expected_rec_ids": []
+            }
+        },
+        {  # Searching for a specific inspire_id
+            "test_query": "inspire_id:[2751932 TO 2751932]",
+            "expected_result": {
+                "count": 1, "expected_inspire_ids": [2751932], "expected_rec_ids": [57]
+            }
+        },
+        {  # Test selection of a failed case
+            "test_query": "inspire_id:[2751933 TO 2751933]",
+            "expected_result": {
+                "count": 0, "expected_inspire_ids": [], "expected_rec_ids": []
+            }
+        },
+        {  # Test selection of just the middle value
+            "test_query": "inspire_id:[1245024 TO 2751931]",
+            "expected_result": {
+                "count": 1, "expected_inspire_ids": [1283842], "expected_rec_ids": [1]
+            }
+        },
+        {  # Test selection of all inspire_id values
+            "test_query": "inspire_id:[1245023 TO 2751932]",
+            "expected_result": {
+                "count": 3, "expected_inspire_ids": [2751932, 1245023, 1283842], "expected_rec_ids": [57, 16, 1]
+            }
+        }
+    ]
+
+    for test in test_data:
+        # Execute the search
+        results = os_api.search(test['test_query'])
+
+        # Gather the recid and inspire_id results
+        recid_results = [result['recid'] for result in results['results']]
+        inspire_results = [int(result['inspire_id']) for result in results['results']]
+
+        # Confirm expected count
+        assert len(results['results']) == test['expected_result']['count']
+        # Confirm recid and inspire_id results are as expected
+        assert test['expected_result']["expected_inspire_ids"] == inspire_results
+        assert test['expected_result']["expected_rec_ids"] == recid_results
+
+
 def test_merge_results():
     pub_result = {
         "hits": {
@@ -417,6 +753,88 @@ def test_add_data_keywords():
         set(['Asymmetry Measurement', 'Inclusive', 'Jet Production'])
     assert doc['data_keywords']['cmenergies'] == [{'gte': 1960.0, 'lte': 1960.0}]
     assert 'NOTAREALKEYWORD' not in doc['data_keywords']
+
+
+def test_add_analyses(app):
+    """
+    Tests the add_analyses function to ensure that DataSubmission data
+        is properly added to the doc object during document enhancement.
+
+    Currently testing against: NUISANCE, HistFactory, MadAnalysis
+    """
+    # Here, test_data should match the contents of the test_folder
+    test_folder = "test_data/test_analysis_submission"
+    test_data = [
+        {  # ProSelecta/NUISANCE
+            "type": "NUISANCE",
+            "filename": "test.ProSelecta"
+        },
+        {  # HistFactory entry
+            "type": "HistFactory",
+            "filename": "test.tar.gz"
+        },
+    ]
+    # This should probably be changed to use SITE_URL or some similar concept
+    analysis_url = "http://localhost:5000/record/resource/%s?landing_page=true"
+
+    with app.app_context():
+        # Creating and submitting the test submission containing resources
+        # op_s is os module
+        base_dir = op_s.path.dirname(op_s.path.realpath(__file__))
+
+        hepsubmission = HEPSubmission(publication_recid=123456,
+                                      overall_status="finished",
+                                      version=1,
+                                      doi="10.17182/hepdata.123456")
+        db.session.add(hepsubmission)
+        db.session.commit()
+
+        # Setting directory and executing processing
+        directory = op_s.path.join(base_dir, test_folder)
+        errors = process_submission_directory(
+            directory,
+            op_s.path.join(directory, "submission.yaml"),
+            hepsubmission.publication_recid
+        )
+
+        # No errors should happen
+        assert not errors
+
+        # Add MadAnalysis DataResource object separately
+        mad_analysis_resource = DataResource(
+            file_location = "placeholder",
+            file_type = "MadAnalysis",
+            file_description = "placeholder"
+        )
+
+        # Adding object to database
+        hepsubmission.resources.append(mad_analysis_resource)
+        db.session.add(mad_analysis_resource)
+        db.session.add(hepsubmission)
+        db.session.commit()
+
+        # Set up a generic doc object to match what add_analyses expects
+        test_doc = {"analyses": [], "recid": hepsubmission.publication_recid}
+        # Run the test add_analyses function
+        add_analyses(test_doc)
+
+        # A sorted list of all DataResource object IDs from submission
+        data_ids = sorted([r.id for r in hepsubmission.resources])
+
+        # There should be 3 analyses and 3 resources
+        assert len(data_ids) == len(test_doc["analyses"]) == 3
+
+        # There should be one entry into test_data per resource ID
+        # Looping through the test, resource IDs and the analysis outputs
+        for test, d_id, analysis in zip(test_data, data_ids, test_doc["analyses"]):
+            # Set the expected ID in the url to the sorted data_id entry
+            test["analysis"] = (analysis_url % d_id)
+            # Confirm data has been added to the doc
+            assert analysis == test
+
+        # Checking MadAnalysis added after submission
+        mad_analysis = test_doc["analyses"][-1]
+        assert mad_analysis["type"] == "MadAnalysis"
 
 
 def test_process_cmenergies():
@@ -710,13 +1128,13 @@ def test_get_all_ids(app, load_default_data, identifiers):
 
     # Check last_updated works
     # Default records were last updated on 2016-07-13 and 2013-12-17
-    date_2013_1 = datetime.datetime(year=2013, month=12, day=16)
+    date_2013_1 = datetime(year=2013, month=12, day=16)
     assert(os_api.get_all_ids(last_updated=date_2013_1) == expected_record_ids)
-    date_2013_2 = datetime.datetime(year=2013, month=12, day=17)
+    date_2013_2 = datetime(year=2013, month=12, day=17)
     assert(os_api.get_all_ids(last_updated=date_2013_2) == expected_record_ids)
-    date_2013_3 = datetime.datetime(year=2013, month=12, day=18)
+    date_2013_3 = datetime(year=2013, month=12, day=18)
     assert(os_api.get_all_ids(last_updated=date_2013_3) == [1, 57])
-    date_2120 = datetime.datetime(year=2120, month=1, day=1)
+    date_2120 = datetime(year=2120, month=1, day=1)
     assert(os_api.get_all_ids(last_updated=date_2120) == [])
 
     # Check sort by latest works - first record is newer than previous

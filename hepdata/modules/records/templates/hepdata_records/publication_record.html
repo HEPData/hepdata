@@ -78,7 +78,11 @@
 
                     <div>
                         <div class="record-title">
+                          {% if "<math>" in ctx.record.title %}
+                            {{ ctx.record.title|safe }}
+                          {% else %}
                             {{ ctx.record.title }}
+                          {% endif %}
                         </div>
 
                     <br/>
@@ -169,7 +173,11 @@
                             {% if ctx.record.data_abstract %}
                                 {{ ctx.record.data_abstract|safe }}
                             {% elif ctx.record.abstract %}
+                              {% if "<math>" in ctx.record.abstract %}
+                                {{ ctx.record.abstract|safe }}
+                              {% else %}
                                 {{ ctx.record.abstract }}
+                              {% endif %}
                             {% else %}
                                 No abstract available.
                             {% endif %}

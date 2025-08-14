@@ -80,6 +80,14 @@ CELERY_BEAT_SCHEDULE = {
         'schedule': crontab(minute=0, hour=1),  # execute daily at 1am UTC
         'args': (1,),  # INSPIRE records (with HEPData) updated yesterday
     },
+    'session_cleaner': {
+        'task': 'invenio_accounts.tasks.clean_session_table',
+        'schedule': timedelta(days=1),
+    },
+    'delete_login_ips': {
+        'task': 'invenio_accounts.tasks.delete_ips',
+        'schedule': timedelta(days=30),
+    },
 }
 
 # Number of workers running the datacite queue
@@ -110,8 +118,8 @@ CACHE_REDIS_URL = "redis://localhost:6379/0"
 CACHE_TYPE = "redis"
 
 # Session
-SESSION_REDIS = "redis://localhost:6379/0"
-PERMANENT_SESSION_LIFETIME = timedelta(days=1)
+ACCOUNTS_SESSION_REDIS_URL = CACHE_REDIS_URL
+PERMANENT_SESSION_LIFETIME = timedelta(hours=12)
 
 # OpenSearch
 OPENSEARCH_HOST = "localhost"
@@ -185,6 +193,7 @@ CFG_PUB_TYPE = 'publication'
 CFG_DATA_TYPE = 'datatable'
 CFG_SUBMISSIONS_TYPE = 'submission'
 CFG_DATA_KEYWORDS = ['observables', 'reactions', 'cmenergies', 'phrases']
+CFG_SEARCH_RANGE_TERMS = ["recid", "publication_recid", "inspire_id"]  # Possible terms used to OpenSearch API range searches
 
 CFG_CONVERTER_URL = 'https://converter.hepdata.net'
 CFG_SUPPORTED_FORMATS = ['yaml', 'root', 'csv', 'yoda', 'yoda1', 'original']
@@ -312,12 +321,45 @@ SPECIAL_VALUES = ['inf', '+inf', '-inf', 'nan']
 # ANALYSES_ENDPOINTS
 ANALYSES_ENDPOINTS = {
     'rivet': {
-        'endpoint_url': 'http://rivet.hepforge.org/analyses.json',
-        'url_template': 'http://rivet.hepforge.org/analyses/{0}'
+        'endpoint_url': 'https://cedar-tools.web.cern.ch/rivet/analyses.json',
+        'url_template': 'http://rivet.hepforge.org/analyses/{0}',
+        'description': 'Rivet analysis'
     },
     'MadAnalysis': {
         'endpoint_url': 'https://madanalysis.irmp.ucl.ac.be/raw-attachment/wiki/MA5SandBox/analyses.json',
-        'url_template': 'https://doi.org/{0}'
+        'url_template': 'https://doi.org/{0}',
+        'description': 'MadAnalysis 5 analysis'
+    },
+    'SModelS': {
+        'endpoint_url': 'https://zenodo.org/records/13952092/files/smodels-analyses.hepdata.json?download=1',
+        'url_template': '{0}',
+        'description': 'SModelS analysis',
+        'subscribe_user_id': 7766
+    },
+    'CheckMATE': {
+        'endpoint_url': 'https://checkmate.hepforge.org/AnalysesList/analyses.json',
+        'url_template': '{0}',
+        'description': 'CheckMATE analysis',
+        'subscribe_user_id': 6977
+    },
+    'HackAnalysis': {
+        'endpoint_url': 'https://goodsell.pages.in2p3.fr/hackanalysis/json/HackAnalysis_HEPData.json',
+        'url_template': '{0}',
+        'description': 'HackAnalysis analysis',
+        'subscribe_user_id': 7919,
+        'license': {
+            'name': 'gnu-gpl-3.0',
+            'url': 'https://www.gnu.org/licenses/gpl-3.0.html'
+        },
+    },
+    'Combine': {
+        'endpoint_url': 'https://cms-public-likelihoods-list.web.cern.ch/artifacts/output.json',
+        'url_template': 'https://doi.org/{0}',
+        'description': 'Statistical models',
+        'license': {
+            'name': 'cc-by-4.0',
+            'url': 'https://creativecommons.org/licenses/by/4.0'
+         },
     },
     #'ufo': {},
     #'xfitter': {},
@@ -326,6 +368,7 @@ ANALYSES_ENDPOINTS = {
 }
 
 HISTFACTORY_FILE_TYPE = 'HistFactory'
+NUISANCE_FILE_TYPE = 'ProSelecta'
 
 ADMIN_EMAIL = 'info@hepdata.net'
 SUBMISSION_FILE_NAME_PATTERN = 'HEPData-{}-v{}-yaml.zip'

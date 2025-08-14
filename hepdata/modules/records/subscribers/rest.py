@@ -34,13 +34,17 @@ def list_subscriptions_for_user():
 
 
 @blueprint.route('/subscribe/<int:recid>', methods=['POST'])
-@login_required
-def subscribe(recid):
+def subscribe(recid, user=None):
+    if not user:
+        user = current_user
+        if not current_user.is_authenticated:
+            return jsonify({"success": False, "status_code": 500})
+
     record_subscribers = get_or_create(db.session, Subscribers, publication_recid=recid)
 
     try:
-        if not current_user in record_subscribers.subscribers:
-            record_subscribers.subscribers.append(current_user)
+        if not user in record_subscribers.subscribers:
+            record_subscribers.subscribers.append(user)
 
         db.session.add(record_subscribers)
         db.session.commit()

@@ -5,7 +5,7 @@ services:
       context: .
       args:
         - "APP_ENVIRONMENT=local-web"
-        - "SAUCE_OS=${SAUCE_OS:-linux}"
+        - "SAUCE_OS=${SAUCE_OS:-linux.x86_64}"
     command: hepdata run -h 0.0.0.0 -p 5000 --debugger --reload
     ports:
     - "5000:5000"
@@ -18,13 +18,16 @@ services:
     - "APP_CELERY_RESULT_BACKEND=redis://cache:6379/2"
     - "APP_OPENSEARCH_HOST=os:9200"
     - "APP_SECRET_KEY=CHANGE_ME"
-    - "APP_SESSION_TYPE=redis"
-    - "APP_SESSION_REDIS_URL=redis://cache:6379/1"
+    - "APP_ACCOUNTS_SESSION_REDIS_URL=redis://cache:6379/1"
     - "APP_SQLALCHEMY_DATABASE_URI=postgresql://hepdata:hepdata@db/hepdata"
     - "SAUCE_USERNAME=${SAUCE_USERNAME}"
     - "SAUCE_ACCESS_KEY=${SAUCE_ACCESS_KEY}"
+    - "SAUCE_REGION=eu-central"
+    - "SAUCE_TUNNEL_NAME=${SAUCE_USERNAME}_tunnel_name"
+    - "SAUCE_PROXY_LOCALHOST=direct"
     - "FLASK_ENV=development"
     - "FLASK_DEBUG=1"
+    - "SQLALCHEMY_WARN_20=1"
     read_only: false
     volumes:
     - ".:/code"
@@ -38,8 +41,7 @@ services:
     - "APP_CELERY_RESULT_BACKEND=redis://cache:6379/2"
     - "APP_OPENSEARCH_HOST=os:9200"
     - "APP_SECRET_KEY=CHANGE_ME"
-    - "APP_SESSION_TYPE=redis"
-    - "APP_SESSION_REDIS_URL=redis://cache:6379/1"
+    - "APP_ACCOUNTS_SESSION_REDIS_URL=redis://cache:6379/1"
     - "APP_SQLALCHEMY_DATABASE_URI=postgresql://hepdata:hepdata@db/hepdata"
     read_only: false
     volumes:
@@ -61,7 +63,7 @@ services:
     - "5432:5432"
     read_only: false
   os:
-    image: opensearchproject/opensearch:2.11.0
+    image: opensearchproject/opensearch:2.18.0
     read_only: false
     environment:
       - node.name=os01
@@ -69,6 +71,7 @@ services:
       - cluster.initial_master_nodes=os01
       - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m"
       - plugins.security.disabled=true
+      - "OPENSEARCH_INITIAL_ADMIN_PASSWORD=${OPENSEARCH_INITIAL_ADMIN_PASSWORD}"
     ports:
     - "9200:9200"
     - "9600:9600"

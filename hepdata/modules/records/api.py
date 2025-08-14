@@ -152,8 +152,7 @@ def format_submission(recid, record, version, version_count, hepdata_submission,
 
         ctx['record']['last_updated'] = hepdata_submission.last_updated
         ctx['record']['hepdata_doi'] = "{0}".format(hepdata_submission.doi)
-
-        if version_count > 1:
+        if hepdata_submission.doi:
             ctx['record']['hepdata_doi'] += ".v{0}".format(ctx['version'])
 
         ctx['recid'] = recid
@@ -315,16 +314,19 @@ def should_send_json_ld(request):
 def get_commit_message(ctx, recid):
     """
     Returns a commit message for the current version if present.
+    Will return the highest ID of a version-recid pairing.
 
     :param ctx:
     :param recid:
     """
     try:
+        # Select the most recent commit (greatest ID)
         commit_message_query = RecordVersionCommitMessage.query \
-            .filter_by(version=ctx["version"], recid=recid)
+            .filter_by(version=ctx["version"], recid=recid) \
+            .order_by(RecordVersionCommitMessage.id.desc())
 
         if commit_message_query.count() > 0:
-            commit_message = commit_message_query.one()
+            commit_message = commit_message_query.first()
             ctx["revision_message"] = {
                 'version': commit_message.version,
                 'message': commit_message.message}
@@ -829,7 +831,8 @@ def check_and_convert_from_oldhepdata(input_directory, id, timestamp):
         successful = convert_oldhepdata_to_yaml(oldhepdata_found[1], converted_temp_path)
         if not successful:
             # Parse error message from title of HTML file, removing part of string after final "//".
-            soup = BeautifulSoup(open(converted_temp_path), "lxml")
+            with open(converted_temp_path) as converted_temp_file:
+                soup = BeautifulSoup(converted_temp_file, "html.parser")
             errormsg = soup.title.string.rsplit("//", 1)[0]
 
     except Error as error:  # hepdata_converter_ws_client.Error
@@ -1063,8 +1066,7 @@ def get_related_hepsubmissions(submission):
     related_submissions = []
     for related in submission.related_recids:
         data_submission = get_latest_hepsubmission(
-            publication_recid=related.related_recid,
-            overall_status='finished'
+            publication_recid=related.related_recid
         )
         if data_submission:
             related_submissions.append(data_submission)
@@ -1080,17 +1082,31 @@ def get_related_to_this_hepsubmissions(submission):
 
     :return: [list] List containing related records.
     """
-    related_sub_ids = (
+
+    # We use a subquery to get the max version/recid pairing
+    subquery = (
         HEPSubmission.query
-            .join(RelatedRecid, RelatedRecid.this_recid == HEPSubmission.publication_recid)
-            .filter(RelatedRecid.related_recid == submission.publication_recid)
-            .filter(HEPSubmission.overall_status == 'finished')  # Only finished submissions
-            .with_entities(HEPSubmission.publication_recid)
-            .all()
+        .with_entities(
+            HEPSubmission.publication_recid,
+            func.max(HEPSubmission.version).label('max_version')
+        )
+        .group_by(HEPSubmission.publication_recid)
+        .subquery()
     )
 
-    # Filter out the non-unique submission results returned by different versions
-    unique_recids =  set(sub[0] for sub in related_sub_ids)
+    # Use result of subquery to join and select the max submission where related
+    related_submissions = (
+        HEPSubmission.query
+        .join(subquery, (HEPSubmission.publication_recid == subquery.c.publication_recid) & (
+                HEPSubmission.version == subquery.c.max_version))
+        .join(RelatedRecid, RelatedRecid.this_recid == HEPSubmission.publication_recid)
+        .filter(RelatedRecid.related_recid == submission.publication_recid)
+        .all()
+    )
+
+    # Set comprehension to determine unique IDs where the max version object is 'finished'
+    unique_recids = {sub.publication_recid for sub in related_submissions if sub.overall_status == 'finished'}
+
     return [get_latest_hepsubmission(publication_recid=recid, overall_status='finished') for recid in unique_recids]
 
 
@@ -1098,7 +1114,6 @@ def get_related_datasubmissions(data_submission):
     """
     Queries the database for all DataSubmission objects contained in
     this object's related DOI list.
-    Only returns an object if associated HEPSubmission status is 'finished'
     (All submissions this one is relating to)
 
     :param data_submission: The datasubmission object to find related data for.
@@ -1108,10 +1123,9 @@ def get_related_datasubmissions(data_submission):
     for related in data_submission.related_tables:
         submission = (
             DataSubmission.query
-                .filter(DataSubmission.doi == related.related_doi)
-                .join(HEPSubmission, HEPSubmission.publication_recid == DataSubmission.publication_recid)
-                .filter(HEPSubmission.overall_status == 'finished')
-                .first()
+            .filter(DataSubmission.doi == related.related_doi)
+            .join(HEPSubmission, HEPSubmission.publication_recid == DataSubmission.publication_recid)
+            .first()
         )
         if submission:
             related_submissions.append(submission)
@@ -1122,19 +1136,24 @@ def get_related_to_this_datasubmissions(data_submission):
     """
         Get the DataSubmission Objects with a RelatedTable entry
         where this doi is referred to in related_doi.
+        Only returns where associated HEPSubmission object is `finished`,
+        OR where it is within the same HEPSubmission
 
         :param data_submission: The datasubmission to find the related entries for.
         :return: [List] List of DataSubmission objects.
     """
     related_submissions = (
         DataSubmission.query
-            .join(RelatedTable, RelatedTable.table_doi == DataSubmission.doi)
-            .join(HEPSubmission,(HEPSubmission.publication_recid == DataSubmission.publication_recid))
-            .group_by(DataSubmission.id)
-            .having(func.max(HEPSubmission.version) == DataSubmission.version)
-            .filter(RelatedTable.related_doi == data_submission.doi)
-            .filter(HEPSubmission.overall_status == 'finished')
-            .all()
+        .join(RelatedTable, RelatedTable.table_doi == DataSubmission.doi)
+        .join(HEPSubmission, (HEPSubmission.publication_recid == DataSubmission.publication_recid))
+        .group_by(DataSubmission.id)
+        .having(func.max(HEPSubmission.version) == DataSubmission.version)
+        .filter(RelatedTable.related_doi == data_submission.doi)
+        # If finished, OR is part of the same submission
+        .filter(
+            (HEPSubmission.overall_status == 'finished') | (
+                HEPSubmission.publication_recid == data_submission.publication_recid))
+        .all()
     )
     return related_submissions
 
