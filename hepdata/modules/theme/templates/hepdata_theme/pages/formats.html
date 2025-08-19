@@ -109,6 +109,7 @@
                     toolkit. Again, the appropriate <a href="https://yoda.hepforge.org" target="_blank" style="text-decoration: underline">YODA</a> object
                     is written according to the number of independent variables in a table. The default <code>yoda</code> output is now
                     in the YODA2 format, but there is still an option <code>yoda1</code> to output the legacy YODA1 format.
+                    Alternatively, the output can be given in the <code>yoda.h5</code> format, designed for parallel computing.
                   </li>
                 </ul>
                 <p>
@@ -123,6 +124,7 @@
                   <li><code>?format=root</code></li>
                   <li><code>?format=yoda</code></li>
                   <li><code>?format=yoda1</code></li>
+                  <li><code>?format=yoda.h5</code></li>
                 </ul>
                 <p>Optional parameters can also be added (separated by a <code>&</code> symbol):</p>
                 <ul>
@@ -140,7 +142,7 @@
                     the data tables from the response.
                   </li>
                   <li>
-                    <code>rivet=ALICE_2016_I1419244</code>: when using <code>format=yoda</code> or <code>format=yoda1</code>, specify the desired
+                    <code>rivet=ALICE_2016_I1419244</code>: when using <code>format=yoda</code>, <code>format=yoda1</code>, or <code>format=yoda.h5</code>, specify the desired
                     Rivet analysis name to be written in the YODA files if it does not match the automatically generated name.
                   </li>
                 </ul>

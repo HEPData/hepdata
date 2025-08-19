@@ -94,6 +94,18 @@ def test_home(app, live_server, env_browser, e2e_identifiers):
     # Close download dropdown by clicking again
     browser.find_element(By.ID, 'dLabel').click()
 
+    # Access the JSON format of the record
+    json_url = browser.find_element(By.ID, 'jsonLabel').get_attribute('href')
+    assert json_url.endswith('?format=json')
+    response = requests.get(json_url)
+    assert response.status_code == 200
+    json_data = response.json()
+    assert len(json_data['data_tables']) == 14
+    response = requests.get(json_url + '&light=true')
+    assert response.status_code == 200
+    json_data = response.json()
+    assert 'data_tables' not in json_data
+
     # Go back to homepage and click on 1st link - should be record with resources
     browser.back()
     latest_item = browser.find_elements(By.CSS_SELECTOR, '.latest-record .title')[0]
@@ -269,7 +281,8 @@ def test_accept_headers(app, live_server, e2e_identifiers):
         {'@type': 'DataDownload', 'contentUrl': 'http://localhost:5000/download/table/1/root', 'description': 'ROOT file', 'encodingFormat': 'https://root.cern'},
         {'@type': 'DataDownload', 'contentUrl': 'http://localhost:5000/download/table/1/yaml', 'description': 'YAML file', 'encodingFormat': 'https://yaml.org'},
         {'@type': 'DataDownload', 'contentUrl': 'http://localhost:5000/download/table/1/csv', 'description': 'CSV file', 'encodingFormat': 'text/csv'},
-        {'@type': 'DataDownload', 'contentUrl': 'http://localhost:5000/download/table/1/yoda', 'description': 'YODA file', 'encodingFormat': 'https://yoda.hepforge.org'}
+        {'@type': 'DataDownload', 'contentUrl': 'http://localhost:5000/download/table/1/yoda', 'description': 'YODA file', 'encodingFormat': 'https://yoda.hepforge.org'},
+        {'@type': 'DataDownload', 'contentUrl': 'http://localhost:5000/download/table/1/yoda.h5', 'description': 'YODA.H5 file', 'encodingFormat': 'https://yoda.hepforge.org'}
     ]
 
     # Data resource landing page (use last submission, which has resources)
