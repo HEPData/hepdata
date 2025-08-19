@@ -24,7 +24,7 @@
 
 from flask import current_app
 from collections import OrderedDict
-import re
+from hepdata.config import CFG_SUPPORTED_FORMATS
 
 from hepdata.utils.miscellaneous import sanitize_html
 
@@ -312,8 +312,9 @@ def process_ctx(ctx, light_mode=False):
                 _cleaned_table_name = data_table['name'].replace('%', '%25').replace('\\', '%5C')
 
                 data_table['data'] = {}
-                for file_format in ['json', 'root', 'csv', 'yoda', 'yoda1', 'yoda.h5', 'yaml']:
-                    data_table['data'][file_format] = '{0}/download/table/{1}/{2}/{3}'.format(
-                        site_url, _recid, _cleaned_table_name, file_format)
+                for file_format in ['json'] + CFG_SUPPORTED_FORMATS:
+                    if file_format != 'original':
+                        data_table['data'][file_format] = '{0}/download/table/{1}/{2}/{3}'.format(
+                            site_url, _recid, _cleaned_table_name, file_format)
 
     return ctx
