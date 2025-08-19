@@ -94,6 +94,18 @@ def test_home(app, live_server, env_browser, e2e_identifiers):
     # Close download dropdown by clicking again
     browser.find_element(By.ID, 'dLabel').click()
 
+    # Access the JSON format of the record
+    json_url = browser.find_element(By.ID, 'jsonLabel').get_attribute('href')
+    assert json_url.endswith('?format=json')
+    response = requests.get(json_url)
+    assert response.status_code == 200
+    json_data = response.json()
+    assert len(json_data['data_tables']) == 14
+    response = requests.get(json_url + '&light=true')
+    assert response.status_code == 200
+    json_data = response.json()
+    assert 'data_tables' not in json_data
+
     # Go back to homepage and click on 1st link - should be record with resources
     browser.back()
     latest_item = browser.find_elements(By.CSS_SELECTOR, '.latest-record .title')[0]
