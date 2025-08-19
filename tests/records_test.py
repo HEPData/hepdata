@@ -923,7 +923,7 @@ def test_get_json_ld(app, load_default_data, identifiers):
         {
             '@type': 'DataDownload',
             'contentUrl': f'http://localhost:5000/download/table/2/yoda.h5',
-            'description': 'YODA-H5 file',
+            'description': 'YODA.H5 file',
             'encodingFormat': 'https://yoda.hepforge.org'
         }
     ]

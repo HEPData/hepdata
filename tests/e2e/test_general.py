@@ -270,7 +270,7 @@ def test_accept_headers(app, live_server, e2e_identifiers):
         {'@type': 'DataDownload', 'contentUrl': 'http://localhost:5000/download/table/1/yaml', 'description': 'YAML file', 'encodingFormat': 'https://yaml.org'},
         {'@type': 'DataDownload', 'contentUrl': 'http://localhost:5000/download/table/1/csv', 'description': 'CSV file', 'encodingFormat': 'text/csv'},
         {'@type': 'DataDownload', 'contentUrl': 'http://localhost:5000/download/table/1/yoda', 'description': 'YODA file', 'encodingFormat': 'https://yoda.hepforge.org'},
-        {'@type': 'DataDownload', 'contentUrl': 'http://localhost:5000/download/table/1/yoda.h5', 'description': 'YODA-H5 file', 'encodingFormat': 'https://yoda.hepforge.org'}
+        {'@type': 'DataDownload', 'contentUrl': 'http://localhost:5000/download/table/1/yoda.h5', 'description': 'YODA.H5 file', 'encodingFormat': 'https://yoda.hepforge.org'}
     ]
 
     # Data resource landing page (use last submission, which has resources)
