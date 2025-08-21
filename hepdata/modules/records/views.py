@@ -33,7 +33,7 @@ import os
 from dateutil import parser
 from invenio_accounts.models import User
 from flask_login import login_required, login_user
-from flask import Blueprint, send_file, abort, redirect
+from flask import Blueprint, send_file, abort, redirect, url_for
 from flask_security.utils import verify_password
 from sqlalchemy import or_, func
 from sqlalchemy.orm import joinedload
@@ -104,31 +104,21 @@ def sandbox_display(id):
             if output_format == 'html':
                 return render_template('hepdata_records/sandbox.html', ctx=ctx)
             elif 'table' in request.args:
-                if output_format.startswith('yoda') and 'rivet' in request.args:
-                    redirect_url = '/download/table/{0}/{1}/{2}/{3}/{4}'.format(
-                        id,
-                        request.args['table'].replace('%', '%25').replace('\\', '%5C'),
-                        1, output_format, request.args['rivet'])
-                else:
-                    redirect_url = '/download/table/{0}/{1}/{2}'.format(
-                        id,
-                        request.args['table'].replace('%', '%25').replace('\\', '%5C'),
-                        output_format)
-                if output_format.startswith('yoda') and 'qualifiers' in request.args:
-                    redirect_url += '?qualifiers={0}'.format(request.args['qualifiers'])
-                return redirect(redirect_url)
+                return redirect(
+                    url_for('converter.download_data_table_by_recid', recid=id,
+                            table_name=request.args['table'].replace('%', '%25').replace('\\', '%5C'),
+                            version=1, file_format=output_format,
+                            rivet=request.args.get('rivet', None),
+                            qualifiers=request.args.get('qualifiers', None)))
             elif output_format == 'json':
                 ctx = process_ctx(ctx, light_mode)
                 return jsonify(ctx)
             else:
-                if output_format.startswith('yoda') and 'rivet' in request.args:
-                    redirect_url = '/download/submission/{0}/{1}/{2}/{3}'.format(
-                    id, 1, output_format, request.args['rivet'])
-                else:
-                    redirect_url = '/download/submission/{0}/{1}'.format(id, output_format)
-                if output_format.startswith('yoda') and 'qualifiers' in request.args:
-                    redirect_url += '?qualifiers={0}'.format(request.args['qualifiers'])
-                return redirect(redirect_url)
+                return redirect(
+                    url_for('converter.download_submission_with_recid',
+                            recid=id, version=1, file_format=output_format,
+                            rivet=request.args.get('rivet', None),
+                            qualifiers=request.args.get('qualifiers', None)))
     else:
         return render_template('hepdata_records/error_page.html', recid=None,
                                header_message="Sandbox record not found",
