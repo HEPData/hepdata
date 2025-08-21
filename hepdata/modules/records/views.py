@@ -105,23 +105,30 @@ def sandbox_display(id):
                 return render_template('hepdata_records/sandbox.html', ctx=ctx)
             elif 'table' in request.args:
                 if output_format.startswith('yoda') and 'rivet' in request.args:
-                    return redirect('/download/table/{0}/{1}/{2}/{3}/{4}'.format(
+                    redirect_url = '/download/table/{0}/{1}/{2}/{3}/{4}'.format(
                         id,
                         request.args['table'].replace('%', '%25').replace('\\', '%5C'),
-                        1, output_format, request.args['rivet']))
+                        1, output_format, request.args['rivet'])
                 else:
-                    return redirect('/download/table/{0}/{1}/{2}'.format(
+                    redirect_url = '/download/table/{0}/{1}/{2}'.format(
                         id,
                         request.args['table'].replace('%', '%25').replace('\\', '%5C'),
-                        output_format))
+                        output_format)
+                if output_format.startswith('yoda') and 'qualifiers' in request.args:
+                    redirect_url += '?qualifiers={0}'.format(request.args['qualifiers'])
+                return redirect(redirect_url)
             elif output_format == 'json':
                 ctx = process_ctx(ctx, light_mode)
                 return jsonify(ctx)
-            elif output_format.startswith('yoda') and 'rivet' in request.args:
-                return redirect('/download/submission/{0}/{1}/{2}/{3}'.format(
-                    id, 1, output_format, request.args['rivet']))
             else:
-                return redirect('/download/submission/{0}/{1}'.format(id, output_format))
+                if output_format.startswith('yoda') and 'rivet' in request.args:
+                    redirect_url = '/download/submission/{0}/{1}/{2}/{3}'.format(
+                    id, 1, output_format, request.args['rivet'])
+                else:
+                    redirect_url = '/download/submission/{0}/{1}'.format(id, output_format)
+                if output_format.startswith('yoda') and 'qualifiers' in request.args:
+                    redirect_url += '?qualifiers={0}'.format(request.args['qualifiers'])
+                return redirect(redirect_url)
     else:
         return render_template('hepdata_records/error_page.html', recid=None,
                                header_message="Sandbox record not found",

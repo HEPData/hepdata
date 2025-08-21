@@ -394,6 +394,8 @@ def render_record(recid, record, version, output_format, light_mode=False):
                 redirect_url_after_login += '%26table%3D{0}'.format(request.args['table'])
             if output_format.startswith('yoda') and 'rivet' in request.args:
                 redirect_url_after_login += '%26rivet%3D{0}'.format(request.args['rivet'])
+            if output_format.startswith('yoda') and 'qualifiers' in request.args:
+                redirect_url_after_login += '%26qualifiers%3D{0}'.format(request.args['qualifiers'])
             return redirect('/login/?next={0}'.format(redirect_url_after_login))
         else:
             abort(403)
@@ -432,19 +434,27 @@ def render_record(recid, record, version, output_format, light_mode=False):
                     ctx = process_ctx(ctx, light_mode)
                     return jsonify(ctx)
                 elif output_format.startswith('yoda') and 'rivet' in request.args:
-                    return redirect('/download/submission/{0}/{1}/{2}/{3}'.format(recid, version, output_format,
-                                                                              request.args['rivet']))
+                    redirect_url = '/download/submission/{0}/{1}/{2}/{3}'.format(
+                        recid, version, output_format,request.args['rivet'])
                 else:
-                    return redirect('/download/submission/{0}/{1}/{2}'.format(recid, version, output_format))
+                    redirect_url = '/download/submission/{0}/{1}/{2}'.format(
+                        recid, version, output_format)
+                if output_format.startswith('yoda') and 'qualifiers' in request.args:
+                    redirect_url += '?qualifiers={0}'.format(request.args['qualifiers'])
+                return redirect(redirect_url)
             else:
                 file_identifier = 'ins{}'.format(hepdata_submission.inspire_id) if hepdata_submission.inspire_id else recid
                 if output_format.startswith('yoda') and 'rivet' in request.args:
-                    return redirect('/download/table/{0}/{1}/{2}/{3}/{4}'.format(
-                        file_identifier, request.args['table'].replace('%', '%25').replace('\\', '%5C'), version, output_format,
-                        request.args['rivet']))
+                    redirect_url = '/download/table/{0}/{1}/{2}/{3}/{4}'.format(
+                        file_identifier, request.args['table'].replace('%', '%25').replace('\\', '%5C'),
+                        version, output_format, request.args['rivet'])
                 else:
-                    return redirect('/download/table/{0}/{1}/{2}/{3}'.format(
-                        file_identifier, request.args['table'].replace('%', '%25').replace('\\', '%5C'), version, output_format))
+                    redirect_url = '/download/table/{0}/{1}/{2}/{3}'.format(
+                        file_identifier, request.args['table'].replace('%', '%25').replace('\\', '%5C'),
+                        version, output_format)
+                if output_format.startswith('yoda') and 'qualifiers' in request.args:
+                    redirect_url += '?qualifiers={0}'.format(request.args['qualifiers'])
+                return redirect(redirect_url)
         else:
             abort(404)
 
@@ -482,12 +492,16 @@ def render_record(recid, record, version, output_format, light_mode=False):
                 return render_template('hepdata_records/related_record.html', ctx=ctx)
 
             elif output_format.startswith('yoda') and 'rivet' in request.args:
-                return redirect('/download/table/{0}/{1}/{2}/{3}/{4}'.format(
-                    publication_recid, ctx['table_name'].replace('%', '%25').replace('\\', '%5C'), datasubmission.version, output_format,
-                    request.args['rivet']))
+                redirect_url = '/download/table/{0}/{1}/{2}/{3}/{4}'.format(
+                    publication_recid, ctx['table_name'].replace('%', '%25').replace('\\', '%5C'),
+                    datasubmission.version, output_format, request.args['rivet'])
             else:
-                return redirect('/download/table/{0}/{1}/{2}/{3}'.format(
-                    publication_recid, ctx['table_name'].replace('%', '%25').replace('\\', '%5C'), datasubmission.version, output_format))
+                redirect_url = '/download/table/{0}/{1}/{2}/{3}'.format(
+                    publication_recid, ctx['table_name'].replace('%', '%25').replace('\\', '%5C'),
+                    datasubmission.version, output_format)
+            if output_format.startswith('yoda') and 'qualifiers' in request.args:
+                redirect_url += '?qualifiers={0}'.format(request.args['qualifiers'])
+            return redirect(redirect_url)
 
         except Exception as e:
             abort(404)
