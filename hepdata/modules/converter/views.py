@@ -27,7 +27,7 @@ import shutil
 import tempfile
 
 from flask import Blueprint, send_file, render_template, \
-    current_app, redirect, abort
+    current_app, redirect, abort, request
 from hepdata.config import CFG_CONVERTER_URL, CFG_SUPPORTED_FORMATS, CFG_CONVERTER_TIMEOUT
 
 from hepdata_converter_ws_client import convert, Error
@@ -110,7 +110,9 @@ def download_submission_with_inspire_id(*args, **kwargs):
             description="A submission with Inspire ID {0} and version {1} does not exist".format(inspire_id, version)
         )
 
-    return download_submission(submission, kwargs.pop('file_format'), rivet_analysis_name=kwargs.pop('rivet', ''))
+    return download_submission(submission, kwargs.pop('file_format'),
+                               rivet_analysis_name=kwargs.pop('rivet', ''),
+                               yoda_keep_qualifiers=bool(request.args.get('qualifiers', False)))
 
 
 @blueprint.route(f'/submission/<int:recid>/<any({FORMATS}):file_format>')
@@ -151,10 +153,13 @@ def download_submission_with_recid(*args, **kwargs):
             description="A submission with record ID {0} and version {1} does not exist".format(recid, version)
         )
 
-    return download_submission(submission, kwargs.pop('file_format'), rivet_analysis_name=kwargs.pop('rivet', ''))
+    return download_submission(submission, kwargs.pop('file_format'),
+                               rivet_analysis_name=kwargs.pop('rivet', ''),
+                               yoda_keep_qualifiers=bool(request.args.get('qualifiers', False)))
 
 
-def download_submission(submission, file_format, offline=False, force=False, rivet_analysis_name=''):
+def download_submission(submission, file_format, offline=False, force=False,
+                        rivet_analysis_name='', yoda_keep_qualifiers=False):
     """
     Gets the submission file and either serves it back directly from YAML, or converts it
     for other formats.
@@ -164,6 +169,7 @@ def download_submission(submission, file_format, offline=False, force=False, riv
     :param offline: offline creation of the conversion when a record is finalised
     :param force: force recreation of the conversion
     :param rivet_analysis_name: Rivet analysis name to override default written in YODA export
+    :param yoda_keep_qualifiers: whether to keep qualifiers in YODA export
     :return: display_error or send_file depending on success of conversion
     """
     version = submission.version
@@ -197,7 +203,7 @@ def download_submission(submission, file_format, offline=False, force=False, riv
     if not os.path.exists(converted_dir):
         os.makedirs(converted_dir, exist_ok=True)
 
-    if file_format.startswith('yoda') and rivet_analysis_name:
+    if file_format.startswith('yoda') and (rivet_analysis_name or yoda_keep_qualifiers):
         # Don't store in converted_dir since rivet_analysis_name might possibly change between calls.
         output_path = os.path.join(current_app.config['CFG_TMPDIR'], output_file)
     else:
@@ -236,6 +242,8 @@ def download_submission(submission, file_format, offline=False, force=False, riv
             rivet_analysis_name = guess_rivet_analysis_name(submission)
         if rivet_analysis_name:
             converter_options['rivet_analysis_name'] = rivet_analysis_name
+        if yoda_keep_qualifiers:
+            converter_options['yoda_keep_qualifiers'] = True
 
     try:
         converted_file = convert_zip_archive(data_filepath, output_path, converter_options)
@@ -321,7 +329,8 @@ def download_data_table_by_inspire_id(*args, **kwargs):
 
     return download_datatable(datasubmission, kwargs.pop('file_format'),
                               submission_id='ins{0}'.format(inspire_id), table_name=datasubmission.name,
-                              rivet_analysis_name=rivet)
+                              rivet_analysis_name=rivet,
+                              yoda_keep_qualifiers=bool(request.args.get('qualifiers', False)))
 
 
 @blueprint.route(f'/table/<int:recid>/<path:table_name>/<any({FORMATS}):file_format>')
@@ -380,7 +389,8 @@ def download_data_table_by_recid(*args, **kwargs):
 
     return download_datatable(datasubmission, kwargs.pop('file_format'),
                               submission_id='{0}'.format(recid), table_name=datasubmission.name,
-                              rivet_analysis_name=rivet)
+                              rivet_analysis_name=rivet,
+                              yoda_keep_qualifiers=bool(request.args.get('qualifiers', False)))
 
 
 @blueprint.route(f'/table/<int:data_id>/<any({FORMATS}):file_format>')
@@ -455,6 +465,9 @@ def download_datatable(datasubmission, file_format, *args, **kwargs):
             rivet_analysis_name = guess_rivet_analysis_name(hepsubmission)
         if rivet_analysis_name:
             options['rivet_analysis_name'] = rivet_analysis_name
+        yoda_keep_qualifiers = kwargs.pop('yoda_keep_qualifiers', False)
+        if yoda_keep_qualifiers:
+            options['yoda_keep_qualifiers'] = True
 
     try:
         successful = convert(
