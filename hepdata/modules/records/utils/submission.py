@@ -43,9 +43,10 @@ from hepdata.modules.converter.tasks import convert_and_store
 from hepdata.modules.email.api import send_finalised_email
 from hepdata.modules.permissions.models import SubmissionParticipant
 from hepdata.modules.records.utils.workflow import create_record
-from hepdata.modules.submission.api import get_latest_hepsubmission
+from hepdata.modules.submission.api import get_latest_hepsubmission, get_or_create_submission_observer, \
+    delete_submission_observer
 from hepdata.modules.submission.models import DataSubmission, DataReview, \
-    DataResource, Keyword, RelatedTable, RelatedRecid, HEPSubmission, RecordVersionCommitMessage
+    DataResource, Keyword, RelatedTable, RelatedRecid, HEPSubmission, RecordVersionCommitMessage, SubmissionObserver
 from hepdata.modules.records.utils.common import \
     get_license, infer_file_type, get_record_by_id, contains_accepted_url
 from hepdata.modules.records.utils.common import get_or_create
@@ -61,7 +62,6 @@ from invenio_pidstore.errors import PIDDoesNotExistError
 import os
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.exc import SQLAlchemyError
-import yaml
 from yaml import CSafeLoader as Loader
 
 def construct_yaml_str(self, node):
@@ -86,6 +86,8 @@ def remove_submission(record_id, version=1):
     hepdata_submissions = HEPSubmission.query.filter_by(
         publication_recid=record_id, version=version).all()
 
+    # Delete any existing access key
+    [SubmissionObserver.query.filter_by(publication_recid=sub.id).delete() for sub in hepdata_submissions]
     try:
         try:
             for hepdata_submission in hepdata_submissions:
@@ -625,11 +627,16 @@ def get_or_create_hepsubmission(recid, coordinator=1, status="todo"):
         hepsubmission = HEPSubmission(publication_recid=recid,
                                       coordinator=coordinator,
                                       overall_status=status)
-
+        # Commit so that the submission exists in the database.
         db.session.add(hepsubmission)
         db.session.commit()
 
+        # Create a new observer key here
+        if status == "todo":
+            get_or_create_submission_observer(hepsubmission.publication_recid, regenerate=True)
+
     return hepsubmission
+
 
 
 def create_data_review(data_recid, publication_recid, version=1):
@@ -682,6 +689,8 @@ def unload_submission(record_id, version=1):
             print("Removed publication {0} from index".format(record_id))
         except NotFoundError as nfe:
             print(nfe)
+
+    delete_submission_observer(record_id)
 
     print('Finished unloading record {0} version {1}.'.format(record_id, version))
 
@@ -780,6 +789,9 @@ def do_finalise(recid, publication_record=None, force_finalise=False,
             hep_submission.inspire_id = record['inspire_id']
             hep_submission.overall_status = "finished"
             db.session.add(hep_submission)
+
+            # Clear any existing SubmissionObserver entry from the database
+            delete_submission_observer(hep_submission.publication_recid)
 
             db.session.commit()
 
