@@ -440,12 +440,22 @@ def render_record(recid, record, version, output_format, light_mode=False):
                                 rivet=request.args.get('rivet', None),
                                 qualifiers=request.args.get('qualifiers', None)))
             else:
-                return redirect(
-                    url_for('converter.download_data_table_by_recid', recid=recid,
-                            table_name=request.args['table'].replace('%', '%25').replace('\\', '%5C'),
-                            version=version, file_format=output_format,
-                            rivet=request.args.get('rivet', None),
-                            qualifiers=request.args.get('qualifiers', None)))
+                table_name = request.args['table'].replace('%', '%25').replace('\\', '%5C')
+                if hepdata_submission.inspire_id:
+                    return redirect(
+                        url_for('converter.download_data_table_by_inspire_id',
+                                inspire_id='ins{}'.format(hepdata_submission.inspire_id),
+                                table_name=table_name,
+                                version=version, file_format=output_format,
+                                rivet=request.args.get('rivet', None),
+                                qualifiers=request.args.get('qualifiers', None)))
+                else:
+                    return redirect(
+                        url_for('converter.download_data_table_by_recid', recid=recid,
+                                table_name=table_name,
+                                version=version, file_format=output_format,
+                                rivet=request.args.get('rivet', None),
+                                qualifiers=request.args.get('qualifiers', None)))
         else:
             abort(404)
 
