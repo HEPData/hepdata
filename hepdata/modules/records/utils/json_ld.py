@@ -183,7 +183,8 @@ def _add_table_info(data, ctx, data_submission):
         'root': 'https://root.cern',
         'yaml': 'https://yaml.org',
         'csv': 'text/csv',
-        'yoda': 'https://yoda.hepforge.org'
+        'yoda': 'https://yoda.hepforge.org',
+        'yoda.h5': 'https://yoda.hepforge.org'
     }
     for download_type, format in download_types.items():
         data_downloads.append({
