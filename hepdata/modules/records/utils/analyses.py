@@ -43,10 +43,11 @@ from hepdata.modules.records.utils.common import get_license
 logging.basicConfig()
 log = logging.getLogger(__name__)
 
-def get_analyses_schema(schema_version="1.0.0"):
+def test_analyses_schema(json_file, schema_version="1.0.0"):
     schema_path = os.path.join("hepdata", "templates", "analyses_schema", schema_version, "analyses_schema.json")
     with open(schema_path) as f:
-        return json.load(f)
+        schema = json.load(f)
+    jsonschema.validate(instance=json_file, schema=schema)
 
 @shared_task
 def update_analyses(endpoint=None):
@@ -57,7 +58,6 @@ def update_analyses(endpoint=None):
 
     :param endpoint: either "rivet" or "MadAnalysis" or "SModelS" or "CheckMATE" or "HackAnalysis" or "Combine" or None (default) for all
     """
-    analyses_schema = get_analyses_schema()
 
     endpoints = current_app.config["ANALYSES_ENDPOINTS"]
     for analysis_endpoint in endpoints:
@@ -76,14 +76,13 @@ def update_analyses(endpoint=None):
                 analysis_resources = DataResource.query.filter_by(file_type=analysis_endpoint).all()
 
                 r_json = response.json()
-                try:
-                    jsonschema.validate(instance=r_json, schema=analyses_schema)
-                    new_json = True
-                except jsonschema.ValidationError:
-                    new_json = False
 
-                if new_json:
+                schema_version = "0.1.0" # this schema doesn't have "schema_version" field
+                if "schema_version" in r_json:
+                    schema_version = r_json["schema_version"]
+                test_analyses_schema(r_json, schema_version=schema_version)
 
+                if schema_version=="1.0.0":
                     # Check for missing analyses.
                     for ana in r_json["analyses"]:
                         inspire_id = ana["inspire_id"]
@@ -145,7 +144,7 @@ def update_analyses(endpoint=None):
                             log.debug("An analysis is available in {0} but with no equivalent in HEPData (ins{1}).".format(
                                 analysis_endpoint, inspire_id))
 
-                else: # old JSON file
+                else: # schema_version=="0.1.0"
                     analyses = r_json
 
                     # Check for missing analyses.
@@ -235,13 +234,13 @@ def update_analyses(endpoint=None):
                     user = get_user_from_id(endpoints[analysis_endpoint]["subscribe_user_id"])
                     if user:
                         # Check for missing analyses.
-                        if new_json:
+                        if schema_version=="1.0.0":
                             for ana in r_json["analyses"]:
                                 submission = get_latest_hepsubmission(inspire_id=str(ana["inspire_id"]), overall_status='finished')
                                 if submission and not is_current_user_subscribed_to_record(submission.publication_recid, user):
                                     subscribe(submission.publication_recid, user)
 
-                        else: # old JSON file
+                        else: # schema_version=="0.1.0"
                             for record in analyses:
                                 submission = get_latest_hepsubmission(inspire_id=record, overall_status='finished')
                                 if submission and not is_current_user_subscribed_to_record(submission.publication_recid, user):

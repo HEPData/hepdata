@@ -22,20 +22,16 @@
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 import json
-import jsonschema
 import os
 
-from hepdata.modules.records.utils.analyses import get_analyses_schema
+from hepdata.modules.records.utils.analyses import test_analyses_schema
 
-def test_analysis_json_schema():
+def test_analyses_json_schema():
   base_dir = os.path.dirname(os.path.realpath(__file__))
   test_file_name = os.path.join(base_dir, "test_data", "analyses_example.json")
 
-  schema = get_analyses_schema()
   with open(test_file_name) as f:
-    test = json.load(f)
-
-  jsonschema.validate(instance=test, schema=schema)
+    test_analyses_schema(json.load(f))
 
 if __name__ == "__main__":
-  test_analysis_json_schema()
+  test_analyses_json_schema()
