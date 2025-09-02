@@ -43,8 +43,8 @@ from hepdata.modules.records.utils.common import get_license
 logging.basicConfig()
 log = logging.getLogger(__name__)
 
-def get_analyses_schema():
-    schema_path = os.path.join("hepdata", "templates", "analyses_schema.json")
+def get_analyses_schema(schema_version="1.0.0"):
+    schema_path = os.path.join("hepdata", "templates", "analyses_schema", schema_version, "analyses_schema.json")
     with open(schema_path) as f:
         return json.load(f)
 
