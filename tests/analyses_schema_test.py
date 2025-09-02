@@ -24,14 +24,14 @@
 import json
 import os
 
-from hepdata.modules.records.utils.analyses import test_analyses_schema
+import hepdata.modules.records.utils.analyses as analyses
 
 def test_analyses_json_schema():
   base_dir = os.path.dirname(os.path.realpath(__file__))
   test_file_name = os.path.join(base_dir, "test_data", "analyses_example.json")
 
   with open(test_file_name) as f:
-    test_analyses_schema(json.load(f))
+    analyses.test_analyses_schema(json.load(f))
 
 if __name__ == "__main__":
   test_analyses_json_schema()
