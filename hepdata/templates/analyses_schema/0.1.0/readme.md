@@ -7,7 +7,7 @@ This readme details a JSON schema which is used by reinterpretation tools to com
 The standard is quite simple: the whole file is basically a dictionary where the keys are the different INSPIRE IDs for the analyses implemented in the tool and the values are lists of tool-internal names for the reimplentations, i.e.
 ```JSON
 {
-  "<INSPIRE ID>" : ["<implementation 1>", "<implementation 2>"]
+  "<INSPIRE ID>": ["<implementation 1>", "<implementation 2>"]
 }
 ```
 

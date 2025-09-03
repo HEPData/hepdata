@@ -53,11 +53,11 @@
     "analyses": {
       "description": "The analyses implemented in the tool",
       "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
       "items": {
         "type": "object",
-        "$ref": "#/$defs/Analysis",
-        "minItems": 1,
-        "uniqueItems": true
+        "$ref": "#/$defs/Analysis"
       }
     },
 
@@ -101,11 +101,11 @@
         "implementations":{
           "description": "The implementations of the analysis in the tool",
           "type": "array",
-          "item": {
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
             "type": "object",
-            "$ref": "#/$defs/Implementation",
-            "minItems": 1,
-            "uniqueItems": true
+            "$ref": "#/$defs/Implementation"
           }
         },
         "signature_type": {

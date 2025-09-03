@@ -73,7 +73,7 @@ These are however not standardised are not being being checked by the schema.
 A minimal example for an analyses JSON adhering to the standard looks like this:
 ```JSON
 {
-  "schema_version" : "1.0.0",
+  "schema_version": "1.0.0",
   "tool": "SModelS",
   "version": "3.0.0",
   "date_created": "2018-11-13T20:20:39+00:00",
@@ -81,12 +81,12 @@ A minimal example for an analyses JSON adhering to the standard looks like this:
   "url_templates": {
     "main_url": "https://github.com/SModelS/smodels-database-release/tree/main/{name}"
   },
-  "analyses" : [
+  "analyses": [
     {
       "inspire_id": 1795076,
       "implementations": [
         {
-          "name" : "ATLAS-EXOT-2018-48",
+          "name": "ATLAS-EXOT-2018-48",
         }
       ]
     }
