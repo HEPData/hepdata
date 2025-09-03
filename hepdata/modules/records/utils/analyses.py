@@ -114,8 +114,8 @@ def update_analyses(endpoint=None):
                                         file_description=r_json["implementations_description"]
                                     )
 
-                                    if "license" in r_json:
-                                        resource_license = get_license(r_json["license"])
+                                    if "implementations_license" in r_json:
+                                        resource_license = get_license(r_json["implementations_license"])
                                         new_resource.file_license = resource_license.id
 
                                     submission.resources.append(new_resource)
