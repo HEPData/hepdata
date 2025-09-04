@@ -82,61 +82,7 @@ def update_analyses(endpoint=None):
                     schema_version = r_json["schema_version"]
                 test_analyses_schema(r_json, schema_version=schema_version)
 
-                if schema_version=="1.0.0":
-                    # Check for missing analyses.
-                    for ana in r_json["analyses"]:
-                        inspire_id = str(ana["inspire_id"]) # TODO: make inspire_id an int in get_latest_hepsubmission
-                        submission = get_latest_hepsubmission(inspire_id=inspire_id, overall_status='finished')
-
-                        if submission:
-                            num_new_resources = 0
-
-                            for implementation in ana["implementations"]:
-                                _resource_url = r_json["url_templates"]["main_url"].format(**implementation)
-
-                                if not is_resource_added_to_submission(submission.publication_recid, submission.version,
-                                                                    _resource_url):
-
-                                    log.info('Adding {} analysis to ins{} with URL {}'.format(
-                                        analysis_endpoint, inspire_id, _resource_url)
-                                    )
-                                    new_resource = DataResource(
-                                        file_location=_resource_url,
-                                        file_type=analysis_endpoint,
-                                        file_description=r_json["implementations_description"]
-                                    )
-
-                                    if "implementations_license" in r_json:
-                                        resource_license = get_license(r_json["implementations_license"])
-                                        new_resource.file_license = resource_license.id
-
-                                    submission.resources.append(new_resource)
-                                    num_new_resources += 1
-
-                                else:
-
-                                    # Remove resources from 'analysis_resources' list.
-                                    resources = list(filter(lambda a: a.file_location == _resource_url, analysis_resources))
-                                    for resource in resources:
-                                        analysis_resources.remove(resource)
-
-                            if num_new_resources:
-
-                                try:
-                                    db.session.add(submission)
-                                    db.session.commit()
-                                    latest_submission = get_latest_hepsubmission(inspire_id=inspire_id)
-                                    if submission.version == latest_submission.version:
-                                        index_record_ids([submission.publication_recid])
-                                except Exception as e:
-                                    db.session.rollback()
-                                    log.error(e)
-
-                        else:
-                            log.debug("An analysis is available in {0} but with no equivalent in HEPData (ins{1}).".format(
-                                analysis_endpoint, inspire_id))
-
-                else: # schema_version=="0.1.0"
+                if schema_version=="0.1.0":
                     analyses = r_json
 
                     # Check for missing analyses.
@@ -192,6 +138,60 @@ def update_analyses(endpoint=None):
                             log.debug("An analysis is available in {0} but with no equivalent in HEPData (ins{1}).".format(
                                 analysis_endpoint, record))
 
+                else: # schema_version>="1.0.0"
+                    # Check for missing analyses.
+                    for ana in r_json["analyses"]:
+                        inspire_id = str(ana["inspire_id"]) # TODO: make inspire_id an int in get_latest_hepsubmission
+                        submission = get_latest_hepsubmission(inspire_id=inspire_id, overall_status='finished')
+
+                        if submission:
+                            num_new_resources = 0
+
+                            for implementation in ana["implementations"]:
+                                _resource_url = r_json["url_templates"]["main_url"].format(**implementation)
+
+                                if not is_resource_added_to_submission(submission.publication_recid, submission.version,
+                                                                    _resource_url):
+
+                                    log.info('Adding {} analysis to ins{} with URL {}'.format(
+                                        analysis_endpoint, inspire_id, _resource_url)
+                                    )
+                                    new_resource = DataResource(
+                                        file_location=_resource_url,
+                                        file_type=analysis_endpoint,
+                                        file_description=r_json["implementations_description"]
+                                    )
+
+                                    if "implementations_license" in r_json:
+                                        resource_license = get_license(r_json["implementations_license"])
+                                        new_resource.file_license = resource_license.id
+
+                                    submission.resources.append(new_resource)
+                                    num_new_resources += 1
+
+                                else:
+
+                                    # Remove resources from 'analysis_resources' list.
+                                    resources = list(filter(lambda a: a.file_location == _resource_url, analysis_resources))
+                                    for resource in resources:
+                                        analysis_resources.remove(resource)
+
+                            if num_new_resources:
+
+                                try:
+                                    db.session.add(submission)
+                                    db.session.commit()
+                                    latest_submission = get_latest_hepsubmission(inspire_id=inspire_id)
+                                    if submission.version == latest_submission.version:
+                                        index_record_ids([submission.publication_recid])
+                                except Exception as e:
+                                    db.session.rollback()
+                                    log.error(e)
+
+                        else:
+                            log.debug("An analysis is available in {0} but with no equivalent in HEPData (ins{1}).".format(
+                                analysis_endpoint, inspire_id))
+
                 if analysis_resources:
                     # Extra resources that were not found in the analyses JSON file.
                     # Need to delete extra resources then reindex affected submissions.
@@ -226,17 +226,18 @@ def update_analyses(endpoint=None):
                     user = get_user_from_id(endpoints[analysis_endpoint]["subscribe_user_id"])
                     if user:
                         # Check for missing analyses.
-                        if schema_version=="1.0.0":
+                        if schema_version=="0.1.0":
+                            for record in analyses:
+                                submission = get_latest_hepsubmission(inspire_id=record, overall_status='finished')
+                                if submission and not is_current_user_subscribed_to_record(submission.publication_recid, user):
+                                    subscribe(submission.publication_recid, user)
+
+                        else: # schema_version>="1.0.0"
                             for ana in r_json["analyses"]:
                                 submission = get_latest_hepsubmission(inspire_id=str(ana["inspire_id"]), overall_status='finished')
                                 if submission and not is_current_user_subscribed_to_record(submission.publication_recid, user):
                                     subscribe(submission.publication_recid, user)
 
-                        else: # schema_version=="0.1.0"
-                            for record in analyses:
-                                submission = get_latest_hepsubmission(inspire_id=record, overall_status='finished')
-                                if submission and not is_current_user_subscribed_to_record(submission.publication_recid, user):
-                                    subscribe(submission.publication_recid, user)
 
         else:
             log.debug("No endpoint url configured for {0}".format(analysis_endpoint))
