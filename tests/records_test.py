@@ -1075,8 +1075,9 @@ def test_update_analyses(app):
     db.session.commit()
     update_analyses('SModelS')
     analysis_resources = DataResource.query.filter_by(file_type='SModelS').all()
-    assert len(analysis_resources) == 1
-    assert analysis_resources[0].file_location == 'https://smodels.github.io/docs/ListOfAnalyses#ATLAS-EXOT-2018-06'
+    assert len(analysis_resources) == 2
+    assert analysis_resources[0].file_location == 'https://github.com/SModelS/smodels-database-release/tree/main/13TeV/ATLAS/ATLAS-EXOT-2018-06/'
+    assert analysis_resources[0].file_license == 'cc-by-4.0'
     submission = get_latest_hepsubmission(inspire_id='1847779', overall_status='finished')
     assert is_current_user_subscribed_to_record(submission.publication_recid, user)
 
