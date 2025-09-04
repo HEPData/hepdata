@@ -26,6 +26,47 @@ The following fields are required by the analyses JSON standard:
   It has to include the following fields:
   - **main_url** (`string`): the URL template for the main repository.
     Should contain e.g. a "{name}" placeholder for the analysis name.
+    Placeholders are retrieved from the "analyses/implementations" field and are not allowed to reference one another, i.e.
+    ```JSON
+    {
+      [...]
+      "url_templates": {
+          "main_url": "https://hepdata.net/{name}",
+      },
+      "analyses": [
+        {
+          [...]
+          "implementations": [
+            {
+              "name": "ANA1",
+              "path": "13TeV/EXP1"
+            }
+          ]
+        }
+      ]
+    }
+    ```
+    is allowed but
+    ```JSON
+    {
+      [...]
+      "url_templates": {
+          "main_url": "https://hepdata.net/{path}",
+      },
+      "analyses": [
+        {
+          [...]
+          "implementations": [
+            {
+              "name": "ANA1",
+              "path": "13TeV/EXP1/{name}"
+            }
+          ]
+        }
+      ]
+    }
+    ```
+    is not.
 - **analyses** (`array`): an array of analyses implemented in the tool.
   All entries have to be unique.
   Needs at least one entry.
@@ -37,6 +78,7 @@ The following fields are required by the analyses JSON standard:
     
     Each array item has to have the following fields:
     - **name** (`string`): the internal name of the implementation used to retrieve information.
+    Is used to fill placeholders for URLs.
 
 ### Additional standardised fields
 The following fields are included in the standard but not required:
@@ -49,6 +91,7 @@ The following fields are included in the standard but not required:
   - **pretty_name** (`string`): a pretty name for the analysis.
   - **implementations** (`array`): the implementations array can also have the following fields:
     - **path** (`string`): the path to the implementation in the tool.
+    Is used to fill placeholders for URLs but must not reference other fields for this implementation.
 - **implementations_license** (`dict`): a dictionary describing the license for the implementations of the analyses in the tool.
   Taken to be CC0 if not specified.
   
@@ -93,7 +136,7 @@ A minimal example for an analyses JSON adhering to the standard looks like this:
   ]
 }
 ```
-See [here](../../tests/test_data/analyses_example.json) for a more elaborate example.
+See [here](../../../../tests/test_data/analyses_example.json) for a more elaborate example.
 
 ## Testing an implementation
 

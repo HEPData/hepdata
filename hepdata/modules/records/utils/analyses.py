@@ -85,22 +85,14 @@ def update_analyses(endpoint=None):
                 if schema_version=="1.0.0":
                     # Check for missing analyses.
                     for ana in r_json["analyses"]:
-                        inspire_id = ana["inspire_id"]
-                        submission = get_latest_hepsubmission(inspire_id=str(inspire_id), overall_status='finished') # TODO: make inspire_id an int
+                        inspire_id = str(ana["inspire_id"]) # TODO: make inspire_id an int in get_latest_hepsubmission
+                        submission = get_latest_hepsubmission(inspire_id=inspire_id, overall_status='finished')
 
                         if submission:
                             num_new_resources = 0
 
                             for implementation in ana["implementations"]:
-                                ana_name = implementation["name"]
-                                ana_path = implementation["path"] if "path" in implementation else ""
-                                _resource_url = r_json["url_templates"]["main_url"]
-                                prev_url = None
-                                n_tries, max_tries = 0, 10
-                                while _resource_url!=prev_url and n_tries<max_tries:
-                                    prev_url = _resource_url
-                                    _resource_url = _resource_url.format(name=ana_name, path=ana_path)
-                                    n_tries += 1
+                                _resource_url = r_json["url_templates"]["main_url"].format(**implementation)
 
                                 if not is_resource_added_to_submission(submission.publication_recid, submission.version,
                                                                     _resource_url):

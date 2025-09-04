@@ -24,11 +24,11 @@
       "implementations": [
         {
           "name": "ATLAS-EXOT-2018-48",
-          "path": "13TeV/ATLAS/{name}/"
+          "path": "13TeV/ATLAS/ATLAS-EXOT-2018-48/"
         },
         {
           "name": "ATLAS-EXOT-2018-48b",
-          "path": "13TeV/ATLAS/{name}/"
+          "path": "13TeV/ATLAS/ATLAS-EXOT-2018-48/"
         }
       ]
     }
