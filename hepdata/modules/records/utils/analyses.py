@@ -226,7 +226,7 @@ def update_analyses(endpoint=None):
                     user = get_user_from_id(endpoints[analysis_endpoint]["subscribe_user_id"])
                     if user:
                         # Check for missing analyses.
-                        if schema_version=="0.1.0":
+                        if schema_version == "0.1.0":
                             for record in analyses:
                                 submission = get_latest_hepsubmission(inspire_id=record, overall_status='finished')
                                 if submission and not is_current_user_subscribed_to_record(submission.publication_recid, user):
