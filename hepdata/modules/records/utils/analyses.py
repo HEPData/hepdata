@@ -82,7 +82,7 @@ def update_analyses(endpoint=None):
                     schema_version = r_json["schema_version"]
                 test_analyses_schema(r_json, schema_version=schema_version)
 
-                if schema_version=="0.1.0":
+                if schema_version == "0.1.0":
                     analyses = r_json
 
                     # Check for missing analyses.
