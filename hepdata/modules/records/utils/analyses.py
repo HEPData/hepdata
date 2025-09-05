@@ -240,4 +240,4 @@ def update_analyses(endpoint=None):
 
 
         else:
-            log.debug("No endpoint url configured for {0}".format(analysis_endpoint))
+            log.debug("No endpoint_url configured for {0}".format(analysis_endpoint))

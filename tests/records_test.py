@@ -33,6 +33,7 @@ import shutil
 import tempfile
 import datetime
 
+from flask import current_app
 from flask_login import login_user
 from invenio_accounts.models import User
 from invenio_db import db
@@ -1081,6 +1082,12 @@ def test_update_analyses(app):
     submission = get_latest_hepsubmission(inspire_id='1847779', overall_status='finished')
     assert is_current_user_subscribed_to_record(submission.publication_recid, user)
 
+    # Call update_analyses() again: should be no further changes (but covers more lines of code)
+    update_analyses('SModelS')
+    analysis_resources = DataResource.query.filter_by(file_type='SModelS').all()
+    assert len(analysis_resources) == 2
+    assert analysis_resources[0].file_location == 'https://github.com/SModelS/smodels-database-release/tree/main/13TeV/ATLAS/ATLAS-EXOT-2018-06/'
+
     # ins1847779 also has a CheckMATE analysis, so don't need to import another record
     analysis_resources = DataResource.query.filter_by(file_type='CheckMATE').all()
     assert len(analysis_resources) == 0
@@ -1123,6 +1130,10 @@ def test_update_analyses(app):
     license_data = License.query.filter_by(id=analysis_resources[0].file_license).first()
     assert license_data.name == 'cc-by-4.0'
     assert license_data.url == 'https://creativecommons.org/licenses/by/4.0'
+
+    # Call update_analysis using an endpoint with no endpoint_url
+    current_app.config["ANALYSES_ENDPOINTS"]["TestAnalysis"] = {}
+    update_analyses('TestAnalysis')
 
 
 def test_generate_license_data_by_id(app):
