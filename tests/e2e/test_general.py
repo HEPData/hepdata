@@ -37,6 +37,7 @@ from tests.conftest import import_default_data
 from hepdata.ext.opensearch.api import reindex_all
 from hepdata.modules.submission.api import get_latest_hepsubmission
 from hepdata.modules.records.utils.submission import unload_submission
+from hepdata_validator import LATEST_SCHEMA_VERSION, RAW_SCHEMAS_URL
 
 
 def test_home(app, live_server, env_browser, e2e_identifiers):
@@ -219,21 +220,37 @@ def test_general_pages(live_server, env_browser):
     """Test general pages can be loaded without errors"""
     browser = env_browser
 
-    browser.get(flask.url_for('hepdata_theme.about', _external=True))
-    assert (flask.url_for('hepdata_theme.about', _external=True) in
-            browser.current_url)
+    url = flask.url_for('hepdata_theme.about', _external=True)
+    browser.get(url)
+    assert url in browser.current_url
 
-    browser.get(flask.url_for('hepdata_theme.submission_help', _external=True))
-    assert (flask.url_for('hepdata_theme.submission_help', _external=True) in
-            browser.current_url)
+    url = flask.url_for('hepdata_theme.submission_help', _external=True)
+    browser.get(url)
+    assert url in browser.current_url
 
-    browser.get(flask.url_for('hepdata_theme.terms', _external=True))
-    assert (flask.url_for('hepdata_theme.terms', _external=True) in
-            browser.current_url)
+    url = flask.url_for('hepdata_theme.terms', _external=True)
+    browser.get(url)
+    assert url in browser.current_url
 
-    browser.get(flask.url_for('hepdata_theme.cookie_policy', _external=True))
-    assert (flask.url_for('hepdata_theme.cookie_policy', _external=True) in
-            browser.current_url)
+    url = flask.url_for('hepdata_theme.cookie_policy', _external=True)
+    browser.get(url)
+    assert url in browser.current_url
+
+    url = flask.url_for('hepdata_theme.submission_schema', jsonschema='submission_schema.json', _external=True)
+    browser.get(url)
+    assert RAW_SCHEMAS_URL + '/' + LATEST_SCHEMA_VERSION + '/submission_schema.json' in browser.current_url
+
+    url = flask.url_for('hepdata_theme.analyses_schema', jsonschema='1.0.0/analyses_schema.json', _external=True)
+    browser.get(url)
+    assert url in browser.current_url
+
+    url = flask.url_for('hepdata_theme.formats', _external=True)
+    browser.get(url)
+    assert url in browser.current_url
+
+    url = flask.url_for('hepdata_theme.ping', _external=True)
+    browser.get(url)
+    assert url in browser.current_url
 
 
 def test_accept_headers(app, live_server, e2e_identifiers):

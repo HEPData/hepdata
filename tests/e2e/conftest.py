@@ -247,11 +247,16 @@ def env_browser(request):
     # Filter out error message for:
     # WARNING: security - Error with Permissions-Policy header:
     # Origin trial controlled feature not enabled: 'interest-cohort'
-    temp_log = [t for t in log if 'interest-cohort' not in t['message']]
+    log = [t for t in log if 'interest-cohort' not in t['message']]
 
-    assert len(temp_log) == 0, \
+    # Filter out error message for:
+    # SEVERE: http://localhost:5555/favicon.ico - Failed to load resource:
+    # the server responded with a status of 404 (Not Found)
+    log = [t for t in log if 'favicon.ico' not in t['message']]
+
+    assert len(log) == 0, \
         "Errors in browser log:\n" + \
-        "\n".join([f"{line['level']}: {line['message']}" for line in temp_log])
+        "\n".join([f"{line['level']}: {line['message']}" for line in log])
 
 
 @pytest.fixture()

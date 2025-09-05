@@ -25,8 +25,9 @@
 """Theme blueprint in order for template and static files to be loaded."""
 
 import re
+import json
 
-from flask import Blueprint, render_template, current_app, redirect, request, url_for
+from flask import Blueprint, render_template, current_app, redirect, request, url_for, jsonify
 from hepdata_validator import LATEST_SCHEMA_VERSION, RAW_SCHEMAS_URL
 
 from hepdata.modules.email.utils import send_flask_message_email
@@ -82,6 +83,13 @@ def submission_schema(jsonschema):
         jsonschema = LATEST_SCHEMA_VERSION + '/' + jsonschema
 
     return redirect(RAW_SCHEMAS_URL + '/' + jsonschema)
+
+
+@blueprint.route('/analyses/schemas/<path:jsonschema>')
+def analyses_schema(jsonschema):
+    with current_app.open_resource('templates/analyses_schema/' + jsonschema) as jsonfile:
+        schema = json.load(jsonfile)
+    return jsonify(schema)
 
 
 @blueprint.route('/cookies')

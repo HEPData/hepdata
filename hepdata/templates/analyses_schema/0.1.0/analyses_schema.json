@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hepdata.net/analyses/schemas/0.1.0/analyses_schema.json",
+  "title": "HEPData analysis tool schema",
+  "description": "A JSON schema for tracking implementations of HEPData analyses in different tools",
+  "type": "object",
+  "patternProperties": {
+    "^[0-9]+$": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1
+    }
+  },
+  "additionalProperties": false
+}
