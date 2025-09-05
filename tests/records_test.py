@@ -1135,6 +1135,10 @@ def test_update_analyses(app):
     current_app.config["ANALYSES_ENDPOINTS"]["TestAnalysis"] = {}
     update_analyses('TestAnalysis')
 
+    # Call update_analyses using an endpoint_url that will fail validation.
+    current_app.config["ANALYSES_ENDPOINTS"]["TestAnalysis"]['endpoint_url'] = 'https://www.hepdata.net/search/?format=json&size=1'
+    update_analyses('TestAnalysis')
+
 
 def test_generate_license_data_by_id(app):
     """
@@ -1371,7 +1375,7 @@ def test_version_related_functions(app):
         expected_backward_sub_relations = []
 
         # Finished records will have other record references appear
-        if test["overall_status"] is not "todo":
+        if test["overall_status"] != "todo":
             expected_backward_sub_relations.append(test["other_recid"])
 
         assert [sub.publication_recid for sub in backward_sub_relations] == expected_backward_sub_relations
@@ -1394,7 +1398,7 @@ def test_version_related_functions(app):
             expected_backward_dt_relations = []
 
             # We expect unfinished records to NOT have `other_recid` tables
-            if test["overall_status"] is not "todo":
+            if test["overall_status"] != "todo":
                 expected_backward_dt_relations.append(f"10.17182/hepdata.{test['other_recid']}.v2/t{table_number}")
 
             # Here we expect the second table to reference ITS OWN table one

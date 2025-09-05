@@ -77,10 +77,16 @@ def update_analyses(endpoint=None):
 
                 r_json = response.json()
 
-                schema_version = "0.1.0" # this schema doesn't have "schema_version" field
+                schema_version = "0.1.0"  # default to 0.1.0 for backward compatibility when schema_version field is missing
                 if "schema_version" in r_json:
                     schema_version = r_json["schema_version"]
-                test_analyses_schema(r_json, schema_version=schema_version)
+
+                # Validate analyses JSON file against the schema.
+                try:
+                    test_analyses_schema(r_json, schema_version=schema_version)
+                except jsonschema.exceptions.ValidationError as e:
+                    log.error("Validation error for analyses schema {0} in {1}: {2}".format(schema_version, analysis_endpoint, e))
+                    continue
 
                 if schema_version == "0.1.0":
                     analyses = r_json
@@ -138,10 +144,10 @@ def update_analyses(endpoint=None):
                             log.debug("An analysis is available in {0} but with no equivalent in HEPData (ins{1}).".format(
                                 analysis_endpoint, record))
 
-                else: # schema_version>="1.0.0"
+                else:  # schema_version >= "1.0.0"
                     # Check for missing analyses.
                     for ana in r_json["analyses"]:
-                        inspire_id = str(ana["inspire_id"]) # TODO: make inspire_id an int in get_latest_hepsubmission
+                        inspire_id = str(ana["inspire_id"])  # inspire_id is stored as a string in the database
                         submission = get_latest_hepsubmission(inspire_id=inspire_id, overall_status='finished')
 
                         if submission:
@@ -232,7 +238,7 @@ def update_analyses(endpoint=None):
                                 if submission and not is_current_user_subscribed_to_record(submission.publication_recid, user):
                                     subscribe(submission.publication_recid, user)
 
-                        else: # schema_version>="1.0.0"
+                        else:  # schema_version >= "1.0.0"
                             for ana in r_json["analyses"]:
                                 submission = get_latest_hepsubmission(inspire_id=str(ana["inspire_id"]), overall_status='finished')
                                 if submission and not is_current_user_subscribed_to_record(submission.publication_recid, user):
