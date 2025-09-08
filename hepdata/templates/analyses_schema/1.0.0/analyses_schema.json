@@ -89,7 +89,7 @@
   "$defs": {
 
     "Analysis": {
-      "description": "An analysis, identified by the INSPIRE ID, implemented at least once in a tool",
+      "description": "An analysis, identified by the INSPIRE ID, implemented at least once in the tool",
       "type": "object",
       "required": ["inspire_id", "implementations"],
     
@@ -120,7 +120,7 @@
     },
 
     "Implementation": {
-      "description": "An implementation of an analysis in a tool, giving the internal name to retrieve information",
+      "description": "An implementation of an analysis in the tool, giving the internal name to retrieve information",
       "type": "object",
       "required": ["name"],
     

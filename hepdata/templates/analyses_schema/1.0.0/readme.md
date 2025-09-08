@@ -109,7 +109,7 @@ The following fields are included in the standard but not required:
 
 ### Additional unknown fields
 Apart from the fields mentioned above, the standard allows for any number of additional fields.
-These are however not standardised are not being being checked by the schema.
+These are however not standardised and not checked by the schema.
 
 
 ## Examples
@@ -140,7 +140,7 @@ See [here](../../../../tests/test_data/analyses_example.json) for a more elabora
 
 ## Testing an implementation
 
-Whether an analyses JSON file adheres to the standard defined here, can be with python checked as follows:
+Whether an analyses JSON file adheres to the standard defined here, can be checked with python as follows:
 ```python
 import json
 import jsonschema

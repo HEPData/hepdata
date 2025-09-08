@@ -24,7 +24,7 @@ A minimal example for an analyses JSON adhering to the standard looks like this:
 
 ## Testing an implementation
 
-Whether an analyses JSON file adheres to the standard defined here, can be with python checked as follows:
+Whether an analyses JSON file adheres to the standard defined here, can be checked with python as follows:
 ```python
 import json
 import jsonschema
