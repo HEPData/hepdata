@@ -331,9 +331,7 @@ ANALYSES_ENDPOINTS = {
         'description': 'MadAnalysis 5 analysis'
     },
     'SModelS': {
-        'endpoint_url': 'https://zenodo.org/records/13952092/files/smodels-analyses.hepdata.json?download=1',
-        'url_template': '{0}',
-        'description': 'SModelS analysis',
+        'endpoint_url': 'https://smodels.github.io/docs/smodels-analyses.hepdata.json',
         'subscribe_user_id': 7766
     },
     'CheckMATE': {
