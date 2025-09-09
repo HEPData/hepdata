@@ -1131,14 +1131,13 @@ def test_update_analyses(app):
     assert license_data.name == 'cc-by-4.0'
     assert license_data.url == 'https://creativecommons.org/licenses/by/4.0'
 
-    # Import a record that has an associated GAMBIT analysis
-    import_records(['ins1827025'], synchronous=True)
+    # ins1847779 also has a GAMBIT analysis, so don't need to import another record
     analysis_resources = DataResource.query.filter_by(file_type='GAMBIT').all()
     assert len(analysis_resources) == 0
     update_analyses('GAMBIT')
     analysis_resources = DataResource.query.filter_by(file_type='GAMBIT').all()
     assert len(analysis_resources) == 1
-    assert analysis_resources[0].file_location == 'https://github.com/GambitBSM/gambit_2.6/blob/release_2.6/ColliderBit/src/analyses/Analysis_ATLAS_13TeV_0LEP_139invfb.cpp'
+    assert analysis_resources[0].file_location == 'https://github.com/GambitBSM/gambit_2.6/blob/release_2.6/ColliderBit/src/analyses/Analysis_ATLAS_13TeV_MONOJET_139infb.cpp'
 
     # Call update_analysis using an endpoint with no endpoint_url
     current_app.config["ANALYSES_ENDPOINTS"]["TestAnalysis"] = {}
