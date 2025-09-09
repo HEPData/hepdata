@@ -52,11 +52,11 @@ def test_analyses_schema(json_file, schema_version="1.0.0"):
 @shared_task
 def update_analyses(endpoint=None):
     """
-    Update (Rivet, MadAnalysis 5, SModelS, CheckMATE, HackAnalysis, Combine, and GAMBIT) analyses and remove outdated resources.
+    Update tools (Rivet, MadAnalysis 5, etc.) analyses and remove outdated resources.
     Allow bulk subscription to record update notifications if "subscribe_user_id" in endpoint.
     Add optional "description" and "license" fields if present in endpoint.
 
-    :param endpoint: either "rivet" or "MadAnalysis" or "SModelS" or "CheckMATE" or "HackAnalysis" or "Combine" or "GAMBIT" or None (default) for all
+    :param endpoint: any one from config.ANALYSES_ENDPOINTS ("rivet", "MadAnalysis", etc.) or None (default) for all
     """
 
     endpoints = current_app.config["ANALYSES_ENDPOINTS"]

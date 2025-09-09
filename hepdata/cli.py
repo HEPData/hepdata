@@ -35,7 +35,7 @@ from hepdata.modules.records.utils.common import record_exists, get_record_by_id
 from hepdata.modules.submission.models import HEPSubmission
 from hepdata.modules.submission.api import get_latest_hepsubmission
 from .factory import create_app
-from hepdata.config import CFG_PUB_TYPE
+from hepdata.config import CFG_PUB_TYPE, ANALYSES_ENDPOINTS
 from hepdata.ext.opensearch.api import reindex_all, get_records_matching_field
 from hepdata.modules.records.importer import api as importer_api
 from hepdata.modules.records.utils import data_files
@@ -55,7 +55,7 @@ from invenio_db import db
 cli = create_cli(create_app=create_app)
 
 default_recids = 'ins1283842,ins1245023,ins1311487'
-
+endpoints_as_string = '"' + '" or "'.join(ANALYSES_ENDPOINTS.keys()) + '"'
 
 @cli.group()
 def importer():
@@ -223,9 +223,9 @@ def do_unload(records_to_unload):
 
 @utils.command()
 @with_appcontext
-@click.option('--endpoint', '-e', type=str, help='Specific endpoint to update (e.g. "rivet" or "MadAnalysis" or "SModelS" or "CheckMATE" or "HackAnalysis" or "Combine" or "GAMBIT"). Omit for all.')
+@click.option('--endpoint', '-e', type=str, help=f'Specific endpoint to update (e.g. {endpoints_as_string}). Omit for all.')
 def find_and_add_record_analyses(endpoint):
-    """Finds analyses such as Rivet, MadAnalysis 5, SModelS, CheckMATE, HackAnalysis, Combine and GAMBIT and adds them to records."""
+    """Finds analyses from tools such as Rivet, MadAnalysis 5, etc. and adds them to records."""
     update_analyses(endpoint)
 
 
