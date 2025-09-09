@@ -30,7 +30,7 @@ import mimetypes
 import time
 
 from celery import shared_task
-from flask import redirect, request, render_template, jsonify, current_app, Response, abort, flash
+from flask import redirect, request, render_template, jsonify, current_app, Response, abort, flash, url_for
 from flask_login import current_user
 from invenio_accounts.models import User
 from invenio_db import db
@@ -394,6 +394,8 @@ def render_record(recid, record, version, output_format, light_mode=False):
                 redirect_url_after_login += '%26table%3D{0}'.format(request.args['table'])
             if output_format.startswith('yoda') and 'rivet' in request.args:
                 redirect_url_after_login += '%26rivet%3D{0}'.format(request.args['rivet'])
+            if output_format.startswith('yoda') and 'qualifiers' in request.args:
+                redirect_url_after_login += '%26qualifiers%3D{0}'.format(request.args['qualifiers'])
             return redirect('/login/?next={0}'.format(redirect_url_after_login))
         else:
             abort(403)
@@ -431,20 +433,29 @@ def render_record(recid, record, version, output_format, light_mode=False):
                 if output_format == 'json':
                     ctx = process_ctx(ctx, light_mode)
                     return jsonify(ctx)
-                elif output_format.startswith('yoda') and 'rivet' in request.args:
-                    return redirect('/download/submission/{0}/{1}/{2}/{3}'.format(recid, version, output_format,
-                                                                              request.args['rivet']))
                 else:
-                    return redirect('/download/submission/{0}/{1}/{2}'.format(recid, version, output_format))
+                    return redirect(
+                        url_for('converter.download_submission_with_recid',
+                                recid=recid, version=version, file_format=output_format,
+                                rivet=request.args.get('rivet', None),
+                                qualifiers=request.args.get('qualifiers', None)))
             else:
-                file_identifier = 'ins{}'.format(hepdata_submission.inspire_id) if hepdata_submission.inspire_id else recid
-                if output_format.startswith('yoda') and 'rivet' in request.args:
-                    return redirect('/download/table/{0}/{1}/{2}/{3}/{4}'.format(
-                        file_identifier, request.args['table'].replace('%', '%25').replace('\\', '%5C'), version, output_format,
-                        request.args['rivet']))
+                table_name = request.args['table'].replace('%', '%25').replace('\\', '%5C')
+                if hepdata_submission.inspire_id:
+                    return redirect(
+                        url_for('converter.download_data_table_by_inspire_id',
+                                inspire_id='ins{}'.format(hepdata_submission.inspire_id),
+                                table_name=table_name,
+                                version=version, file_format=output_format,
+                                rivet=request.args.get('rivet', None),
+                                qualifiers=request.args.get('qualifiers', None)))
                 else:
-                    return redirect('/download/table/{0}/{1}/{2}/{3}'.format(
-                        file_identifier, request.args['table'].replace('%', '%25').replace('\\', '%5C'), version, output_format))
+                    return redirect(
+                        url_for('converter.download_data_table_by_recid', recid=recid,
+                                table_name=table_name,
+                                version=version, file_format=output_format,
+                                rivet=request.args.get('rivet', None),
+                                qualifiers=request.args.get('qualifiers', None)))
         else:
             abort(404)
 
@@ -481,13 +492,14 @@ def render_record(recid, record, version, output_format, light_mode=False):
 
                 return render_template('hepdata_records/related_record.html', ctx=ctx)
 
-            elif output_format.startswith('yoda') and 'rivet' in request.args:
-                return redirect('/download/table/{0}/{1}/{2}/{3}/{4}'.format(
-                    publication_recid, ctx['table_name'].replace('%', '%25').replace('\\', '%5C'), datasubmission.version, output_format,
-                    request.args['rivet']))
             else:
-                return redirect('/download/table/{0}/{1}/{2}/{3}'.format(
-                    publication_recid, ctx['table_name'].replace('%', '%25').replace('\\', '%5C'), datasubmission.version, output_format))
+                return redirect(
+                    url_for('converter.download_data_table_by_recid',
+                            recid=publication_recid,
+                            table_name=request.args['table'].replace('%', '%25').replace('\\', '%5C'),
+                            version=datasubmission.version, file_format=output_format,
+                            rivet=request.args.get('rivet', None),
+                            qualifiers=request.args.get('qualifiers', None)))
 
         except Exception as e:
             abort(404)
@@ -831,7 +843,8 @@ def check_and_convert_from_oldhepdata(input_directory, id, timestamp):
         successful = convert_oldhepdata_to_yaml(oldhepdata_found[1], converted_temp_path)
         if not successful:
             # Parse error message from title of HTML file, removing part of string after final "//".
-            soup = BeautifulSoup(open(converted_temp_path), "lxml")
+            with open(converted_temp_path) as converted_temp_file:
+                soup = BeautifulSoup(converted_temp_file, "html.parser")
             errormsg = soup.title.string.rsplit("//", 1)[0]
 
     except Error as error:  # hepdata_converter_ws_client.Error

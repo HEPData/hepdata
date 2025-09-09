@@ -33,7 +33,7 @@ import os
 from dateutil import parser
 from invenio_accounts.models import User
 from flask_login import login_required, login_user
-from flask import Blueprint, send_file, abort, redirect
+from flask import Blueprint, send_file, abort, redirect, url_for
 from flask_security.utils import verify_password
 from sqlalchemy import or_, func
 from sqlalchemy.orm import joinedload
@@ -104,24 +104,21 @@ def sandbox_display(id):
             if output_format == 'html':
                 return render_template('hepdata_records/sandbox.html', ctx=ctx)
             elif 'table' in request.args:
-                if output_format.startswith('yoda') and 'rivet' in request.args:
-                    return redirect('/download/table/{0}/{1}/{2}/{3}/{4}'.format(
-                        id,
-                        request.args['table'].replace('%', '%25').replace('\\', '%5C'),
-                        1, output_format, request.args['rivet']))
-                else:
-                    return redirect('/download/table/{0}/{1}/{2}'.format(
-                        id,
-                        request.args['table'].replace('%', '%25').replace('\\', '%5C'),
-                        output_format))
+                return redirect(
+                    url_for('converter.download_data_table_by_recid', recid=id,
+                            table_name=request.args['table'].replace('%', '%25').replace('\\', '%5C'),
+                            version=1, file_format=output_format,
+                            rivet=request.args.get('rivet', None),
+                            qualifiers=request.args.get('qualifiers', None)))
             elif output_format == 'json':
                 ctx = process_ctx(ctx, light_mode)
                 return jsonify(ctx)
-            elif output_format.startswith('yoda') and 'rivet' in request.args:
-                return redirect('/download/submission/{0}/{1}/{2}/{3}'.format(
-                    id, 1, output_format, request.args['rivet']))
             else:
-                return redirect('/download/submission/{0}/{1}'.format(id, output_format))
+                return redirect(
+                    url_for('converter.download_submission_with_recid',
+                            recid=id, version=1, file_format=output_format,
+                            rivet=request.args.get('rivet', None),
+                            qualifiers=request.args.get('qualifiers', None)))
     else:
         return render_template('hepdata_records/error_page.html', recid=None,
                                header_message="Sandbox record not found",
@@ -133,32 +130,28 @@ def sandbox_display(id):
 def get_metadata_by_alternative_id(recid):
 
     try:
-        if "ins" in recid:
-            recid = recid.replace("ins", "")
-            record = get_records_matching_field('inspire_id', recid,
-                                                doc_type=CFG_PUB_TYPE)
-            record = record['hits']['hits'][0].get("_source")
-            try:
-                version = int(request.args.get('version', -1))
-            except ValueError:
-                version = -1
+        inspire_id = int(recid.replace('ins', ''))  # raises ValueError if not integer
+        record = get_records_matching_field('inspire_id', inspire_id,
+                                            doc_type=CFG_PUB_TYPE)
+        record = record['hits']['hits'][0].get("_source")
+        try:
+            version = int(request.args.get('version', -1))
+        except ValueError:
+            version = -1
 
-            output_format = request.args.get('format', 'html')
-            light_mode = bool(request.args.get('light', False))
+        output_format = request.args.get('format', 'html')
+        light_mode = bool(request.args.get('light', False))
 
-            # Check the Accept header to determine whether to send JSON-LD
-            if output_format == 'html' and should_send_json_ld(request):
-                output_format = 'json_ld'
+        # Check the Accept header to determine whether to send JSON-LD
+        if output_format == 'html' and should_send_json_ld(request):
+            output_format = 'json_ld'
 
-            return render_record(recid=record['recid'], record=record, version=version, output_format=output_format,
-                                 light_mode=light_mode)
-        else:
-            log.error("Unable to find %s.", recid)
-            return abort(404)
+        return render_record(recid=record['recid'], record=record, version=version, output_format=output_format,
+                             light_mode=light_mode)
 
     except Exception as e:
-        log.error("Unable to find %s.", recid)
-        log.error(e)
+        log.warning("Unable to find %s.", recid)
+        log.warning(e)
         return abort(404)
 
 

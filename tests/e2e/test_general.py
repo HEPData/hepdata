@@ -37,6 +37,7 @@ from tests.conftest import import_default_data
 from hepdata.ext.opensearch.api import reindex_all
 from hepdata.modules.submission.api import get_latest_hepsubmission
 from hepdata.modules.records.utils.submission import unload_submission
+from hepdata_validator import LATEST_SCHEMA_VERSION, RAW_SCHEMAS_URL
 
 
 def test_home(app, live_server, env_browser, e2e_identifiers):
@@ -93,6 +94,18 @@ def test_home(app, live_server, env_browser, e2e_identifiers):
         assert False, "File is not a valid zip file"
     # Close download dropdown by clicking again
     browser.find_element(By.ID, 'dLabel').click()
+
+    # Access the JSON format of the record
+    json_url = browser.find_element(By.ID, 'jsonLabel').get_attribute('href')
+    assert json_url.endswith('?format=json')
+    response = requests.get(json_url)
+    assert response.status_code == 200
+    json_data = response.json()
+    assert len(json_data['data_tables']) == 14
+    response = requests.get(json_url + '&light=true')
+    assert response.status_code == 200
+    json_data = response.json()
+    assert 'data_tables' not in json_data
 
     # Go back to homepage and click on 1st link - should be record with resources
     browser.back()
@@ -207,21 +220,37 @@ def test_general_pages(live_server, env_browser):
     """Test general pages can be loaded without errors"""
     browser = env_browser
 
-    browser.get(flask.url_for('hepdata_theme.about', _external=True))
-    assert (flask.url_for('hepdata_theme.about', _external=True) in
-            browser.current_url)
+    url = flask.url_for('hepdata_theme.about', _external=True)
+    browser.get(url)
+    assert url in browser.current_url
 
-    browser.get(flask.url_for('hepdata_theme.submission_help', _external=True))
-    assert (flask.url_for('hepdata_theme.submission_help', _external=True) in
-            browser.current_url)
+    url = flask.url_for('hepdata_theme.submission_help', _external=True)
+    browser.get(url)
+    assert url in browser.current_url
 
-    browser.get(flask.url_for('hepdata_theme.terms', _external=True))
-    assert (flask.url_for('hepdata_theme.terms', _external=True) in
-            browser.current_url)
+    url = flask.url_for('hepdata_theme.terms', _external=True)
+    browser.get(url)
+    assert url in browser.current_url
 
-    browser.get(flask.url_for('hepdata_theme.cookie_policy', _external=True))
-    assert (flask.url_for('hepdata_theme.cookie_policy', _external=True) in
-            browser.current_url)
+    url = flask.url_for('hepdata_theme.cookie_policy', _external=True)
+    browser.get(url)
+    assert url in browser.current_url
+
+    url = flask.url_for('hepdata_theme.submission_schema', jsonschema='submission_schema.json', _external=True)
+    browser.get(url)
+    assert RAW_SCHEMAS_URL + '/' + LATEST_SCHEMA_VERSION + '/submission_schema.json' in browser.current_url
+
+    url = flask.url_for('hepdata_theme.analyses_schema', jsonschema='1.0.0/analyses_schema.json', _external=True)
+    browser.get(url)
+    assert url in browser.current_url
+
+    url = flask.url_for('hepdata_theme.formats', _external=True)
+    browser.get(url)
+    assert url in browser.current_url
+
+    url = flask.url_for('hepdata_theme.ping', _external=True)
+    browser.get(url)
+    assert url in browser.current_url
 
 
 def test_accept_headers(app, live_server, e2e_identifiers):
@@ -269,7 +298,8 @@ def test_accept_headers(app, live_server, e2e_identifiers):
         {'@type': 'DataDownload', 'contentUrl': 'http://localhost:5000/download/table/1/root', 'description': 'ROOT file', 'encodingFormat': 'https://root.cern'},
         {'@type': 'DataDownload', 'contentUrl': 'http://localhost:5000/download/table/1/yaml', 'description': 'YAML file', 'encodingFormat': 'https://yaml.org'},
         {'@type': 'DataDownload', 'contentUrl': 'http://localhost:5000/download/table/1/csv', 'description': 'CSV file', 'encodingFormat': 'text/csv'},
-        {'@type': 'DataDownload', 'contentUrl': 'http://localhost:5000/download/table/1/yoda', 'description': 'YODA file', 'encodingFormat': 'https://yoda.hepforge.org'}
+        {'@type': 'DataDownload', 'contentUrl': 'http://localhost:5000/download/table/1/yoda', 'description': 'YODA file', 'encodingFormat': 'https://yoda.hepforge.org'},
+        {'@type': 'DataDownload', 'contentUrl': 'http://localhost:5000/download/table/1/yoda.h5', 'description': 'YODA.H5 file', 'encodingFormat': 'https://yoda.hepforge.org'}
     ]
 
     # Data resource landing page (use last submission, which has resources)

@@ -105,7 +105,7 @@
 
             <li id="{{ table.id }}"
                 class="{{ table.processed_name }} {% if loop.index == 1 %}active{% endif %}"
-                onclick="HEPDATA.switch_table('#table-list', '{{ table.id }}', '{{ table.name | replace("\\","\\\\") }}', '{{ ctx.status }}')">
+                onclick="HEPDATA.switch_table('#table-list', '{{ table.id }}', '{{ table.name | replace("\\","\\\\") | replace("\'","\\'") }}', '{{ ctx.status }}')">
                 <div class="content">
                     <h4>{{ table.name }}</h4>
 

@@ -1,0 +1,40 @@
+{
+  "schema_version": "1.0.0",
+  "tool": "SModelS",
+  "version": "3.0.0",
+  "date_created": "2018-11-13T20:20:39+00:00",
+  "implementations_description": "SModelS analysis",
+  "url_templates": {
+      "main_url": "https://github.com/SModelS/smodels-database-release/tree/main/{path}",
+      "val_url": "https://smodels.github.io/docs/Validation#{name}_ul"
+  },
+  "analyses": [
+    {
+      "inspire_id": 1795075,
+      "implementations": [
+        {
+          "name": "ATLAS-EXOT-2018-47"
+        }
+      ]
+    },
+    {
+      "inspire_id": 1795076,
+      "signature_type": "prompt",
+      "pretty_name": "di-top resonance",
+      "implementations": [
+        {
+          "name": "ATLAS-EXOT-2018-48",
+          "path": "13TeV/ATLAS/ATLAS-EXOT-2018-48/"
+        },
+        {
+          "name": "ATLAS-EXOT-2018-48b",
+          "path": "13TeV/ATLAS/ATLAS-EXOT-2018-48/"
+        }
+      ]
+    }
+  ],
+  "implementations_license": {
+    "name": "cc-by-4.0",
+    "url": "https://creativecommons.org/licenses/by/4.0"
+  }
+}
