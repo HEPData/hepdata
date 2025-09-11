@@ -1038,7 +1038,7 @@ def test_create_breadcrumb_text():
 
 
 def test_update_analyses(app):
-    """ Test update of Rivet, MadAnalyses 5, SModelS, CheckMATE, HackAnalysis and Combine analyses """
+    """ Test update of Rivet, MadAnalyses 5, etc. analyses """
 
     # Import a record that already has a Rivet analysis attached (but with '#' in the URL)
     import_records(['ins1203852'], synchronous=True)
