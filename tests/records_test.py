@@ -1147,6 +1147,7 @@ def test_update_analyses(app):
     current_app.config["ANALYSES_ENDPOINTS"]["TestAnalysis"]['endpoint_url'] = 'https://www.hepdata.net/search/?format=json&size=1'
     update_analyses('TestAnalysis')
 
+
 def test_generate_license_data_by_id(app):
     """
     Tests the generate_license_data_by_id function which
