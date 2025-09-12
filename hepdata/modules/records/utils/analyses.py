@@ -28,7 +28,7 @@ import os
 from celery import shared_task
 from flask import current_app
 from invenio_db import db
-import requests
+from hepdata.resilient_requests import resilient_requests
 import json
 import jsonschema
 
@@ -69,9 +69,9 @@ def update_analyses(endpoint=None):
 
             log.info("Updating analyses from {0}...".format(analysis_endpoint))
 
-            response = requests.get(endpoints[analysis_endpoint]["endpoint_url"])
+            response = resilient_requests('get', endpoints[analysis_endpoint]["endpoint_url"])
 
-            if response and response.status_code == 200:
+            if response.ok:
 
                 analysis_resources = DataResource.query.filter_by(file_type=analysis_endpoint).all()
 
@@ -244,7 +244,7 @@ def update_analyses(endpoint=None):
                                 if submission and not is_current_user_subscribed_to_record(submission.publication_recid, user):
                                     subscribe(submission.publication_recid, user)
 
-            else:  # if response.status_code != 200
+            else:  # if not response.ok
                 log.error(f"Error accessing {endpoints[analysis_endpoint]['endpoint_url']}")
 
         else:  # if "endpoint_url" not in endpoints[analysis_endpoint]
