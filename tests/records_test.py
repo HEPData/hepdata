@@ -1143,8 +1143,12 @@ def test_update_analyses(app):
     current_app.config["ANALYSES_ENDPOINTS"]["TestAnalysis"] = {}
     update_analyses('TestAnalysis')
 
-    # Call update_analyses using an endpoint_url that will fail validation.
+    # Call update_analyses using an endpoint_url that will fail validation
     current_app.config["ANALYSES_ENDPOINTS"]["TestAnalysis"]['endpoint_url'] = 'https://www.hepdata.net/search/?format=json&size=1'
+    update_analyses('TestAnalysis')
+
+    # Call update_analyses using an invalid endpoint_URL
+    current_app.config["ANALYSES_ENDPOINTS"]["TestAnalysis"]['endpoint_url'] = 'https://www.hepdata.net/analyses.json'
     update_analyses('TestAnalysis')
 
 

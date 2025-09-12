@@ -244,5 +244,8 @@ def update_analyses(endpoint=None):
                                 if submission and not is_current_user_subscribed_to_record(submission.publication_recid, user):
                                     subscribe(submission.publication_recid, user)
 
-        else:
+            else:  # if response.status_code != 200
+                log.error(f"Error accessing {endpoints[analysis_endpoint]['endpoint_url']}")
+
+        else:  # if "endpoint_url" not in endpoints[analysis_endpoint]
             log.debug("No endpoint_url configured for {0}".format(analysis_endpoint))
