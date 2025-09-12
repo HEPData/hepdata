@@ -1038,7 +1038,7 @@ def test_create_breadcrumb_text():
 
 
 def test_update_analyses(app):
-    """ Test update of Rivet, MadAnalyses 5, SModelS, CheckMATE, HackAnalysis and Combine analyses """
+    """ Test update of Rivet, MadAnalyses 5, etc. analyses """
 
     # Import a record that already has a Rivet analysis attached (but with '#' in the URL)
     import_records(['ins1203852'], synchronous=True)
@@ -1131,12 +1131,24 @@ def test_update_analyses(app):
     assert license_data.name == 'cc-by-4.0'
     assert license_data.url == 'https://creativecommons.org/licenses/by/4.0'
 
+    # ins1847779 also has a GAMBIT analysis, so don't need to import another record
+    analysis_resources = DataResource.query.filter_by(file_type='GAMBIT').all()
+    assert len(analysis_resources) == 0
+    update_analyses('GAMBIT')
+    analysis_resources = DataResource.query.filter_by(file_type='GAMBIT').all()
+    assert len(analysis_resources) == 1
+    assert analysis_resources[0].file_location == 'https://github.com/GambitBSM/gambit_2.6/blob/release_2.6/ColliderBit/src/analyses/Analysis_ATLAS_13TeV_MONOJET_139infb.cpp'
+
     # Call update_analysis using an endpoint with no endpoint_url
     current_app.config["ANALYSES_ENDPOINTS"]["TestAnalysis"] = {}
     update_analyses('TestAnalysis')
 
-    # Call update_analyses using an endpoint_url that will fail validation.
+    # Call update_analyses using an endpoint_url that will fail validation
     current_app.config["ANALYSES_ENDPOINTS"]["TestAnalysis"]['endpoint_url'] = 'https://www.hepdata.net/search/?format=json&size=1'
+    update_analyses('TestAnalysis')
+
+    # Call update_analyses using an invalid endpoint_URL
+    current_app.config["ANALYSES_ENDPOINTS"]["TestAnalysis"]['endpoint_url'] = 'https://www.hepdata.net/analyses.json'
     update_analyses('TestAnalysis')
 
 

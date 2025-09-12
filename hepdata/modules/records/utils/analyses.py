@@ -28,7 +28,7 @@ import os
 from celery import shared_task
 from flask import current_app
 from invenio_db import db
-import requests
+from hepdata.resilient_requests import resilient_requests
 import json
 import jsonschema
 
@@ -52,11 +52,11 @@ def test_analyses_schema(json_file, schema_version="1.0.0"):
 @shared_task
 def update_analyses(endpoint=None):
     """
-    Update (Rivet, MadAnalysis 5, SModelS, CheckMATE, HackAnalysis and Combine) analyses and remove outdated resources.
+    Update tools (Rivet, MadAnalysis 5, etc.) analyses and remove outdated resources.
     Allow bulk subscription to record update notifications if "subscribe_user_id" in endpoint.
     Add optional "description" and "license" fields if present in endpoint.
 
-    :param endpoint: either "rivet" or "MadAnalysis" or "SModelS" or "CheckMATE" or "HackAnalysis" or "Combine" or None (default) for all
+    :param endpoint: any one from config.ANALYSES_ENDPOINTS ("rivet", "MadAnalysis", etc.) or None (default) for all
     """
 
     endpoints = current_app.config["ANALYSES_ENDPOINTS"]
@@ -69,9 +69,9 @@ def update_analyses(endpoint=None):
 
             log.info("Updating analyses from {0}...".format(analysis_endpoint))
 
-            response = requests.get(endpoints[analysis_endpoint]["endpoint_url"])
+            response = resilient_requests('get', endpoints[analysis_endpoint]["endpoint_url"])
 
-            if response and response.status_code == 200:
+            if response.ok:
 
                 analysis_resources = DataResource.query.filter_by(file_type=analysis_endpoint).all()
 
@@ -244,6 +244,8 @@ def update_analyses(endpoint=None):
                                 if submission and not is_current_user_subscribed_to_record(submission.publication_recid, user):
                                     subscribe(submission.publication_recid, user)
 
+            else:  # if not response.ok
+                log.error(f"Error accessing {endpoints[analysis_endpoint]['endpoint_url']}")
 
-        else:
+        else:  # if "endpoint_url" not in endpoints[analysis_endpoint]
             log.debug("No endpoint_url configured for {0}".format(analysis_endpoint))

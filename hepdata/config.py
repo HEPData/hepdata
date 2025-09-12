@@ -359,6 +359,9 @@ ANALYSES_ENDPOINTS = {
             'url': 'https://creativecommons.org/licenses/by/4.0'
          },
     },
+    'GAMBIT': {
+        'endpoint_url': 'https://gambitbsm.org/analyses.json',
+    },
     #'ufo': {},
     #'xfitter': {},
     #'applgrid': {},
