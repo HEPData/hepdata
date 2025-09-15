@@ -1040,7 +1040,7 @@ def test_create_breadcrumb_text():
 
 
 def test_update_analyses(app):
-    """ Test update of Rivet, MadAnalyses 5, SModelS, CheckMATE, HackAnalysis and Combine analyses """
+    """ Test update of Rivet, MadAnalyses 5, etc. analyses """
 
     # Import a record that already has a Rivet analysis attached (but with '#' in the URL)
     import_records(['ins1203852'], synchronous=True)
@@ -1078,10 +1078,17 @@ def test_update_analyses(app):
     db.session.commit()
     update_analyses('SModelS')
     analysis_resources = DataResource.query.filter_by(file_type='SModelS').all()
-    assert len(analysis_resources) == 1
-    assert analysis_resources[0].file_location == 'https://smodels.github.io/docs/ListOfAnalyses#ATLAS-EXOT-2018-06'
+    assert len(analysis_resources) == 2
+    assert analysis_resources[0].file_location == 'https://github.com/SModelS/smodels-database-release/tree/main/13TeV/ATLAS/ATLAS-EXOT-2018-06/'
+    assert License.query.filter_by(id=analysis_resources[0].file_license).first().name == 'cc-by-4.0'
     submission = get_latest_hepsubmission(inspire_id='1847779', overall_status='finished')
     assert is_current_user_subscribed_to_record(submission.publication_recid, user)
+
+    # Call update_analyses() again: should be no further changes (but covers more lines of code)
+    update_analyses('SModelS')
+    analysis_resources = DataResource.query.filter_by(file_type='SModelS').all()
+    assert len(analysis_resources) == 2
+    assert analysis_resources[0].file_location == 'https://github.com/SModelS/smodels-database-release/tree/main/13TeV/ATLAS/ATLAS-EXOT-2018-06/'
 
     # ins1847779 also has a CheckMATE analysis, so don't need to import another record
     analysis_resources = DataResource.query.filter_by(file_type='CheckMATE').all()
@@ -1125,6 +1132,26 @@ def test_update_analyses(app):
     license_data = License.query.filter_by(id=analysis_resources[0].file_license).first()
     assert license_data.name == 'cc-by-4.0'
     assert license_data.url == 'https://creativecommons.org/licenses/by/4.0'
+
+    # ins1847779 also has a GAMBIT analysis, so don't need to import another record
+    analysis_resources = DataResource.query.filter_by(file_type='GAMBIT').all()
+    assert len(analysis_resources) == 0
+    update_analyses('GAMBIT')
+    analysis_resources = DataResource.query.filter_by(file_type='GAMBIT').all()
+    assert len(analysis_resources) == 1
+    assert analysis_resources[0].file_location == 'https://github.com/GambitBSM/gambit_2.6/blob/release_2.6/ColliderBit/src/analyses/Analysis_ATLAS_13TeV_MONOJET_139infb.cpp'
+
+    # Call update_analysis using an endpoint with no endpoint_url
+    current_app.config["ANALYSES_ENDPOINTS"]["TestAnalysis"] = {}
+    update_analyses('TestAnalysis')
+
+    # Call update_analyses using an endpoint_url that will fail validation
+    current_app.config["ANALYSES_ENDPOINTS"]["TestAnalysis"]['endpoint_url'] = 'https://www.hepdata.net/search/?format=json&size=1'
+    update_analyses('TestAnalysis')
+
+    # Call update_analyses using an invalid endpoint_URL
+    current_app.config["ANALYSES_ENDPOINTS"]["TestAnalysis"]['endpoint_url'] = 'https://www.hepdata.net/analyses.json'
+    update_analyses('TestAnalysis')
 
 
 def test_generate_license_data_by_id(app):
@@ -1362,7 +1389,7 @@ def test_version_related_functions(app):
         expected_backward_sub_relations = []
 
         # Finished records will have other record references appear
-        if test["overall_status"] is not "todo":
+        if test["overall_status"] != "todo":
             expected_backward_sub_relations.append(test["other_recid"])
 
         assert [sub.publication_recid for sub in backward_sub_relations] == expected_backward_sub_relations
@@ -1385,7 +1412,7 @@ def test_version_related_functions(app):
             expected_backward_dt_relations = []
 
             # We expect unfinished records to NOT have `other_recid` tables
-            if test["overall_status"] is not "todo":
+            if test["overall_status"] != "todo":
                 expected_backward_dt_relations.append(f"10.17182/hepdata.{test['other_recid']}.v2/t{table_number}")
 
             # Here we expect the second table to reference ITS OWN table one

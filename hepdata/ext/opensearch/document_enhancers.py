@@ -94,7 +94,7 @@ def add_shortened_authors(doc):
 
 def add_analyses(doc):
     """
-    Add analyses links such as Rivet, MadAnalysis 5, SModelS, CheckMATE, HackAnalysis, Combine, HistFactory and NUISANCE to the index.
+    Add analyses links to tools such as Rivet, MadAnalysis 5, etc. to the index.
 
     :param doc:
     :return:

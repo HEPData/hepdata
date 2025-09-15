@@ -53,6 +53,7 @@ HEPDATA.file_type_to_details = {
   "checkmate": {"icon": "area-chart", "description": "CheckMATE Analysis"},
   "hackanalysis": {"icon": "area-chart", "description": "HackAnalysis Analysis"},
   "combine": {"icon": "area-chart", "description": "Combine Analysis"},
+  "gambit": {"icon": "area-chart", "description": "GAMBIT analysis"},
   "xfitter": {"icon": "area-chart", "description": "xFitter Analysis"},
   "applgrid": {"icon": "area-chart", "description": "APPLgrid Analysis"},
   "ufo": {"icon": "rocket", "description": "Universal Feynrules Output (UFO)"},

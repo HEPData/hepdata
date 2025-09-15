@@ -48,11 +48,12 @@ There are some examples below:
 
 **MacOS**
 
-Install the latest version (currently, v2.19.1) with ``brew install opensearch``.
+Install the latest version (currently, v3.2.0) with ``brew install opensearch``.
 Alternatively, to install a specific version like v2.18.0 via Homebrew (if the latest version is newer), run:
 
 .. code-block:: console
 
+    $ brew tap homebrew/core --force
     $ brew tap-new opensearch/tap
     $ brew extract --version=2.18.0 opensearch opensearch/tap
     $ brew install opensearch/tap/opensearch@2.18.0
@@ -62,11 +63,16 @@ Alternatively, to install a specific version like v2.18.0 via Homebrew (if the l
 
 You can see the tarball instructions on the OpenSearch installation `webpage. <https://docs.opensearch.org/docs/2.18/install-and-configure/install-opensearch/tar/>`_
 
-To execute, run this command within the extracted folder.
+To execute, run these commands within the extracted folder.
 
 .. code-block:: console
 
-		./opensearch-tar-install.sh -E "plugins.security.disabled=true"
+    $ export OPENSEARCH_INITIAL_ADMIN_PASSWORD=<custom-admin-password>
+    $ ./opensearch-tar-install.sh -E "plugins.security.disabled=true"
+
+The custom admin password is required for OpenSearch 2.12 or greater.  The requirements for ``<custom-admin-password>``
+are "a minimum 8 character password and must contain at least one uppercase letter, one lowercase letter, one digit,
+and one special character that is strong".
 
 **Docker**
 
@@ -77,9 +83,7 @@ Alternatively, run OpenSearch after `installing Docker <https://docs.docker.com/
     $ docker pull opensearchproject/opensearch:2.18.0
     $ docker run -d -p 9200:9200 -p 9600:9600 -e "discovery.type=single-node" -e "plugins.security.disabled=true" -e "OPENSEARCH_INITIAL_ADMIN_PASSWORD=<custom-admin-password>" opensearchproject/opensearch:2.18.0
 
-The custom admin password is required for OpenSearch 2.12 or greater.  The requirements for ``<custom-admin-password>``
-are "a minimum 8 character password and must contain at least one uppercase letter, one lowercase letter, one digit,
-and one special character that is strong".  You can test that the container is running with:
+You can test that the container is running with:
 
 .. code-block:: console
 

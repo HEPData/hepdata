@@ -1,0 +1,141 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hepdata.net/analyses/schemas/1.0.0/analyses_schema.json",
+  "title": "HEPData analysis tool schema",
+  "description": "A JSON schema for tracking implementations of HEPData analyses in different tools",
+  "type": "object",
+  "required": ["schema_version", "tool", "version", "date_created", "implementations_description", "url_templates", "analyses"],
+
+  "properties": {
+    "schema_version": {
+      "description": "The version of the JSON schema applying to this file",
+      "const": "1.0.0"
+    },
+
+    "tool": {
+      "description": "The name of the tool used to implement the analyses",
+      "type": "string"
+    },
+
+    "version": {
+      "description": "The version of the tool used to implement the analyses",
+      "type": "string"
+    },
+
+    "date_created": {
+      "description": "The date at which the JSON file was created, formatted as RFC 3339, section 5.6 (https://json-schema.org/understanding-json-schema/reference/type#dates-and-times), e.g. 2018-11-13T20:20:39+00:00",
+      "type": "string",
+      "format": "date-time"
+    },
+
+    "implementations_description": {
+      "description": "The type of information provided for the analyses by the tool",
+      "type": "string"
+    },
+
+    "url_templates": {
+      "description": "Templates for URLs to the main repository and important other pages",
+      "type": "object",
+      "required": ["main_url"],
+
+      "properties": {
+        "main_url": {
+          "description": "The URL template for the main repository. Should contain e.g. a {name} placeholder for the analysis name.",
+          "type": "string"
+        },
+        "val_url": {
+          "description": "The URL template for the validation page. Should contain e.g. a {name} placeholder for the analysis name.",
+          "type": "string"
+        }
+      }
+    },
+
+    "analyses": {
+      "description": "The analyses implemented in the tool",
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "$ref": "#/$defs/Analysis"
+      }
+    },
+
+    "implementations_license": {
+      "description": "The license for the implementations of the analyses in the tool. Taken to be CC0 if not specified.",
+      "type": "object",
+      "required": ["name", "url"],
+      "additionalProperties": false,
+
+      "properties": {
+        "name": {
+          "description": "The name of the license",
+          "type": "string",
+          "maxLength": 256
+        },
+        "url": {
+          "description": "The URL to the license",
+          "type": "string",
+          "maxLength": 256
+        },
+        "description": {
+          "description": "A description of the license",
+          "type": "string"
+        }
+      }
+    }
+  },
+
+  "$defs": {
+
+    "Analysis": {
+      "description": "An analysis, identified by the INSPIRE ID, implemented at least once in the tool",
+      "type": "object",
+      "required": ["inspire_id", "implementations"],
+    
+      "properties": {
+        "inspire_id": {
+          "description": "The INSPIRE ID of the analysis",
+          "type": "number"
+        },
+        "implementations":{
+          "description": "The implementations of the analysis in the tool",
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "$ref": "#/$defs/Implementation"
+          }
+        },
+        "signature_type": {
+          "description": "The signature of the analysis, e.g. 'prompt', 'displaced'",
+          "type": "string"
+        },
+        "pretty_name": {
+          "description": "A pretty name for the analysis",
+          "type": "string"
+        }
+      }
+    },
+
+    "Implementation": {
+      "description": "An implementation of an analysis in the tool, giving the internal name to retrieve information",
+      "type": "object",
+      "required": ["name"],
+    
+      "properties": {
+        "name": {
+          "description": "Internal name of the implementation",
+          "type": "string"
+        },
+        "path": {
+          "description": "The path to the implementation in the tool",
+          "type": "string"
+        }
+      }
+    }
+
+  }
+
+}

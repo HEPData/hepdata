@@ -21,11 +21,17 @@
 # In applying this license, CERN does not
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
+import json
+import os
 
-"""Version information for HEPData.
+import hepdata.modules.records.utils.analyses as analyses
 
-This file is imported by ``HEPData.__init__``,
-and parsed by ``setup.py``.
-"""
+def test_analyses_json_schema():
+  base_dir = os.path.dirname(os.path.realpath(__file__))
+  test_file_name = os.path.join(base_dir, "test_data", "analyses_example.json")
 
-__version__ = "0.9.4dev20250912"
+  with open(test_file_name) as f:
+    analyses.test_analyses_schema(json.load(f))
+
+if __name__ == "__main__":
+  test_analyses_json_schema()
