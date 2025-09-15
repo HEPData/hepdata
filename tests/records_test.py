@@ -922,6 +922,12 @@ def test_get_json_ld(app, load_default_data, identifiers):
             'contentUrl': f'http://localhost:5000/download/table/2/yoda',
             'description': 'YODA file',
             'encodingFormat': 'https://yoda.hepforge.org'
+        },
+        {
+            '@type': 'DataDownload',
+            'contentUrl': f'http://localhost:5000/download/table/2/yoda.h5',
+            'description': 'YODA.H5 file',
+            'encodingFormat': 'https://yoda.hepforge.org'
         }
     ]
     assert table_data['includedInDataCatalog'] == {

@@ -80,7 +80,12 @@ Ready to contribute? Here's how to set up ``hepdata`` for local development.
       $ git commit -s -m "Your detailed description of your changes."
       $ git push origin name-of-your-bugfix-or-feature
 
-7. Submit a pull request through the GitHub website, perhaps initially as a
+7. The continuous integration (CI) run via GitHub Actions requires access to secrets only available to the
+https://github.com/HEPData/hepdata repository, not to forks. Therefore, pull requests should be made only
+from branches of this repository, not from forks. You can request Write access to the repository by
+sending an email to ``info@hepdata.net``.
+
+8. Submit a pull request through the GitHub website, perhaps initially as a
 `draft pull request <https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-pull-requests#draft-pull-requests>`_
 until you make sure that all checks have passed.
 

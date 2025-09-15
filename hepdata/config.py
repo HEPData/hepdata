@@ -197,7 +197,7 @@ CFG_DATA_KEYWORDS = ['observables', 'reactions', 'cmenergies', 'phrases']
 CFG_SEARCH_RANGE_TERMS = ["recid", "publication_recid", "inspire_id"]  # Possible terms used to OpenSearch API range searches
 
 CFG_CONVERTER_URL = 'https://converter.hepdata.net'
-CFG_SUPPORTED_FORMATS = ['yaml', 'root', 'csv', 'yoda', 'yoda1', 'original']
+CFG_SUPPORTED_FORMATS = ['yaml', 'root', 'csv', 'yoda', 'yoda1', 'yoda.h5', 'original']
 CFG_CONVERTER_TIMEOUT = 220  # timeout in seconds
 
 CFG_TMPDIR = tempfile.gettempdir()

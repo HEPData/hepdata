@@ -37,7 +37,7 @@ from hepdata.modules.submission.api import get_latest_hepsubmission
 from hepdata.modules.submission.models import DataSubmission
 from hepdata.utils.miscellaneous import get_resource_data
 
-FORMATS = ['json', 'root', 'yaml', 'csv', 'yoda']
+FORMATS = ['json', 'root', 'yaml', 'csv', 'yoda', 'yoda.h5']
 
 logging.basicConfig()
 log = logging.getLogger(__name__)
@@ -55,7 +55,7 @@ def add_data_submission_urls(doc):
     doc['access_urls'] = {'links': {}}
 
     for format in FORMATS:
-        doc['access_urls']['links'][format] = '{0}/download/submission/ins{1}/{2}/{3}'.format(
+        doc['access_urls']['links'][format.replace('.', '-')] = '{0}/download/submission/ins{1}/{2}/{3}'.format(
             current_app.config.get('SITE_URL', 'https://www.hepdata.net'),
             doc['inspire_id'], doc['version'] if 'version' in doc else 1,
             format)
@@ -67,7 +67,7 @@ def add_data_table_urls(doc):
 
         _cleaned_table_name = doc['title'].replace('%', '%25').replace('\\', '%5C')
 
-        doc['access_urls']['links'][format] = '{0}/download/table/ins{1}/{2}/{3}'.format(
+        doc['access_urls']['links'][format.replace('.', '-')] = '{0}/download/table/ins{1}/{2}/{3}'.format(
             current_app.config.get('SITE_URL', 'https://www.hepdata.net'),
             doc['inspire_id'], _cleaned_table_name, format)
 
