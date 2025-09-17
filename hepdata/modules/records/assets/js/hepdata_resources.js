@@ -70,46 +70,57 @@ HEPDATA.hepdata_resources = (function () {
         return d['doi'] == null ? '' : '<a href="https://doi.org/' + d['doi'] + '" class="resource-doi">' + d['doi'] + '</a>';
       });
 
-    let append = "";
+    let key_append = "";
+
+    // If the status is to-do: we request and set the observer key
     let todo = HEPDATA.current_submission_status == 'todo';
-    if(todo) {
-      append = '&observer_key=' + HEPDATA.current_observer_key;
-    }
 
-    // Add the landing page button
-    resource_item.append("a")
-      .attr('target', '_new')
-      .attr("class", "btn btn-primary btn-sm")
-      .attr("href", function(d) {
-        let landing_page_url = '/record/resource/' + d.id + '?landing_page=true';
-        if(todo) {
-          landing_page_url += append;
-        }
-        return landing_page_url;
-      })
-      .text("Landing Page");
+    // We either get the observer key (if to-do), or just set the promise to resolve with null return
+    let observer_key_promise = todo
+      ? HEPDATA.get_observer_key_data(HEPDATA.current_record_id)
+      : Promise.resolve(null);
 
-    resource_item.append("a")
-      .attr('target', '_new')
-      .attr("class", "btn btn-primary btn-sm")
-      .attr("href", function (d) {
-        var download_location = d.location;
-        if (d.location.indexOf('http') == -1) {
-          let view_page_url = '/record/resource/' + d.id + '?view=true';
-          if(todo) {
-            view_page_url += append;
-          }
-          download_location = view_page_url;
-        }
-        return download_location;
-      }).text(function (d) {
-      if (d.location.indexOf('http') == -1) {
-        return "Download"
+    // Wait for the promise to resolve, as we cannot continue without the append
+    observer_key_promise.then(function(observer_key) {
+      if(todo) {
+        key_append = '&observer_key=' + HEPDATA.current_observer_key;
       }
-      return "View Resource";
-    });
 
-    HEPDATA.typeset([d3.select("#resourceModal").node()]);
+      // Add the landing page button
+      resource_item.append("a")
+        .attr('target', '_new')
+        .attr("class", "btn btn-primary btn-sm")
+        .attr("href", function(d) {
+          let landing_page_url = '/record/resource/' + d.id + '?landing_page=true';
+          if(todo) {
+            landing_page_url += key_append;
+          }
+          return landing_page_url;
+        })
+        .text("Landing Page");
+
+      resource_item.append("a")
+        .attr('target', '_new')
+        .attr("class", "btn btn-primary btn-sm")
+        .attr("href", function (d) {
+          var download_location = d.location;
+          if (d.location.indexOf('http') == -1) {
+            let view_page_url = '/record/resource/' + d.id + '?view=true';
+            if(todo) {
+              view_page_url += key_append;
+            }
+            download_location = view_page_url;
+          }
+          return download_location;
+        }).text(function (d) {
+        if (d.location.indexOf('http') == -1) {
+          return "Download"
+        }
+        return "View Resource";
+      });
+
+      HEPDATA.typeset([d3.select("#resourceModal").node()]);
+     });
   };
 
   var create_modal_view = function (recid, version) {
