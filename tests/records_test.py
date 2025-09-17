@@ -61,7 +61,7 @@ from hepdata.modules.records.utils.data_files import get_data_path_for_record
 from hepdata.modules.records.utils.json_ld import get_json_ld
 from hepdata.modules.records.utils.users import get_coordinators_in_system, has_role
 from hepdata.modules.records.utils.workflow import update_record, create_record
-from hepdata.modules.records.views import set_data_review_status, get_observer_url
+from hepdata.modules.records.views import set_data_review_status, get_observer_data
 from hepdata.modules.submission.models import HEPSubmission, DataReview, \
     DataSubmission, DataResource, License, RecordVersionCommitMessage, RelatedRecid, RelatedTable, SubmissionObserver
 from hepdata.modules.submission.views import process_submission_payload
@@ -1515,9 +1515,9 @@ def test_verify_observer_key(app):
         assert result == test["expected"]
 
 
-def test_get_observer_url(app, client, mocker):
+def test_get_observer_data(app, client, mocker):
     """
-    Tests the get_observer_url function to ensure valid observer keys are returned
+    Tests the get_observer_data function to ensure valid observer keys are returned
     or not returned as expected.
     Tests logged in, out and valid/invalid values.
     """
@@ -1528,7 +1528,7 @@ def test_get_observer_url(app, client, mocker):
     db.session.commit()
 
     # Failed result with no login
-    failed_result = get_observer_url(0)
+    failed_result = get_observer_data(0)
 
     # Check that we've been redirected
     assert failed_result.status_code == 302
@@ -1538,14 +1538,14 @@ def test_get_observer_url(app, client, mocker):
 
     # Testing a non-existent recid
     test_recid = 1000001
-    result = json.loads(get_observer_url(test_recid))
+    result = json.loads(get_observer_data(test_recid))
 
     # Ensure correct error messaging with recid/false
     assert result["recid"] == test_recid
     assert result["observer_exists"] == False
 
     # Make the request and load response to dict
-    result = json.loads(get_observer_url(recid))
+    result = json.loads(get_observer_data(recid))
 
     # Get current site_url for generating expected url format for comparison
     site_url = current_app.config.get('SITE_URL', 'https://www.hepdata.net')
