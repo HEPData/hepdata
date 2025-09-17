@@ -33,7 +33,7 @@ import os
 from dateutil import parser
 from invenio_accounts.models import User
 from flask_login import login_required, login_user
-from flask import Blueprint, send_file, abort, redirect, url_for
+from flask import Blueprint, send_file, abort, redirect, current_app, url_for
 from flask_security.utils import verify_password
 from sqlalchemy import or_, func
 from sqlalchemy.orm import joinedload
@@ -43,17 +43,19 @@ from yaml import CBaseLoader as Loader
 from hepdata.config import CFG_DATA_TYPE, CFG_PUB_TYPE, SITE_URL, ADDITIONAL_SIZE_LOAD_CHECK_THRESHOLD
 from hepdata.ext.opensearch.api import get_records_matching_field, get_count_for_collection, get_n_latest_records, \
     index_record_ids
+from hepdata.modules.converter.views import get_version_count
 from hepdata.modules.email.api import send_notification_email, send_new_review_message_email, NoParticipantsException, \
     send_question_email, send_coordinator_notification_email
 from hepdata.modules.inspire_api.views import get_inspire_record_information
+from hepdata.modules.permissions.api import verify_observer_key
 from hepdata.modules.records.api import request, determine_user_privileges, render_template, format_submission, \
     render_record, current_user, db, jsonify, get_user_from_id, get_record_contents, extract_journal_info, \
     user_allowed_to_perform_action, NoResultFound, OrderedDict, query_messages_for_data_review, returns_json, \
     process_payload, has_upload_permissions, has_coordinator_permissions, create_new_version, format_resource, \
     should_send_json_ld, JSON_LD_MIMETYPES, get_resource_mimetype, get_table_data_list
-from hepdata.modules.submission.api import get_submission_participants_for_record
+from hepdata.modules.submission.api import get_submission_participants_for_record, get_or_create_submission_observer
 from hepdata.modules.submission.models import HEPSubmission, DataSubmission, \
-    DataResource, DataReview, Message, Question
+    DataResource, DataReview, Message, Question, SubmissionObserver
 from hepdata.modules.records.utils.common import get_record_by_id, \
     default_time, IMAGE_TYPES, decode_string, file_size_check, generate_license_data_by_id, load_table_data
 from hepdata.modules.records.utils.data_processing_utils import \
@@ -225,6 +227,8 @@ def metadata(recid):
     :return: renders the record template
     """
 
+    observer_key = request.args.get('observer_key')
+
     try:
         version = int(request.args.get('version', -1))
     except ValueError:
@@ -242,7 +246,7 @@ def metadata(recid):
         output_format = 'json_ld'
 
     return render_record(recid=recid, record=record, version=version, output_format=output_format,
-                         light_mode=light_mode)
+                         light_mode=light_mode, observer_key=observer_key)
 
 
 @blueprint.route('/count')
@@ -309,6 +313,18 @@ def get_table_details(recid, data_recid, version, load_all=1):
     :param load_all: Whether to perform the filesize check or not when loading (1 will always load the file)
     :return:
     """
+
+    observer_key = request.args.get('observer_key')
+    key_verified = verify_observer_key(recid, observer_key)
+
+    version_count, version_count_all = get_version_count(recid)
+    # If version not given explicitly, take to be latest allowed version (or 1 if there are no allowed versions).
+    version = version_count if version_count else 1
+
+    # Check for a user trying to access a version of a publication record where they don't have permissions.
+    if version_count < version_count_all and version == version_count_all and not key_verified:
+        abort(403)
+
     # joinedload allows query of data in another table without a second database access.
     datasub_query = DataSubmission.query.options(joinedload('related_tables')).filter_by(id=data_recid, version=version)
     table_contents = {}
@@ -439,6 +455,44 @@ def get_coordinator_view(recid):
          "reserve-reviewers": participants["reviewer"]["reserve"],
          "primary-uploaders": participants["uploader"]["primary"],
          "reserve-uploaders": participants["uploader"]["reserve"]})
+
+
+@blueprint.route('/coordinator/observer_key/<int:recid>/', methods=['GET', ])
+@blueprint.route('/coordinator/observer_key/<int:recid>/<int:as_url>', methods=['GET', ])
+@login_required
+def get_observer_data(recid, as_url=None):
+    """
+    Returns the observer url for a record, if it exists, and the user
+    has permission.
+
+    :param recid: The publication recid for requested observer key
+    :param as_url: Default: None - Whether to return as url (when set to 1), or just key
+    :return: JSON object with observer url and recid/status, or failure message.
+    """
+    response = { "recid": recid, "observer_exists": False }
+
+    if user_allowed_to_perform_action(recid):
+        # Query for the observer key object
+        observer = get_or_create_submission_observer(recid)
+
+        if observer:
+            # If exists, set response value and key
+            response['observer_exists'] = True
+
+            if as_url == 1:
+                site_url = current_app.config.get('SITE_URL', 'https://www.hepdata.net')
+                observer_url = f"{site_url}/record/{recid}/?observer_key={observer.observer_key}"
+                response['observer_key'] = observer_url
+            else:
+                response['observer_key'] = observer.observer_key
+        else:
+            # Set response object value for status
+            response['observer_exists'] = False
+    else:
+        # Return error message if user does not have relevant permissions
+        response['message'] = "You do not have permission to perform this action."
+
+    return json.dumps(response)
 
 
 @blueprint.route('/data/review/status/', methods=['POST', ])
@@ -698,10 +752,33 @@ def get_resource(resource_id):
     Attempts to find any HTML resources to be displayed for a record in the event that it
     does not have proper data records included.
 
-    :param recid: publication record id
+    :param resource_id: Resource id
     :return: json dictionary containing any HTML files to show.
     """
     resource_obj = DataResource.query.filter_by(id=resource_id).first()
+
+    # Perform a join to determine parent ID
+    parent_submission = db.session.query(HEPSubmission).join(
+        HEPSubmission.resources  # Uses the relationship, not the table
+    ).filter(
+        DataResource.id == resource_id
+    ).first()
+
+    # Get parent submission recid, or default 0
+    recid = parent_submission.publication_recid if parent_submission else 0
+
+    # Retrieve and verify observer key value
+    observer_key = request.args.get('observer_key')
+    key_verified = verify_observer_key(recid, observer_key)
+
+    version_count, version_count_all = get_version_count(recid)
+    # If version not given explicitly, take to be latest allowed version (or 1 if there are no allowed versions).
+    version = version_count if version_count else 1
+
+    # Check for a user trying to access a version of a publication record where they don't have permissions.
+    if version_count < version_count_all and version == version_count_all and not key_verified:
+        abort(403)
+
     view_mode = bool(request.args.get('view', False))
     landing_page = bool(request.args.get('landing_page', False))
     output_format = 'html'
