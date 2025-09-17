@@ -1528,7 +1528,7 @@ def test_get_observer_data(app, client, mocker):
     db.session.commit()
 
     # Failed result with no login
-    failed_result = get_observer_data(0)
+    failed_result = get_observer_data(0, 1)
 
     # Check that we've been redirected
     assert failed_result.status_code == 302
@@ -1538,14 +1538,14 @@ def test_get_observer_data(app, client, mocker):
 
     # Testing a non-existent recid
     test_recid = 1000001
-    result = json.loads(get_observer_data(test_recid))
+    result = json.loads(get_observer_data(test_recid, 1))
 
     # Ensure correct error messaging with recid/false
     assert result["recid"] == test_recid
     assert result["observer_exists"] == False
 
     # Make the request and load response to dict
-    result = json.loads(get_observer_data(recid))
+    result = json.loads(get_observer_data(recid, 1))
 
     # Get current site_url for generating expected url format for comparison
     site_url = current_app.config.get('SITE_URL', 'https://www.hepdata.net')
