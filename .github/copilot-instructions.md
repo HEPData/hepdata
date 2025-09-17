@@ -176,6 +176,43 @@ pytest tests -k 'not e2e'  # NEVER CANCEL: Takes 10-15 minutes
    - Test different export formats (ROOT, CSV, YAML)
    - Verify file downloads correctly
 
+### Pre-Development Validation Checklist
+Before making code changes, verify your setup:
+
+```bash
+# 1. Check all services are accessible
+curl -f http://localhost:5000/ || echo "Web server not running"
+curl -f http://localhost:9200/ || echo "OpenSearch not running"  
+redis-cli ping || echo "Redis not running"
+
+# 2. Verify Python environment
+python --version | grep "3.9" || echo "Wrong Python version"
+pip list | grep "invenio" || echo "HEPData not installed"
+
+# 3. Check asset compilation works
+hepdata webpack --help || echo "Webpack commands not available"
+
+# 4. Verify database connectivity
+docker-compose exec db psql hepdata -U hepdata -c "SELECT 1;" || echo "Database not accessible"
+```
+
+### Post-Change Validation Steps
+After making changes:
+
+```bash
+# 1. Run linting (if available)
+flake8 hepdata/ || echo "Linting not configured"
+
+# 2. Run quick tests
+pytest tests/ -k "not e2e" --maxfail=5 -x || echo "Unit tests failed"
+
+# 3. Rebuild assets if frontend changes
+hepdata webpack buildall
+
+# 4. Test basic functionality
+curl http://localhost:5000/api/status || echo "API not responding"
+```
+
 ## Common Issues and Solutions
 
 ### Build Issues
@@ -269,6 +306,29 @@ The project uses `setup.py` instead of `package.json`:
 'invenio_assets.webpack': ['hepdata_theme_css = hepdata.modules.theme.webpack:theme']
 ```
 
+### Important File Locations
+```bash
+# Configuration files (copy and modify as needed):
+hepdata/config_local.local.py         # Local development template
+hepdata/config_local.docker_compose.py # Docker template  
+hepdata/config_local.gh.py           # GitHub Actions template
+
+# Key scripts:
+scripts/initialise_db.sh             # Database setup
+scripts/clean_assets.sh              # Asset rebuilding
+run-tests.sh                         # Test runner
+
+# Docker files:
+Dockerfile                           # Main application container
+docker-compose.yml                   # Development services
+docker/db/Dockerfile                 # Database container
+
+# Documentation:
+docs/                                # Sphinx documentation
+INSTALL.rst                          # Installation guide
+CONTRIBUTING.rst                     # Contribution guidelines
+```
+
 ### Environment Variables
 Always set these for development:
 ```bash
@@ -306,5 +366,38 @@ If you encounter SSL/network issues:
 2. Use system package managers instead of downloading
 3. Check if corporate proxy/firewall is blocking connections
 4. For Node.js issues in Docker, modify Dockerfile to use apt-based Node.js installation
+5. For pip install timeouts, increase timeout or try installing packages individually
+
+### Known Docker Build Issues
+The current Dockerfile may fail with SSL errors when downloading Node.js. Workaround:
+```dockerfile
+# Replace lines 22-26 with system Node.js installation:
+RUN apt-get update && apt-get install -y nodejs npm
+```
+
+## Quick Reference Commands
+
+### Check Application Status
+```bash
+# Check if services are running
+docker-compose ps                    # Docker setup
+curl http://localhost:5000/          # Web application
+curl http://localhost:9200/          # OpenSearch
+redis-cli ping                       # Redis (returns PONG)
+```
+
+### Common Git Operations
+```bash
+git status                           # Check working directory
+git log --oneline -10               # Recent commits
+git branch -a                       # All branches
+```
+
+### Directory Listing Commands
+```bash
+ls -la                               # Repository root contents
+find . -name "*.py" | head -10      # Python files
+find . -name "*.yml" -o -name "*.yaml" | head -5  # YAML configs
+```
 
 **Remember: This project requires patience - builds and tests take significant time but this is normal for a complex application with many dependencies.**
