@@ -294,5 +294,30 @@ HEPDATA.setup_clipboard = function(selector) {
   return clipboard;
 }
 
+HEPDATA.get_observer_key_data = function(recid, as_url) {
+    /**
+    * Requests the observer key data from a recid for URL display purposes.
+    * Optionally can be returned as the record URL.
+    *
+    * @param {number} recid - The recid to get observer_key for.
+    * @param {number} as_url - When set to "1", will request response as a full access URL
+    * @return {Promise} - Returns the request promise to later retrieve the observer key
+    */
+
+    let request_url = '/record/coordinator/observer_key/' + recid;
+    // Setting the request flag if required
+    if (as_url == 1) request_url += '/1';
+
+    return $.ajax({
+      dataType: 'json',
+      url: request_url,
+      processData: false,
+      cache: true
+    }).then(function (data) {
+      HEPDATA.current_observer_key = data['observer_exists'] ? data['observer_key'] : null;
+      return HEPDATA.current_observer_key;
+    });
+};
+
 window.HEPDATA = HEPDATA;
 export default HEPDATA;
