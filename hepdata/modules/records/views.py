@@ -458,13 +458,15 @@ def get_coordinator_view(recid):
 
 
 @blueprint.route('/coordinator/observer_key/<int:recid>/', methods=['GET', ])
+@blueprint.route('/coordinator/observer_key/<int:recid>/<int:as_url>', methods=['GET', ])
 @login_required
-def get_observer_url(recid):
+def get_observer_data(recid, as_url=None):
     """
     Returns the observer url for a record, if it exists, and the user
     has permission.
 
     :param recid: The publication recid for requested observer key
+    :param as_url: Default: None - Whether to return as url (when set to 1), or just key
     :return: JSON object with observer url and recid/status, or failure message.
     """
     response = { "recid": recid, "observer_exists": False }
@@ -476,10 +478,13 @@ def get_observer_url(recid):
         if observer:
             # If exists, set response value and key
             response['observer_exists'] = True
-            site_url = current_app.config.get('SITE_URL', 'https://www.hepdata.net')
-            observer_url = f"{site_url}/record/{recid}/?observer_key={observer.observer_key}"
 
-            response['observer_key'] = observer_url
+            if as_url == 1:
+                site_url = current_app.config.get('SITE_URL', 'https://www.hepdata.net')
+                observer_url = f"{site_url}/record/{recid}/?observer_key={observer.observer_key}"
+                response['observer_key'] = observer_url
+            else:
+                response['observer_key'] = observer.observer_key
         else:
             # Set response object value for status
             response['observer_exists'] = False
