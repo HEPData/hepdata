@@ -608,6 +608,56 @@ def test_update_record_info(app):
         unload_submission(submission.publication_recid)
 
 
+def test_update_record_info_large_submission_batching(app, mocker):
+    """Test that update_record_info properly batches large numbers of records"""
+    # Mock the database query to return many data submissions
+    mock_hep_submission = mocker.MagicMock()
+    mock_hep_submission.overall_status = 'finished'
+    mock_hep_submission.version = 1
+    mock_hep_submission.publication_recid = 1
+    
+    # Create mock data submissions for 150 records (publication + 149 data tables)  
+    mock_data_submissions = []
+    for i in range(2, 151):  # records 2-150
+        mock_submission = mocker.MagicMock()
+        mock_submission.associated_recid = i
+        mock_data_submissions.append(mock_submission)
+    
+    # Mock the necessary functions
+    mocker.patch('hepdata.modules.records.utils.records_update_utils.get_latest_hepsubmission', return_value=mock_hep_submission)
+    mocker.patch('hepdata.modules.records.utils.records_update_utils.get_inspire_record_information', return_value=({}, 'success'))
+    mocker.patch('hepdata.modules.records.utils.records_update_utils.DataSubmission.query.filter_by').return_value.order_by.return_value = mock_data_submissions
+    mocker.patch('hepdata.modules.records.utils.records_update_utils.get_record_by_id', return_value={'test': 'record'})
+    mocker.patch('hepdata.modules.records.utils.records_update_utils.TESTING', True)
+    
+    # Mock the indexing functions to track calls
+    mock_index_record_ids = mocker.patch('hepdata.modules.records.utils.records_update_utils.index_record_ids')
+    mock_push_data_keywords = mocker.patch('hepdata.modules.records.utils.records_update_utils.push_data_keywords')
+    
+    # Call update_record_info with a large submission
+    result = update_record_info('1311487')
+    
+    # Should be called 2 times: 100 records, 50 records
+    assert mock_index_record_ids.call_count == 2
+    
+    # Check the call arguments for batching  
+    calls = mock_index_record_ids.call_args_list
+    
+    # First batch: 100 records
+    first_batch = calls[0][0][0]  # First positional argument of first call
+    assert len(first_batch) == 100
+    assert 1 in first_batch  # publication record should be in first batch
+    
+    # Second batch: 50 records  
+    second_batch = calls[1][0][0]
+    assert len(second_batch) == 50
+    
+    # push_data_keywords should be called once
+    mock_push_data_keywords.assert_called_once_with(pub_ids=[1])
+    
+    assert result == 'No update needed'
+
+
 def test_set_review_status(app, load_default_data):
     """Test we can set review status on one or all data records"""
     # Set the status of a default record to "todo" so we can modify table
