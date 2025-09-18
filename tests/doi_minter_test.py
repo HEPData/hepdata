@@ -354,7 +354,7 @@ def test_xml_validates(app, identifiers):
     site_url = app.config.get('SITE_URL', 'https://www.hepdata.net')
 
     # Load schema
-    datacite_schema = xmlschema.XMLSchema('http://schema.datacite.org/meta/kernel-4.4/metadata.xsd')
+    datacite_schema = xmlschema.XMLSchema('http://schema.datacite.org/meta/kernel-4.5/metadata.xsd')
 
     base_xml = render_template('hepdata_records/formats/datacite/datacite_container_submission.xml',
                                doi=hep_submission.doi,
