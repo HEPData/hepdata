@@ -15,7 +15,7 @@ from hepdata.modules.records.utils.common import get_record_by_id
 from hepdata.modules.records.utils.doi_minter import get_or_create_doi, register_doi, \
     generate_doi_for_table, generate_dois_for_submission, \
     reserve_dois_for_data_submissions, reserve_doi_for_hepsubmission, \
-    _get_submission_file_resources
+    _get_submission_file_resources, get_license_for_datacite
 from hepdata.modules.records.utils.submission import get_or_create_hepsubmission
 from hepdata.modules.records.utils.workflow import create_record
 from hepdata.modules.submission.models import DataSubmission, HEPSubmission, \
@@ -375,12 +375,20 @@ def test_xml_validates(app, identifiers):
     datacite_schema.validate(version_xml)
 
     for data_submission in data_submissions:
+        # Get license data using the new helper function
+        data_file = DataResource.query.filter_by(id=data_submission.data_file).first()
+        license_id = None
+        if data_file and data_file.file_license:
+            license_id = data_file.file_license
+        license = get_license_for_datacite(license_id)
+        
         data_xml = render_template('hepdata_records/formats/datacite/datacite_data_record.xml',
                                    doi=data_submission.doi,
                                    table_name=data_submission.name,
                                    table_description=data_submission.description,
                                    overall_submission=hep_submission,
                                    data_submission=data_submission,
+                                   license=license,
                                    publication_info=publication_info,
                                    site_url=site_url)
         # Validate the data submission XML
@@ -394,9 +402,8 @@ def test_xml_validates(app, identifiers):
     publication_info = get_record_by_id(hep_submission.publication_recid)
 
     for i, resource in enumerate(hep_submission.resources):
-        license = None
-        if resource.file_license:
-            license = License.query.filter_by(id=resource.file_license).first()
+        # Use the new helper function to always get license data
+        license = get_license_for_datacite(resource.file_license)
 
         resource_xml = render_template(
             'hepdata_records/formats/datacite/datacite_resource.xml',
@@ -410,6 +417,90 @@ def test_xml_validates(app, identifiers):
 
         # Validate the resource XML
         datacite_schema.validate(resource_xml)
+
+
+def test_datacite_xml_always_includes_license(app, identifiers):
+    """Test that DataCite XML always includes license information, defaulting to CC0 when none specified"""
+    hep_submission = get_or_create_hepsubmission(1)
+    data_submissions = DataSubmission.query.filter_by(
+        publication_inspire_id=hep_submission.inspire_id,
+        version=hep_submission.version) \
+        .order_by(DataSubmission.id.asc()).all()
+    publication_info = get_record_by_id(hep_submission.publication_recid)
+    site_url = app.config.get('SITE_URL', 'https://www.hepdata.net')
+
+    # Load schema
+    datacite_schema = xmlschema.XMLSchema('http://schema.datacite.org/meta/kernel-4.4/metadata.xsd')
+
+    # Test data submission without explicit license (should get CC0)
+    for data_submission in data_submissions:
+        data_file = DataResource.query.filter_by(id=data_submission.data_file).first()
+        
+        # Ensure no explicit license is set
+        if data_file:
+            data_file.file_license = None
+            db.session.commit()
+        
+        # Use the new helper function
+        license = get_license_for_datacite(None)
+        
+        data_xml = render_template('hepdata_records/formats/datacite/datacite_data_record.xml',
+                                   doi=data_submission.doi,
+                                   table_name=data_submission.name,
+                                   table_description=data_submission.description,
+                                   overall_submission=hep_submission,
+                                   data_submission=data_submission,
+                                   license=license,
+                                   publication_info=publication_info,
+                                   site_url=site_url)
+        
+        # Validate the XML
+        datacite_schema.validate(data_xml)
+        
+        # Check that CC0 license is present in the XML
+        assert 'CC0' in data_xml
+        assert 'https://creativecommons.org/publicdomain/zero/1.0/' in data_xml
+        assert '<rightsList>' in data_xml
+        assert '<rights rightsURI="https://creativecommons.org/publicdomain/zero/1.0/">CC0</rights>' in data_xml
+        
+        # Break after first data submission to keep test simple
+        break
+
+    # Create a test resource without explicit license
+    test_resource = DataResource(
+        id=99999,
+        file_location='/test/file.txt',
+        file_type='txt',
+        file_license=None  # No explicit license
+    )
+    db.session.add(test_resource)
+    db.session.commit()
+    
+    # Test that resource XML includes CC0 license
+    license = get_license_for_datacite(test_resource.file_license)
+    
+    resource_xml = render_template(
+        'hepdata_records/formats/datacite/datacite_resource.xml',
+        resource=test_resource,
+        doi='10.17182/test.99999',
+        overall_submission=hep_submission,
+        filename='file.txt',
+        license=license,
+        publication_info=publication_info,
+        site_url=site_url)
+    
+    # Validate the resource XML
+    datacite_schema.validate(resource_xml)
+    
+    # Check that CC0 license is present in the XML
+    assert 'CC0' in resource_xml
+    assert 'https://creativecommons.org/publicdomain/zero/1.0/' in resource_xml
+    assert '<rightsList>' in resource_xml
+    assert '<rights rightsURI="https://creativecommons.org/publicdomain/zero/1.0/">CC0</rights>' in resource_xml
+    
+    # Clean up test resource
+    db.session.delete(test_resource)
+    db.session.commit()
 
 
 def test_get_submission_file_resources(app, identifiers):
