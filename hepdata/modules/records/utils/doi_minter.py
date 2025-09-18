@@ -149,6 +149,7 @@ def create_container_doi(hep_submission_id, data_submission_ids, resource_ids, s
                                doi=hep_submission.doi,
                                overall_submission=hep_submission,
                                data_submissions=data_submissions,
+                               resources=resources,
                                publication_info=publication_info,
                                site_url=site_url)
 
@@ -156,6 +157,7 @@ def create_container_doi(hep_submission_id, data_submission_ids, resource_ids, s
                                   doi=version_doi,
                                   overall_submission=hep_submission,
                                   data_submissions=data_submissions,
+                                  resources=resources,
                                   publication_info=publication_info,
                                   site_url=site_url)
 
