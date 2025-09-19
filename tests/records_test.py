@@ -1037,9 +1037,38 @@ def test_create_breadcrumb_text():
     }
 
 
-def test_update_analyses(app):
+base_dir = os.path.dirname(os.path.realpath(__file__))
+testdata_analyses = yaml.safe_load(open(os.path.join(base_dir, "test_data", "analyses_tests.yaml"), 'r'))
+testdata_analyses_pytest = [tuple([tool]+list(dic.values())) for tool, dic in testdata_analyses.items()]
+@pytest.mark.parametrize("tool, import_id, counts, test_user, url, license", testdata_analyses_pytest, ids=testdata_analyses.keys())
+def test_update_analyses(app, tool, import_id, counts, test_user, url, license):
     """ Test update of Rivet, MadAnalyses 5, etc. analyses """
 
+    if import_id is not None:
+        import_records([f'ins{import_id}'], synchronous=True)
+
+    analysis_resources = DataResource.query.filter_by(file_type=tool).all()
+    assert len(analysis_resources) == counts["before"]
+
+    if test_user is not None:
+        user = User(**test_user, password="hello1", active=True)
+        db.session.add(user)
+        db.session.commit()
+
+    update_analyses(tool)
+    analysis_resources = DataResource.query.filter_by(file_type=tool).all()
+    assert len(analysis_resources) == counts["after"]
+    assert analysis_resources[0].file_location == url
+    if license is not None:
+        assert License.query.filter_by(id=analysis_resources[0].file_license).first().name == license
+
+    if test_user is not None:
+        submission = get_latest_hepsubmission(inspire_id=str(import_id), overall_status='finished')
+        assert is_current_user_subscribed_to_record(submission.publication_recid, user)
+
+
+def test_multiupdate_analyses(app):
+    """ Test update of analyses multiple times, using Rivet as example """
     # Import a record that already has a Rivet analysis attached (but with '#' in the URL)
     import_records(['ins1203852'], synchronous=True)
     analysis_resources = DataResource.query.filter_by(file_type='rivet').all()
@@ -1058,62 +1087,9 @@ def test_update_analyses(app):
     assert len(analysis_resources) == 1
     assert analysis_resources[0].file_location == 'http://rivet.hepforge.org/analyses/ATLAS_2012_I1203852'
 
-    # Import a record that has an associated MadAnalysis 5 analysis
-    import_records(['ins1811596'], synchronous=True)
-    analysis_resources = DataResource.query.filter_by(file_type='MadAnalysis').all()
-    assert len(analysis_resources) == 0
-    update_analyses('MadAnalysis')
-    analysis_resources = DataResource.query.filter_by(file_type='MadAnalysis').all()
-    assert len(analysis_resources) == 1
-    assert analysis_resources[0].file_location == 'https://doi.org/10.14428/DVN/I2CZWU'
 
-    # Import a record that has an associated SModelS analysis
-    import_records(['ins1847779'], synchronous=True)
-    analysis_resources = DataResource.query.filter_by(file_type='SModelS').all()
-    assert len(analysis_resources) == 0
-    user = User(email='test1@test.com', password='hello1', active=True, id=7766)
-    db.session.add(user)
-    db.session.commit()
-    update_analyses('SModelS')
-    analysis_resources = DataResource.query.filter_by(file_type='SModelS').all()
-    assert len(analysis_resources) == 2
-    assert analysis_resources[0].file_location == 'https://github.com/SModelS/smodels-database-release/tree/main/13TeV/ATLAS/ATLAS-EXOT-2018-06/'
-    assert License.query.filter_by(id=analysis_resources[0].file_license).first().name == 'cc-by-4.0'
-    submission = get_latest_hepsubmission(inspire_id='1847779', overall_status='finished')
-    assert is_current_user_subscribed_to_record(submission.publication_recid, user)
-
-    # Call update_analyses() again: should be no further changes (but covers more lines of code)
-    update_analyses('SModelS')
-    analysis_resources = DataResource.query.filter_by(file_type='SModelS').all()
-    assert len(analysis_resources) == 2
-    assert analysis_resources[0].file_location == 'https://github.com/SModelS/smodels-database-release/tree/main/13TeV/ATLAS/ATLAS-EXOT-2018-06/'
-
-    # ins1847779 also has a CheckMATE analysis, so don't need to import another record
-    analysis_resources = DataResource.query.filter_by(file_type='CheckMATE').all()
-    assert len(analysis_resources) == 0
-    user = User(email='test2@test.com', password='hello1', active=True, id=6977)
-    db.session.add(user)
-    db.session.commit()
-    update_analyses('CheckMATE')
-    analysis_resources = DataResource.query.filter_by(file_type='CheckMATE').all()
-    assert len(analysis_resources) == 1
-    assert analysis_resources[0].file_location == 'https://checkmate.hepforge.org/AnalysesList/ATLAS_13TeV.html#atlas_2102_10874'
-    submission = get_latest_hepsubmission(inspire_id='1847779', overall_status='finished')
-    assert is_current_user_subscribed_to_record(submission.publication_recid, user)
-
-    # ins1847779 also has a HackAnalysis analysis, so don't need to import another record
-    analysis_resources = DataResource.query.filter_by(file_type='HackAnalysis').all()
-    assert len(analysis_resources) == 0
-    user = User(email='test3@test.com', password='hello1', active=True, id=7919)
-    db.session.add(user)
-    db.session.commit()
-    update_analyses('HackAnalysis')
-    analysis_resources = DataResource.query.filter_by(file_type='HackAnalysis').all()
-    assert len(analysis_resources) == 1
-    assert analysis_resources[0].file_location == 'https://goodsell.pages.in2p3.fr/hackanalysis/page/analyses/atlas_exot_2018_06/'
-    submission = get_latest_hepsubmission(inspire_id='1847779', overall_status='finished')
-    assert is_current_user_subscribed_to_record(submission.publication_recid, user)
-
+def test_update_delete_analyses(app):
+    """ Test update and deleting of analyses, using Combine as example """
     # Import a record that has an associated Combine analysis
     import_records(['ins2796231'], synchronous=True)
     analysis_resources = DataResource.query.filter_by(file_type='Combine').all()
@@ -1131,14 +1107,9 @@ def test_update_analyses(app):
     assert license_data.name == 'cc-by-4.0'
     assert license_data.url == 'https://creativecommons.org/licenses/by/4.0'
 
-    # ins1847779 also has a GAMBIT analysis, so don't need to import another record
-    analysis_resources = DataResource.query.filter_by(file_type='GAMBIT').all()
-    assert len(analysis_resources) == 0
-    update_analyses('GAMBIT')
-    analysis_resources = DataResource.query.filter_by(file_type='GAMBIT').all()
-    assert len(analysis_resources) == 1
-    assert analysis_resources[0].file_location == 'https://github.com/GambitBSM/gambit_2.6/blob/release_2.6/ColliderBit/src/analyses/Analysis_ATLAS_13TeV_MONOJET_139infb.cpp'
 
+def test_incorrect_endpoint(app):
+    """ Test update_analyses with incorrect endpoint configurations """
     # Call update_analysis using an endpoint with no endpoint_url
     current_app.config["ANALYSES_ENDPOINTS"]["TestAnalysis"] = {}
     update_analyses('TestAnalysis')

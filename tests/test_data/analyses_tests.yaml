@@ -1,0 +1,61 @@
+CheckMATE:
+  import_id: 1847779
+  counts:
+    before: 0
+    after: 1
+  test_user:
+    email: test2@test.com
+    id: 6977
+  url: https://checkmate.hepforge.org/AnalysesList/ATLAS_13TeV.html#atlas_2102_10874
+  license: null
+
+# Combine: # tested in test_update_delete_analyses
+
+GAMBIT:
+  import_id: 1847779
+  counts:
+    before: 0
+    after: 1
+  test_user: null
+  url: https://github.com/GambitBSM/gambit_2.6/blob/release_2.6/ColliderBit/src/analyses/Analysis_ATLAS_13TeV_MONOJET_139infb.cpp
+  license: null
+
+HackAnalysis:
+  import_id: 1847779
+  counts:
+    before: 0
+    after: 1
+  test_user:
+    email: test3@test.com
+    id: 7919
+  url: https://goodsell.pages.in2p3.fr/hackanalysis/page/analyses/atlas_exot_2018_06/
+  license: null
+
+MadAnalysis:
+  import_id: 1811596
+  counts:
+    before: 0
+    after: 1
+  test_user: null
+  url: https://doi.org/10.14428/DVN/I2CZWU
+  license: null
+
+rivet:
+  import_id: 1203852
+  counts:
+    before: 1
+    after: 1
+  test_user: null
+  url: http://rivet.hepforge.org/analyses/ATLAS_2012_I1203852
+  license: null
+
+SModelS:
+  import_id: 1847779
+  counts:
+    before: 0
+    after: 2
+  test_user:
+    email: test1@test.com
+    id: 7766
+  url: https://github.com/SModelS/smodels-database-release/tree/main/13TeV/ATLAS/ATLAS-EXOT-2018-06/
+  license: cc-by-4.0
