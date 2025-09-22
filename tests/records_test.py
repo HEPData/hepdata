@@ -41,6 +41,7 @@ from sqlalchemy.exc import MultipleResultsFound
 import pytest
 from werkzeug.datastructures import FileStorage
 import requests_mock
+import jsonschema
 
 from hepdata.modules.permissions.models import SubmissionParticipant
 from hepdata.modules.records.api import process_payload, process_zip_archive, \
@@ -50,7 +51,7 @@ from hepdata.modules.records.api import process_payload, process_zip_archive, \
     format_resource, get_commit_message, get_related_to_this_hepsubmissions, \
     get_related_hepsubmissions, get_related_datasubmissions, get_related_to_this_datasubmissions
 from hepdata.modules.records.importer.api import import_records
-from hepdata.modules.records.utils.analyses import update_analyses
+from hepdata.modules.records.utils.analyses import update_analyses, update_analyses_single_tool
 from hepdata.modules.records.utils.submission import get_or_create_hepsubmission, process_submission_directory, \
     do_finalise, unload_submission
 from hepdata.modules.records.utils.common import get_record_by_id, get_record_contents, generate_license_data_by_id
@@ -1037,6 +1038,16 @@ def test_create_breadcrumb_text():
     }
 
 
+def update_analyses_single_tool_forgiving(tool):
+    """ Call update_analyses_single_tool() but demote known errors to warnings because they are on the tool side."""
+    try:
+        update_analyses_single_tool(tool)
+    except (jsonschema.exceptions.ValidationError, LookupError) as e:
+        print(f"WARNING: test_update_analyses[{tool}] failed with '{e}' which indicates error on tool side. Aborting.")
+        return False
+    return True
+
+
 base_dir = os.path.dirname(os.path.realpath(__file__))
 testdata_analyses = yaml.safe_load(open(os.path.join(base_dir, "test_data", "analyses_tests.yaml"), 'r'))
 testdata_analyses_pytest = [tuple([tool]+list(dic.values())) for tool, dic in testdata_analyses.items()]
@@ -1055,7 +1066,9 @@ def test_update_analyses(app, tool, import_id, counts, test_user, url, license):
         db.session.add(user)
         db.session.commit()
 
-    update_analyses(tool)
+    if not update_analyses_single_tool_forgiving(tool):
+        return
+
     analysis_resources = DataResource.query.filter_by(file_type=tool).all()
     assert len(analysis_resources) == counts["after"]
     assert analysis_resources[0].file_location == url
@@ -1076,13 +1089,15 @@ def test_multiupdate_analyses(app):
     assert analysis_resources[0].file_location == 'http://rivet.hepforge.org/analyses#ATLAS_2012_I1203852'
 
     # Call update_analyses(): should add new resource and delete existing one
-    update_analyses('rivet')
+    if not update_analyses_single_tool_forgiving('rivet'):
+        return
     analysis_resources = DataResource.query.filter_by(file_type='rivet').all()
     assert len(analysis_resources) == 1
     assert analysis_resources[0].file_location == 'http://rivet.hepforge.org/analyses/ATLAS_2012_I1203852'
 
     # Call update_analyses() again: should be no further changes (but covers more lines of code)
-    update_analyses('rivet')
+    if not update_analyses_single_tool_forgiving('rivet'):
+        return
     analysis_resources = DataResource.query.filter_by(file_type='rivet').all()
     assert len(analysis_resources) == 1
     assert analysis_resources[0].file_location == 'http://rivet.hepforge.org/analyses/ATLAS_2012_I1203852'
@@ -1098,7 +1113,8 @@ def test_update_delete_analyses(app):
     assert len(analysis_resources) == 1
     db.session.delete(analysis_resources[0])  # delete resource so it can be re-added in next step
     db.session.commit()
-    update_analyses('Combine')
+    if not update_analyses_single_tool_forgiving('Combine'):
+        return
     analysis_resources = DataResource.query.filter_by(file_type='Combine').all()
     assert len(analysis_resources) == 1
     assert analysis_resources[0].file_location == 'https://doi.org/10.17181/bp9fx-6qs64'
@@ -1108,19 +1124,35 @@ def test_update_delete_analyses(app):
     assert license_data.url == 'https://creativecommons.org/licenses/by/4.0'
 
 
+def assert_err_msg(err_type, expected_msg, truncate_length=None):
+    err_msg = ""
+    try:
+        update_analyses_single_tool('TestAnalysis')
+    except err_type as e:
+        err_msg = str(e)[:truncate_length]
+    assert err_msg == expected_msg
+
+
 def test_incorrect_endpoint(app):
     """ Test update_analyses with incorrect endpoint configurations """
-    # Call update_analysis using an endpoint with no endpoint_url
+    # Call update_analyses_single_tool using an endpoint with no endpoint_url
     current_app.config["ANALYSES_ENDPOINTS"]["TestAnalysis"] = {}
-    update_analyses('TestAnalysis')
+    assert_err_msg(KeyError, "'No endpoint_url configured for TestAnalysis'")
 
-    # Call update_analyses using an endpoint_url that will fail validation
+    # Call update_analyses_single_tool using an invalid endpoint_URL
+    current_app.config["ANALYSES_ENDPOINTS"]["TestAnalysis"]['endpoint_url'] = 'https://www.hepdata.net/analyses.json'
+    assert_err_msg(LookupError, "Error accessing https://www.hepdata.net/analyses.json, status 404")
+
+    # Call update_analyses_single_tool using an endpoint_url that will fail validation
     current_app.config["ANALYSES_ENDPOINTS"]["TestAnalysis"]['endpoint_url'] = 'https://www.hepdata.net/search/?format=json&size=1'
-    update_analyses('TestAnalysis')
+    assert_err_msg(jsonschema.exceptions.ValidationError, "'facets', 'hits', 'results', 'total' do not match any of the regexes: '^[0-9]+$'", truncate_length=80)
 
-    # Call update_analyses using an invalid endpoint_URL
+    # Call update_analyses, which doesn't raise exceptions, using an invalid endpoint_URL
     current_app.config["ANALYSES_ENDPOINTS"]["TestAnalysis"]['endpoint_url'] = 'https://www.hepdata.net/analyses.json'
     update_analyses('TestAnalysis')
+
+    # Call forgiving version of update_analyses_single_tool to make sure it works as intended
+    assert update_analyses_single_tool_forgiving("TestAnalysis") == False
 
 
 def test_generate_license_data_by_id(app):
