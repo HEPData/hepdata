@@ -1051,6 +1051,7 @@ def update_analyses_single_tool_forgiving(tool):
 base_dir = os.path.dirname(os.path.realpath(__file__))
 testdata_analyses = yaml.safe_load(open(os.path.join(base_dir, "test_data", "analyses_tests.yaml"), 'r'))
 testdata_analyses_pytest = [tuple([tool]+list(dic.values())) for tool, dic in testdata_analyses.items()]
+@pytest.mark.endpoints_test
 @pytest.mark.parametrize("tool, import_id, counts, test_user, url, license", testdata_analyses_pytest, ids=testdata_analyses.keys())
 def test_update_analyses(app, tool, import_id, counts, test_user, url, license):
     """ Test update of Rivet, MadAnalyses 5, etc. analyses """
@@ -1080,6 +1081,7 @@ def test_update_analyses(app, tool, import_id, counts, test_user, url, license):
         assert is_current_user_subscribed_to_record(submission.publication_recid, user)
 
 
+@pytest.mark.endpoints_test
 def test_multiupdate_analyses(app):
     """ Test update of analyses multiple times, using Rivet as example """
     # Import a record that already has a Rivet analysis attached (but with '#' in the URL)
@@ -1103,6 +1105,7 @@ def test_multiupdate_analyses(app):
     assert analysis_resources[0].file_location == 'http://rivet.hepforge.org/analyses/ATLAS_2012_I1203852'
 
 
+@pytest.mark.endpoints_test
 def test_update_delete_analyses(app):
     """ Test update and deleting of analyses, using Combine as example """
     # Import a record that has an associated Combine analysis
@@ -1133,6 +1136,7 @@ def assert_err_msg(err_type, expected_msg, truncate_length=None):
     assert err_msg == expected_msg
 
 
+@pytest.mark.endpoints_test
 def test_incorrect_endpoint(app):
     """ Test update_analyses with incorrect endpoint configurations """
     # Call update_analyses_single_tool using an endpoint with no endpoint_url
