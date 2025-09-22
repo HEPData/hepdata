@@ -154,7 +154,7 @@ jobs:
         hepdata webpack buildall
         cp hepdata/config_local.gh.py hepdata/config_local.py
     - uses: qoomon/actions--parallel-steps@v1
-      id: Run tests
+      id: run-tests
       env:
         COVERAGE_FILE: '.coverage_func'
         SQLALCHEMY_WARN_20: 1
