@@ -1044,7 +1044,7 @@ def update_analyses_single_tool_forgiving(tool):
         update_analyses_single_tool(tool)
     except (jsonschema.exceptions.ValidationError, LookupError) as e:
         # syntax ensures flagging by GitHub CI
-        raise Warning(f"WARNING: test_update_analyses[{tool}] failed with '{e}' which indicates error on tool side. Skipping test.")
+        print(f"WARNING: test_update_analyses[{tool}] failed with '{e}' which indicates error on tool side. Skipping test.")
         return False
     return True
 
@@ -1082,7 +1082,16 @@ def test_update_analyses(app, tool, import_id, counts, test_user, url, license):
         assert is_current_user_subscribed_to_record(submission.publication_recid, user)
 
 
-@pytest.mark.endpoints_test
+testdata_analyses_pytest_strict = list(testdata_analyses.keys())+["TestAnalysis"]
+@pytest.mark.strict_endpoints_test
+@pytest.mark.parametrize("tool", testdata_analyses_pytest_strict)
+def test_update_analyses_strict(app, tool):
+    """ Test update of Rivet, MadAnalyses 5, etc. analyses 
+        Be strict about encountered errors, i.e. flag even if error is (presumably) on tool side
+    """
+    update_analyses_single_tool(tool)
+
+
 def test_multiupdate_analyses(app):
     """ Test update of analyses multiple times, using Rivet as example """
     # Import a record that already has a Rivet analysis attached (but with '#' in the URL)
@@ -1106,7 +1115,6 @@ def test_multiupdate_analyses(app):
     assert analysis_resources[0].file_location == 'http://rivet.hepforge.org/analyses/ATLAS_2012_I1203852'
 
 
-@pytest.mark.endpoints_test
 def test_update_delete_analyses(app):
     """ Test update and deleting of analyses, using Combine as example """
     # Import a record that has an associated Combine analysis
@@ -1137,7 +1145,6 @@ def assert_err_msg(err_type, expected_msg, truncate_length=None):
     assert err_msg == expected_msg
 
 
-@pytest.mark.endpoints_test
 def test_incorrect_endpoint(app):
     """ Test update_analyses with incorrect endpoint configurations """
     # Call update_analyses_single_tool using an endpoint with no endpoint_url

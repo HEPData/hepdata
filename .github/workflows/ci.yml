@@ -165,7 +165,7 @@ jobs:
         SQLALCHEMY_WARN_20: 1
       continue-on-error: true
       run: |
-        py.test -vv tests/*_test.py tests/test_*.py -m "endpoints_test" || echo "::warning ::At least one analyses endpoint was not available"
+        py.test -vv tests/*_test.py tests/test_*.py -m "strict_endpoints_test" || echo "::warning ::At least one analyses endpoint was not available"
     - name: Setup Sauce Connect
       uses: saucelabs/sauce-connect-action@v3.0.0
       if: startsWith(matrix.python-version, '3.9')
