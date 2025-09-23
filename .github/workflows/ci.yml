@@ -154,19 +154,11 @@ jobs:
         hepdata webpack buildall
         cp hepdata/config_local.gh.py hepdata/config_local.py
     - name: Run tests
-      uses: qoomon/actions--parallel-steps@v1
-      id: run-tests
       env:
         COVERAGE_FILE: '.coverage_func'
         SQLALCHEMY_WARN_20: 1
-      with:
-        steps: |
-          - name : non-endpoints tests
-            run: |
-              py.test -vv tests/*_test.py tests/test_*.py -m "not endpoints_test"
-          # - name : endpoints tests
-          #   run: |
-          #     py.test -vv tests/*_test.py tests/test_*.py -m "endpoints_test"
+      run: |
+        py.test -vv tests/*_test.py tests/test_*.py
     - name: Setup Sauce Connect
       uses: saucelabs/sauce-connect-action@v3.0.0
       if: startsWith(matrix.python-version, '3.9')
