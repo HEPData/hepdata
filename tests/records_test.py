@@ -1044,7 +1044,7 @@ def update_analyses_single_tool_forgiving(tool):
         update_analyses_single_tool(tool)
     except (jsonschema.exceptions.ValidationError, LookupError) as e:
         # syntax ensures flagging by GitHub CI
-        print(f"::warning test_update_analyses[{tool}] failed with '{e}' which indicates error on tool side. Skipping test.")
+        raise Warning(f"WARNING: test_update_analyses[{tool}] failed with '{e}' which indicates error on tool side. Skipping test.")
         return False
     return True
 
