@@ -159,6 +159,13 @@ jobs:
         SQLALCHEMY_WARN_20: 1
       run: |
         py.test -vv tests/*_test.py tests/test_*.py
+    - name: Check availability of analyses endpoints
+      env:
+        COVERAGE_FILE: '.coverage_func'
+        SQLALCHEMY_WARN_20: 1
+      continue-on-error: true
+      run: |
+        py.test -vv tests/*_test.py tests/test_*.py -m "endpoints_test" || echo "::warning ::At least one analyses endpoint was not available"
     - name: Setup Sauce Connect
       uses: saucelabs/sauce-connect-action@v3.0.0
       if: startsWith(matrix.python-version, '3.9')
