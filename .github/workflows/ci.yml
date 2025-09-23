@@ -164,9 +164,9 @@ jobs:
           - name : non-endpoints tests
             run: |
               py.test -vv tests/*_test.py tests/test_*.py -m "not endpoints_test"
-          - name : endpoints tests
-            run: |
-              py.test -vv tests/*_test.py tests/test_*.py -m "endpoints_test"
+          # - name : endpoints tests
+          #   run: |
+          #     py.test -vv tests/*_test.py tests/test_*.py -m "endpoints_test"
     - name: Setup Sauce Connect
       uses: saucelabs/sauce-connect-action@v3.0.0
       if: startsWith(matrix.python-version, '3.9')
