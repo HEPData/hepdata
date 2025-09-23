@@ -158,7 +158,7 @@ jobs:
         COVERAGE_FILE: '.coverage_func'
         SQLALCHEMY_WARN_20: 1
       run: |
-        py.test -vv tests/*_test.py tests/test_*.py
+        py.test -vv tests/*_test.py tests/test_*.py -m "not strict_endpoints_test"
     - name: Check availability of analyses endpoints
       env:
         COVERAGE_FILE: '.coverage_func'
