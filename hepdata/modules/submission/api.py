@@ -93,28 +93,27 @@ def get_or_create_submission_observer(publication_recid, regenerate=False):
     :param regenerate: Whether to regenerate/force generate the key
     :return: SubmissionObserver key, created, or None
     """
-    # Get the submission to confirm overall_status
-    submission = HEPSubmission.query.filter_by(publication_recid=publication_recid).first()
-    if not submission:
-        return None
-
-    # We regenerate if the status is set, or regenerate is True
-    should_have_observer = submission.overall_status == "todo" or regenerate
-    if not should_have_observer:
-        return None
-
-    # We attempt to get the SubmissionObserver, or create and return if this is None
     submission_observer = SubmissionObserver.query.filter_by(publication_recid=publication_recid).first()
+    created = False
+
     if submission_observer is None:
-        submission_observer = SubmissionObserver(publication_recid=publication_recid)
-        db.session.add(submission_observer)
-        db.session.commit()
-        return submission_observer
+        submission = HEPSubmission.query.filter_by(publication_recid=publication_recid).first()
+        if submission:
+            if submission.overall_status == "todo" or regenerate:
+                submission_observer = SubmissionObserver(publication_recid=publication_recid)
+                created = True
+        else:
+            # No submission, no observer, return None
+            return None
+
 
     # If we are to regenerate, and SubmissionObserver was queried and not generated.
     # If just created, we don't need to generate anything.
-    if regenerate:
+    if not created and regenerate:
         submission_observer.generate_observer_key()
+
+    # Only commit if we have created or regenerated
+    if created or regenerate:
         db.session.add(submission_observer)
         db.session.commit()
 
