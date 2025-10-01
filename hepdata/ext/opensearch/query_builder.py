@@ -79,7 +79,7 @@ class HEPDataQueryParser(object):
     def _quote_phrase(phrase):
         # Match phrases containing a reaction (including "-->") or a doi (word
         # chars with / in the middle) and quote them
-        pattern = re.compile("(.*-->.*|[\w\.]+\/[\w\.]+)")
+        pattern = re.compile(r"(.*-->.*|[\w\.]+\/[\w\.]+)")
 
         if '"' not in phrase and pattern.fullmatch(phrase):
             return f'"{phrase}"'
