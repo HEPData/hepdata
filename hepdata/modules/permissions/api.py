@@ -27,6 +27,7 @@ from operator import is_not
 from flask_login import current_user
 from sqlalchemy import or_
 
+from hepdata.config import OBSERVER_KEY_LENGTH
 from hepdata.modules.permissions.models import SubmissionParticipant, CoordinatorRequest
 from hepdata.modules.records.utils.common import get_record_contents
 from hepdata.modules.submission.models import HEPSubmission, SubmissionObserver
@@ -207,7 +208,7 @@ def verify_observer_key(submission_id, observer_key):
     """
 
     # If none, or doesn't match expected size
-    if observer_key is None or len(observer_key) != 8:
+    if observer_key is None or len(observer_key) != OBSERVER_KEY_LENGTH:
         return False
 
     # Do a query
