@@ -133,16 +133,16 @@ class SubmissionObserver(db.Model):
     observer_key = db.Column(db.String(8), nullable=False)
 
     def __init__(self, publication_recid):
-def __init__(self, publication_recid):
-    # Validate publication_recid
-    try:
-        recid = int(publication_recid)
-        if recid <= 0:
-            raise ValueError(f"publication_recid must be positive, got: {recid}")
-        self.publication_recid = recid
-    except (ValueError, TypeError) as e:
-        raise ValueError(f"publication_recid must be a positive integer, got: {publication_recid}") from e
-    self.generate_observer_key()
+        # Validate publication_recid
+        try:
+            recid = int(publication_recid)
+            if recid <= 0:
+                raise ValueError(f"publication_recid must be positive, got: {recid}")
+            self.publication_recid = recid
+        except (ValueError, TypeError) as e:
+            raise ValueError(f"publication_recid must be a positive integer, got: {publication_recid}") from e
+        self.generate_observer_key()
+
     def generate_observer_key(self):
         """
         Generates a new observer key (UUID4/random)
