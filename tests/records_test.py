@@ -625,9 +625,14 @@ def test_update_record_info_large_submission_batching(app, mocker):
     
     # Mock the necessary functions
     mocker.patch('hepdata.modules.records.utils.records_update_utils.get_latest_hepsubmission', return_value=mock_hep_submission)
-    mocker.patch('hepdata.modules.records.utils.records_update_utils.get_inspire_record_information', return_value=({}, 'success'))
+    # Return updated information that differs from current to avoid early return
+    mock_updated_info = {'authors': [{'full_name': 'New Author'}], 'creation_date': '2024-01-01', 
+                         'journal_info': 'New Journal', 'collaborations': ['New Collab']}
+    mocker.patch('hepdata.modules.records.utils.records_update_utils.get_inspire_record_information', return_value=(mock_updated_info, 'success'))
     mocker.patch('hepdata.modules.records.utils.records_update_utils.DataSubmission.query.filter_by').return_value.order_by.return_value = mock_data_submissions
-    mocker.patch('hepdata.modules.records.utils.records_update_utils.get_record_by_id', return_value={'test': 'record'})
+    # Return record with different information to trigger update
+    mocker.patch('hepdata.modules.records.utils.records_update_utils.get_record_by_id', return_value={'authors': [{'full_name': 'Old Author'}]})
+    mocker.patch('hepdata.modules.records.utils.records_update_utils.update_record')
     mocker.patch('hepdata.modules.records.utils.records_update_utils.TESTING', True)
     
     # Mock the indexing functions to track calls
@@ -655,7 +660,7 @@ def test_update_record_info_large_submission_batching(app, mocker):
     # push_data_keywords should be called once
     mock_push_data_keywords.assert_called_once_with(pub_ids=[1])
     
-    assert result == 'No update needed'
+    assert result == 'Success'
 
 
 def test_set_review_status(app, load_default_data):
