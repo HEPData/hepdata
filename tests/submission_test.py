@@ -862,3 +862,39 @@ def test_do_finalise_commit_message_failure(app, admin_idx):
         # We should now have one message in the database.
         assert len(commit_messages) == 1
         assert commit_messages[0].message == "NewMessage"
+
+
+def test_do_finalise_async_indexing(app, admin_idx, mocker):
+    """
+    Tests that do_finalise uses asynchronous indexing via reindex_batch.delay
+    """
+    # Mock the reindex_batch.delay function
+    mock_reindex_batch_delay = mocker.patch('hepdata.modules.records.utils.submission.reindex_batch.delay')
+    
+    with app.app_context():
+        admin_idx.recreate_index()
+        # Create test submission/record
+        hepdata_submission = create_test_record(
+            os.path.abspath('tests/test_data/test_submission'),
+            overall_status='todo'
+        )
+
+        record = get_record_by_id(hepdata_submission.publication_recid)
+        record["creation_date"] = str(datetime.today().strftime('%Y-%m-%d'))
+
+        # Mock generate_dois_for_submission.delay to avoid side effects
+        mocker.patch('hepdata.modules.records.utils.submission.generate_dois_for_submission.delay')
+
+        # Call do_finalise
+        do_finalise(
+            hepdata_submission.publication_recid,
+            publication_record=record,
+            force_finalise=True,
+            convert=False
+        )
+
+        # Verify that reindex_batch.delay was called with correct parameters
+        mock_reindex_batch_delay.assert_called_once_with(
+            [hepdata_submission.id], 
+            app.config['OPENSEARCH_INDEX']
+        )
