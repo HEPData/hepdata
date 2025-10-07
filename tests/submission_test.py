@@ -864,6 +864,56 @@ def test_do_finalise_commit_message_failure(app, admin_idx):
         assert commit_messages[0].message == "NewMessage"
 
 
+@patch("hepdata.ext.opensearch.document_enhancers.process_last_updates")
+def test_do_finalise_general_exception(app, admin_idx):
+    """
+    Tests that do_finalise handles general exceptions properly.
+    Checks rollback functionality and error logging.
+    """
+
+    with app.app_context():
+        admin_idx.recreate_index()
+        # Create test submission/record
+        hepdata_submission = create_test_record(
+            os.path.abspath('tests/test_data/test_submission'),
+            overall_status='todo'
+        )
+
+        # Create record data and prepare
+        record = get_record_by_id(hepdata_submission.publication_recid)
+        record["creation_date"] = str(datetime.today().strftime('%Y-%m-%d'))
+
+        # Now we mock the send_finalised_email function to cause a general error
+        with patch("hepdata.modules.records.utils.submission.send_finalised_email") as mock_send_email:
+            # Set the function to raise a generic exception
+            mock_send_email.side_effect = RuntimeError("Test error: Email service unavailable")
+
+            # Now we run the do_finalise function (PATCHED)
+            result = do_finalise(
+                        hepdata_submission.publication_recid,
+                        publication_record=record,
+                        force_finalise=True,
+                        convert=False,
+                        send_email=True
+            )
+            # Convert str(json)->dict
+            result = json.loads(result)
+
+        # Confirm that the result response exists and indicates failure
+        assert "errors" in result
+        assert len(result["errors"]) == 1
+        assert "An error occurred during finalisation" in result["errors"][0]
+        assert "Test error: Email service unavailable" in result["errors"][0]
+        assert result["success"] is False
+
+        # Verify that the submission status was rolled back (not set to "finished")
+        hep_submission_after = HEPSubmission.query.filter_by(
+            publication_recid=hepdata_submission.publication_recid,
+            version=hepdata_submission.version
+        ).first()
+        assert hep_submission_after.overall_status != "finished"
+
+
 def test_do_finalise_async_indexing(app, admin_idx, mocker):
     """
     Tests that do_finalise uses asynchronous indexing via reindex_batch.delay
