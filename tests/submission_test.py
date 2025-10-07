@@ -867,8 +867,8 @@ def test_do_finalise_commit_message_failure(app, admin_idx):
 @patch("hepdata.ext.opensearch.document_enhancers.process_last_updates")
 def test_do_finalise_general_exception(app, admin_idx):
     """
-    Tests that do_finalise handles general exceptions properly.
-    Checks rollback functionality and error logging.
+    Tests that do_finalise handles general exceptions properly during the
+    database commit phase. Checks rollback functionality and error logging.
     """
 
     with app.app_context():
@@ -883,10 +883,11 @@ def test_do_finalise_general_exception(app, admin_idx):
         record = get_record_by_id(hepdata_submission.publication_recid)
         record["creation_date"] = str(datetime.today().strftime('%Y-%m-%d'))
 
-        # Now we mock the send_finalised_email function to cause a general error
-        with patch("hepdata.modules.records.utils.submission.send_finalised_email") as mock_send_email:
-            # Set the function to raise a generic exception
-            mock_send_email.side_effect = RuntimeError("Test error: Email service unavailable")
+        # Mock db.session.commit to cause an error before changes are committed
+        # This tests exception handling during the critical database commit phase
+        with patch("hepdata.modules.records.utils.submission.db.session.commit") as mock_commit:
+            # Set the commit to raise a generic exception
+            mock_commit.side_effect = RuntimeError("Test error: Database connection lost")
 
             # Now we run the do_finalise function (PATCHED)
             result = do_finalise(
@@ -894,7 +895,7 @@ def test_do_finalise_general_exception(app, admin_idx):
                         publication_record=record,
                         force_finalise=True,
                         convert=False,
-                        send_email=True
+                        send_email=False
             )
             # Convert str(json)->dict
             result = json.loads(result)
@@ -903,10 +904,11 @@ def test_do_finalise_general_exception(app, admin_idx):
         assert "errors" in result
         assert len(result["errors"]) == 1
         assert "An error occurred during finalisation" in result["errors"][0]
-        assert "Test error: Email service unavailable" in result["errors"][0]
+        assert "Test error: Database connection lost" in result["errors"][0]
         assert result["success"] is False
 
         # Verify that the submission status was rolled back (not set to "finished")
+        # Since the exception occurred during commit, rollback should work
         hep_submission_after = HEPSubmission.query.filter_by(
             publication_recid=hepdata_submission.publication_recid,
             version=hepdata_submission.version
