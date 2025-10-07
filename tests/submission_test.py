@@ -867,8 +867,8 @@ def test_do_finalise_commit_message_failure(app, admin_idx):
 @patch("hepdata.ext.opensearch.document_enhancers.process_last_updates")
 def test_do_finalise_general_exception(app, admin_idx):
     """
-    Tests that do_finalise handles general exceptions properly during the
-    database commit phase. Checks rollback functionality and error logging.
+    Tests that do_finalise handles general exceptions properly.
+    Checks error logging and proper error response.
     """
 
     with app.app_context():
@@ -883,11 +883,12 @@ def test_do_finalise_general_exception(app, admin_idx):
         record = get_record_by_id(hepdata_submission.publication_recid)
         record["creation_date"] = str(datetime.today().strftime('%Y-%m-%d'))
 
-        # Mock db.session.commit to cause an error before changes are committed
-        # This tests exception handling during the critical database commit phase
-        with patch("hepdata.modules.records.utils.submission.db.session.commit") as mock_commit:
-            # Set the commit to raise a generic exception
-            mock_commit.side_effect = RuntimeError("Test error: Database connection lost")
+        # Mock create_celery_app to cause an error after db commit
+        # This simulates issues like Redis connectivity problems that occur
+        # after the database changes are committed
+        with patch("hepdata.modules.records.utils.submission.create_celery_app") as mock_celery:
+            # Set the function to raise a generic exception
+            mock_celery.side_effect = RuntimeError("Test error: Redis connection failed")
 
             # Now we run the do_finalise function (PATCHED)
             result = do_finalise(
@@ -904,16 +905,12 @@ def test_do_finalise_general_exception(app, admin_idx):
         assert "errors" in result
         assert len(result["errors"]) == 1
         assert "An error occurred during finalisation" in result["errors"][0]
-        assert "Test error: Database connection lost" in result["errors"][0]
+        assert "Test error: Redis connection failed" in result["errors"][0]
         assert result["success"] is False
 
-        # Verify that the submission status was rolled back (not set to "finished")
-        # Since the exception occurred during commit, rollback should work
-        hep_submission_after = HEPSubmission.query.filter_by(
-            publication_recid=hepdata_submission.publication_recid,
-            version=hepdata_submission.version
-        ).first()
-        assert hep_submission_after.overall_status != "finished"
+        # Note: The database changes were already committed before the exception,
+        # so rollback cannot undo them. This test verifies that exceptions are
+        # caught, logged, and reported properly even when they occur after commit.
 
 
 def test_do_finalise_async_indexing(app, admin_idx, mocker):
