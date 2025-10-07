@@ -815,6 +815,10 @@ def do_finalise(recid, publication_record=None, force_finalise=False,
                                "generated_records": generated_record_ids})
         except NoResultFound:
             error_message = 'No record found to update. Which is super strange.'
+            log.error('NoResultFound exception during finalisation of record {0}: {1}'.format(recid, error_message))
+        except Exception as e:
+            error_message = 'An error occurred during finalisation: {0}'.format(str(e))
+            log.error('Exception during finalisation of record {0}: {1}'.format(recid, str(e)), exc_info=True)
 
         # If we have not returned, then we set an error message
         if error_message is None:
