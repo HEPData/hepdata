@@ -630,12 +630,14 @@ def test_update_record_info_large_submission_batching(app, mocker):
                          'journal_info': 'New Journal', 'collaborations': ['New Collab']}
     mocker.patch('hepdata.modules.records.utils.records_update_utils.get_inspire_record_information', return_value=(mock_updated_info, 'success'))
 
-    # Mock DataSubmission.query to properly handle filter_by().order_by() chain
+    # Mock DataSubmission.query.filter_by().order_by() chain directly for simplicity
     mock_query_result = mocker.MagicMock()
     mock_query_result.order_by.return_value = mock_data_submissions
-    mock_query_obj = mocker.MagicMock()
-    mock_query_obj.filter_by.return_value = mock_query_result
-    mocker.patch('hepdata.modules.records.utils.records_update_utils.DataSubmission.query', mock_query_obj)
+    mocker.patch.object(
+        type(DataSubmission.query),
+        "filter_by",
+        return_value=mock_query_result
+    )
 
     # Return record with different information to trigger update
     mocker.patch('hepdata.modules.records.utils.records_update_utils.get_record_by_id', return_value={'authors': [{'full_name': 'Old Author'}]})
