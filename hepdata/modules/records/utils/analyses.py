@@ -224,14 +224,10 @@ def update_analyses(endpoint=None):
                         if recids_to_reindex:
                             unique_recids = list(set(recids_to_reindex))  # remove duplicates before indexing
                             # For large numbers of records, batch the indexing to reduce memory usage
-                            if len(unique_recids) > 100:
-                                log.info('Large number of records to reindex ({}), using batched indexing'.format(len(unique_recids)))
-                                batch_size = 100
-                                for i in range(0, len(unique_recids), batch_size):
-                                    batch_recids = unique_recids[i:i+batch_size]
-                                    index_record_ids(batch_recids)
-                            else:
-                                index_record_ids(unique_recids)
+                            batch_size = 100
+                            for i in range(0, len(unique_recids), batch_size):
+                                batch_recids = unique_recids[i:i+batch_size]
+                                index_record_ids(batch_recids)
                     except Exception as e:
                         db.session.rollback()
                         log.error(e)
