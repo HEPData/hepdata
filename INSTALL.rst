@@ -165,7 +165,7 @@ such as clicking on confirmation links when a new user is created (see
 `HEPData/hepdata#493 <https://github.com/HEPData/hepdata/issues/493>`_).
 With ``TESTING=False`` you will need to configure an SMTP server to send emails such as
 `SMTP2GO <https://www.smtp2go.com>`_ that offers a free plan with a limit of 1000 emails/month.
-An alternative is to install `Mailpit <https://mailpit.axllent.org/>`_ (e.g. ``brew install mailcatcher`` followed by
+An alternative is to install `Mailpit <https://mailpit.axllent.org/>`_ (e.g. ``brew install mailpit`` followed by
 ``brew services start mailpit`` on macOS) where you just need to add these lines to ``hepdata/config_local.py``:
 
 .. code-block:: python
