@@ -1082,7 +1082,7 @@ def test_update_analyses(app, tool, import_id, counts, test_user, url, license):
         assert is_current_user_subscribed_to_record(submission.publication_recid, user)
 
 
-testdata_analyses_pytest_strict = list(testdata_analyses.keys())+["TestAnalysis"]
+testdata_analyses_pytest_strict = list(testdata_analyses.keys())+["TestAnalysis", "TestAnalysis2"]
 @pytest.mark.strict_endpoints_test
 @pytest.mark.parametrize("tool", testdata_analyses_pytest_strict)
 def test_update_analyses_strict(app, tool):

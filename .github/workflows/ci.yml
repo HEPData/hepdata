@@ -161,11 +161,20 @@ jobs:
         py.test -vv tests/*_test.py tests/test_*.py -m "not strict_endpoints_test"
     - name: Check availability of analyses endpoints
       env:
-        COVERAGE_FILE: '.coverage_func'
         SQLALCHEMY_WARN_20: 1
       continue-on-error: true
       run: |
-        py.test -vv tests/*_test.py tests/test_*.py -m "strict_endpoints_test" || echo "::warning ::At least one analyses endpoint was not available"
+        EXTRA_MSG=""
+        RESULT=$(pytest --color=yes -vv tests/*_test.py tests/test_*.py -m "strict_endpoints_test")
+        if [ $? -ne 0 ]; then # if test failed
+          while read -r FAIL; do
+            ANALYSIS=`echo ${FAIL##*strict\[} | cut -d "]" -f1` # get analysis name from pattern "strict[<ANALYSIS>]"
+            REASON=`echo ${FAIL#* - }` # get fail reason after " -"
+            EXTRA_MSG="$EXTRA_MSG::warning ::Analyses endpoint '$ANALYSIS' was not available: $REASON\n"
+          done <<< `echo $RESULT | grep "FAILED.*\[" | grep -v "%"` # get summary lines with failing tests, ignore progress lines
+        fi
+        echo "$RESULT"
+        echo -n $EXTRA_MSG # flag warning to GitHub, remove trailing new lines
     - name: Setup Sauce Connect
       uses: saucelabs/sauce-connect-action@v3.0.0
       if: startsWith(matrix.python-version, '3.9')
