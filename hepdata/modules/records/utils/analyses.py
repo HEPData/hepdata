@@ -222,7 +222,12 @@ def update_analyses(endpoint=None):
                                 recids_to_reindex.append(submission.publication_recid)
                         db.session.commit()
                         if recids_to_reindex:
-                            index_record_ids(list(set(recids_to_reindex)))  # remove duplicates before indexing
+                            unique_recids = list(set(recids_to_reindex))  # remove duplicates before indexing
+                            # For large numbers of records, batch the indexing to reduce memory usage
+                            batch_size = 100
+                            for i in range(0, len(unique_recids), batch_size):
+                                batch_recids = unique_recids[i:i+batch_size]
+                                index_record_ids(batch_recids)
                     except Exception as e:
                         db.session.rollback()
                         log.error(e)

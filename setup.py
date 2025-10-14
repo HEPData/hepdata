@@ -32,7 +32,7 @@ readme = open('README.rst').read()
 history = open('CHANGES.rst').read()
 
 tests_require = [
-    'pytest>=6.0.2,<8.0.0',  # see https://github.com/HEPData/hepdata/issues/815
+    'pytest>=6.0.2',
     'pytest-cov>=2.9.0,<4.0.0',  # see https://github.com/HEPData/hepdata/issues/580
     'pytest-flask>=1.0.0',
     'pytest-mock>=3.1.0',

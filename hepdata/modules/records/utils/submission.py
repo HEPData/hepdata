@@ -37,7 +37,7 @@ from hepdata_converter_ws_client import get_data_size
 from hepdata.config import CFG_DATA_TYPE, CFG_PUB_TYPE, CFG_SUPPORTED_FORMATS, HEPDATA_DOI_PREFIX
 from hepdata.ext.opensearch.admin_view.api import AdminIndexer
 from hepdata.ext.opensearch.api import get_records_matching_field, \
-    delete_item_from_index, index_record_ids, push_data_keywords
+    delete_item_from_index, index_record_ids, push_data_keywords, reindex_batch
 from hepdata.modules.converter import prepare_data_folder
 from hepdata.modules.converter.tasks import convert_and_store
 from hepdata.modules.email.api import send_finalised_email
@@ -802,9 +802,8 @@ def do_finalise(recid, publication_record=None, force_finalise=False,
                 generate_dois_for_submission.delay(inspire_id=hep_submission.inspire_id, version=version)
                 log.info("Generated DOIs for ins{0}".format(hep_submission.inspire_id))
 
-            # Reindex everything.
-            index_record_ids([recid] + generated_record_ids)
-            push_data_keywords(pub_ids=[recid])
+            # Reindex everything asynchronously to avoid blocking UI for large submissions.
+            reindex_batch.delay([hep_submission.id], current_app.config['OPENSEARCH_INDEX'])
 
             try:
                 admin_indexer = AdminIndexer()
@@ -828,6 +827,10 @@ def do_finalise(recid, publication_record=None, force_finalise=False,
                                "generated_records": generated_record_ids})
         except NoResultFound:
             error_message = 'No record found to update. Which is super strange.'
+            log.error('NoResultFound exception during finalisation of record {0}: {1}'.format(recid, error_message))
+        except Exception as e:
+            error_message = 'An error occurred during finalisation: {0}'.format(str(e))
+            log.error('Exception during finalisation of record {0}: {1}'.format(recid, str(e)), exc_info=True)
 
         # If we have not returned, then we set an error message
         if error_message is None:

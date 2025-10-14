@@ -868,6 +868,91 @@ def test_do_finalise_commit_message_failure(app, admin_idx):
         assert commit_messages[0].message == "NewMessage"
 
 
+@patch("hepdata.ext.opensearch.document_enhancers.process_last_updates")
+def test_do_finalise_general_exception(app, admin_idx):
+    """
+    Tests that do_finalise handles general exceptions properly.
+    Checks error logging and proper error response.
+    """
+
+    with app.app_context():
+        admin_idx.recreate_index()
+        # Create test submission/record
+        hepdata_submission = create_test_record(
+            os.path.abspath('tests/test_data/test_submission'),
+            overall_status='todo'
+        )
+
+        # Create record data and prepare
+        record = get_record_by_id(hepdata_submission.publication_recid)
+        record["creation_date"] = str(datetime.today().strftime('%Y-%m-%d'))
+
+        # Mock create_celery_app to cause an error after db commit
+        # This simulates issues like Redis connectivity problems that occur
+        # after the database changes are committed
+        with patch("hepdata.modules.records.utils.submission.create_celery_app") as mock_celery:
+            # Set the function to raise a generic exception
+            mock_celery.side_effect = RuntimeError("Test error: Redis connection failed")
+
+            # Now we run the do_finalise function (PATCHED)
+            result = do_finalise(
+                        hepdata_submission.publication_recid,
+                        publication_record=record,
+                        force_finalise=True,
+                        convert=False,
+                        send_email=False
+            )
+            # Convert str(json)->dict
+            result = json.loads(result)
+
+        # Confirm that the result response exists and indicates failure
+        assert "errors" in result
+        assert len(result["errors"]) == 1
+        assert "An error occurred during finalisation" in result["errors"][0]
+        assert "Test error: Redis connection failed" in result["errors"][0]
+        assert result["success"] is False
+
+        # Note: The database changes were already committed before the exception,
+        # so rollback cannot undo them. This test verifies that exceptions are
+        # caught, logged, and reported properly even when they occur after commit.
+
+
+def test_do_finalise_async_indexing(app, admin_idx, mocker):
+    """
+    Tests that do_finalise uses asynchronous indexing via reindex_batch.delay
+    """
+    # Mock the reindex_batch.delay function
+    mock_reindex_batch_delay = mocker.patch('hepdata.modules.records.utils.submission.reindex_batch.delay')
+
+    with app.app_context():
+        admin_idx.recreate_index()
+        # Create test submission/record
+        hepdata_submission = create_test_record(
+            os.path.abspath('tests/test_data/test_submission'),
+            overall_status='todo'
+        )
+
+        record = get_record_by_id(hepdata_submission.publication_recid)
+        record["creation_date"] = str(datetime.today().strftime('%Y-%m-%d'))
+
+        # Mock generate_dois_for_submission.delay to avoid side effects
+        mocker.patch('hepdata.modules.records.utils.submission.generate_dois_for_submission.delay')
+
+        # Call do_finalise
+        do_finalise(
+            hepdata_submission.publication_recid,
+            publication_record=record,
+            force_finalise=True,
+            convert=False
+        )
+
+        # Verify that reindex_batch.delay was called with correct parameters
+        mock_reindex_batch_delay.assert_called_once_with(
+            [hepdata_submission.id],
+            app.config['OPENSEARCH_INDEX']
+        )
+
+
 def test_get_or_create_submission_observer(app):
     """
         Tests the get_or_create_submission_observer function against both
