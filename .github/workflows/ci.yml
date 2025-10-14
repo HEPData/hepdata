@@ -176,7 +176,7 @@ jobs:
             ERR_MSGS+=("::warning ::Analyses endpoint '$ANALYSIS' was not available: $REASON") # use GitHub's warning syntax
           done <<< `grep "FAILED.*\[" $LOGFILE | grep -v "%"` # get summary lines with failing tests, ignore progress lines
         cat $LOGFILE
-        for ERR_MSG in "${ERR_MSGS[@]}"; do; echo $ERR_MSG; done # flag errors
+        for ERR_MSG in "${ERR_MSGS[@]}"; do echo $ERR_MSG; done # flag errors
         if [ $ERR_COUNT>0 ]; then; exit 1; fi # fail if there were any errors
     - name: Setup Sauce Connect
       uses: saucelabs/sauce-connect-action@v3.0.0
