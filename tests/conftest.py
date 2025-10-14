@@ -170,9 +170,12 @@ def load_submission(app, load_default_data):
     import_records(['ins1487726'], synchronous=True)
 
 
-def create_blank_test_record(status="todo"):
+def create_blank_test_record(status="todo", user_id=1):
     """
     Helper function to create a single, blank, finished submission
+
+    :param status: str - Specific status setting
+    :param user_id: int - Optionally create a new user of a specific id.
     :returns submission: The newly created submission object
     """
     record_information = create_record(
@@ -181,8 +184,12 @@ def create_blank_test_record(status="todo"):
     submission = get_or_create_hepsubmission(recid, status=status)
     # Set overall status to finished so related data appears on dashboard
     submission.overall_status = status
-    user = User(email=f'test@test.com', password='hello1', active=True,
-                id=1)
+
+    # Either use default user, or create a new user
+    if user_id != 1:
+        user = User(email=f'test@test.com', password='hello1', active=True, id=user_id)
+    else:
+        user = User.query.get(id=1)
     test_submissions = {}
     create_record_for_dashboard(recid, test_submissions, user)
     return submission
