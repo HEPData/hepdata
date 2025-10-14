@@ -86,8 +86,6 @@ def remove_submission(record_id, version=1):
     hepdata_submissions = HEPSubmission.query.filter_by(
         publication_recid=record_id, version=version).all()
 
-    # Delete any existing access key
-    [SubmissionObserver.query.filter_by(publication_recid=sub.id).delete() for sub in hepdata_submissions]
     try:
         try:
             for hepdata_submission in hepdata_submissions:
