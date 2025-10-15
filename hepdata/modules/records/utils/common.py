@@ -30,7 +30,8 @@ from invenio_records.api import Record
 import os
 from sqlalchemy.orm.exc import NoResultFound
 
-from hepdata.config import HISTFACTORY_FILE_TYPE, NUISANCE_FILE_TYPE, SIZE_LOAD_CHECK_THRESHOLD
+from hepdata.config import (HISTFACTORY_FILE_TYPE, HS3_FILE_TYPE, SIMPLEANALYSIS_FILE_TYPE,
+                            NUISANCE_FILE_TYPE, SIZE_LOAD_CHECK_THRESHOLD)
 from hepdata.ext.opensearch.api import get_record
 from hepdata.modules.submission.models import HEPSubmission, License, DataSubmission, DataResource
 
@@ -74,8 +75,7 @@ URL_PATTERNS = [
 
 ALLOWED_EXTENSIONS = ('.zip', '.tar', '.tar.gz', '.tgz', '.oldhepdata', '.yaml', '.yaml.gz')
 
-HISTFACTORY_EXTENSIONS = ALLOWED_EXTENSIONS[:4] + ('.tar.xz', '.json')
-HISTFACTORY_TERMS = ("histfactory", "pyhf", "likelihoods", "workspaces")
+SIMPLEANALYSIS_TERMS = ("simpleanalysis",)
 
 
 def contains_accepted_url(file):
@@ -96,15 +96,14 @@ def is_image(filename):
     return False
 
 
-def is_histfactory(filename, description, type=None):
-    if type and type.lower() == HISTFACTORY_FILE_TYPE.lower():
+def is_simpleanalysis(description, type=None):
+    if type and type.lower() == SIMPLEANALYSIS_FILE_TYPE.lower():
         return True
 
-    if filename.endswith(HISTFACTORY_EXTENSIONS):
-        description_lc = description.lower()
-        for term in HISTFACTORY_TERMS:
-            if term in description_lc:
-                return True
+    description_lc = description.lower()
+    for term in SIMPLEANALYSIS_TERMS:
+        if term in description_lc:
+            return True
 
     return False
 
@@ -115,8 +114,12 @@ def infer_file_type(file, description, type=None):
         if result:
             return pattern
         else:
-            if is_histfactory(file, description, type):
+            if is_simpleanalysis(description, type):
+                return SIMPLEANALYSIS_FILE_TYPE
+            if type and type.lower() == HISTFACTORY_FILE_TYPE.lower():
                 return HISTFACTORY_FILE_TYPE
+            elif type and type.lower() == HS3_FILE_TYPE.lower():
+                return HS3_FILE_TYPE
             elif type and type.lower() == NUISANCE_FILE_TYPE.lower():
                 return NUISANCE_FILE_TYPE
             extension = file.rsplit(".", 1)[1]

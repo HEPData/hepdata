@@ -369,6 +369,8 @@ ANALYSES_ENDPOINTS = {
 }
 
 HISTFACTORY_FILE_TYPE = 'HistFactory'
+HS3_FILE_TYPE = 'HS3'
+SIMPLEANALYSIS_FILE_TYPE = 'SimpleAnalysis'
 NUISANCE_FILE_TYPE = 'ProSelecta'
 
 ADMIN_EMAIL = 'info@hepdata.net'
