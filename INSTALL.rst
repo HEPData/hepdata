@@ -36,32 +36,32 @@ for example, using ``yum`` or ``apt-get`` for Linux or ``brew`` for macOS:
 
  * `PostgreSQL <http://www.postgresql.org/>`_ (version 14) database server
  * `Redis <http://redis.io/>`_ for caching
- * `OpenSearch <https://opensearch.org/>`_ (version 2.18.0) for indexing and information retrieval. See below for further instructions.
+ * `OpenSearch <https://opensearch.org/>`_ (version 3.2.0) for indexing and information retrieval. See below for further instructions.
  * `Node.js <https://nodejs.org>`_ (version 18) JavaScript run-time environment and its package manager `npm <https://www.npmjs.com/>`_.
 
-OpenSearch v2.18.0
-------------------
+OpenSearch v3.2.0
+-----------------
 
-We are currently using OpenSearch v2.18.0. Here, you can find the `download instructions. <https://opensearch.org/downloads/>`_
+We are currently using OpenSearch v3.2.0. Here, you can find the `download instructions. <https://opensearch.org/downloads/>`_
 
 There are some examples below:
 
 **MacOS**
 
-Install the latest version (currently, v3.2.0) with ``brew install opensearch``.
-Alternatively, to install a specific version like v2.18.0 via Homebrew (if the latest version is newer), run:
+Install the latest version (currently, v3.3.0) with ``brew install opensearch``.
+Alternatively, to install a specific version like v3.2.0 via Homebrew (if the latest version is newer), run:
 
 .. code-block:: console
 
     $ brew tap homebrew/core --force
     $ brew tap-new opensearch/tap
-    $ brew extract --version=2.18.0 opensearch opensearch/tap
-    $ brew install opensearch/tap/opensearch@2.18.0
-    $ brew services restart opensearch/tap/opensearch@2.18.0
+    $ brew extract --version=3.2.0 opensearch opensearch/tap
+    $ brew install opensearch/tap/opensearch@3.2.0
+    $ brew services restart opensearch/tap/opensearch@3.2.0
 
 **Linux**
 
-You can see the tarball instructions on the OpenSearch installation `webpage. <https://docs.opensearch.org/docs/2.18/install-and-configure/install-opensearch/tar/>`_
+You can see the tarball instructions on the OpenSearch installation `webpage. <https://docs.opensearch.org/docs/3.2/install-and-configure/install-opensearch/tar/>`_
 
 To execute, run these commands within the extracted folder.
 
@@ -80,8 +80,8 @@ Alternatively, run OpenSearch after `installing Docker <https://docs.docker.com/
 
 .. code-block:: console
 
-    $ docker pull opensearchproject/opensearch:2.18.0
-    $ docker run -d -p 9200:9200 -p 9600:9600 -e "discovery.type=single-node" -e "plugins.security.disabled=true" -e "OPENSEARCH_INITIAL_ADMIN_PASSWORD=<custom-admin-password>" opensearchproject/opensearch:2.18.0
+    $ docker pull opensearchproject/opensearch:3.2.0
+    $ docker run -d -p 9200:9200 -p 9600:9600 -e "discovery.type=single-node" -e "plugins.security.disabled=true" -e "OPENSEARCH_INITIAL_ADMIN_PASSWORD=<custom-admin-password>" opensearchproject/opensearch:3.2.0
 
 You can test that the container is running with:
 
