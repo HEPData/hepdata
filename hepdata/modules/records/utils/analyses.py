@@ -205,6 +205,8 @@ def update_analyses(endpoint=None):
                     try:
                         recids_to_reindex = []
                         for extra_analysis_resource in analysis_resources:
+                            if not extra_analysis_resource.file_location.lower().startswith('http'):
+                                continue  # don't delete local files from database
                             query = db.select([data_reference_link.columns.submission_id]).where(
                                 data_reference_link.columns.dataresource_id == extra_analysis_resource.id)
                             results = db.session.execute(query)
