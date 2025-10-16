@@ -105,7 +105,7 @@ def add_analyses(doc):
     if latest_submission:
         doc["analyses"] = []
         for reference in latest_submission.resources:
-            if reference.file_type in current_app.config['ANALYSES_ENDPOINTS']:
+            if reference.file_type in current_app.config['ANALYSES_ENDPOINTS'] and reference.file_location.lower().startswith('http'):
                 doc["analyses"].append({'type': reference.file_type, 'analysis': reference.file_location})
             else:
                 site_url = current_app.config.get('SITE_URL', 'https://www.hepdata.net')

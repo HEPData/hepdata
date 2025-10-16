@@ -803,7 +803,7 @@ def test_add_analyses(app):
 
         # Add MadAnalysis DataResource object separately
         mad_analysis_resource = DataResource(
-            file_location = "placeholder",
+            file_location = "https://placeholder",
             file_type = "MadAnalysis",
             file_description = "placeholder"
         )
