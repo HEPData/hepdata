@@ -746,3 +746,22 @@ def test_large_file_load(app, live_server, admin_idx, logged_in_browser):
                 _external=True)
             browser.get(web_url)
             assert EC.visibility_of(expected)
+
+def test_logged_out_observer(app, live_server, admin_idx, env_browser):
+    """
+    Testing that a logged out browser is not able to access an unfinished submission.
+    """
+
+    logged_out_browser = env_browser
+    with app.app_context():
+        test_submission = create_test_record(
+            os.path.abspath('tests/test_data/test_submission'),
+            overall_status='todo'
+        )
+
+        record_url = flask.url_for('hepdata_records.get_metadata_by_alternative_id',
+                                   recid=test_submission.publication_recid, _external=True)
+        logged_out_browser.get(record_url)
+
+        form_exists = logged_out_browser.find_element(By.TAG_NAME, 'form')
+        assert 'Log In' in form_exists.text
