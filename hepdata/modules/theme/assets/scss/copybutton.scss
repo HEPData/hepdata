@@ -71,12 +71,39 @@
   background: transparent;
 }
 
+/* MANAGER FOOTER RULES */
+
 /* The accompanying observer key message */
 #manager-footer #data_link_message {
     color: black;
     padding-bottom: 10px;
 }
 
+#manager-footer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+#manager-footer #data_link_message {
+    text-align: center;
+    width: 100%;
+}
+
 #manager-footer #data_link_container {
-  width: fit-content;
+    width: fit-content;
+    display: flex;
+    gap: 8px;
+    margin-bottom: 10px;
+    width: 75%;
+    justify-content: center;
+}
+
+#manager-footer #direct_data_link {
+    width: 100%;
+    text-align: center;
+}
+
+#manager-footer #manager-close {
+    top: 50%;
 }
