@@ -75,8 +75,6 @@ URL_PATTERNS = [
 
 ALLOWED_EXTENSIONS = ('.zip', '.tar', '.tar.gz', '.tgz', '.oldhepdata', '.yaml', '.yaml.gz')
 
-SIMPLEANALYSIS_TERMS = ("simpleanalysis",)
-
 
 def contains_accepted_url(file):
     for pattern in URL_PATTERNS:
@@ -96,16 +94,12 @@ def is_image(filename):
     return False
 
 
-def is_simpleanalysis(description, type=None):
-    if type and type.lower() == SIMPLEANALYSIS_FILE_TYPE.lower():
+def is_analysis(analyses_type, description, type=None):
+    if type and type.lower() == analyses_type.lower():
         return True
 
     description_lc = description.lower()
-    for term in SIMPLEANALYSIS_TERMS:
-        if term in description_lc:
-            return True
-
-    return False
+    return True if analyses_type.lower() in description_lc else False
 
 
 def infer_file_type(file, description, type=None):
@@ -114,12 +108,12 @@ def infer_file_type(file, description, type=None):
         if result:
             return pattern
         else:
-            if is_simpleanalysis(description, type):
+            if is_analysis(SIMPLEANALYSIS_FILE_TYPE, description, type):
                 return SIMPLEANALYSIS_FILE_TYPE
-            if type and type.lower() == HISTFACTORY_FILE_TYPE.lower():
-                return HISTFACTORY_FILE_TYPE
-            elif type and type.lower() == HS3_FILE_TYPE.lower():
+            elif is_analysis(HS3_FILE_TYPE, description, type):
                 return HS3_FILE_TYPE
+            elif type and type.lower() == HISTFACTORY_FILE_TYPE.lower():
+                return HISTFACTORY_FILE_TYPE
             elif type and type.lower() == NUISANCE_FILE_TYPE.lower():
                 return NUISANCE_FILE_TYPE
             extension = file.rsplit(".", 1)[1]

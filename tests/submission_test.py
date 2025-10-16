@@ -49,7 +49,7 @@ from hepdata.modules.records.api import (
     process_saved_file, get_commit_message
 )
 from hepdata.modules.records.utils.common import infer_file_type, contains_accepted_url, allowed_file, record_exists, \
-    get_record_contents, is_simpleanalysis, get_record_by_id
+    get_record_contents, is_analysis, get_record_by_id
 from hepdata.modules.records.utils.data_files import get_data_path_for_record
 from hepdata.modules.records.utils.submission import process_submission_directory, do_finalise, unload_submission, \
     cleanup_data_related_recid
@@ -94,16 +94,16 @@ def test_url_pattern():
         assert (url_group["exp_result"] == url_type)
 
 
-@pytest.mark.parametrize("description,type,expected",
+@pytest.mark.parametrize("analyses_type,description,type,expected",
     [
-        ("SimpleAnalysis code snippet", None, True),
-        ("ComplicatedAnalysis code snippet", None, False),
-        ("Code snippet", "SimpleAnalysis", True),
-        ("Code snippet", "ComplicatedAnalysis", False),
+        ("SimpleAnalysis", "SimpleAnalysis code snippet", None, True),
+        ("SimpleAnalysis", "ComplicatedAnalysis code snippet", None, False),
+        ("SimpleAnalysis", "Code snippet", "SimpleAnalysis", True),
+        ("SimpleAnalysis", "Code snippet", "ComplicatedAnalysis", False),
     ]
 )
-def test_is_simpleanalysis(description, type, expected):
-    assert is_simpleanalysis(description, type) == expected
+def test_is_analysis(analyses_type, description, type, expected):
+    assert is_analysis(analyses_type, description, type) == expected
 
 
 @pytest.mark.parametrize("filename,description,type,expected",
