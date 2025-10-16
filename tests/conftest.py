@@ -189,7 +189,7 @@ def create_blank_test_record(status="todo", user_id=1):
     if user_id != 1:
         user = User(email=f'test@test.com', password='hello1', active=True, id=user_id)
     else:
-        user = User.query.get(id=1)
+        user = User.query.filter_by(id=1).first()
     test_submissions = {}
     create_record_for_dashboard(recid, test_submissions, user)
     return submission
