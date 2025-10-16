@@ -774,7 +774,7 @@ def test_add_analyses(app):
             "filename": "test.tar.gz"
         },
     ]
-    # This should probably be changed to use SITE_URL or some similar concept
+
     site_url = app.config.get('SITE_URL', 'http://localhost:5000')
     analysis_url = site_url + "/record/resource/%s?landing_page=true"
 
