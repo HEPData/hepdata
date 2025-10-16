@@ -62,7 +62,11 @@
   font-size: 1.05em;
 }
 
-// Removes highlight colour on the input after copy
+#submission_observer_container #data_link_container {
+    width: 100%;
+}
+
+/* Removes highlight colour on the input after copy */
 #direct_data_link::selection {
   background: transparent;
 }
