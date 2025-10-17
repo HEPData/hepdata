@@ -335,7 +335,7 @@ def test_search(app, load_default_data, identifiers):
 
     # Test searching of the resources field by type.
     # A bunch of different types to be checked for
-    resource_types = ['png', 'html', 'zenodo', 'dat', 'C++', None]
+    resource_types = ['png', 'html', 'zenodo', 'dat', 'SimpleAnalysis', None]
     for res_type in resource_types:
         # Execute search for the current type
         results = os_api.search(f'resources.type:{res_type}', index=index)
@@ -774,8 +774,9 @@ def test_add_analyses(app):
             "filename": "test.tar.gz"
         },
     ]
-    # This should probably be changed to use SITE_URL or some similar concept
-    analysis_url = "http://localhost:5000/record/resource/%s?landing_page=true"
+
+    site_url = app.config.get('SITE_URL', 'http://localhost:5000')
+    analysis_url = site_url + "/record/resource/%s?landing_page=true"
 
     with app.app_context():
         # Creating and submitting the test submission containing resources
@@ -802,7 +803,7 @@ def test_add_analyses(app):
 
         # Add MadAnalysis DataResource object separately
         mad_analysis_resource = DataResource(
-            file_location = "placeholder",
+            file_location = "https://placeholder",
             file_type = "MadAnalysis",
             file_description = "placeholder"
         )
@@ -1072,36 +1073,36 @@ def test_reindex_batch_large_submission(app, mocker):
     # Mock methods called so we can check they're called with correct parameters
     mock_index_record_ids = mocker.patch('hepdata.ext.opensearch.api.index_record_ids')
     mock_push_data_keywords = mocker.patch('hepdata.ext.opensearch.api.push_data_keywords')
-    
+
     # Mock database query to return a large number of records (250 total)
     mock_db_result = [(1, i) for i in range(2, 252)]  # pub_recid=1, data_recids=2-251
     mocker.patch('hepdata.ext.opensearch.api.db.session.query').return_value.join.return_value.filter.return_value.all.return_value = mock_db_result
-    
+
     # Set up return values for batched calls
     mock_index_record_ids.return_value = {'publication': [1], 'datatable': []}
-    
+
     # Call reindex_batch with a mock submission ID
     os_api.reindex_batch([999], index)
-    
-    # Should be called 3 times: 100 records, 100 records, 51 records  
+
+    # Should be called 3 times: 100 records, 100 records, 51 records
     assert mock_index_record_ids.call_count == 3
-    
+
     # Check the call arguments for batching
     calls = mock_index_record_ids.call_args_list
-    
+
     # First batch: 100 records (1 + first 99 from 2-100)
     first_batch = calls[0][0][0]  # First positional argument of first call
     assert len(first_batch) == 100
     assert 1 in first_batch  # publication record
-    
+
     # Second batch: 100 records (101-200)
     second_batch = calls[1][0][0]
     assert len(second_batch) == 100
-    
-    # Third batch: 51 records (201-251)  
+
+    # Third batch: 51 records (201-251)
     third_batch = calls[2][0][0]
     assert len(third_batch) == 51
-    
+
     # push_data_keywords should be called once at the end
     mock_push_data_keywords.assert_called_once_with(pub_ids=[1, 1, 1])  # Called with accumulated publication IDs
 
