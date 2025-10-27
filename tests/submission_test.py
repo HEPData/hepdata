@@ -49,7 +49,7 @@ from hepdata.modules.records.api import (
     process_saved_file, get_commit_message
 )
 from hepdata.modules.records.utils.common import infer_file_type, contains_accepted_url, allowed_file, record_exists, \
-    get_record_contents, is_histfactory, get_record_by_id
+    get_record_contents, is_analysis, get_record_by_id
 from hepdata.modules.records.utils.data_files import get_data_path_for_record
 from hepdata.modules.records.utils.submission import process_submission_directory, do_finalise, unload_submission, \
     cleanup_data_related_recid
@@ -94,20 +94,16 @@ def test_url_pattern():
         assert (url_group["exp_result"] == url_type)
 
 
-@pytest.mark.parametrize("filename,description,type,expected",
+@pytest.mark.parametrize("analyses_type,description,type,expected",
     [
-        ("pyhf.tar.gz", "PyHF", None, True),
-        ("pyhf.tgz", "File containing likelihoods", None, True),
-        ("pyhf.zip", "HistFactory JSON file", None, True),
-        ("test.zip", "Some sort of file", "HistFactory", True),
-        ("test.zip", "Some sort of file", "histfactory", True),
-        ("pyhf.tar.gz", "A file", None, False),
-        ("pyhf.json", "HistFactory JSON file", None, True),
-        ("test.zip", "Some sort of file", "json", False),
+        ("SimpleAnalysis", "SimpleAnalysis code snippet", None, True),
+        ("SimpleAnalysis", "ComplicatedAnalysis code snippet", None, False),
+        ("SimpleAnalysis", "Code snippet", "SimpleAnalysis", True),
+        ("SimpleAnalysis", "Code snippet", "ComplicatedAnalysis", False),
     ]
 )
-def test_is_histfactory(filename, description, type, expected):
-    assert is_histfactory(filename, description, type) == expected
+def test_is_analysis(analyses_type, description, type, expected):
+    assert is_analysis(analyses_type, description, type) == expected
 
 
 @pytest.mark.parametrize("filename,description,type,expected",
@@ -121,8 +117,11 @@ def test_is_histfactory(filename, description, type, expected):
         ("test.root", "", None, "ROOT"),
         ("test.docx", "", None, "docx"),
         ("test", "", None, "resource"),
-        ("pyhf.tgz", "File containing likelihoods", None, "HistFactory"),
+        ("pyhf.tgz", "File containing likelihoods", None, "tgz"),
         ("test.zip", "Some sort of file", "HistFactory", "HistFactory"),
+        ("test.zip", "Some sort of file", "HS3", "HS3"),
+        ("snippet.cxx", "SimpleAnalysis code snippet", None, "SimpleAnalysis"),
+        ("snippet.cxx", "Code snippet", "SimpleAnalysis", "SimpleAnalysis"),
         ("snippet.cxx", "ProSelecta analysis", "ProSelecta", "ProSelecta")
     ]
 )
@@ -862,3 +861,88 @@ def test_do_finalise_commit_message_failure(app, admin_idx):
         # We should now have one message in the database.
         assert len(commit_messages) == 1
         assert commit_messages[0].message == "NewMessage"
+
+
+@patch("hepdata.ext.opensearch.document_enhancers.process_last_updates")
+def test_do_finalise_general_exception(app, admin_idx):
+    """
+    Tests that do_finalise handles general exceptions properly.
+    Checks error logging and proper error response.
+    """
+
+    with app.app_context():
+        admin_idx.recreate_index()
+        # Create test submission/record
+        hepdata_submission = create_test_record(
+            os.path.abspath('tests/test_data/test_submission'),
+            overall_status='todo'
+        )
+
+        # Create record data and prepare
+        record = get_record_by_id(hepdata_submission.publication_recid)
+        record["creation_date"] = str(datetime.today().strftime('%Y-%m-%d'))
+
+        # Mock create_celery_app to cause an error after db commit
+        # This simulates issues like Redis connectivity problems that occur
+        # after the database changes are committed
+        with patch("hepdata.modules.records.utils.submission.create_celery_app") as mock_celery:
+            # Set the function to raise a generic exception
+            mock_celery.side_effect = RuntimeError("Test error: Redis connection failed")
+
+            # Now we run the do_finalise function (PATCHED)
+            result = do_finalise(
+                        hepdata_submission.publication_recid,
+                        publication_record=record,
+                        force_finalise=True,
+                        convert=False,
+                        send_email=False
+            )
+            # Convert str(json)->dict
+            result = json.loads(result)
+
+        # Confirm that the result response exists and indicates failure
+        assert "errors" in result
+        assert len(result["errors"]) == 1
+        assert "An error occurred during finalisation" in result["errors"][0]
+        assert "Test error: Redis connection failed" in result["errors"][0]
+        assert result["success"] is False
+
+        # Note: The database changes were already committed before the exception,
+        # so rollback cannot undo them. This test verifies that exceptions are
+        # caught, logged, and reported properly even when they occur after commit.
+
+
+def test_do_finalise_async_indexing(app, admin_idx, mocker):
+    """
+    Tests that do_finalise uses asynchronous indexing via reindex_batch.delay
+    """
+    # Mock the reindex_batch.delay function
+    mock_reindex_batch_delay = mocker.patch('hepdata.modules.records.utils.submission.reindex_batch.delay')
+
+    with app.app_context():
+        admin_idx.recreate_index()
+        # Create test submission/record
+        hepdata_submission = create_test_record(
+            os.path.abspath('tests/test_data/test_submission'),
+            overall_status='todo'
+        )
+
+        record = get_record_by_id(hepdata_submission.publication_recid)
+        record["creation_date"] = str(datetime.today().strftime('%Y-%m-%d'))
+
+        # Mock generate_dois_for_submission.delay to avoid side effects
+        mocker.patch('hepdata.modules.records.utils.submission.generate_dois_for_submission.delay')
+
+        # Call do_finalise
+        do_finalise(
+            hepdata_submission.publication_recid,
+            publication_record=record,
+            force_finalise=True,
+            convert=False
+        )
+
+        # Verify that reindex_batch.delay was called with correct parameters
+        mock_reindex_batch_delay.assert_called_once_with(
+            [hepdata_submission.id],
+            app.config['OPENSEARCH_INDEX']
+        )
