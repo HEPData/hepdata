@@ -51,19 +51,25 @@
             {% endif %}
             <ul class="dropdown-menu" aria-labelledby="dLabel"
                 style="height: auto;">
-
-                <li><a href="{{ download_base_url }}/original"
-                       id="download_original">YAML with resource files</a></li>
-                <li><a href="{{ download_base_url }}/yaml"
-                       id="download_yaml">YAML</a></li>
-                <li><a href="{{ download_base_url }}/yoda"
-                       id="download_yoda">YODA</a></li>
-                <li><a href="{{ download_base_url }}/yoda1"
-                       id="download_yoda1">YODA1</a></li>
-                <li><a href="{{ download_base_url }}/root"
-                       id="download_root">ROOT</a></li>
-                <li><a href="{{ download_base_url }}/csv"
-                       id="download_csv">CSV</a></li>
+                {# Define a set containing url/text pairs for each resource download option. #}
+                {% set type_dict = {
+                    'original': 'YAML with resource files',
+                    'yaml': 'YAML',
+                    'yoda': 'YODA',
+                    'yoda1': 'YODA1',
+                    'root': 'ROOT',
+                    'csv': 'CSV'
+                  }
+                %}
+                {# Generating the URL #}
+                {% for type, string in type_dict.items() %}
+                  {% set download_url = download_base_url ~ '/' ~ type %}
+                  {# If observer key, we need to add the key to URL #}
+                  {% if ctx.observer_key %}
+                    {% set download_url = download_url ~ '?observer_key=' ~ ctx.observer_key %}
+                  {% endif %}
+                  <li><a href="{{ download_url }}" id="download_{{ type }}">{{ string }}</a></li>
+                {% endfor %}
             </ul>
         </div>
 
