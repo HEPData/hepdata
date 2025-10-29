@@ -126,15 +126,23 @@ def delete_submission_observer(recid):
 
     :param: recid: int - The recid to delete on
     """
-
-    # Verify that recid is an int
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    # Validate recid is an integer
     try:
-        int(recid)
-    except ValueError:
-        raise ValueError(f"Supplied recid value ({recid}) for deletion is not an Integer.")
+        recid = int(recid)
+    except (ValueError, TypeError) as e:
+        logger.error(f"Invalid recid provided for observer deletion: {recid}")
+        raise ValueError(f"Supplied recid value ({recid}) for deletion is not an Integer.") from e
 
-    submission_observer = SubmissionObserver.query.filter_by(publication_recid=recid).first()
-
-    if submission_observer:
-        db.session.delete(submission_observer)
-        db.session.commit()
+    try:
+        submission_observer = SubmissionObserver.query.filter_by(publication_recid=recid).first()
+        if submission_observer:
+            db.session.delete(submission_observer)
+            db.session.commit()
+            logger.info(f"Deleted observer for submission {recid}")
+    except Exception as e:
+        logger.error(f"Error deleting observer for submission {recid}: {e}")
+        db.session.rollback()
+        raise
