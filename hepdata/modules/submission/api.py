@@ -16,6 +16,7 @@
 # along with HEPData; if not, write to the Free Software Foundation, Inc.,
 # 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
 #
+import logging
 
 from invenio_db import db
 from hepdata.modules.submission.models import DataResource, SubmissionObserver
@@ -23,6 +24,9 @@ from hepdata.modules.permissions.models import SubmissionParticipant
 from hepdata.modules.submission.models import HEPSubmission
 
 """Common utilities used across the code base."""
+
+logging.basicConfig()
+log = logging.getLogger(__name__)
 
 
 def is_resource_added_to_submission(recid, version, resource_url):
@@ -126,23 +130,22 @@ def delete_submission_observer(recid):
 
     :param: recid: int - The recid to delete on
     """
-    import logging
-    logger = logging.getLogger(__name__)
-    
+
     # Validate recid is an integer
     try:
         recid = int(recid)
     except (ValueError, TypeError) as e:
-        logger.error(f"Invalid recid provided for observer deletion: {recid}")
+        log.error(f"Invalid recid provided for observer deletion: {recid}")
         raise ValueError(f"Supplied recid value ({recid}) for deletion is not an Integer.") from e
 
     try:
         submission_observer = SubmissionObserver.query.filter_by(publication_recid=recid).first()
+
         if submission_observer:
             db.session.delete(submission_observer)
             db.session.commit()
-            logger.info(f"Deleted observer for submission {recid}")
+            log.info(f"Deleted observer for submission {recid}")
     except Exception as e:
-        logger.error(f"Error deleting observer for submission {recid}: {e}")
+        log.error(f"Error deleting observer for submission {recid}: {e}")
         db.session.rollback()
         raise
