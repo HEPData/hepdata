@@ -1,6 +1,7 @@
 import logging
 import os
 from unittest.mock import call
+import xml.etree.ElementTree as ET
 
 from datacite.errors import DataCiteUnauthorizedError, DataCiteError
 from flask import render_template
@@ -449,6 +450,15 @@ def test_get_submission_file_resources(app, identifiers):
     assert file_resources[3].id == 1062
 
 
+def _get_related_identifiers(xml_string):
+    """Helper function to extract relatedIdentifier elements from DataCite XML."""
+    root = ET.fromstring(xml_string)
+    # DataCite uses namespace
+    ns = {'datacite': 'http://datacite.org/schema/kernel-4'}
+    related_ids = root.findall('.//datacite:relatedIdentifier', ns)
+    return [(elem.text, elem.get('relationType'), elem.get('relatedIdentifierType'), 
+             elem.get('resourceTypeGeneral')) for elem in related_ids]
+
 
 def test_datacite_related_identifiers(app, identifiers):
     """Test that DataCite XML has correct relatedIdentifiers based on the issue requirements."""
@@ -472,6 +482,9 @@ def test_datacite_related_identifiers(app, identifiers):
     if hep_submission.doi is None:
         reserve_doi_for_hepsubmission(hep_submission)
 
+    # Load DataCite schema for validation
+    datacite_schema = xmlschema.XMLSchema('http://schema.datacite.org/meta/kernel-4.6/metadata.xsd')
+
     # Test unversioned whole record DOI
     base_xml = render_template('hepdata_records/formats/datacite/datacite_container_submission.xml',
                                doi=hep_submission.doi,
@@ -482,14 +495,24 @@ def test_datacite_related_identifiers(app, identifiers):
                                publication_info=publication_info,
                                site_url=site_url)
 
+    # Validate against schema
+    datacite_schema.validate(base_xml)
+
+    # Parse XML and check relatedIdentifiers
+    base_related_ids = _get_related_identifiers(base_xml)
+    
     # Should contain versioned DOI with HasVersion relation for each version
     for version_submission in all_versions:
-        expected_version_relation = f'<relatedIdentifier relatedIdentifierType="DOI" resourceTypeGeneral="Collection" relationType="HasVersion">{hep_submission.doi}.v{version_submission.version}</relatedIdentifier>'
-        assert expected_version_relation in base_xml, f"Base XML should contain version relation: {expected_version_relation}"
+        expected_doi = f'{hep_submission.doi}.v{version_submission.version}'
+        matching = [rid for rid in base_related_ids 
+                   if rid[0] == expected_doi and rid[1] == 'HasVersion' 
+                   and rid[2] == 'DOI' and rid[3] == 'Collection']
+        assert len(matching) == 1, f"Base XML should contain exactly one HasVersion relation for {expected_doi}"
 
     # Should NOT contain individual table DOIs in unversioned record
     for data_submission in data_submissions:
-        assert data_submission.doi not in base_xml, f"Base XML should not contain table DOI: {data_submission.doi}"
+        table_dois = [rid for rid in base_related_ids if rid[0] == data_submission.doi]
+        assert len(table_dois) == 0, f"Base XML should not contain table DOI: {data_submission.doi}"
 
     # Test versioned whole record DOI
     version_doi = f"{hep_submission.doi}.v{hep_submission.version}"
@@ -502,20 +525,32 @@ def test_datacite_related_identifiers(app, identifiers):
                                   publication_info=publication_info,
                                   site_url=site_url)
 
+    # Validate against schema
+    datacite_schema.validate(version_xml)
+
+    # Parse XML and check relatedIdentifiers
+    version_related_ids = _get_related_identifiers(version_xml)
+
     # Should contain unversioned DOI with IsVersionOf relation
-    expected_unversioned_relation = f'<relatedIdentifier relatedIdentifierType="DOI" resourceTypeGeneral="Collection" relationType="IsVersionOf">{hep_submission.doi}</relatedIdentifier>'
-    assert expected_unversioned_relation in version_xml, f"Version XML should contain unversioned relation: {expected_unversioned_relation}"
+    unversioned_matches = [rid for rid in version_related_ids 
+                          if rid[0] == hep_submission.doi and rid[1] == 'IsVersionOf' 
+                          and rid[2] == 'DOI' and rid[3] == 'Collection']
+    assert len(unversioned_matches) == 1, f"Version XML should contain exactly one IsVersionOf relation to {hep_submission.doi}"
 
     # Should contain individual table DOIs with HasPart relation
     for data_submission in data_submissions:
-        expected_table_relation = f'<relatedIdentifier relatedIdentifierType="DOI" resourceTypeGeneral="Dataset" relationType="HasPart">{data_submission.doi}</relatedIdentifier>'
-        assert expected_table_relation in version_xml, f"Version XML should contain table relation: {expected_table_relation}"
+        table_matches = [rid for rid in version_related_ids 
+                        if rid[0] == data_submission.doi and rid[1] == 'HasPart' 
+                        and rid[2] == 'DOI' and rid[3] == 'Dataset']
+        assert len(table_matches) == 1, f"Version XML should contain exactly one HasPart relation for table {data_submission.doi}"
 
     # Should contain resource DOIs with HasPart relation (if any)
     for resource in resources:
         if resource.doi:
-            expected_resource_relation = f'<relatedIdentifier relatedIdentifierType="DOI" resourceTypeGeneral="Other" relationType="HasPart">{resource.doi}</relatedIdentifier>'
-            assert expected_resource_relation in version_xml, f"Version XML should contain resource relation: {expected_resource_relation}"
+            resource_matches = [rid for rid in version_related_ids 
+                               if rid[0] == resource.doi and rid[1] == 'HasPart' 
+                               and rid[2] == 'DOI' and rid[3] == 'Other']
+            assert len(resource_matches) == 1, f"Version XML should contain exactly one HasPart relation for resource {resource.doi}"
 
     # Test individual table DOI
     if data_submissions:
@@ -529,13 +564,24 @@ def test_datacite_related_identifiers(app, identifiers):
                                     publication_info=publication_info,
                                     site_url=site_url)
 
+        # Validate against schema
+        datacite_schema.validate(table_xml)
+
+        # Parse XML and check relatedIdentifiers
+        table_related_ids = _get_related_identifiers(table_xml)
+
         # Should reference versioned whole record DOI, not unversioned
-        expected_versioned_container = f'<relatedIdentifier relatedIdentifierType="DOI" resourceTypeGeneral="Collection" relationType="IsPartOf">{hep_submission.doi}.v{hep_submission.version}</relatedIdentifier>'
-        assert expected_versioned_container in table_xml, f"Table XML should reference versioned container: {expected_versioned_container}"
+        versioned_container = f'{hep_submission.doi}.v{hep_submission.version}'
+        versioned_matches = [rid for rid in table_related_ids 
+                            if rid[0] == versioned_container and rid[1] == 'IsPartOf' 
+                            and rid[2] == 'DOI' and rid[3] == 'Collection']
+        assert len(versioned_matches) == 1, f"Table XML should reference versioned container {versioned_container}"
 
         # Should NOT reference unversioned DOI
-        unexpected_unversioned_container = f'<relatedIdentifier relatedIdentifierType="DOI" resourceTypeGeneral="Collection" relationType="IsPartOf">{hep_submission.doi}</relatedIdentifier>'
-        assert unexpected_unversioned_container not in table_xml, f"Table XML should not reference unversioned container: {unexpected_unversioned_container}"
+        unversioned_matches = [rid for rid in table_related_ids 
+                              if rid[0] == hep_submission.doi and rid[1] == 'IsPartOf' 
+                              and rid[2] == 'DOI' and rid[3] == 'Collection']
+        assert len(unversioned_matches) == 0, f"Table XML should not reference unversioned container {hep_submission.doi}"
 
     # Test resource file DOI
     if resources and any(r.doi for r in resources):
@@ -553,13 +599,24 @@ def test_datacite_related_identifiers(app, identifiers):
                                        publication_info=publication_info,
                                        site_url=site_url)
 
+        # Validate against schema
+        datacite_schema.validate(resource_xml)
+
+        # Parse XML and check relatedIdentifiers
+        resource_related_ids = _get_related_identifiers(resource_xml)
+
         # Should reference versioned whole record DOI, not unversioned
-        expected_versioned_container = f'<relatedIdentifier relatedIdentifierType="DOI" resourceTypeGeneral="Collection" relationType="IsPartOf">{hep_submission.doi}.v{hep_submission.version}</relatedIdentifier>'
-        assert expected_versioned_container in resource_xml, f"Resource XML should reference versioned container: {expected_versioned_container}"
-        
+        versioned_container = f'{hep_submission.doi}.v{hep_submission.version}'
+        versioned_matches = [rid for rid in resource_related_ids 
+                            if rid[0] == versioned_container and rid[1] == 'IsPartOf' 
+                            and rid[2] == 'DOI' and rid[3] == 'Collection']
+        assert len(versioned_matches) == 1, f"Resource XML should reference versioned container {versioned_container}"
+
         # Should NOT reference unversioned DOI
-        unexpected_unversioned_container = f'<relatedIdentifier relatedIdentifierType="DOI" resourceTypeGeneral="Collection" relationType="IsPartOf">{hep_submission.doi}</relatedIdentifier>'
-        assert unexpected_unversioned_container not in resource_xml, f"Resource XML should not reference unversioned container: {unexpected_unversioned_container}"
+        unversioned_matches = [rid for rid in resource_related_ids 
+                              if rid[0] == hep_submission.doi and rid[1] == 'IsPartOf' 
+                              and rid[2] == 'DOI' and rid[3] == 'Collection']
+        assert len(unversioned_matches) == 0, f"Resource XML should not reference unversioned container {hep_submission.doi}"
 
 
 def test_get_datacite_schema():

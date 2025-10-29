@@ -56,7 +56,7 @@
             <relatedIdentifier relatedIdentifierType="DOI" resourceTypeGeneral="JournalArticle" relationType="IsSupplementTo">{{ publication_info.doi }}</relatedIdentifier>
         {% endif %}
 
-        {% set is_version_doi = '.v' in doi %}
+        {% set is_version_doi = doi and doi.split('.')[-1].startswith('v') and doi.split('.')[-1][1:].isdigit() %}
         {% if is_version_doi %}
             {# Versioned whole record DOI: include unversioned DOI and individual table/resource DOIs #}
             <relatedIdentifier relatedIdentifierType="DOI" resourceTypeGeneral="Collection" relationType="IsVersionOf">{{ overall_submission.doi }}</relatedIdentifier>
