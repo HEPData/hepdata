@@ -34,6 +34,13 @@
       If you would like further details about this change, please contact <a href="mailto:{{coordinator_email}}">{{ coordinator_email }}</a>.
     </p>
 
+  {% if message %}
+    <p>
+      <b>A message has been supplied by the Coordinator ({{ coordinator_email }}). </b>
+    </p>
+    <pre style="white-space:pre-wrap;padding-left:20px;font-family:'Lato',sans-serif;">{{ message }}</pre>
+  {% endif %}
+
     <p>
         The <a href="{{ site_url }}" style="color: #9b59b6">HEPData</a> team
     </p>

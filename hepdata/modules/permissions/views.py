@@ -97,10 +97,12 @@ def manage_participant_status(recid, action, status_action, participant_id):
         # now send the email telling the user of their new status!
         hepsubmission = get_latest_hepsubmission(publication_recid=recid)
         if status_action != 'email':
+            # Get the message from the form if provided
+            message = request.form.get('review_message', None)
             if status_action == 'promote':
-                send_cookie_email(participant, record, version=hepsubmission.version)
+                send_cookie_email(participant, record, version=hepsubmission.version, message=message)
             elif status_action == 'demote':
-                send_reserve_email(participant, record)
+                send_reserve_email(participant, record, message=message)
             admin_idx = AdminIndexer()
             admin_idx.index_submission(hepsubmission)
         else:
