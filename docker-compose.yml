@@ -63,7 +63,7 @@ services:
     - "5432:5432"
     read_only: false
   os:
-    image: opensearchproject/opensearch:2.18.0
+    image: opensearchproject/opensearch:3.2.0
     read_only: false
     environment:
       - node.name=os01
