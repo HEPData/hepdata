@@ -70,7 +70,9 @@
             {% endfor %}
         {% else %}
             {# Unversioned whole record DOI: include versioned whole record DOIs #}
-            <relatedIdentifier relatedIdentifierType="DOI" resourceTypeGeneral="Collection" relationType="HasVersion">{{ overall_submission.doi }}.v{{ overall_submission.version }}</relatedIdentifier>
+            {% for version_submission in all_versions %}
+                <relatedIdentifier relatedIdentifierType="DOI" resourceTypeGeneral="Collection" relationType="HasVersion">{{ overall_submission.doi }}.v{{ version_submission.version }}</relatedIdentifier>
+            {% endfor %}
         {% endif %}
     </relatedIdentifiers>
 </resource>

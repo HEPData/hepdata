@@ -356,11 +356,18 @@ def test_xml_validates(app, identifiers):
     # Load schema
     datacite_schema = xmlschema.XMLSchema('http://schema.datacite.org/meta/kernel-4.4/metadata.xsd')
 
+    # Get all versions for the publication
+    all_versions = HEPSubmission.query.filter_by(
+        publication_recid=hep_submission.publication_recid,
+        overall_status='finished'
+    ).order_by(HEPSubmission.version.asc()).all()
+    
     base_xml = render_template('hepdata_records/formats/datacite/datacite_container_submission.xml',
                                doi=hep_submission.doi,
                                overall_submission=hep_submission,
                                data_submissions=data_submissions,
                                resources=_get_submission_file_resources(hep_submission.publication_recid, hep_submission.version, hep_submission),
+                               all_versions=all_versions,
                                publication_info=publication_info,
                                site_url=site_url)
     # Validate the base XML
@@ -371,6 +378,7 @@ def test_xml_validates(app, identifiers):
                                   overall_submission=hep_submission,
                                   data_submissions=data_submissions,
                                   resources=_get_submission_file_resources(hep_submission.publication_recid, hep_submission.version, hep_submission),
+                                  all_versions=all_versions,
                                   publication_info=publication_info,
                                   site_url=site_url)
     # Validate the version XML
@@ -449,18 +457,26 @@ def test_datacite_related_identifiers(app, identifiers):
     publication_info = get_record_by_id(hep_submission.publication_recid)
     site_url = app.config.get('SITE_URL', 'https://www.hepdata.net')
     
+    # Get all versions for the publication
+    all_versions = HEPSubmission.query.filter_by(
+        publication_recid=hep_submission.publication_recid,
+        overall_status='finished'
+    ).order_by(HEPSubmission.version.asc()).all()
+    
     # Test unversioned whole record DOI
     base_xml = render_template('hepdata_records/formats/datacite/datacite_container_submission.xml',
                                doi=hep_submission.doi,
                                overall_submission=hep_submission,
                                data_submissions=data_submissions,
                                resources=resources,
+                               all_versions=all_versions,
                                publication_info=publication_info,
                                site_url=site_url)
     
-    # Should contain versioned DOI with HasVersion relation
-    expected_version_relation = f'<relatedIdentifier relatedIdentifierType="DOI" resourceTypeGeneral="Collection" relationType="HasVersion">{hep_submission.doi}.v{hep_submission.version}</relatedIdentifier>'
-    assert expected_version_relation in base_xml, f"Base XML should contain version relation: {expected_version_relation}"
+    # Should contain versioned DOI with HasVersion relation for each version
+    for version_submission in all_versions:
+        expected_version_relation = f'<relatedIdentifier relatedIdentifierType="DOI" resourceTypeGeneral="Collection" relationType="HasVersion">{hep_submission.doi}.v{version_submission.version}</relatedIdentifier>'
+        assert expected_version_relation in base_xml, f"Base XML should contain version relation: {expected_version_relation}"
     
     # Should NOT contain individual table DOIs in unversioned record
     for data_submission in data_submissions:
@@ -473,6 +489,7 @@ def test_datacite_related_identifiers(app, identifiers):
                                   overall_submission=hep_submission,
                                   data_submissions=data_submissions,
                                   resources=resources,
+                                  all_versions=all_versions,
                                   publication_info=publication_info,
                                   site_url=site_url)
     
