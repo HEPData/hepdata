@@ -60,8 +60,9 @@ def manage_participant_status(recid, action, status_action, participant_id):
     """
     Handles actions received from the "Manage Submission" widget window buttons.
     Manages user promotion/demotion for uploader and reviewer roles,
-    removal of reserve users, and email reminders to primary uploaders/reviewers
-    Request can contain a message for reminder email.
+    removal of reserve users, and email reminders to primary uploaders/reviewers.
+    Request can contain an optional message (via 'review_message' form field) 
+    that will be included in promotion, demotion, and reminder emails.
 
     status_action possibilities are:
         promote: Promote a reserve uploader/reviewer to primary position

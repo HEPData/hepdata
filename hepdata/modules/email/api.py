@@ -321,6 +321,13 @@ def send_cookie_email(submission_participant,
 
 
 def send_reserve_email(submission_participant, record_information, message=None):
+    """
+    Sends an email to notify an uploader or reviewer that they have been demoted to reserve status.
+
+    :param submission_participant: A SubmissionParticipant object, to receive the email
+    :param record_information: Record object containing record information
+    :param message: Any specific message text input into the form (Default is None)
+    """
 
     hepsubmission = get_latest_hepsubmission(
         publication_recid=record_information['recid']
