@@ -19,7 +19,7 @@
 # In applying this license, CERN does not
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
-
+import logging
 
 from functools import partial
 from operator import is_not
@@ -32,6 +32,9 @@ from hepdata.modules.permissions.models import SubmissionParticipant, Coordinato
 from hepdata.modules.records.utils.common import get_record_contents
 from hepdata.modules.submission.models import HEPSubmission, SubmissionObserver
 from hepdata.utils.users import get_user_from_id, user_is_admin
+
+logging.basicConfig()
+log = logging.getLogger(__name__)
 
 
 def get_records_participated_in_by_user(user):
@@ -195,42 +198,40 @@ def write_submissions_to_files():
 
     csvfile.close()
     csvfile1.close()
+
+
 def verify_observer_key(submission_id, observer_key):
     """
     Verifies the access key used to access a submission without
     login requirement.
-
     :param int submission_id:  The requested HEPSubmission for access
     :param str observer_key: The access key used to access the submission
     :returns: Bool representing match status against database
     """
-    import logging
-    logger = logging.getLogger(__name__)
-    
+
     # Validate inputs
     if submission_id is None or observer_key is None:
         return False
-        
+
     try:
         submission_id = int(submission_id)
     except (ValueError, TypeError):
-        logger.warning(f"Invalid submission_id format: {submission_id}")
-        return False
-        
-    if len(observer_key) != OBSERVER_KEY_LENGTH:
-        logger.warning(f"Invalid observer_key length for submission {submission_id}")
+        log.warning(f"Invalid submission_id format: {submission_id}")
         return False
 
+    if len(observer_key) != OBSERVER_KEY_LENGTH:
+        log.warning(f"Invalid observer_key length for submission {submission_id}")
+        return False
     try:
         submission_observer = SubmissionObserver.query.filter_by(
             publication_recid=submission_id,
             observer_key=observer_key
         ).first()
-        
+
         result = submission_observer is not None
-        if result:
-            logger.info(f"Valid observer key used for submission {submission_id}")
+
         return result
+
     except Exception as e:
-        logger.error(f"Database error in verify_observer_key: {e}")
+        log.error(f"Database error in verify_observer_key: {e}")
         return False
