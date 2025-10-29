@@ -195,8 +195,6 @@ def write_submissions_to_files():
 
     csvfile.close()
     csvfile1.close()
-
-
 def verify_observer_key(submission_id, observer_key):
     """
     Verifies the access key used to access a submission without
@@ -206,18 +204,33 @@ def verify_observer_key(submission_id, observer_key):
     :param str observer_key: The access key used to access the submission
     :returns: Bool representing match status against database
     """
-
-    # If none, or doesn't match expected size
-    if observer_key is None or len(observer_key) != OBSERVER_KEY_LENGTH:
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    # Validate inputs
+    if submission_id is None or observer_key is None:
+        return False
+        
+    try:
+        submission_id = int(submission_id)
+    except (ValueError, TypeError):
+        logger.warning(f"Invalid submission_id format: {submission_id}")
+        return False
+        
+    if len(observer_key) != OBSERVER_KEY_LENGTH:
+        logger.warning(f"Invalid observer_key length for submission {submission_id}")
         return False
 
-    # Do a query
-    submission_observer = SubmissionObserver.query.filter_by(
-        publication_recid=submission_id,
-        observer_key=observer_key
-    ).first()
-
-    if submission_observer:
-        return True
-    else:
+    try:
+        submission_observer = SubmissionObserver.query.filter_by(
+            publication_recid=submission_id,
+            observer_key=observer_key
+        ).first()
+        
+        result = submission_observer is not None
+        if result:
+            logger.info(f"Valid observer key used for submission {submission_id}")
+        return result
+    except Exception as e:
+        logger.error(f"Database error in verify_observer_key: {e}")
         return False
