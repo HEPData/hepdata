@@ -181,7 +181,7 @@ def create_container_doi(hep_submission_id, data_submission_ids, resource_ids, s
 
     publication_info = get_record_by_id(hep_submission.publication_recid)
     version_doi = hep_submission.doi + ".v{0}".format(hep_submission.version)
-    
+
     # Get all versions for this publication (for unversioned DOI to include all versions)
     all_versions = db.session.query(HEPSubmission).filter(
         HEPSubmission.publication_recid == hep_submission.publication_recid,

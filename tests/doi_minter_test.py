@@ -361,7 +361,11 @@ def test_xml_validates(app, identifiers):
         publication_recid=hep_submission.publication_recid,
         overall_status='finished'
     ).order_by(HEPSubmission.version.asc()).all()
-    
+
+    # Ensure DOI is assigned
+    if hep_submission.doi is None:
+        reserve_doi_for_hepsubmission(hep_submission)
+
     base_xml = render_template('hepdata_records/formats/datacite/datacite_container_submission.xml',
                                doi=hep_submission.doi,
                                overall_submission=hep_submission,
@@ -457,13 +461,17 @@ def test_datacite_related_identifiers(app, identifiers):
     resources = _get_submission_file_resources(hep_submission.publication_recid, hep_submission.version, hep_submission)
     publication_info = get_record_by_id(hep_submission.publication_recid)
     site_url = app.config.get('SITE_URL', 'https://www.hepdata.net')
-    
+
     # Get all versions for the publication
     all_versions = HEPSubmission.query.filter_by(
         publication_recid=hep_submission.publication_recid,
         overall_status='finished'
     ).order_by(HEPSubmission.version.asc()).all()
-    
+
+    # Ensure DOI is assigned
+    if hep_submission.doi is None:
+        reserve_doi_for_hepsubmission(hep_submission)
+
     # Test unversioned whole record DOI
     base_xml = render_template('hepdata_records/formats/datacite/datacite_container_submission.xml',
                                doi=hep_submission.doi,
@@ -473,16 +481,16 @@ def test_datacite_related_identifiers(app, identifiers):
                                all_versions=all_versions,
                                publication_info=publication_info,
                                site_url=site_url)
-    
+
     # Should contain versioned DOI with HasVersion relation for each version
     for version_submission in all_versions:
         expected_version_relation = f'<relatedIdentifier relatedIdentifierType="DOI" resourceTypeGeneral="Collection" relationType="HasVersion">{hep_submission.doi}.v{version_submission.version}</relatedIdentifier>'
         assert expected_version_relation in base_xml, f"Base XML should contain version relation: {expected_version_relation}"
-    
+
     # Should NOT contain individual table DOIs in unversioned record
     for data_submission in data_submissions:
         assert data_submission.doi not in base_xml, f"Base XML should not contain table DOI: {data_submission.doi}"
-    
+
     # Test versioned whole record DOI
     version_doi = f"{hep_submission.doi}.v{hep_submission.version}"
     version_xml = render_template('hepdata_records/formats/datacite/datacite_container_submission.xml',
@@ -493,22 +501,22 @@ def test_datacite_related_identifiers(app, identifiers):
                                   all_versions=all_versions,
                                   publication_info=publication_info,
                                   site_url=site_url)
-    
+
     # Should contain unversioned DOI with IsVersionOf relation
     expected_unversioned_relation = f'<relatedIdentifier relatedIdentifierType="DOI" resourceTypeGeneral="Collection" relationType="IsVersionOf">{hep_submission.doi}</relatedIdentifier>'
     assert expected_unversioned_relation in version_xml, f"Version XML should contain unversioned relation: {expected_unversioned_relation}"
-    
+
     # Should contain individual table DOIs with HasPart relation
     for data_submission in data_submissions:
         expected_table_relation = f'<relatedIdentifier relatedIdentifierType="DOI" resourceTypeGeneral="Dataset" relationType="HasPart">{data_submission.doi}</relatedIdentifier>'
         assert expected_table_relation in version_xml, f"Version XML should contain table relation: {expected_table_relation}"
-    
+
     # Should contain resource DOIs with HasPart relation (if any)
     for resource in resources:
         if resource.doi:
             expected_resource_relation = f'<relatedIdentifier relatedIdentifierType="DOI" resourceTypeGeneral="Other" relationType="HasPart">{resource.doi}</relatedIdentifier>'
             assert expected_resource_relation in version_xml, f"Version XML should contain resource relation: {expected_resource_relation}"
-    
+
     # Test individual table DOI
     if data_submissions:
         data_submission = data_submissions[0]
@@ -520,22 +528,22 @@ def test_datacite_related_identifiers(app, identifiers):
                                     data_submission=data_submission,
                                     publication_info=publication_info,
                                     site_url=site_url)
-        
+
         # Should reference versioned whole record DOI, not unversioned
         expected_versioned_container = f'<relatedIdentifier relatedIdentifierType="DOI" resourceTypeGeneral="Collection" relationType="IsPartOf">{hep_submission.doi}.v{hep_submission.version}</relatedIdentifier>'
         assert expected_versioned_container in table_xml, f"Table XML should reference versioned container: {expected_versioned_container}"
-        
+
         # Should NOT reference unversioned DOI
         unexpected_unversioned_container = f'<relatedIdentifier relatedIdentifierType="DOI" resourceTypeGeneral="Collection" relationType="IsPartOf">{hep_submission.doi}</relatedIdentifier>'
         assert unexpected_unversioned_container not in table_xml, f"Table XML should not reference unversioned container: {unexpected_unversioned_container}"
-    
+
     # Test resource file DOI
     if resources and any(r.doi for r in resources):
         resource = next(r for r in resources if r.doi)
         license = None
         if resource.file_license:
             license = License.query.filter_by(id=resource.file_license).first()
-            
+
         resource_xml = render_template('hepdata_records/formats/datacite/datacite_resource.xml',
                                        resource=resource,
                                        doi=resource.doi,
@@ -544,7 +552,7 @@ def test_datacite_related_identifiers(app, identifiers):
                                        license=license,
                                        publication_info=publication_info,
                                        site_url=site_url)
-        
+
         # Should reference versioned whole record DOI, not unversioned
         expected_versioned_container = f'<relatedIdentifier relatedIdentifierType="DOI" resourceTypeGeneral="Collection" relationType="IsPartOf">{hep_submission.doi}.v{hep_submission.version}</relatedIdentifier>'
         assert expected_versioned_container in resource_xml, f"Resource XML should reference versioned container: {expected_versioned_container}"
