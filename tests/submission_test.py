@@ -51,7 +51,7 @@ from hepdata.modules.records.api import (
     process_saved_file
 )
 from hepdata.modules.records.utils.common import infer_file_type, contains_accepted_url, allowed_file, record_exists, \
-    get_record_contents, is_histfactory, get_record_by_id
+    get_record_contents, is_analysis, get_record_by_id
 from hepdata.modules.records.utils.data_files import get_data_path_for_record
 from hepdata.modules.records.utils.submission import process_submission_directory, do_finalise, unload_submission, \
     cleanup_data_related_recid, get_or_create_hepsubmission
@@ -98,20 +98,16 @@ def test_url_pattern():
         assert (url_group["exp_result"] == url_type)
 
 
-@pytest.mark.parametrize("filename,description,type,expected",
+@pytest.mark.parametrize("analyses_type,description,type,expected",
     [
-        ("pyhf.tar.gz", "PyHF", None, True),
-        ("pyhf.tgz", "File containing likelihoods", None, True),
-        ("pyhf.zip", "HistFactory JSON file", None, True),
-        ("test.zip", "Some sort of file", "HistFactory", True),
-        ("test.zip", "Some sort of file", "histfactory", True),
-        ("pyhf.tar.gz", "A file", None, False),
-        ("pyhf.json", "HistFactory JSON file", None, True),
-        ("test.zip", "Some sort of file", "json", False),
+        ("SimpleAnalysis", "SimpleAnalysis code snippet", None, True),
+        ("SimpleAnalysis", "ComplicatedAnalysis code snippet", None, False),
+        ("SimpleAnalysis", "Code snippet", "SimpleAnalysis", True),
+        ("SimpleAnalysis", "Code snippet", "ComplicatedAnalysis", False),
     ]
 )
-def test_is_histfactory(filename, description, type, expected):
-    assert is_histfactory(filename, description, type) == expected
+def test_is_analysis(analyses_type, description, type, expected):
+    assert is_analysis(analyses_type, description, type) == expected
 
 
 @pytest.mark.parametrize("filename,description,type,expected",
@@ -125,8 +121,11 @@ def test_is_histfactory(filename, description, type, expected):
         ("test.root", "", None, "ROOT"),
         ("test.docx", "", None, "docx"),
         ("test", "", None, "resource"),
-        ("pyhf.tgz", "File containing likelihoods", None, "HistFactory"),
+        ("pyhf.tgz", "File containing likelihoods", None, "tgz"),
         ("test.zip", "Some sort of file", "HistFactory", "HistFactory"),
+        ("test.zip", "Some sort of file", "HS3", "HS3"),
+        ("snippet.cxx", "SimpleAnalysis code snippet", None, "SimpleAnalysis"),
+        ("snippet.cxx", "Code snippet", "SimpleAnalysis", "SimpleAnalysis"),
         ("snippet.cxx", "ProSelecta analysis", "ProSelecta", "ProSelecta")
     ]
 )

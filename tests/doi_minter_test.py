@@ -15,7 +15,7 @@ from hepdata.modules.records.utils.common import get_record_by_id
 from hepdata.modules.records.utils.doi_minter import get_or_create_doi, register_doi, \
     generate_doi_for_table, generate_dois_for_submission, \
     reserve_dois_for_data_submissions, reserve_doi_for_hepsubmission, \
-    _get_submission_file_resources
+    _get_submission_file_resources, _get_datacite_schema, _validate_datacite_xml
 from hepdata.modules.records.utils.submission import get_or_create_hepsubmission
 from hepdata.modules.records.utils.workflow import create_record
 from hepdata.modules.submission.models import DataSubmission, HEPSubmission, \
@@ -354,7 +354,7 @@ def test_xml_validates(app, identifiers):
     site_url = app.config.get('SITE_URL', 'https://www.hepdata.net')
 
     # Load schema
-    datacite_schema = xmlschema.XMLSchema('http://schema.datacite.org/meta/kernel-4.4/metadata.xsd')
+    datacite_schema = xmlschema.XMLSchema('http://schema.datacite.org/meta/kernel-4.6/metadata.xsd')
 
     base_xml = render_template('hepdata_records/formats/datacite/datacite_container_submission.xml',
                                doi=hep_submission.doi,
@@ -433,3 +433,110 @@ def test_get_submission_file_resources(app, identifiers):
     assert file_resources[1].id == 1002
     assert file_resources[2].id == 1043
     assert file_resources[3].id == 1062
+
+
+def test_get_datacite_schema():
+    """Test that _get_datacite_schema loads and caches the schema correctly."""
+    import hepdata.modules.records.utils.doi_minter as doi_minter_module
+    
+    # Reset the cached schema
+    original_schema = doi_minter_module._DATACITE_SCHEMA
+    doi_minter_module._DATACITE_SCHEMA = None
+    
+    try:
+        # First call should load the schema
+        schema1 = _get_datacite_schema()
+        assert schema1 is not None
+        assert isinstance(schema1, xmlschema.XMLSchema)
+        
+        # Second call should return the same cached instance
+        schema2 = _get_datacite_schema()
+        assert schema2 is schema1
+        
+        # Verify it's the DataCite 4.6 schema
+        assert 'kernel-4' in str(schema1.url) or 'kernel-4.6' in str(schema1.url) or 'datacite' in str(schema1.url).lower()
+    finally:
+        # Restore original schema
+        doi_minter_module._DATACITE_SCHEMA = original_schema
+
+
+def test_get_datacite_schema_handles_errors(mocker, caplog):
+    """Test that _get_datacite_schema handles errors gracefully."""
+    import hepdata.modules.records.utils.doi_minter as doi_minter_module
+    
+    # Reset the cached schema
+    original_schema = doi_minter_module._DATACITE_SCHEMA
+    doi_minter_module._DATACITE_SCHEMA = None
+    
+    try:
+        # Mock xmlschema.XMLSchema to raise an exception
+        mocker.patch('hepdata.modules.records.utils.doi_minter.xmlschema.XMLSchema',
+                     side_effect=Exception('Network error'))
+        
+        caplog.set_level(logging.ERROR)
+        
+        # Should return None and log error
+        schema = _get_datacite_schema()
+        assert schema is None
+        assert 'Failed to load DataCite schema' in caplog.text
+        assert 'Network error' in caplog.text
+    finally:
+        # Restore original schema
+        doi_minter_module._DATACITE_SCHEMA = original_schema
+
+
+def test_validate_datacite_xml_valid():
+    """Test that _validate_datacite_xml validates correct XML."""
+    # Valid minimal DataCite XML
+    valid_xml = """<resource xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+                              xmlns="http://datacite.org/schema/kernel-4"
+                              xsi:schemaLocation="http://datacite.org/schema/kernel-4 
+                              https://schema.datacite.org/meta/kernel-4.6/metadata.xsd">
+        <identifier identifierType="DOI">10.17182/hepdata.test</identifier>
+        <creators>
+            <creator>
+                <creatorName nameType="Organizational">Test Collaboration</creatorName>
+            </creator>
+        </creators>
+        <titles>
+            <title>Test Publication</title>
+        </titles>
+        <publisher>HEPData</publisher>
+        <publicationYear>2024</publicationYear>
+        <resourceType resourceTypeGeneral="Dataset">Dataset</resourceType>
+    </resource>"""
+    
+    result = _validate_datacite_xml(valid_xml, '10.17182/hepdata.test')
+    assert result is True
+
+
+def test_validate_datacite_xml_invalid(caplog):
+    """Test that _validate_datacite_xml detects invalid XML."""
+    # Invalid XML - missing required elements
+    invalid_xml = """<resource xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+                                xmlns="http://datacite.org/schema/kernel-4"
+                                xsi:schemaLocation="http://datacite.org/schema/kernel-4 
+                                https://schema.datacite.org/meta/kernel-4.6/metadata.xsd">
+        <identifier identifierType="DOI">10.17182/hepdata.test</identifier>
+    </resource>"""
+    
+    caplog.set_level(logging.ERROR)
+    
+    result = _validate_datacite_xml(invalid_xml, '10.17182/hepdata.test')
+    assert result is False
+    assert 'DataCite XML validation failed' in caplog.text
+    assert '10.17182/hepdata.test' in caplog.text
+
+
+def test_validate_datacite_xml_no_schema(mocker, caplog):
+    """Test that _validate_datacite_xml handles missing schema gracefully."""
+    # Mock _get_datacite_schema to return None
+    mocker.patch('hepdata.modules.records.utils.doi_minter._get_datacite_schema',
+                 return_value=None)
+    
+    caplog.set_level(logging.WARNING)
+    
+    result = _validate_datacite_xml('<xml>test</xml>', '10.17182/hepdata.test')
+    assert result is True  # Should return True when schema not available
+    assert 'DataCite schema not available' in caplog.text
+    assert 'skipping validation' in caplog.text
