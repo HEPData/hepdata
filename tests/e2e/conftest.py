@@ -186,12 +186,21 @@ def env_browser(request):
     timeout = int(os.environ.get('E2E_WEBDRIVER_TIMEOUT', 300))
 
     def wait_kill():
-        time.sleep(timeout)
-        browser.quit()
+        # Timer already waited for 'timeout' seconds before calling this
+        try:
+            browser.quit()
+        except Exception:
+            # Browser might have already been closed by finalizer
+            pass
 
     def finalizer():
-        browser.quit()
+        # Cancel the timer first to avoid race condition
         timeout_thread.cancel()
+        try:
+            browser.quit()
+        except Exception:
+            # Browser might have already been closed by timeout
+            pass
 
     # Use threading.Timer instead of multiprocessing.Process to avoid
     # issues with the 'fork' start method on macOS (see bpo-33725).
