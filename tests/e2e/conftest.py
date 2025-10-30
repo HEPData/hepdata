@@ -27,6 +27,7 @@
 from builtins import str
 import multiprocessing
 import os
+import sys
 import time
 from datetime import datetime
 
@@ -62,7 +63,17 @@ class SQLAlchemy(InvenioSQLAlchemy):
 
 db = SQLAlchemy(metadata=metadata)
 
-multiprocessing.set_start_method('fork')
+# Set multiprocessing start method in a platform-safe way.
+# On macOS, 'fork' is unsafe and can cause segmentation faults (see bpo-33725).
+# Use 'spawn' on macOS and 'fork' on other platforms for backwards compatibility.
+try:
+    if sys.platform == 'darwin':
+        multiprocessing.set_start_method('spawn')
+    else:
+        multiprocessing.set_start_method('fork')
+except RuntimeError:
+    # Start method has already been set, which is fine
+    pass
 
 @pytest.fixture(scope='session')
 def app(request):
@@ -78,7 +89,6 @@ def app(request):
     # as changing them later doesn't have the desired effect.
     app.config.update(dict(
         TESTING=True,
-        TEST_RUNNER="celery.contrib.test_runner.CeleryTestSuiteRunner",
         CELERY_TASK_ALWAYS_EAGER=True,
         CELERY_RESULT_BACKEND="cache",
         CELERY_CACHE_BACKEND="memory",
