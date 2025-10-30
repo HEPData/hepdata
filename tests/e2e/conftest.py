@@ -190,7 +190,9 @@ def env_browser(request):
         try:
             browser.quit()
         except Exception:
-            # Browser might have already been closed by finalizer
+            # Browser might have already been closed by finalizer.
+            # We use broad exception handling here because the specific exception
+            # type varies by webdriver implementation (Remote, Chrome, Firefox, etc.)
             pass
 
     def finalizer():
@@ -199,7 +201,9 @@ def env_browser(request):
         try:
             browser.quit()
         except Exception:
-            # Browser might have already been closed by timeout
+            # Browser might have already been closed by timeout.
+            # We use broad exception handling here because the specific exception
+            # type varies by webdriver implementation (Remote, Chrome, Firefox, etc.)
             pass
 
     # Use threading.Timer instead of multiprocessing.Process to avoid
