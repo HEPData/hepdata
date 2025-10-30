@@ -60,7 +60,9 @@
             <relatedIdentifier relatedIdentifierType="DOI" resourceTypeGeneral="JournalArticle" relationType="IsSupplementTo">{{ publication_info.doi }}</relatedIdentifier>
         {% endif %}
 
-        <relatedIdentifier relatedIdentifierType="DOI" resourceTypeGeneral="Collection" relationType="IsPartOf">{{ overall_submission.doi }}</relatedIdentifier>
+        {% if overall_submission.doi and overall_submission.version %}
+            <relatedIdentifier relatedIdentifierType="DOI" resourceTypeGeneral="Collection" relationType="IsPartOf">{{ overall_submission.doi }}.v{{ overall_submission.version }}</relatedIdentifier>
+        {% endif %}
 
     </relatedIdentifiers>
 </resource>

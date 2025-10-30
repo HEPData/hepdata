@@ -182,10 +182,18 @@ def create_container_doi(hep_submission_id, data_submission_ids, resource_ids, s
     publication_info = get_record_by_id(hep_submission.publication_recid)
     version_doi = hep_submission.doi + ".v{0}".format(hep_submission.version)
 
+    # Get all versions for this publication (for unversioned DOI to include all versions)
+    all_versions = db.session.query(HEPSubmission).filter(
+        HEPSubmission.publication_recid == hep_submission.publication_recid,
+        HEPSubmission.overall_status == 'finished'
+    ).order_by(HEPSubmission.version.asc()).all()
+
     base_xml = render_template('hepdata_records/formats/datacite/datacite_container_submission.xml',
                                doi=hep_submission.doi,
                                overall_submission=hep_submission,
                                data_submissions=data_submissions,
+                               resources=resources,
+                               all_versions=all_versions,
                                publication_info=publication_info,
                                site_url=site_url)
 
@@ -196,6 +204,8 @@ def create_container_doi(hep_submission_id, data_submission_ids, resource_ids, s
                                   doi=version_doi,
                                   overall_submission=hep_submission,
                                   data_submissions=data_submissions,
+                                  resources=resources,
+                                  all_versions=all_versions,
                                   publication_info=publication_info,
                                   site_url=site_url)
 

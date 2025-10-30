@@ -56,8 +56,23 @@
             <relatedIdentifier relatedIdentifierType="DOI" resourceTypeGeneral="JournalArticle" relationType="IsSupplementTo">{{ publication_info.doi }}</relatedIdentifier>
         {% endif %}
 
-        {% for submission in data_submissions %}
-            <relatedIdentifier relatedIdentifierType="DOI" resourceTypeGeneral="Dataset" relationType="HasPart">{{ submission.doi }}</relatedIdentifier>
-        {% endfor %}
+        {% set is_version_doi = doi and doi.split('.')[-1].startswith('v') and doi.split('.')[-1][1:].isdigit() %}
+        {% if is_version_doi %}
+            {# Versioned whole record DOI: include unversioned DOI and individual table/resource DOIs #}
+            <relatedIdentifier relatedIdentifierType="DOI" resourceTypeGeneral="Collection" relationType="IsVersionOf">{{ overall_submission.doi }}</relatedIdentifier>
+            {% for submission in data_submissions %}
+                <relatedIdentifier relatedIdentifierType="DOI" resourceTypeGeneral="Dataset" relationType="HasPart">{{ submission.doi }}</relatedIdentifier>
+            {% endfor %}
+            {% for resource in resources %}
+                {% if resource.doi %}
+                    <relatedIdentifier relatedIdentifierType="DOI" resourceTypeGeneral="Other" relationType="HasPart">{{ resource.doi }}</relatedIdentifier>
+                {% endif %}
+            {% endfor %}
+        {% else %}
+            {# Unversioned whole record DOI: include versioned whole record DOIs #}
+            {% for version_submission in all_versions %}
+                <relatedIdentifier relatedIdentifierType="DOI" resourceTypeGeneral="Collection" relationType="HasVersion">{{ overall_submission.doi }}.v{{ version_submission.version }}</relatedIdentifier>
+            {% endfor %}
+        {% endif %}
     </relatedIdentifiers>
 </resource>
