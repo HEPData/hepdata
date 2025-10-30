@@ -25,9 +25,9 @@
 """PyTest Config"""
 
 from builtins import str
-import multiprocessing
 import os
 import sys
+import threading
 import time
 from datetime import datetime
 
@@ -62,18 +62,6 @@ class SQLAlchemy(InvenioSQLAlchemy):
 
 
 db = SQLAlchemy(metadata=metadata)
-
-# Set multiprocessing start method in a platform-safe way.
-# On macOS, 'fork' is unsafe and can cause segmentation faults (see bpo-33725).
-# Use 'spawn' on macOS and 'fork' on other platforms for backwards compatibility.
-try:
-    if sys.platform == 'darwin':
-        multiprocessing.set_start_method('spawn')
-    else:
-        multiprocessing.set_start_method('fork')
-except RuntimeError:
-    # Start method has already been set, which is fine
-    pass
 
 @pytest.fixture(scope='session')
 def app(request):
@@ -203,9 +191,12 @@ def env_browser(request):
 
     def finalizer():
         browser.quit()
-        timeout_process.terminate()
+        timeout_thread.cancel()
 
-    timeout_process = multiprocessing.Process(target=wait_kill)
+    # Use threading.Timer instead of multiprocessing.Process to avoid
+    # issues with the 'fork' start method on macOS (see bpo-33725).
+    # Timer is a thread-based approach that doesn't require pickling.
+    timeout_thread = threading.Timer(timeout, wait_kill)
 
     if not RUN_SELENIUM_LOCALLY:
         remote_url = "https://ondemand.eu-central-1.saucelabs.com:443/wd/hub"
@@ -248,7 +239,7 @@ def env_browser(request):
     # Add finalizer to quit the webdriver instance
     request.addfinalizer(finalizer)
 
-    timeout_process.start()
+    timeout_thread.start()
     yield browser
 
     # Check browser logs before quitting
