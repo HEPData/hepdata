@@ -205,6 +205,8 @@ def update_analyses(endpoint=None):
                     try:
                         recids_to_reindex = []
                         for extra_analysis_resource in analysis_resources:
+                            if not extra_analysis_resource.file_location.lower().startswith('http'):
+                                continue  # don't delete local files from database
                             query = db.select([data_reference_link.columns.submission_id]).where(
                                 data_reference_link.columns.dataresource_id == extra_analysis_resource.id)
                             results = db.session.execute(query)
@@ -222,7 +224,12 @@ def update_analyses(endpoint=None):
                                 recids_to_reindex.append(submission.publication_recid)
                         db.session.commit()
                         if recids_to_reindex:
-                            index_record_ids(list(set(recids_to_reindex)))  # remove duplicates before indexing
+                            unique_recids = list(set(recids_to_reindex))  # remove duplicates before indexing
+                            # For large numbers of records, batch the indexing to reduce memory usage
+                            batch_size = 100
+                            for i in range(0, len(unique_recids), batch_size):
+                                batch_recids = unique_recids[i:i+batch_size]
+                                index_record_ids(batch_recids)
                     except Exception as e:
                         db.session.rollback()
                         log.error(e)

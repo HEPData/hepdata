@@ -36,32 +36,32 @@ for example, using ``yum`` or ``apt-get`` for Linux or ``brew`` for macOS:
 
  * `PostgreSQL <http://www.postgresql.org/>`_ (version 14) database server
  * `Redis <http://redis.io/>`_ for caching
- * `OpenSearch <https://opensearch.org/>`_ (version 2.18.0) for indexing and information retrieval. See below for further instructions.
+ * `OpenSearch <https://opensearch.org/>`_ (version 3.2.0) for indexing and information retrieval. See below for further instructions.
  * `Node.js <https://nodejs.org>`_ (version 18) JavaScript run-time environment and its package manager `npm <https://www.npmjs.com/>`_.
 
-OpenSearch v2.18.0
-------------------
+OpenSearch v3.2.0
+-----------------
 
-We are currently using OpenSearch v2.18.0. Here, you can find the `download instructions. <https://opensearch.org/downloads/>`_
+We are currently using OpenSearch v3.2.0. Here, you can find the `download instructions. <https://opensearch.org/downloads/>`_
 
 There are some examples below:
 
 **MacOS**
 
-Install the latest version (currently, v3.2.0) with ``brew install opensearch``.
-Alternatively, to install a specific version like v2.18.0 via Homebrew (if the latest version is newer), run:
+Install the latest version (currently, v3.3.0) with ``brew install opensearch``.
+Alternatively, to install a specific version like v3.2.0 via Homebrew (if the latest version is newer), run:
 
 .. code-block:: console
 
     $ brew tap homebrew/core --force
     $ brew tap-new opensearch/tap
-    $ brew extract --version=2.18.0 opensearch opensearch/tap
-    $ brew install opensearch/tap/opensearch@2.18.0
-    $ brew services restart opensearch/tap/opensearch@2.18.0
+    $ brew extract --version=3.2.0 opensearch opensearch/tap
+    $ brew install opensearch/tap/opensearch@3.2.0
+    $ brew services restart opensearch/tap/opensearch@3.2.0
 
 **Linux**
 
-You can see the tarball instructions on the OpenSearch installation `webpage. <https://docs.opensearch.org/docs/2.18/install-and-configure/install-opensearch/tar/>`_
+You can see the tarball instructions on the OpenSearch installation `webpage. <https://docs.opensearch.org/docs/3.2/install-and-configure/install-opensearch/tar/>`_
 
 To execute, run these commands within the extracted folder.
 
@@ -80,8 +80,8 @@ Alternatively, run OpenSearch after `installing Docker <https://docs.docker.com/
 
 .. code-block:: console
 
-    $ docker pull opensearchproject/opensearch:2.18.0
-    $ docker run -d -p 9200:9200 -p 9600:9600 -e "discovery.type=single-node" -e "plugins.security.disabled=true" -e "OPENSEARCH_INITIAL_ADMIN_PASSWORD=<custom-admin-password>" opensearchproject/opensearch:2.18.0
+    $ docker pull opensearchproject/opensearch:3.2.0
+    $ docker run -d -p 9200:9200 -p 9600:9600 -e "discovery.type=single-node" -e "plugins.security.disabled=true" -e "OPENSEARCH_INITIAL_ADMIN_PASSWORD=<custom-admin-password>" opensearchproject/opensearch:3.2.0
 
 You can test that the container is running with:
 
@@ -165,13 +165,15 @@ such as clicking on confirmation links when a new user is created (see
 `HEPData/hepdata#493 <https://github.com/HEPData/hepdata/issues/493>`_).
 With ``TESTING=False`` you will need to configure an SMTP server to send emails such as
 `SMTP2GO <https://www.smtp2go.com>`_ that offers a free plan with a limit of 1000 emails/month.
-An alternative is to install `MailCatcher <https://mailcatcher.me/>`_ (e.g. ``brew install mailcatcher``) where you
-just need to add these lines to ``hepdata/config_local.py``:
+An alternative is to install `Mailpit <https://mailpit.axllent.org/>`_ (e.g. ``brew install mailpit`` followed by
+``brew services start mailpit`` on macOS) where you just need to add these lines to ``hepdata/config_local.py``:
 
 .. code-block:: python
 
    MAIL_SERVER = '127.0.0.1'
    MAIL_PORT = 1025
+
+The Mailpit web UI can then be accessed from http://localhost:8025 .
 
 JavaScript
 ----------
@@ -190,6 +192,10 @@ Run Celery and ensure the redis-server service is running (-B runs celery beat):
 .. code-block:: console
 
    (hepdata)$ celery -A hepdata.celery worker -l info -E -B -Q celery,priority,datacite
+
+On macOS, you might also need an option ``-P solo`` to use a solo pool and avoid errors related to forking.  An
+alternative is to add ``export no_proxy=*`` to your ``.zshrc`` file or ``os.environ["no_proxy"] = "*"`` to your
+``hepdata/config_local.py`` file.
 
 PostgreSQL
 ----------
@@ -276,6 +282,7 @@ Running the tests
 
 Some of the tests run using `Selenium <https://selenium.dev>`_ on `Sauce Labs <https://saucelabs.com>`_.
 Note that some of the end-to-end tests currently fail when run individually rather than all together.
+The end-to-end tests may not work on macOS (`issue #929 <https://github.com/HEPData/hepdata/issues/929>`_).
 If you have a local development server running, shut it down before running the tests.
 
 To run the tests locally you have several options:

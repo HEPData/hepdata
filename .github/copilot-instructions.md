@@ -9,8 +9,8 @@ HEPData is a Python 3.9 Flask web application built on the Invenio v3 framework 
 ### Prerequisites
 Install these services before running HEPData locally:
 - **PostgreSQL 14** database server
-- **Redis** for caching  
-- **OpenSearch 2.18.0** for indexing and search
+- **Redis** for caching
+- **OpenSearch 3.2.0** for indexing and search
 - **Node.js 18+** and npm for frontend assets
 - **Python 3.9** (HEPData is ONLY compatible with Python 3.9, not 3.10+ or other versions)
 
@@ -44,7 +44,7 @@ Install these services before running HEPData locally:
    ```
 
 5. **Access application:**
-   - Open http://localhost:5000/ 
+   - Open http://localhost:5000/
    - Login with your@email.com / password
    - **Note:** Initial loading may take several minutes for Celery to process sample records
 
@@ -94,10 +94,10 @@ Install these services before running HEPData locally:
    # Start PostgreSQL, Redis, OpenSearch first
    # Start Celery worker:
    celery -A hepdata.celery worker -l info -E -B -Q celery,priority,datacite
-   
+
    # Initialize database:
    ./scripts/initialise_db.sh your@email.com password
-   
+
    # Start web server:
    hepdata run --debugger --reload
    ```
@@ -182,7 +182,7 @@ Before making code changes, verify your setup:
 ```bash
 # 1. Check all services are accessible
 curl -f http://localhost:5000/ || echo "Web server not running"
-curl -f http://localhost:9200/ || echo "OpenSearch not running"  
+curl -f http://localhost:9200/ || echo "OpenSearch not running"
 redis-cli ping || echo "Redis not running"
 
 # 2. Verify Python environment
@@ -225,7 +225,7 @@ curl http://localhost:5000/api/status || echo "API not responding"
 - **Port 5000 conflict on macOS:** Disable AirPlay Receiver
 - **Celery worker not processing:** Check Redis connection and restart worker
 - **OpenSearch connection failed:** Verify OpenSearch is running on port 9200
-- **Email links not working:** Set TESTING=False or use MailCatcher
+- **Email links not working:** Set TESTING=False or use Mailpit
 
 ### Performance
 - **Slow initial load:** Normal - Celery processes sample records on first run
@@ -236,7 +236,7 @@ curl http://localhost:5000/api/status || echo "API not responding"
 ### Asset Management
 ```bash
 hepdata collect -v                 # Collect static files
-hepdata webpack clean             # Clean webpack bundles  
+hepdata webpack clean             # Clean webpack bundles
 hepdata webpack install --unsafe  # Install npm dependencies
 hepdata webpack build            # Build production assets
 hepdata webpack buildall         # Clean, install, and build
@@ -286,7 +286,7 @@ hepdata roles add email@domain.com admin                 # Add admin role
 ```
 ls -la /
 README.rst
-INSTALL.rst  
+INSTALL.rst
 CONTRIBUTING.rst
 setup.py
 requirements.txt
@@ -310,7 +310,7 @@ The project uses `setup.py` instead of `package.json`:
 ```bash
 # Configuration files (copy and modify as needed):
 hepdata/config_local.local.py         # Local development template
-hepdata/config_local.docker_compose.py # Docker template  
+hepdata/config_local.docker_compose.py # Docker template
 hepdata/config_local.gh.py           # GitHub Actions template
 
 # Key scripts:
@@ -333,7 +333,7 @@ CONTRIBUTING.rst                     # Contribution guidelines
 Always set these for development:
 ```bash
 export FLASK_ENV=development
-export FLASK_DEBUG=1  
+export FLASK_DEBUG=1
 export SQLALCHEMY_WARN_20=1
 export OPENSEARCH_INITIAL_ADMIN_PASSWORD=YourPassword123!
 ```
@@ -342,7 +342,7 @@ export OPENSEARCH_INITIAL_ADMIN_PASSWORD=YourPassword123!
 
 The GitHub Actions workflow (`.github/workflows/ci.yml`):
 - **NEVER CANCEL CI builds** - they take 20-30 minutes
-- Tests against Python 3.9, PostgreSQL 14, OpenSearch 2.18.0
+- Tests against Python 3.9, PostgreSQL 14, OpenSearch 3.2.0
 - Requires Sauce Labs credentials for end-to-end tests
 - Builds and pushes Docker images on main branch
 - **Always check CI status before merging**
@@ -352,7 +352,7 @@ The GitHub Actions workflow (`.github/workflows/ci.yml`):
 **NEVER CANCEL these operations - use appropriate timeouts:**
 
 - **Docker build:** 10-20 minutes (set 30+ minute timeout)
-- **Pip install requirements:** 5-10 minutes (set 15+ minute timeout) 
+- **Pip install requirements:** 5-10 minutes (set 15+ minute timeout)
 - **Webpack asset build:** 5-10 minutes (set 15+ minute timeout)
 - **Unit tests:** 10-15 minutes (set 20+ minute timeout)
 - **Full test suite:** 20-30 minutes (set 40+ minute timeout)

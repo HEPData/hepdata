@@ -335,7 +335,7 @@ ANALYSES_ENDPOINTS = {
         'subscribe_user_id': 7766
     },
     'CheckMATE': {
-        'endpoint_url': 'https://checkmate.hepforge.org/AnalysesList/analyses.json',
+        'endpoint_url': 'https://raw.githubusercontent.com/CheckMATE2/checkmate2/refs/heads/master/data/analyses.json',
         'url_template': '{0}',
         'description': 'CheckMATE analysis',
         'subscribe_user_id': 6977
@@ -369,6 +369,8 @@ ANALYSES_ENDPOINTS = {
 }
 
 HISTFACTORY_FILE_TYPE = 'HistFactory'
+HS3_FILE_TYPE = 'HS3'
+SIMPLEANALYSIS_FILE_TYPE = 'SimpleAnalysis'
 NUISANCE_FILE_TYPE = 'ProSelecta'
 
 ADMIN_EMAIL = 'info@hepdata.net'
