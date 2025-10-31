@@ -447,7 +447,7 @@ def test_manage_participant_status_with_message(app):
     login_user(admin_user)
 
     # Test promoting with a message
-    test_message = "You're being promoted - great work!"
+    test_message = "You are being promoted - great work!"
     with patch("hepdata.modules.permissions.views.request") as mock_request:
         mock_request.form = ImmutableMultiDict([('review_message', test_message)])
         with patch("hepdata.modules.email.api.create_send_email_task") as email_patch:
