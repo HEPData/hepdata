@@ -193,6 +193,10 @@ Run Celery and ensure the redis-server service is running (-B runs celery beat):
 
    (hepdata)$ celery -A hepdata.celery worker -l info -E -B -Q celery,priority,datacite
 
+On macOS, you might also need an option ``-P solo`` to use a solo pool and avoid errors related to forking.  An
+alternative is to add ``export no_proxy=*`` to your ``.zshrc`` file or ``os.environ["no_proxy"] = "*"`` to your
+``hepdata/config_local.py`` file.
+
 PostgreSQL
 ----------
 
@@ -278,6 +282,7 @@ Running the tests
 
 Some of the tests run using `Selenium <https://selenium.dev>`_ on `Sauce Labs <https://saucelabs.com>`_.
 Note that some of the end-to-end tests currently fail when run individually rather than all together.
+The end-to-end tests may not work on macOS (`issue #929 <https://github.com/HEPData/hepdata/issues/929>`_).
 If you have a local development server running, shut it down before running the tests.
 
 To run the tests locally you have several options:

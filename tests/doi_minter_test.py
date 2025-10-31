@@ -1,6 +1,7 @@
 import logging
 import os
 from unittest.mock import call
+import xml.etree.ElementTree as ET
 
 from datacite.errors import DataCiteUnauthorizedError, DataCiteError
 from flask import render_template
@@ -11,22 +12,22 @@ import xmlschema
 import pytest
 
 from hepdata.modules.records.importer.api import import_records
-from hepdata.modules.records.utils.common import get_record_by_id
+from hepdata.modules.records.utils.common import get_record_by_id, get_license
 from hepdata.modules.records.utils.doi_minter import get_or_create_doi, register_doi, \
     generate_doi_for_table, generate_dois_for_submission, \
     reserve_dois_for_data_submissions, reserve_doi_for_hepsubmission, \
-    _get_submission_file_resources, _get_datacite_schema, _validate_datacite_xml
+    _get_submission_file_resources, get_license_for_datacite, _get_datacite_schema, _validate_datacite_xml, \
+    create_data_doi, create_resource_doi
 from hepdata.modules.records.utils.submission import get_or_create_hepsubmission
 from hepdata.modules.records.utils.workflow import create_record
-from hepdata.modules.submission.models import DataSubmission, HEPSubmission, \
-    License, DataResource
+from hepdata.modules.submission.models import DataSubmission, HEPSubmission, DataResource
 
 
 @pytest.fixture()
 def mock_data_cite_provider(app, mocker, load_default_data):
     """Mock DataCiteProvider and temporarily disable NO_DOI_MINTING
 
-    This enables us to check that register_doi makes hte appropriate calls to
+    This enables us to check that register_doi makes the appropriate calls to
     DataCiteProvider without making requests to DataCite
 
     load_default_data is used here so it is loaded before we change the settings
@@ -344,22 +345,34 @@ def test_generate_dois_for_submission(mock_data_cite_provider, identifiers):
 
 
 def test_xml_validates(app, identifiers):
+    # Import a record with a resource file
+    import_records(['ins1748602'], synchronous=True)
+    hep_submission = HEPSubmission.query.filter_by(inspire_id='1748602').first()
+
     # Test that the XML produced validates against the datacite schema
-    hep_submission = get_or_create_hepsubmission(1)
     data_submissions = DataSubmission.query.filter_by(
         publication_inspire_id=hep_submission.inspire_id,
         version=hep_submission.version) \
         .order_by(DataSubmission.id.asc()).all()
+    resources = _get_submission_file_resources(hep_submission.publication_recid, hep_submission.version, hep_submission)
     publication_info = get_record_by_id(hep_submission.publication_recid)
     site_url = app.config.get('SITE_URL', 'https://www.hepdata.net')
 
     # Load schema
     datacite_schema = xmlschema.XMLSchema('http://schema.datacite.org/meta/kernel-4.6/metadata.xsd')
 
+    # Get all versions for the publication
+    all_versions = HEPSubmission.query.filter_by(
+        publication_recid=hep_submission.publication_recid,
+        overall_status='finished'
+    ).order_by(HEPSubmission.version.asc()).all()
+
     base_xml = render_template('hepdata_records/formats/datacite/datacite_container_submission.xml',
                                doi=hep_submission.doi,
                                overall_submission=hep_submission,
                                data_submissions=data_submissions,
+                               resources=_get_submission_file_resources(hep_submission.publication_recid, hep_submission.version, hep_submission),
+                               all_versions=all_versions,
                                publication_info=publication_info,
                                site_url=site_url)
     # Validate the base XML
@@ -369,34 +382,38 @@ def test_xml_validates(app, identifiers):
                                   doi=f"{hep_submission.doi}.v1",
                                   overall_submission=hep_submission,
                                   data_submissions=data_submissions,
+                                  resources=_get_submission_file_resources(hep_submission.publication_recid, hep_submission.version, hep_submission),
+                                  all_versions=all_versions,
                                   publication_info=publication_info,
                                   site_url=site_url)
     # Validate the version XML
     datacite_schema.validate(version_xml)
 
     for data_submission in data_submissions:
+
+        # Get license data using the new helper function
+        data_file = DataResource.query.filter_by(id=data_submission.data_file).first()
+        license_id = None
+        if data_file and data_file.file_license:
+            license_id = data_file.file_license
+        license = get_license_for_datacite(license_id)
+
         data_xml = render_template('hepdata_records/formats/datacite/datacite_data_record.xml',
                                    doi=data_submission.doi,
                                    table_name=data_submission.name,
                                    table_description=data_submission.description,
                                    overall_submission=hep_submission,
                                    data_submission=data_submission,
+                                   license=license,
                                    publication_info=publication_info,
                                    site_url=site_url)
         # Validate the data submission XML
         datacite_schema.validate(data_xml)
 
-    # Import a record with a resource file
-    import_records(['ins1748602'], synchronous=True)
-    hep_submission = HEPSubmission.query.filter_by(
-        inspire_id='1748602'
-    ).first()
-    publication_info = get_record_by_id(hep_submission.publication_recid)
+    for resource in resources:
 
-    for i, resource in enumerate(hep_submission.resources):
-        license = None
-        if resource.file_license:
-            license = License.query.filter_by(id=resource.file_license).first()
+        # Use the new helper function to always get license data
+        license = get_license_for_datacite(resource.file_license)
 
         resource_xml = render_template(
             'hepdata_records/formats/datacite/datacite_resource.xml',
@@ -410,6 +427,119 @@ def test_xml_validates(app, identifiers):
 
         # Validate the resource XML
         datacite_schema.validate(resource_xml)
+
+
+def test_datacite_xml_always_includes_license(app, identifiers):
+    """Test that DataCite XML always includes license information, defaulting to CC0 when none specified"""
+
+    no_doi_minting_config = app.config.get('NO_DOI_MINTING')
+    app.config['NO_DOI_MINTING'] = False
+
+    import_records(['ins1748602'], synchronous=True)
+    hep_submission = HEPSubmission.query.filter_by(inspire_id='1748602').first()
+    data_submissions = DataSubmission.query.filter_by(
+        publication_inspire_id=hep_submission.inspire_id,
+        version=hep_submission.version) \
+        .order_by(DataSubmission.id.asc()).all()
+    resources = _get_submission_file_resources(hep_submission.publication_recid, hep_submission.version, hep_submission)
+    publication_info = get_record_by_id(hep_submission.publication_recid)
+    site_url = app.config.get('SITE_URL', 'https://www.hepdata.net')
+
+    # Load schema
+    datacite_schema = xmlschema.XMLSchema('http://schema.datacite.org/meta/kernel-4.6/metadata.xsd')
+
+    # Define a cc-by-4.0 license
+    cc_by_id = get_license({'name': 'cc-by-4.0', 'url': 'https://creativecommons.org/licenses/by/4.0'}).id
+
+    for license_id in [None, cc_by_id]:
+
+        data_submission = data_submissions[0]
+        data_file = DataResource.query.filter_by(id=data_submission.data_file).first()
+
+        # Commit the license to the database
+        data_file.file_license = license_id
+        db.session.add(data_file)
+        db.session.commit()
+
+        # Use the new helper function
+        license = get_license_for_datacite(license_id)
+
+        data_xml = render_template('hepdata_records/formats/datacite/datacite_data_record.xml',
+                                   doi=data_submission.doi,
+                                   table_name=data_submission.name,
+                                   table_description=data_submission.description,
+                                   overall_submission=hep_submission,
+                                   data_submission=data_submission,
+                                   license=license,
+                                   publication_info=publication_info,
+                                   site_url=site_url)
+
+        # Validate the XML
+        datacite_schema.validate(data_xml)
+
+        if license_id is None:
+
+            # Check that CC0 license is present in the XML
+            assert 'CC0' in data_xml
+            assert 'https://creativecommons.org/publicdomain/zero/1.0/' in data_xml
+            assert '<rightsList>' in data_xml
+            assert '<rights rightsURI="https://creativecommons.org/publicdomain/zero/1.0/">CC0</rights>' in data_xml
+
+        else:
+
+            # Check that cc-by-4.0 license is present in the XML
+            assert 'cc-by-4.0' in data_xml
+            assert 'https://creativecommons.org/licenses/by/4.0' in data_xml
+            assert '<rightsList>' in data_xml
+            assert '<rights rightsURI="https://creativecommons.org/licenses/by/4.0">cc-by-4.0</rights>' in data_xml
+
+        create_data_doi(hep_submission.id, data_submission.id, site_url)
+
+        # Now the same for a resource file
+        resource = resources[0]
+
+        # Commit the license to the database
+        resource.file_license = license_id
+        db.session.add(resource)
+        db.session.commit()
+
+        # Use the new helper function to always get license data
+        license = get_license_for_datacite(license_id)
+
+        resource_xml = render_template(
+            'hepdata_records/formats/datacite/datacite_resource.xml',
+            resource=resource,
+            doi=resource.doi,
+            overall_submission=hep_submission,
+            filename=os.path.basename(resource.file_location),
+            license=license,
+            publication_info=publication_info,
+            site_url=site_url)
+
+        # Validate the resource XML
+        datacite_schema.validate(resource_xml)
+
+        if license_id is None:
+
+            # Check that CC0 license is present in the XML
+            assert 'CC0' in resource_xml
+            assert 'https://creativecommons.org/publicdomain/zero/1.0/' in resource_xml
+            assert '<rightsList>' in resource_xml
+            assert '<rights rightsURI="https://creativecommons.org/publicdomain/zero/1.0/">CC0</rights>' in resource_xml
+
+        else:
+
+            # Check that cc-by-4.0 license is present in the XML
+            assert 'cc-by-4.0' in resource_xml
+            assert 'https://creativecommons.org/licenses/by/4.0' in resource_xml
+            assert '<rightsList>' in resource_xml
+            assert '<rights rightsURI="https://creativecommons.org/licenses/by/4.0">cc-by-4.0</rights>' in resource_xml
+
+        app.config['NO_DOI_MINTING'] = False
+        create_resource_doi(hep_submission.id, resource.id, site_url)
+
+    if no_doi_minting_config:
+        app.config['NO_DOI_MINTING'] = True
 
 
 def test_get_submission_file_resources(app, identifiers):
@@ -435,24 +565,197 @@ def test_get_submission_file_resources(app, identifiers):
     assert file_resources[3].id == 1062
 
 
+def _get_related_identifiers(xml_string):
+    """Helper function to extract relatedIdentifier elements from DataCite XML."""
+    root = ET.fromstring(xml_string)
+    # DataCite uses namespace
+    ns = {'datacite': 'http://datacite.org/schema/kernel-4'}
+    related_ids = root.findall('.//datacite:relatedIdentifier', ns)
+    return [(elem.text, elem.get('relationType'), elem.get('relatedIdentifierType'),
+             elem.get('resourceTypeGeneral')) for elem in related_ids]
+
+
+def test_datacite_related_identifiers(app, identifiers):
+    """Test that DataCite XML has correct relatedIdentifiers based on the issue requirements."""
+    # Test data setup
+    import_records(['ins1748602'], synchronous=True)
+    hep_submission = HEPSubmission.query.filter_by(inspire_id='1748602').first()
+    data_submissions = DataSubmission.query.filter_by(
+        publication_inspire_id=hep_submission.inspire_id,
+        version=hep_submission.version) \
+        .order_by(DataSubmission.id.asc()).all()
+    resources = _get_submission_file_resources(hep_submission.publication_recid, hep_submission.version, hep_submission)
+    publication_info = get_record_by_id(hep_submission.publication_recid)
+    site_url = app.config.get('SITE_URL', 'https://www.hepdata.net')
+
+    # Get all versions for the publication
+    all_versions = HEPSubmission.query.filter_by(
+        publication_recid=hep_submission.publication_recid,
+        overall_status='finished'
+    ).order_by(HEPSubmission.version.asc()).all()
+
+    # Load DataCite schema for validation
+    datacite_schema = xmlschema.XMLSchema('http://schema.datacite.org/meta/kernel-4.6/metadata.xsd')
+
+    # Test unversioned whole record DOI
+    base_xml = render_template('hepdata_records/formats/datacite/datacite_container_submission.xml',
+                               doi=hep_submission.doi,
+                               overall_submission=hep_submission,
+                               data_submissions=data_submissions,
+                               resources=resources,
+                               all_versions=all_versions,
+                               publication_info=publication_info,
+                               site_url=site_url)
+
+    # Validate against schema
+    datacite_schema.validate(base_xml)
+
+    # Parse XML and check relatedIdentifiers
+    base_related_ids = _get_related_identifiers(base_xml)
+
+    # Should contain versioned DOI with HasVersion relation for each version
+    for version_submission in all_versions:
+        expected_doi = f'{hep_submission.doi}.v{version_submission.version}'
+        matching = [rid for rid in base_related_ids
+                   if rid[0] == expected_doi and rid[1] == 'HasVersion'
+                   and rid[2] == 'DOI' and rid[3] == 'Collection']
+        assert len(matching) == 1, f"Base XML should contain exactly one HasVersion relation for {expected_doi}"
+
+    # Should NOT contain individual table DOIs in unversioned record
+    for data_submission in data_submissions:
+        table_dois = [rid for rid in base_related_ids if rid[0] == data_submission.doi]
+        assert len(table_dois) == 0, f"Base XML should not contain table DOI: {data_submission.doi}"
+
+    # Test versioned whole record DOI
+    version_doi = f"{hep_submission.doi}.v{hep_submission.version}"
+    version_xml = render_template('hepdata_records/formats/datacite/datacite_container_submission.xml',
+                                  doi=version_doi,
+                                  overall_submission=hep_submission,
+                                  data_submissions=data_submissions,
+                                  resources=resources,
+                                  all_versions=all_versions,
+                                  publication_info=publication_info,
+                                  site_url=site_url)
+
+    # Validate against schema
+    datacite_schema.validate(version_xml)
+
+    # Parse XML and check relatedIdentifiers
+    version_related_ids = _get_related_identifiers(version_xml)
+
+    # Should contain unversioned DOI with IsVersionOf relation
+    unversioned_matches = [rid for rid in version_related_ids
+                          if rid[0] == hep_submission.doi and rid[1] == 'IsVersionOf'
+                          and rid[2] == 'DOI' and rid[3] == 'Collection']
+    assert len(unversioned_matches) == 1, f"Version XML should contain exactly one IsVersionOf relation to {hep_submission.doi}"
+
+    # Should contain individual table DOIs with HasPart relation
+    for data_submission in data_submissions:
+        table_matches = [rid for rid in version_related_ids
+                        if rid[0] == data_submission.doi and rid[1] == 'HasPart'
+                        and rid[2] == 'DOI' and rid[3] == 'Dataset']
+        assert len(table_matches) == 1, f"Version XML should contain exactly one HasPart relation for table {data_submission.doi}"
+
+    # Should contain resource DOIs with HasPart relation (if any)
+    for resource in resources:
+        if resource.doi:
+            resource_matches = [rid for rid in version_related_ids
+                               if rid[0] == resource.doi and rid[1] == 'HasPart'
+                               and rid[2] == 'DOI' and rid[3] == 'Other']
+            assert len(resource_matches) == 1, f"Version XML should contain exactly one HasPart relation for resource {resource.doi}"
+
+    # Test individual table DOI
+    if data_submissions:
+        data_submission = data_submissions[0]
+        # Get license data using the new helper function
+        data_file = DataResource.query.filter_by(id=data_submission.data_file).first()
+        license_id = None
+        if data_file and data_file.file_license:
+            license_id = data_file.file_license
+        license = get_license_for_datacite(license_id)
+        table_xml = render_template('hepdata_records/formats/datacite/datacite_data_record.xml',
+                                    doi=data_submission.doi,
+                                    table_name=data_submission.name,
+                                    table_description=data_submission.description,
+                                    overall_submission=hep_submission,
+                                    data_submission=data_submission,
+                                    license=license,
+                                    publication_info=publication_info,
+                                    site_url=site_url)
+
+        # Validate against schema
+        datacite_schema.validate(table_xml)
+
+        # Parse XML and check relatedIdentifiers
+        table_related_ids = _get_related_identifiers(table_xml)
+
+        # Should reference versioned whole record DOI, not unversioned
+        versioned_container = f'{hep_submission.doi}.v{hep_submission.version}'
+        versioned_matches = [rid for rid in table_related_ids
+                            if rid[0] == versioned_container and rid[1] == 'IsPartOf'
+                            and rid[2] == 'DOI' and rid[3] == 'Collection']
+        assert len(versioned_matches) == 1, f"Table XML should reference versioned container {versioned_container}"
+
+        # Should NOT reference unversioned DOI
+        unversioned_matches = [rid for rid in table_related_ids
+                              if rid[0] == hep_submission.doi and rid[1] == 'IsPartOf'
+                              and rid[2] == 'DOI' and rid[3] == 'Collection']
+        assert len(unversioned_matches) == 0, f"Table XML should not reference unversioned container {hep_submission.doi}"
+
+    # Test resource file DOI
+    if resources and any(r.doi for r in resources):
+        resource = next(r for r in resources if r.doi)
+
+        # Use the new helper function to always get license data
+        license = get_license_for_datacite(resource.file_license)
+
+        resource_xml = render_template('hepdata_records/formats/datacite/datacite_resource.xml',
+                                       resource=resource,
+                                       doi=resource.doi,
+                                       overall_submission=hep_submission,
+                                       filename=os.path.basename(resource.file_location),
+                                       license=license,
+                                       publication_info=publication_info,
+                                       site_url=site_url)
+
+        # Validate against schema
+        datacite_schema.validate(resource_xml)
+
+        # Parse XML and check relatedIdentifiers
+        resource_related_ids = _get_related_identifiers(resource_xml)
+
+        # Should reference versioned whole record DOI, not unversioned
+        versioned_container = f'{hep_submission.doi}.v{hep_submission.version}'
+        versioned_matches = [rid for rid in resource_related_ids
+                            if rid[0] == versioned_container and rid[1] == 'IsPartOf'
+                            and rid[2] == 'DOI' and rid[3] == 'Collection']
+        assert len(versioned_matches) == 1, f"Resource XML should reference versioned container {versioned_container}"
+
+        # Should NOT reference unversioned DOI
+        unversioned_matches = [rid for rid in resource_related_ids
+                              if rid[0] == hep_submission.doi and rid[1] == 'IsPartOf'
+                              and rid[2] == 'DOI' and rid[3] == 'Collection']
+        assert len(unversioned_matches) == 0, f"Resource XML should not reference unversioned container {hep_submission.doi}"
+
+
 def test_get_datacite_schema():
     """Test that _get_datacite_schema loads and caches the schema correctly."""
     import hepdata.modules.records.utils.doi_minter as doi_minter_module
-    
+
     # Reset the cached schema
     original_schema = doi_minter_module._DATACITE_SCHEMA
     doi_minter_module._DATACITE_SCHEMA = None
-    
+
     try:
         # First call should load the schema
         schema1 = _get_datacite_schema()
         assert schema1 is not None
         assert isinstance(schema1, xmlschema.XMLSchema)
-        
+
         # Second call should return the same cached instance
         schema2 = _get_datacite_schema()
         assert schema2 is schema1
-        
+
         # Verify it's the DataCite 4.6 schema
         assert 'kernel-4' in str(schema1.url) or 'kernel-4.6' in str(schema1.url) or 'datacite' in str(schema1.url).lower()
     finally:
@@ -463,18 +766,18 @@ def test_get_datacite_schema():
 def test_get_datacite_schema_handles_errors(mocker, caplog):
     """Test that _get_datacite_schema handles errors gracefully."""
     import hepdata.modules.records.utils.doi_minter as doi_minter_module
-    
+
     # Reset the cached schema
     original_schema = doi_minter_module._DATACITE_SCHEMA
     doi_minter_module._DATACITE_SCHEMA = None
-    
+
     try:
         # Mock xmlschema.XMLSchema to raise an exception
         mocker.patch('hepdata.modules.records.utils.doi_minter.xmlschema.XMLSchema',
                      side_effect=Exception('Network error'))
-        
+
         caplog.set_level(logging.ERROR)
-        
+
         # Should return None and log error
         schema = _get_datacite_schema()
         assert schema is None
@@ -488,9 +791,9 @@ def test_get_datacite_schema_handles_errors(mocker, caplog):
 def test_validate_datacite_xml_valid():
     """Test that _validate_datacite_xml validates correct XML."""
     # Valid minimal DataCite XML
-    valid_xml = """<resource xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+    valid_xml = """<resource xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                               xmlns="http://datacite.org/schema/kernel-4"
-                              xsi:schemaLocation="http://datacite.org/schema/kernel-4 
+                              xsi:schemaLocation="http://datacite.org/schema/kernel-4
                               https://schema.datacite.org/meta/kernel-4.6/metadata.xsd">
         <identifier identifierType="DOI">10.17182/hepdata.test</identifier>
         <creators>
@@ -505,7 +808,7 @@ def test_validate_datacite_xml_valid():
         <publicationYear>2024</publicationYear>
         <resourceType resourceTypeGeneral="Dataset">Dataset</resourceType>
     </resource>"""
-    
+
     result = _validate_datacite_xml(valid_xml, '10.17182/hepdata.test')
     assert result is True
 
@@ -513,15 +816,15 @@ def test_validate_datacite_xml_valid():
 def test_validate_datacite_xml_invalid(caplog):
     """Test that _validate_datacite_xml detects invalid XML."""
     # Invalid XML - missing required elements
-    invalid_xml = """<resource xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+    invalid_xml = """<resource xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                                 xmlns="http://datacite.org/schema/kernel-4"
-                                xsi:schemaLocation="http://datacite.org/schema/kernel-4 
+                                xsi:schemaLocation="http://datacite.org/schema/kernel-4
                                 https://schema.datacite.org/meta/kernel-4.6/metadata.xsd">
         <identifier identifierType="DOI">10.17182/hepdata.test</identifier>
     </resource>"""
-    
+
     caplog.set_level(logging.ERROR)
-    
+
     result = _validate_datacite_xml(invalid_xml, '10.17182/hepdata.test')
     assert result is False
     assert 'DataCite XML validation failed' in caplog.text
@@ -533,10 +836,11 @@ def test_validate_datacite_xml_no_schema(mocker, caplog):
     # Mock _get_datacite_schema to return None
     mocker.patch('hepdata.modules.records.utils.doi_minter._get_datacite_schema',
                  return_value=None)
-    
+
     caplog.set_level(logging.WARNING)
-    
+
     result = _validate_datacite_xml('<xml>test</xml>', '10.17182/hepdata.test')
     assert result is True  # Should return True when schema not available
     assert 'DataCite schema not available' in caplog.text
     assert 'skipping validation' in caplog.text
+

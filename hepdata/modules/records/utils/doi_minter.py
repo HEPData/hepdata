@@ -34,7 +34,7 @@ from sqlalchemy.orm.exc import NoResultFound
 import xmlschema
 
 from hepdata.modules.submission.models import DataSubmission, HEPSubmission, DataResource, License
-from hepdata.modules.records.utils.common import get_record_by_id
+from hepdata.modules.records.utils.common import get_record_by_id, generate_license_data_by_id
 import logging
 
 logging.basicConfig()
@@ -75,6 +75,32 @@ def _validate_datacite_xml(xml, doi):
     except Exception as e:
         log.error(f'DataCite XML validation failed for {doi}: {str(e)}', exc_info=True)
         return False
+
+
+class LicenseData:
+    """Simple class to hold license data for template rendering"""
+    def __init__(self, name, url, description):
+        self.name = name
+        self.url = url
+        self.description = description
+
+
+def get_license_for_datacite(license_id):
+    """
+    Get license data for DataCite XML generation.
+    Returns a LicenseData object with either the specified license or default CC0.
+    
+    :param license_id: License ID or None
+    :return: LicenseData object
+    """
+    if license_id:
+        license_obj = License.query.filter_by(id=license_id).first()
+        if license_obj and license_obj.name is not None:
+            return LicenseData(license_obj.name, license_obj.url, license_obj.description)
+    
+    # Return default CC0 license data
+    license_data = generate_license_data_by_id(None)
+    return LicenseData(license_data['name'], license_data['url'], license_data['description'])
 
 
 @shared_task
@@ -182,10 +208,18 @@ def create_container_doi(hep_submission_id, data_submission_ids, resource_ids, s
     publication_info = get_record_by_id(hep_submission.publication_recid)
     version_doi = hep_submission.doi + ".v{0}".format(hep_submission.version)
 
+    # Get all versions for this publication (for unversioned DOI to include all versions)
+    all_versions = db.session.query(HEPSubmission).filter(
+        HEPSubmission.publication_recid == hep_submission.publication_recid,
+        HEPSubmission.overall_status == 'finished'
+    ).order_by(HEPSubmission.version.asc()).all()
+
     base_xml = render_template('hepdata_records/formats/datacite/datacite_container_submission.xml',
                                doi=hep_submission.doi,
                                overall_submission=hep_submission,
                                data_submissions=data_submissions,
+                               resources=resources,
+                               all_versions=all_versions,
                                publication_info=publication_info,
                                site_url=site_url)
 
@@ -196,6 +230,8 @@ def create_container_doi(hep_submission_id, data_submission_ids, resource_ids, s
                                   doi=version_doi,
                                   overall_submission=hep_submission,
                                   data_submissions=data_submissions,
+                                  resources=resources,
+                                  all_versions=all_versions,
                                   publication_info=publication_info,
                                   site_url=site_url)
 
@@ -225,10 +261,11 @@ def create_data_doi(hep_submission_id, data_submission_id, site_url):
     data_file = DataResource.query.filter_by(id=data_submission.data_file).first()
     publication_info = get_record_by_id(hep_submission.publication_recid)
 
-    license = None
-    if data_file:
-        if data_file.file_license:
-            license = License.query.filter_by(id=data_file.file_license).first()
+    # Always provide license data - either from the data file or default CC0
+    license_id = None
+    if data_file and data_file.file_license:
+        license_id = data_file.file_license
+    license = get_license_for_datacite(license_id)
 
     xml = render_template('hepdata_records/formats/datacite/datacite_data_record.xml',
                           doi=data_submission.doi,
@@ -261,9 +298,8 @@ def create_resource_doi(hep_submission_id, resource_id, site_url):
     resource = db.session.query(DataResource).get(resource_id)
     publication_info = get_record_by_id(hep_submission.publication_recid)
 
-    license = None
-    if resource.file_license:
-        license = License.query.filter_by(id=resource.file_license).first()
+    # Always provide license data - either from the resource or default CC0
+    license = get_license_for_datacite(resource.file_license)
 
     xml = render_template(
         'hepdata_records/formats/datacite/datacite_resource.xml',
