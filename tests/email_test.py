@@ -31,7 +31,7 @@ import os
 from invenio_db import db
 from unittest.mock import patch
 
-from hepdata.modules.email.api import send_cookie_email
+from hepdata.modules.email.api import send_cookie_email, send_reserve_email
 from hepdata.modules.permissions.models import SubmissionParticipant
 from tests.conftest import create_test_record
 
@@ -83,6 +83,56 @@ def test_send_cookie_email(app):
         assert called_kwargs["reply_to_address"] == test_participant.email
 
         # TODO - Expand to further check email contents
+        # Confirm existence of message sent in email
+        assert message in called_args[2]
+
+
+def test_send_reserve_email(app):
+    """
+    Basic testing of the send_reserve_email method with message parameter.
+    Tests expected output (argument calls) of the create_send_email_task function.
+    """
+
+    # Set up the submission used for testing purposes
+    # Create test participant
+    test_participant = SubmissionParticipant(
+            user_account=1, publication_recid=2,
+            email="test@hepdata.net", role='reviewer')
+    db.session.add(test_participant)
+    db.session.commit()
+
+    # Correctly set up the test_submission folder path
+    base_directory = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+    test_directory = os.path.join(base_directory, 'tests', 'test_data', 'test_submission')
+
+    # Create and upload the submission
+    # and set the coordinator
+    test_submission = create_test_record(test_directory, "todo")
+    test_submission.coordinator = 1
+    db.session.add(test_participant)
+    db.session.commit()
+
+    record_information = {
+        "recid": test_submission.publication_recid,
+        "title": "Test Title"
+    }
+    message = "TestDemotionMessage"
+
+    # Set up the patch for call access then run
+    with patch("hepdata.modules.email.api.create_send_email_task", side_effect=None) as task_patch:
+        # Execute the test function
+        send_reserve_email(test_participant, record_information, message=message)
+        # Check to see if the email function was properly called
+        task_patch.assert_called_once()
+
+        # Get the arguments used from the function call
+        called_args = task_patch.call_args.args
+        called_kwargs = task_patch.call_args.kwargs
+
+        # Check email was used in task call, and as recipient email
+        assert called_args[0] == test_participant.email
+        assert called_kwargs["reply_to_address"] == test_participant.email
+
         # Confirm existence of message sent in email
         assert message in called_args[2]
 
