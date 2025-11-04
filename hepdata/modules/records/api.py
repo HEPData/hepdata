@@ -496,7 +496,7 @@ def render_record(recid, record, version, output_format, light_mode=False):
                 return redirect(
                     url_for('converter.download_data_table_by_recid',
                             recid=publication_recid,
-                            table_name=request.args['table'].replace('%', '%25').replace('\\', '%5C'),
+                            table_name=ctx['table_name'].replace('%', '%25').replace('\\', '%5C'),
                             version=datasubmission.version, file_format=output_format,
                             rivet=request.args.get('rivet', None),
                             qualifiers=request.args.get('qualifiers', None)))
