@@ -410,6 +410,71 @@ def test_manage_participant_status(app):
     assert result == '{"success": false, "recid": 1, "message": "Unable to demote participant id 1 for record 1. Please refresh the page and try again."}'
 
 
+def test_manage_participant_status_with_message(app):
+    """
+    Test that messages are properly passed when promoting/demoting participants.
+    """
+    from unittest.mock import patch
+    from flask import Flask
+    from werkzeug.datastructures import ImmutableMultiDict
+
+    # Create a record and add a participant
+    record_information = create_record({
+        'journal_info': 'Phys. Letts',
+        'title': 'My Journal Paper',
+        'inspire_id': '1487726'
+    })
+
+    hepsubmission = get_or_create_hepsubmission(record_information['recid'])
+    db.session.add(hepsubmission)
+
+    user = User(email='test@test.com', password='hello1', active=True,
+                id=101)
+    db.session.add(user)
+    db.session.commit()
+
+    participant = SubmissionParticipant(
+        publication_recid=record_information['recid'],
+        role="uploader",
+        email='test@test.com',
+        status='primary',
+        user_account=user.id)
+
+    db.session.add(participant)
+    db.session.commit()
+
+    admin_user = User.query.filter_by(id=1).first()
+    login_user(admin_user)
+
+    # Test promoting with a message
+    test_message = "You are being promoted - great work!"
+    with patch("hepdata.modules.permissions.views.request") as mock_request:
+        mock_request.form = ImmutableMultiDict([('review_message', test_message)])
+        with patch("hepdata.modules.email.api.create_send_email_task") as email_patch:
+            result = manage_participant_status(record_information['recid'], 'upload', 'promote', participant.id)
+            assert result == '{"success": true, "recid": 1}'
+            # Check that email was called and message was included
+            email_patch.assert_called_once()
+            email_body = email_patch.call_args.args[2]
+            assert test_message in email_body
+
+    # Reset participant to primary for demotion test
+    participant.status = 'primary'
+    db.session.commit()
+
+    # Test demoting with a message
+    test_message = "We need to move you to reserve status"
+    with patch("hepdata.modules.permissions.views.request") as mock_request:
+        mock_request.form = ImmutableMultiDict([('review_message', test_message)])
+        with patch("hepdata.modules.email.api.create_send_email_task") as email_patch:
+            result = manage_participant_status(record_information['recid'], 'upload', 'demote', participant.id)
+            assert result == '{"success": true, "recid": 1}'
+            # Check that email was called and message was included
+            email_patch.assert_called_once()
+            email_body = email_patch.call_args.args[2]
+            assert test_message in email_body
+
+
 def test_dashboard_current_user(app):
     with app.app_context():
         dashboardTestMockObjects = get_mock_user_object()

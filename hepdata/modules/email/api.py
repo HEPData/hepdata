@@ -321,7 +321,14 @@ def send_cookie_email(submission_participant,
                            reply_to_address=coordinator.email)
 
 
-def send_reserve_email(submission_participant, record_information):
+def send_reserve_email(submission_participant, record_information, message=None):
+    """
+    Sends an email to notify an uploader or reviewer that they have been demoted to reserve status.
+
+    :param submission_participant: A SubmissionParticipant object, to receive the email
+    :param record_information: Record object containing record information
+    :param message: Any specific message text input into the form (Default is None)
+    """
 
     hepsubmission = get_latest_hepsubmission(
         publication_recid=record_information['recid']
@@ -338,7 +345,8 @@ def send_reserve_email(submission_participant, record_information):
         recid=submission_participant.publication_recid,
         email=submission_participant.email,
         coordinator_email=coordinator.email,
-        collaboration=collaboration)
+        collaboration=collaboration,
+        message=message)
 
     create_send_email_task(submission_participant.email,
                            "[HEPData] Change of {0} status for record {1} in HEPData".format(

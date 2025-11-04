@@ -44,11 +44,9 @@
         <description descriptionType="Other">{% if overall_submission.data_abstract %}{{ overall_submission.data_abstract | truncate(5000) }}{% else %}No data abstract available.{% endif %}</description>
     </descriptions>
 
-    {% if license %}
-        <rightsList>
-            <rights rightsURI="{{ license.url }}">{{ license.name }}</rights>
-        </rightsList>
-    {% endif %}
+    <rightsList>
+        <rights rightsURI="{{ license.url }}">{{ license.name }}</rights>
+    </rightsList>
 
     <alternateIdentifiers>
         <alternateIdentifier alternateIdentifierType="HEPDataRecord">{{ site_url }}/record/ins{{ publication_info.inspire_id }}</alternateIdentifier>
@@ -65,7 +63,9 @@
             <relatedIdentifier relatedIdentifierType="DOI" resourceTypeGeneral="JournalArticle" relationType="IsSupplementTo">{{ publication_info.doi }}</relatedIdentifier>
         {% endif %}
 
-        <relatedIdentifier relatedIdentifierType="DOI" resourceTypeGeneral="Collection" relationType="IsPartOf">{{ overall_submission.doi }}</relatedIdentifier>
+        {% if overall_submission.doi and overall_submission.version %}
+            <relatedIdentifier relatedIdentifierType="DOI" resourceTypeGeneral="Collection" relationType="IsPartOf">{{ overall_submission.doi }}.v{{ overall_submission.version }}</relatedIdentifier>
+        {% endif %}
 
     </relatedIdentifiers>
 </resource>

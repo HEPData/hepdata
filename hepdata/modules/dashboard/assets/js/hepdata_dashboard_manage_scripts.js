@@ -43,6 +43,13 @@ $(document).ready(function() {
         confirmation_html += '<p>This action will send an email immediately to invite the user to join the ' + window.data_person_type + ' process.</p>';
       }
       show_confirmation(confirmation_html);
+      
+      // Hide the review message textarea for remove action since no email is sent
+      if (window.action == 'remove') {
+        $('#review-message-container').hide();
+      } else {
+        $('#review-message-container').show();
+      }
   });
 
   $(document).on('click', '.confirm-move-action', function () {
@@ -115,6 +122,8 @@ $(document).ready(function() {
   function hide_pane(pane_id) {
       $("#" + window.active_target).removeClass("hidden");
       $(pane_id).addClass("hidden");
+      // Reset the review message container to be visible when pane is hidden
+      $('#review-message-container').show();
   }
 
   function process_reviews(recid) {
