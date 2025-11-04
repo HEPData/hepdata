@@ -70,20 +70,18 @@ HEPDATA.hepdata_resources = (function () {
         return d['doi'] == null ? '' : '<a href="https://doi.org/' + d['doi'] + '" class="resource-doi">' + d['doi'] + '</a>';
       });
 
-    let key_append = "";
-
-    // If the status is to-do: we request and set the observer key
-    let todo = HEPDATA.current_submission_status == 'todo';
-
-    // We either get the observer key (if to-do), or just set the promise to resolve with null return
-    let observer_key_promise = todo
-      ? HEPDATA.get_observer_key_data(HEPDATA.current_record_id)
-      : Promise.resolve(null);
+    // If the observer key isn't set, try and request it, then move on to rendering
+    let observer_key_promise = !!HEPDATA.current_observer_key
+      ? Promise.resolve(HEPDATA.current_observer_key)
+      : HEPDATA.get_observer_key_data(HEPDATA.current_record_id);
 
     // Wait for the promise to resolve, as we cannot continue without the append
     observer_key_promise.then(function(observer_key) {
+      let todo = HEPDATA.current_submission_status === 'todo';
+      let key_append = "";
+
       if(todo) {
-        key_append = '&observer_key=' + HEPDATA.current_observer_key;
+        key_append = '&observer_key=' + observer_key;
       }
 
       // Add the landing page button
@@ -130,9 +128,6 @@ HEPDATA.hepdata_resources = (function () {
       dataType: 'json',
       url: '/record/resources/' + recid + '/' + version,
       success: function (data) {
-
-
-
         var resource_list = d3.select("#resource-filter ul");
         resource_list.html('');
 
