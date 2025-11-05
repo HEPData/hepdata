@@ -70,14 +70,19 @@ HEPDATA.hepdata_resources = (function () {
         return d['doi'] == null ? '' : '<a href="https://doi.org/' + d['doi'] + '" class="resource-doi">' + d['doi'] + '</a>';
       });
 
-    // If the observer key isn't set, try and request it, then move on to rendering
-    let observer_key_promise = !!HEPDATA.current_observer_key
-      ? Promise.resolve(HEPDATA.current_observer_key)
-      : HEPDATA.get_observer_key_data(HEPDATA.current_record_id);
+    let todo = HEPDATA.current_submission_status === 'todo';
+    let observer_key_promise;
+
+    if (!todo) {
+      observer_key_promise = Promise.resolve(HEPDATA.current_observer_key || null);
+    } else if (HEPDATA.current_observer_key) {
+      observer_key_promise = Promise.resolve(HEPDATA.current_observer_key);
+    } else {
+      observer_key_promise = HEPDATA.get_observer_key_data(HEPDATA.current_record_id);
+    }
 
     // Wait for the promise to resolve, as we cannot continue without the append
     observer_key_promise.then(function(observer_key) {
-      let todo = HEPDATA.current_submission_status === 'todo';
       let key_append = "";
 
       if(todo) {
