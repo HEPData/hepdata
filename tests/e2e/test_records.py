@@ -38,7 +38,8 @@ from selenium.webdriver.support import expected_conditions as EC
 
 from hepdata.config import HEPDATA_DOI_PREFIX
 from hepdata.modules.records.utils.data_files import get_data_path_for_record
-from hepdata.modules.submission.models import HEPSubmission, RelatedRecid, DataSubmission, RelatedTable
+from hepdata.modules.submission.models import HEPSubmission, RelatedRecid, DataSubmission, RelatedTable, \
+    SubmissionObserver
 from hepdata.modules.dashboard.api import create_record_for_dashboard
 from hepdata.modules.records.utils.common import get_record_by_id
 from hepdata.modules.records.utils.submission import get_or_create_hepsubmission, process_submission_directory
@@ -749,19 +750,49 @@ def test_large_file_load(app, live_server, admin_idx, logged_in_browser):
 
 def test_logged_out_observer(app, live_server, admin_idx, env_browser):
     """
-    Testing that a logged out browser is not able to access an unfinished submission.
+    Testing that a logged out browser is not able to access an unfinished submission, and that
+    the browser can also access a submission through its resource ID.
     """
 
     logged_out_browser = env_browser
+
     with app.app_context():
         test_submission = create_test_record(
             os.path.abspath('tests/test_data/test_submission'),
             overall_status='todo'
         )
 
+        test_submission_observer = SubmissionObserver.query.filter_by(
+            publication_recid=test_submission.publication_recid).first()
+
         record_url = flask.url_for('hepdata_records.get_metadata_by_alternative_id',
                                    recid=test_submission.publication_recid, _external=True)
-        logged_out_browser.get(record_url)
+    observer_append = f"?observer_key=%s"
 
+    for test_key in [None, "BAD_KEY1"]:
+        bad_url = record_url
+
+        if test_key:
+            bad_url += observer_append % test_key
+
+        logged_out_browser.get(bad_url)
         form_exists = logged_out_browser.find_element(By.TAG_NAME, 'form')
         assert 'Log In' in form_exists.text
+
+    observer_url = record_url + observer_append % test_submission_observer.observer_key
+    logged_out_browser.get(observer_url)
+    submission_title = logged_out_browser.find_element(By.CLASS_NAME, 'record-title').text
+
+    assert submission_title == "HEPData Testing"
+
+    json_link = logged_out_browser.find_element(By.ID, 'json_link').get_attribute('href')
+    test_url = flask.url_for('converter.download_data_table_by_recid',
+                             recid=test_submission.publication_recid,
+                             table_name="Table 1",
+                             version=test_submission.version,
+                             file_format='json',
+                             _external=True)
+
+    json_url = test_url + observer_append % test_submission_observer.observer_key
+
+    assert json_link == json_url
