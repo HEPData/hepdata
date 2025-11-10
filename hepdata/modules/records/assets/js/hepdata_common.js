@@ -252,7 +252,7 @@ HEPDATA.setup_default_clipboards = function () {
 
     toastr.options.timeOut = 3000;
   }
-}
+};
 
 HEPDATA.setup_clipboard = function(selector) {
   /*

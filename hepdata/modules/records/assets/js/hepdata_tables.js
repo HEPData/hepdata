@@ -120,7 +120,7 @@ HEPDATA.switch_table = function (listId, table_requested, table_name, status) {
   if (HEPDATA.current_record_type == 'table') {
     $("#json_link").hide();
   } else {
-    let json_url = '/download/table/' + _recid + '/' + encoded_name + '/' + HEPDATA.current_table_version + '/json'
+    let json_url = '/download/table/' + _recid + '/' + encoded_name + '/' + HEPDATA.current_table_version + '/json';
 
     if(observer_key) {
       json_url += observer_append;
