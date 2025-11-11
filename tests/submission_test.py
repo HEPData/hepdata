@@ -1039,7 +1039,7 @@ def test_submission_observer_create_delete(app, admin_idx):
     """
         Tests creation, new version and deletion cycle of a SubmissionObserver.
     """
-    # 8 char alpanumeric
+    # 8 char alphanumeric
     uuid_regex = r"^[0-9a-fA-F]{8}"
 
     # Insert the testing record data
