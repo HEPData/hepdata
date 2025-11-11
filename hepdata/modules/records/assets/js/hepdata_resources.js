@@ -73,19 +73,23 @@ HEPDATA.hepdata_resources = (function () {
     let todo = HEPDATA.current_submission_status === 'todo';
     let observer_key_promise;
 
+    // If unfinished, we can just resolve the promise with null
     if (!todo) {
-      observer_key_promise = Promise.resolve(HEPDATA.current_observer_key || null);
+      observer_key_promise = Promise.resolve(null);
     } else if (HEPDATA.current_observer_key) {
+      // If unfinished, and the key has been set, we can continue,
       observer_key_promise = Promise.resolve(HEPDATA.current_observer_key);
     } else {
+      // Unfinished, and no key: We need to request this key, if we can.
       observer_key_promise = HEPDATA.get_observer_key_data(HEPDATA.current_record_id);
     }
 
     // Wait for the promise to resolve, as we cannot continue without the append
     observer_key_promise.then(function(observer_key) {
       let key_append = "";
+      let should_append = todo && observer_key;
 
-      if(todo) {
+      if(should_append) {
         key_append = '&observer_key=' + observer_key;
       }
 
@@ -95,7 +99,7 @@ HEPDATA.hepdata_resources = (function () {
         .attr("class", "btn btn-primary btn-sm")
         .attr("href", function(d) {
           let landing_page_url = '/record/resource/' + d.id + '?landing_page=true';
-          if(todo) {
+          if(should_append) {
             landing_page_url += key_append;
           }
           return landing_page_url;
@@ -109,7 +113,7 @@ HEPDATA.hepdata_resources = (function () {
           var download_location = d.location;
           if (d.location.indexOf('http') == -1) {
             let view_page_url = '/record/resource/' + d.id + '?view=true';
-            if(todo) {
+            if(should_append) {
               view_page_url += key_append;
             }
             download_location = view_page_url;
