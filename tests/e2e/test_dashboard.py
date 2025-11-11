@@ -155,7 +155,7 @@ def test_dashboard(live_server, logged_in_browser):
     site_url = current_app.config.get('SITE_URL', 'https://www.hepdata.net')
 
     # Build the first half of the url
-    valid_url_base = rf"{site_url}/record/{sub_id}/?observer_key"
+    valid_url_base = rf"{site_url}/record/{sub_id}?observer_key"
     uuid_regex = "^[0-9a-fA-F]{8}"
 
     # Validate that the URL points to correct location
