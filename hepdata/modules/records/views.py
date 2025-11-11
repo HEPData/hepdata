@@ -481,7 +481,7 @@ def get_observer_data(recid, as_url=None):
 
             if as_url == 1:
                 site_url = current_app.config.get('SITE_URL', 'https://www.hepdata.net')
-                observer_url = f"{site_url}/record/{recid}/?observer_key={observer.observer_key}"
+                observer_url = f"{site_url}/record/{recid}?observer_key={observer.observer_key}"
                 response['observer_key'] = observer_url
             else:
                 response['observer_key'] = observer.observer_key

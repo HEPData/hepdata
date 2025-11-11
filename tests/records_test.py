@@ -1617,4 +1617,4 @@ def test_get_observer_data(app, client, mocker):
     # Check recid, status message, and observer URL
     assert result["recid"] == recid
     assert result["observer_exists"] == True
-    assert result["observer_key"] == f"{site_url}/record/{recid}/?observer_key={test_observer.observer_key}"
+    assert result["observer_key"] == f"{site_url}/record/{recid}?observer_key={test_observer.observer_key}"
