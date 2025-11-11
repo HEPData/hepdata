@@ -77,7 +77,7 @@ def test_notify_submission_created(app):
     """
     test_submission, test_participant, record_information = create_record_with_participant()
 
-     # Test sending the initial submission creation email
+    # Test sending the initial submission creation email
     with patch("hepdata.modules.email.api.create_send_email_task", side_effect=None) as task_patch:
 
         test_recid = test_submission.publication_recid
