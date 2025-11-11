@@ -200,7 +200,7 @@ $(document).ready(function() {
         // Unhide container, set value and text on the input
         $('#data_link_container').removeAttr('hidden');
         $('#direct_data_link').val(observer_key);
-        $('dashboard_button').attr('data-clipboard-text', observer_key);
+        $('#dashboard_button').attr('data-clipboard-text', observer_key);
 
         // Attempt to set up the clipboard object for this widget
         HEPDATA.setup_clipboard("#dashboard_button");
