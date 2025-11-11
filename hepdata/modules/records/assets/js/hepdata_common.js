@@ -24,6 +24,7 @@ HEPDATA.clipboard = undefined;
 HEPDATA.clipboard_list = [];
 HEPDATA.selected = {};
 HEPDATA.site_url = "https://www.hepdata.net";
+HEPDATA.OBSERVER_KEY_LENGTH = 8;
 
 HEPDATA.current_filters = {
   "text": "",

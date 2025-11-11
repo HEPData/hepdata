@@ -50,7 +50,7 @@ HEPDATA.switch_table = function (listId, table_requested, table_name, status) {
     direct_link = HEPDATA.site_url + '/record/' + _recid
       + '?version=' + HEPDATA.current_table_version + "&table=" + encoded_name;
 
-    if(observer_key && observer_key.length == 8) {
+    if(observer_key && observer_key.length === HEPDATA.OBSERVER_KEY_LENGTH ) {
       direct_link += '&observer_key=' + observer_key;
     }
   }
@@ -99,7 +99,7 @@ HEPDATA.switch_table = function (listId, table_requested, table_name, status) {
 
   // If it doesn't match the correct length, we null it.
   // If yes, create the append string.
-  if(observer_key && observer_key.length == 8) {
+  if(observer_key && observer_key.length === HEPDATA.OBSERVER_KEY_LENGTH) {
     var observer_append = '?observer_key=' + observer_key;
   } else {
     // Null it if unexpected length
@@ -141,7 +141,7 @@ HEPDATA.table_renderer = {
     const observer_key = params.get('observer_key');
 
     // Add the observer key
-    if(observer_key && observer_key.length == 8) {
+    if(observer_key && observer_key.length === HEPDATA.OBSERVER_KEY_LENGTH) {
       url += "?observer_key=" + observer_key;
     }
 
