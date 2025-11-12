@@ -755,8 +755,10 @@ def test_logged_out_observer(app, live_server, admin_idx, env_browser):
     """
 
     logged_out_browser = env_browser
+    observer_key = None
 
     with app.app_context():
+        # Create the test record and get the observer key for it.
         test_submission = create_test_record(
             os.path.abspath('tests/test_data/test_submission'),
             overall_status='todo'
@@ -764,11 +766,16 @@ def test_logged_out_observer(app, live_server, admin_idx, env_browser):
 
         test_submission_observer = SubmissionObserver.query.filter_by(
             publication_recid=test_submission.publication_recid).first()
+        observer_key = test_submission_observer.observer_key
 
         record_url = flask.url_for('hepdata_records.get_metadata_by_alternative_id',
                                    recid=test_submission.publication_recid, _external=True)
-    observer_append = f"?observer_key=%s"
 
+    # Create later observer key strings for later assertions
+    observer_append = f"?observer_key=%s"
+    complete_append = observer_append % observer_key
+
+    # Testing some bad keys for access
     for test_key in [None, "BAD_KEY1"]:
         bad_url = record_url
 
@@ -779,12 +786,15 @@ def test_logged_out_observer(app, live_server, admin_idx, env_browser):
         form_exists = logged_out_browser.find_element(By.TAG_NAME, 'form')
         assert 'Log In' in form_exists.text
 
-    observer_url = record_url + observer_append % test_submission_observer.observer_key
+    # Finally, testing the correct observer key and checking title (assumes access if true)
+    observer_url = record_url + observer_append % observer_key
     logged_out_browser.get(observer_url)
     submission_title = logged_out_browser.find_element(By.CLASS_NAME, 'record-title').text
 
     assert submission_title == "HEPData Testing"
 
+    # We've ensured initial access, now ensure that all required links contain the observer key
+    # Getting the "JSON" text button at the top right of the table info
     json_link = logged_out_browser.find_element(By.ID, 'json_link').get_attribute('href')
     test_url = flask.url_for('converter.download_data_table_by_recid',
                              recid=test_submission.publication_recid,
@@ -794,5 +804,33 @@ def test_logged_out_observer(app, live_server, admin_idx, env_browser):
                              _external=True)
 
     json_url = test_url + observer_append % test_submission_observer.observer_key
-
     assert json_link == json_url
+
+    # Checking the "JSON" button on the top right of the record (next to "Cite")
+    json_label = logged_out_browser.find_element(By.ID, 'jsonLabel').get_attribute('href')
+    # Removing the first ? character and checking for correct key, and "observer_key="
+    assert complete_append[1:] in json_label
+
+    # Table download dropdown menu
+    dropdown_uls = logged_out_browser.find_elements(By.CSS_SELECTOR, '#record-dropdown li a')
+    ul_text = [i.get_attribute('textContent') for i in dropdown_uls]
+    ul_urls = [i.get_attribute('href') for i in dropdown_uls]
+
+    for text, url in zip(ul_text, ul_urls):
+        key_text = f"{text.lower()}{observer_append % observer_key}"
+        assert key_text in url
+
+    # Checking the table copy button value
+    copy_btn = logged_out_browser.find_element(By.ID, 'direct_data_link')
+    so_url = copy_btn.get_attribute("value")
+    assert complete_append[1:] in so_url
+
+    # Checking the "Download All" dropdown buttons
+    dl_all = logged_out_browser.find_elements(By.CSS_SELECTOR, '#download-all li a')
+    dl_text = [i.get_attribute('textContent') for i in dl_all]
+    dl_urls = [i.get_attribute('href') for i in dl_all]
+
+    for text, url in zip(dl_text, dl_urls):
+        prepend = text.lower() if "with resource" not in text else "original"
+        key_text = f"{prepend}{observer_append % observer_key}"
+        assert key_text in url

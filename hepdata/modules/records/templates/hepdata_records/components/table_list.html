@@ -49,7 +49,7 @@
             {% else %}
                 {% set download_base_url = "/download/submission/ins" + ctx.record.inspire_id|string + "/" + ctx.version|string %}
             {% endif %}
-            <ul class="dropdown-menu" aria-labelledby="dLabel"
+            <ul id="download-all" class="dropdown-menu" aria-labelledby="dLabel"
                 style="height: auto;">
                 {# Define a set containing url/text pairs for each resource download option. #}
                 {% set type_dict = {
