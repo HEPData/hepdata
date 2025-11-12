@@ -44,15 +44,8 @@ HEPDATA.switch_table = function (listId, table_requested, table_name, status) {
     direct_link = HEPDATA.site_url + '/record/sandbox/' + _recid
       + '?table=' + encoded_name;
   } else {
-    const params = new URLSearchParams(document.location.search);
-    const observer_key = params.get('observer_key');
-
     direct_link = HEPDATA.site_url + '/record/' + _recid
       + '?version=' + HEPDATA.current_table_version + "&table=" + encoded_name;
-
-    if(observer_key && observer_key.length === HEPDATA.OBSERVER_KEY_LENGTH ) {
-      direct_link += '&observer_key=' + observer_key;
-    }
   }
 
   $("#direct_data_link").val(direct_link);
@@ -114,6 +107,11 @@ HEPDATA.switch_table = function (listId, table_requested, table_name, status) {
     let observer_append;
     if(requested_key && requested_key.length === HEPDATA.OBSERVER_KEY_LENGTH) {
       observer_append = '?observer_key=' + requested_key;
+
+      direct_link += observer_append;
+      direct_link = direct_link.replace('?observer', '&observer');
+      $("#direct_data_link").val(direct_link);
+      $(".copy-btn").attr('data-clipboard-text', direct_link);
     } else {
       // Null it if unexpected length
       requested_key = null;
