@@ -21,6 +21,7 @@ import os.path
 import shutil
 
 from invenio_db import db
+from sqlalchemy import text
 
 from hepdata.modules.submission.models import DataReview, DataResource, DataSubmission, \
     Message, receive_before_flush
@@ -132,7 +133,11 @@ def test_data_review_cascades(app):
     assert(len(reviews[0].messages) == 1)
     assert(reviews[0].messages[0].message == message.message)
 
-    review_messages = list(db.engine.execute("select * from review_messages where datareview_id = %s" % datareview.id))
+    review_messages = list(db.session.execute(
+        text("select * from review_messages where datareview_id = :id"),
+        {"id": datareview.id}
+    ).all())
+
     assert(len(review_messages) == 1)
     assert(review_messages[0].datareview_id == datareview.id)
 
