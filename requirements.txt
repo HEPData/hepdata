@@ -13,7 +13,7 @@ invenio-records[postgresql]==2.4.1
 invenio-search[opensearch2]==2.4.1
 invenio-userprofiles==3.0.1
 mathml-to-latex==1.0.0
-python-twitter-v2==0.9.2
+python-twitter-v2==0.9.3
 responses==0.25.8
 unicodeit==0.7.5
 xmlschema==4.2.0
