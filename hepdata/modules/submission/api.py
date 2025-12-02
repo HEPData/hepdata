@@ -101,7 +101,7 @@ def get_or_create_submission_observer(publication_recid, regenerate=False):
     created = False
 
     if submission_observer is None:
-        submission = HEPSubmission.query.filter_by(publication_recid=publication_recid).first()
+        submission = get_latest_hepsubmission(publication_recid=publication_recid)
         if submission:
             if submission.overall_status == "todo" or regenerate:
                 submission_observer = SubmissionObserver(publication_recid=publication_recid)
