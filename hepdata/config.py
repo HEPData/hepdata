@@ -327,9 +327,8 @@ ANALYSES_ENDPOINTS = {
         'description': 'Rivet analysis'
     },
     'MadAnalysis': {
-        'endpoint_url': 'https://madanalysis.irmp.ucl.ac.be/raw-attachment/wiki/MA5SandBox/analyses.json',
-        'url_template': 'https://doi.org/{0}',
-        'description': 'MadAnalysis 5 analysis'
+        'endpoint_url': 'https://raw.githubusercontent.com/MadAnalysis/HEPData-link/refs/heads/main/analyses.json',
+        'subscribe_user_id': 1703,
     },
     'SModelS': {
         'endpoint_url': 'https://smodels.github.io/docs/smodels-analyses.hepdata.json',
