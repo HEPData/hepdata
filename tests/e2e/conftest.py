@@ -34,6 +34,7 @@ import flask
 from flask_security.utils import hash_password
 import pytest
 from invenio_accounts.models import User, Role
+from invenio_db import db
 from invenio_db.shared import metadata, SQLAlchemy as InvenioSQLAlchemy
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -60,7 +61,7 @@ class SQLAlchemy(InvenioSQLAlchemy):
 
 
 
-db = SQLAlchemy(metadata=metadata)
+# db = SQLAlchemy(metadata=metadata)
 
 multiprocessing.set_start_method('fork')
 
