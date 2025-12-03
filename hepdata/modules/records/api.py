@@ -1046,8 +1046,7 @@ def get_all_ids(index=None, id_field='recid', last_updated=None, latest_first=Fa
         else HEPSubmission.inspire_id
 
     # Get unique version
-    query = db.session.query(db_col) \
-        .filter(HEPSubmission.overall_status == 'finished')
+    query = db.session.query(db_col, HEPSubmission.publication_recid).filter(HEPSubmission.overall_status == 'finished')
 
     if last_updated:
         query = query.filter(HEPSubmission.last_updated >= last_updated)
