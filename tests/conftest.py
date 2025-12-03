@@ -37,6 +37,7 @@ from hepdata.ext.opensearch.admin_view.api import AdminIndexer
 from hepdata.ext.opensearch.api import reindex_all
 from hepdata.factory import create_app
 from hepdata.modules.dashboard.api import create_record_for_dashboard
+from hepdata.modules.permissions.models import SubmissionParticipant
 from hepdata.modules.records.importer.api import import_records, _download_file
 from hepdata.modules.records.utils.data_files import get_data_path_for_record
 from hepdata.modules.records.utils.submission import get_or_create_hepsubmission, process_submission_directory
@@ -169,19 +170,26 @@ def load_submission(app, load_default_data):
     import_records(['ins1487726'], synchronous=True)
 
 
-def create_blank_test_record():
+def create_blank_test_record(status="todo", user_id=1):
     """
     Helper function to create a single, blank, finished submission
+
+    :param status: str - Specific status setting
+    :param user_id: int - Optionally create a new user of a specific id.
     :returns submission: The newly created submission object
     """
     record_information = create_record(
         {'journal_info': 'Journal', 'title': 'Test Paper'})
     recid = record_information['recid']
-    submission = get_or_create_hepsubmission(recid)
+    submission = get_or_create_hepsubmission(recid, status=status)
     # Set overall status to finished so related data appears on dashboard
-    submission.overall_status = 'finished'
-    user = User(email=f'test@test.com', password='hello1', active=True,
-                id=1)
+    submission.overall_status = status
+
+    # Either use default user, or create a new user
+    if user_id != 1:
+        user = User(email=f'test@test.com', password='hello1', active=True, id=user_id)
+    else:
+        user = User.query.filter_by(id=1).first()
     test_submissions = {}
     create_record_for_dashboard(recid, test_submissions, user)
     return submission
@@ -208,3 +216,38 @@ def create_test_record(file_location, overall_status='finished'):
     process_submission_directory(record_dir, os.path.join(record_dir, 'submission.yaml'),
                                  test_submission.publication_recid)
     return test_submission
+
+def create_record_with_participant():
+    """
+    A specific function used in email_test.py to create a blank test record
+    with a participant for email information.
+
+    Returns test copies of HEPSubmission, SubmissionParticipant, and record information
+    :returns: tuple - test_submission, test_participant, record_information
+    """
+    # Correctly set up the test_submission folder path
+    base_directory = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+    test_directory = os.path.join(base_directory, 'tests', 'test_data', 'test_submission')
+
+    # Create and upload the submission
+    # and set the coordinator
+    test_submission = create_test_record(test_directory, "todo")
+    test_pubid = test_submission.publication_recid
+    test_submission.coordinator = 1
+    db.session.add(test_submission)
+    db.session.commit()
+
+    # Set up the submission used for testing purposes
+    # Create test participant
+    test_participant = SubmissionParticipant(
+            user_account=1, publication_recid=test_pubid,
+            email="test@hepdata.net", role='primary')
+    db.session.add(test_participant)
+    db.session.commit()
+
+    record_information = {
+        "recid": test_pubid,
+        "title": "Test Title"
+    }
+
+    return test_submission, test_participant, record_information

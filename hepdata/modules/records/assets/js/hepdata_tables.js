@@ -50,7 +50,7 @@ HEPDATA.switch_table = function (listId, table_requested, table_name, status) {
 
   $("#direct_data_link").val(direct_link);
   $(".copy-btn").attr('data-clipboard-text', direct_link);
-  HEPDATA.setup_clipboard();
+  HEPDATA.setup_default_clipboards();
 
   // Reset the table loading section
   $("#hepdata_table_loading").removeClass("hidden");
@@ -87,18 +87,62 @@ HEPDATA.switch_table = function (listId, table_requested, table_name, status) {
     HEPDATA.table_renderer.get_and_display_table(data_url);
   });
 
-  $(".data_download_link").each(function () {
-    var data_format = $(this).text().toLowerCase();
-    var data_url = '/download/table/' + _recid + '/' + encoded_name + '/' + HEPDATA.current_table_version + '/' + data_format;
-    $(this).attr('href', data_url);
-  });
-
-  if (HEPDATA.current_record_type == 'table') {
-    $("#json_link").hide();
-  } else {
-    $("#json_link").attr('href', '/download/table/' + _recid + '/' + encoded_name + '/' + HEPDATA.current_table_version + '/json');
-    $("#json_link").show();
+  // Some logic to decide which key to pass, or if to query for the observer key
+  let observer_key_promise;
+  if(HEPDATA.current_submission_status === 'todo') {
+    // If to-do, we either pass through the key we have, or execute as normal.
+    if(HEPDATA.current_observer_key) {
+      observer_key_promise = $.Deferred().resolve(HEPDATA.current_observer_key).promise();
+    }
+    else {
+      observer_key_promise = HEPDATA.get_observer_key_data(HEPDATA.current_record_id);    }
   }
+  else {
+    observer_key_promise = $.Deferred().resolve(null).promise();
+  }
+
+  observer_key_promise.then(function(requested_key) {
+    // If it doesn't match the correct length, we null it.
+    // If yes, create the append string.
+    let observer_append;
+    if(requested_key && requested_key.length === HEPDATA.OBSERVER_KEY_LENGTH) {
+      observer_append = '?observer_key=' + requested_key;
+
+      direct_link += observer_append;
+      direct_link = direct_link.replace('?observer', '&observer');
+      $("#direct_data_link").val(direct_link);
+      $(".copy-btn").attr('data-clipboard-text', direct_link);
+    } else {
+      // Null it if unexpected length
+      requested_key = null;
+    }
+
+    $(".data_download_link").each(function () {
+      var data_format = $(this).text().toLowerCase();
+      var data_url = '/download/table/' + _recid + '/' + encoded_name + '/' + HEPDATA.current_table_version + '/' + data_format;
+
+      if(requested_key) {
+        data_url += observer_append;
+      }
+
+      $(this).attr('href', data_url);
+    });
+
+    let json_link = $("#json_link");
+
+    if (HEPDATA.current_record_type === 'table') {
+      json_link.hide();
+    } else {
+      let json_url = '/download/table/' + _recid + '/' + encoded_name + '/' + HEPDATA.current_table_version + '/json';
+
+      if(requested_key) {
+        json_url += observer_append;
+      }
+
+      json_link.attr('href', json_url);
+      json_link.show();
+    }
+  });
 };
 
 HEPDATA.table_renderer = {
@@ -107,6 +151,14 @@ HEPDATA.table_renderer = {
       Render only the main table information (name, details, etc.) at the top,
       then decides whether to trigger render of the table or not.
     */
+    const params = new URLSearchParams(document.location.search);
+    const observer_key = params.get('observer_key');
+
+    // Add the observer key
+    if(observer_key && observer_key.length === HEPDATA.OBSERVER_KEY_LENGTH) {
+      url += "?observer_key=" + observer_key;
+    }
+
     $.ajax({
       dataType: "json",
       url: url,
