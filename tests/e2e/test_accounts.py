@@ -146,6 +146,8 @@ def test_user_registration_and_login(live_server, env_browser):
     e2e_assert(browser, not testutils.webdriver_authenticated(browser),
                'Should not be authenticated')
 
+    # TODO - Forces a reload to avoid timeout, should fix elsewhere
+    db.engine.dispose()
     # Delete the newly created account
     user = User.query.filter_by(email=user_email).first()
     login_information = LoginInformation.query.filter_by(user_id=user.id).first()
