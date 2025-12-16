@@ -471,7 +471,7 @@ def get_observer_data(recid, as_url=None):
     """
     response = { "recid": recid, "observer_exists": False }
 
-    if user_allowed_to_perform_action(recid):
+    if user_allowed_to_perform_action(recid) and has_coordinator_permissions(recid, current_user):
         # Query for the observer key object
         observer = get_or_create_submission_observer(recid)
 
