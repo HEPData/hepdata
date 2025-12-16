@@ -427,7 +427,7 @@ def render_record(recid, record, version, output_format, light_mode=False, obser
             elif hepdata_submission.overall_status == 'todo':
                 observer = get_or_create_submission_observer(hepdata_submission.publication_recid)
 
-                if observer:
+                if observer and has_coordinator_permissions(recid, current_user):
                     ctx['observer_key'] = observer.observer_key
 
             increment(recid)
