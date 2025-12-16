@@ -65,8 +65,8 @@ from hepdata.modules.records.views import set_data_review_status, get_observer_d
 from hepdata.modules.submission.models import HEPSubmission, DataReview, \
     DataSubmission, DataResource, License, RecordVersionCommitMessage, RelatedRecid, RelatedTable, SubmissionObserver
 from hepdata.modules.submission.views import process_submission_payload
-from hepdata.modules.submission.api import get_latest_hepsubmission
-from tests.conftest import TEST_EMAIL, create_test_record
+from hepdata.modules.submission.api import get_latest_hepsubmission, get_or_create_submission_observer
+from tests.conftest import TEST_EMAIL, create_test_record, create_blank_test_record
 from hepdata.modules.records.utils.records_update_utils import get_inspire_records_updated_since, \
     get_inspire_records_updated_on, update_record_info, RECORDS_PER_PAGE
 from hepdata.modules.inspire_api.views import get_inspire_record_information
@@ -1618,3 +1618,34 @@ def test_get_observer_data(app, client, mocker):
     assert result["recid"] == recid
     assert result["observer_exists"] == True
     assert result["observer_key"] == f"{site_url}/record/{recid}?observer_key={test_observer.observer_key}"
+
+
+def test_observer_create_from_none(app, load_default_data):
+    """
+        Testing to ensure that a to-do submission without a SubmissionObserver
+        object is created automatically when called for
+        by get_or_create_submission_observer.
+    """
+    test_sub = create_blank_test_record()
+    test_sub_obs = get_or_create_submission_observer(test_sub.publication_recid)
+    first_key = test_sub_obs.observer_key
+
+    all_sub_obs = SubmissionObserver.query.all()
+
+    assert len(all_sub_obs) == 1
+    assert all_sub_obs[0].publication_recid == test_sub.publication_recid
+
+    db.session.delete(test_sub_obs)
+    db.session.commit()
+
+    all_sub_obs = SubmissionObserver.query.all()
+    assert len(all_sub_obs) == 0
+
+    new_sub_obs = get_or_create_submission_observer(test_sub.publication_recid)
+
+    assert new_sub_obs
+    assert new_sub_obs.publication_recid == test_sub.publication_recid
+    assert first_key != new_sub_obs.observer_key
+
+    todo_subs = [sub for sub in HEPSubmission.query.all() if sub.overall_status == 'todo']
+    assert len(SubmissionObserver.query.all()) == len(todo_subs)
