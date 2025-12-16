@@ -307,7 +307,7 @@ HEPDATA.get_observer_key_data = function(recid, as_url) {
 
     let request_url = '/record/coordinator/observer_key/' + recid;
     // Setting the request flag if required
-    if (as_url == 1) request_url += '/1';
+    if (as_url === 1) request_url += '/1';
 
     return $.ajax({
       dataType: 'json',
