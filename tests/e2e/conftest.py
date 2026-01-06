@@ -254,11 +254,6 @@ def env_browser(request):
     # the server responded with a status of 404 (Not Found)
     log = [t for t in log if 'favicon.ico' not in t['message']]
 
-    # Filter out error message for:
-    # SEVERE: https://zenodo.org/badge/DOI/10.5281/zenodo.197109.svg - Failed to load resource:
-    # the server responded with a status of 403 (Forbidden)
-    log = [t for t in log if 'zenodo.org' not in t['message']]
-
     assert len(log) == 0, \
         "Errors in browser log:\n" + \
         "\n".join([f"{line['level']}: {line['message']}" for line in log])
