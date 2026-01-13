@@ -100,7 +100,7 @@ def returns_json(f):
 
 
 def format_submission(recid, record, version, version_count, hepdata_submission,
-                      data_table=None):
+                      data_table=None, observer_view=None):
     """
     Performs all the processing of the record to be displayed.
 
@@ -110,6 +110,7 @@ def format_submission(recid, record, version, version_count, hepdata_submission,
     :param version_count:
     :param hepdata_submission:
     :param data_table:
+    :param observer_view:
     :return:
     """
     ctx = {}
@@ -167,9 +168,14 @@ def format_submission(recid, record, version, version_count, hepdata_submission,
             if not (ctx['show_review_widget']
                     or ctx['show_upload_widget']
                     or ctx['is_submission_coordinator_or_admin']):
-                # we show the latest approved version.
-                ctx["version"] -= 1
-                ctx["version_count"] -= 1
+
+                if not observer_view:
+                    # we show the latest approved version.
+                    ctx["version"] -= 1
+                    ctx["version_count"] -= 1
+                else:
+                    ctx["version_count"] += 1
+
 
         ctx['additional_resources'] = submission_has_resources(hepdata_submission)
         ctx['resources_with_doi'] = []
