@@ -143,13 +143,14 @@ def get_metadata_by_alternative_id(recid):
 
         output_format = request.args.get('format', 'html')
         light_mode = bool(request.args.get('light', False))
+        observer_key = request.args.get('observer_key', None)
 
         # Check the Accept header to determine whether to send JSON-LD
         if output_format == 'html' and should_send_json_ld(request):
             output_format = 'json_ld'
 
         return render_record(recid=record['recid'], record=record, version=version, output_format=output_format,
-                             light_mode=light_mode)
+                             light_mode=light_mode, observer_key=observer_key)
 
     except Exception as e:
         log.warning("Unable to find %s.", recid)
