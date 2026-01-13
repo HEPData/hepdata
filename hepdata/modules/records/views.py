@@ -319,8 +319,10 @@ def get_table_details(recid, data_recid, version, load_all=1):
     key_verified = verify_observer_key(recid, observer_key)
 
     version_count, version_count_all = get_version_count(recid)
-    # If version not given explicitly, take to be latest allowed version (or 1 if there are no allowed versions).
-    version = version_count if version_count else 1
+
+    if not version:
+        # If version not given explicitly, take to be latest allowed version (or 1 if there are no allowed versions).
+        version = version_count if version_count else 1
 
     # Check for a user trying to access a version of a publication record where they don't have permissions.
     if version_count < version_count_all and version == version_count_all and not key_verified:
