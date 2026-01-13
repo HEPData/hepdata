@@ -421,7 +421,7 @@ def render_record(recid, record, version, output_format, light_mode=False, obser
             return render_template('hepdata_records/publication_processing.html', ctx=ctx)
 
         elif not hepdata_submission.overall_status.startswith('sandbox'):
-            ctx = format_submission(recid, record, version, version_count, hepdata_submission)
+            ctx = format_submission(recid, record, version, version_count, hepdata_submission, observer_view=key_verified)
             ctx['record_type'] = 'publication'
             ctx['related_recids'] = get_record_data_list(hepdata_submission, "related")
             ctx['related_to_this_recids'] = get_record_data_list(hepdata_submission, "related_to_this")
