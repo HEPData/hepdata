@@ -52,7 +52,6 @@ def create_basic_app():
     test_db_host = app.config.get('TEST_DB_HOST', 'localhost')
     app.config.update(dict(
         TESTING=True,
-        TEST_RUNNER="celery.contrib.test_runner.CeleryTestSuiteRunner",
         CELERY_TASK_ALWAYS_EAGER=True,
         CELERY_RESULT_BACKEND="cache",
         CELERY_CACHE_BACKEND="memory",
