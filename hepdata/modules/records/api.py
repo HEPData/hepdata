@@ -388,12 +388,15 @@ def render_record(recid, record, version, output_format, light_mode=False, obser
 
     # Number of versions that a user is allowed to access based on their permissions.
     version_count = version_count_all if user_allowed_to_perform_action(recid) else version_count_finished
+    key_verified = verify_observer_key(recid, observer_key)
 
     # If version not given explicitly, take to be latest allowed version (or 1 if there are no allowed versions).
+    # Unless we have a verified observer key, then we should just select the latest version of ANY status.
     if version == -1:
-        version = version_count if version_count else 1
-
-    key_verified = verify_observer_key(recid, observer_key)
+        if key_verified:
+            version = version_count_all
+        else:
+            version = version_count if version_count else 1
 
     # We skip the version check if the access key matches
     if not key_verified:
