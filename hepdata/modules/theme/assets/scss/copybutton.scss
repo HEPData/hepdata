@@ -3,8 +3,8 @@
     used on separate pages across the site.
 */
 
-#data_link_container {
-  display: inline-block;
+#data_link_container, #revision_link_container {
+  display: flex;
   margin-right: 10px;
   border: 1px solid #ccc;
   background-color: $lightgrey;
@@ -56,16 +56,19 @@
 /*
 *    Boosting the font size a little for the submission and dashboard manager copy button
 */
-#manager-footer #data_link_container .data_link {
+#manager-footer #data_link_container .data_link,
+#revision_link_container .data_link {
   font-size: 1.05em;
 }
 
-#submission_observer_container #data_link_container {
-    width: 100%;
+#submission_observer_container #data_link_container,
+#revision_link_container {
+  width: 100%;
 }
 
 /* Removes highlight colour on the input after copy */
-#direct_data_link::selection {
+#direct_data_link::selection,
+#revision_data_link::selection {
   background: transparent;
 }
 
@@ -73,45 +76,42 @@
 
 /* The accompanying observer key message */
 #manager-footer #data_link_message {
-    color: black;
-    padding-bottom: 10px;
+  color: black;
+  padding-bottom: 10px;
 }
 
 #manager-footer {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 #manager-footer #data_link_message {
-    text-align: center;
-    width: 100%;
+  text-align: center;
+  width: 100%;
 }
 
 #manager-footer #data_link_container {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 10px;
-    width: 75%;
-    justify-content: center;
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+  width: 75%;
+  justify-content: center;
 }
 
-#manager-footer #direct_data_link {
-    width: 100%;
-    text-align: center;
+#manager-footer #direct_data_link,
+#revision_data_link {
+  width: 100%;
+  text-align: center;
 }
 
 #manager-footer #manager-close {
-    top: 50%;
+  top: 50%;
 }
 
 /* Specific rules for the post-submission page */
 #check #direct_data_link {
   width: calc(100% - 50px);
-   text-align: center;
-   font-size: 0.9em;
-}
-
-#check .copy-btn-style {
-  float: right;
+  text-align: center;
+  font-size: 0.9em;
 }
