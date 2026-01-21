@@ -446,7 +446,7 @@ def notify_publication_update(hepsubmission, record):
                            message_body)
 
 
-def notify_submission_created(record, coordinator_id, uploader, reviewer):
+def notify_submission_created(record, coordinator_id, uploader, reviewer, revision=False):
     coordinator = get_user_from_id(coordinator_id)
 
     if not coordinator:
@@ -479,8 +479,13 @@ def notify_submission_created(record, coordinator_id, uploader, reviewer):
                                    link=site_url + "/record/{0}".format(record['recid']),
                                    observer_url=observer_url)
 
-    create_send_email_task(coordinator.email,
-                           '[HEPData] Submission {0} has been created'.format(record['recid']),
+    # Modifying the subject to note the submission version if this is a revision.
+    if revision:
+        subject_string = '{0}, version {1}'.format(record['recid'], record['version'])
+    else:
+        subject_string = record['recid']
+
+    create_send_email_task(coordinator.email, f'[HEPData] Submission {subject_string} has been created',
                            message_body)
 
 
