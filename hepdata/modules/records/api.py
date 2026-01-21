@@ -39,7 +39,7 @@ from sqlalchemy.orm.exc import NoResultFound
 from werkzeug.utils import secure_filename
 
 from hepdata.modules.converter import convert_oldhepdata_to_yaml
-from hepdata.modules.email.api import send_cookie_email
+from hepdata.modules.email.api import send_cookie_email, notify_submission_created
 from hepdata.modules.email.utils import create_send_email_task
 from hepdata.modules.permissions.api import user_allowed_to_perform_action, verify_observer_key
 from hepdata.modules.permissions.models import SubmissionParticipant
@@ -574,16 +574,21 @@ def create_new_version(recid, user, notify_uploader=True, uploader_message=None)
         db.session.add(observer_key)
         db.session.commit()
 
+        record_information = get_record_by_id(recid)
+
         if notify_uploader:
             uploaders = SubmissionParticipant.query.filter_by(
                 role='uploader', publication_recid=recid, status='primary'
                 )
-            record_information = get_record_by_id(recid)
             for uploader in uploaders:
                 send_cookie_email(uploader,
                                   record_information,
                                   message=uploader_message,
                                   version=_rev_hepsubmission.version)
+
+        if user:
+            # Send the submission created email. containing no uploader, or reviewer information.
+            notify_submission_created(record_information, user.id, None, None, revision=True)
 
         return jsonify({'success': True, 'version': _rev_hepsubmission.version})
     else:
