@@ -185,10 +185,31 @@ $(document).ready(function() {
       });
   }
 
+  function set_observer_key(recid) {
+    /**
+    * Sets the observer key value on the manage submission dashboard widget.
+    *
+    * @param {number} recid - The recid to get observer_key for.
+    */
+
+    // Call for observer key, with the flag to retrieve
+    let observer_promise = HEPDATA.get_observer_key_data(recid, 1);
+
+    observer_promise.then(function(observer_key) {
+      if(observer_key) {
+        // Unhide container, set value and text on the input
+        $('#data_link_container').removeAttr('hidden');
+        $('#direct_data_link').val(observer_key);
+      }
+    });
+    HEPDATA.setup_clipboard("#dashboard_button");
+  }
+
   $(document).on('click', '.manage-submission-trigger', function (event) {
       window.recid = $(this).attr('data-recid');
       HEPDATA.load_all_review_messages("#conversation", $(this).attr('data-recid'));
       process_reviews($(this).attr('data-recid'));
+      set_observer_key($(this).attr('data-recid'));
   });
 
   $(document).on('click', '.conversation-trigger', function (event) {

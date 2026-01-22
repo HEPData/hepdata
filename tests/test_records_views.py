@@ -41,7 +41,8 @@ class TestGetMetadataByAlternativeId:
                     record=mock_record,
                     version=1,
                     output_format='json',
-                    light_mode=False
+                    light_mode=False,
+                    observer_key=None
                 )
 
                 assert result == 'rendered_record'
@@ -133,5 +134,6 @@ class TestGetMetadataByAlternativeId:
                     record=mock_record,
                     version=-1,
                     output_format='json_ld',
-                    light_mode=False
+                    light_mode=False,
+                    observer_key=None
                 )

@@ -39,9 +39,9 @@ from sqlalchemy.orm.exc import NoResultFound
 from werkzeug.utils import secure_filename
 
 from hepdata.modules.converter import convert_oldhepdata_to_yaml
-from hepdata.modules.email.api import send_cookie_email
+from hepdata.modules.email.api import send_cookie_email, notify_submission_created
 from hepdata.modules.email.utils import create_send_email_task
-from hepdata.modules.permissions.api import user_allowed_to_perform_action
+from hepdata.modules.permissions.api import user_allowed_to_perform_action, verify_observer_key
 from hepdata.modules.permissions.models import SubmissionParticipant
 from hepdata.modules.records.subscribers.api import is_current_user_subscribed_to_record
 from hepdata.modules.records.utils.common import decode_string, find_file_in_directory, allowed_file, \
@@ -51,7 +51,8 @@ from hepdata.modules.records.utils.data_files import get_data_path_for_record, c
 from hepdata.modules.records.utils.json_ld import get_json_ld
 from hepdata.modules.records.utils.submission import process_submission_directory, \
     create_data_review, cleanup_submission, clean_error_message_for_display
-from hepdata.modules.submission.api import get_latest_hepsubmission, get_submission_participants_for_record
+from hepdata.modules.submission.api import get_latest_hepsubmission, get_submission_participants_for_record, \
+    get_or_create_submission_observer
 from hepdata.modules.records.utils.users import get_coordinators_in_system, has_role
 from hepdata.modules.records.utils.workflow import update_action_for_submission_participant
 from hepdata.modules.records.utils.yaml_utils import split_files
@@ -62,7 +63,8 @@ from hepdata.modules.submission.models import (
     HEPSubmission,
     RecordVersionCommitMessage,
     RelatedRecid,
-    RelatedTable
+    RelatedTable,
+    SubmissionObserver
 )
 from hepdata.utils.file_extractor import extract
 from hepdata.utils.miscellaneous import sanitize_html, get_resource_data
@@ -98,7 +100,7 @@ def returns_json(f):
 
 
 def format_submission(recid, record, version, version_count, hepdata_submission,
-                      data_table=None):
+                      data_table=None, observer_view=None):
     """
     Performs all the processing of the record to be displayed.
 
@@ -108,6 +110,7 @@ def format_submission(recid, record, version, version_count, hepdata_submission,
     :param version_count:
     :param hepdata_submission:
     :param data_table:
+    :param observer_view:
     :return:
     """
     ctx = {}
@@ -165,9 +168,14 @@ def format_submission(recid, record, version, version_count, hepdata_submission,
             if not (ctx['show_review_widget']
                     or ctx['show_upload_widget']
                     or ctx['is_submission_coordinator_or_admin']):
-                # we show the latest approved version.
-                ctx["version"] -= 1
-                ctx["version_count"] -= 1
+
+                if not observer_view:
+                    # we show the latest approved version.
+                    ctx["version"] -= 1
+                    ctx["version_count"] -= 1
+                else:
+                    ctx["version_count"] += 1
+
 
         ctx['additional_resources'] = submission_has_resources(hepdata_submission)
         ctx['resources_with_doi'] = []
@@ -370,7 +378,7 @@ def extract_journal_info(record):
             record['journal_info'] = "Conference Paper"
 
 
-def render_record(recid, record, version, output_format, light_mode=False):
+def render_record(recid, record, version, output_format, light_mode=False, observer_key=None):
 
     # Count number of all versions and number of finished versions of a publication record.
     version_count_all = HEPSubmission.query.filter(HEPSubmission.publication_recid == recid,
@@ -380,25 +388,32 @@ def render_record(recid, record, version, output_format, light_mode=False):
 
     # Number of versions that a user is allowed to access based on their permissions.
     version_count = version_count_all if user_allowed_to_perform_action(recid) else version_count_finished
+    key_verified = verify_observer_key(recid, observer_key)
 
     # If version not given explicitly, take to be latest allowed version (or 1 if there are no allowed versions).
+    # Unless we have a verified observer key, then we should just select the latest version of ANY status.
     if version == -1:
-        version = version_count if version_count else 1
-
-    # Check for a user trying to access a version of a publication record where they don't have permissions.
-    if version_count < version_count_all and version == version_count_all:
-        # Prompt the user to login if they are not authenticated then redirect, otherwise return a 403 error.
-        if not current_user.is_authenticated:
-            redirect_url_after_login = '%2Frecord%2F{0}%3Fversion%3D{1}%26format%3D{2}'.format(recid, version, output_format)
-            if 'table' in request.args:
-                redirect_url_after_login += '%26table%3D{0}'.format(request.args['table'])
-            if output_format.startswith('yoda') and 'rivet' in request.args:
-                redirect_url_after_login += '%26rivet%3D{0}'.format(request.args['rivet'])
-            if output_format.startswith('yoda') and 'qualifiers' in request.args:
-                redirect_url_after_login += '%26qualifiers%3D{0}'.format(request.args['qualifiers'])
-            return redirect('/login/?next={0}'.format(redirect_url_after_login))
+        if key_verified:
+            version = version_count_all
         else:
-            abort(403)
+            version = version_count if version_count else 1
+
+    # We skip the version check if the access key matches
+    if not key_verified:
+        # Check for a user trying to access a version of a publication record where they don't have permissions.
+        if version_count < version_count_all and version == version_count_all:
+            # Prompt the user to login if they are not authenticated then redirect, otherwise return a 403 error.
+            if not current_user.is_authenticated:
+                redirect_url_after_login = '%2Frecord%2F{0}%3Fversion%3D{1}%26format%3D{2}'.format(recid, version, output_format)
+                if 'table' in request.args:
+                    redirect_url_after_login += '%26table%3D{0}'.format(request.args['table'])
+                if output_format.startswith('yoda') and 'rivet' in request.args:
+                    redirect_url_after_login += '%26rivet%3D{0}'.format(request.args['rivet'])
+                if output_format.startswith('yoda') and 'qualifiers' in request.args:
+                    redirect_url_after_login += '%26qualifiers%3D{0}'.format(request.args['qualifiers'])
+                return redirect('/login/?next={0}'.format(redirect_url_after_login))
+            else:
+                abort(403)
 
     hepdata_submission = get_latest_hepsubmission(publication_recid=recid, version=version)
 
@@ -409,10 +424,20 @@ def render_record(recid, record, version, output_format, light_mode=False):
             return render_template('hepdata_records/publication_processing.html', ctx=ctx)
 
         elif not hepdata_submission.overall_status.startswith('sandbox'):
-            ctx = format_submission(recid, record, version, version_count, hepdata_submission)
+            ctx = format_submission(recid, record, version, version_count, hepdata_submission, observer_view=key_verified)
             ctx['record_type'] = 'publication'
             ctx['related_recids'] = get_record_data_list(hepdata_submission, "related")
             ctx['related_to_this_recids'] = get_record_data_list(hepdata_submission, "related_to_this")
+            ctx['overall_status'] = hepdata_submission.overall_status
+
+
+            if key_verified and observer_key:
+                ctx['observer_key'] = observer_key
+            elif hepdata_submission.overall_status == 'todo':
+                observer = get_or_create_submission_observer(hepdata_submission.publication_recid)
+
+                if key_verified and has_coordinator_permissions(recid, current_user):
+                    ctx['observer_key'] = observer.observer_key
 
             increment(recid)
 
@@ -541,19 +566,29 @@ def create_new_version(recid, user, notify_uploader=True, uploader_message=None)
                                            inspire_id=hepsubmission.inspire_id,
                                            coordinator=hepsubmission.coordinator,
                                            version=hepsubmission.version + 1)
+
+        # Gets a generated or new SubmissionObserver object
+        observer_key = get_or_create_submission_observer(_rev_hepsubmission.publication_recid, regenerate=True)
+
         db.session.add(_rev_hepsubmission)
+        db.session.add(observer_key)
         db.session.commit()
+
+        record_information = get_record_by_id(recid)
 
         if notify_uploader:
             uploaders = SubmissionParticipant.query.filter_by(
                 role='uploader', publication_recid=recid, status='primary'
                 )
-            record_information = get_record_by_id(recid)
             for uploader in uploaders:
                 send_cookie_email(uploader,
                                   record_information,
                                   message=uploader_message,
                                   version=_rev_hepsubmission.version)
+
+        if user:
+            # Send the submission created email. containing no uploader, or reviewer information.
+            notify_submission_created(record_information, user.id, None, None, revision=True)
 
         return jsonify({'success': True, 'version': _rev_hepsubmission.version})
     else:

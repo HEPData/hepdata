@@ -18,12 +18,13 @@
 
 import logging
 import os.path
+import pytest
+import re
 import shutil
 
 from invenio_db import db
 
-from hepdata.modules.submission.models import DataReview, DataResource, DataSubmission, \
-    Message, receive_before_flush
+from hepdata.modules.submission.models import DataReview, DataResource, DataSubmission, Message, SubmissionObserver
 
 
 def test_data_submission_cascades(app):
@@ -195,3 +196,37 @@ def test_receive_before_flush_errors(app, mocker, caplog):
     assert(caplog.records[1].msg.endswith(
         " is not persisted"
     ))
+
+
+def test_submissionobserver():
+    """
+    Basic test to ensure correct construction and validation of SubmissionObserver
+    object base functionality.
+
+    Tests constructor and default/triggered key generation.
+    """
+    # 8 Character alphanumeric
+    id_regex = r"^[0-9a-fA-F]{8}"
+    recid = 1
+
+    # Create a new SubmissionObserver object, setting the recid
+    test_submission = SubmissionObserver(recid)
+
+    # Get the initial observer key value
+    base_observer_key = test_submission.observer_key
+
+    # Verify correctly set recid and key match
+    assert test_submission.publication_recid == recid
+    assert re.match(id_regex, base_observer_key)
+
+    # Regenerate a new key and verify
+    test_submission.generate_observer_key()
+    new_observer_key = test_submission.observer_key
+
+    # Ensure key has changed, and is valid
+    assert new_observer_key != base_observer_key
+    assert re.match(id_regex, new_observer_key)
+
+    # Testing error raised with invalid publication_recid string value
+    with pytest.raises(ValueError):
+        SubmissionObserver("test")

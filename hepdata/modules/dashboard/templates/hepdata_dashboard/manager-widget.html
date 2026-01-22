@@ -29,10 +29,19 @@
 
             </div>
             <div class="clearfix"></div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-default pull-right" data-dismiss="modal" aria-label="Close">Close
+            <div id="manager-footer" class="modal-footer">
+                <div id="data_link_message">
+                  You can use this URL to allow any user observer access without special permissions:
+                </div>
+                <div id="data_link_container" hidden>
+                  <input id="direct_data_link" class="data_link" value="" readonly>
+                  <button id="dashboard_button" class="btn btn-small copy-btn-style" data-clipboard-target="#direct_data_link">
+                    <i class="fa fa-copy" alt="Copy to clipboard"></i>
+                  </button>
+                </div>
+                <button id="manager-close" type="button" class="btn btn-default pull-right" data-dismiss="modal" aria-label="Close">
+                  Close
                 </button>
-
             </div>
         </div>
     </div>

@@ -171,6 +171,14 @@ HEPDATA.hepdata_record = (function () {
                 $("#revise-confirm").hide();
                 $("#revise-success").removeClass('hidden');
 
+                let observer_promise = HEPDATA.get_observer_key_data(HEPDATA.current_record_id, 1);
+                observer_promise.then(function(observer_key) {
+                  if (observer_key) {
+                    $('#revision_data_link').val(observer_key);
+                    HEPDATA.setup_clipboard("#revision_button");
+                  }
+                });
+
                 var count = 5;
                 setInterval(function () {
                   count -= 1;

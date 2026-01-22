@@ -26,6 +26,8 @@
 
 {%- block additional_assets %}
 
+    {{ webpack['toastr.css'] }}
+
     <style>
         #hepdata_table_detail {
             width: 87% !important;
@@ -213,6 +215,18 @@
                             If you're sure that everything is correct, click on
                             the <strong>submit</strong> button.</p>
 
+                    </div>
+
+                    <div id="submission_observer_container" hidden>
+                      <p>
+                        You can use this URL to allow any user observer access without special permissions:
+                      </p>
+                      <div id="data_link_container">
+                        <input id="direct_data_link" class="data_link" value="" readonly>
+                        <button id="submit_clipboard" class="btn btn-small copy-btn-style" data-clipboard-target="#direct_data_link">
+                          <i class="fa fa-copy" alt="Copy to clipboard"></i>
+                        </button>
+                      </div>
                     </div>
 
                     <div>
