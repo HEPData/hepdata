@@ -86,7 +86,7 @@ CELERY_BEAT_SCHEDULE = {
     },
     'delete_login_ips': {
         'task': 'invenio_accounts.tasks.delete_ips',
-        'schedule': timedelta(days=30),
+        'schedule': timedelta(days=7),
     },
 }
 
@@ -118,6 +118,7 @@ CACHE_REDIS_URL = "redis://localhost:6379/0"
 CACHE_TYPE = "redis"
 
 # Session
+ACCOUNTS_RETENTION_PERIOD = timedelta(days=7)
 ACCOUNTS_SESSION_REDIS_URL = CACHE_REDIS_URL
 PERMANENT_SESSION_LIFETIME = timedelta(hours=12)
 
