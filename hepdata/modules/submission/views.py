@@ -136,7 +136,7 @@ def process_submission_payload(*args, **kwargs):
         message = kwargs.get('message', None)
         send_cookie_email(uploader, record_information, message)
 
-    notify_submission_created(record_information, submitter_id, uploader, reviewer)
+    notify_submission_created(record_information, submitter_id, [uploader], [reviewer])
 
     admin_idx = AdminIndexer()
     admin_idx.index_submission(hepsubmission)

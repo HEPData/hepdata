@@ -13,12 +13,16 @@ Record {{ article }} has been created
       by {{ actor }}{% if collaboration %} for {{ collaboration }}{% endif %}.
     </p>
 
-    {% if uploader %}
-      <p>Uploader: {{ uploader.full_name }} ({{ uploader.email }})</p>
+    {% if uploaders %}
+      {% for uploader in uploaders %}
+        <p>Uploader: {{ uploader.full_name }} ({{ uploader.email }})</p>
+      {% endfor %}
     {% endif %}
 
-    {% if reviewer %}
+    {% if reviewers %}
+      {% for reviewer in reviewers %}
       <p>Reviewer: {{ reviewer.full_name }} ({{ reviewer.email }})</p>
+      {% endfor %}
     {% endif %}
 
     {% if observer_url %}

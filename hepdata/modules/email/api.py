@@ -446,7 +446,17 @@ def notify_publication_update(hepsubmission, record):
                            message_body)
 
 
-def notify_submission_created(record, coordinator_id, uploader, reviewer, revision=False):
+def notify_submission_created(record, coordinator_id, uploaders, reviewers, revision=False):
+    """
+    Send a submission or revision creation email for a record
+
+    :param record: Dictionary containing record data
+    :param coordinator_id: Associated coordinator ID for submission
+    :param uploaders: List of associated uploaders
+    :param reviewers: List of associated reviewers
+    :param revision: Is revision or not. Determines subject text
+    :return:
+    """
     coordinator = get_user_from_id(coordinator_id)
 
     if not coordinator:
@@ -471,8 +481,8 @@ def notify_submission_created(record, coordinator_id, uploader, reviewer, revisi
                                    name=name,
                                    actor=coordinator.email,
                                    collaboration=collaboration,
-                                   uploader=uploader,
-                                   reviewer=reviewer,
+                                   uploaders=uploaders,
+                                   reviewers=reviewers,
                                    article=record['recid'],
                                    title=record['title'],
                                    site_url=site_url,

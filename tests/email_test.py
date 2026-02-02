@@ -85,7 +85,7 @@ def test_notify_submission_created(app):
         user = MagicMock(full_name="HEPData User", email="e@mail.com")
 
         # Execute the target function
-        notify_submission_created(record_information, test_submission.coordinator, user, user)
+        notify_submission_created(record_information, test_submission.coordinator, [user], [user])
 
         task_patch.assert_called_once()
         called_args = task_patch.call_args.args
