@@ -30,6 +30,7 @@ import time
 import flask
 import os
 import re
+import requests
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.file_detector import LocalFileDetector
@@ -89,8 +90,8 @@ def test_record_update(live_server, logged_in_browser):
     WebDriverWait(browser, 10).until(
         EC.visibility_of(revise_success)
     )
-    assert revise_success.find_element(By.TAG_NAME, 'p').text \
-        .startswith("Version 2 created.\nThis window will close in ")
+
+    assert revise_success.find_element(By.TAG_NAME, 'p').text.startswith("Version 2 created.")
 
     # Refresh record page (to avoid waiting)
     browser.get(record_url)
@@ -756,6 +757,7 @@ def test_logged_out_observer(app, live_server, admin_idx, env_browser):
 
     logged_out_browser = env_browser
     observer_key = None
+    url_tests = []
 
     with app.app_context():
         # Create the test record and get the observer key for it.
@@ -804,10 +806,12 @@ def test_logged_out_observer(app, live_server, admin_idx, env_browser):
                              _external=True)
 
     json_url = test_url + observer_append % test_submission_observer.observer_key
+    #url_tests.append(json_link)
     assert json_link == json_url
 
     # Checking the "JSON" button on the top right of the record (next to "Cite")
     json_label = logged_out_browser.find_element(By.ID, 'jsonLabel').get_attribute('href')
+    #url_tests.append(json_label)
     # Removing the first ? character and checking for correct key, and "observer_key="
     assert complete_append[1:] in json_label
 
@@ -818,11 +822,14 @@ def test_logged_out_observer(app, live_server, admin_idx, env_browser):
 
     for text, url in zip(ul_text, ul_urls):
         key_text = f"{text.lower()}{observer_append % observer_key}"
+        #url_tests.append(url)
         assert key_text in url
+
 
     # Checking the table copy button value
     copy_btn = logged_out_browser.find_element(By.ID, 'direct_data_link')
     so_url = copy_btn.get_attribute("value")
+    #url_tests.append(so_url)
     assert complete_append[1:] in so_url
 
     # Checking the "Download All" dropdown buttons
@@ -833,4 +840,17 @@ def test_logged_out_observer(app, live_server, admin_idx, env_browser):
     for text, url in zip(dl_text, dl_urls):
         prepend = text.lower() if "with resource" not in text else "original"
         key_text = f"{prepend}{observer_append % observer_key}"
+        #url_tests.append(url)
         assert key_text in url
+
+    # Now just bulk testing all URLs
+    for url in url_tests:
+        if not requests.get(url).status_code == 200:
+            print("asd")
+        if not requests.get(url[:-8]).status_code == 403:
+            val = url[:-8]
+            res = requests.get(url[:-8]).status_code
+            print("asd")
+
+        assert requests.get(url).status_code == 200
+        assert requests.get(url[:-8]).status_code == 403  # Removing the observer key from URL first

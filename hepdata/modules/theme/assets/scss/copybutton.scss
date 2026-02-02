@@ -110,6 +110,12 @@
   top: 50%;
 }
 
+/* Defaults the close button to centre and removes top/bottom margins. */
+#revision_close_button {
+  display: table;
+  margin: 0 auto;
+}
+
 /* Specific rules for the post-submission page */
 #check #direct_data_link {
   width: calc(100% - 50px);
