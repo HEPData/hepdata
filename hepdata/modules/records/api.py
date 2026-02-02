@@ -576,10 +576,16 @@ def create_new_version(recid, user, notify_uploader=True, uploader_message=None)
 
         record_information = get_record_by_id(recid)
 
-        if notify_uploader:
+        uploaders, reviewers = [], []
+
+        # Get uploaders if required
+        if notify_uploader or user:
             uploaders = SubmissionParticipant.query.filter_by(
                 role='uploader', publication_recid=recid, status='primary'
-                )
+            )
+
+        # Send notification emails to each uploader if required
+        if notify_uploader:
             for uploader in uploaders:
                 send_cookie_email(uploader,
                                   record_information,
@@ -587,8 +593,11 @@ def create_new_version(recid, user, notify_uploader=True, uploader_message=None)
                                   version=_rev_hepsubmission.version)
 
         if user:
+            # Finally, we need the reviewer list for the email
+            reviewers = get_submission_participants_for_record(recid, ["reviewer"], status='primary')
+
             # Send the submission created email. containing no uploader, or reviewer information.
-            notify_submission_created(record_information, user.id, None, None, revision=True)
+            notify_submission_created(record_information, user.id, uploaders, reviewers, revision=True)
 
         return jsonify({'success': True, 'version': _rev_hepsubmission.version})
     else:
