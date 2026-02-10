@@ -135,7 +135,7 @@ jobs:
           ${{ runner.os }}-test-${{ env.cache-name }}-
     - name: Install dependencies
       run: |
-        python -m pip install --upgrade pip setuptools py
+        python -m pip install --upgrade pip "setuptools<82" py
         python -m pip install twine wheel coveralls requirements-builder
         python -m pip install --force-reinstall -r requirements.txt
         python -m pip install -e .[tests]
