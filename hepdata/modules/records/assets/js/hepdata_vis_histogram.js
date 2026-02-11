@@ -66,6 +66,10 @@ HEPDATA.visualization.histogram = {
     // this can then be used to create the lines.
     var _aggregated_values = {};
 
+    // check if any of the values has y errors, not just the first one
+    var processed_dict_has_y_errors = processed_dict["processed"].some(
+      value_obj => value_obj.errors[0] ? !value_obj.errors[0].hide : false);
+
     for (var value_idx in processed_dict["processed"]) {
       var value_obj = processed_dict["processed"][value_idx];
 
@@ -74,10 +78,9 @@ HEPDATA.visualization.histogram = {
           "name": value_obj.name,
           "values": [],
           "x_error": "x_min" in value_obj,
-          "y_errors": value_obj.errors[0] ? !value_obj.errors[0].hide : false
+          "y_errors": processed_dict_has_y_errors
         };
       }
-
 
       if (_aggregated_values[value_obj.name]["y_errors"]) {
         _aggregated_values[value_obj.name]["values"].push(value_obj);
