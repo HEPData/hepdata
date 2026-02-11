@@ -201,7 +201,7 @@ def env_browser(request):
     if not RUN_SELENIUM_LOCALLY:
         remote_url = "https://ondemand.eu-central-1.saucelabs.com:443/wd/hub"
         options = webdriver.ChromeOptions()
-        options.browser_version = '131'
+        options.browser_version = '143'
         options.platform_name = 'Windows 11'
         local_tunnel_name = os.environ.get('SAUCE_USERNAME', '') + '_tunnel_name'
         sauce_options = {
