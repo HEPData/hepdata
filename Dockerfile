@@ -30,7 +30,7 @@ WORKDIR /code
 COPY . .
 
 RUN pip install --no-cache-dir --upgrade pip && \
- pip install --no-cache-dir --upgrade setuptools && \
+ pip install --no-cache-dir --upgrade "setuptools<82" && \
  pip install --no-cache-dir --upgrade wheel && \
  pip install -e . -r requirements.txt
 
