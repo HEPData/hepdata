@@ -70,32 +70,64 @@ HEPDATA.hepdata_resources = (function () {
         return d['doi'] == null ? '' : '<a href="https://doi.org/' + d['doi'] + '" class="resource-doi">' + d['doi'] + '</a>';
       });
 
-    // Add the landing page button
-    resource_item.append("a")
-      .attr('target', '_new')
-      .attr("class", "btn btn-primary btn-sm")
-      .attr("href", function(d) {
-        return '/record/resource/' + d.id + '?landing_page=true';
-      })
-      .text("Landing Page");
+    let todo = HEPDATA.current_submission_status === 'todo';
+    let observer_key_promise;
 
-    resource_item.append("a")
-      .attr('target', '_new')
-      .attr("class", "btn btn-primary btn-sm")
-      .attr("href", function (d) {
-        var download_location = d.location;
-        if (d.location.indexOf('http') == -1) {
-          download_location = '/record/resource/' + d.id + '?view=true';
-        }
-        return download_location;
-      }).text(function (d) {
-      if (d.location.indexOf('http') == -1) {
-        return "Download"
+    // If unfinished, we can just resolve the promise with null
+    if (!todo) {
+      observer_key_promise = Promise.resolve(null);
+    } else if (HEPDATA.current_observer_key) {
+      // If unfinished, and the key has been set, we can continue,
+      observer_key_promise = Promise.resolve(HEPDATA.current_observer_key);
+    } else {
+      // Unfinished, and no key: We need to request this key, if we can.
+      observer_key_promise = HEPDATA.get_observer_key_data(HEPDATA.current_record_id);
+    }
+
+    // Wait for the promise to resolve, as we cannot continue without the append
+    observer_key_promise.then(function(observer_key) {
+      let key_append = "";
+      let should_append = todo && observer_key;
+
+      if(should_append) {
+        key_append = '&observer_key=' + observer_key;
       }
-      return "View Resource";
-    });
 
-    HEPDATA.typeset([d3.select("#resourceModal").node()]);
+      // Add the landing page button
+      resource_item.append("a")
+        .attr('target', '_new')
+        .attr("class", "btn btn-primary btn-sm")
+        .attr("href", function(d) {
+          let landing_page_url = '/record/resource/' + d.id + '?landing_page=true';
+          if(should_append) {
+            landing_page_url += key_append;
+          }
+          return landing_page_url;
+        })
+        .text("Landing Page");
+
+      resource_item.append("a")
+        .attr('target', '_new')
+        .attr("class", "btn btn-primary btn-sm")
+        .attr("href", function (d) {
+          var download_location = d.location;
+          if (d.location.indexOf('http') == -1) {
+            let view_page_url = '/record/resource/' + d.id + '?view=true';
+            if(should_append) {
+              view_page_url += key_append;
+            }
+            download_location = view_page_url;
+          }
+          return download_location;
+        }).text(function (d) {
+        if (d.location.indexOf('http') == -1) {
+          return "Download"
+        }
+        return "View Resource";
+      });
+
+      HEPDATA.typeset([d3.select("#resourceModal").node()]);
+     });
   };
 
   var create_modal_view = function (recid, version) {
@@ -105,9 +137,6 @@ HEPDATA.hepdata_resources = (function () {
       dataType: 'json',
       url: '/record/resources/' + recid + '/' + version,
       success: function (data) {
-
-
-
         var resource_list = d3.select("#resource-filter ul");
         resource_list.html('');
 
