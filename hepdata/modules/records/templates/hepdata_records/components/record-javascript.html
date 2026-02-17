@@ -33,6 +33,10 @@
                 {"width": 200, "height": 200}
         );
 
+        {% if ctx.observer_key %}
+          HEPDATA.current_observer_key = "{{ctx.observer_key | safe}}";
+        {% endif %}
+
         {% if ctx.show_upload_area %}
             $("#root_file_upload").filestyle({
                 iconName: "fa fa-upload",
@@ -45,14 +49,9 @@
                 HEPDATA.current_inspire_id = {{ctx.record.inspire_id | safe}};
             {% endif %}
 
-            {% if ctx.observer_key %}
-                HEPDATA.current_observer_key = "{{ctx.observer_key | safe}}";
-            {% endif %}
-
             HEPDATA.site_url = "{{ ctx.site_url }}";
             HEPDATA.current_record_id = {{ctx.recid | safe}};
             HEPDATA.current_table_version = {{ctx.version | safe}};
-            HEPDATA.current_submission_status = "{{ctx.overall_status | safe}}";
 
             var table_id_to_show = {{ ctx.table_id_to_show | safe }};
             var table_name_to_show = "{{ ctx.table_name_to_show | replace("\\","\\\\") }}";  // escape backslashes

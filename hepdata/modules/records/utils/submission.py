@@ -46,7 +46,7 @@ from hepdata.modules.records.utils.workflow import create_record
 from hepdata.modules.submission.api import get_latest_hepsubmission, get_or_create_submission_observer, \
     delete_submission_observer
 from hepdata.modules.submission.models import DataSubmission, DataReview, \
-    DataResource, Keyword, RelatedTable, RelatedRecid, HEPSubmission, RecordVersionCommitMessage, SubmissionObserver
+    DataResource, Keyword, RelatedTable, RelatedRecid, HEPSubmission, RecordVersionCommitMessage
 from hepdata.modules.records.utils.common import \
     get_license, infer_file_type, get_record_by_id, contains_accepted_url
 from hepdata.modules.records.utils.common import get_or_create

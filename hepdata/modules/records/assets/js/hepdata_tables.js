@@ -87,17 +87,11 @@ HEPDATA.switch_table = function (listId, table_requested, table_name, status) {
     HEPDATA.table_renderer.get_and_display_table(data_url);
   });
 
-  // Some logic to decide which key to pass, or if to query for the observer key
+  // Some logic to decide which key to pass
   let observer_key_promise;
-  if(HEPDATA.current_submission_status === 'todo') {
-    // If to-do, we either pass through the key we have, or execute as normal.
-    if(HEPDATA.current_observer_key) {
-      observer_key_promise = $.Deferred().resolve(HEPDATA.current_observer_key).promise();
-    }
-    else {
-      observer_key_promise = HEPDATA.get_observer_key_data(HEPDATA.current_record_id);    }
-  }
-  else {
+  if (HEPDATA.current_observer_key) {
+    observer_key_promise = $.Deferred().resolve(HEPDATA.current_observer_key).promise();
+  } else {
     observer_key_promise = $.Deferred().resolve(null).promise();
   }
 
@@ -215,7 +209,7 @@ HEPDATA.table_renderer = {
           $("filesize_table_confirm").removeClass("hidden");
         }
         else {
-          HEPDATA.table_renderer.display_table(table_data, '#data_table_region', '#data_visualization_region');
+          HEPDATA.table_renderer.display_table(table_data, '#data_table_region', '#data_visualization_region', observer_key);
         }
       },
       error: function (data, error) {
@@ -246,12 +240,12 @@ HEPDATA.table_renderer = {
       }
     });
   },
-  display_table: function (table_data, table_placement, visualization_placement) {
+  display_table: function (table_data, table_placement, visualization_placement, observer_key) {
     /*
       Triggers the table (bottom section) render of the records table table section.
     */
     HEPDATA.reset_stats();
-    HEPDATA.render_associated_files(table_data.associated_files, '#support-files');
+    HEPDATA.render_associated_files(table_data.associated_files, '#support-files', observer_key);
 
     // If it is larger than an empty table (bytes)
     HEPDATA.table_renderer.render_qualifiers(table_data, table_placement);

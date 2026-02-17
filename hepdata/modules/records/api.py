@@ -63,8 +63,7 @@ from hepdata.modules.submission.models import (
     HEPSubmission,
     RecordVersionCommitMessage,
     RelatedRecid,
-    RelatedTable,
-    SubmissionObserver
+    RelatedTable
 )
 from hepdata.utils.file_extractor import extract
 from hepdata.utils.miscellaneous import sanitize_html, get_resource_data
@@ -167,15 +166,11 @@ def format_submission(recid, record, version, version_count, hepdata_submission,
         if hepdata_submission.overall_status != 'finished' and ctx["version_count"] > 0:
             if not (ctx['show_review_widget']
                     or ctx['show_upload_widget']
-                    or ctx['is_submission_coordinator_or_admin']):
-
-                if not observer_view:
-                    # we show the latest approved version.
-                    ctx["version"] -= 1
-                    ctx["version_count"] -= 1
-                else:
-                    ctx["version_count"] += 1
-
+                    or ctx['is_submission_coordinator_or_admin']
+                    or observer_view):
+                # we show the latest approved version.
+                ctx["version"] -= 1
+                ctx["version_count"] -= 1
 
         ctx['additional_resources'] = submission_has_resources(hepdata_submission)
         ctx['resources_with_doi'] = []
@@ -253,6 +248,7 @@ def format_resource(resource, contents, content_url):
     """
     hepsubmission = HEPSubmission.query.filter(HEPSubmission.resources.any(id=resource.id)).first()
     if not hepsubmission:
+        # Look for DataSubmission mapping to this resource
         datasubmission = DataSubmission.query.filter(DataSubmission.resources.any(id=resource.id)).first()
         if datasubmission:
             hepsubmission = HEPSubmission.query.filter_by(
@@ -260,10 +256,9 @@ def format_resource(resource, contents, content_url):
                 version=datasubmission.version
             ).first()
         if not hepsubmission:
-            # Look for DataSubmission mapping to this resource
             raise ValueError("Unable to find publication for resource %d. (Is it a data file?)", resource.id)
 
-    record = get_record_contents(hepsubmission.publication_recid)
+    record = get_record_contents(hepsubmission.publication_recid, status=hepsubmission.overall_status)
     ctx = format_submission(hepsubmission.publication_recid, record,
                             hepsubmission.version, 1, hepsubmission)
     ctx['record_type'] = 'resource'
@@ -277,6 +272,7 @@ def format_resource(resource, contents, content_url):
     ctx['resource_filetype'] = f'{resource.file_type} File'
     ctx['related_recids'] = get_record_data_list(hepsubmission, "related")
     ctx['related_to_this_recids'] = get_record_data_list(hepsubmission, "related_to_this")
+    ctx['version'] = hepsubmission.version
 
     if resource.file_type in IMAGE_TYPES:
         ctx['display_type'] = 'image'
@@ -387,33 +383,27 @@ def render_record(recid, record, version, output_format, light_mode=False, obser
     version_count_finished = HEPSubmission.query.filter_by(publication_recid=recid, overall_status='finished').count()
 
     # Number of versions that a user is allowed to access based on their permissions.
-    version_count = version_count_all if user_allowed_to_perform_action(recid) else version_count_finished
     key_verified = verify_observer_key(recid, observer_key)
+    version_count = version_count_all if user_allowed_to_perform_action(recid) or key_verified else version_count_finished
 
     # If version not given explicitly, take to be latest allowed version (or 1 if there are no allowed versions).
-    # Unless we have a verified observer key, then we should just select the latest version of ANY status.
     if version == -1:
-        if key_verified:
-            version = version_count_all
-        else:
-            version = version_count if version_count else 1
+        version = version_count if version_count else 1
 
-    # We skip the version check if the access key matches
-    if not key_verified:
-        # Check for a user trying to access a version of a publication record where they don't have permissions.
-        if version_count < version_count_all and version == version_count_all:
-            # Prompt the user to login if they are not authenticated then redirect, otherwise return a 403 error.
-            if not current_user.is_authenticated:
-                redirect_url_after_login = '%2Frecord%2F{0}%3Fversion%3D{1}%26format%3D{2}'.format(recid, version, output_format)
-                if 'table' in request.args:
-                    redirect_url_after_login += '%26table%3D{0}'.format(request.args['table'])
-                if output_format.startswith('yoda') and 'rivet' in request.args:
-                    redirect_url_after_login += '%26rivet%3D{0}'.format(request.args['rivet'])
-                if output_format.startswith('yoda') and 'qualifiers' in request.args:
-                    redirect_url_after_login += '%26qualifiers%3D{0}'.format(request.args['qualifiers'])
-                return redirect('/login/?next={0}'.format(redirect_url_after_login))
-            else:
-                abort(403)
+    # Check for a user trying to access a version of a publication record where they don't have permissions.
+    if version_count < version_count_all and version == version_count_all:
+        # Prompt the user to login if they are not authenticated then redirect, otherwise return a 403 error.
+        if not current_user.is_authenticated:
+            redirect_url_after_login = '%2Frecord%2F{0}%3Fversion%3D{1}%26format%3D{2}'.format(recid, version, output_format)
+            if 'table' in request.args:
+                redirect_url_after_login += '%26table%3D{0}'.format(request.args['table'])
+            if output_format.startswith('yoda') and 'rivet' in request.args:
+                redirect_url_after_login += '%26rivet%3D{0}'.format(request.args['rivet'])
+            if output_format.startswith('yoda') and 'qualifiers' in request.args:
+                redirect_url_after_login += '%26qualifiers%3D{0}'.format(request.args['qualifiers'])
+            return redirect('/login/?next={0}'.format(redirect_url_after_login))
+        else:
+            abort(403)
 
     hepdata_submission = get_latest_hepsubmission(publication_recid=recid, version=version)
 
@@ -430,14 +420,8 @@ def render_record(recid, record, version, output_format, light_mode=False, obser
             ctx['related_to_this_recids'] = get_record_data_list(hepdata_submission, "related_to_this")
             ctx['overall_status'] = hepdata_submission.overall_status
 
-
-            if key_verified and observer_key:
+            if key_verified:
                 ctx['observer_key'] = observer_key
-            elif hepdata_submission.overall_status == 'todo':
-                observer = get_or_create_submission_observer(hepdata_submission.publication_recid)
-
-                if key_verified and has_coordinator_permissions(recid, current_user):
-                    ctx['observer_key'] = observer.observer_key
 
             increment(recid)
 
@@ -596,7 +580,7 @@ def create_new_version(recid, user, notify_uploader=True, uploader_message=None)
             # Finally, we need the reviewer list for the email
             reviewers = get_submission_participants_for_record(recid, ["reviewer"], status='primary')
 
-            # Send the submission created email. containing no uploader, or reviewer information.
+            # Send the submission created email containing uploader and reviewer information
             notify_submission_created(record_information, user.id, uploaders, reviewers, revision=True)
 
         return jsonify({'success': True, 'version': _rev_hepsubmission.version})

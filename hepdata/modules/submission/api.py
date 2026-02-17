@@ -110,7 +110,6 @@ def get_or_create_submission_observer(publication_recid, regenerate=False):
             # No submission, no observer, return None
             return None
 
-
     # If we are to regenerate, and SubmissionObserver was queried and not generated.
     # If just created, we don't need to generate anything.
     if not created and regenerate:
@@ -122,6 +121,7 @@ def get_or_create_submission_observer(publication_recid, regenerate=False):
         db.session.commit()
 
     return submission_observer
+
 
 def delete_submission_observer(recid):
     """

@@ -318,14 +318,14 @@ def get_table_details(recid, data_recid, version, load_all=1):
     observer_key = request.args.get('observer_key')
     key_verified = verify_observer_key(recid, observer_key)
 
-    version_count, version_count_all = get_version_count(recid)
+    version_count, version_count_all = get_version_count(recid, key_verified)
 
     if not version:
         # If version not given explicitly, take to be latest allowed version (or 1 if there are no allowed versions).
         version = version_count if version_count else 1
 
     # Check for a user trying to access a version of a publication record where they don't have permissions.
-    if version_count < version_count_all and version == version_count_all and not key_verified:
+    if version_count < version_count_all and version == version_count_all:
         abort(403)
 
     # joinedload allows query of data in another table without a second database access.
@@ -760,26 +760,29 @@ def get_resource(resource_id):
     """
     resource_obj = DataResource.query.filter_by(id=resource_id).first()
 
-    # Perform a join to determine parent ID
-    parent_submission = db.session.query(HEPSubmission).join(
-        HEPSubmission.resources  # Uses the relationship, not the table
-    ).filter(
-        DataResource.id == resource_id
-    ).first()
+    hepsubmission = HEPSubmission.query.filter(HEPSubmission.resources.any(id=resource_id)).first()
+    if not hepsubmission:
+        # Look for DataSubmission mapping to this resource
+        datasubmission = DataSubmission.query.filter(DataSubmission.resources.any(id=resource_id)).first()
+        if datasubmission:
+            hepsubmission = HEPSubmission.query.filter_by(
+                publication_recid=datasubmission.publication_recid,
+                version=datasubmission.version
+            ).first()
+        if not hepsubmission:
+            raise ValueError("Unable to find publication for resource %d. (Is it a data file?)", resource.id)
 
-    # Get parent submission recid, or default 0
-    recid = parent_submission.publication_recid if parent_submission else 0
+    recid = hepsubmission.publication_recid
+    version = hepsubmission.version
 
     # Retrieve and verify observer key value
     observer_key = request.args.get('observer_key')
     key_verified = verify_observer_key(recid, observer_key)
 
-    version_count, version_count_all = get_version_count(recid)
-    # If version not given explicitly, take to be latest allowed version (or 1 if there are no allowed versions).
-    version = version_count if version_count else 1
+    version_count, version_count_all = get_version_count(recid, key_verified)
 
     # Check for a user trying to access a version of a publication record where they don't have permissions.
-    if version_count < version_count_all and version == version_count_all and not key_verified:
+    if version_count < version_count_all and version == version_count_all:
         abort(403)
 
     view_mode = bool(request.args.get('view', False))
@@ -836,14 +839,20 @@ def get_resource(resource_id):
             if resource_obj.file_location.lower().startswith('http'):
                 return redirect(resource_obj.file_location)
             else:
-                return send_file(resource_obj.file_location, as_attachment=True)
+                file_location = resource_obj.file_location
+                return send_file(file_location, as_attachment=True)
         elif 'html' in resource_obj.file_location and 'http' not in resource_obj.file_location.lower() and not landing_page:
             with open(resource_obj.file_location, 'r') as resource_file:
                 return contents
         else:
             if landing_page:
                 try:
-                    ctx = format_resource(resource_obj, contents, request.base_url + '?view=true')
+                    content_url = request.base_url + '?view=true'
+                    if key_verified:
+                        content_url += f'&observer_key={observer_key}'
+                    ctx = format_resource(resource_obj, contents, content_url)
+                    if key_verified:
+                        ctx['observer_key'] = observer_key
                 except ValueError as e:
                     log.error(str(e))
                     return abort(404)
@@ -859,8 +868,11 @@ def get_resource(resource_id):
                     return render_template('hepdata_records/related_record.html', ctx=ctx)
 
             else:
+                location = '/record/resource/{0}?view=true'.format(resource_obj.id)
+                if key_verified:
+                    location += f'&observer_key={observer_key}'
                 return jsonify(
-                    {"location": '/record/resource/{0}?view=true'.format(resource_obj.id), 'type': resource_obj.file_type,
+                    {"location": location, 'type': resource_obj.file_type,
                      'description': resource_obj.file_description, 'file_contents': decode_string(contents)})
 
     else:

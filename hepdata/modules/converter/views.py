@@ -90,7 +90,10 @@ def download_submission_with_inspire_id(*args, **kwargs):
         )
 
     recid = submission.publication_recid
-    version_count, version_count_all = get_version_count(recid)
+    observer_key = request.args.get('observer_key')
+    key_verified = verify_observer_key(recid, observer_key)
+
+    version_count, version_count_all = get_version_count(recid, key_verified)
 
     if 'version' in kwargs:
         version = kwargs.pop('version')
@@ -136,7 +139,8 @@ def download_submission_with_recid(*args, **kwargs):
     observer_key = request.args.get('observer_key')
     key_verified = verify_observer_key(recid, observer_key)
 
-    version_count, version_count_all = get_version_count(recid)
+    version_count, version_count_all = get_version_count(recid, key_verified)
+
     if 'version' in kwargs:
         version = kwargs.pop('version')
     else:
@@ -144,7 +148,7 @@ def download_submission_with_recid(*args, **kwargs):
         version = version_count if version_count else 1
 
     # Check for a user trying to access a version of a publication record where they don't have permissions.
-    if version_count < version_count_all and version == version_count_all and not key_verified:
+    if version_count < version_count_all and version == version_count_all:
         abort(403)
 
     submission = HEPSubmission.query.filter_by(publication_recid=recid, version=version).first()
@@ -294,6 +298,7 @@ def download_data_table_by_inspire_id(*args, **kwargs):
         )
 
     recid = submission.publication_recid
+
     version_count, version_count_all = get_version_count(recid)
 
     if 'version' in kwargs:
@@ -357,7 +362,8 @@ def download_data_table_by_recid(*args, **kwargs):
     observer_key = request.args.get('observer_key')
     key_verified = verify_observer_key(recid, observer_key)
 
-    version_count, version_count_all = get_version_count(recid)
+    version_count, version_count_all = get_version_count(recid, key_verified)
+
     if 'version' in kwargs:
         version = kwargs.pop('version')
     else:
@@ -365,7 +371,7 @@ def download_data_table_by_recid(*args, **kwargs):
         version = version_count if version_count else 1
 
     # Check for a user trying to access a version of a publication record where they don't have permissions.
-    if version_count < version_count_all and version == version_count_all and not key_verified:
+    if version_count < version_count_all and version == version_count_all:
         abort(403)
 
     if not key_verified:
@@ -578,11 +584,12 @@ def create_original_with_resources(submission, data_filepath, output_path):
         shutil.copy2(data_filepath, output_path)
 
 
-def get_version_count(recid):
+def get_version_count(recid, key_verified=False):
     """
     Returns both the number of *allowed* versions and the number of *all* versions.
 
     :param recid:
+    :param key_verified:
     :return: version_count, version_count_all
     """
     # Count number of all versions and number of finished versions of a publication record.
@@ -598,7 +605,7 @@ def get_version_count(recid):
         version_count = version_count_all
     else:
         # Number of versions that a user is allowed to access based on their permissions.
-        version_count = version_count_all if user_allowed_to_perform_action(recid) else version_count_finished
+        version_count = version_count_all if user_allowed_to_perform_action(recid) or key_verified else version_count_finished
 
     return version_count, version_count_all
 

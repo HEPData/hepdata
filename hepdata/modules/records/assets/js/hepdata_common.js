@@ -17,7 +17,6 @@ HEPDATA.current_record_id = undefined;
 HEPDATA.current_table_id = undefined;
 HEPDATA.current_table_name = undefined;
 HEPDATA.current_table_version = undefined;
-HEPDATA.current_submission_status = undefined;
 HEPDATA.current_observer_key = undefined;
 HEPDATA.clipboard = undefined;
 // Stores a list of CSS selectors to track added Clipboards
@@ -221,7 +220,7 @@ HEPDATA.map_file_type_to_property = function (file_type, property) {
 
 };
 
-HEPDATA.render_associated_files = function (associated_files, placement) {
+HEPDATA.render_associated_files = function (associated_files, placement, observer_key) {
   $(placement).html('');
   $("#figures").html('');
 
@@ -232,9 +231,15 @@ HEPDATA.render_associated_files = function (associated_files, placement) {
       .attr('id', 'show_resources').text('Resources');
 
     if ('preview_location' in file) {
+      var preview_location = file['preview_location'];
+      var data_file_id = file.id;
+      if (observer_key && observer_key.length === HEPDATA.OBSERVER_KEY_LENGTH) {
+        preview_location += "&observer_key=" + observer_key;
+        data_file_id += "?observer_key=" + observer_key;
+      }
       $("#figures")
-        .append('<a class="support-file" data-file-id="' + file.id + '">' +
-          '<img src="' + file['preview_location'] + '"/>' +
+        .append('<a class="support-file" data-file-id="' + data_file_id + '">' +
+          '<img src="' + preview_location + '"/>' +
           '</a>');
     }
     $(placement).append(html);

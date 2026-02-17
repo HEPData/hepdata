@@ -27,82 +27,72 @@ HEPDATA.hepdata_resources = (function () {
 
     var resource_item = resource_item_container.append("div").attr("class", "resource-item");
 
-    resource_item.append("div").html(function (d) {
-      if ('preview_location' in d) {
-        d.file_type = 'image';
-        return '<img src="' + d.preview_location + '" width="110px"/>';
-      } else {
-        return '<i class="fa fa-' + HEPDATA.map_file_type_to_property(d.file_type, 'icon') + '"></i>';
-      }
-    });
-
-    resource_item.append("h4").text(function (d) {
-      return HEPDATA.map_file_type_to_property(d.file_type, 'description');
-    });
-
-    resource_item.append("p").text(function (d) {
-      return d['file_description'];
-    });
-
-    // Render the license header text if required
-    resource_item.append("span").text(function(d) {
-      return d['data_license'] && d['data_license'].url ? "License: " : "";
-    });
-
-    // Manage rendering of the data license value
-    // Uses url, description and name from data_license for anchor url, title, and text respectively
-    resource_item.append("a")
-      .attr('href', function(d) {
-        return d['data_license'] ? d['data_license'].url : null;
-      })
-      .attr('title', function(d) {
-        return d['data_license'] ? d['data_license'].description : null;
-      })
-      .text(function(d) {
-        return d['data_license'] ? d['data_license'].name : null;
-      })
-      .attr("class", "license-url");
-
-    resource_item.append("p")
-      .attr('display', function(d){
-        return d['doi'] == null ? 'none' : 'block';
-      }).html(function (d) {
-        return d['doi'] == null ? '' : '<a href="https://doi.org/' + d['doi'] + '" class="resource-doi">' + d['doi'] + '</a>';
-      });
-
-    let todo = HEPDATA.current_submission_status === 'todo';
     let observer_key_promise;
 
-    // If unfinished, we can just resolve the promise with null
-    if (!todo) {
-      observer_key_promise = Promise.resolve(null);
-    } else if (HEPDATA.current_observer_key) {
-      // If unfinished, and the key has been set, we can continue,
+    if (HEPDATA.current_observer_key) {
+      // If the key has been set
       observer_key_promise = Promise.resolve(HEPDATA.current_observer_key);
     } else {
-      // Unfinished, and no key: We need to request this key, if we can.
-      observer_key_promise = HEPDATA.get_observer_key_data(HEPDATA.current_record_id);
+      // Otherwise we can just resolve the promise with null
+      observer_key_promise = Promise.resolve(null);
     }
 
     // Wait for the promise to resolve, as we cannot continue without the append
     observer_key_promise.then(function(observer_key) {
       let key_append = "";
-      let should_append = todo && observer_key;
-
-      if(should_append) {
+      if (observer_key) {
         key_append = '&observer_key=' + observer_key;
       }
+
+      resource_item.append("div").html(function (d) {
+        if ('preview_location' in d) {
+          d.file_type = 'image';
+          return '<img src="' + d.preview_location + key_append + '" width="110px"/>';
+        } else {
+          return '<i class="fa fa-' + HEPDATA.map_file_type_to_property(d.file_type, 'icon') + '"></i>';
+        }
+      });
+
+      resource_item.append("h4").text(function (d) {
+        return HEPDATA.map_file_type_to_property(d.file_type, 'description');
+      });
+
+      resource_item.append("p").text(function (d) {
+        return d['file_description'];
+      });
+
+      // Render the license header text if required
+      resource_item.append("span").text(function(d) {
+        return d['data_license'] && d['data_license'].url ? "License: " : "";
+      });
+
+      // Manage rendering of the data license value
+      // Uses url, description and name from data_license for anchor url, title, and text respectively
+      resource_item.append("a")
+        .attr('href', function(d) {
+          return d['data_license'] ? d['data_license'].url : null;
+        })
+        .attr('title', function(d) {
+          return d['data_license'] ? d['data_license'].description : null;
+        })
+        .text(function(d) {
+          return d['data_license'] ? d['data_license'].name : null;
+        })
+        .attr("class", "license-url");
+
+      resource_item.append("p")
+        .attr('display', function(d){
+          return d['doi'] == null ? 'none' : 'block';
+        }).html(function (d) {
+          return d['doi'] == null ? '' : '<a href="https://doi.org/' + d['doi'] + '" class="resource-doi">' + d['doi'] + '</a>';
+        });
 
       // Add the landing page button
       resource_item.append("a")
         .attr('target', '_new')
         .attr("class", "btn btn-primary btn-sm")
         .attr("href", function(d) {
-          let landing_page_url = '/record/resource/' + d.id + '?landing_page=true';
-          if(should_append) {
-            landing_page_url += key_append;
-          }
-          return landing_page_url;
+          return '/record/resource/' + d.id + '?landing_page=true' + key_append;
         })
         .text("Landing Page");
 
@@ -112,11 +102,7 @@ HEPDATA.hepdata_resources = (function () {
         .attr("href", function (d) {
           var download_location = d.location;
           if (d.location.indexOf('http') == -1) {
-            let view_page_url = '/record/resource/' + d.id + '?view=true';
-            if(should_append) {
-              view_page_url += key_append;
-            }
-            download_location = view_page_url;
+            download_location = '/record/resource/' + d.id + '?view=true' + key_append;
           }
           return download_location;
         }).text(function (d) {
