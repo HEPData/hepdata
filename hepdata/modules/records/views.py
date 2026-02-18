@@ -759,6 +759,9 @@ def get_resource(resource_id):
     :return: json dictionary containing any HTML files to show.
     """
     resource_obj = DataResource.query.filter_by(id=resource_id).first()
+    if not resource_obj:
+        log.warning("Unable to find resource %d.", resource_id)
+        return abort(404)
 
     hepsubmission = HEPSubmission.query.filter(HEPSubmission.resources.any(id=resource_id)).first()
     if not hepsubmission:
@@ -770,7 +773,8 @@ def get_resource(resource_id):
                 version=datasubmission.version
             ).first()
         if not hepsubmission:
-            raise ValueError("Unable to find publication for resource %d. (Is it a data file?)", resource_id)
+            log.warning("Unable to find publication for resource %d.", resource_id)
+            return abort(404)
 
     recid = hepsubmission.publication_recid
     version = hepsubmission.version
@@ -790,94 +794,89 @@ def get_resource(resource_id):
     output_format = 'html'
     filesize = None
 
-    if resource_obj:
-        contents = ''
-        if landing_page or not view_mode:
-            if resource_obj.file_location.lower().startswith('http'):
-                contents = resource_obj.file_location
-            elif resource_obj.file_type.lower() not in IMAGE_TYPES:
-                print("Resource is at: " + resource_obj.file_location)
-                try:
-                    with open(resource_obj.file_location, 'r', encoding='utf-8') as resource_file:
-                        if mimetypes.guess_type(resource_obj.file_location)[0] != 'application/x-tar':
-                            # Check against the filesize threshold. Do not set contents if it fails.
-                            filesize = os.path.getsize(resource_obj.file_location)
-                            if filesize < ADDITIONAL_SIZE_LOAD_CHECK_THRESHOLD:
-                                contents = resource_file.read()
-                            else:
-                                contents = 'Large text file'
+    contents = ''
+    if landing_page or not view_mode:
+        if resource_obj.file_location.lower().startswith('http'):
+            contents = resource_obj.file_location
+        elif resource_obj.file_type.lower() not in IMAGE_TYPES:
+            print("Resource is at: " + resource_obj.file_location)
+            try:
+                with open(resource_obj.file_location, 'r', encoding='utf-8') as resource_file:
+                    if mimetypes.guess_type(resource_obj.file_location)[0] != 'application/x-tar':
+                        # Check against the filesize threshold. Do not set contents if it fails.
+                        filesize = os.path.getsize(resource_obj.file_location)
+                        if filesize < ADDITIONAL_SIZE_LOAD_CHECK_THRESHOLD:
+                            contents = resource_file.read()
                         else:
-                            contents = 'Binary'
-                except UnicodeDecodeError:
-                    contents = 'Binary'
+                            contents = 'Large text file'
+                    else:
+                        contents = 'Binary'
+            except UnicodeDecodeError:
+                contents = 'Binary'
 
-        if landing_page:
-            # Check the Accept header: if it matches the file's mimetype then send the file back instead
-            request_mimetypes = request.accept_mimetypes
-            file_mimetype = get_resource_mimetype(resource_obj, contents)
+    if landing_page:
+        # Check the Accept header: if it matches the file's mimetype then send the file back instead
+        request_mimetypes = request.accept_mimetypes
+        file_mimetype = get_resource_mimetype(resource_obj, contents)
 
-            if request_mimetypes.quality(file_mimetype) >= 1 and not (file_mimetype == 'text/html' and len(request_mimetypes) > 1):
-                # Accept header matches the file type, so download file instead
-                view_mode = True
-                landing_page = False
-            elif should_send_json_ld(request):
-                output_format = 'json_ld'
-            else:
-                if request_mimetypes.quality('text/html') == 0:
-                    # If text/html is not requested, user has probably requested the wrong file type
-                    # so send an appropriate error so they know the correct type
-                    accepted_mimetypes = [file_mimetype, 'text/html'] + JSON_LD_MIMETYPES
-                    accepted_mimetypes_str = ', '.join([f"'{m}'" for m in accepted_mimetypes])
-                    # Send back JSON as client is not expecting HTML
-                    return jsonify({
-                        'msg': f"Accept header value '{request_mimetypes}' does not contain a valid media type for this resource. "
-                               + f"Expected Accept header to include one of {accepted_mimetypes_str}",
-                        'file_mimetype': file_mimetype
-                    }), 406
-
-        if view_mode:
-            if resource_obj.file_location.lower().startswith('http'):
-                return redirect(resource_obj.file_location)
-            else:
-                file_location = resource_obj.file_location
-                return send_file(file_location, as_attachment=True)
-        elif 'html' in resource_obj.file_location and 'http' not in resource_obj.file_location.lower() and not landing_page:
-            with open(resource_obj.file_location, 'r') as resource_file:
-                return contents
+        if request_mimetypes.quality(file_mimetype) >= 1 and not (file_mimetype == 'text/html' and len(request_mimetypes) > 1):
+            # Accept header matches the file type, so download file instead
+            view_mode = True
+            landing_page = False
+        elif should_send_json_ld(request):
+            output_format = 'json_ld'
         else:
-            if landing_page:
-                try:
-                    content_url = request.base_url + '?view=true'
-                    if key_verified:
-                        content_url += f'&observer_key={observer_key}'
-                    ctx = format_resource(resource_obj, contents, content_url)
-                    if key_verified:
-                        ctx['observer_key'] = observer_key
-                except ValueError as e:
-                    log.error(str(e))
-                    return abort(404)
+            if request_mimetypes.quality('text/html') == 0:
+                # If text/html is not requested, user has probably requested the wrong file type
+                # so send an appropriate error so they know the correct type
+                accepted_mimetypes = [file_mimetype, 'text/html'] + JSON_LD_MIMETYPES
+                accepted_mimetypes_str = ', '.join([f"'{m}'" for m in accepted_mimetypes])
+                # Send back JSON as client is not expecting HTML
+                return jsonify({
+                    'msg': f"Accept header value '{request_mimetypes}' does not contain a valid media type for this resource. "
+                           + f"Expected Accept header to include one of {accepted_mimetypes_str}",
+                    'file_mimetype': file_mimetype
+                }), 406
 
-                if output_format == 'json_ld':
-                    status_code = 404 if 'error' in ctx['json_ld'] else 200
-                    return jsonify(ctx['json_ld']), status_code
-                else:
-                    if filesize:
-                        ctx['filesize'] = '%.2f'%((filesize / 1024) / 1024) # Set filesize if exists
-                        ctx['ADDITIONAL_SIZE_LOAD_CHECK_THRESHOLD'] = '%.2f'%((ADDITIONAL_SIZE_LOAD_CHECK_THRESHOLD / 1024) / 1024)
-                    ctx['data_license'] = generate_license_data_by_id(resource_obj.file_license)
-                    return render_template('hepdata_records/related_record.html', ctx=ctx)
-
-            else:
-                location = '/record/resource/{0}?view=true'.format(resource_obj.id)
-                if key_verified:
-                    location += f'&observer_key={observer_key}'
-                return jsonify(
-                    {"location": location, 'type': resource_obj.file_type,
-                     'description': resource_obj.file_description, 'file_contents': decode_string(contents)})
-
+    if view_mode:
+        if resource_obj.file_location.lower().startswith('http'):
+            return redirect(resource_obj.file_location)
+        else:
+            file_location = resource_obj.file_location
+            return send_file(file_location, as_attachment=True)
+    elif 'html' in resource_obj.file_location and 'http' not in resource_obj.file_location.lower() and not landing_page:
+        with open(resource_obj.file_location, 'r') as resource_file:
+            return contents
     else:
-        log.error("Unable to find resource %d.", resource_id)
-        return abort(404)
+        if landing_page:
+            try:
+                content_url = request.base_url + '?view=true'
+                if key_verified:
+                    content_url += f'&observer_key={observer_key}'
+                ctx = format_resource(resource_obj, contents, content_url)
+                if key_verified:
+                    ctx['observer_key'] = observer_key
+            except ValueError as e:
+                log.error(str(e))
+                return abort(404)
+
+            if output_format == 'json_ld':
+                status_code = 404 if 'error' in ctx['json_ld'] else 200
+                return jsonify(ctx['json_ld']), status_code
+            else:
+                if filesize:
+                    ctx['filesize'] = '%.2f'%((filesize / 1024) / 1024) # Set filesize if exists
+                    ctx['ADDITIONAL_SIZE_LOAD_CHECK_THRESHOLD'] = '%.2f'%((ADDITIONAL_SIZE_LOAD_CHECK_THRESHOLD / 1024) / 1024)
+                ctx['data_license'] = generate_license_data_by_id(resource_obj.file_license)
+                return render_template('hepdata_records/related_record.html', ctx=ctx)
+
+        else:
+            location = '/record/resource/{0}?view=true'.format(resource_obj.id)
+            if key_verified:
+                location += f'&observer_key={observer_key}'
+            return jsonify(
+                {"location": location, 'type': resource_obj.file_type,
+                 'description': resource_obj.file_description, 'file_contents': decode_string(contents)})
 
 
 @blueprint.route('/cli_upload', methods=['GET', 'POST'])
