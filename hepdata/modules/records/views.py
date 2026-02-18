@@ -770,7 +770,7 @@ def get_resource(resource_id):
                 version=datasubmission.version
             ).first()
         if not hepsubmission:
-            raise ValueError("Unable to find publication for resource %d. (Is it a data file?)", resource.id)
+            raise ValueError("Unable to find publication for resource %d. (Is it a data file?)", resource_id)
 
     recid = hepsubmission.publication_recid
     version = hepsubmission.version
