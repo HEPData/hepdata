@@ -8,8 +8,15 @@
             </a>
 
             {% if ctx.record_type != 'publication' %}
-              <a href="/record/{% if ctx.record.inspire_id %}ins{{ ctx.record.inspire_id }}{% else %}{% if ctx.status == 'sandbox' %}sandbox/{% endif %}{{ ctx.related_publication_id }}{% endif %}">
-                  <li class="active bg-purple-2"><span
+              <a href="/record/
+                {%- if ctx.record.inspire_id %}ins
+                  {{- ctx.record.inspire_id }}
+                {%- else %}
+                  {%- if ctx.status == 'sandbox' %}sandbox/{% endif %}
+                  {{- ctx.related_publication_id }}
+                {%- endif %}
+                {%- if ctx.observer_key %}?observer_key={{- ctx.observer_key }}{% endif %}">
+              <li class="active bg-purple-2"><span
                           class="fa fa-list"></span> View all Publication
                       Data
                   </li>
@@ -53,7 +60,12 @@
                         </button>
                     {% endif %}
 
-                    <a href="?format=json" id="jsonLabel" type="button"
+                  {% set download_params = "?format=json" %}
+                  {% if ctx.observer_key %}
+                    {% set download_params = download_params + "&observer_key=" + ctx.observer_key %}
+                  {% endif %}
+
+                    <a href="{{ download_params }}" id="jsonLabel" type="button"
                        class="btn btn-sm btn-default"
                        aria-haspopup="true" aria-expanded="false">
                         JSON
