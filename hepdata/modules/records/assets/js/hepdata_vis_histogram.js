@@ -300,9 +300,12 @@ HEPDATA.visualization.histogram = {
         dot_groups.append("line")
           .attr("x1", 0)
           .attr("y1", function (d) {
-            if (!isNaN(d.quad_error.err_minus) &&
-                (HEPDATA.visualization[type].options.y_scale != 'log' || (d.y + d.quad_error.err_minus) > 0)) {
-              return HEPDATA.visualization[type].y_scale(d.y + d.quad_error.err_minus) - HEPDATA.visualization[type].y_scale(d.y);
+            if (!isNaN(d.quad_error.err_minus)) {
+              if (HEPDATA.visualization[type].options.y_scale != 'log' || (d.y + d.quad_error.err_minus) > 0) {
+                return HEPDATA.visualization[type].y_scale(d.y + d.quad_error.err_minus) - HEPDATA.visualization[type].y_scale(d.y);
+              } else {  // error bar on log scale extends to zero or below, so just draw line to lower limit of plot
+                return HEPDATA.visualization[type].y_scale(HEPDATA.stats.min_y) - HEPDATA.visualization[type].y_scale(d.y);
+              }
             } else {
               return 0;
             }
@@ -334,7 +337,11 @@ HEPDATA.visualization.histogram = {
           .attr("x1", 0)
           .attr("y1", function (d) {
             if (!isNaN(d.err_minus)) {
-              return HEPDATA.visualization[type].y_scale(d.y + d.err_minus) - HEPDATA.visualization[type].y_scale(d.y);
+              if (HEPDATA.visualization[type].options.y_scale != 'log' || (d.y + d.err_minus) > 0) {
+                return HEPDATA.visualization[type].y_scale(d.y + d.err_minus) - HEPDATA.visualization[type].y_scale(d.y);
+              } else {  // error bar on log scale extends to zero or below, so just draw line to lower limit of plot
+                return HEPDATA.visualization[type].y_scale(HEPDATA.stats.min_y) - HEPDATA.visualization[type].y_scale(d.y);
+              }
             } else {
               return 0;
             }
