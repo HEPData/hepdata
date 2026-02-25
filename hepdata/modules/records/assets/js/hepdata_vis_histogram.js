@@ -66,6 +66,10 @@ HEPDATA.visualization.histogram = {
     // this can then be used to create the lines.
     var _aggregated_values = {};
 
+    // check if any of the values has y errors, not just the first one
+    var processed_dict_has_y_errors = processed_dict["processed"].some(
+      value_obj => value_obj.errors[0] ? !value_obj.errors[0].hide : false);
+
     for (var value_idx in processed_dict["processed"]) {
       var value_obj = processed_dict["processed"][value_idx];
 
@@ -74,10 +78,9 @@ HEPDATA.visualization.histogram = {
           "name": value_obj.name,
           "values": [],
           "x_error": "x_min" in value_obj,
-          "y_errors": value_obj.errors[0] ? !value_obj.errors[0].hide : false
+          "y_errors": processed_dict_has_y_errors
         };
       }
-
 
       if (_aggregated_values[value_obj.name]["y_errors"]) {
         _aggregated_values[value_obj.name]["values"].push(value_obj);
@@ -297,9 +300,12 @@ HEPDATA.visualization.histogram = {
         dot_groups.append("line")
           .attr("x1", 0)
           .attr("y1", function (d) {
-            if (!isNaN(d.quad_error.err_minus) &&
-                (HEPDATA.visualization[type].options.y_scale != 'log' || (d.y + d.quad_error.err_minus) > 0)) {
-              return HEPDATA.visualization[type].y_scale(d.y + d.quad_error.err_minus) - HEPDATA.visualization[type].y_scale(d.y);
+            if (!isNaN(d.quad_error.err_minus)) {
+              if (HEPDATA.visualization[type].options.y_scale != 'log' || (d.y + d.quad_error.err_minus) > 0) {
+                return HEPDATA.visualization[type].y_scale(d.y + d.quad_error.err_minus) - HEPDATA.visualization[type].y_scale(d.y);
+              } else {  // error bar on log scale extends to zero or below, so just draw line to lower limit of plot
+                return HEPDATA.visualization[type].y_scale(HEPDATA.stats.min_y) - HEPDATA.visualization[type].y_scale(d.y);
+              }
             } else {
               return 0;
             }
@@ -331,7 +337,11 @@ HEPDATA.visualization.histogram = {
           .attr("x1", 0)
           .attr("y1", function (d) {
             if (!isNaN(d.err_minus)) {
-              return HEPDATA.visualization[type].y_scale(d.y + d.err_minus) - HEPDATA.visualization[type].y_scale(d.y);
+              if (HEPDATA.visualization[type].options.y_scale != 'log' || (d.y + d.err_minus) > 0) {
+                return HEPDATA.visualization[type].y_scale(d.y + d.err_minus) - HEPDATA.visualization[type].y_scale(d.y);
+              } else {  // error bar on log scale extends to zero or below, so just draw line to lower limit of plot
+                return HEPDATA.visualization[type].y_scale(HEPDATA.stats.min_y) - HEPDATA.visualization[type].y_scale(d.y);
+              }
             } else {
               return 0;
             }
