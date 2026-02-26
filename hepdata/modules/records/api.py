@@ -581,7 +581,7 @@ def create_new_version(recid, user, notify_uploader=True, uploader_message=None)
             reviewers = get_submission_participants_for_record(recid, ["reviewer"], status='primary')
 
             # Send the submission created email containing uploader and reviewer information
-            notify_submission_created(record_information, user.id, uploaders, reviewers, revision=True)
+            notify_submission_created(record_information, user.id, uploaders, reviewers, version=_rev_hepsubmission.version)
 
         return jsonify({'success': True, 'version': _rev_hepsubmission.version})
     else:

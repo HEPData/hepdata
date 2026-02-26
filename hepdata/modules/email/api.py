@@ -446,7 +446,7 @@ def notify_publication_update(hepsubmission, record):
                            message_body)
 
 
-def notify_submission_created(record, coordinator_id, uploaders, reviewers, revision=False):
+def notify_submission_created(record, coordinator_id, uploaders, reviewers, version=1):
     """
     Send a submission or revision creation email for a record
 
@@ -454,7 +454,7 @@ def notify_submission_created(record, coordinator_id, uploaders, reviewers, revi
     :param coordinator_id: Associated coordinator ID for submission
     :param uploaders: List of associated uploaders
     :param reviewers: List of associated reviewers
-    :param revision: Is revision or not. Determines subject text
+    :param version: Is revision or not. Determines subject text
     :return:
     """
     coordinator = get_user_from_id(coordinator_id)
@@ -484,14 +484,15 @@ def notify_submission_created(record, coordinator_id, uploaders, reviewers, revi
                                    uploaders=uploaders,
                                    reviewers=reviewers,
                                    article=record['recid'],
+                                   version=version,
                                    title=record['title'],
                                    site_url=site_url,
                                    link=site_url + "/record/{0}".format(record['recid']),
                                    observer_url=observer_url)
 
     # Modifying the subject to note the submission version if this is a revision.
-    if revision:
-        subject_string = '{0}, version {1}'.format(record['recid'], record['version'])
+    if version > 1:
+        subject_string = '{0} (version {1})'.format(record['recid'], version)
     else:
         subject_string = record['recid']
 

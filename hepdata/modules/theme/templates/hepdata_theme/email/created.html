@@ -1,6 +1,6 @@
 {% extends 'hepdata_theme/email/email_container.html' %}
 {% block email_type %}
-Record {{ article }} has been created
+Record {{ article }} has been {{ 'revised' if version > 1 else 'created' }}
 {% endblock %}
 
 
@@ -9,7 +9,7 @@ Record {{ article }} has been created
     Dear {{ name }},
 
     <p>
-      A new submission <a href="{{ link }}" style="color: #9b59b6">{{ title }}</a> has been created
+      Version {{ version }} of submission <a href="{{ link }}" style="color: #9b59b6">{{ title }}</a> has been created
       by {{ actor }}{% if collaboration %} for {{ collaboration }}{% endif %}.
     </p>
 
