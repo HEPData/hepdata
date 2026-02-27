@@ -4,9 +4,9 @@
        :target: https://github.com/HEPData/hepdata/actions?query=branch%3Amain
        :alt: GitHub Actions Build Status
 
-    .. image:: https://coveralls.io/repos/github/HEPData/hepdata/badge.svg?branch=main
-       :target: https://coveralls.io/github/HEPData/hepdata?branch=main
-       :alt: Coveralls Status
+    .. image:: https://codecov.io/gh/HEPData/hepdata/graph/badge.svg
+       :target: https://codecov.io/gh/HEPData/hepdata
+       :alt: Coverage Status
 
     .. image:: https://img.shields.io/github/license/HEPData/hepdata.svg
        :target: https://github.com/HEPData/hepdata/blob/main/LICENSE

@@ -136,7 +136,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip "setuptools<82" py
-        python -m pip install twine wheel coveralls requirements-builder
+        python -m pip install twine wheel requirements-builder
         python -m pip install --force-reinstall -r requirements.txt
         python -m pip install -e .[tests]
     - name: Initialise hepdata
@@ -155,10 +155,10 @@ jobs:
         cp hepdata/config_local.gh.py hepdata/config_local.py
     - name: Run tests
       env:
-        COVERAGE_FILE: '.coverage_func'
+        COVERAGE_FILE: '.coverage_func.xml'
         SQLALCHEMY_WARN_20: 1
       run: |
-        py.test -vv tests/*_test.py tests/test_*.py
+        pytest --cov-report xml tests/*_test.py tests/test_*.py
     - name: Setup Sauce Connect
       uses: saucelabs/sauce-connect-action@v3.0.0
       if: startsWith(matrix.python-version, '3.9')
@@ -174,18 +174,21 @@ jobs:
       env:
         SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
         SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY }}
-        COVERAGE_FILE: '.coverage_e2e'
+        COVERAGE_FILE: '.coverage_e2e.xml'
         SQLALCHEMY_WARN_20: 1
       run: |
-        if [[ -n ${{ secrets.SAUCE_USERNAME }} && -n ${{ secrets.SAUCE_ACCESS_KEY}} ]]; then py.test -vv tests/e2e; fi
-    - name: Run coveralls
-      if: ${{ startsWith(matrix.python-version, '3.9') && !env.ACT }}
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        COVERALLS_SERVICE_NAME: github
+        if [[ -n ${{ secrets.SAUCE_USERNAME }} && -n ${{ secrets.SAUCE_ACCESS_KEY}} ]]; then pytest --cov-report xml tests/e2e; fi
+    - name: Combine coverage files
+      if: startsWith(matrix.python-version, '3.9')
       run: |
-        coverage combine .coverage_func .coverage_e2e
-        coveralls
+        coverage combine .coverage_func.xml .coverage_e2e.xml
+    - name: Upload to Codecov
+      if: ${{ startsWith(matrix.python-version, '3.9') && !env.ACT }}
+      uses: codecov/codecov-action@v5
+      with:
+        files: .coverage.xml
+        fail_ci_if_error: true
+        token: ${{ secrets.CODECOV_TOKEN }}
     - name: Build docs
       run: |
         python -m pip install -e .[docs]
