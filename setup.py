@@ -46,7 +46,7 @@ extras_require = {
     'docs': [
         'Sphinx>=1.8.5,!=3.4.2',
         'sphinx-click>=2.1.0',
-        'setuptools<82',
+        'setuptools<83',
     ],
     'tests': tests_require,
 }
