@@ -49,7 +49,7 @@
                             <span class="caret"></span>
                         </button>
 
-                        <ul class="dropdown-menu" aria-labelledby="dLabelData">
+                        <ul id="record-dropdown" class="dropdown-menu" aria-labelledby="dLabelData">
                             <li>
                                 <a href="#"
                                    class="data_download_link"
@@ -79,8 +79,8 @@
                     </div>
 
                     <div class="pull-right" id="data_link_container">
-                        <input id="direct_data_link" value="" disabled>
-                        <button class="btn btn-small copy-btn" data-clipboard-text="">
+                        <input id="direct_data_link" class="data_link" value="" disabled>
+                        <button class="btn btn-small copy-btn copy-btn-style" data-clipboard-text="">
                             <i class="fa fa-copy" alt="Copy to clipboard"></i>
                         </button>
                     </div>

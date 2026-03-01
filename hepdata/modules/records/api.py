@@ -39,9 +39,9 @@ from sqlalchemy.orm.exc import NoResultFound
 from werkzeug.utils import secure_filename
 
 from hepdata.modules.converter import convert_oldhepdata_to_yaml
-from hepdata.modules.email.api import send_cookie_email
+from hepdata.modules.email.api import send_cookie_email, notify_submission_created
 from hepdata.modules.email.utils import create_send_email_task
-from hepdata.modules.permissions.api import user_allowed_to_perform_action
+from hepdata.modules.permissions.api import user_allowed_to_perform_action, verify_observer_key
 from hepdata.modules.permissions.models import SubmissionParticipant
 from hepdata.modules.records.subscribers.api import is_current_user_subscribed_to_record
 from hepdata.modules.records.utils.common import decode_string, find_file_in_directory, allowed_file, \
@@ -51,7 +51,8 @@ from hepdata.modules.records.utils.data_files import get_data_path_for_record, c
 from hepdata.modules.records.utils.json_ld import get_json_ld
 from hepdata.modules.records.utils.submission import process_submission_directory, \
     create_data_review, cleanup_submission, clean_error_message_for_display
-from hepdata.modules.submission.api import get_latest_hepsubmission, get_submission_participants_for_record
+from hepdata.modules.submission.api import get_latest_hepsubmission, get_submission_participants_for_record, \
+    get_or_create_submission_observer
 from hepdata.modules.records.utils.users import get_coordinators_in_system, has_role
 from hepdata.modules.records.utils.workflow import update_action_for_submission_participant
 from hepdata.modules.records.utils.yaml_utils import split_files
@@ -98,7 +99,7 @@ def returns_json(f):
 
 
 def format_submission(recid, record, version, version_count, hepdata_submission,
-                      data_table=None):
+                      data_table=None, observer_view=None):
     """
     Performs all the processing of the record to be displayed.
 
@@ -108,6 +109,7 @@ def format_submission(recid, record, version, version_count, hepdata_submission,
     :param version_count:
     :param hepdata_submission:
     :param data_table:
+    :param observer_view:
     :return:
     """
     ctx = {}
@@ -164,7 +166,8 @@ def format_submission(recid, record, version, version_count, hepdata_submission,
         if hepdata_submission.overall_status != 'finished' and ctx["version_count"] > 0:
             if not (ctx['show_review_widget']
                     or ctx['show_upload_widget']
-                    or ctx['is_submission_coordinator_or_admin']):
+                    or ctx['is_submission_coordinator_or_admin']
+                    or observer_view):
                 # we show the latest approved version.
                 ctx["version"] -= 1
                 ctx["version_count"] -= 1
@@ -245,6 +248,7 @@ def format_resource(resource, contents, content_url):
     """
     hepsubmission = HEPSubmission.query.filter(HEPSubmission.resources.any(id=resource.id)).first()
     if not hepsubmission:
+        # Look for DataSubmission mapping to this resource
         datasubmission = DataSubmission.query.filter(DataSubmission.resources.any(id=resource.id)).first()
         if datasubmission:
             hepsubmission = HEPSubmission.query.filter_by(
@@ -252,10 +256,9 @@ def format_resource(resource, contents, content_url):
                 version=datasubmission.version
             ).first()
         if not hepsubmission:
-            # Look for DataSubmission mapping to this resource
             raise ValueError("Unable to find publication for resource %d. (Is it a data file?)", resource.id)
 
-    record = get_record_contents(hepsubmission.publication_recid)
+    record = get_record_contents(hepsubmission.publication_recid, status=hepsubmission.overall_status)
     ctx = format_submission(hepsubmission.publication_recid, record,
                             hepsubmission.version, 1, hepsubmission)
     ctx['record_type'] = 'resource'
@@ -269,6 +272,7 @@ def format_resource(resource, contents, content_url):
     ctx['resource_filetype'] = f'{resource.file_type} File'
     ctx['related_recids'] = get_record_data_list(hepsubmission, "related")
     ctx['related_to_this_recids'] = get_record_data_list(hepsubmission, "related_to_this")
+    ctx['version'] = hepsubmission.version
 
     if resource.file_type in IMAGE_TYPES:
         ctx['display_type'] = 'image'
@@ -370,7 +374,7 @@ def extract_journal_info(record):
             record['journal_info'] = "Conference Paper"
 
 
-def render_record(recid, record, version, output_format, light_mode=False):
+def render_record(recid, record, version, output_format, light_mode=False, observer_key=None):
 
     # Count number of all versions and number of finished versions of a publication record.
     version_count_all = HEPSubmission.query.filter(HEPSubmission.publication_recid == recid,
@@ -379,7 +383,8 @@ def render_record(recid, record, version, output_format, light_mode=False):
     version_count_finished = HEPSubmission.query.filter_by(publication_recid=recid, overall_status='finished').count()
 
     # Number of versions that a user is allowed to access based on their permissions.
-    version_count = version_count_all if user_allowed_to_perform_action(recid) else version_count_finished
+    key_verified = verify_observer_key(recid, observer_key)
+    version_count = version_count_all if user_allowed_to_perform_action(recid) or key_verified else version_count_finished
 
     # If version not given explicitly, take to be latest allowed version (or 1 if there are no allowed versions).
     if version == -1:
@@ -409,10 +414,14 @@ def render_record(recid, record, version, output_format, light_mode=False):
             return render_template('hepdata_records/publication_processing.html', ctx=ctx)
 
         elif not hepdata_submission.overall_status.startswith('sandbox'):
-            ctx = format_submission(recid, record, version, version_count, hepdata_submission)
+            ctx = format_submission(recid, record, version, version_count, hepdata_submission, observer_view=key_verified)
             ctx['record_type'] = 'publication'
             ctx['related_recids'] = get_record_data_list(hepdata_submission, "related")
             ctx['related_to_this_recids'] = get_record_data_list(hepdata_submission, "related_to_this")
+            ctx['overall_status'] = hepdata_submission.overall_status
+
+            if key_verified:
+                ctx['observer_key'] = observer_key
 
             increment(recid)
 
@@ -541,19 +550,38 @@ def create_new_version(recid, user, notify_uploader=True, uploader_message=None)
                                            inspire_id=hepsubmission.inspire_id,
                                            coordinator=hepsubmission.coordinator,
                                            version=hepsubmission.version + 1)
+
+        # Gets a generated or new SubmissionObserver object
+        observer_key = get_or_create_submission_observer(_rev_hepsubmission.publication_recid, regenerate=True)
+
         db.session.add(_rev_hepsubmission)
+        db.session.add(observer_key)
         db.session.commit()
 
-        if notify_uploader:
+        record_information = get_record_by_id(recid)
+
+        uploaders, reviewers = [], []
+
+        # Get uploaders if required
+        if notify_uploader or user:
             uploaders = SubmissionParticipant.query.filter_by(
                 role='uploader', publication_recid=recid, status='primary'
-                )
-            record_information = get_record_by_id(recid)
+            )
+
+        # Send notification emails to each uploader if required
+        if notify_uploader:
             for uploader in uploaders:
                 send_cookie_email(uploader,
                                   record_information,
                                   message=uploader_message,
                                   version=_rev_hepsubmission.version)
+
+        if user:
+            # Finally, we need the reviewer list for the email
+            reviewers = get_submission_participants_for_record(recid, ["reviewer"], status='primary')
+
+            # Send the submission created email containing uploader and reviewer information
+            notify_submission_created(record_information, user.id, uploaders, reviewers, version=_rev_hepsubmission.version)
 
         return jsonify({'success': True, 'version': _rev_hepsubmission.version})
     else:

@@ -1023,35 +1023,6 @@ g.node {
 
 }
 
-#data_link_container {
-  margin-right: 10px;
-  border: 1px solid #ccc;
-  background-color: $lightgrey;
-  border-radius: 3px;
-  height: 34px;
-
-  #direct_data_link {
-    border: none;
-    background: transparent;
-    padding-left: 10px;
-    font-size: .7em;
-    color: $navy;
-  }
-
-  .copy-btn {
-    background: white;
-    border-left: 1px solid #ccc;
-    border-radius: 0;
-    padding: 5px 12px;
-  }
-
-}
-
-.toast-success {
-  background-color: $purple !important;
-  z-index: 100;
-}
-
 #table_doi, #resource_doi {
   font-size: .55em;
   color: $navy !important;

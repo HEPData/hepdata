@@ -189,6 +189,7 @@ CONVERT_MAX_SIZE = sys.maxsize  # Limit on payload sent to converter (checked at
 CLIENT_TIMEOUT = 298  # Client-side timeout in s (should be slightly smaller than server timeout)
 SIZE_LOAD_CHECK_THRESHOLD = 1 * (1024 * 1024) # Size (bytes) threshold for immediate loading of a table on the records page.
 ADDITIONAL_SIZE_LOAD_CHECK_THRESHOLD = 1 * (1024 * 1024) # Size (bytes) threshold  for disallowing render of additional res files
+OBSERVER_KEY_LENGTH = 8 # The length that the UUID4 observer key is trimmed down to.
 
 CFG_PUB_TYPE = 'publication'
 CFG_DATA_TYPE = 'datatable'

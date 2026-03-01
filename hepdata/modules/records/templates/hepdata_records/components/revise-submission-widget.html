@@ -98,20 +98,33 @@
                                 </div>
                             </div>
                             <div align="center" class="hidden" id="revise-success"
-                                 style="padding: 40px">
+                                 style="padding: 20px 40px 0px 40px">
                                 <div style="font-weight: bolder">
                                     <span class="fa fa-check"
                                           style="font-size: 3em; color: #4FBA6F;"></span><br/>
 
                                     <p>
                                         Version <span id="new-version-number"></span> created.
-                                        <br/>
-                                        This window will close in <span id="revise-timer"
-                                                                        style="color: #4FBA6F;">5</span>
-                                        seconds and load the Dashboard page.
                                     </p>
                                 </div>
+                              <div id="revision_link_text">
+                                <p>
+                                  You can use this URL to allow any user observer access without special permissions.
+                                  It is also accessible on your Dashboard and you will also receive it in a
+                                  notification email.
+                                </p>
+                                <p><b>The page will refresh when this window closes.</b></p>
+                              </div>
+                              <div id="revision_link_container">
+                                  <input id="revision_data_link" class="data_link" value="" readonly>
+                                  <button id="revision_button" class="btn btn-small copy-btn-style" data-clipboard-target="#revision_data_link">
+                                    <i class="fa fa-copy" alt="Copy to clipboard"></i>
+                                  </button>
+                              </div>
                             </div>
+                          <button id="revision_close_button" type="button" class="btn btn-default hidden" data-dismiss="modal">
+                            Close
+                          </button>
                         </div>
                     </div>
                 </div>

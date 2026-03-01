@@ -13,8 +13,8 @@
 
         {% if ctx.mode != 'sandbox' %}
             <div class="pull-right" id="data_link_container">
-                <input id="direct_data_link" value="{{ ctx.resource_url }}" disabled>
-                <button class="btn btn-small copy-btn" data-clipboard-text="{{ ctx.resource_url }}">
+                <input id="direct_data_link" class="data_link" value="{{ ctx.resource_url }}" disabled>
+                <button class="btn btn-small copy-btn copy-btn-style" data-clipboard-text="{{ ctx.resource_url }}">
                     <i class="fa fa-copy" alt="Copy to clipboard"></i>
                 </button>
             </div>

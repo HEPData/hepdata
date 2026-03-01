@@ -22,6 +22,7 @@
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
 """HEPData records test cases."""
+import json
 import random
 from io import open, StringIO
 import os
@@ -42,13 +43,14 @@ import pytest
 from werkzeug.datastructures import FileStorage
 import requests_mock
 
+from hepdata.modules.permissions.api import verify_observer_key
 from hepdata.modules.permissions.models import SubmissionParticipant
 from hepdata.modules.records.api import process_payload, process_zip_archive, \
     move_files, get_all_ids, has_upload_permissions, \
     has_coordinator_permissions, create_new_version, \
     get_resource_mimetype, create_breadcrumb_text, format_submission, \
     format_resource, get_commit_message, get_related_to_this_hepsubmissions, \
-    get_related_hepsubmissions, get_related_datasubmissions, get_related_to_this_datasubmissions
+    get_related_hepsubmissions, get_related_datasubmissions, get_related_to_this_datasubmissions, render_record
 from hepdata.modules.records.importer.api import import_records
 from hepdata.modules.records.utils.analyses import update_analyses
 from hepdata.modules.records.utils.submission import get_or_create_hepsubmission, process_submission_directory, \
@@ -59,12 +61,12 @@ from hepdata.modules.records.utils.data_files import get_data_path_for_record
 from hepdata.modules.records.utils.json_ld import get_json_ld
 from hepdata.modules.records.utils.users import get_coordinators_in_system, has_role
 from hepdata.modules.records.utils.workflow import update_record, create_record
-from hepdata.modules.records.views import set_data_review_status
+from hepdata.modules.records.views import set_data_review_status, get_observer_data
 from hepdata.modules.submission.models import HEPSubmission, DataReview, \
-    DataSubmission, DataResource, License, RecordVersionCommitMessage, RelatedRecid, RelatedTable
+    DataSubmission, DataResource, License, RecordVersionCommitMessage, RelatedRecid, RelatedTable, SubmissionObserver
 from hepdata.modules.submission.views import process_submission_payload
-from hepdata.modules.submission.api import get_latest_hepsubmission
-from tests.conftest import TEST_EMAIL
+from hepdata.modules.submission.api import get_latest_hepsubmission, get_or_create_submission_observer
+from tests.conftest import TEST_EMAIL, create_test_record, create_blank_test_record
 from hepdata.modules.records.utils.records_update_utils import get_inspire_records_updated_since, \
     get_inspire_records_updated_on, update_record_info, RECORDS_PER_PAGE
 from hepdata.modules.inspire_api.views import get_inspire_record_information
@@ -1487,3 +1489,163 @@ def test_version_related_functions(app):
             # Test that the forward/backward datatable relations work as expected
             assert set(forward_dt_relations) == set(expected_forward_dt_relations)
             assert set(backward_dt_relations) == set(expected_backward_dt_relations)
+
+
+def test_observer_key(app, mocker):
+    """
+    Some basic testing of the observer key functionality
+    Here we are specifically testing against the render_record function to ensure that
+    access without login is possible using the observer key.
+    """
+
+    # Set testing directory up
+    base_dir = os.path.dirname(os.path.realpath(__file__))
+    full_dir = os.path.join(base_dir, 'test_data/test_submission')
+
+    # Insert the test record.
+    test_submission = create_test_record(
+        full_dir,
+        overall_status='todo'
+    )
+    # Get the test record and
+    record = get_record_contents(test_submission.publication_recid)
+    submission_observer = SubmissionObserver.query.filter_by(
+        publication_recid=test_submission.publication_recid
+    ).first()
+
+    test_data = [
+        {
+            "observer_key": submission_observer.observer_key,
+            "expected_status": 200, # 200/OK as observer key matches
+            "expected_data": ""
+        },
+        {
+            "observer_key": None,
+            "expected_status": 302, # 302 as there is no observer key
+            "expected_data": ""
+        },
+        {
+            "observer_key": "1234",
+            "expected_status": 302, # 302 as observer key has not matched
+            "expected_data": ""
+        }
+    ]
+
+    for test in test_data:
+        result = render_record(
+            test_submission.id,
+            record,
+            test_submission.version,
+            output_format='json',
+            observer_key=test["observer_key"],
+        )
+        # Set user login to always fail
+        mock_permissions = mocker.patch("hepdata.modules.records.api.user_allowed_to_perform_action")
+        mock_permissions.return_value = 0
+
+        assert result.status_code == test["expected_status"]
+
+
+def test_verify_observer_key(app):
+    """
+        Tests the verify_observer_key function to ensure correct boolean result
+        based on expected matching and not matching key inputs.
+    """
+    test_data = [
+        {  # We expect these keys to match
+            "expected": True,  # Expected result boolean
+            "input_key": "12345678",  # Key inserted with the object
+            "test_key": "12345678"  # Key used for test retrieval
+        },
+        {  # Saved key in database should not match test_key used for querying
+            "expected": False,
+            "input_key": "12345678",
+            "test_key": "00000000"
+        }
+    ]
+
+    for test in test_data:
+        # Set a random recid
+        test_recid = random.randint(0, 10000)
+        # Create a new SubmissionObserver object from test data
+        test_observer = SubmissionObserver(test_recid)
+        # Set the key based on the test
+        test_observer.observer_key = test["input_key"]
+        db.session.add(test_observer)
+        db.session.commit()
+
+        # Verify against test data
+        result = verify_observer_key(test_recid, test["test_key"])
+        assert result == test["expected"]
+
+
+def test_get_observer_data(app, client, mocker):
+    """
+    Tests the get_observer_data function to ensure valid observer keys are returned
+    or not returned as expected.
+    Tests logged in, out and valid/invalid values.
+    """
+    # Create test data
+    recid = random.randint(0, 10000)
+    test_observer = SubmissionObserver(recid)
+    db.session.add(test_observer)
+    db.session.commit()
+
+    # Failed result with no login
+    failed_result = get_observer_data(0, 1)
+
+    # Check that we've been redirected
+    assert failed_result.status_code == 302
+
+    # Get a user object and log it in
+    login_user(User.query.first())
+
+    # Testing a non-existent recid
+    test_recid = 1000001
+    result = json.loads(get_observer_data(test_recid, 1))
+
+    # Ensure correct error messaging with recid/false
+    assert result["recid"] == test_recid
+    assert result["observer_exists"] == False
+
+    # Make the request and load response to dict
+    result = json.loads(get_observer_data(recid, 1))
+
+    # Get current site_url for generating expected url format for comparison
+    site_url = current_app.config.get('SITE_URL', 'https://www.hepdata.net')
+
+    # Check recid, status message, and observer URL
+    assert result["recid"] == recid
+    assert result["observer_exists"] == True
+    assert result["observer_key"] == f"{site_url}/record/{recid}?observer_key={test_observer.observer_key}"
+
+
+def test_observer_create_from_none(app, load_default_data):
+    """
+        Testing to ensure that a to-do submission without a SubmissionObserver
+        object is created automatically when called for
+        by get_or_create_submission_observer.
+    """
+    test_sub = create_blank_test_record()
+    test_sub_obs = get_or_create_submission_observer(test_sub.publication_recid)
+    first_key = test_sub_obs.observer_key
+
+    all_sub_obs = SubmissionObserver.query.all()
+
+    assert len(all_sub_obs) == 1
+    assert all_sub_obs[0].publication_recid == test_sub.publication_recid
+
+    db.session.delete(test_sub_obs)
+    db.session.commit()
+
+    all_sub_obs = SubmissionObserver.query.all()
+    assert len(all_sub_obs) == 0
+
+    new_sub_obs = get_or_create_submission_observer(test_sub.publication_recid)
+
+    assert new_sub_obs
+    assert new_sub_obs.publication_recid == test_sub.publication_recid
+    assert first_key != new_sub_obs.observer_key
+
+    todo_subs = [sub for sub in HEPSubmission.query.all() if sub.overall_status == 'todo']
+    assert len(SubmissionObserver.query.all()) == len(todo_subs)

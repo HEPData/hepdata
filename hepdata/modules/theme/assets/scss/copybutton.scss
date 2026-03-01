@@ -1,0 +1,124 @@
+/*
+    CSS rules specific to the copy/paste buttons
+    used on separate pages across the site.
+*/
+
+#data_link_container, #revision_link_container {
+  display: flex;
+  margin-right: 10px;
+  border: 1px solid #ccc;
+  background-color: $lightgrey;
+  border-radius: 3px;
+  height: 34px;
+  margin-bottom: 15px;
+
+  button {
+    color: #894b9d;
+  }
+
+  button:hover {
+    color: black;
+  }
+
+  .data_link {
+    flex: 1;
+    border: none;
+    background: transparent;
+    font-weight: bolder;
+    font-size: 0.7em;
+    color: $navy;
+  }
+
+  .data_link:focus {
+    // Hides the outline after copying
+    outline: none;
+  }
+
+  .copy-btn-style {
+    background: white;
+    border-left: 1px solid #ccc;
+    border-radius: 0;
+    padding: 5px 12px;
+  }
+}
+
+#toast-container {
+  text-align: center;
+  top: 20px;
+  right: 20px;
+  bottom: auto;
+}
+
+.toast-success {
+  background-color: $purple !important;
+  z-index: 100;
+}
+
+/*
+*    Boosting the font size a little for the submission and dashboard manager copy button
+*/
+#manager-footer #data_link_container .data_link,
+#revision_link_container .data_link {
+  font-size: 1.05em;
+}
+
+#submission_observer_container #data_link_container,
+#revision_link_container {
+  width: 100%;
+}
+
+/* Removes highlight colour on the input after copy */
+#direct_data_link::selection,
+#revision_data_link::selection {
+  background: transparent;
+}
+
+/* MANAGER FOOTER RULES */
+
+/* The accompanying observer key message */
+#manager-footer #data_link_message {
+  color: black;
+  padding-bottom: 10px;
+}
+
+#manager-footer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+#manager-footer #data_link_message {
+  text-align: center;
+  width: 100%;
+}
+
+#manager-footer #data_link_container {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+  width: 75%;
+  justify-content: center;
+}
+
+#manager-footer #direct_data_link,
+#revision_data_link {
+  width: 100%;
+  text-align: center;
+}
+
+#manager-footer #manager-close {
+  top: 50%;
+}
+
+/* Defaults the close button to centre and removes top/bottom margins. */
+#revision_close_button {
+  display: table;
+  margin: 0 auto;
+}
+
+/* Specific rules for the post-submission page */
+#check #direct_data_link {
+  width: calc(100% - 50px);
+  text-align: center;
+  font-size: 0.9em;
+}

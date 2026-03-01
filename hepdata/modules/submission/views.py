@@ -17,7 +17,7 @@
 # 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
 #
 
-from flask import Blueprint, render_template, request, jsonify, abort
+from flask import Blueprint, render_template, request, jsonify, abort, current_app
 from flask_login import login_required, current_user
 from invenio_db import db
 
@@ -28,6 +28,7 @@ from hepdata.modules.permissions.models import SubmissionParticipant
 from hepdata.modules.records.utils.submission import \
     get_or_create_hepsubmission
 from hepdata.modules.records.utils.workflow import create_record
+from hepdata.modules.submission.models import SubmissionObserver
 from hepdata.utils.users import user_is_admin_or_coordinator
 
 blueprint = Blueprint(
@@ -66,7 +67,19 @@ def submit_post():
                                                     uploader=uploader, message=message)
 
     if hepdata_submission:
-        return jsonify({'success': True, 'message': 'Submission successful.'})
+        submission_observer = SubmissionObserver.query.filter_by(publication_recid=hepdata_submission.publication_recid).first()
+        # Default response message
+        result_data = {'success': True, 'message': 'Submission successful.'}
+
+        # If there's an observer key found, return it
+        if submission_observer:
+            # Return key and recid for URL generation
+            result_data['observer_key'] = submission_observer.observer_key
+            result_data['submission_id'] = hepdata_submission.publication_recid
+            # Pass site_url for button display
+            result_data['site_url'] = current_app.config.get('SITE_URL', 'https://www.hepdata.net')
+
+        return jsonify(result_data)
     else:
         return jsonify({'success': False, 'message': 'Submission unsuccessful.'})
 
@@ -123,7 +136,7 @@ def process_submission_payload(*args, **kwargs):
         message = kwargs.get('message', None)
         send_cookie_email(uploader, record_information, message)
 
-    notify_submission_created(record_information, submitter_id, uploader, reviewer)
+    notify_submission_created(record_information, submitter_id, [uploader], [reviewer])
 
     admin_idx = AdminIndexer()
     admin_idx.index_submission(hepsubmission)

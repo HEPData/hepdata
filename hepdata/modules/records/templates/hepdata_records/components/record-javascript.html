@@ -33,6 +33,10 @@
                 {"width": 200, "height": 200}
         );
 
+        {% if ctx.observer_key %}
+          HEPDATA.current_observer_key = "{{ctx.observer_key | safe}}";
+        {% endif %}
+
         {% if ctx.show_upload_area %}
             $("#root_file_upload").filestyle({
                 iconName: "fa fa-upload",
@@ -129,7 +133,7 @@
         })
     });
 
-    HEPDATA.setup_clipboard();
+    HEPDATA.setup_default_clipboards();
 
 
 
