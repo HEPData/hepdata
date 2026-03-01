@@ -25,8 +25,9 @@
 """PyTest Config"""
 
 from builtins import str
-import multiprocessing
 import os
+import sys
+import threading
 import time
 from datetime import datetime
 
@@ -62,8 +63,6 @@ class SQLAlchemy(InvenioSQLAlchemy):
 
 db = SQLAlchemy(metadata=metadata)
 
-multiprocessing.set_start_method('fork')
-
 @pytest.fixture(scope='session')
 def app(request):
     """Flask application fixture for E2E/integration/selenium tests.
@@ -78,7 +77,6 @@ def app(request):
     # as changing them later doesn't have the desired effect.
     app.config.update(dict(
         TESTING=True,
-        TEST_RUNNER="celery.contrib.test_runner.CeleryTestSuiteRunner",
         CELERY_TASK_ALWAYS_EAGER=True,
         CELERY_RESULT_BACKEND="cache",
         CELERY_CACHE_BACKEND="memory",
@@ -188,14 +186,30 @@ def env_browser(request):
     timeout = int(os.environ.get('E2E_WEBDRIVER_TIMEOUT', 300))
 
     def wait_kill():
-        time.sleep(timeout)
-        browser.quit()
+        # Timer already waited for 'timeout' seconds before calling this
+        try:
+            browser.quit()
+        except Exception:
+            # Browser might have already been closed by finalizer.
+            # We use broad exception handling here because the specific exception
+            # type varies by webdriver implementation (Remote, Chrome, Firefox, etc.)
+            pass
 
     def finalizer():
-        browser.quit()
-        timeout_process.terminate()
+        # Cancel the timer first to avoid race condition
+        timeout_thread.cancel()
+        try:
+            browser.quit()
+        except Exception:
+            # Browser might have already been closed by timeout.
+            # We use broad exception handling here because the specific exception
+            # type varies by webdriver implementation (Remote, Chrome, Firefox, etc.)
+            pass
 
-    timeout_process = multiprocessing.Process(target=wait_kill)
+    # Use threading.Timer instead of multiprocessing.Process to avoid
+    # issues with the 'fork' start method on macOS (see bpo-33725).
+    # Timer is a thread-based approach that doesn't require pickling.
+    timeout_thread = threading.Timer(timeout, wait_kill)
 
     if not RUN_SELENIUM_LOCALLY:
         remote_url = "https://ondemand.eu-central-1.saucelabs.com:443/wd/hub"
@@ -238,7 +252,7 @@ def env_browser(request):
     # Add finalizer to quit the webdriver instance
     request.addfinalizer(finalizer)
 
-    timeout_process.start()
+    timeout_thread.start()
     yield browser
 
     # Check browser logs before quitting
