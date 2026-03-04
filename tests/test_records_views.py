@@ -1,5 +1,6 @@
+import json
 import pytest
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, patch, MagicMock
 from flask import Flask, request
 from hepdata.modules.records.views import get_metadata_by_alternative_id
 
@@ -166,3 +167,153 @@ def test_metadata_by_id_record_failure(app, client):
             light_mode=False,
             observer_key=None
         )
+
+
+def test_get_table_details_version_access_control(app, client):
+    """
+    Test that get_table_details returns 403 when a user without permissions
+    tries to access an unpublished version (version_count < version_count_all
+    and version == version_count_all).
+    """
+    recid = 1
+    data_recid = 1
+    version = 2  # Trying to access version 2 (unpublished)
+
+    with patch('hepdata.modules.records.views.verify_observer_key') as mock_verify, \
+         patch('hepdata.modules.records.views.get_version_count') as mock_version_count:
+
+        mock_verify.return_value = False  # Key not verified
+        # User can only see 1 version (finished), but there are 2 total
+        mock_version_count.return_value = (1, 2)
+
+        response = client.get(f'/record/data/{recid}/{data_recid}/{version}/')
+        assert response.status_code == 403
+
+
+def test_get_resource_not_found(app, client):
+    """
+    Test that get_resource returns 404 when the resource does not exist.
+    """
+    response = client.get('/record/resource/99999999')
+    assert response.status_code == 404
+
+
+def test_get_resource_no_publication(app, client):
+    """
+    Test that get_resource returns 404 when there is no associated
+    HEPSubmission or DataSubmission for the resource.
+    """
+    from invenio_db import db
+    from hepdata.modules.submission.models import DataResource
+
+    # Create a DataResource not linked to any submission
+    orphan_resource = DataResource(
+        file_location='http://example.com/orphan.txt',
+        file_type='url',
+        file_description='Orphan resource'
+    )
+    db.session.add(orphan_resource)
+    db.session.commit()
+
+    with patch('hepdata.modules.records.views.HEPSubmission.query') as mock_hep_query, \
+         patch('hepdata.modules.records.views.DataSubmission.query') as mock_data_query:
+        mock_hep_query.filter.return_value.first.return_value = None
+        mock_data_query.filter.return_value.first.return_value = None
+
+        response = client.get(f'/record/resource/{orphan_resource.id}')
+        assert response.status_code == 404
+
+    # Cleanup
+    db.session.delete(orphan_resource)
+    db.session.commit()
+
+
+def test_get_resource_observer_key_in_location(app, client):
+    """
+    Test that get_resource includes observer_key in the returned location
+    when the key is verified (covers the key_verified path in the else branch).
+    """
+    from invenio_db import db
+    from hepdata.modules.submission.models import DataResource, HEPSubmission, SubmissionObserver
+
+    # Create test data
+    resource = DataResource(
+        file_location='http://example.com/file.txt',
+        file_type='url',
+        file_description='Test resource'
+    )
+    db.session.add(resource)
+    db.session.flush()
+
+    submission = HEPSubmission(publication_recid=88881, coordinator=1,
+                               overall_status='finished', version=1)
+    db.session.add(submission)
+    db.session.flush()
+
+    observer = SubmissionObserver(88881)
+    db.session.add(observer)
+    db.session.commit()
+
+    observer_key = observer.observer_key
+
+    with patch('hepdata.modules.records.views.HEPSubmission.query') as mock_hep_query, \
+         patch('hepdata.modules.records.views.verify_observer_key') as mock_verify, \
+         patch('hepdata.modules.records.views.get_version_count') as mock_version_count:
+
+        mock_hep_sub = Mock()
+        mock_hep_sub.publication_recid = 88881
+        mock_hep_sub.version = 1
+        mock_hep_query.filter.return_value.first.return_value = mock_hep_sub
+        mock_verify.return_value = True  # Key verified
+        mock_version_count.return_value = (1, 1)
+
+        response = client.get(
+            f'/record/resource/{resource.id}?observer_key={observer_key}',
+            headers={'Accept': 'application/json'}
+        )
+        # Should be 200 and include observer_key in location
+        assert response.status_code == 200
+        data = json.loads(response.data)
+        assert f'observer_key={observer_key}' in data['location']
+
+    # Cleanup
+    db.session.delete(observer)
+    db.session.delete(submission)
+    db.session.delete(resource)
+    db.session.commit()
+
+
+def test_get_resource_version_access_control(app, client):
+    """
+    Test that get_resource returns 403 when a user without permissions
+    tries to access an unpublished version via a resource.
+    """
+    from invenio_db import db
+    from hepdata.modules.submission.models import DataResource
+
+    resource = DataResource(
+        file_location='http://example.com/test.txt',
+        file_type='url',
+        file_description='Test resource'
+    )
+    db.session.add(resource)
+    db.session.commit()
+
+    with patch('hepdata.modules.records.views.HEPSubmission.query') as mock_hep_query, \
+         patch('hepdata.modules.records.views.verify_observer_key') as mock_verify, \
+         patch('hepdata.modules.records.views.get_version_count') as mock_version_count:
+
+        mock_hep_sub = Mock()
+        mock_hep_sub.publication_recid = 77771
+        mock_hep_sub.version = 2  # Latest (unpublished) version
+        mock_hep_query.filter.return_value.first.return_value = mock_hep_sub
+        mock_verify.return_value = False  # Key not verified
+        # User can see 1 version (finished), but there are 2 total
+        mock_version_count.return_value = (1, 2)
+
+        response = client.get(f'/record/resource/{resource.id}')
+        assert response.status_code == 403
+
+    # Cleanup
+    db.session.delete(resource)
+    db.session.commit()
