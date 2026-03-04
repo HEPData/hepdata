@@ -41,7 +41,8 @@ class TestGetMetadataByAlternativeId:
                     record=mock_record,
                     version=1,
                     output_format='json',
-                    light_mode=False
+                    light_mode=False,
+                    observer_key=None
                 )
 
                 assert result == 'rendered_record'
@@ -133,5 +134,35 @@ class TestGetMetadataByAlternativeId:
                     record=mock_record,
                     version=-1,
                     output_format='json_ld',
-                    light_mode=False
+                    light_mode=False,
+                    observer_key=None
                 )
+
+
+# Testing Metadata by recid
+def test_metadata_by_id_record_failure(app, client):
+    """
+        Test handling of metadata by recid record retrieval function failure.
+        Tests case where record and version are not provided.
+
+    """
+    test_id = 1
+    with patch('hepdata.modules.records.views.get_record_contents') as mock_get_record_contents, \
+         patch('hepdata.modules.records.views.render_record') as mock_render:
+
+        # Make get_record_contents raise an Exception to set record to None
+        mock_get_record_contents.side_effect = Exception('Test Exception')
+        mock_render.return_value = 'test_render'
+
+        # Request record with invalid version
+        _response = client.get(f'/record/{test_id}?version=not-an-int&format=json')
+
+        # We want to ensure that render_record is called with record=None and version=-1
+        mock_render.assert_called_once_with(
+            recid=test_id,
+            record=None, # Set by exception handler
+            version=-1, # Set by exception handler
+            output_format='json',
+            light_mode=False,
+            observer_key=None
+        )

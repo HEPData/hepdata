@@ -33,7 +33,7 @@ import os
 from dateutil import parser
 from invenio_accounts.models import User
 from flask_login import login_required, login_user
-from flask import Blueprint, send_file, abort, redirect, url_for
+from flask import Blueprint, send_file, abort, redirect, current_app, url_for
 from flask_security.utils import verify_password
 from sqlalchemy import or_, func
 from sqlalchemy.orm import joinedload
@@ -43,17 +43,19 @@ from yaml import CBaseLoader as Loader
 from hepdata.config import CFG_DATA_TYPE, CFG_PUB_TYPE, SITE_URL, ADDITIONAL_SIZE_LOAD_CHECK_THRESHOLD
 from hepdata.ext.opensearch.api import get_records_matching_field, get_count_for_collection, get_n_latest_records, \
     index_record_ids
+from hepdata.modules.converter.views import get_version_count
 from hepdata.modules.email.api import send_notification_email, send_new_review_message_email, NoParticipantsException, \
     send_question_email, send_coordinator_notification_email
 from hepdata.modules.inspire_api.views import get_inspire_record_information
+from hepdata.modules.permissions.api import verify_observer_key
 from hepdata.modules.records.api import request, determine_user_privileges, render_template, format_submission, \
     render_record, current_user, db, jsonify, get_user_from_id, get_record_contents, extract_journal_info, \
     user_allowed_to_perform_action, NoResultFound, OrderedDict, query_messages_for_data_review, returns_json, \
     process_payload, has_upload_permissions, has_coordinator_permissions, create_new_version, format_resource, \
     should_send_json_ld, JSON_LD_MIMETYPES, get_resource_mimetype, get_table_data_list
-from hepdata.modules.submission.api import get_submission_participants_for_record
+from hepdata.modules.submission.api import get_submission_participants_for_record, get_or_create_submission_observer
 from hepdata.modules.submission.models import HEPSubmission, DataSubmission, \
-    DataResource, DataReview, Message, Question
+    DataResource, DataReview, Message, Question, SubmissionObserver
 from hepdata.modules.records.utils.common import get_record_by_id, \
     default_time, IMAGE_TYPES, decode_string, file_size_check, generate_license_data_by_id, load_table_data
 from hepdata.modules.records.utils.data_processing_utils import \
@@ -141,13 +143,14 @@ def get_metadata_by_alternative_id(recid):
 
         output_format = request.args.get('format', 'html')
         light_mode = bool(request.args.get('light', False))
+        observer_key = request.args.get('observer_key', None)
 
         # Check the Accept header to determine whether to send JSON-LD
         if output_format == 'html' and should_send_json_ld(request):
             output_format = 'json_ld'
 
         return render_record(recid=record['recid'], record=record, version=version, output_format=output_format,
-                             light_mode=light_mode)
+                             light_mode=light_mode, observer_key=observer_key)
 
     except Exception as e:
         log.warning("Unable to find %s.", recid)
@@ -225,6 +228,8 @@ def metadata(recid):
     :return: renders the record template
     """
 
+    observer_key = request.args.get('observer_key')
+
     try:
         version = int(request.args.get('version', -1))
     except ValueError:
@@ -242,7 +247,7 @@ def metadata(recid):
         output_format = 'json_ld'
 
     return render_record(recid=recid, record=record, version=version, output_format=output_format,
-                         light_mode=light_mode)
+                         light_mode=light_mode, observer_key=observer_key)
 
 
 @blueprint.route('/count')
@@ -309,6 +314,20 @@ def get_table_details(recid, data_recid, version, load_all=1):
     :param load_all: Whether to perform the filesize check or not when loading (1 will always load the file)
     :return:
     """
+
+    observer_key = request.args.get('observer_key')
+    key_verified = verify_observer_key(recid, observer_key)
+
+    version_count, version_count_all = get_version_count(recid, key_verified)
+
+    if not version:
+        # If version not given explicitly, take to be latest allowed version (or 1 if there are no allowed versions).
+        version = version_count if version_count else 1
+
+    # Check for a user trying to access a version of a publication record where they don't have permissions.
+    if version_count < version_count_all and version == version_count_all:
+        abort(403)
+
     # joinedload allows query of data in another table without a second database access.
     datasub_query = DataSubmission.query.options(joinedload('related_tables')).filter_by(id=data_recid, version=version)
     table_contents = {}
@@ -439,6 +458,44 @@ def get_coordinator_view(recid):
          "reserve-reviewers": participants["reviewer"]["reserve"],
          "primary-uploaders": participants["uploader"]["primary"],
          "reserve-uploaders": participants["uploader"]["reserve"]})
+
+
+@blueprint.route('/coordinator/observer_key/<int:recid>/', methods=['GET', ])
+@blueprint.route('/coordinator/observer_key/<int:recid>/<int:as_url>', methods=['GET', ])
+@login_required
+def get_observer_data(recid, as_url=None):
+    """
+    Returns the observer url for a record, if it exists, and the user
+    has permission.
+
+    :param recid: The publication recid for requested observer key
+    :param as_url: Default: None - Whether to return as url (when set to 1), or just key
+    :return: JSON object with observer url and recid/status, or failure message.
+    """
+    response = { "recid": recid, "observer_exists": False }
+
+    if user_allowed_to_perform_action(recid) and has_coordinator_permissions(recid, current_user):
+        # Query for the observer key object
+        observer = get_or_create_submission_observer(recid)
+
+        if observer:
+            # If exists, set response value and key
+            response['observer_exists'] = True
+
+            if as_url == 1:
+                site_url = current_app.config.get('SITE_URL', 'https://www.hepdata.net')
+                observer_url = f"{site_url}/record/{recid}?observer_key={observer.observer_key}"
+                response['observer_key'] = observer_url
+            else:
+                response['observer_key'] = observer.observer_key
+        else:
+            # Set response object value for status
+            response['observer_exists'] = False
+    else:
+        # Return error message if user does not have relevant permissions
+        response['message'] = "You do not have permission to perform this action."
+
+    return json.dumps(response)
 
 
 @blueprint.route('/data/review/status/', methods=['POST', ])
@@ -698,94 +755,128 @@ def get_resource(resource_id):
     Attempts to find any HTML resources to be displayed for a record in the event that it
     does not have proper data records included.
 
-    :param recid: publication record id
+    :param resource_id: Resource id
     :return: json dictionary containing any HTML files to show.
     """
     resource_obj = DataResource.query.filter_by(id=resource_id).first()
+    if not resource_obj:
+        log.warning("Unable to find resource %d.", resource_id)
+        return abort(404)
+
+    hepsubmission = HEPSubmission.query.filter(HEPSubmission.resources.any(id=resource_id)).first()
+    if not hepsubmission:
+        # Look for DataSubmission mapping to this resource
+        datasubmission = DataSubmission.query.filter(DataSubmission.resources.any(id=resource_id)).first()
+        if datasubmission:
+            hepsubmission = HEPSubmission.query.filter_by(
+                publication_recid=datasubmission.publication_recid,
+                version=datasubmission.version
+            ).first()
+        if not hepsubmission:
+            log.warning("Unable to find publication for resource %d.", resource_id)
+            return abort(404)
+
+    recid = hepsubmission.publication_recid
+    version = hepsubmission.version
+
+    # Retrieve and verify observer key value
+    observer_key = request.args.get('observer_key')
+    key_verified = verify_observer_key(recid, observer_key)
+
+    version_count, version_count_all = get_version_count(recid, key_verified)
+
+    # Check for a user trying to access a version of a publication record where they don't have permissions.
+    if version_count < version_count_all and version == version_count_all:
+        abort(403)
+
     view_mode = bool(request.args.get('view', False))
     landing_page = bool(request.args.get('landing_page', False))
     output_format = 'html'
     filesize = None
 
-    if resource_obj:
-        contents = ''
-        if landing_page or not view_mode:
-            if resource_obj.file_location.lower().startswith('http'):
-                contents = resource_obj.file_location
-            elif resource_obj.file_type.lower() not in IMAGE_TYPES:
-                print("Resource is at: " + resource_obj.file_location)
-                try:
-                    with open(resource_obj.file_location, 'r', encoding='utf-8') as resource_file:
-                        if mimetypes.guess_type(resource_obj.file_location)[0] != 'application/x-tar':
-                            # Check against the filesize threshold. Do not set contents if it fails.
-                            filesize = os.path.getsize(resource_obj.file_location)
-                            if filesize < ADDITIONAL_SIZE_LOAD_CHECK_THRESHOLD:
-                                contents = resource_file.read()
-                            else:
-                                contents = 'Large text file'
+    contents = ''
+    if landing_page or not view_mode:
+        if resource_obj.file_location.lower().startswith('http'):
+            contents = resource_obj.file_location
+        elif resource_obj.file_type.lower() not in IMAGE_TYPES:
+            print("Resource is at: " + resource_obj.file_location)
+            try:
+                with open(resource_obj.file_location, 'r', encoding='utf-8') as resource_file:
+                    if mimetypes.guess_type(resource_obj.file_location)[0] != 'application/x-tar':
+                        # Check against the filesize threshold. Do not set contents if it fails.
+                        filesize = os.path.getsize(resource_obj.file_location)
+                        if filesize < ADDITIONAL_SIZE_LOAD_CHECK_THRESHOLD:
+                            contents = resource_file.read()
                         else:
-                            contents = 'Binary'
-                except UnicodeDecodeError:
-                    contents = 'Binary'
+                            contents = 'Large text file'
+                    else:
+                        contents = 'Binary'
+            except UnicodeDecodeError:
+                contents = 'Binary'
 
-        if landing_page:
-            # Check the Accept header: if it matches the file's mimetype then send the file back instead
-            request_mimetypes = request.accept_mimetypes
-            file_mimetype = get_resource_mimetype(resource_obj, contents)
+    if landing_page:
+        # Check the Accept header: if it matches the file's mimetype then send the file back instead
+        request_mimetypes = request.accept_mimetypes
+        file_mimetype = get_resource_mimetype(resource_obj, contents)
 
-            if request_mimetypes.quality(file_mimetype) >= 1 and not (file_mimetype == 'text/html' and len(request_mimetypes) > 1):
-                # Accept header matches the file type, so download file instead
-                view_mode = True
-                landing_page = False
-            elif should_send_json_ld(request):
-                output_format = 'json_ld'
-            else:
-                if request_mimetypes.quality('text/html') == 0:
-                    # If text/html is not requested, user has probably requested the wrong file type
-                    # so send an appropriate error so they know the correct type
-                    accepted_mimetypes = [file_mimetype, 'text/html'] + JSON_LD_MIMETYPES
-                    accepted_mimetypes_str = ', '.join([f"'{m}'" for m in accepted_mimetypes])
-                    # Send back JSON as client is not expecting HTML
-                    return jsonify({
-                        'msg': f"Accept header value '{request_mimetypes}' does not contain a valid media type for this resource. "
-                               + f"Expected Accept header to include one of {accepted_mimetypes_str}",
-                        'file_mimetype': file_mimetype
-                    }), 406
-
-        if view_mode:
-            if resource_obj.file_location.lower().startswith('http'):
-                return redirect(resource_obj.file_location)
-            else:
-                return send_file(resource_obj.file_location, as_attachment=True)
-        elif 'html' in resource_obj.file_location and 'http' not in resource_obj.file_location.lower() and not landing_page:
-            with open(resource_obj.file_location, 'r') as resource_file:
-                return contents
+        if request_mimetypes.quality(file_mimetype) >= 1 and not (file_mimetype == 'text/html' and len(request_mimetypes) > 1):
+            # Accept header matches the file type, so download file instead
+            view_mode = True
+            landing_page = False
+        elif should_send_json_ld(request):
+            output_format = 'json_ld'
         else:
-            if landing_page:
-                try:
-                    ctx = format_resource(resource_obj, contents, request.base_url + '?view=true')
-                except ValueError as e:
-                    log.error(str(e))
-                    return abort(404)
+            if request_mimetypes.quality('text/html') == 0:
+                # If text/html is not requested, user has probably requested the wrong file type
+                # so send an appropriate error so they know the correct type
+                accepted_mimetypes = [file_mimetype, 'text/html'] + JSON_LD_MIMETYPES
+                accepted_mimetypes_str = ', '.join([f"'{m}'" for m in accepted_mimetypes])
+                # Send back JSON as client is not expecting HTML
+                return jsonify({
+                    'msg': f"Accept header value '{request_mimetypes}' does not contain a valid media type for this resource. "
+                           + f"Expected Accept header to include one of {accepted_mimetypes_str}",
+                    'file_mimetype': file_mimetype
+                }), 406
 
-                if output_format == 'json_ld':
-                    status_code = 404 if 'error' in ctx['json_ld'] else 200
-                    return jsonify(ctx['json_ld']), status_code
-                else:
-                    if filesize:
-                        ctx['filesize'] = '%.2f'%((filesize / 1024) / 1024) # Set filesize if exists
-                        ctx['ADDITIONAL_SIZE_LOAD_CHECK_THRESHOLD'] = '%.2f'%((ADDITIONAL_SIZE_LOAD_CHECK_THRESHOLD / 1024) / 1024)
-                    ctx['data_license'] = generate_license_data_by_id(resource_obj.file_license)
-                    return render_template('hepdata_records/related_record.html', ctx=ctx)
-
-            else:
-                return jsonify(
-                    {"location": '/record/resource/{0}?view=true'.format(resource_obj.id), 'type': resource_obj.file_type,
-                     'description': resource_obj.file_description, 'file_contents': decode_string(contents)})
-
+    if view_mode:
+        if resource_obj.file_location.lower().startswith('http'):
+            return redirect(resource_obj.file_location)
+        else:
+            file_location = resource_obj.file_location
+            return send_file(file_location, as_attachment=True)
+    elif 'html' in resource_obj.file_location and 'http' not in resource_obj.file_location.lower() and not landing_page:
+        with open(resource_obj.file_location, 'r') as resource_file:
+            return contents
     else:
-        log.error("Unable to find resource %d.", resource_id)
-        return abort(404)
+        if landing_page:
+            try:
+                content_url = request.base_url + '?view=true'
+                if key_verified:
+                    content_url += f'&observer_key={observer_key}'
+                ctx = format_resource(resource_obj, contents, content_url)
+                if key_verified:
+                    ctx['observer_key'] = observer_key
+            except ValueError as e:
+                log.error(str(e))
+                return abort(404)
+
+            if output_format == 'json_ld':
+                status_code = 404 if 'error' in ctx['json_ld'] else 200
+                return jsonify(ctx['json_ld']), status_code
+            else:
+                if filesize:
+                    ctx['filesize'] = '%.2f'%((filesize / 1024) / 1024) # Set filesize if exists
+                    ctx['ADDITIONAL_SIZE_LOAD_CHECK_THRESHOLD'] = '%.2f'%((ADDITIONAL_SIZE_LOAD_CHECK_THRESHOLD / 1024) / 1024)
+                ctx['data_license'] = generate_license_data_by_id(resource_obj.file_license)
+                return render_template('hepdata_records/related_record.html', ctx=ctx)
+
+        else:
+            location = '/record/resource/{0}?view=true'.format(resource_obj.id)
+            if key_verified:
+                location += f'&observer_key={observer_key}'
+            return jsonify(
+                {"location": location, 'type': resource_obj.file_type,
+                 'description': resource_obj.file_description, 'file_contents': decode_string(contents)})
 
 
 @blueprint.route('/cli_upload', methods=['GET', 'POST'])
