@@ -160,7 +160,7 @@ jobs:
       run: |
         pytest --cov-report xml tests/*_test.py tests/test_*.py
     - name: Setup Sauce Connect
-      uses: saucelabs/sauce-connect-action@v3.0.0
+      uses: saucelabs/sauce-connect-action@v3
       if: startsWith(matrix.python-version, '3.9')
       with:
         username: ${{ secrets.SAUCE_USERNAME }}
@@ -168,7 +168,7 @@ jobs:
         region: eu
         tunnelName: ${{ github.run_id }}
         proxyLocalhost: direct
-        scVersion: 5.3.1
+        scVersion: 5.5.0
     - name: Run end-to-end tests
       if: startsWith(matrix.python-version, '3.9')
       env:
