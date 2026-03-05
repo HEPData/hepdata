@@ -230,3 +230,10 @@ def test_submissionobserver():
     # Testing error raised with invalid publication_recid string value
     with pytest.raises(ValueError):
         SubmissionObserver("test")
+
+    # Testing error raised with non-positive publication_recid (zero and negative)
+    with pytest.raises(ValueError):
+        SubmissionObserver(0)
+
+    with pytest.raises(ValueError):
+        SubmissionObserver(-1)

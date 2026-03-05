@@ -40,6 +40,7 @@ from invenio_accounts.models import User
 from invenio_db import db
 from sqlalchemy.exc import MultipleResultsFound
 import pytest
+from unittest.mock import patch
 from werkzeug.datastructures import FileStorage
 import requests_mock
 
@@ -1578,6 +1579,23 @@ def test_verify_observer_key(app):
         result = verify_observer_key(test_recid, test["test_key"])
         assert result == test["expected"]
 
+    # Test None inputs - both None, submission_id only None, observer_key only None
+    assert verify_observer_key(None, None) == False
+    assert verify_observer_key(None, "12345678") == False
+    assert verify_observer_key(1, None) == False
+
+    # Test non-numeric submission_id (raises ValueError/TypeError when cast to int)
+    assert verify_observer_key("abc", "12345678") == False
+
+    # Test wrong length observer_key (not equal to OBSERVER_KEY_LENGTH)
+    assert verify_observer_key(1, "short") == False  # too short
+    assert verify_observer_key(1, "toolongkey123") == False  # too long
+
+    # Test DB exception path
+    with patch('hepdata.modules.permissions.api.SubmissionObserver.query') as mock_query:
+        mock_query.filter_by.side_effect = Exception("DB error")
+        assert verify_observer_key(1, "12345678") == False
+
 
 def test_get_observer_data(app, client, mocker):
     """
@@ -1618,6 +1636,24 @@ def test_get_observer_data(app, client, mocker):
     assert result["recid"] == recid
     assert result["observer_exists"] == True
     assert result["observer_key"] == f"{site_url}/record/{recid}?observer_key={test_observer.observer_key}"
+
+    # Test as_url != 1 path: should return just the key, not a full URL
+    result_key_only = json.loads(get_observer_data(recid, 0))
+    assert result_key_only["observer_exists"] == True
+    assert result_key_only["observer_key"] == test_observer.observer_key
+    assert not result_key_only["observer_key"].startswith("http")
+
+    # Test no-permission path: non-admin user without coordinator rights
+    from invenio_accounts.models import User as InvUser
+    from flask_login import logout_user
+    logout_user()
+    non_admin = InvUser(email='observer_test_nonadmin@test.com', password='test', active=True)
+    db.session.add(non_admin)
+    db.session.commit()
+    login_user(non_admin)
+    result_no_perm = json.loads(get_observer_data(recid, 1))
+    assert "message" in result_no_perm
+    assert result_no_perm["observer_exists"] == False
 
 
 def test_observer_create_from_none(app, load_default_data):

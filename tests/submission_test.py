@@ -1128,3 +1128,23 @@ def test_delete_submission_observer(app):
     all_observers = SubmissionObserver.query.all()
     assert len(all_observers) == (len(test_ids) - 1)
 
+
+def test_delete_submission_observer_db_error(app):
+    """
+    Tests that delete_submission_observer correctly handles a database error
+    during the delete operation (covers the except Exception block).
+    """
+    # Create a test SubmissionObserver to operate on
+    test_observer = SubmissionObserver(9999)
+    db.session.add(test_observer)
+    db.session.commit()
+
+    # Mock db.session.delete to raise a database exception
+    with patch.object(db.session, 'delete', side_effect=Exception("DB delete error")):
+        with pytest.raises(Exception, match="DB delete error"):
+            delete_submission_observer(9999)
+
+    # After the exception, the observer should still exist (rollback occurred)
+    submission_observer = SubmissionObserver.query.filter_by(publication_recid=9999).first()
+    assert submission_observer is not None
+
