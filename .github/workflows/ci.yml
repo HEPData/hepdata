@@ -181,13 +181,12 @@ jobs:
     - name: Combine coverage files
       if: startsWith(matrix.python-version, '3.9')
       run: |
-        coverage combine --data-file=.coverage.xml .coverage_func.xml .coverage_e2e.xml
         coverage combine --data-file=.coverage .coverage_func .coverage_e2e
     - name: Upload to Codecov
       if: ${{ startsWith(matrix.python-version, '3.9') && !env.ACT }}
       uses: codecov/codecov-action@v5
       with:
-        files: .coverage.xml
+        files: .coverage_func.xml,.coverage_e2e.xml
         fail_ci_if_error: true
         token: ${{ secrets.CODECOV_TOKEN }}
     - name: Upload to Coveralls
