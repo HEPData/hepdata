@@ -178,11 +178,16 @@ jobs:
         SQLALCHEMY_WARN_20: 1
       run: |
         if [[ -n ${{ secrets.SAUCE_USERNAME }} && -n ${{ secrets.SAUCE_ACCESS_KEY}} ]]; then pytest -v --cov-report xml:.coverage_e2e.xml tests/e2e; fi
+    - name: Combine coverage files
+      if: startsWith(matrix.python-version, '3.9')
+      run: |
+        coverage combine --data-file=.coverage.xml .coverage_func.xml .coverage_e2e.xml
+        coverage combine --data-file=.coverage .coverage_func .coverage_e2e
     - name: Upload to Codecov
       if: ${{ startsWith(matrix.python-version, '3.9') && !env.ACT }}
       uses: codecov/codecov-action@v5
       with:
-        files: .coverage_func.xml,.coverage_e2e.xml
+        files: .coverage.xml
         fail_ci_if_error: true
         token: ${{ secrets.CODECOV_TOKEN }}
     - name: Upload to Coveralls
@@ -190,7 +195,7 @@ jobs:
       uses: coverallsapp/github-action@v2
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
-        files: .coverage_func .coverage_e2e
+        file: .coverage
         fail-on-error: false
     - name: Build docs
       run: |
