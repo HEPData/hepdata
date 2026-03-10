@@ -47,7 +47,7 @@ from time import sleep
 from hepdata.config import CFG_TMPDIR, RUN_SELENIUM_LOCALLY
 from hepdata.ext.opensearch.api import reindex_all
 from hepdata.factory import create_app
-from tests.conftest import get_identifiers, import_default_data
+from tests.conftest import _get_test_db_uri, get_identifiers, import_default_data
 
 
 # Override Invenio-DB's SQLAlchemy object to set pool_pre_ping to True to avoid
@@ -102,8 +102,8 @@ def app(request):
     Overrides the `app` fixture found in `../conftest.py`. Tests/files in this
     folder and subfolders will see this variant of the `app` fixture.
     """
-    app = create_app()
-    test_db_host = app.config.get('TEST_DB_HOST', 'localhost')
+    test_db_uri = _get_test_db_uri()
+    app = create_app(SQLALCHEMY_DATABASE_URI=test_db_uri)
     # Note that in GitHub Actions we add "TESTING=True" and
     # "APP_ENABLE_SECURE_HEADERS=False" to config_local.py as well,
     # to ensure that they're set before the app is initialised,
@@ -118,8 +118,7 @@ def app(request):
         OPENSEARCH_INDEX="hepdata-main-test",
         SUBMISSION_INDEX='hepdata-submission-test',
         AUTHOR_INDEX='hepdata-authors-test',
-        SQLALCHEMY_DATABASE_URI=os.environ.get(
-            'SQLALCHEMY_DATABASE_URI', 'postgresql+psycopg2://hepdata:hepdata@' + test_db_host + '/hepdata_test'),
+        SQLALCHEMY_DATABASE_URI=test_db_uri,
         APP_ENABLE_SECURE_HEADERS=False,
         E2E_TESTING=True
     ))
