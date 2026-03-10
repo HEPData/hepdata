@@ -22,6 +22,7 @@
 import os.path
 import responses
 import zipfile
+from unittest.mock import Mock, patch
 
 from hepdata.config import CFG_CONVERTER_URL
 from hepdata.modules.converter.tasks import convert_and_store
@@ -100,3 +101,154 @@ def test_convert_and_store_valid_original_with_old_resources(app, capsys):
                     line_str = line.decode()
                     if 'location' in line_str:
                         assert('/resource/' not in line_str)
+
+
+def test_download_submission_with_recid_version_access_control(app, client):
+    """
+    Test that download_submission_with_recid returns 403 when a user without
+    permissions tries to access an unpublished version.
+    """
+    recid = 12345
+    version = 2  # Trying to access the latest unpublished version
+
+    with patch('hepdata.modules.converter.views.verify_observer_key') as mock_verify, \
+         patch('hepdata.modules.converter.views.get_version_count') as mock_version_count:
+
+        mock_verify.return_value = False
+        # User can see 1 version (finished), but there are 2 total
+        mock_version_count.return_value = (1, 2)
+
+        response = client.get(f'/download/submission/{recid}/{version}/yaml')
+        assert response.status_code == 403
+
+
+def test_download_submission_with_inspire_id_version_access_control(app, client):
+    """
+    Test that download_submission_with_inspire_id returns 403 when a user
+    without permissions tries to access an unpublished version.
+    """
+    inspire_id = 'ins1487726'
+    version = 2  # Trying to access the latest unpublished version
+
+    with patch('hepdata.modules.converter.views.verify_observer_key') as mock_verify, \
+         patch('hepdata.modules.converter.views.get_version_count') as mock_version_count, \
+         patch('hepdata.modules.converter.views.get_latest_hepsubmission') as mock_sub:
+
+        mock_sub.return_value = Mock(publication_recid=99999)
+        mock_verify.return_value = False
+        # User can see 1 version (finished), but there are 2 total
+        mock_version_count.return_value = (1, 2)
+
+        response = client.get(f'/download/submission/{inspire_id}/{version}/yaml')
+        assert response.status_code == 403
+
+
+def test_download_submission_with_inspire_id_older_version(app, client):
+    """
+    Test that download_submission_with_inspire_id retrieves the correct
+    older version (elif version < version_count_all branch).
+    """
+    inspire_id = '1487726'
+
+    mock_submission = Mock()
+    mock_submission.publication_recid = 99998
+    mock_submission.inspire_id = inspire_id
+    mock_submission.version = 1
+    mock_submission.overall_status = 'finished'
+
+    with patch('hepdata.modules.converter.views.verify_observer_key') as mock_verify, \
+         patch('hepdata.modules.converter.views.get_version_count') as mock_version_count, \
+         patch('hepdata.modules.converter.views.get_latest_hepsubmission') as mock_sub, \
+         patch('hepdata.modules.converter.views.HEPSubmission') as mock_hepsub_class, \
+         patch('hepdata.modules.converter.views.download_submission') as mock_download:
+
+        mock_sub.return_value = mock_submission
+        mock_verify.return_value = False
+        # User can see 1 version (finished), but there are 2 total
+        mock_version_count.return_value = (1, 2)
+        mock_hepsub_class.query.filter_by.return_value.first.return_value = mock_submission
+        mock_download.return_value = 'downloaded'
+
+        response = client.get(f'/download/submission/ins{inspire_id}/1/yaml')
+        # Should have called download_submission with version 1
+        mock_download.assert_called_once()
+
+
+def test_download_data_table_observer_key_not_verified(app, client):
+    """
+    Test that download_data_table_by_recid sets observer_key to None
+    when the key is not verified (covers the if not key_verified path).
+    """
+    recid = 11111
+
+    mock_datasubmission = Mock()
+    mock_datasubmission.publication_recid = recid
+    mock_datasubmission.id = 1
+    mock_datasubmission.version = 1
+    mock_datasubmission.name = 'Table 1'
+
+    with patch('hepdata.modules.converter.views.verify_observer_key') as mock_verify, \
+         patch('hepdata.modules.converter.views.get_version_count') as mock_version_count, \
+         patch('hepdata.modules.converter.views.DataSubmission') as mock_datasub, \
+         patch('hepdata.modules.converter.views.download_datatable') as mock_download:
+
+        mock_verify.return_value = False  # Key NOT verified
+        mock_version_count.return_value = (1, 1)  # Same count, no permission issue
+        mock_datasub.query.filter_by.return_value.one.return_value = mock_datasubmission
+        mock_download.return_value = 'downloaded'
+
+        response = client.get(
+            f'/download/table/{recid}/Table 1/yaml?observer_key=invalidkey'
+        )
+        # When key is not verified, download_datatable should be called with observer_key=None
+        mock_download.assert_called_once()
+        call_kwargs = mock_download.call_args[1]
+        assert call_kwargs.get('observer_key') is None
+
+
+def test_download_datatable_json_with_observer_key(app, client):
+    """
+    Test that download_datatable includes observer_key in the redirect URL
+    when file_format is 'json' and observer_key is provided.
+    """
+    from hepdata.modules.converter.views import download_datatable
+
+    mock_datasubmission = Mock()
+    mock_datasubmission.publication_recid = 22222
+    mock_datasubmission.id = 5
+    mock_datasubmission.version = 1
+
+    with app.test_request_context('/'):
+        response = download_datatable(
+            mock_datasubmission,
+            'json',
+            observer_key='testkey1'
+        )
+        # Should redirect with observer_key in URL
+        assert response.status_code == 302
+        location = response.headers.get('Location', '')
+        assert 'observer_key=testkey1' in location
+
+
+def test_download_datatable_json_without_observer_key(app, client):
+    """
+    Test that download_datatable redirects without observer_key when
+    observer_key is None (covers the if observer_key: branch).
+    """
+    from hepdata.modules.converter.views import download_datatable
+
+    mock_datasubmission = Mock()
+    mock_datasubmission.publication_recid = 33333
+    mock_datasubmission.id = 6
+    mock_datasubmission.version = 1
+
+    with app.test_request_context('/'):
+        response = download_datatable(
+            mock_datasubmission,
+            'json',
+            observer_key=None
+        )
+        # Should redirect without observer_key
+        assert response.status_code == 302
+        location = response.headers.get('Location', '')
+        assert 'observer_key' not in location

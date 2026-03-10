@@ -31,6 +31,9 @@ from invenio_accounts.models import User
 from sqlalchemy import TypeDecorator, types, event
 from invenio_db import db
 from datetime import datetime
+from uuid import uuid4
+
+from hepdata.config import OBSERVER_KEY_LENGTH
 
 logging.basicConfig()
 log = logging.getLogger(__name__)
@@ -88,7 +91,6 @@ class HEPSubmission(db.Model):
     # and is used as the document id in opensearch and as the record id
     publication_recid = db.Column(db.Integer)
     inspire_id = db.Column(db.String(128))
-
     data_abstract = db.Column(LargeBinaryString)
 
     resources = db.relationship("DataResource",
@@ -120,6 +122,37 @@ class HEPSubmission(db.Model):
     related_recids = db.relationship("RelatedRecid", secondary="relatedrecid_identifier",
                                cascade="all,delete")
 
+
+class SubmissionObserver(db.Model):
+    """
+    Contains observer key entry for access per publication
+    on the publication_recid field.
+    """
+    __tablename__ = "submissionobserver"
+    publication_recid = db.Column(db.Integer, primary_key=True)
+    observer_key = db.Column(db.String(OBSERVER_KEY_LENGTH), nullable=False)
+
+    def __init__(self, publication_recid):
+        # Validate publication_recid
+        try:
+            recid = int(publication_recid)
+            if recid <= 0:
+                raise ValueError(f"publication_recid must be positive, got: {recid}")
+            self.publication_recid = recid
+        except (ValueError, TypeError) as e:
+            raise ValueError(f"publication_recid must be a positive integer, got: {publication_recid}") from e
+        self.generate_observer_key()
+
+    def generate_observer_key(self):
+        """
+        Generates a new observer key (UUID4/random)
+        and sets the observer key.
+        """
+        # Generate UUID4 and cast to string
+        generated_key = str(uuid4())
+        # Split to desired key length
+        truncated_key = generated_key[:OBSERVER_KEY_LENGTH]
+        self.observer_key = truncated_key
 
 # Declarations of the helper tables used to manage many-to-many relationships.
 datafile_identifier = db.Table(

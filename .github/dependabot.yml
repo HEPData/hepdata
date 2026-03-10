@@ -28,3 +28,4 @@ updates:
       - dependency-name: "invenio-records"  # see https://github.com/HEPData/hepdata/issues/848
       - dependency-name: "invenio-search"  # see https://github.com/HEPData/hepdata/issues/848
       - dependency-name: "invenio-userprofiles"  # see https://github.com/HEPData/hepdata/issues/848
+      - dependency-name: "setuptools"  # see https://github.com/HEPData/hepdata/issues/946

@@ -27,12 +27,15 @@ Used to specifically test email sending call functions.
 """
 
 import os
+import re
 
 from invenio_db import db
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 
-from hepdata.modules.email.api import send_cookie_email, send_reserve_email
+from .conftest import create_record_with_participant
+from hepdata.modules.email.api import send_cookie_email, notify_submission_created, send_reserve_email
 from hepdata.modules.permissions.models import SubmissionParticipant
+from hepdata.modules.submission.models import SubmissionObserver
 from tests.conftest import create_test_record
 
 
@@ -42,29 +45,8 @@ def test_send_cookie_email(app):
     Tests expected output (argument calls) of the create_send_email_task function.
     """
 
-    # Set up the submission used for testing purposes
-    # Create test participant
-    test_participant = SubmissionParticipant(
-            user_account=1, publication_recid=2,
-            email="test@hepdata.net", role='primary')
-    db.session.add(test_participant)
-    db.session.commit()
+    test_submission, test_participant, record_information = create_record_with_participant()
 
-    # Correctly set up the test_submission folder path
-    base_directory = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-    test_directory = os.path.join(base_directory, 'tests', 'test_data', 'test_submission')
-
-    # Create and upload the submission
-    # and set the coordinator
-    test_submission = create_test_record(test_directory, "todo")
-    test_submission.coordinator = 1
-    db.session.add(test_participant)
-    db.session.commit()
-
-    record_information = {
-        "recid": test_submission.publication_recid,
-        "title": "Test Title"
-    }
     message = "TestMessage"
 
     # Set up the patch for call access then run
@@ -85,6 +67,52 @@ def test_send_cookie_email(app):
         # TODO - Expand to further check email contents
         # Confirm existence of message sent in email
         assert message in called_args[2]
+
+def test_notify_submission_created(app):
+    """
+    Tests the notify_submission_created function to ensure that the submission observer
+    key is being properly inserted into the creation email.
+
+    Currently only checking for the existence of the observer key.
+    """
+    test_submission, test_participant, record_information = create_record_with_participant()
+
+    # Test sending the initial submission creation email
+    with patch("hepdata.modules.email.api.create_send_email_task", side_effect=None) as task_patch:
+
+        test_recid = test_submission.publication_recid
+        # Creating a valid user object for rendering with full_name and email
+        user = MagicMock(full_name="HEPData User", email="e@mail.com")
+
+        # Execute the target function
+        notify_submission_created(record_information, test_submission.coordinator, [user], [user])
+
+        task_patch.assert_called_once()
+        called_args = task_patch.call_args.args
+
+        # called_args[2] should contain the result of render_template on email/created.html
+        # Also discard everything prior to what we require
+        base_text = called_args[2].split("special permissions:")[1]
+
+        # Get the contents of anchor tags
+        match = re.search(r'<a href="(.*?)">(.*?)</a>', base_text)
+
+        # Check that they are both properly selected
+        try:
+            anchor_url = match.group(1)
+            anchor_text = match.group(2)
+        except IndexError:
+            raise AssertionError(f"Value for anchor_url: {anchor_url}/anchor_text: {anchor_text} is invalid")
+
+        # Get SubmissionObserver to get key
+        test_observer = SubmissionObserver.query.filter_by(publication_recid=test_recid).first()
+
+        # Build expected URL for verification
+        site_url = app.config.get('SITE_URL')
+        expected_url = f"{site_url}/record/{test_recid}?observer_key={test_observer.observer_key}"
+
+        assert anchor_url == expected_url
+        assert anchor_text == expected_url
 
 
 def test_send_reserve_email(app):

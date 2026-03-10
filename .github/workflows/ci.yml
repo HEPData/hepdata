@@ -136,7 +136,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip "setuptools<82" py
-        python -m pip install twine wheel coveralls requirements-builder
+        python -m pip install twine wheel requirements-builder
         python -m pip install --force-reinstall -r requirements.txt
         python -m pip install -e .[tests]
     - name: Initialise hepdata
@@ -158,9 +158,9 @@ jobs:
         COVERAGE_FILE: '.coverage_func'
         SQLALCHEMY_WARN_20: 1
       run: |
-        py.test -vv tests/*_test.py tests/test_*.py
+        pytest -v --cov-report xml:.coverage_func.xml tests/*_test.py tests/test_*.py
     - name: Setup Sauce Connect
-      uses: saucelabs/sauce-connect-action@v3.0.0
+      uses: saucelabs/sauce-connect-action@v3
       if: startsWith(matrix.python-version, '3.9')
       with:
         username: ${{ secrets.SAUCE_USERNAME }}
@@ -168,7 +168,7 @@ jobs:
         region: eu
         tunnelName: ${{ github.run_id }}
         proxyLocalhost: direct
-        scVersion: 5.3.1
+        scVersion: 5.5.0
     - name: Run end-to-end tests
       if: startsWith(matrix.python-version, '3.9')
       env:
@@ -177,20 +177,30 @@ jobs:
         COVERAGE_FILE: '.coverage_e2e'
         SQLALCHEMY_WARN_20: 1
       run: |
-        if [[ -n ${{ secrets.SAUCE_USERNAME }} && -n ${{ secrets.SAUCE_ACCESS_KEY}} ]]; then py.test -vv tests/e2e; fi
-    - name: Run coveralls
-      if: ${{ startsWith(matrix.python-version, '3.9') && !env.ACT }}
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        COVERALLS_SERVICE_NAME: github
+        if [[ -n ${{ secrets.SAUCE_USERNAME }} && -n ${{ secrets.SAUCE_ACCESS_KEY}} ]]; then pytest -v --cov-report xml:.coverage_e2e.xml tests/e2e; fi
+    - name: Combine coverage files
+      if: startsWith(matrix.python-version, '3.9')
       run: |
-        coverage combine .coverage_func .coverage_e2e
-        coveralls
+        coverage combine --data-file=.coverage .coverage_func .coverage_e2e
+    - name: Upload to Codecov
+      if: ${{ startsWith(matrix.python-version, '3.9') && !env.ACT }}
+      uses: codecov/codecov-action@v5
+      with:
+        files: .coverage_func.xml,.coverage_e2e.xml
+        fail_ci_if_error: true
+        token: ${{ secrets.CODECOV_TOKEN }}
+    - name: Upload to Coveralls
+      if: ${{ startsWith(matrix.python-version, '3.9') && !env.ACT }}
+      uses: coverallsapp/github-action@v2
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        file: .coverage
+        fail-on-error: false
     - name: Build docs
       run: |
         python -m pip install -e .[docs]
         cd docs && make html
-    - uses: actions/upload-artifact@v6
+    - uses: actions/upload-artifact@v7
       if: ${{ failure() && !env.ACT }}
       with:
         name: sauce-connect-log
