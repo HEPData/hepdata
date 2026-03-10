@@ -65,6 +65,37 @@ class SQLAlchemy(InvenioSQLAlchemy):
 
 multiprocessing.set_start_method('fork')
 
+
+def _debug_browser_log_entries(browser, log_entries):
+    print('========== Browser log diagnostics ==============================================')
+    print(f'Current URL: {browser.current_url}')
+    try:
+        print(f'Page title: {browser.title}')
+    except Exception:
+        print('Page title: <unavailable>')
+
+    for entry in log_entries:
+        message = entry.get('message', '')
+        print(f"[{entry.get('level', 'UNKNOWN')}] {message}")
+        if '/static/dist/js/manifest.' in message and 'status of 500' in message:
+            resource_url = message.split(' - Failed to load resource', 1)[0].strip()
+            print(f'Manifest resource URL: {resource_url}')
+            try:
+                with urllib_request.urlopen(resource_url, timeout=15) as response:
+                    body_prefix = response.read(300).decode('utf-8', errors='replace')
+                    print(f'Manifest fetch status: {response.status}')
+                    print(f'Manifest fetch body prefix: {body_prefix}')
+            except HTTPError as exc:
+                body_prefix = exc.read(300).decode('utf-8', errors='replace')
+                print(f'Manifest fetch HTTPError: {exc.code}')
+                print(f'Manifest fetch body prefix: {body_prefix}')
+            except URLError as exc:
+                print(f'Manifest fetch URLError: {exc.reason}')
+            except Exception:
+                print('Manifest fetch raised unexpected exception:')
+                print(traceback.format_exc())
+    print('================================================================================')
+
 @pytest.fixture(scope='session')
 def app(request):
     """Flask application fixture for E2E/integration/selenium tests.
@@ -255,6 +286,9 @@ def env_browser(request):
     # SEVERE: http://localhost:5555/favicon.ico - Failed to load resource:
     # the server responded with a status of 404 (Not Found)
     log = [t for t in log if 'favicon.ico' not in t['message']]
+
+    if log:
+        _debug_browser_log_entries(browser, log)
 
     assert len(log) == 0, \
         "Errors in browser log:\n" + \
