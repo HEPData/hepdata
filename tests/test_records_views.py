@@ -352,7 +352,7 @@ def test_get_table_details_version_zero_fallback(app, client):
 
     with patch('hepdata.modules.records.views.verify_observer_key', return_value=False), \
          patch('hepdata.modules.records.views.get_version_count', return_value=(2, 2)), \
-         patch('hepdata.modules.records.views.DataSubmission') as mock_ds, \
+         patch('hepdata.modules.records.views.DataSubmission.query') as mock_ds_query, \
          patch('hepdata.modules.records.views.db') as mock_db, \
          patch('hepdata.modules.records.views.file_size_check', return_value={'status': True, 'size': 0}), \
          patch('hepdata.modules.records.views.generate_license_data_by_id', return_value={}), \
@@ -363,7 +363,7 @@ def test_get_table_details_version_zero_fallback(app, client):
          patch('hepdata.modules.records.views.generate_table_data', return_value={}), \
          patch('hepdata.modules.records.views.load_table_data', return_value=None):
 
-        mock_ds.query.options.return_value.filter_by.return_value = mock_datasub_query
+        mock_ds_query.options.return_value.filter_by.return_value = mock_datasub_query
         mock_db.session.query.return_value.filter.return_value = mock_data_query
 
         # version=0 triggers "if not version:" fallback → sets version to version_count (2)
