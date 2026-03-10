@@ -79,6 +79,10 @@ def create_basic_app():
 
 def setup_app(app):
     with app.app_context():
+        db_url = db.engine.url.render_as_string(hide_password=False)
+        if not database_exists(db_url):
+            create_database(db_url)
+
         db.drop_all()
         db.create_all()
         reindex_all(recreate=True, synchronous=True)
