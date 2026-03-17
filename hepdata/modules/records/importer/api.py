@@ -55,7 +55,8 @@ log = logging.getLogger(__name__)
 
 
 def import_records(inspire_ids, synchronous=False, update_existing=False,
-                   base_url='https://hepdata.net', send_email=False):
+                   base_url='https://hepdata.net', send_email=False,
+                   coordinator_id=1, files_url=None):
     """
     Import records from hepdata.net
 
@@ -64,35 +65,52 @@ def import_records(inspire_ids, synchronous=False, update_existing=False,
     :param update_existing: whether to update records that already exist
     :param base_url: override default base URL
     :param send_email: whether to send emails on finalising submissions
+    :param coordinator_id: user ID to assign as Coordinator (defaults to 1)
+    :param files_url: if given, download files from this URL using pattern
+                      ``{files_url}/ins{inspire_id}.tar.gz`` instead of the
+                      default HEPData download endpoint
     :return: None
     """
     for index, inspire_id in enumerate(inspire_ids):
         _cleaned_id = str(inspire_id).replace("ins", "")
         if synchronous:
             _import_record(_cleaned_id, update_existing=update_existing,
-                           base_url=base_url, send_email=send_email)
+                           base_url=base_url, send_email=send_email,
+                           coordinator_id=coordinator_id, files_url=files_url)
         else:
             log.info("Sending import_record task to celery for id %s"
                      % _cleaned_id)
             _import_record.delay(_cleaned_id, update_existing=update_existing,
-                                 base_url=base_url, send_email=send_email)
+                                 base_url=base_url, send_email=send_email,
+                                 coordinator_id=coordinator_id,
+                                 files_url=files_url)
 
 
-def get_inspire_ids(base_url='https://hepdata.net', last_updated=None, n_latest=None):
+def get_inspire_ids(base_url='https://hepdata.net', last_updated=None, n_latest=None,
+                    ids_url=None):
     """
-    Get inspire IDs from hepdata.net
+    Get inspire IDs from hepdata.net or from an alternate URL
 
     :param last_updated: get IDs of records updated on/after this date
+                         (ignored when ``ids_url`` is provided)
     :param n_latest: get the n most recently updated IDs
-    :param base_url: override default base URL
+    :param base_url: override default base URL (ignored when ``ids_url`` is
+                     provided)
+    :param ids_url: explicit URL of a JSON file containing INSPIRE IDs
+                    (e.g. ``https://example.com/hepdata/inspire.json``).
+                    When provided, ``base_url`` and ``last_updated`` are
+                    ignored.
     :return: list of integer IDs, or False in the case of errors
     """
-    url = base_url + '/search/ids?inspire_ids=true'
-    if last_updated:
-        url += '&last_updated=' + last_updated.strftime('%Y-%m-%d')
+    if ids_url:
+        url = ids_url
+    else:
+        url = base_url + '/search/ids?inspire_ids=true'
+        if last_updated:
+            url += '&last_updated=' + last_updated.strftime('%Y-%m-%d')
 
-    if n_latest and n_latest > 0:
-        url += '&sort_by=latest'
+        if n_latest and n_latest > 0:
+            url += '&sort_by=latest'
 
     try:
         response = resilient_requests('get', url)
@@ -123,7 +141,8 @@ def get_inspire_ids(base_url='https://hepdata.net', last_updated=None, n_latest=
 
 
 @shared_task
-def _import_record(inspire_id, update_existing=False, base_url='https://hepdata.net', send_email=False):
+def _import_record(inspire_id, update_existing=False, base_url='https://hepdata.net',
+                   send_email=False, coordinator_id=1, files_url=None):
     publication_information, status = get_inspire_record_information(inspire_id)
     if status != "success":
         log.error("Failed to retrieve publication information for " + inspire_id)
@@ -146,7 +165,7 @@ def _import_record(inspire_id, update_existing=False, base_url='https://hepdata.
             return False
 
     try:
-        download_path = _download_file(base_url, inspire_id)
+        download_path = _download_file(base_url, inspire_id, files_url=files_url)
 
         filename = os.path.basename(download_path)
 
@@ -161,8 +180,7 @@ def _import_record(inspire_id, update_existing=False, base_url='https://hepdata.
         shutil.copy(download_path, file_path)
 
         # Create submission
-        admin_user_id = 1
-        hepsubmission = get_or_create_hepsubmission(recid, admin_user_id)
+        hepsubmission = get_or_create_hepsubmission(recid, coordinator_id)
         db.session.add(hepsubmission)
         db.session.commit()
 
@@ -216,9 +234,12 @@ def _import_record(inspire_id, update_existing=False, base_url='https://hepdata.
         return False
 
 
-def _download_file(base_url, inspire_id):
+def _download_file(base_url, inspire_id, files_url=None):
     # Download file to temp dir
-    url = "{0}/download/submission/ins{1}/original".format(base_url, inspire_id)
+    if files_url:
+        url = "{0}/ins{1}.tar.gz".format(files_url.rstrip('/'), inspire_id)
+    else:
+        url = "{0}/download/submission/ins{1}/original".format(base_url, inspire_id)
     log.info("Trying URL " + url)
     try:
         response = resilient_requests('get', url)
