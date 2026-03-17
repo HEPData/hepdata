@@ -120,7 +120,8 @@ def app(request):
         AUTHOR_INDEX='hepdata-authors-test',
         SQLALCHEMY_DATABASE_URI=test_db_uri,
         APP_ENABLE_SECURE_HEADERS=False,
-        E2E_TESTING=True
+        E2E_TESTING=True,
+        SERVER_NAME=None
     ))
 
     with app.app_context():
