@@ -592,3 +592,73 @@ def test_submissions_csv(app, admin_idx, load_default_data, identifiers):
         csv_lines = csv_data.splitlines()
         assert len(csv_lines) == 4
         assert csv_lines[2] == f'1,1,{site_url}/record/1,1283842,arXiv:1403.1294,Measurement of the forward-backward asymmetry in the distribution of leptons in $t\\bar{{t}}$ events in the lepton+jets channel,D0,{today},2014-08-11,finished,test@test.com (Una Uploader),test2@test.com (Rowan Reviewer) | test@hepdata.net'
+
+
+def test_update_submission_title(app):
+    """Test the update_submission_title endpoint."""
+    with app.app_context():
+        admin_user = User.query.filter_by(id=1).first()
+
+        def make_logged_in_client():
+            """Return a test client session logged in as the admin user."""
+            client = app.test_client()
+            with client.session_transaction() as sess:
+                sess['user_id'] = str(admin_user.id)
+                sess['_fresh'] = True
+            return client
+
+        # Create a record without an INSPIRE ID
+        record_information = create_record({
+            'journal_info': '',
+            'title': 'Provisional Title'
+        })
+        hepsubmission = get_or_create_hepsubmission(record_information['recid'])
+        hepsubmission.inspire_id = None
+        hepsubmission.coordinator = admin_user.id
+        db.session.add(hepsubmission)
+        db.session.commit()
+
+        client = make_logged_in_client()
+
+        # Test successful title update
+        response = client.post(
+            '/dashboard/update_title/{}'.format(record_information['recid']),
+            data={'title': 'Updated Provisional Title'}
+        )
+        assert response.status_code == 200
+        data = response.get_json()
+        assert data['status'] == 'success'
+
+        # Verify title was updated in the record
+        updated_record = get_record_by_id(record_information['recid'])
+        assert updated_record['title'] == 'Updated Provisional Title'
+
+        # Test with empty title
+        response = client.post(
+            '/dashboard/update_title/{}'.format(record_information['recid']),
+            data={'title': ''}
+        )
+        assert response.status_code == 400
+        data = response.get_json()
+        assert data['status'] == 'error'
+
+        # Test that submissions with an INSPIRE ID cannot have their title changed
+        record_with_inspire = create_record({
+            'journal_info': 'Phys. Letts',
+            'title': 'INSPIRE Paper',
+            'inspire_id': '1487726'
+        })
+        hepsubmission_with_inspire = get_or_create_hepsubmission(record_with_inspire['recid'])
+        hepsubmission_with_inspire.inspire_id = '1487726'
+        hepsubmission_with_inspire.coordinator = admin_user.id
+        db.session.add(hepsubmission_with_inspire)
+        db.session.commit()
+
+        client = make_logged_in_client()
+        response = client.post(
+            '/dashboard/update_title/{}'.format(record_with_inspire['recid']),
+            data={'title': 'New Title'}
+        )
+        assert response.status_code == 400
+        data = response.get_json()
+        assert data['status'] == 'error'
