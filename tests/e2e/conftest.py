@@ -204,6 +204,10 @@ def env_browser(request):
         options = webdriver.ChromeOptions()
         options.browser_version = '145'
         options.platform_name = 'Windows 11'
+        prefs = {
+            'profile.password_manager_leak_detection': False
+        }
+        options.add_experimental_option('prefs', prefs)
         local_tunnel_name = os.environ.get('SAUCE_USERNAME', '') + '_tunnel_name'
         sauce_options = {
             'extendedDebugging': True,
