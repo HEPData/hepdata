@@ -52,6 +52,7 @@ TEST_PWD = 'hello1'
 
 
 def _get_test_db_uri():
+    # Generates the test database URI from the set environment variable
     base_db_uri = os.environ.get('SQLALCHEMY_DATABASE_URI', config.SQLALCHEMY_DATABASE_URI)
     parsed_db_uri = urlparse(base_db_uri)
     test_db_path = '/hepdata_test'
@@ -79,6 +80,7 @@ def create_basic_app():
 
 def setup_app(app):
     with app.app_context():
+        # Ensure the test database exists, and if not, create it
         db_url = db.engine.url.render_as_string(hide_password=False)
         if not database_exists(db_url):
             create_database(db_url)
