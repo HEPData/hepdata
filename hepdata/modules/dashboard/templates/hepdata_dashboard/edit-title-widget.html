@@ -1,0 +1,60 @@
+<!-- Edit Title Modal -->
+<div class="modal fade" id="editTitleDialog" tabindex="-1" role="dialog"
+     aria-labelledby="editTitleDialog"
+     aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header" style="border: none">
+                <button type="button" class="close" data-dismiss="modal"
+                        aria-label="Close"><span
+                        aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="editTitleDialogLabel">Edit Submission Title</h4>
+            </div>
+
+            <div class="modal-body">
+
+                <div id="edit_title_entry">
+                    <p>Enter a new provisional title for this submission.</p>
+                    <p class="text-small text-grey">This title will be replaced by the INSPIRE paper
+                        title when an INSPIRE record is attached.</p>
+                    <br/>
+                    <input type="text" id="edit-title-input"
+                           class="form-control"
+                           placeholder="Provisional Submission Title"
+                           style="width: 100%;"/>
+
+                    <div id="edit-title-error" class="alert alert-danger hidden" style="margin-top: 15px;">
+                    </div>
+                </div>
+
+                <div class="spinner hidden" id="edit-title-progress"
+                     style="padding-top: 40px; padding-bottom: 40px">
+                    <div class="ball ball-purple"></div>
+                    <p>Saving Title...</p>
+                </div>
+
+                <div align="center" class="hidden" id="edit-title-success"
+                     style="padding: 40px">
+                    <div style="color: #4FBA6F; font-weight: bolder">
+                        <span class="fa fa-check"
+                              style="font-size: 3em"></span><br/>
+                        <p>Title updated successfully.</p>
+                    </div>
+                </div>
+
+            </div>
+            <div class="clearfix"></div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default pull-left"
+                        data-dismiss="modal" aria-label="Close"><span
+                        aria-hidden="true">&times; Close</span></button>
+
+                <button class="btn btn-md btn-success pull-right"
+                        id="edit-title-save-button" data-recid=""> Save Title
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
