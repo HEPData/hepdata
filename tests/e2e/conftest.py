@@ -78,8 +78,7 @@ def app(request):
         SQLALCHEMY_DATABASE_URI=test_db_uri,
         SQLALCHEMY_ENGINE_OPTIONS={"pool_pre_ping": True},
         APP_ENABLE_SECURE_HEADERS=False,
-        E2E_TESTING=True,
-        SERVER_NAME=None
+        E2E_TESTING=True
     ))
 
     with app.app_context():
