@@ -72,7 +72,10 @@ def app(request):
     folder and subfolders will see this variant of the `app` fixture.
     """
     test_db_uri = _get_test_db_uri()
-    app = create_app(SQLALCHEMY_DATABASE_URI=test_db_uri)
+    app = create_app(
+        SQLALCHEMY_DATABASE_URI=test_db_uri,
+        SQLALCHEMY_ENGINE_OPTIONS={"pool_pre_ping": True}
+    )
     # Note that in GitHub Actions we add "TESTING=True" and
     # "APP_ENABLE_SECURE_HEADERS=False" to config_local.py as well,
     # to ensure that they're set before the app is initialised,
@@ -88,6 +91,7 @@ def app(request):
         SUBMISSION_INDEX='hepdata-submission-test',
         AUTHOR_INDEX='hepdata-authors-test',
         SQLALCHEMY_DATABASE_URI=test_db_uri,
+        SQLALCHEMY_ENGINE_OPTIONS={"pool_pre_ping": True},
         APP_ENABLE_SECURE_HEADERS=False,
         E2E_TESTING=True,
         SERVER_NAME=None
