@@ -43,7 +43,7 @@ $(document).ready(function() {
         confirmation_html += '<p>This action will send an email immediately to invite the user to join the ' + window.data_person_type + ' process.</p>';
       }
       show_confirmation(confirmation_html);
-      
+
       // Hide the review message textarea for remove action since no email is sent
       if (window.action == 'remove') {
         $('#review-message-container').hide();
@@ -53,12 +53,13 @@ $(document).ready(function() {
   });
 
   $(document).on('click', '.confirm-move-action', function () {
+      let review_message = $("#review-message");
       $.ajax({
           dataType: "json",
           url: '/permissions/manage/' + window.recid + '/' + window.data_person_type + '/' + window.action + '/' + window.userid,
           type: 'POST',
           data: {
-              review_message: $("#review-message").val()
+              review_message: review_message.val()
           },
           success: function (data) {
               if (data.success) {
@@ -69,6 +70,7 @@ $(document).ready(function() {
               }
           }
       })
+      review_message.val('');
   });
 
   $(document).on('click', '.confirm-add-user-action', function (event) {
