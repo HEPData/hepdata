@@ -129,7 +129,7 @@ def test_dashboard(live_server, logged_in_browser):
     manage_widget = WebDriverWait(browser, 10).until(
         EC.visibility_of_element_located((By.ID, 'manageWidget'))
     )
-    
+
     assert manage_widget.find_element(By.CLASS_NAME,'modal-title').text == 'Manage Submission'
 
     # Check reminder email button works
@@ -138,8 +138,24 @@ def test_dashboard(live_server, logged_in_browser):
     reminder_button.click()
     confirmation_message = manage_widget.find_element(By.ID, 'confirmation_message').text
     assert confirmation_message == 'Are you sure you want to email this uploader?'
+
+    # Add some text to the review message box
+    review_message_area = manage_widget.find_element(By.ID, 'review-message')
+    review_message_area.send_keys('some text!')
+
+    # Confirm and check it closes upon confirmation
     confirmation_button = manage_widget.find_element(By.CSS_SELECTOR, '.confirm-move-action')
     confirmation_button.click()
+    assert not manage_widget.find_element(By.ID, 'confirmation').is_displayed()
+
+    # Open again and check review message text has cleared
+    reminder_button = manage_widget.find_element(By.CSS_SELECTOR, '.trigger-actions .btn-primary')
+    reminder_button.click()
+    assert review_message_area.text == ''
+
+    # Close and check with cancel button
+    cancel_button = manage_widget.find_element(By.CSS_SELECTOR, '.reject-move-action')
+    cancel_button.click()
     assert not manage_widget.find_element(By.ID, 'confirmation').is_displayed()
 
     # Get the submission ID from the anchor tag href attr
