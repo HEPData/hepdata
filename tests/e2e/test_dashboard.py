@@ -144,9 +144,13 @@ def test_dashboard(live_server, logged_in_browser):
     review_message_area.send_keys('some text!')
 
     # Confirm and check it closes upon confirmation
+    confirmation_panel = manage_widget.find_element(By.ID, 'confirmation')
     confirmation_button = manage_widget.find_element(By.CSS_SELECTOR, '.confirm-move-action')
     confirmation_button.click()
-    assert not manage_widget.find_element(By.ID, 'confirmation').is_displayed()
+    WebDriverWait(browser, 10).until(
+        EC.invisibility_of_element(confirmation_panel)
+    )
+    assert not confirmation_panel.is_displayed()
 
     # Open again and check review message text has cleared
     reminder_button = manage_widget.find_element(By.CSS_SELECTOR, '.trigger-actions .btn-primary')
@@ -154,9 +158,13 @@ def test_dashboard(live_server, logged_in_browser):
     assert review_message_area.text == ''
 
     # Close and check with cancel button
+    confirmation_panel = manage_widget.find_element(By.ID, 'confirmation')
     cancel_button = manage_widget.find_element(By.CSS_SELECTOR, '.reject-move-action')
     cancel_button.click()
-    assert not manage_widget.find_element(By.ID, 'confirmation').is_displayed()
+    WebDriverWait(browser, 10).until(
+        EC.invisibility_of_element(confirmation_panel)
+    )
+    assert not confirmation_panel.is_displayed()
 
     # Get the submission ID from the anchor tag href attr
     sub_item = browser.find_element(By.CSS_SELECTOR, '.row div h4 a').get_attribute("href")
