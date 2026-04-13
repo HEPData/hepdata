@@ -155,7 +155,9 @@ def test_dashboard(live_server, logged_in_browser):
     # Open again and check review message text has cleared
     reminder_button = manage_widget.find_element(By.CSS_SELECTOR, '.trigger-actions .btn-primary')
     reminder_button.click()
-    assert review_message_area.text == ''
+    
+    review_message_area = manage_widget.find_element(By.ID, 'review-message')
+    assert review_message_area.get_attribute('value') == ''
 
     # Close and check with cancel button
     confirmation_panel = manage_widget.find_element(By.ID, 'confirmation')
