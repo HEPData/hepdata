@@ -65,6 +65,7 @@ $(document).ready(function() {
               if (data.success) {
                   process_reviews(data['recid']);
                   hide_pane("#confirmation");
+                  review_message.val('');
               } else {
                   alert("Error! " + data.message)
               }
