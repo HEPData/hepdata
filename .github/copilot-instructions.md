@@ -8,9 +8,9 @@ HEPData is a Python 3.9 Flask web application built on the Invenio v3 framework 
 
 ### Prerequisites
 Install these services before running HEPData locally:
-- **PostgreSQL 14** database server
+- **PostgreSQL 16** database server
 - **Redis** for caching
-- **OpenSearch 3.2.0** for indexing and search
+- **OpenSearch 3.4.0** for indexing and search
 - **Node.js 18+** and npm for frontend assets
 - **Python 3.9** (HEPData is ONLY compatible with Python 3.9, not 3.10+ or other versions)
 
@@ -342,7 +342,7 @@ export OPENSEARCH_INITIAL_ADMIN_PASSWORD=YourPassword123!
 
 The GitHub Actions workflow (`.github/workflows/ci.yml`):
 - **NEVER CANCEL CI builds** - they take 20-30 minutes
-- Tests against Python 3.9, PostgreSQL 14, OpenSearch 3.2.0
+- Tests against Python 3.9, PostgreSQL 16, OpenSearch 3.4.0
 - Requires Sauce Labs credentials for end-to-end tests
 - Builds and pushes Docker images on main branch
 - **Always check CI status before merging**

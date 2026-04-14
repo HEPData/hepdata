@@ -53,8 +53,8 @@ jobs:
     strategy:
 
       matrix:
-        postgres-version: [ 14 ]
-        os-version: [ '3.2.0' ]
+        postgres-version: [ 16 ]
+        os-version: [ '3.4.0' ]
         python-version: [ '3.9' ]
 
     # Service containers to run with `runner-job`
