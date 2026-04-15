@@ -34,7 +34,7 @@ from flask import redirect, request, render_template, jsonify, current_app, Resp
 from flask_login import current_user
 from invenio_accounts.models import User
 from invenio_db import db
-from sqlalchemy import and_, func
+from sqlalchemy import and_, func, select
 from sqlalchemy.orm.exc import NoResultFound
 from werkzeug.utils import secure_filename
 
@@ -1073,16 +1073,13 @@ def get_all_ids(index=None, id_field='recid', last_updated=None, latest_first=Fa
     db_col = HEPSubmission.publication_recid if id_field == 'recid' \
         else HEPSubmission.inspire_id
 
-    # Get unique version
-    query = db.session.query(db_col, HEPSubmission.publication_recid).filter(HEPSubmission.overall_status == 'finished')
-
-    if last_updated:
-        query = query.filter(HEPSubmission.last_updated >= last_updated)
-
     if latest_first:
         # Use a set to check for duplicates, as sorting by last_updated
         # means distinct doesn't work (as it looks for distinct across both
         # cols)
+        query = db.session.query(db_col).filter(HEPSubmission.overall_status == 'finished')
+        if last_updated:
+            query = query.filter(HEPSubmission.last_updated >= last_updated)
         query = query.order_by(HEPSubmission.last_updated.desc())
         seen = set()
         seen_add = seen.add
@@ -1090,8 +1087,19 @@ def get_all_ids(index=None, id_field='recid', last_updated=None, latest_first=Fa
             int(x[0]) for x in query.all() if not (x[0] in seen or seen_add(x[0]))
         ]
     else:
-        query = query.order_by(HEPSubmission.publication_recid).distinct()
-        return [int(x[0]) for x in query.all()]
+        # Use a subquery to enforce uniqueness on db_col while ordering
+        # deterministically by the minimum associated publication_recid.
+        subq = db.session.query(
+            db_col.label('id'),
+            func.min(HEPSubmission.publication_recid).label('min_recid')
+        ).filter(HEPSubmission.overall_status == 'finished')
+        if last_updated:
+            subq = subq.filter(HEPSubmission.last_updated >= last_updated)
+        subq = subq.group_by(db_col).subquery()
+        result = db.session.execute(
+            select(subq.c.id).order_by(subq.c.min_recid)
+        )
+        return [int(row[0]) for row in result]
 
 
 def get_related_hepsubmissions(submission):
