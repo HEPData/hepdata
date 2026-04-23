@@ -436,38 +436,40 @@ $(document).on('input', '#edit-title-input', function () {
 });
 
 $(document).on('click', '#edit-title-save-button', function () {
-    let recid = $(this).attr('data-recid');
-    let title = $("#edit-title-input").val().trim();
+  let recid = $(this).attr('data-recid');
+  let title = $("#edit-title-input").val().trim();
 
-    $("#edit_title_entry").addClass("hidden");
-    $("#edit-title-save-button").addClass("hidden");
-    $("#edit-title-error").addClass("hidden");
-    $("#edit-title-progress").removeClass("hidden");
+  $("#edit_title_entry").addClass("hidden");
+  $("#edit-title-save-button").addClass("hidden");
+  $("#edit-title-error").addClass("hidden");
+  $("#edit-title-progress").removeClass("hidden");
 
-    $.ajax({
-        dataType: "json",
-        method: 'POST',
-        url: '/dashboard/update_title/' + recid,
-        data: {'title': title},
-        success: function (data) {
-            $("#edit-title-progress").addClass("hidden");
-            if (data.status === 'success') {
-                $("#edit-title-success").removeClass("hidden");
-                setTimeout(function () {
-                    $("#editTitleDialog").modal('hide');
-                    window.location = "/dashboard";
-                }, 1000);
-            } else {
-                $("#edit_title_entry").removeClass("hidden");
-                $("#edit-title-save-button").removeClass("hidden");
-                $("#edit-title-error").text(data.message || 'An error occurred.').removeClass("hidden");
-            }
-        },
-        error: function () {
-            $("#edit-title-progress").addClass("hidden");
-            $("#edit_title_entry").removeClass("hidden");
-            $("#edit-title-save-button").removeClass("hidden");
-            $("#edit-title-error").text('An error occurred. Please try again.').removeClass("hidden");
-        }
-    });
+  $.ajax({
+    dataType: "json",
+    method: 'POST',
+    url: '/dashboard/update_title/' + recid,
+    data: {'title': title},
+    success: function (data) {
+      $("#edit-title-progress").addClass("hidden");
+      if (data.status === 'success') {
+        $("#edit-title-success").removeClass("hidden");
+
+        setTimeout(function () {
+          $("#editTitleDialog").modal('hide');
+          window.location = "/dashboard";
+        }, 1000);
+
+      } else {
+        $("#edit_title_entry").removeClass("hidden");
+        $("#edit-title-save-button").removeClass("hidden");
+        $("#edit-title-error").text(data.message || 'An error occurred.').removeClass("hidden");
+      }
+    },
+    error: function () {
+      $("#edit-title-progress").addClass("hidden");
+      $("#edit_title_entry").removeClass("hidden");
+      $("#edit-title-save-button").removeClass("hidden");
+      $("#edit-title-error").text('An error occurred. Please try again.').removeClass("hidden");
+    }
+  });
 });
