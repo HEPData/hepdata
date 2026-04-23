@@ -598,14 +598,8 @@ def test_update_submission_title(app):
     """Test the update_submission_title endpoint."""
     with app.app_context():
         admin_user = User.query.filter_by(id=1).first()
-
-        def make_logged_in_client():
-            """Return a test client session logged in as the admin user."""
-            client = app.test_client()
-            with client.session_transaction() as sess:
-                sess['user_id'] = str(admin_user.id)
-                sess['_fresh'] = True
-            return client
+        login_user(admin_user)
+        client = app.test_client()
 
         # Create a record without an INSPIRE ID
         record_information = create_record({
@@ -618,7 +612,6 @@ def test_update_submission_title(app):
         db.session.add(hepsubmission)
         db.session.commit()
 
-        client = make_logged_in_client()
 
         # Test successful title update
         response = client.post(
@@ -654,7 +647,6 @@ def test_update_submission_title(app):
         db.session.add(hepsubmission_with_inspire)
         db.session.commit()
 
-        client = make_logged_in_client()
         response = client.post(
             '/dashboard/update_title/{}'.format(record_with_inspire['recid']),
             data={'title': 'New Title'}
