@@ -612,10 +612,11 @@ def test_update_submission_title(app):
         db.session.add(hepsubmission)
         db.session.commit()
 
+        update_url = '/dashboard/update_title/{}'.format(record_information['recid'])
 
         # Test successful title update
         response = client.post(
-            '/dashboard/update_title/{}'.format(record_information['recid']),
+            update_url,
             data={'title': 'Updated Provisional Title'}
         )
         assert response.status_code == 200
@@ -628,7 +629,7 @@ def test_update_submission_title(app):
 
         # Test with empty title
         response = client.post(
-            '/dashboard/update_title/{}'.format(record_information['recid']),
+            update_url,
             data={'title': ''}
         )
         assert response.status_code == 400
