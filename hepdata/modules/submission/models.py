@@ -53,6 +53,7 @@ class LargeBinaryString(TypeDecorator):
     Decorator for unicode strings which are stored in the DB as LargeBinary objects,
     to allow them to be treated as strings in python3
     """
+    cache_ok = True # Allows this decorator to be used as cache
     impl = types.LargeBinary
 
     def process_literal_param(self, value, dialect):

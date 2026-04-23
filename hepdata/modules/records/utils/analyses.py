@@ -29,6 +29,7 @@ from celery import shared_task
 from flask import current_app
 from invenio_db import db
 from hepdata.resilient_requests import resilient_requests
+from sqlalchemy import select
 import json
 import jsonschema
 
@@ -73,7 +74,9 @@ def update_analyses(endpoint=None):
 
             if response.ok:
 
-                analysis_resources = DataResource.query.filter_by(file_type=analysis_endpoint).all()
+                analysis_resources = db.session.execute(
+                    select(DataResource).filter_by(file_type=analysis_endpoint)
+                ).scalars().all()
 
                 r_json = response.json()
 
@@ -207,8 +210,8 @@ def update_analyses(endpoint=None):
                         for extra_analysis_resource in analysis_resources:
                             if not extra_analysis_resource.file_location.lower().startswith('http'):
                                 continue  # don't delete local files from database
-                            query = db.select([data_reference_link.columns.submission_id]).where(
-                                data_reference_link.columns.dataresource_id == extra_analysis_resource.id)
+
+                            query = select(data_reference_link.columns.submission_id).where(data_reference_link.columns.dataresource_id == extra_analysis_resource.id)
                             results = db.session.execute(query)
                             for result in results:
                                 submission_id = result[0]

@@ -1566,8 +1566,8 @@ def test_verify_observer_key(app):
     ]
 
     for test in test_data:
-        # Set a random recid
-        test_recid = random.randint(0, 10000)
+        # Set a random positive recid value
+        test_recid = random.randint(1, 10000)
         # Create a new SubmissionObserver object from test data
         test_observer = SubmissionObserver(test_recid)
         # Set the key based on the test
