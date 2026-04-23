@@ -282,6 +282,7 @@ HEPDATA.dashboard = (function () {
         $("#edit-title-progress").addClass("hidden");
         $("#edit-title-success").addClass("hidden");
         $("#edit-title-save-button").removeClass("hidden");
+        update_edit_title_button_disabled_state();
         $("#editTitleDialog").modal();
       });
 
@@ -412,14 +413,31 @@ $(document).ready(function () {
     HEPDATA.dashboard.initialise();
 });
 
-$(document).on('click', '#edit-title-save-button', function () {
-    var recid = $(this).attr('data-recid');
-    var title = $("#edit-title-input").val().trim();
+let update_edit_title_button_disabled_state = function () {
+  // If the edit title input field is empty, disable the button, otherwise enable it
+  let is_empty = $("#edit-title-input").val().trim() === '';
+  $("#edit-title-save-button").prop('disabled', is_empty).toggleClass('disabled', is_empty);
+};
 
-    if (!title) {
-        $("#edit-title-error").text('Please provide a title.').removeClass("hidden");
-        return;
-    }
+// Update the disabled state of the edit title save button whenever the input changes
+$(document).on('input', '#edit-title-input', function () {
+  update_edit_title_button_disabled_state();
+  let title = $("#edit-title-input").val().trim() === '';
+  let title_error = $("#edit-title-error");
+
+  if (!title) {
+    // Add error message and show
+    title_error.text('Please provide a title.').removeClass('hidden');
+  }
+  else {
+    // Remove text and hide
+    title_error.text('').addClass('hidden');
+  }
+});
+
+$(document).on('click', '#edit-title-save-button', function () {
+    let recid = $(this).attr('data-recid');
+    let title = $("#edit-title-input").val().trim();
 
     $("#edit_title_entry").addClass("hidden");
     $("#edit-title-save-button").addClass("hidden");
