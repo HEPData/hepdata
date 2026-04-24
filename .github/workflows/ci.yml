@@ -53,8 +53,8 @@ jobs:
     strategy:
 
       matrix:
-        postgres-version: [ 14 ]
-        os-version: [ '3.2.0' ]
+        postgres-version: [ 16 ]
+        os-version: [ '3.4.0' ]
         python-version: [ '3.9' ]
 
     # Service containers to run with `runner-job`
@@ -184,7 +184,7 @@ jobs:
         coverage combine --data-file=.coverage .coverage_func .coverage_e2e
     - name: Upload to Codecov
       if: ${{ startsWith(matrix.python-version, '3.9') && !env.ACT }}
-      uses: codecov/codecov-action@v5
+      uses: codecov/codecov-action@v6
       with:
         files: .coverage_func.xml,.coverage_e2e.xml
         fail_ci_if_error: true

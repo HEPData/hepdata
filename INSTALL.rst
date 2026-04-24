@@ -34,34 +34,34 @@ HEPData runs with Python 3.9. It also uses several services, which you will need
 These services can be installed using the relevant package manager for your system,
 for example, using ``yum`` or ``apt-get`` for Linux or ``brew`` for macOS:
 
- * `PostgreSQL <http://www.postgresql.org/>`_ (version 14) database server
+ * `PostgreSQL <http://www.postgresql.org/>`_ (version 16) database server
  * `Redis <http://redis.io/>`_ for caching
- * `OpenSearch <https://opensearch.org/>`_ (version 3.2.0) for indexing and information retrieval. See below for further instructions.
+ * `OpenSearch <https://opensearch.org/>`_ (version 3.4.0) for indexing and information retrieval. See below for further instructions.
  * `Node.js <https://nodejs.org>`_ (version 18) JavaScript run-time environment and its package manager `npm <https://www.npmjs.com/>`_.
 
-OpenSearch v3.2.0
+OpenSearch v3.4.0
 -----------------
 
-We are currently using OpenSearch v3.2.0. Here, you can find the `download instructions. <https://opensearch.org/downloads/>`_
+We are currently using OpenSearch v3.4.0. Here, you can find the `download instructions. <https://opensearch.org/downloads/>`_
 
 There are some examples below:
 
 **MacOS**
 
-Install the latest version (currently, v3.3.0) with ``brew install opensearch``.
-Alternatively, to install a specific version like v3.2.0 via Homebrew (if the latest version is newer), run:
+Install the latest version (currently, v3.6.0) with ``brew install opensearch``.
+Alternatively, to install a specific version like v3.4.0 via Homebrew (if the latest version is newer), run:
 
 .. code-block:: console
 
     $ brew tap homebrew/core --force
     $ brew tap-new opensearch/tap
-    $ brew extract --version=3.2.0 opensearch opensearch/tap
-    $ brew install opensearch/tap/opensearch@3.2.0
-    $ brew services restart opensearch/tap/opensearch@3.2.0
+    $ brew extract --version=3.4.0 opensearch opensearch/tap
+    $ brew install opensearch/tap/opensearch@3.4.0
+    $ brew services restart opensearch/tap/opensearch@3.4.0
 
 **Linux**
 
-You can see the tarball instructions on the OpenSearch installation `webpage. <https://docs.opensearch.org/docs/3.2/install-and-configure/install-opensearch/tar/>`_
+You can see the tarball instructions on the OpenSearch installation `webpage. <https://docs.opensearch.org/docs/3.4/install-and-configure/install-opensearch/tar/>`_
 
 To execute, run these commands within the extracted folder.
 
@@ -80,8 +80,8 @@ Alternatively, run OpenSearch after `installing Docker <https://docs.docker.com/
 
 .. code-block:: console
 
-    $ docker pull opensearchproject/opensearch:3.2.0
-    $ docker run -d -p 9200:9200 -p 9600:9600 -e "discovery.type=single-node" -e "plugins.security.disabled=true" -e "OPENSEARCH_INITIAL_ADMIN_PASSWORD=<custom-admin-password>" opensearchproject/opensearch:3.2.0
+    $ docker pull opensearchproject/opensearch:3.4.0
+    $ docker run -d -p 9200:9200 -p 9600:9600 -e "discovery.type=single-node" -e "plugins.security.disabled=true" -e "OPENSEARCH_INITIAL_ADMIN_PASSWORD=<custom-admin-password>" opensearchproject/opensearch:3.4.0
 
 You can test that the container is running with:
 
@@ -202,7 +202,7 @@ PostgreSQL
 
 See `YUM Installation <https://wiki.postgresql.org/wiki/YUM_Installation>`_ and
 `First steps <https://wiki.postgresql.org/wiki/First_steps>`_.  On Linux you might need ``sudo su - postgres`` before
-executing the steps below.  On macOS you can install with ``brew install postgresql@14``.
+executing the steps below.  On macOS you can install with ``brew install postgresql@16``.
 
 .. code-block:: console
 
@@ -245,9 +245,9 @@ Set email confirmation for the test user within the database.
    UPDATE 1
 
 If you're having problems with access permissions to the database (on Linux), a simple solution is to edit the
-PostgreSQL Client Authentication Configuration File (e.g. ``/var/lib/pgsql/14/data/pg_hba.conf``) to
+PostgreSQL Client Authentication Configuration File (e.g. ``/var/lib/pgsql/16/data/pg_hba.conf``) to
 ``trust`` local and IPv4/IPv6 connections (instead of ``peer`` or ``ident``), then restart the PostgreSQL
-server (e.g. ``sudo systemctl restart postgresql-14``).
+server (e.g. ``sudo systemctl restart postgresql-16``).
 
 Recreate the OpenSearch index
 -----------------------------
