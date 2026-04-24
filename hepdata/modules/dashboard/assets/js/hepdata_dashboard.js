@@ -425,7 +425,7 @@ $(document).on('input', '#edit-title-input', function () {
   let title = $("#edit-title-input").val().trim() === '';
   let title_error = $("#edit-title-error");
 
-  if (!title) {
+  if (title) {
     // Add error message and show
     title_error.text('Please provide a title.').removeClass('hidden');
   }

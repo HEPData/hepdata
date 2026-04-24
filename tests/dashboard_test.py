@@ -596,6 +596,7 @@ def test_submissions_csv(app, admin_idx, load_default_data, identifiers):
 
 def test_update_submission_title(app):
     """Test the update_submission_title endpoint."""
+    from unittest.mock import patch
     with app.app_context():
         admin_user = User.query.filter_by(id=1).first()
         login_user(admin_user)
@@ -613,6 +614,15 @@ def test_update_submission_title(app):
         db.session.commit()
 
         update_url = '/dashboard/update_title/{}'.format(record_information['recid'])
+
+        # Test with non-existent submission (submission is None)
+        response = client.post(
+            '/dashboard/update_title/99999',
+            data={'title': 'Some Title'}
+        )
+        assert response.status_code == 404
+        data = response.get_json()
+        assert data['status'] == 'error'
 
         # Test successful title update
         response = client.post(
@@ -655,3 +665,30 @@ def test_update_submission_title(app):
         assert response.status_code == 400
         data = response.get_json()
         assert data['status'] == 'error'
+
+        # Test no permissions (regular user who is not coordinator or admin)
+        regular_user = User(email='regular@test.com', password='hello1', active=True)
+        db.session.add(regular_user)
+        db.session.commit()
+        login_user(regular_user)
+
+        response = client.post(
+            update_url,
+            data={'title': 'Unauthorized Title'}
+        )
+        assert response.status_code == 403
+        data = response.get_json()
+        assert data['status'] == 'error'
+
+        # Restore admin user for subsequent tests
+        login_user(admin_user)
+
+        # Test with record not found in Invenio records (record is None)
+        with patch('hepdata.modules.dashboard.views.get_record_by_id', return_value=None):
+            response = client.post(
+                update_url,
+                data={'title': 'Another Title'}
+            )
+            assert response.status_code == 404
+            data = response.get_json()
+            assert data['status'] == 'error'
