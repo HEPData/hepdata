@@ -594,7 +594,7 @@ def test_submissions_csv(app, admin_idx, load_default_data, identifiers):
         assert csv_lines[2] == f'1,1,{site_url}/record/1,1283842,arXiv:1403.1294,Measurement of the forward-backward asymmetry in the distribution of leptons in $t\\bar{{t}}$ events in the lepton+jets channel,D0,{today},2014-08-11,finished,test@test.com (Una Uploader),test2@test.com (Rowan Reviewer) | test@hepdata.net'
 
 
-def test_update_submission_title(app):
+def test_update_submission_title(app, admin_idx):
     """Test the update_submission_title endpoint."""
     from unittest.mock import patch
     with app.app_context():
@@ -636,6 +636,10 @@ def test_update_submission_title(app):
         # Verify title was updated in the record
         updated_record = get_record_by_id(record_information['recid'])
         assert updated_record['title'] == 'Updated Provisional Title'
+
+        # Verify title was updated in the admin index
+        results = admin_idx.search(term=record_information['recid'], fields=['recid'])
+        assert results[0]['title'] == updated_record['title']
 
         # Test with empty title
         response = client.post(

@@ -334,6 +334,9 @@ def update_submission_title(recid):
     record.commit()
     db.session.commit()
 
+    admin_idx = AdminIndexer()
+    admin_idx.index_submission(submission)
+
     return jsonify({'status': 'success'})
 
 
