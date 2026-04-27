@@ -272,6 +272,20 @@ HEPDATA.dashboard = (function () {
         $("#inspireDialog").modal();
       });
 
+      $(".edit-title-btn").bind("click", function () {
+        var recid = $(this).attr("data-recid");
+        var current_title = $(this).attr("data-title");
+        $("#edit-title-save-button").attr('data-recid', recid);
+        $("#edit-title-input").val(current_title);
+        $("#edit-title-error").addClass("hidden").text('');
+        $("#edit_title_entry").removeClass("hidden");
+        $("#edit-title-progress").addClass("hidden");
+        $("#edit-title-success").addClass("hidden");
+        $("#edit-title-save-button").removeClass("hidden");
+        update_edit_title_button_disabled_state();
+        $("#editTitleDialog").modal();
+      });
+
       initialise_finalise_btn();
       HEPDATA.typeset($('#submissions-wrapper').get());
 
@@ -397,4 +411,65 @@ HEPDATA.dashboard = (function () {
 
 $(document).ready(function () {
     HEPDATA.dashboard.initialise();
+});
+
+let update_edit_title_button_disabled_state = function () {
+  // If the edit title input field is empty, disable the button, otherwise enable it
+  let is_empty = $("#edit-title-input").val().trim() === '';
+  $("#edit-title-save-button").prop('disabled', is_empty).toggleClass('disabled', is_empty);
+};
+
+// Update the disabled state of the edit title save button whenever the input changes
+$(document).on('input', '#edit-title-input', function () {
+  update_edit_title_button_disabled_state();
+  let is_empty = $("#edit-title-input").val().trim() === '';
+  let title_error = $("#edit-title-error");
+
+  if (is_empty) {
+    // Add error message and show
+    title_error.text('Please provide a title.').removeClass('hidden');
+  }
+  else {
+    // Remove text and hide
+    title_error.text('').addClass('hidden');
+  }
+});
+
+$(document).on('click', '#edit-title-save-button', function () {
+  let recid = $(this).attr('data-recid');
+  let title = $("#edit-title-input").val().trim();
+
+  $("#edit_title_entry").addClass("hidden");
+  $("#edit-title-save-button").addClass("hidden");
+  $("#edit-title-error").addClass("hidden");
+  $("#edit-title-progress").removeClass("hidden");
+
+  $.ajax({
+    dataType: "json",
+    method: 'POST',
+    url: '/dashboard/update_title/' + recid,
+    data: {'title': title},
+    success: function (data) {
+      $("#edit-title-progress").addClass("hidden");
+      if (data.status === 'success') {
+        $("#edit-title-success").removeClass("hidden");
+
+        setTimeout(function () {
+          $("#editTitleDialog").modal('hide');
+          window.location = "/dashboard";
+        }, 1000);
+
+      } else {
+        $("#edit_title_entry").removeClass("hidden");
+        $("#edit-title-save-button").removeClass("hidden");
+        $("#edit-title-error").text(data.message || 'An error occurred.').removeClass("hidden");
+      }
+    },
+    error: function () {
+      $("#edit-title-progress").addClass("hidden");
+      $("#edit_title_entry").removeClass("hidden");
+      $("#edit-title-save-button").removeClass("hidden");
+      $("#edit-title-error").text('An error occurred. Please try again.').removeClass("hidden");
+    }
+  });
 });

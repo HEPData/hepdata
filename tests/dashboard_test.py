@@ -592,3 +592,115 @@ def test_submissions_csv(app, admin_idx, load_default_data, identifiers):
         csv_lines = csv_data.splitlines()
         assert len(csv_lines) == 4
         assert csv_lines[2] == f'1,1,{site_url}/record/1,1283842,arXiv:1403.1294,Measurement of the forward-backward asymmetry in the distribution of leptons in $t\\bar{{t}}$ events in the lepton+jets channel,D0,{today},2014-08-11,finished,test@test.com (Una Uploader),test2@test.com (Rowan Reviewer) | test@hepdata.net'
+
+
+def test_update_submission_title(app, admin_idx):
+    """Test the update_submission_title endpoint."""
+    from unittest.mock import patch
+    with app.app_context():
+        admin_user = User.query.filter_by(id=1).first()
+        login_user(admin_user)
+        client = app.test_client()
+
+        # Create a record without an INSPIRE ID
+        record_information = create_record({
+            'journal_info': '',
+            'title': 'Provisional Title'
+        })
+        hepsubmission = get_or_create_hepsubmission(record_information['recid'])
+        hepsubmission.inspire_id = None
+        hepsubmission.coordinator = admin_user.id
+        db.session.add(hepsubmission)
+        db.session.commit()
+
+        # Add the record to the admin index
+        admin_idx.recreate_index()
+        admin_idx.index_submission(hepsubmission)
+        time.sleep(1)  # wait before searching
+        results = admin_idx.search(term=record_information['recid'], fields=['recid'])
+        assert results[0]['title'] == record_information['title']
+
+        update_url = '/dashboard/update_title/{}'.format(record_information['recid'])
+
+        # Test with non-existent submission (submission is None)
+        response = client.post(
+            '/dashboard/update_title/99999',
+            data={'title': 'Some Title'}
+        )
+        assert response.status_code == 404
+        data = response.get_json()
+        assert data['status'] == 'error'
+
+        # Test successful title update
+        response = client.post(
+            update_url,
+            data={'title': 'Updated Provisional Title'}
+        )
+        assert response.status_code == 200
+        data = response.get_json()
+        assert data['status'] == 'success'
+
+        # Verify title was updated in the record
+        updated_record = get_record_by_id(record_information['recid'])
+        assert updated_record['title'] == 'Updated Provisional Title'
+
+        # Verify title was updated in the admin index
+        time.sleep(1)  # wait before searching
+        results = admin_idx.search(term=record_information['recid'], fields=['recid'])
+        assert results[0]['title'] == updated_record['title']
+
+        # Test with empty title
+        response = client.post(
+            update_url,
+            data={'title': ''}
+        )
+        assert response.status_code == 400
+        data = response.get_json()
+        assert data['status'] == 'error'
+
+        # Test that submissions with an INSPIRE ID cannot have their title changed
+        record_with_inspire = create_record({
+            'journal_info': 'Phys. Letts',
+            'title': 'INSPIRE Paper',
+            'inspire_id': '1487726'
+        })
+        hepsubmission_with_inspire = get_or_create_hepsubmission(record_with_inspire['recid'])
+        hepsubmission_with_inspire.inspire_id = '1487726'
+        hepsubmission_with_inspire.coordinator = admin_user.id
+        db.session.add(hepsubmission_with_inspire)
+        db.session.commit()
+
+        response = client.post(
+            '/dashboard/update_title/{}'.format(record_with_inspire['recid']),
+            data={'title': 'New Title'}
+        )
+        assert response.status_code == 400
+        data = response.get_json()
+        assert data['status'] == 'error'
+
+        # Test no permissions (regular user who is not coordinator or admin)
+        regular_user = User(email='regular@test.com', password='hello1', active=True)
+        db.session.add(regular_user)
+        db.session.commit()
+        login_user(regular_user)
+
+        response = client.post(
+            update_url,
+            data={'title': 'Unauthorized Title'}
+        )
+        assert response.status_code == 403
+        data = response.get_json()
+        assert data['status'] == 'error'
+
+        # Restore admin user for subsequent tests
+        login_user(admin_user)
+
+        # Test with record not found in Invenio records (record is None)
+        with patch('hepdata.modules.dashboard.views.get_record_by_id', return_value=None):
+            response = client.post(
+                update_url,
+                data={'title': 'Another Title'}
+            )
+            assert response.status_code == 404
+            data = response.get_json()
+            assert data['status'] == 'error'
