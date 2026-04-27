@@ -613,6 +613,13 @@ def test_update_submission_title(app, admin_idx):
         db.session.add(hepsubmission)
         db.session.commit()
 
+        # Add the record to the admin index
+        admin_idx.recreate_index()
+        admin_idx.index_submission(hepsubmission)
+        time.sleep(1)  # wait before searching
+        results = admin_idx.search(term=record_information['recid'], fields=['recid'])
+        assert results[0]['title'] == record_information['title']
+
         update_url = '/dashboard/update_title/{}'.format(record_information['recid'])
 
         # Test with non-existent submission (submission is None)
@@ -638,6 +645,7 @@ def test_update_submission_title(app, admin_idx):
         assert updated_record['title'] == 'Updated Provisional Title'
 
         # Verify title was updated in the admin index
+        time.sleep(1)  # wait before searching
         results = admin_idx.search(term=record_information['recid'], fields=['recid'])
         assert results[0]['title'] == updated_record['title']
 
