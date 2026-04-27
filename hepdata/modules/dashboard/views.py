@@ -298,12 +298,15 @@ def submissions_csv():
 @login_required
 def update_submission_title(recid):
     """
-    Updates the title of a submission that does not have an INSPIRE ID attached.
+    Updates the title of an editable submission that does not have an INSPIRE ID attached.
 
     :param recid: record id of the submission to update
     :return: JSON response with status 'success' or error message
     """
-    submission = get_latest_hepsubmission(publication_recid=recid)
+    submission = get_latest_hepsubmission(
+        publication_recid=recid,
+        overall_status='todo'
+    )
 
     if submission is None:
         return jsonify({'status': 'error', 'message': 'Submission not found.'}), 404

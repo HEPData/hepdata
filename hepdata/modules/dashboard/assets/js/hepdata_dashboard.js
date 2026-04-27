@@ -422,10 +422,10 @@ let update_edit_title_button_disabled_state = function () {
 // Update the disabled state of the edit title save button whenever the input changes
 $(document).on('input', '#edit-title-input', function () {
   update_edit_title_button_disabled_state();
-  let title = $("#edit-title-input").val().trim() === '';
+  let is_empty = $("#edit-title-input").val().trim() === '';
   let title_error = $("#edit-title-error");
 
-  if (title) {
+  if (is_empty) {
     // Add error message and show
     title_error.text('Please provide a title.').removeClass('hidden');
   }
