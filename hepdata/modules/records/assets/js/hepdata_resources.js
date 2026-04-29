@@ -7,6 +7,7 @@ HEPDATA.hepdata_resources = (function () {
   var ALL_RESOURCES = 'Common Resources';
   var resources = {};
   var initial_resource = ALL_RESOURCES;
+  var record_status = null;
 
   var show_resource = function (selected_item) {
 
@@ -82,9 +83,9 @@ HEPDATA.hepdata_resources = (function () {
 
       resource_item.append("p")
         .attr('display', function(d){
-          return d['doi'] == null ? 'none' : 'block';
+          return (d['doi'] == null || record_status === 'sandbox') ? 'none' : 'block';
         }).html(function (d) {
-          return d['doi'] == null ? '' : '<a href="https://doi.org/' + d['doi'] + '" class="resource-doi">' + d['doi'] + '</a>';
+          return (d['doi'] == null || record_status === 'sandbox') ? '' : '<a href="https://doi.org/' + d['doi'] + '" class="resource-doi">' + d['doi'] + '</a>';
         });
 
       // Add the landing page button
@@ -166,7 +167,8 @@ HEPDATA.hepdata_resources = (function () {
   };
 
   return {
-    initialise: function (recid, version) {
+    initialise: function (recid, version, status) {
+      record_status = status || null;
 
       $(document).on('click', '#show_all_resources', function () {
         initial_resource = ALL_RESOURCES;
