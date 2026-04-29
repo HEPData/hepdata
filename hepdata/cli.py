@@ -77,7 +77,15 @@ def importer():
               'https://hepdata.net)')
 @click.option('--send-email', '-e', default=False, type=bool,
               help='Whether or not to send emails on finalising submissions')
-def import_records(inspireids, recreate_index, base_url, update_existing, send_email):
+@click.option('--coordinator-id', '-c', default=1, type=int,
+              help='User ID to assign as Coordinator (defaults to 1)')
+@click.option('--files-url', '-f', default=None, type=str,
+              help='Base URL for downloading submission files. When given, '
+              'files are fetched using the pattern '
+              '{files_url}/ins{inspire_id}.tar.gz instead of the default '
+              'HEPData download endpoint.')
+def import_records(inspireids, recreate_index, base_url, update_existing,
+                   send_email, coordinator_id, files_url):
     """
     Populate the DB with specific records from HEPData.net (or another
     instance as specified by base_url)
@@ -97,7 +105,9 @@ def import_records(inspireids, recreate_index, base_url, update_existing, send_e
     files_to_load = parse_inspireids_from_string(inspireids)
     importer_api.import_records(files_to_load, synchronous=False,
                                 update_existing=update_existing,
-                                base_url=base_url, send_email=send_email)
+                                base_url=base_url, send_email=send_email,
+                                coordinator_id=coordinator_id,
+                                files_url=files_url)
 
 
 @importer.command()
@@ -115,7 +125,19 @@ def import_records(inspireids, recreate_index, base_url, update_existing, send_e
               help='Get only the n most recently updated records')
 @click.option('--send-email', '-e', default=False, type=bool,
               help='Whether or not to send emails on finalising submissions')
-def bulk_import_records(base_url, update_existing, date, n_latest, send_email):
+@click.option('--ids-url', default=None, type=str,
+              help='URL of a JSON file containing a list of INSPIRE IDs '
+              '(e.g. https://example.com/hepdata/inspire.json). When given, '
+              '--base-url and --date are ignored for ID retrieval.')
+@click.option('--files-url', '-f', default=None, type=str,
+              help='Base URL for downloading submission files. When given, '
+              'files are fetched using the pattern '
+              '{files_url}/ins{inspire_id}.tar.gz instead of the default '
+              'HEPData download endpoint.')
+@click.option('--coordinator-id', '-c', default=1, type=int,
+              help='User ID to assign as Coordinator (defaults to 1)')
+def bulk_import_records(base_url, update_existing, date, n_latest, send_email,
+                        ids_url, files_url, coordinator_id):
     """
     Populate the DB with records from HEPData.net (or another instance as
     specified by base_url)
@@ -131,13 +153,16 @@ def bulk_import_records(base_url, update_existing, date, n_latest, send_email):
     inspire_ids = importer_api.get_inspire_ids(
         base_url=base_url,
         last_updated=date,
-        n_latest=n_latest
+        n_latest=n_latest,
+        ids_url=ids_url
     )
     if inspire_ids is not False:
         print("Found {} inspire ids to load.".format(len(inspire_ids)))
         importer_api.import_records(inspire_ids, synchronous=False,
                                     update_existing=update_existing,
-                                    base_url=base_url, send_email=send_email)
+                                    base_url=base_url, send_email=send_email,
+                                    coordinator_id=coordinator_id,
+                                    files_url=files_url)
 
 
 @cli.group()
