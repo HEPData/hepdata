@@ -1206,6 +1206,20 @@ def test_update_analyses(app):
     assert len(analysis_resources) == 1
     assert analysis_resources[0].file_location == 'https://github.com/GambitBSM/gambit_2.6/blob/release_2.6/ColliderBit/src/analyses/Analysis_ATLAS_13TeV_MONOJET_139infb.cpp'
 
+    # ins1847779 has SimpleAnalysis file attached and is also listed in SimpleAnalysis JSON file
+    analysis_resources = DataResource.query.filter_by(file_type='SimpleAnalaysis').all()
+    assert len(analysis_resources) == 1
+    update_analyses('SimpleAnalysis')
+    analysis_resources = DataResource.query.filter_by(file_type='SimpleAnalaysis').all()
+    assert len(analysis_resources) == 1
+    file_location = re.sub(r'v[\d.]+', "VERSION", analysis_resources[0].file_location)
+    assert file_location == 'https://gitlab.cern.ch/atlas-sa/simple-analysis/-/tree/VERSION/SimpleAnalysisCodes/src/ANA-EXOT-2018-06.cxx'
+    import_records(['ins1597123'], synchronous=True) # only appears in SimpleAnalysis JSON file
+    assert len(analysis_resources) == 0
+    update_analyses('SimpleAnalysis')
+    analysis_resources = DataResource.query.filter_by(file_type='SimpleAnalaysis').all()
+    assert len(analysis_resources) == 1
+
     # Call update_analysis using an endpoint with no endpoint_url
     current_app.config["ANALYSES_ENDPOINTS"]["TestAnalysis"] = {}
     update_analyses('TestAnalysis')
