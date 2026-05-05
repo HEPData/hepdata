@@ -340,7 +340,10 @@ texinfo_documents = [
 
 
 # Example configuration for intersphinx: refer to the Python standard library.
-intersphinx_mapping = {'python': ('https://docs.python.org/3.9', None)}
+intersphinx_mapping = {
+    'python': ('https://docs.python.org/3.9', None),
+    'sqlalchemy': ('https://docs.sqlalchemy.org/en/20/', None)
+}
 
 # If you’d like to change the prefix for tasks in reference documentation
 # then you can change the celery_task_prefix configuration value.

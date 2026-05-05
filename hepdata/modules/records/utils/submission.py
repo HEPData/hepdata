@@ -268,7 +268,7 @@ def process_data_file(recid, version, basepath, data_obj, datasubmission, main_f
         for keyword in data_obj["keywords"]:
             keyword_name = keyword['name']
             for value in keyword['values']:
-                keyword = Keyword(name=keyword_name, value=value)
+                keyword = Keyword(name=keyword_name, value=str(value))
                 datasubmission.keywords.append(keyword)
 
     if overall_status not in ("sandbox", "sandbox_processing"):

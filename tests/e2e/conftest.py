@@ -34,7 +34,7 @@ import flask
 from flask_security.utils import hash_password
 import pytest
 from invenio_accounts.models import User, Role
-from invenio_db.shared import metadata, SQLAlchemy as InvenioSQLAlchemy
+from invenio_db import db
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.command import Command
@@ -46,21 +46,7 @@ from time import sleep
 from hepdata.config import CFG_TMPDIR, RUN_SELENIUM_LOCALLY
 from hepdata.ext.opensearch.api import reindex_all
 from hepdata.factory import create_app
-from tests.conftest import get_identifiers, import_default_data
-
-
-# Override Invenio-DB's SQLAlchemy object to set pool_pre_ping to True to avoid
-# issues with dropped connection pools
-class SQLAlchemy(InvenioSQLAlchemy):
-    def apply_pool_defaults(self, app, options):
-        # See https://github.com/pallets/flask-sqlalchemy/issues/589#issuecomment-361075700
-        options = super().apply_pool_defaults(app, options)
-        options["pool_pre_ping"] = True
-        return options
-
-
-
-db = SQLAlchemy(metadata=metadata)
+from tests.conftest import _get_test_db_uri, get_identifiers, import_default_data
 
 multiprocessing.set_start_method('fork')
 
@@ -70,8 +56,11 @@ def app(request):
     Overrides the `app` fixture found in `../conftest.py`. Tests/files in this
     folder and subfolders will see this variant of the `app` fixture.
     """
-    app = create_app()
-    test_db_host = app.config.get('TEST_DB_HOST', 'localhost')
+    test_db_uri = _get_test_db_uri()
+    app = create_app(
+        SQLALCHEMY_DATABASE_URI=test_db_uri,
+        SQLALCHEMY_ENGINE_OPTIONS={"pool_pre_ping": True}
+    )
     # Note that in GitHub Actions we add "TESTING=True" and
     # "APP_ENABLE_SECURE_HEADERS=False" to config_local.py as well,
     # to ensure that they're set before the app is initialised,
@@ -86,15 +75,16 @@ def app(request):
         OPENSEARCH_INDEX="hepdata-main-test",
         SUBMISSION_INDEX='hepdata-submission-test',
         AUTHOR_INDEX='hepdata-authors-test',
-        SQLALCHEMY_DATABASE_URI=os.environ.get(
-            'SQLALCHEMY_DATABASE_URI', 'postgresql+psycopg2://hepdata:hepdata@' + test_db_host + '/hepdata_test'),
+        SQLALCHEMY_DATABASE_URI=test_db_uri,
+        SQLALCHEMY_ENGINE_OPTIONS={"pool_pre_ping": True},
         APP_ENABLE_SECURE_HEADERS=False,
         E2E_TESTING=True
     ))
 
     with app.app_context():
-        if not database_exists(str(db.engine.url)):
-            create_database(str(db.engine.url))
+        db_url = db.engine.url.render_as_string(hide_password=False)
+        if not database_exists(db_url):
+            create_database(db_url)
 
         db.create_all()
 
