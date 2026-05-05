@@ -1206,13 +1206,14 @@ def test_update_analyses(app):
     assert len(analysis_resources) == 1
     assert analysis_resources[0].file_location == 'https://github.com/GambitBSM/gambit_2.6/blob/release_2.6/ColliderBit/src/analyses/Analysis_ATLAS_13TeV_MONOJET_139infb.cpp'
 
-    # ins1847779 has SimpleAnalysis file attached and is also listed in SimpleAnalysis JSON file
-    analysis_resources = DataResource.query.filter_by(file_type='SimpleAnalaysis').all()
-    assert len(analysis_resources) == 0
+    # SimpleAnalysis
+    import_records(['ins1597123'], synchronous=True) # 1597123 is in SimpleAnalysis JSON but doesn't have code uploaded to HEPData
+    analysis_resources = DataResource.query.filter_by(file_type='SimpleAnalysis').all()
+    assert len(analysis_resources) == 2 # 1811596 and 1847779 have SimpleAnalysis file attached
     update_analyses('SimpleAnalysis')
-    analysis_resources = DataResource.query.filter_by(file_type='SimpleAnalaysis').all()
-    assert len(analysis_resources) == 1
-    file_location = re.sub(r'v[\d.]+', "VERSION", analysis_resources[0].file_location)
+    analysis_resources = DataResource.query.filter_by(file_type='SimpleAnalysis').all()
+    assert len(analysis_resources) == 5 # file attached: 1811596, 1847779; JSON file: 1811596, 1847779, 1597123
+    file_location = re.sub(r'v[\d.]+', "VERSION", analysis_resources[4].file_location) # 1847779
     assert file_location == 'https://gitlab.cern.ch/atlas-sa/simple-analysis/-/tree/VERSION/SimpleAnalysisCodes/src/ANA-EXOT-2018-06.cxx'
 
     # Call update_analysis using an endpoint with no endpoint_url
