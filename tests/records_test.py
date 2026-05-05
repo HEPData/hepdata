@@ -770,6 +770,17 @@ def test_get_all_ids(app, load_default_data, identifiers):
     assert(get_all_ids(latest_first=True) == sorted_expected_record_ids)
     assert(get_all_ids(id_field='inspire_id', latest_first=True) == sorted_expected_inspire_ids)
 
+    # Finally, insert a duplicate inspire ID to check uniqueness
+    existing_submission = get_latest_hepsubmission(publication_recid=expected_record_ids[0]) # Just get an ID
+    dupe_ins = HEPSubmission(publication_recid=999, inspire_id=existing_submission.inspire_id,
+                             version=1, overall_status='finished')
+    db.session.add(dupe_ins)
+    db.session.commit()
+
+    inspire_ids_set = set(sorted_expected_inspire_ids)
+    assert set(get_all_ids(id_field='inspire_id')) == inspire_ids_set # latest_first=False branch
+    assert set(get_all_ids(id_field='inspire_id', latest_first=True)) == inspire_ids_set
+
 
 def test_create_new_version(app, load_default_data, identifiers, mocker):
     hepsubmission = get_latest_hepsubmission(publication_recid=1)
