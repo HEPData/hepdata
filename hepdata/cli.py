@@ -269,7 +269,8 @@ def execute(query):
     """Execute a SQL query via SQLAlchemy Engine."""
     print("Executing query: {}".format(query))
     if query:
-        result = db.session.execute(query)
+        from sqlalchemy import text
+        result = db.session.execute(text(query))
         if result.returns_rows:
             for i, row in enumerate(result):
                 print('Row {}:'.format(i + 1), row)

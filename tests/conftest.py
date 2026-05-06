@@ -27,14 +27,17 @@
 import os
 import shutil
 import time
+from urllib.parse import urlparse, urlunparse
 from unittest import mock
 
 from invenio_accounts.models import Role, User
 from invenio_db import db
 import pytest
+from sqlalchemy_utils import create_database, database_exists
 
 from hepdata.ext.opensearch.admin_view.api import AdminIndexer
 from hepdata.ext.opensearch.api import reindex_all
+from hepdata import config
 from hepdata.factory import create_app
 from hepdata.modules.dashboard.api import create_record_for_dashboard
 from hepdata.modules.permissions.models import SubmissionParticipant
@@ -48,9 +51,17 @@ TEST_EMAIL = 'test@hepdata.net'
 TEST_PWD = 'hello1'
 
 
+def _get_test_db_uri():
+    # Generates the test database URI from the set environment variable
+    base_db_uri = os.environ.get('SQLALCHEMY_DATABASE_URI', config.SQLALCHEMY_DATABASE_URI)
+    parsed_db_uri = urlparse(base_db_uri)
+    test_db_path = '/hepdata_test'
+    return urlunparse(parsed_db_uri._replace(path=test_db_path))
+
+
 def create_basic_app():
-    app = create_app()
-    test_db_host = app.config.get('TEST_DB_HOST', 'localhost')
+    test_db_uri = _get_test_db_uri()
+    app = create_app(SQLALCHEMY_DATABASE_URI=test_db_uri)
     app.config.update(dict(
         TESTING=True,
         TEST_RUNNER="celery.contrib.test_runner.CeleryTestSuiteRunner",
@@ -62,14 +73,18 @@ def create_basic_app():
         OPENSEARCH_INDEX="hepdata-main-test",
         SUBMISSION_INDEX='hepdata-submission-test',
         AUTHOR_INDEX='hepdata-authors-test',
-        SQLALCHEMY_DATABASE_URI=os.environ.get(
-            'SQLALCHEMY_DATABASE_URI', 'postgresql+psycopg2://hepdata:hepdata@' + test_db_host + '/hepdata_test')
+        SQLALCHEMY_DATABASE_URI=test_db_uri
     ))
     return app
 
 
 def setup_app(app):
     with app.app_context():
+        # Ensure the test database exists, and if not, create it
+        db_url = db.engine.url.render_as_string(hide_password=False)
+        if not database_exists(db_url):
+            create_database(db_url)
+
         db.drop_all()
         db.create_all()
         reindex_all(recreate=True, synchronous=True)
