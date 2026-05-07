@@ -135,8 +135,7 @@ jobs:
           ${{ runner.os }}-test-${{ env.cache-name }}-
     - name: Install dependencies
       run: |
-        python -m pip install --upgrade pip "setuptools<82" py
-        python -m pip install twine wheel requirements-builder
+        python -m pip install --upgrade pip "setuptools<82" wheel
         python -m pip install --force-reinstall -r requirements.txt
         python -m pip install -e .[tests]
     - name: Initialise hepdata
