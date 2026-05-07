@@ -7,7 +7,7 @@ hepdata-validator==0.3.6
 Flask-Security-Invenio==4.1.0
 invenio-access[admin]==4.0.0
 invenio-assets==4.0.0
-invenio-db[postgresql]==2.0.0
+invenio-db[postgresql]==2.5.0
 invenio-logging[sentry]==4.0.2
 invenio-oauthclient==5.0.0
 invenio-pidstore==2.0.0
