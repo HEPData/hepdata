@@ -22,6 +22,7 @@ updates:
       - dependency-name: "pytest-cov"  # see https://github.com/HEPData/hepdata/issues/580
       - dependency-name: "invenio-access"  # see https://github.com/HEPData/hepdata/issues/848
       - dependency-name: "invenio-assets"  # see https://github.com/HEPData/hepdata/issues/848
+      - dependency-name: "invenio-db"  # see https://github.com/HEPData/hepdata/issues/848
       - dependency-name: "invenio-logging"  # see https://github.com/HEPData/hepdata/issues/848
       - dependency-name: "invenio-oauthclient"  # see https://github.com/HEPData/hepdata/issues/848
       - dependency-name: "invenio-pidstore"  # see https://github.com/HEPData/hepdata/issues/848
