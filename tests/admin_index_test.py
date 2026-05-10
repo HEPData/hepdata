@@ -48,6 +48,9 @@ def test_add_to_index(admin_idx):
 
 
 def test_search_index(admin_idx):
+    from time import sleep
+    sleep(1)  # wait before searching
+
     all_results = admin_idx.search()
     assert (len(all_results) == 3)
 
