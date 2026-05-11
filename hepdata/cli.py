@@ -72,6 +72,9 @@ def importer():
 @click.option('--update-existing', '-u', default=False, type=bool,
               help='Whether to update records which already exist'
               '(defaults to False)')
+@click.option('--allow-old-schema', '-a', default=True, type=bool,
+              help='Whether to allow a fall back to validation against the old schema'
+              '(defaults to True)')
 @click.option('--base-url', '-b', default="https://hepdata.net", type=str,
               help='Base URL from which to get data (defaults to '
               'https://hepdata.net)')
@@ -84,7 +87,7 @@ def importer():
               'files are fetched using the pattern '
               '{files_url}/ins{inspire_id}.tar.gz instead of the default '
               'HEPData download endpoint.')
-def import_records(inspireids, recreate_index, base_url, update_existing,
+def import_records(inspireids, recreate_index, base_url, update_existing, allow_old_schema,
                    send_email, coordinator_id, files_url):
     """
     Populate the DB with specific records from HEPData.net (or another
@@ -104,7 +107,7 @@ def import_records(inspireids, recreate_index, base_url, update_existing,
 
     files_to_load = parse_inspireids_from_string(inspireids)
     importer_api.import_records(files_to_load, synchronous=False,
-                                update_existing=update_existing,
+                                update_existing=update_existing, allow_old_schema=allow_old_schema,
                                 base_url=base_url, send_email=send_email,
                                 coordinator_id=coordinator_id,
                                 files_url=files_url)
@@ -118,6 +121,9 @@ def import_records(inspireids, recreate_index, base_url, update_existing,
 @click.option('--update-existing', '-u', default=False, type=bool,
               help='Whether to update records which already exist'
               '(defaults to False)')
+@click.option('--allow-old-schema', '-a', default=True, type=bool,
+              help='Whether to allow a fall back to validation against the old schema'
+              '(defaults to True)')
 @click.option('--base-url', '-b', default="https://hepdata.net", type=str,
               help='Base URL from which to get data (defaults to '
               'https://hepdata.net)')
@@ -125,7 +131,7 @@ def import_records(inspireids, recreate_index, base_url, update_existing,
               help='Get only the n most recently updated records')
 @click.option('--send-email', '-e', default=False, type=bool,
               help='Whether or not to send emails on finalising submissions')
-@click.option('--ids-url', default=None, type=str,
+@click.option('--ids-url', '-i', default=None, type=str,
               help='URL of a JSON file containing a list of INSPIRE IDs '
               '(e.g. https://example.com/hepdata/inspire.json). When given, '
               '--base-url and --date are ignored for ID retrieval.')
@@ -136,7 +142,7 @@ def import_records(inspireids, recreate_index, base_url, update_existing,
               'HEPData download endpoint.')
 @click.option('--coordinator-id', '-c', default=1, type=int,
               help='User ID to assign as Coordinator (defaults to 1)')
-def bulk_import_records(base_url, update_existing, date, n_latest, send_email,
+def bulk_import_records(base_url, update_existing, allow_old_schema, date, n_latest, send_email,
                         ids_url, files_url, coordinator_id):
     """
     Populate the DB with records from HEPData.net (or another instance as
@@ -159,7 +165,7 @@ def bulk_import_records(base_url, update_existing, date, n_latest, send_email,
     if inspire_ids is not False:
         print("Found {} inspire ids to load.".format(len(inspire_ids)))
         importer_api.import_records(inspire_ids, synchronous=False,
-                                    update_existing=update_existing,
+                                    update_existing=update_existing, allow_old_schema=allow_old_schema,
                                     base_url=base_url, send_email=send_email,
                                     coordinator_id=coordinator_id,
                                     files_url=files_url)

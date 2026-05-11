@@ -55,6 +55,7 @@ log = logging.getLogger(__name__)
 
 
 def import_records(inspire_ids, synchronous=False, update_existing=False,
+                   allow_old_schema=True,
                    base_url='https://hepdata.net', send_email=False,
                    coordinator_id=1, files_url=None):
     """
@@ -63,6 +64,7 @@ def import_records(inspire_ids, synchronous=False, update_existing=False,
     :param inspire_ids: array of inspire ids to load (in the format insXXX).
     :param synchronous: if should be run immediately rather than via celery
     :param update_existing: whether to update records that already exist
+    :param allow_old_schema: whether to allow validation against old schema
     :param base_url: override default base URL
     :param send_email: whether to send emails on finalising submissions
     :param coordinator_id: user ID to assign as Coordinator (defaults to 1)
@@ -74,13 +76,13 @@ def import_records(inspire_ids, synchronous=False, update_existing=False,
     for index, inspire_id in enumerate(inspire_ids):
         _cleaned_id = str(inspire_id).replace("ins", "")
         if synchronous:
-            _import_record(_cleaned_id, update_existing=update_existing,
+            _import_record(_cleaned_id, update_existing=update_existing, allow_old_schema=allow_old_schema,
                            base_url=base_url, send_email=send_email,
                            coordinator_id=coordinator_id, files_url=files_url)
         else:
             log.info("Sending import_record task to celery for id %s"
                      % _cleaned_id)
-            _import_record.delay(_cleaned_id, update_existing=update_existing,
+            _import_record.delay(_cleaned_id, update_existing=update_existing, allow_old_schema=allow_old_schema,
                                  base_url=base_url, send_email=send_email,
                                  coordinator_id=coordinator_id,
                                  files_url=files_url)
@@ -141,8 +143,8 @@ def get_inspire_ids(base_url='https://hepdata.net', last_updated=None, n_latest=
 
 
 @shared_task
-def _import_record(inspire_id, update_existing=False, base_url='https://hepdata.net',
-                   send_email=False, coordinator_id=1, files_url=None):
+def _import_record(inspire_id, update_existing=False, allow_old_schema=True,
+                   base_url='https://hepdata.net', send_email=False, coordinator_id=1, files_url=None):
     publication_information, status = get_inspire_record_information(inspire_id)
     if status != "success":
         log.error("Failed to retrieve publication information for " + inspire_id)
@@ -187,20 +189,22 @@ def _import_record(inspire_id, update_existing=False, base_url='https://hepdata.
         # Then process the payload as for any other record
         errors = process_zip_archive(file_path, recid)
         if errors:
-            log.info("Errors processing archive. Re-trying with old schema.")
-            # Try again with old schema
-            # Need to clean up first to avoid errors
-            # First delete tables
-            cleanup_submission(recid, 1, [])
-            # Next remove remaining files
-            file_save_directory = os.path.dirname(file_path)
-            submission_path = os.path.join(file_save_directory,
-                                           remove_file_extension(filename))
-            shutil.rmtree(submission_path)
 
-            errors = process_zip_archive(file_path,
-                                         recid,
-                                         old_schema=True)
+            if allow_old_schema:
+                log.info("Errors processing archive. Re-trying with old schema.")
+                # Try again with old schema
+                # Need to clean up first to avoid errors
+                # First delete tables
+                cleanup_submission(recid, 1, [])
+                # Next remove remaining files
+                file_save_directory = os.path.dirname(file_path)
+                submission_path = os.path.join(file_save_directory,
+                                               remove_file_extension(filename))
+                shutil.rmtree(submission_path)
+
+                errors = process_zip_archive(file_path,
+                                             recid,
+                                             old_schema=True)
 
             if errors:
                 log.error("Could not process zip archive: ")
