@@ -135,7 +135,7 @@ def import_default_data(app, identifiers):
     with app.app_context():
         # Mock out the _download_file method in importer to avoid downloading the
         # sample files multiple times during testing
-        def _test_download_file(base_url, inspire_id):
+        def _test_download_file(base_url, inspire_id, files_url=None):
             filename = 'HEPData-ins{0}-v1.zip'.format(inspire_id)
             print(f'Looking for file {filename} in {app.config["CFG_TMPDIR"]}')
             expected_file_name = os.path.join(app.config["CFG_TMPDIR"], filename)
@@ -144,7 +144,7 @@ def import_default_data(app, identifiers):
                 return expected_file_name
             else:
                 print("Reverting to normal _download_file method")
-                return _download_file(base_url, inspire_id)
+                return _download_file(base_url, inspire_id, files_url=files_url)
 
         with mock.patch('hepdata.modules.records.importer.api._download_file', wraps=_test_download_file):
             to_load = [x["hepdata_id"] for x in identifiers]
