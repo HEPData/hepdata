@@ -59,7 +59,7 @@ def import_records(inspire_ids, synchronous=False, update_existing=False,
                    base_url='https://hepdata.net', send_email=False,
                    coordinator_id=1, files_url=None):
     """
-    Import records from hepdata.net
+    Import records from HEPData or another configured source.
 
     :param inspire_ids: array of inspire ids to load (in the format insXXX).
     :param synchronous: if should be run immediately rather than via celery
