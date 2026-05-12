@@ -1214,32 +1214,28 @@ def test_update_delete_analyses(app):
     assert license_data.url == 'https://creativecommons.org/licenses/by/4.0'
 
 
-def assert_err_msg(err_type, expected_msg, truncate_length=None):
-    err_msg = ""
-    try:
-        update_analyses_single_tool('TestAnalysis')
-    except err_type as e:
-        err_msg = str(e)[:truncate_length]
-    assert err_msg == expected_msg
-
-
 def test_incorrect_endpoint(app):
     """ Test update_analyses with incorrect endpoint configurations """
     # Call update_analyses_single_tool using an endpoint with no endpoint_url
     current_app.config["ANALYSES_ENDPOINTS"]["TestAnalysis"] = {}
-    assert_err_msg(KeyError, "'No endpoint_url configured for TestAnalysis'")
+    with pytest.raises(KeyError, match="'No endpoint_url configured for TestAnalysis'"):
+        update_analyses_single_tool('TestAnalysis')
 
     # Call update_analyses_single_tool using an invalid endpoint_URL
     current_app.config["ANALYSES_ENDPOINTS"]["TestAnalysis"]['endpoint_url'] = 'https://www.hepdata.net/analyses.json'
-    assert_err_msg(LookupError, "Error accessing https://www.hepdata.net/analyses.json, status 404")
+    with pytest.raises(LookupError, match="Error accessing https://www.hepdata.net/analyses.json, status 404"):
+        update_analyses_single_tool('TestAnalysis')
 
     # Call update_analyses_single_tool using an endpoint_url that will fail validation
     current_app.config["ANALYSES_ENDPOINTS"]["TestAnalysis"]['endpoint_url'] = 'https://www.hepdata.net/search/?format=json&size=1'
-    assert_err_msg(jsonschema.exceptions.ValidationError, "'facets', 'hits', 'results', 'total' do not match any of the regexes: '^[0-9]+$'", truncate_length=80)
+    with pytest.raises(jsonschema.exceptions.ValidationError) as exc_info:
+        update_analyses_single_tool('TestAnalysis')
+        assert exc_info.value.message == "'facets', 'hits', 'results', 'total' do not match any of the regexes: '^[0-9]+$'"
 
     # Call update_analyses, which doesn't raise exceptions, using an invalid endpoint_URL
     current_app.config["ANALYSES_ENDPOINTS"]["TestAnalysis"]['endpoint_url'] = 'https://www.hepdata.net/analyses.json'
-    update_analyses('TestAnalysis')
+    with pytest.raises(LookupError, match="Error accessing https://www.hepdata.net/analyses.json, status 404"):
+        update_analyses_single_tool('TestAnalysis')
 
     # Call forgiving version of update_analyses_single_tool to make sure it works as intended
     assert update_analyses_single_tool_forgiving("TestAnalysis") == False
