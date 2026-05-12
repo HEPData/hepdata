@@ -29,6 +29,7 @@ import shutil
 from celery import shared_task
 from flask import current_app
 from invenio_db import db
+from sqlalchemy import text
 
 from hepdata.modules.email.utils import create_send_email_task
 from hepdata.modules.records.utils.common import allowed_file
@@ -254,7 +255,7 @@ def _delete_all_orphan_file_resources():  # pragma: no cover
     # ~196k rows in datafile_identifier - explain analyse on QA takes 92ms
     # Produces ~300k orphans on QA.
     result = db.session.execute(
-        """
+        text("""
         CREATE TEMP TABLE valid_resource_ids(id INT);
         LOCK TABLE data_resource_link IN EXCLUSIVE MODE;
         INSERT INTO valid_resource_ids
@@ -270,7 +271,7 @@ def _delete_all_orphan_file_resources():  # pragma: no cover
                  SELECT id from valid_resource_ids
                     WHERE valid_resource_ids.id = dataresource.id
             );
-        """
+        """)
     )
 
     ids_to_delete = [x[0] for x in result]
