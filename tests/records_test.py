@@ -1213,8 +1213,7 @@ def test_update_analyses(app):
     update_analyses('SimpleAnalysis')
     analysis_resources = DataResource.query.filter_by(file_type='SimpleAnalysis').all()
     assert len(analysis_resources) == 5 # file attached: 1811596, 1847779; JSON file: 1811596, 1847779, 1597123
-    file_location = re.sub(r'v[\d.]+', "VERSION", analysis_resources[4].file_location) # 1847779
-    assert file_location == 'https://gitlab.cern.ch/atlas-sa/simple-analysis/-/tree/VERSION/SimpleAnalysisCodes/src/ANA-EXOT-2018-06.cxx'
+    assert analysis_resources[4].file_location == 'https://gitlab.cern.ch/atlas-sa/simple-analysis/-/tree/master/SimpleAnalysisCodes/src/ANA-EXOT-2018-06.cxx' # 1847779
 
     # Call update_analysis using an endpoint with no endpoint_url
     current_app.config["ANALYSES_ENDPOINTS"]["TestAnalysis"] = {}
