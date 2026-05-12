@@ -20,7 +20,7 @@
         HEPDATA.size_load_check_threshold = {{ config['SIZE_LOAD_CHECK_THRESHOLD']|default(1*1024*1024) }};
 
         HEPDATA.hepdata_record.initialise();
-        HEPDATA.hepdata_resources.initialise({{ ctx.recid|default(0) }}, {{ ctx.version|default(0) }});
+        HEPDATA.hepdata_resources.initialise({{ ctx.recid|default(0) }}, {{ ctx.version|default(0) }}, "{{ ctx.status }}");
         HEPDATA.current_record_type = '{{ ctx.record_type }}';
 
         HEPDATA.render_loader("#hepdata-loading", [

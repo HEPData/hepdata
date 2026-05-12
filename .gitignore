@@ -68,6 +68,9 @@ tmp/
 # PyCharm
 .idea
 
+# VS Code
+.vscode
+
 # Virtual environment
 venv/
 

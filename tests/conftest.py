@@ -27,14 +27,17 @@
 import os
 import shutil
 import time
+from urllib.parse import urlparse, urlunparse
 from unittest import mock
 
 from invenio_accounts.models import Role, User
 from invenio_db import db
 import pytest
+from sqlalchemy_utils import create_database, database_exists
 
 from hepdata.ext.opensearch.admin_view.api import AdminIndexer
 from hepdata.ext.opensearch.api import reindex_all
+from hepdata import config
 from hepdata.factory import create_app
 from hepdata.modules.dashboard.api import create_record_for_dashboard
 from hepdata.modules.permissions.models import SubmissionParticipant
@@ -48,9 +51,17 @@ TEST_EMAIL = 'test@hepdata.net'
 TEST_PWD = 'hello1'
 
 
+def _get_test_db_uri():
+    # Generates the test database URI from the set environment variable
+    base_db_uri = os.environ.get('SQLALCHEMY_DATABASE_URI', config.SQLALCHEMY_DATABASE_URI)
+    parsed_db_uri = urlparse(base_db_uri)
+    test_db_path = '/hepdata_test'
+    return urlunparse(parsed_db_uri._replace(path=test_db_path))
+
+
 def create_basic_app():
-    app = create_app()
-    test_db_host = app.config.get('TEST_DB_HOST', 'localhost')
+    test_db_uri = _get_test_db_uri()
+    app = create_app(SQLALCHEMY_DATABASE_URI=test_db_uri)
     app.config.update(dict(
         TESTING=True,
         TEST_RUNNER="celery.contrib.test_runner.CeleryTestSuiteRunner",
@@ -62,14 +73,18 @@ def create_basic_app():
         OPENSEARCH_INDEX="hepdata-main-test",
         SUBMISSION_INDEX='hepdata-submission-test',
         AUTHOR_INDEX='hepdata-authors-test',
-        SQLALCHEMY_DATABASE_URI=os.environ.get(
-            'SQLALCHEMY_DATABASE_URI', 'postgresql+psycopg2://hepdata:hepdata@' + test_db_host + '/hepdata_test')
+        SQLALCHEMY_DATABASE_URI=test_db_uri
     ))
     return app
 
 
 def setup_app(app):
     with app.app_context():
+        # Ensure the test database exists, and if not, create it
+        db_url = db.engine.url.render_as_string(hide_password=False)
+        if not database_exists(db_url):
+            create_database(db_url)
+
         db.drop_all()
         db.create_all()
         reindex_all(recreate=True, synchronous=True)
@@ -120,7 +135,7 @@ def import_default_data(app, identifiers):
     with app.app_context():
         # Mock out the _download_file method in importer to avoid downloading the
         # sample files multiple times during testing
-        def _test_download_file(base_url, inspire_id):
+        def _test_download_file(base_url, inspire_id, files_url=None):
             filename = 'HEPData-ins{0}-v1.zip'.format(inspire_id)
             print(f'Looking for file {filename} in {app.config["CFG_TMPDIR"]}')
             expected_file_name = os.path.join(app.config["CFG_TMPDIR"], filename)
@@ -129,7 +144,7 @@ def import_default_data(app, identifiers):
                 return expected_file_name
             else:
                 print("Reverting to normal _download_file method")
-                return _download_file(base_url, inspire_id)
+                return _download_file(base_url, inspire_id, files_url=files_url)
 
         with mock.patch('hepdata.modules.records.importer.api._download_file', wraps=_test_download_file):
             to_load = [x["hepdata_id"] for x in identifiers]

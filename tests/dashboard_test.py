@@ -546,7 +546,7 @@ def test_submissions_csv(app, admin_idx, load_default_data, identifiers):
         today = datetime.datetime.utcnow().date().isoformat()
         assert csv_lines[1] == f'16,1,{site_url}/record/16,1245023,arXiv:1307.7457,High-statistics study of $K^0_S$ pair production in two-photon collisions,Belle,{today},2013-12-17,finished,,'
         assert csv_lines[2] == f'1,1,{site_url}/record/1,1283842,arXiv:1403.1294,Measurement of the forward-backward asymmetry in the distribution of leptons in $t\\bar{{t}}$ events in the lepton+jets channel,D0,{today},2014-08-11,finished,,'
-        assert csv_lines[3] == f'57,1,{site_url}/record/57,2751932,arXiv:2401.14922,Search for pair production of higgsinos in events with two Higgs bosons and missing transverse momentum in $\sqrt{{s}}=13$ TeV $pp$ collisions at the ATLAS experiment,ATLAS,{today},{today},finished,,'
+        assert csv_lines[3] == rf'57,1,{site_url}/record/57,2751932,arXiv:2401.14922,Search for pair production of higgsinos in events with two Higgs bosons and missing transverse momentum in $\sqrt{{s}}=13$ TeV $pp$ collisions at the ATLAS experiment,ATLAS,{today},{today},finished,,'
 
         # Get data without imported records - should be empty (headers only)
         csv_data = get_submissions_csv(user, include_imported=False)
