@@ -1164,8 +1164,9 @@ testdata_analyses_pytest_strict = list(testdata_analyses.keys())
 @pytest.mark.strict_endpoints_test
 @pytest.mark.parametrize("tool", testdata_analyses_pytest_strict)
 def test_update_analyses_strict(app, tool):
-    """ Test update of Rivet, MadAnalyses 5, etc. analyses 
-        Be strict about encountered errors, i.e. flag even if error is (presumably) on tool side
+    """
+    Test update of Rivet, MadAnalyses 5, etc. analyses 
+    Be strict about encountered errors, i.e. flag even if error is (presumably) on tool side.
     """
     update_analyses_single_tool(tool)
 
