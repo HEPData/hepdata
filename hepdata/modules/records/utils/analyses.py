@@ -262,7 +262,7 @@ def update_analyses(endpoint=None):
             continue
 
         try:
-            update_analyses_single_tool(endpoint)
+            update_analyses_single_tool(analysis_endpoint)
         except LookupError as e:
             log.error(str(e))
         except jsonschema.exceptions.ValidationError as e:
