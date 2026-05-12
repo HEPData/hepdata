@@ -2,11 +2,15 @@
 HEPData
 =======
 
-|GitHub Actions Build Status| |Coveralls Status| |License| |Docker Image Size| |GitHub Issues| |Documentation Status|
+|GitHub Actions Build Status| |Codecov Status| |Coveralls Status| |License| |Docker Image Size| |GitHub Issues| |Documentation Status|
 
 .. |GitHub Actions Build Status| image:: https://github.com/HEPData/hepdata/actions/workflows/ci.yml/badge.svg?branch=main
    :target: https://github.com/HEPData/hepdata/actions?query=branch%3Amain
    :alt: GitHub Actions Build Status
+
+.. |Codecov Status| image:: https://codecov.io/gh/HEPData/hepdata/graph/badge.svg
+   :target: https://codecov.io/gh/HEPData/hepdata
+   :alt: Coverage Status
 
 .. |Coveralls Status| image:: https://coveralls.io/repos/github/HEPData/hepdata/badge.svg?branch=main
    :target: https://coveralls.io/github/HEPData/hepdata?branch=main

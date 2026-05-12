@@ -13,11 +13,11 @@ Basic Information
 =================
 
 HEPData is based on the `Invenio Framework <https://invenio.readthedocs.io/en/latest/index.html>`_  which in turn is
-built using `Flask <https://flask.palletsprojects.com/en/1.1.x/>`_.
+built using `Flask <https://flask.palletsprojects.com/en/stable/>`_.
 
 HEPData requires:
 
- * `PostgreSQL <http://www.postgresql.org/>`_ (version 12) databases
+ * `PostgreSQL <http://www.postgresql.org/>`_ (version 16) databases
  * `Redis <http://redis.io/>`_ for caching
  * `Celery <https://docs.celeryproject.org/en/stable/index.html>`_ for managing asynchronous tasks
  * `OpenSearch <https://opensearch.org/>`_ for indexing and searching data

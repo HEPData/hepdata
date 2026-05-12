@@ -23,10 +23,10 @@
 
 """HEPData end to end testing of dashboard and administrative options."""
 import csv
-import io
+import re
 import requests
 
-from flask import url_for
+from flask import url_for, current_app
 from invenio_accounts.models import User
 from invenio_db import db
 from selenium.webdriver.common.action_chains import ActionChains
@@ -129,7 +129,7 @@ def test_dashboard(live_server, logged_in_browser):
     manage_widget = WebDriverWait(browser, 10).until(
         EC.visibility_of_element_located((By.ID, 'manageWidget'))
     )
-    
+
     assert manage_widget.find_element(By.CLASS_NAME,'modal-title').text == 'Manage Submission'
 
     # Check reminder email button works
@@ -138,9 +138,56 @@ def test_dashboard(live_server, logged_in_browser):
     reminder_button.click()
     confirmation_message = manage_widget.find_element(By.ID, 'confirmation_message').text
     assert confirmation_message == 'Are you sure you want to email this uploader?'
+
+    # Add some text to the review message box
+    review_message_area = manage_widget.find_element(By.ID, 'review-message')
+    review_message_area.send_keys('some text!')
+
+    # Confirm and check it closes upon confirmation
+    confirmation_panel = manage_widget.find_element(By.ID, 'confirmation')
     confirmation_button = manage_widget.find_element(By.CSS_SELECTOR, '.confirm-move-action')
     confirmation_button.click()
-    assert not manage_widget.find_element(By.ID, 'confirmation').is_displayed()
+    WebDriverWait(browser, 10).until(
+        EC.invisibility_of_element(confirmation_panel)
+    )
+    assert not confirmation_panel.is_displayed()
+
+    # Open again and check review message text has cleared
+    reminder_button = manage_widget.find_element(By.CSS_SELECTOR, '.trigger-actions .btn-primary')
+    reminder_button.click()
+    
+    review_message_area = manage_widget.find_element(By.ID, 'review-message')
+    assert review_message_area.get_attribute('value') == ''
+
+    # Close and check with cancel button
+    confirmation_panel = manage_widget.find_element(By.ID, 'confirmation')
+    cancel_button = manage_widget.find_element(By.CSS_SELECTOR, '.reject-move-action')
+    cancel_button.click()
+    WebDriverWait(browser, 10).until(
+        EC.invisibility_of_element(confirmation_panel)
+    )
+    assert not confirmation_panel.is_displayed()
+
+    # Get the submission ID from the anchor tag href attr
+    sub_item = browser.find_element(By.CSS_SELECTOR, '.row div h4 a').get_attribute("href")
+    sub_id = sub_item.split("record/")[1]
+
+    # Get the submission observer object
+    submission_observer_field = browser.find_element(By.ID, 'direct_data_link')
+    # Get submission observer field value
+    so_url = submission_observer_field.get_attribute("value")
+
+    # Get the correct site_url value
+    site_url = current_app.config.get('SITE_URL', 'https://www.hepdata.net')
+
+    # Build the first half of the url
+    valid_url_base = rf"{site_url}/record/{sub_id}?observer_key"
+    uuid_regex = "^[0-9a-fA-F]{8}"
+
+    # Validate that the URL points to correct location
+    assert valid_url_base == so_url.split("=")[0]
+    # Validate observer_key value against uuid
+    assert re.match(uuid_regex, so_url.split("=")[1])
 
     # Close modal
     manage_widget.find_element(By.CSS_SELECTOR, '.modal-footer .btn-default').click()

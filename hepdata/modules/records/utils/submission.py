@@ -37,13 +37,14 @@ from hepdata_converter_ws_client import get_data_size
 from hepdata.config import CFG_DATA_TYPE, CFG_PUB_TYPE, CFG_SUPPORTED_FORMATS, HEPDATA_DOI_PREFIX
 from hepdata.ext.opensearch.admin_view.api import AdminIndexer
 from hepdata.ext.opensearch.api import get_records_matching_field, \
-    delete_item_from_index, index_record_ids, push_data_keywords
+    delete_item_from_index, index_record_ids, push_data_keywords, reindex_batch
 from hepdata.modules.converter import prepare_data_folder
 from hepdata.modules.converter.tasks import convert_and_store
 from hepdata.modules.email.api import send_finalised_email
 from hepdata.modules.permissions.models import SubmissionParticipant
 from hepdata.modules.records.utils.workflow import create_record
-from hepdata.modules.submission.api import get_latest_hepsubmission
+from hepdata.modules.submission.api import get_latest_hepsubmission, get_or_create_submission_observer, \
+    delete_submission_observer
 from hepdata.modules.submission.models import DataSubmission, DataReview, \
     DataResource, Keyword, RelatedTable, RelatedRecid, HEPSubmission, RecordVersionCommitMessage
 from hepdata.modules.records.utils.common import \
@@ -61,7 +62,6 @@ from invenio_pidstore.errors import PIDDoesNotExistError
 import os
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.exc import SQLAlchemyError
-import yaml
 from yaml import CSafeLoader as Loader
 
 def construct_yaml_str(self, node):
@@ -268,7 +268,7 @@ def process_data_file(recid, version, basepath, data_obj, datasubmission, main_f
         for keyword in data_obj["keywords"]:
             keyword_name = keyword['name']
             for value in keyword['values']:
-                keyword = Keyword(name=keyword_name, value=value)
+                keyword = Keyword(name=keyword_name, value=str(value))
                 datasubmission.keywords.append(keyword)
 
     if overall_status not in ("sandbox", "sandbox_processing"):
@@ -625,11 +625,16 @@ def get_or_create_hepsubmission(recid, coordinator=1, status="todo"):
         hepsubmission = HEPSubmission(publication_recid=recid,
                                       coordinator=coordinator,
                                       overall_status=status)
-
+        # Commit so that the submission exists in the database.
         db.session.add(hepsubmission)
         db.session.commit()
 
+        # Create a new observer key here
+        if status == "todo":
+            get_or_create_submission_observer(hepsubmission.publication_recid, regenerate=True)
+
     return hepsubmission
+
 
 
 def create_data_review(data_recid, publication_recid, version=1):
@@ -682,6 +687,8 @@ def unload_submission(record_id, version=1):
             print("Removed publication {0} from index".format(record_id))
         except NotFoundError as nfe:
             print(nfe)
+
+    delete_submission_observer(record_id)
 
     print('Finished unloading record {0} version {1}.'.format(record_id, version))
 
@@ -781,6 +788,9 @@ def do_finalise(recid, publication_record=None, force_finalise=False,
             hep_submission.overall_status = "finished"
             db.session.add(hep_submission)
 
+            # Clear any existing SubmissionObserver entry from the database
+            delete_submission_observer(hep_submission.publication_recid)
+
             db.session.commit()
 
             create_celery_app(current_app)
@@ -790,9 +800,8 @@ def do_finalise(recid, publication_record=None, force_finalise=False,
                 generate_dois_for_submission.delay(inspire_id=hep_submission.inspire_id, version=version)
                 log.info("Generated DOIs for ins{0}".format(hep_submission.inspire_id))
 
-            # Reindex everything.
-            index_record_ids([recid] + generated_record_ids)
-            push_data_keywords(pub_ids=[recid])
+            # Reindex everything asynchronously to avoid blocking UI for large submissions.
+            reindex_batch.delay([hep_submission.id], current_app.config['OPENSEARCH_INDEX'])
 
             try:
                 admin_indexer = AdminIndexer()
@@ -816,6 +825,10 @@ def do_finalise(recid, publication_record=None, force_finalise=False,
                                "generated_records": generated_record_ids})
         except NoResultFound:
             error_message = 'No record found to update. Which is super strange.'
+            log.error('NoResultFound exception during finalisation of record {0}: {1}'.format(recid, error_message))
+        except Exception as e:
+            error_message = 'An error occurred during finalisation: {0}'.format(str(e))
+            log.error('Exception during finalisation of record {0}: {1}'.format(recid, str(e)), exc_info=True)
 
         # If we have not returned, then we set an error message
         if error_message is None:

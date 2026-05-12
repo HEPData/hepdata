@@ -277,8 +277,13 @@ def reindex_batch(hepsubmission_record_ids, index):
     rec_ids = list(set([id for result in ids for id in result if id is not None]))
 
     indexed_publications = []
-    indexed_result = index_record_ids(rec_ids, index=index)
-    indexed_publications += indexed_result[CFG_PUB_TYPE]
+    # Process records in batches of 100 to reduce memory usage for large submissions
+    batch_size = 100
+    for i in range(0, len(rec_ids), batch_size):
+        batch_rec_ids = rec_ids[i:i+batch_size]
+        log.info('Indexing batch {0}-{1} of {2} total records'.format(i+1, min(i+batch_size, len(rec_ids)), len(rec_ids)))
+        indexed_result = index_record_ids(batch_rec_ids, index=index)
+        indexed_publications += indexed_result[CFG_PUB_TYPE]
 
     log.info('Finished indexing, now pushing data keywords\n######')
     push_data_keywords(pub_ids=indexed_publications)

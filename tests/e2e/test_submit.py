@@ -22,6 +22,8 @@
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
 """HEPData end to end testing of record submission."""
+import re
+from flask import current_app
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
@@ -107,9 +109,28 @@ def test_create_submission(live_server, logged_in_browser):
         )
     )
 
+    # Checking submission observer field
+    # Get observer field element
+    submission_observer_field = browser.find_element(By.ID, 'direct_data_link')
+    # Get submission observer field value
+    so_url = submission_observer_field.get_attribute("value")
+
     # Check that submission has been created in DB
     submissions = HEPSubmission.query.filter_by(
         inspire_id=inspire_id).all()
+
+    # Get the correct site_url value
+    site_url = current_app.config.get('SITE_URL', 'https://www.hepdata.net')
+
+    # Build the first half of the url
+    valid_url_base = rf"{site_url}/record/{submissions[0].publication_recid}?observer_key"
+    uuid_regex = "^[0-9a-fA-F]{8}"
+
+    # Validate that the URL points to correct location
+    assert valid_url_base == so_url.split("=")[0]
+    # Validate observer_key value against uuid
+    assert re.match(uuid_regex, so_url.split("=")[1])
+
     assert len(submissions) == 1
     assert submissions[0].overall_status == 'todo'
     assert submissions[0].version == 1

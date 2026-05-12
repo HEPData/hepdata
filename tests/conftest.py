@@ -27,16 +27,20 @@
 import os
 import shutil
 import time
+from urllib.parse import urlparse, urlunparse
 from unittest import mock
 
 from invenio_accounts.models import Role, User
 from invenio_db import db
 import pytest
+from sqlalchemy_utils import create_database, database_exists
 
 from hepdata.ext.opensearch.admin_view.api import AdminIndexer
 from hepdata.ext.opensearch.api import reindex_all
+from hepdata import config
 from hepdata.factory import create_app
 from hepdata.modules.dashboard.api import create_record_for_dashboard
+from hepdata.modules.permissions.models import SubmissionParticipant
 from hepdata.modules.records.importer.api import import_records, _download_file
 from hepdata.modules.records.utils.data_files import get_data_path_for_record
 from hepdata.modules.records.utils.submission import get_or_create_hepsubmission, process_submission_directory
@@ -47,9 +51,17 @@ TEST_EMAIL = 'test@hepdata.net'
 TEST_PWD = 'hello1'
 
 
+def _get_test_db_uri():
+    # Generates the test database URI from the set environment variable
+    base_db_uri = os.environ.get('SQLALCHEMY_DATABASE_URI', config.SQLALCHEMY_DATABASE_URI)
+    parsed_db_uri = urlparse(base_db_uri)
+    test_db_path = '/hepdata_test'
+    return urlunparse(parsed_db_uri._replace(path=test_db_path))
+
+
 def create_basic_app():
-    app = create_app()
-    test_db_host = app.config.get('TEST_DB_HOST', 'localhost')
+    test_db_uri = _get_test_db_uri()
+    app = create_app(SQLALCHEMY_DATABASE_URI=test_db_uri)
     app.config.update(dict(
         TESTING=True,
         TEST_RUNNER="celery.contrib.test_runner.CeleryTestSuiteRunner",
@@ -61,14 +73,18 @@ def create_basic_app():
         OPENSEARCH_INDEX="hepdata-main-test",
         SUBMISSION_INDEX='hepdata-submission-test',
         AUTHOR_INDEX='hepdata-authors-test',
-        SQLALCHEMY_DATABASE_URI=os.environ.get(
-            'SQLALCHEMY_DATABASE_URI', 'postgresql+psycopg2://hepdata:hepdata@' + test_db_host + '/hepdata_test')
+        SQLALCHEMY_DATABASE_URI=test_db_uri
     ))
     return app
 
 
 def setup_app(app):
     with app.app_context():
+        # Ensure the test database exists, and if not, create it
+        db_url = db.engine.url.render_as_string(hide_password=False)
+        if not database_exists(db_url):
+            create_database(db_url)
+
         db.drop_all()
         db.create_all()
         reindex_all(recreate=True, synchronous=True)
@@ -119,7 +135,7 @@ def import_default_data(app, identifiers):
     with app.app_context():
         # Mock out the _download_file method in importer to avoid downloading the
         # sample files multiple times during testing
-        def _test_download_file(base_url, inspire_id):
+        def _test_download_file(base_url, inspire_id, files_url=None):
             filename = 'HEPData-ins{0}-v1.zip'.format(inspire_id)
             print(f'Looking for file {filename} in {app.config["CFG_TMPDIR"]}')
             expected_file_name = os.path.join(app.config["CFG_TMPDIR"], filename)
@@ -128,7 +144,7 @@ def import_default_data(app, identifiers):
                 return expected_file_name
             else:
                 print("Reverting to normal _download_file method")
-                return _download_file(base_url, inspire_id)
+                return _download_file(base_url, inspire_id, files_url=files_url)
 
         with mock.patch('hepdata.modules.records.importer.api._download_file', wraps=_test_download_file):
             to_load = [x["hepdata_id"] for x in identifiers]
@@ -169,19 +185,26 @@ def load_submission(app, load_default_data):
     import_records(['ins1487726'], synchronous=True)
 
 
-def create_blank_test_record():
+def create_blank_test_record(status="todo", user_id=1):
     """
     Helper function to create a single, blank, finished submission
+
+    :param status: str - Specific status setting
+    :param user_id: int - Optionally create a new user of a specific id.
     :returns submission: The newly created submission object
     """
     record_information = create_record(
         {'journal_info': 'Journal', 'title': 'Test Paper'})
     recid = record_information['recid']
-    submission = get_or_create_hepsubmission(recid)
+    submission = get_or_create_hepsubmission(recid, status=status)
     # Set overall status to finished so related data appears on dashboard
-    submission.overall_status = 'finished'
-    user = User(email=f'test@test.com', password='hello1', active=True,
-                id=1)
+    submission.overall_status = status
+
+    # Either use default user, or create a new user
+    if user_id != 1:
+        user = User(email=f'test@test.com', password='hello1', active=True, id=user_id)
+    else:
+        user = User.query.filter_by(id=1).first()
     test_submissions = {}
     create_record_for_dashboard(recid, test_submissions, user)
     return submission
@@ -208,3 +231,38 @@ def create_test_record(file_location, overall_status='finished'):
     process_submission_directory(record_dir, os.path.join(record_dir, 'submission.yaml'),
                                  test_submission.publication_recid)
     return test_submission
+
+def create_record_with_participant():
+    """
+    A specific function used in email_test.py to create a blank test record
+    with a participant for email information.
+
+    Returns test copies of HEPSubmission, SubmissionParticipant, and record information
+    :returns: tuple - test_submission, test_participant, record_information
+    """
+    # Correctly set up the test_submission folder path
+    base_directory = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+    test_directory = os.path.join(base_directory, 'tests', 'test_data', 'test_submission')
+
+    # Create and upload the submission
+    # and set the coordinator
+    test_submission = create_test_record(test_directory, "todo")
+    test_pubid = test_submission.publication_recid
+    test_submission.coordinator = 1
+    db.session.add(test_submission)
+    db.session.commit()
+
+    # Set up the submission used for testing purposes
+    # Create test participant
+    test_participant = SubmissionParticipant(
+            user_account=1, publication_recid=test_pubid,
+            email="test@hepdata.net", role='primary')
+    db.session.add(test_participant)
+    db.session.commit()
+
+    record_information = {
+        "recid": test_pubid,
+        "title": "Test Title"
+    }
+
+    return test_submission, test_participant, record_information

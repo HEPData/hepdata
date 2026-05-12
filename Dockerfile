@@ -30,7 +30,7 @@ WORKDIR /code
 COPY . .
 
 RUN pip install --no-cache-dir --upgrade pip && \
- pip install --no-cache-dir --upgrade setuptools && \
+ pip install --no-cache-dir --upgrade "setuptools<82" && \
  pip install --no-cache-dir --upgrade wheel && \
  pip install -e . -r requirements.txt
 
@@ -46,8 +46,8 @@ RUN hepdata collect -v  && \
 
 RUN bash -c "echo $APP_ENVIRONMENT"
 
-RUN bash -c "set -x; [[ ${APP_ENVIRONMENT:-prod} = local-web ]] && (cd /usr/local/var && wget https://saucelabs.com/downloads/sauce-connect/5.3.0/sauce-connect-5.3.0_${SAUCE_OS:-linux.x86_64}.tar.gz && \
-  tar -xvf sauce-connect-5.3.0_${SAUCE_OS:-linux.x86_64}.tar.gz) || echo 'Not installing SC on prod or worker build'"
+RUN bash -c "set -x; [[ ${APP_ENVIRONMENT:-prod} = local-web ]] && (cd /usr/local/var && wget https://saucelabs.com/downloads/sauce-connect/5.5.1/sauce-connect-5.5.1_${SAUCE_OS:-linux.x86_64}.tar.gz && \
+  tar -xvf sauce-connect-5.5.1_${SAUCE_OS:-linux.x86_64}.tar.gz) || echo 'Not installing SC on prod or worker build'"
 
 WORKDIR /code
 

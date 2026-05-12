@@ -212,11 +212,14 @@ HEPDATA.dataprocessing = {
                 summed_uncertainties["up"] += Math.pow(errors_obj.err_plus, 2);
                 summed_uncertainties["down"] += Math.pow(errors_obj.err_minus, 2);
 
-                // If error bars would go to 0, just omit them
-                if (options.y_scale == 'log' && errors_obj.y + errors_obj.err_minus <= 0) continue;
-
-                if (errors_obj.y + errors_obj.err_plus > HEPDATA.stats.max_y) HEPDATA.stats.max_y = errors_obj.err_plus + errors_obj.y;
-                if (errors_obj.y + errors_obj.err_minus < HEPDATA.stats.min_y) HEPDATA.stats.min_y = errors_obj.err_minus + errors_obj.y;
+                if (errors_obj.y + errors_obj.err_plus > HEPDATA.stats.max_y) {
+                  HEPDATA.stats.max_y = errors_obj.err_plus + errors_obj.y;
+                }
+                if (errors_obj.y + errors_obj.err_minus < HEPDATA.stats.min_y) {
+                  if (options.y_scale != 'log' || (errors_obj.y + errors_obj.err_minus) > 0) {
+                    HEPDATA.stats.min_y = errors_obj.err_minus + errors_obj.y;
+                  }
+                }
 
                 errors.push(errors_obj);
                 all_errors.push(errors_obj);
@@ -232,9 +235,6 @@ HEPDATA.dataprocessing = {
                 'name': data_header_value
               };
 
-              if (options.y_scale == 'log' &&
-                  processed_value["quad_error"].y + processed_value["quad_error"]["err_minus"] <= 0) continue;
-
               if (summed_uncertainties["up"] == 0 && summed_uncertainties["down"] == 0) {
                 processed_value["quad_error"]["label"] = "hidden";
               }
@@ -244,7 +244,9 @@ HEPDATA.dataprocessing = {
               }
 
               if (processed_value["quad_error"].y + processed_value["quad_error"]["err_minus"] < HEPDATA.stats.min_y) {
-                HEPDATA.stats.min_y = processed_value["quad_error"].y + processed_value["quad_error"]["err_minus"];
+                if (options.y_scale != 'log' || (processed_value["quad_error"].y + processed_value["quad_error"]["err_minus"]) > 0) {
+                  HEPDATA.stats.min_y = processed_value["quad_error"].y + processed_value["quad_error"]["err_minus"];
+                }
               }
 
               all_quad_errors.push(processed_value["quad_error"]);

@@ -29,6 +29,7 @@ from celery import shared_task
 from flask import current_app
 from invenio_db import db
 from hepdata.resilient_requests import resilient_requests
+from sqlalchemy import select
 import json
 import jsonschema
 

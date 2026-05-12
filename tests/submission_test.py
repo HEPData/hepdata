@@ -25,6 +25,8 @@
 import json
 import logging
 import os
+import random
+import re
 import shutil
 import time
 from datetime import datetime
@@ -46,18 +48,20 @@ from hepdata.modules.records.api import (
     get_related_to_this_datasubmissions,
     get_related_to_this_hepsubmissions,
     get_table_data_list,
-    process_saved_file, get_commit_message
+    process_saved_file
 )
 from hepdata.modules.records.utils.common import infer_file_type, contains_accepted_url, allowed_file, record_exists, \
-    get_record_contents, is_histfactory, get_record_by_id
+    get_record_contents, is_analysis, get_record_by_id
 from hepdata.modules.records.utils.data_files import get_data_path_for_record
 from hepdata.modules.records.utils.submission import process_submission_directory, do_finalise, unload_submission, \
-    cleanup_data_related_recid
-from hepdata.modules.submission.api import get_latest_hepsubmission, get_submission_participants_for_record
-from hepdata.modules.submission.models import DataSubmission, HEPSubmission, RelatedRecid, RecordVersionCommitMessage
+    cleanup_data_related_recid, get_or_create_hepsubmission
+from hepdata.modules.submission.api import get_latest_hepsubmission, get_submission_participants_for_record, \
+    get_or_create_submission_observer, delete_submission_observer
+from hepdata.modules.submission.models import DataSubmission, HEPSubmission, RelatedRecid, RecordVersionCommitMessage, \
+    SubmissionObserver
 from hepdata.modules.submission.views import process_submission_payload
 from hepdata.config import HEPDATA_DOI_PREFIX
-from tests.conftest import create_test_record
+from tests.conftest import create_test_record, create_blank_test_record
 
 
 def test_submission_endpoint(app, client):
@@ -94,20 +98,16 @@ def test_url_pattern():
         assert (url_group["exp_result"] == url_type)
 
 
-@pytest.mark.parametrize("filename,description,type,expected",
+@pytest.mark.parametrize("analyses_type,description,type,expected",
     [
-        ("pyhf.tar.gz", "PyHF", None, True),
-        ("pyhf.tgz", "File containing likelihoods", None, True),
-        ("pyhf.zip", "HistFactory JSON file", None, True),
-        ("test.zip", "Some sort of file", "HistFactory", True),
-        ("test.zip", "Some sort of file", "histfactory", True),
-        ("pyhf.tar.gz", "A file", None, False),
-        ("pyhf.json", "HistFactory JSON file", None, True),
-        ("test.zip", "Some sort of file", "json", False),
+        ("SimpleAnalysis", "SimpleAnalysis code snippet", None, True),
+        ("SimpleAnalysis", "ComplicatedAnalysis code snippet", None, False),
+        ("SimpleAnalysis", "Code snippet", "SimpleAnalysis", True),
+        ("SimpleAnalysis", "Code snippet", "ComplicatedAnalysis", False),
     ]
 )
-def test_is_histfactory(filename, description, type, expected):
-    assert is_histfactory(filename, description, type) == expected
+def test_is_analysis(analyses_type, description, type, expected):
+    assert is_analysis(analyses_type, description, type) == expected
 
 
 @pytest.mark.parametrize("filename,description,type,expected",
@@ -121,8 +121,11 @@ def test_is_histfactory(filename, description, type, expected):
         ("test.root", "", None, "ROOT"),
         ("test.docx", "", None, "docx"),
         ("test", "", None, "resource"),
-        ("pyhf.tgz", "File containing likelihoods", None, "HistFactory"),
+        ("pyhf.tgz", "File containing likelihoods", None, "tgz"),
         ("test.zip", "Some sort of file", "HistFactory", "HistFactory"),
+        ("test.zip", "Some sort of file", "HS3", "HS3"),
+        ("snippet.cxx", "SimpleAnalysis code snippet", None, "SimpleAnalysis"),
+        ("snippet.cxx", "Code snippet", "SimpleAnalysis", "SimpleAnalysis"),
         ("snippet.cxx", "ProSelecta analysis", "ProSelecta", "ProSelecta")
     ]
 )
@@ -862,3 +865,286 @@ def test_do_finalise_commit_message_failure(app, admin_idx):
         # We should now have one message in the database.
         assert len(commit_messages) == 1
         assert commit_messages[0].message == "NewMessage"
+
+
+@patch("hepdata.ext.opensearch.document_enhancers.process_last_updates")
+def test_do_finalise_general_exception(app, admin_idx):
+    """
+    Tests that do_finalise handles general exceptions properly.
+    Checks error logging and proper error response.
+    """
+
+    with app.app_context():
+        admin_idx.recreate_index()
+        # Create test submission/record
+        hepdata_submission = create_test_record(
+            os.path.abspath('tests/test_data/test_submission'),
+            overall_status='todo'
+        )
+
+        # Create record data and prepare
+        record = get_record_by_id(hepdata_submission.publication_recid)
+        record["creation_date"] = str(datetime.today().strftime('%Y-%m-%d'))
+
+        # Mock create_celery_app to cause an error after db commit
+        # This simulates issues like Redis connectivity problems that occur
+        # after the database changes are committed
+        with patch("hepdata.modules.records.utils.submission.create_celery_app") as mock_celery:
+            # Set the function to raise a generic exception
+            mock_celery.side_effect = RuntimeError("Test error: Redis connection failed")
+
+            # Now we run the do_finalise function (PATCHED)
+            result = do_finalise(
+                        hepdata_submission.publication_recid,
+                        publication_record=record,
+                        force_finalise=True,
+                        convert=False,
+                        send_email=False
+            )
+            # Convert str(json)->dict
+            result = json.loads(result)
+
+        # Confirm that the result response exists and indicates failure
+        assert "errors" in result
+        assert len(result["errors"]) == 1
+        assert "An error occurred during finalisation" in result["errors"][0]
+        assert "Test error: Redis connection failed" in result["errors"][0]
+        assert result["success"] is False
+
+        # Note: The database changes were already committed before the exception,
+        # so rollback cannot undo them. This test verifies that exceptions are
+        # caught, logged, and reported properly even when they occur after commit.
+
+
+def test_do_finalise_async_indexing(app, admin_idx, mocker):
+    """
+    Tests that do_finalise uses asynchronous indexing via reindex_batch.delay
+    """
+    # Mock the reindex_batch.delay function
+    mock_reindex_batch_delay = mocker.patch('hepdata.modules.records.utils.submission.reindex_batch.delay')
+
+    with app.app_context():
+        admin_idx.recreate_index()
+        # Create test submission/record
+        hepdata_submission = create_test_record(
+            os.path.abspath('tests/test_data/test_submission'),
+            overall_status='todo'
+        )
+
+        record = get_record_by_id(hepdata_submission.publication_recid)
+        record["creation_date"] = str(datetime.today().strftime('%Y-%m-%d'))
+
+        # Mock generate_dois_for_submission.delay to avoid side effects
+        mocker.patch('hepdata.modules.records.utils.submission.generate_dois_for_submission.delay')
+
+        # Call do_finalise
+        do_finalise(
+            hepdata_submission.publication_recid,
+            publication_record=record,
+            force_finalise=True,
+            convert=False
+        )
+
+        # Verify that reindex_batch.delay was called with correct parameters
+        mock_reindex_batch_delay.assert_called_once_with(
+            [hepdata_submission.id],
+            app.config['OPENSEARCH_INDEX']
+        )
+
+
+def test_get_or_create_submission_observer(app):
+    """
+        Tests the get_or_create_submission_observer function against both
+        its creation and regeneration functionality.
+    """
+
+    test_data = [
+        {
+            "id": 0, "insert": True, "regenerate": True, "generated_key": None
+        },
+        {
+            "id": 0, "insert": True, "regenerate": False, "generated_key": None
+        },
+        {
+            "id": 0, "insert": False, "regenerate": True, "generated_key": None
+        },
+        # Testing against
+        {  # It should not generate here as we have no Submission.
+            "id": 0, "insert": False, "regenerate": False, "generated_key": None, "overall_status": "finished"
+        },
+        {  # It should not generate here as we have no Submission.
+            "id": 0, "insert": False, "regenerate": False, "generated_key": None, "overall_status": "todo"
+        }
+    ]
+
+    uuid_regex = r"^[0-9a-fA-F]{8}"
+
+    for test in test_data:
+        test["id"] = random.randint(2500, 50000)
+        overall_status = "todo" if (test["insert"] or test["regenerate"]) else test["overall_status"]
+        test_sub = HEPSubmission(publication_recid=test["id"],
+                                      coordinator=1,
+                                      overall_status=overall_status)
+        db.session.add(test_sub)
+        db.session.commit()
+
+        # Not all cases should insert at first
+        if test["insert"]:
+            observer = get_or_create_submission_observer(test["id"])
+
+            # Setting the test data if there was a key generated
+            if observer:
+                test["generated_key"] = observer.observer_key
+            else:
+                test["generated_key"] = None
+
+        submission_observer = SubmissionObserver.query.filter_by(publication_recid=test["id"]).first()
+
+        # If we insert, the SO key should match the generated key, and regex
+        if test["insert"]:
+            assert submission_observer.observer_key == test["generated_key"]
+            assert re.match(uuid_regex, str(test["generated_key"]))
+        else:
+            # If no insert, this is likely checking for equality with None
+            assert submission_observer == test["generated_key"]
+
+    for test in test_data:
+        # Get the submission observer, and then try to generate a new key
+        submission_observer = SubmissionObserver.query.filter_by(publication_recid=test["id"]).first()
+        new_key = get_or_create_submission_observer(test["id"], regenerate=test["regenerate"])
+
+        if test["insert"] or test["regenerate"]:
+            # If we regenerate OR insert, then it should have been generated, and match
+            assert re.match(uuid_regex, new_key.observer_key)
+            assert (test["generated_key"] == new_key.observer_key) == (not test["regenerate"] and test["insert"])
+        else:
+            # If we are not inserting, or regenerating (both False)
+            # No There should be no submission observer, and no key generated
+            assert submission_observer is None
+            assert get_latest_hepsubmission(publication_recid=test["id"]).overall_status == test["overall_status"]
+            assert test["generated_key"] is None
+
+            # If the status is to-do, it should be a valid key, or the new key should be None
+            if test["overall_status"] == "todo":
+                assert re.match(uuid_regex, new_key.observer_key)
+            else:
+                assert new_key is None
+
+        # Testing that a completely fake submission observer does not create
+        for regen_bool in [True, False]:
+            blank_observer = get_or_create_submission_observer(23232323, regenerate=regen_bool)
+            assert blank_observer is None
+
+def test_submission_observer_create_delete(app, admin_idx):
+    """
+        Tests creation, new version and deletion cycle of a SubmissionObserver.
+    """
+    # 8 char alphanumeric
+    uuid_regex = r"^[0-9a-fA-F]{8}"
+
+    # Insert the testing record data
+    empty_submission = create_blank_test_record(status="todo")
+    record = get_record_by_id(empty_submission.publication_recid)
+
+    # Get the submission observer key and verify against regex
+    sub_obs = SubmissionObserver.query.filter_by(publication_recid=empty_submission.publication_recid).first()
+    sub_observer_key = sub_obs.observer_key
+    assert re.match(uuid_regex, sub_observer_key)
+
+    # Patching OpenSearch indexing to avoid setup steps
+    with patch('hepdata.modules.records.utils.submission.index_record_ids', side_effect=None):
+        do_finalise(empty_submission.publication_recid, publication_record=record, force_finalise=True)
+
+    # We finalise the submission, so there should be no SubmissionObserver objects
+    all_obs = SubmissionObserver.query.all()
+    assert len(all_obs) == 0
+
+    # Setting finished status and creating a new version
+    empty_submission.overall_status = 'finished'
+    db.session.add(empty_submission)
+    db.session.commit()
+    create_new_version(empty_submission.publication_recid, None)
+
+    # Get the new SubmissionObserver key and verify
+    sub_obs = SubmissionObserver.query.filter_by(publication_recid=empty_submission.publication_recid).first()
+    new_observer_key = sub_obs.observer_key
+
+    # Ensure the new key both matches the regex, and is a different key
+    assert re.match(uuid_regex, new_observer_key)
+    assert new_observer_key != sub_observer_key
+
+    # Unload the new version object
+    unload_submission(empty_submission.publication_recid, 2)
+
+    # Verify SubmissionObserver deletion
+    all_obs = SubmissionObserver.query.all()
+    assert len(all_obs) == 0
+
+
+def test_delete_submission_observer(app):
+    """
+    Tests the specific deletion of the delete_submission_observer function.
+    Check error return and deletion of an object
+
+    TODO - Doesn't do much with the error
+    """
+
+    test_ids = [{
+        "id": 1, "error": False # Should just insert and delete
+    },
+    {
+        "id": 2, "error": True # Causing an error (checking error handling)
+    }]
+
+    for test in test_ids:
+        # Create a test object
+        test_observer = SubmissionObserver(test["id"])
+        db.session.add(test_observer)
+        db.session.commit()
+
+        # Checking retrieval of newly inserted object
+        submission_observer = SubmissionObserver.query.filter_by(publication_recid=test["id"]).first()
+        assert submission_observer.publication_recid == test["id"]
+
+        if test["error"]:
+            # If we should error, we check for the error
+            with pytest.raises(ValueError):
+                # Pass through a string of some sort
+                delete_submission_observer("a")
+        else:
+            # Run the delete function normally
+            delete_submission_observer(test["id"])
+
+        # Try to get the SubmissionObserver object for this ID
+        submission_observer = SubmissionObserver.query.filter_by(publication_recid=test["id"]).first()
+
+        # If error, item exists.
+        if test["error"]:
+            assert isinstance(submission_observer, SubmissionObserver)
+        else:
+            assert submission_observer is None
+
+    # Ensure count of all objects equal to the data minus the error
+    all_observers = SubmissionObserver.query.all()
+    assert len(all_observers) == (len(test_ids) - 1)
+
+
+def test_delete_submission_observer_db_error(app):
+    """
+    Tests that delete_submission_observer correctly handles a database error
+    during the delete operation (covers the except Exception block).
+    """
+    # Create a test SubmissionObserver to operate on
+    test_observer = SubmissionObserver(9999)
+    db.session.add(test_observer)
+    db.session.commit()
+
+    # Mock db.session.delete to raise a database exception
+    with patch.object(db.session, 'delete', side_effect=Exception("DB delete error")):
+        with pytest.raises(Exception, match="DB delete error"):
+            delete_submission_observer(9999)
+
+    # After the exception, the observer should still exist (rollback occurred)
+    submission_observer = SubmissionObserver.query.filter_by(publication_recid=9999).first()
+    assert submission_observer is not None
+

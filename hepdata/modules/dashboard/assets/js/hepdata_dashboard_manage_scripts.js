@@ -43,25 +43,35 @@ $(document).ready(function() {
         confirmation_html += '<p>This action will send an email immediately to invite the user to join the ' + window.data_person_type + ' process.</p>';
       }
       show_confirmation(confirmation_html);
+
+      // Hide the review message textarea for remove action since no email is sent
+      if (window.action == 'remove') {
+        $('#review-message-container').hide();
+      } else {
+        $('#review-message-container').show();
+      }
   });
 
   $(document).on('click', '.confirm-move-action', function () {
+      let review_message = $("#review-message");
       $.ajax({
           dataType: "json",
           url: '/permissions/manage/' + window.recid + '/' + window.data_person_type + '/' + window.action + '/' + window.userid,
           type: 'POST',
           data: {
-              review_message: $("#review-message").val()
+              review_message: review_message.val()
           },
           success: function (data) {
               if (data.success) {
                   process_reviews(data['recid']);
                   hide_pane("#confirmation");
+                  review_message.val('');
               } else {
                   alert("Error! " + data.message)
               }
           }
       })
+      review_message.val('');
   });
 
   $(document).on('click', '.confirm-add-user-action', function (event) {
@@ -115,6 +125,8 @@ $(document).ready(function() {
   function hide_pane(pane_id) {
       $("#" + window.active_target).removeClass("hidden");
       $(pane_id).addClass("hidden");
+      // Reset the review message container to be visible when pane is hidden
+      $('#review-message-container').show();
   }
 
   function process_reviews(recid) {
@@ -176,10 +188,31 @@ $(document).ready(function() {
       });
   }
 
+  function set_observer_key(recid) {
+    /**
+    * Sets the observer key value on the manage submission dashboard widget.
+    *
+    * @param {number} recid - The recid to get observer_key for.
+    */
+
+    // Call for observer key, with the flag to retrieve
+    let observer_promise = HEPDATA.get_observer_key_data(recid, 1);
+
+    observer_promise.then(function(observer_key) {
+      if(observer_key) {
+        // Unhide container, set value and text on the input
+        $('#data_link_container').removeAttr('hidden');
+        $('#direct_data_link').val(observer_key);
+      }
+    });
+    HEPDATA.setup_clipboard("#dashboard_button");
+  }
+
   $(document).on('click', '.manage-submission-trigger', function (event) {
       window.recid = $(this).attr('data-recid');
       HEPDATA.load_all_review_messages("#conversation", $(this).attr('data-recid'));
       process_reviews($(this).attr('data-recid'));
+      set_observer_key($(this).attr('data-recid'));
   });
 
   $(document).on('click', '.conversation-trigger', function (event) {

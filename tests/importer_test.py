@@ -110,6 +110,28 @@ def test_get_inspire_ids(caplog):
         assert caplog.records[0].msg == \
             "Unexpected response from https://hepdata.net/search/ids?inspire_ids=true: 3"
 
+        # Test ids_url parameter: fetches from that URL directly, ignoring base_url
+        caplog.clear()
+        mock.get('https://example.com/hepdata/inspire.json',
+                 json=dummy_ids, complete_qs=True)
+        ids = get_inspire_ids(ids_url='https://example.com/hepdata/inspire.json')
+        assert ids == dummy_ids
+
+        # Test ids_url with n_latest still limits results client-side
+        mock.get('https://example.com/hepdata/inspire.json',
+                 json=dummy_ids, complete_qs=True)
+        ids = get_inspire_ids(ids_url='https://example.com/hepdata/inspire.json', n_latest=3)
+        assert ids == dummy_ids[:3]
+
+        # Test ids_url 404
+        caplog.clear()
+        mock.get('https://example.com/hepdata/inspire.json',
+                 complete_qs=True, status_code=404)
+        ids = get_inspire_ids(ids_url='https://example.com/hepdata/inspire.json')
+        assert ids is False
+        assert caplog.records[0].msg == \
+            "Unable to retrieve data from https://example.com/hepdata/inspire.json: 404 Not Found"
+
 
 def test_import_record(app):
     all_submissions = HEPSubmission.query.all()
@@ -149,17 +171,19 @@ def test_import_record(app):
     assert updated_submission.last_updated > last_updated
 
     # Try an old inspire id which uses the old schema
-    old_inspire_id = '944937'
+    old_inspire_id = '214970'
+    result = _import_record(old_inspire_id, allow_old_schema=False)
+    assert result is False
     result = _import_record(old_inspire_id)
     assert result is True
     all_submissions = HEPSubmission.query.all()
     assert len(all_submissions) == 2
     data_submissions = DataSubmission.query.all()
-    assert len(data_submissions) == 3
+    assert len(data_submissions) == 4
     record = get_record_by_id(all_submissions[1].publication_recid)
-    assert record['title'] == 'The Production of Charged Photomesons from Deuterium and Hydrogen. I'
+    assert record['title'] == 'CHARGED PARTICLE MULTIPLICITIES IN PI-, K- AND ANTI-P INTERACTIONS WITH NUCLEI AT 40-GEV/C'
     assert record['inspire_id'] == old_inspire_id
-    assert record['abstract'].startswith('Hydrogen and deuterium gases have been bombarded in a gas target at a temperature of 77°K')
+    assert record['abstract'].startswith('Interactions of 40 GeV/c')
 
     # Try an invalid inspire id
     assert _import_record('thisisinvalid') is False
@@ -193,14 +217,25 @@ def test_import_record(app):
             result = _import_record(inspire_id, update_existing=True)
             assert result is False
 
+        # Test files_url: download from alternate location using pattern
+        # {files_url}/ins{inspire_id}.tar.gz
+        files_url = 'https://example.com/hepdata'
+        mock.get('{0}/ins{1}.tar.gz'.format(files_url, inspire_id),
+                 status_code=404)
+        result = _import_record(inspire_id, update_existing=True,
+                                files_url=files_url)
+        assert result is False
+
 
 def test_import_records(mocker):
     # Patch the _import_record function as it's tested elsewhere
     m = mocker.patch('hepdata.modules.records.importer.api._import_record')
     import_records(['ins12345', '67890'], synchronous=True)
     expected_args = [
-        call('12345', base_url='https://hepdata.net', update_existing=False, send_email=False),
-        call('67890', base_url='https://hepdata.net', update_existing=False, send_email=False),
+        call('12345', base_url='https://hepdata.net', update_existing=False, allow_old_schema=True,
+             send_email=False, coordinator_id=1, files_url=None),
+        call('67890', base_url='https://hepdata.net', update_existing=False, allow_old_schema=True,
+             send_email=False, coordinator_id=1, files_url=None),
     ]
     assert m.call_count == 2
     assert m.call_args_list == expected_args
@@ -209,4 +244,14 @@ def test_import_records(mocker):
     import_records(['ins54321'], base_url='https://localhost:5000',
                    update_existing=True, synchronous=True)
     m.assert_called_once_with('54321', base_url='https://localhost:5000',
-                              update_existing=True, send_email=False)
+                              update_existing=True, allow_old_schema=True, send_email=False,
+                              coordinator_id=1, files_url=None)
+
+    # Test allow_old_schema, coordinator_id and files_url are passed through
+    m.reset_mock()
+    import_records(['ins99999'], synchronous=True, allow_old_schema=False, coordinator_id=42,
+                   files_url='https://example.com/hepdata')
+    m.assert_called_once_with('99999', base_url='https://hepdata.net',
+                              update_existing=False, allow_old_schema=False, send_email=False,
+                              coordinator_id=42,
+                              files_url='https://example.com/hepdata')

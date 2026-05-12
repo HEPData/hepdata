@@ -86,7 +86,7 @@ CELERY_BEAT_SCHEDULE = {
     },
     'delete_login_ips': {
         'task': 'invenio_accounts.tasks.delete_ips',
-        'schedule': timedelta(days=30),
+        'schedule': timedelta(days=7),
     },
 }
 
@@ -118,6 +118,7 @@ CACHE_REDIS_URL = "redis://localhost:6379/0"
 CACHE_TYPE = "redis"
 
 # Session
+ACCOUNTS_RETENTION_PERIOD = timedelta(days=7)
 ACCOUNTS_SESSION_REDIS_URL = CACHE_REDIS_URL
 PERMANENT_SESSION_LIFETIME = timedelta(hours=12)
 
@@ -188,6 +189,7 @@ CONVERT_MAX_SIZE = sys.maxsize  # Limit on payload sent to converter (checked at
 CLIENT_TIMEOUT = 298  # Client-side timeout in s (should be slightly smaller than server timeout)
 SIZE_LOAD_CHECK_THRESHOLD = 1 * (1024 * 1024) # Size (bytes) threshold for immediate loading of a table on the records page.
 ADDITIONAL_SIZE_LOAD_CHECK_THRESHOLD = 1 * (1024 * 1024) # Size (bytes) threshold  for disallowing render of additional res files
+OBSERVER_KEY_LENGTH = 8 # The length that the UUID4 observer key is trimmed down to.
 
 CFG_PUB_TYPE = 'publication'
 CFG_DATA_TYPE = 'datatable'
@@ -326,16 +328,15 @@ ANALYSES_ENDPOINTS = {
         'description': 'Rivet analysis'
     },
     'MadAnalysis': {
-        'endpoint_url': 'https://madanalysis.irmp.ucl.ac.be/raw-attachment/wiki/MA5SandBox/analyses.json',
-        'url_template': 'https://doi.org/{0}',
-        'description': 'MadAnalysis 5 analysis'
+        'endpoint_url': 'https://raw.githubusercontent.com/MadAnalysis/HEPData-link/refs/heads/main/analyses.json',
+        'subscribe_user_id': 1703,
     },
     'SModelS': {
         'endpoint_url': 'https://smodels.github.io/docs/smodels-analyses.hepdata.json',
         'subscribe_user_id': 7766
     },
     'CheckMATE': {
-        'endpoint_url': 'https://checkmate.hepforge.org/AnalysesList/analyses.json',
+        'endpoint_url': 'https://raw.githubusercontent.com/CheckMATE2/checkmate2/refs/heads/master/data/analyses.json',
         'url_template': '{0}',
         'description': 'CheckMATE analysis',
         'subscribe_user_id': 6977
@@ -369,6 +370,8 @@ ANALYSES_ENDPOINTS = {
 }
 
 HISTFACTORY_FILE_TYPE = 'HistFactory'
+HS3_FILE_TYPE = 'HS3'
+SIMPLEANALYSIS_FILE_TYPE = 'SimpleAnalysis'
 NUISANCE_FILE_TYPE = 'ProSelecta'
 
 ADMIN_EMAIL = 'info@hepdata.net'

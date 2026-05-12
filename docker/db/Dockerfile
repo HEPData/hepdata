@@ -1,4 +1,4 @@
-FROM postgres:14
+FROM postgres:16
 
 # Custom initialization scripts
 COPY ./create_test_db.sh     /docker-entrypoint-initdb.d/20-create_test_db.sh
