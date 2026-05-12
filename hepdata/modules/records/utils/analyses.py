@@ -266,4 +266,4 @@ def update_analyses(endpoint=None):
         except LookupError as e:
             log.error(str(e))
         except jsonschema.exceptions.ValidationError as e:
-            log.error("Validation error for analyses schema {0} in {1}: {2}".format(schema_version, analysis_endpoint, e))
+            log.error("Validation error for analyses schema in {}: {}".format(analysis_endpoint, e))
