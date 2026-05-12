@@ -1238,7 +1238,7 @@ def test_incorrect_endpoint(app):
         update_analyses_single_tool('TestAnalysis')
 
     # Call forgiving version of update_analyses_single_tool to make sure it works as intended
-    assert update_analyses_single_tool_forgiving("TestAnalysis") == False
+    assert not update_analyses_single_tool_forgiving("TestAnalysis")
 
 
 def test_generate_license_data_by_id(app):
