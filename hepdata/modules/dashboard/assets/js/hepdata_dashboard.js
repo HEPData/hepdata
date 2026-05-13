@@ -465,11 +465,16 @@ $(document).on('click', '#edit-title-save-button', function () {
         $("#edit-title-error").text(data.message || 'An error occurred.').removeClass("hidden");
       }
     },
-    error: function () {
+    error: function (xhr) {
+      let error_message = 'An error occurred. Please try again.';
+      if (xhr.responseJSON && xhr.responseJSON.message) {
+        error_message = xhr.responseJSON.message;
+      }
+      
       $("#edit-title-progress").addClass("hidden");
       $("#edit_title_entry").removeClass("hidden");
       $("#edit-title-save-button").removeClass("hidden");
-      $("#edit-title-error").text('An error occurred. Please try again.').removeClass("hidden");
+      $("#edit-title-error").text(error_message).removeClass("hidden");
     }
   });
 });
