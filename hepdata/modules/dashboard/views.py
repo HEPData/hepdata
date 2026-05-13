@@ -26,6 +26,7 @@ from flask import Blueprint, jsonify, request, render_template, abort, \
     current_app, make_response, url_for
 from flask_login import login_required, current_user
 from invenio_accounts.models import User, Role
+from invenio_db import db
 
 from hepdata.ext.opensearch.admin_view.api import AdminIndexer
 from hepdata.ext.opensearch.api import reindex_all
@@ -291,6 +292,52 @@ def submissions_csv():
     output.headers["Content-Disposition"] = "attachment; filename=export.csv"
     output.headers["Content-type"] = "text/csv"
     return output
+
+
+@blueprint.route('/update_title/<int:recid>', methods=['POST'])
+@login_required
+def update_submission_title(recid):
+    """
+    Updates the title of an editable submission that does not have an INSPIRE ID attached.
+
+    :param recid: record id of the submission to update
+    :return: JSON response with status 'success' or error message
+    """
+    submission = get_latest_hepsubmission(
+        publication_recid=recid,
+        overall_status='todo'
+    )
+
+    if submission is None:
+        return jsonify({'status': 'error', 'message': 'Submission not found.'}), 404
+
+    if submission.inspire_id:
+        return jsonify({'status': 'error',
+                        'message': 'This submission has an INSPIRE ID attached. '
+                                   'The title is managed via INSPIRE.'}), 400
+
+    if not (has_role(current_user, 'admin') or
+            submission.coordinator == int(current_user.get_id())):
+        return jsonify({'status': 'error',
+                        'message': 'You do not have permission to update this submission.'}), 403
+
+    title = request.form.get('title', '').strip()
+
+    if not title:
+        return jsonify({'status': 'error', 'message': 'Please provide a title.'}), 400
+
+    record = get_record_by_id(recid)
+    if record is None:
+        return jsonify({'status': 'error', 'message': 'Record not found.'}), 404
+
+    record['title'] = title
+    record.commit()
+    db.session.commit()
+
+    admin_idx = AdminIndexer()
+    admin_idx.index_submission(submission)
+
+    return jsonify({'status': 'success'})
 
 
 @blueprint.route('/list-all-users')
