@@ -25,6 +25,7 @@ import time
 
 from flask_login import current_user, login_user
 from invenio_db import db
+from unittest.mock import patch
 from werkzeug.exceptions import Forbidden
 from hepdata.modules.dashboard.api import add_user_to_metadata, \
     create_record_for_dashboard, prepare_submissions, \
@@ -596,9 +597,9 @@ def test_submissions_csv(app, admin_idx, load_default_data, identifiers):
 
 def test_update_submission_title(app, admin_idx):
     """Test the update_submission_title endpoint."""
-    from unittest.mock import patch
     with app.app_context():
         admin_user = User.query.filter_by(id=1).first()
+        # Create the initial admin user
         login_user(admin_user)
         client = app.test_client()
 
@@ -632,9 +633,10 @@ def test_update_submission_title(app, admin_idx):
         assert data['status'] == 'error'
 
         # Test successful title update
+        updated_title = 'Updated Provisional Title'
         response = client.post(
             update_url,
-            data={'title': 'Updated Provisional Title'}
+            data={'title': updated_title}
         )
         assert response.status_code == 200
         data = response.get_json()
@@ -642,7 +644,7 @@ def test_update_submission_title(app, admin_idx):
 
         # Verify title was updated in the record
         updated_record = get_record_by_id(record_information['recid'])
-        assert updated_record['title'] == 'Updated Provisional Title'
+        assert updated_record['title'] == updated_title
 
         # Verify title was updated in the admin index
         time.sleep(1)  # wait before searching
