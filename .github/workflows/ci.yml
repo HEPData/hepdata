@@ -56,6 +56,7 @@ jobs:
         postgres-version: [ 16 ]
         os-version: [ '3.4.0' ]
         python-version: [ '3.9' ]
+        test-mode: [ func, endpoint-availability, e2e ]
 
     # Service containers to run with `runner-job`
     services:
@@ -153,20 +154,23 @@ jobs:
         hepdata webpack buildall
         cp hepdata/config_local.gh.py hepdata/config_local.py
     - name: Run tests
+      if: matrix.test-mode == 'func'
       env:
         COVERAGE_FILE: '.coverage_func'
         SQLALCHEMY_WARN_20: 1
       run: |
-        pytest -v --cov-report xml:.coverage_func.xml tests/*_test.py tests/test_*.py -m "not strict_endpoints_test"
+        pytest -v --cov-report xml:${COVERAGE_FILE}.xml tests/*_test.py tests/test_*.py -m "not strict_endpoints_test"
     - name: Check availability of analyses endpoints
+      if: matrix.test-mode == 'endpoint-availability'
       env:
+        COVERAGE_FILE: '.coverage_endpoint_availability'
         SQLALCHEMY_WARN_20: 1
       continue-on-error: true
       run: |
-        bash scripts/check_for_endpoint_failures.sh
+        pytest -v --cov-report xml:${${COVERAGE_FILE}}.xml tests/*_test.py tests/test_*.py -m "strict_endpoints_test"
     - name: Setup Sauce Connect
       uses: saucelabs/sauce-connect-action@v3
-      if: startsWith(matrix.python-version, '3.9')
+      if: matrix.test-mode == 'e2e' && startsWith(matrix.python-version, '3.9')
       with:
         username: ${{ secrets.SAUCE_USERNAME }}
         accessKey: ${{ secrets.SAUCE_ACCESS_KEY }}
@@ -175,18 +179,18 @@ jobs:
         proxyLocalhost: direct
         scVersion: 5.5.1
     - name: Run end-to-end tests
-      if: startsWith(matrix.python-version, '3.9')
+      if: matrix.test-mode == 'e2e' && startsWith(matrix.python-version, '3.9')
       env:
         SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
         SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY }}
         COVERAGE_FILE: '.coverage_e2e'
         SQLALCHEMY_WARN_20: 1
       run: |
-        if [[ -n ${{ secrets.SAUCE_USERNAME }} && -n ${{ secrets.SAUCE_ACCESS_KEY}} ]]; then pytest -v --cov-report xml:.coverage_e2e.xml tests/e2e; fi
+        if [[ -n ${{ secrets.SAUCE_USERNAME }} && -n ${{ secrets.SAUCE_ACCESS_KEY}} ]]; then pytest -v --cov-report xml:${COVERAGE_FILE}.xml tests/e2e; fi
     - name: Combine coverage files
       if: startsWith(matrix.python-version, '3.9')
       run: |
-        coverage combine --data-file=.coverage .coverage_func .coverage_e2e
+        coverage combine --data-file=.coverage .coverage_func .coverage_endpoint_availability .coverage_e2e
     - name: Upload to Codecov
       if: ${{ startsWith(matrix.python-version, '3.9') && !env.ACT }}
       uses: codecov/codecov-action@v6
