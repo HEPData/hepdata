@@ -1116,17 +1116,6 @@ def test_create_breadcrumb_text():
     }
 
 
-def update_analyses_single_tool_forgiving(tool):
-    """ Call update_analyses_single_tool() but demote known errors to warnings because they are on the tool side."""
-    try:
-        update_analyses_single_tool(tool)
-    except (jsonschema.exceptions.ValidationError, LookupError) as e:
-        # syntax ensures flagging by GitHub CI
-        print(f"WARNING: test_update_analyses[{tool}] failed with '{e}' which indicates error on tool side. Skipping test.")
-        return False
-    return True
-
-
 base_dir = os.path.dirname(os.path.realpath(__file__))
 testdata_analyses = yaml.safe_load(open(os.path.join(base_dir, "test_data", "analyses_tests.yaml"), 'r'))
 testdata_analyses_pytest = [tuple([tool]+list(dic.values())) for tool, dic in testdata_analyses.items()]
@@ -1146,7 +1135,7 @@ def test_update_analyses(app, tool, import_id, counts, test_user, url, license):
         db.session.add(user)
         db.session.commit()
 
-    if not update_analyses_single_tool_forgiving(tool):
+    if not update_analyses(tool):
         return
 
     analysis_resources = DataResource.query.filter_by(file_type=tool).all()
@@ -1180,14 +1169,14 @@ def test_multiupdate_analyses(app):
     assert analysis_resources[0].file_location == 'http://rivet.hepforge.org/analyses#ATLAS_2012_I1203852'
 
     # Call update_analyses(): should add new resource and delete existing one
-    if not update_analyses_single_tool_forgiving('rivet'):
+    if not update_analyses('rivet'):
         return
     analysis_resources = DataResource.query.filter_by(file_type='rivet').all()
     assert len(analysis_resources) == 1
     assert analysis_resources[0].file_location == 'http://rivet.hepforge.org/analyses/ATLAS_2012_I1203852'
 
     # Call update_analyses() again: should be no further changes (but covers more lines of code)
-    if not update_analyses_single_tool_forgiving('rivet'):
+    if not update_analyses('rivet'):
         return
     analysis_resources = DataResource.query.filter_by(file_type='rivet').all()
     assert len(analysis_resources) == 1
@@ -1204,7 +1193,7 @@ def test_update_delete_analyses(app):
     assert len(analysis_resources) == 1
     db.session.delete(analysis_resources[0])  # delete resource so it can be re-added in next step
     db.session.commit()
-    if not update_analyses_single_tool_forgiving('Combine'):
+    if not update_analyses('Combine'):
         return
     analysis_resources = DataResource.query.filter_by(file_type='Combine').all()
     assert len(analysis_resources) == 1
@@ -1233,14 +1222,25 @@ def test_incorrect_endpoint(app):
         update_analyses_single_tool('TestAnalysis')
         assert exc_info.value.message == "'facets', 'hits', 'results', 'total' do not match any of the regexes: '^[0-9]+$'"
 
-    # Call update_analyses, which doesn't raise exceptions, using an invalid endpoint_URL
+def test_update_analyses_error_handling(app):
+    """ Test that errors in update_analyses are only raised when expected """
+    # Call update_analyses_single_tool using an endpoint with no endpoint_url
+    # This is an error on HEPData's side and should be raised
+    current_app.config["ANALYSES_ENDPOINTS"]["TestAnalysis"] = {}
+    with pytest.raises(KeyError, match="'No endpoint_url configured for TestAnalysis'"):
+        update_analyses('TestAnalysis')
+
+    # Call update_analyses_single_tool using an invalid endpoint_URL (handling LookupError)
     current_app.config["ANALYSES_ENDPOINTS"]["TestAnalysis"]['endpoint_url'] = 'https://www.hepdata.net/analyses.json'
-    with pytest.raises(LookupError, match="Error accessing https://www.hepdata.net/analyses.json, status 404"):
-        update_analyses_single_tool('TestAnalysis')
+    assert update_analyses('TestAnalysis') == False
 
-    # Call forgiving version of update_analyses_single_tool to make sure it works as intended
-    assert not update_analyses_single_tool_forgiving("TestAnalysis")
+    # Call update_analyses_single_tool using a valid endpoint_URL with an invalid json (handling json.JSONDecodeError)
+    current_app.config["ANALYSES_ENDPOINTS"]["TestAnalysis"]['endpoint_url'] = 'https://www.hepdata.net'
+    assert update_analyses('TestAnalysis') == False
 
+    # Call update_analyses_single_tool using an endpoint_url that will fail validation (handling jsonschema.exceptions.ValidationError)
+    current_app.config["ANALYSES_ENDPOINTS"]["TestAnalysis"]['endpoint_url'] = 'https://www.hepdata.net/search/?format=json&size=1'
+    assert update_analyses('TestAnalysis') == False
 
 def test_generate_license_data_by_id(app):
     """
