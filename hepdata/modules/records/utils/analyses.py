@@ -69,9 +69,11 @@ def update_analyses_single_tool(analysis_endpoint):
 
         response = resilient_requests('get', endpoints[analysis_endpoint]["endpoint_url"])
 
-        if response.status_code == 200:
+        if response.ok:
 
-            analysis_resources = DataResource.query.filter_by(file_type=analysis_endpoint).all()
+            analysis_resources = db.session.execute(
+                select(DataResource).filter_by(file_type=analysis_endpoint)
+            ).scalars().all()
 
             r_json = response.json()
 
@@ -199,8 +201,10 @@ def update_analyses_single_tool(analysis_endpoint):
                 try:
                     recids_to_reindex = []
                     for extra_analysis_resource in analysis_resources:
-                        query = db.select([data_reference_link.columns.submission_id]).where(
-                            data_reference_link.columns.dataresource_id == extra_analysis_resource.id)
+                        if not extra_analysis_resource.file_location.lower().startswith('http'):
+                            continue  # don't delete local files from database
+
+                        query = select(data_reference_link.columns.submission_id).where(data_reference_link.columns.dataresource_id == extra_analysis_resource.id)
                         results = db.session.execute(query)
                         for result in results:
                             submission_id = result[0]
@@ -216,7 +220,12 @@ def update_analyses_single_tool(analysis_endpoint):
                             recids_to_reindex.append(submission.publication_recid)
                     db.session.commit()
                     if recids_to_reindex:
-                        index_record_ids(list(set(recids_to_reindex)))  # remove duplicates before indexing
+                        unique_recids = list(set(recids_to_reindex))  # remove duplicates before indexing
+                        # For large numbers of records, batch the indexing to reduce memory usage
+                            batch_size = 100
+                            for i in range(0, len(unique_recids), batch_size):
+                                batch_recids = unique_recids[i:i+batch_size]
+                                index_record_ids(batch_recids)
                 except Exception as e:
                     db.session.rollback()
                     log.error(e)
