@@ -1135,12 +1135,12 @@ def test_update_analyses(app, tool, import_id, counts, test_user, url, license):
         db.session.add(user)
         db.session.commit()
 
-    if not update_analyses(tool):
+    if not update_analyses(tool): # something went wrong but not on HEPData's side - skip rest of tests
         return
 
     analysis_resources = DataResource.query.filter_by(file_type=tool).all()
     assert len(analysis_resources) == counts["after"]
-    assert analysis_resources[0].file_location == url
+    assert analysis_resources[-1].file_location == url
     if license is not None:
         assert License.query.filter_by(id=analysis_resources[0].file_license).first().name == license
 
