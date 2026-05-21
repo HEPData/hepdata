@@ -49,6 +49,15 @@ rivet:
   url: http://rivet.hepforge.org/analyses/ATLAS_2012_I1203852
   license: null
 
+SimpleAnalysis:
+  import_id: 1597123 # 1597123 is in SimpleAnalysis JSON but doesn't have code uploaded to HEPData
+  counts:
+    before: 2 # 1811596 and 1847779 have SimpleAnalysis file attached
+    after: 5 # file attached: 1811596, 1847779; JSON file: 1811596, 1847779, 1597123
+  test_user: null
+  url: https://gitlab.cern.ch/atlas-sa/simple-analysis/-/tree/master/SimpleAnalysisCodes/src/ANA-EXOT-2018-06.cxx # 4
+  license: null
+
 SModelS:
   import_id: 1847779
   counts:

@@ -363,6 +363,9 @@ ANALYSES_ENDPOINTS = {
     'GAMBIT': {
         'endpoint_url': 'https://gambitbsm.org/analyses.json',
     },
+    'SimpleAnalysis': {
+        'endpoint_url': 'https://simpleanalysis.docs.cern.ch/analyses.json',
+    },
     #'ufo': {},
     #'xfitter': {},
     #'applgrid': {},

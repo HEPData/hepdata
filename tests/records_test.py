@@ -1122,7 +1122,7 @@ testdata_analyses_pytest = [tuple([tool]+list(dic.values())) for tool, dic in te
 @pytest.mark.endpoints_test
 @pytest.mark.parametrize("tool, import_id, counts, test_user, url, license", testdata_analyses_pytest, ids=testdata_analyses.keys())
 def test_update_analyses(app, tool, import_id, counts, test_user, url, license):
-    """ Test update of Rivet, MadAnalyses 5, etc. analyses """
+    """ Test update of Rivet, MadAnalysis 5, etc. analyses """
 
     if import_id is not None:
         import_records([f'ins{import_id}'], synchronous=True)
