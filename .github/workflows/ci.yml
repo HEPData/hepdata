@@ -233,13 +233,19 @@ jobs:
         run: |
           python -m pip install -e .[docs]
           cd docs && make html
-          uses: actions/upload-artifact@v7
-          if: ${{ failure() && !env.ACT }}
-          with:
-            name: sauce-connect-log
-            path: ${{ env.SAUCE_CONNECT_DIR_IN_HOST }}/sauce-connect.log
+        uses: actions/upload-artifact@v7
+        if: ${{ failure() && !env.ACT }}
+        with:
+          name: sauce-connect-log
+          path: ${{ env.SAUCE_CONNECT_DIR_IN_HOST }}/sauce-connect.log
+
+  stop-services:
+    needs: test
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
       - name: Stop service containers for act
-        if: ${{ always() && env.ACT }}
+        if: ${{ env.ACT }}
         run: |
           docker stop act-postgres act-redis act-opensearch
 
