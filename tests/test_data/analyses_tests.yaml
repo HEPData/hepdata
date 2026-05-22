@@ -50,12 +50,12 @@ rivet:
   license: null
 
 SimpleAnalysis:
-  import_id: 1597123 # 1597123 is in SimpleAnalysis JSON but doesn't have code uploaded to HEPData
+  import_id: 1811596
   counts:
-    before: 2 # 1811596 and 1847779 have SimpleAnalysis file attached
-    after: 5 # file attached: 1811596, 1847779; JSON file: 1811596, 1847779, 1597123
+    before: 1 # 1811596 has code uploaded to HEPData
+    after: 2 # 1811596 also appears in JSON
   test_user: null
-  url: https://gitlab.cern.ch/atlas-sa/simple-analysis/-/tree/master/SimpleAnalysisCodes/src/ANA-EXOT-2018-06.cxx # 4
+  url: https://gitlab.cern.ch/atlas-sa/simple-analysis/-/tree/master/SimpleAnalysisCodes/src/ANA-SUSY-2018-17.cxx
   license: null
 
 SModelS:
@@ -66,5 +66,5 @@ SModelS:
   test_user:
     email: test1@test.com
     id: 7766
-  url: https://github.com/SModelS/smodels-database-release/tree/main/13TeV/ATLAS/ATLAS-EXOT-2018-06/
+  url: https://github.com/SModelS/smodels-database-release/tree/main/13TeV/ATLAS/ATLAS-EXOT-2018-06-eff/
   license: cc-by-4.0
