@@ -56,7 +56,8 @@ jobs:
         postgres-version: [ 16 ]
         os-version: [ '3.4.0' ]
         python-version: [ '3.9' ]
-        test-mode: [ func, endpoint-availability, e2e ]
+        test-mode: [ func, endpoint_availability, e2e ]
+      fail-fast: false
 
     # Service containers to run with `runner-job`
     services:
@@ -161,13 +162,13 @@ jobs:
       run: |
         pytest -v --cov-report xml:${COVERAGE_FILE}.xml tests/*_test.py tests/test_*.py -m "not strict_endpoints_test"
     - name: Check availability of analyses endpoints
-      if: matrix.test-mode == 'endpoint-availability'
+      if: matrix.test-mode == 'endpoint_availability'
       env:
         COVERAGE_FILE: '.coverage_endpoint_availability'
         SQLALCHEMY_WARN_20: 1
       continue-on-error: true
       run: |
-        pytest -v --cov-report xml:${${COVERAGE_FILE}}.xml tests/*_test.py tests/test_*.py -m "strict_endpoints_test"
+        pytest -v --cov-report xml:${COVERAGE_FILE}.xml tests/*_test.py tests/test_*.py -m "strict_endpoints_test"
     - name: Setup Sauce Connect
       uses: saucelabs/sauce-connect-action@v3
       if: matrix.test-mode == 'e2e' && startsWith(matrix.python-version, '3.9')
@@ -187,37 +188,55 @@ jobs:
         SQLALCHEMY_WARN_20: 1
       run: |
         if [[ -n ${{ secrets.SAUCE_USERNAME }} && -n ${{ secrets.SAUCE_ACCESS_KEY}} ]]; then pytest -v --cov-report xml:${COVERAGE_FILE}.xml tests/e2e; fi
-    - name: Combine coverage files
-      if: startsWith(matrix.python-version, '3.9')
-      run: |
-        coverage combine --data-file=.coverage .coverage_func .coverage_endpoint_availability .coverage_e2e
-    - name: Upload to Codecov
-      if: ${{ startsWith(matrix.python-version, '3.9') && !env.ACT }}
-      uses: codecov/codecov-action@v6
-      with:
-        files: .coverage_func.xml,.coverage_e2e.xml
-        fail_ci_if_error: true
-        token: ${{ secrets.CODECOV_TOKEN }}
-    - name: Upload to Coveralls
-      if: ${{ startsWith(matrix.python-version, '3.9') && !env.ACT }}
-      uses: coverallsapp/github-action@v2
-      with:
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-        file: .coverage
-        fail-on-error: false
-    - name: Build docs
-      run: |
-        python -m pip install -e .[docs]
-        cd docs && make html
-    - uses: actions/upload-artifact@v7
-      if: ${{ failure() && !env.ACT }}
-      with:
-        name: sauce-connect-log
-        path: ${{ env.SAUCE_CONNECT_DIR_IN_HOST }}/sauce-connect.log
-    - name: Stop service containers for act
-      if: ${{ always() && env.ACT }}
-      run: |
-        docker stop act-postgres act-redis act-opensearch
+
+  combine-and-upload:
+    needs: test
+    if: success()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.9'
+      - name: Install dependencies
+        run: pip install coverage
+      - name: Download all coverage artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: coverage-*
+          merge-multiple: true
+      - name: Combine coverage files
+        run: |
+          # Only pass files that actually exist
+          files=$(ls .coverage_func .coverage_endpoint_availability .coverage_e2e 2>/dev/null || true)
+          if [ -n "$files" ]; then
+            coverage combine --data-file=.coverage $files
+          else
+            echo "No coverage files found"
+            exit 1
+          fi
+      - name: Upload to Codecov
+        if: ${{ !env.ACT }}
+        uses: codecov/codecov-action@v6
+        with:
+          files: .coverage_func.xml,.coverage_e2e.xml
+          fail_ci_if_error: true
+          token: ${{ secrets.CODECOV_TOKEN }}
+      - name: Upload to Coveralls
+        if: ${{ !env.ACT }}
+        uses: coverallsapp/github-action@v2
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          file: .coverage
+          fail-on-error: false
+      - name: Build docs
+        run: |
+          python -m pip install -e .[docs]
+          cd docs && make html
+      - name: Stop service containers for act
+        if: ${{ always() && env.ACT }}
+        run: |
+          docker stop act-postgres act-redis act-opensearch
 
   deploy:
     needs: test
