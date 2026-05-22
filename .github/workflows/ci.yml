@@ -219,7 +219,7 @@ jobs:
         if: ${{ !env.ACT }}
         uses: codecov/codecov-action@v6
         with:
-          files: .coverage_func.xml,.coverage_e2e.xml
+          files: .coverage.xml
           fail_ci_if_error: true
           token: ${{ secrets.CODECOV_TOKEN }}
       - name: Upload to Coveralls
@@ -233,6 +233,11 @@ jobs:
         run: |
           python -m pip install -e .[docs]
           cd docs && make html
+          uses: actions/upload-artifact@v7
+          if: ${{ failure() && !env.ACT }}
+          with:
+            name: sauce-connect-log
+            path: ${{ env.SAUCE_CONNECT_DIR_IN_HOST }}/sauce-connect.log
       - name: Stop service containers for act
         if: ${{ always() && env.ACT }}
         run: |
