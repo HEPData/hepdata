@@ -324,8 +324,6 @@ SPECIAL_VALUES = ['inf', '+inf', '-inf', 'nan']
 ANALYSES_ENDPOINTS = {
     'rivet': {
         'endpoint_url': 'https://cedar-tools.web.cern.ch/rivet/analyses.json',
-        'url_template': 'http://rivet.hepforge.org/analyses/{0}',
-        'description': 'Rivet analysis'
     },
     'MadAnalysis': {
         'endpoint_url': 'https://raw.githubusercontent.com/MadAnalysis/HEPData-link/refs/heads/main/analyses.json',
