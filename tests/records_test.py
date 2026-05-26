@@ -62,9 +62,11 @@ from hepdata.modules.records.utils.data_files import get_data_path_for_record
 from hepdata.modules.records.utils.json_ld import get_json_ld
 from hepdata.modules.records.utils.users import get_coordinators_in_system, has_role
 from hepdata.modules.records.utils.workflow import update_record, create_record
-from hepdata.modules.records.views import set_data_review_status, get_observer_data
+from hepdata.modules.records.views import set_data_review_status, get_observer_data, get_data_review_status, \
+    get_data_reviews_for_record
 from hepdata.modules.submission.models import HEPSubmission, DataReview, \
-    DataSubmission, DataResource, License, RecordVersionCommitMessage, RelatedRecid, RelatedTable, SubmissionObserver
+    DataSubmission, DataResource, License, RecordVersionCommitMessage, RelatedRecid, RelatedTable, SubmissionObserver, \
+    Message
 from hepdata.modules.submission.views import process_submission_payload
 from hepdata.modules.submission.api import get_latest_hepsubmission, get_or_create_submission_observer
 from tests.conftest import TEST_EMAIL, create_test_record, create_blank_test_record
@@ -735,6 +737,69 @@ def test_set_review_status(app, load_default_data):
             assert(data_review.publication_recid == 1)
             assert(data_review.data_recid == data_submissions[i].id)
             assert(data_review.status == 'passed')
+
+
+def test_get_review_endpoints_require_login(app, load_default_data):
+    data_submission = DataSubmission.query.filter_by(
+        publication_recid=1, version=1).order_by(DataSubmission.id.asc()).first()
+
+    with app.test_request_context(
+            f'/data/review/status/?data_recid={data_submission.id}&version=1'):
+        result = get_data_review_status()
+        assert result.status_code == 302
+
+    with app.test_request_context('/data/review/?publication_recid=1'):
+        result = get_data_reviews_for_record()
+        assert result.status_code == 302
+
+
+def test_get_review_status_for_table(app, load_default_data):
+    hepsubmission = get_latest_hepsubmission(publication_recid=1)
+    hepsubmission.overall_status = "todo"
+    db.session.add(hepsubmission)
+    db.session.commit()
+
+    user = User.query.first()
+    data_submission = DataSubmission.query.filter_by(
+        publication_recid=1, version=1).order_by(DataSubmission.id.asc()).first()
+
+    with app.test_request_context(
+            f'/data/review/status/?data_recid={data_submission.id}&version=1'):
+        login_user(user)
+        result = get_data_review_status()
+        assert result.json == {
+            'publication_recid': 1,
+            'data_recid': data_submission.id,
+            'status': 'todo',
+            'messages': False
+        }
+
+    params = {
+        'publication_recid': 1,
+        'status': 'attention',
+        'version': 1,
+        'data_recid': data_submission.id
+    }
+
+    with app.test_request_context('/data/review/status/', data=params):
+        login_user(user)
+        set_data_review_status()
+
+    data_review = DataReview.query.filter_by(
+        publication_recid=1, data_recid=data_submission.id, version=1).one()
+    data_review.messages.append(Message(user=user.id, message='test message'))
+    db.session.commit()
+
+    with app.test_request_context(
+            f'/data/review/status/?data_recid={data_submission.id}&version=1'):
+        login_user(user)
+        result = get_data_review_status()
+        assert result.json == {
+            'publication_recid': 1,
+            'data_recid': data_submission.id,
+            'status': 'attention',
+            'messages': True
+        }
 
 
 def test_get_all_ids(app, load_default_data, identifiers):
