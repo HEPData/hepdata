@@ -324,6 +324,12 @@ HEPDATA.table_renderer = {
       cache: false,
       success: function (review_info) {
         if (!review_info || !review_info.status) {
+          console.warn(
+            "Could not retrieve table review status for",
+            HEPDATA.current_table_id,
+            HEPDATA.current_table_version,
+            review_info
+          );
           return;
         }
 

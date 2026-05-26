@@ -577,7 +577,7 @@ def get_data_review_status():
     version = request.args.get('version', type=int)
 
     if not data_id:
-        return jsonify({"error": "data_recid is required."}), 400
+        return jsonify({"error": "Data record ID is required."}), 400
 
     datasubmission_query = DataSubmission.query.filter_by(id=data_id)
     if version is not None:
