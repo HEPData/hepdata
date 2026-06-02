@@ -548,6 +548,45 @@ def test_move_files_invalid_path():
            )
 
 
+def test_process_zip_archive_returns_copy_errors(app):
+    base_dir = os.path.dirname(os.path.realpath(__file__))
+    file_path = os.path.join(base_dir, 'test_data/1396331.zip')
+    expected_errors = {
+        "Exceptions when copying files": [{
+            "level": "error",
+            "message": "forced copy error"
+        }]
+    }
+
+    def _mock_move_files(submission_temp_path, submission_path):
+        # Cleanup temporary extraction dir because we bypass the real move_files finally block.
+        shutil.rmtree(submission_temp_path, ignore_errors=True)
+        return expected_errors
+
+    with patch('hepdata.modules.records.api.move_files', side_effect=_mock_move_files):
+        errors = process_zip_archive(file_path, 1)
+
+    assert errors == expected_errors
+
+
+def test_move_files_shutil_error_formats_messages():
+    submission_temp_path = tempfile.mkdtemp(dir=CFG_TMPDIR)
+    submission_path = tempfile.mkdtemp(dir=CFG_TMPDIR)
+    srcname = os.path.join(submission_temp_path, 'bad.txt')
+    dstname = os.path.join(submission_path, 'bad.txt')
+
+    copy_error = shutil.Error([(srcname, dstname, 'permission denied')])
+    with patch('hepdata.modules.records.api.shutil.copytree', side_effect=copy_error):
+        errors = move_files(submission_temp_path, submission_path)
+
+    assert errors == {
+        "Exceptions when copying files": [{
+            "level": "error",
+            "message": "Invalid file bad.txt: permission denied"
+        }]
+    }
+
+
 def test_get_updated_records_since_date(app):
     ids_since = get_inspire_records_updated_since(3)
     ids_on = get_inspire_records_updated_on(0)
