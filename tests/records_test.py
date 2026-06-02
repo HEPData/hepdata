@@ -478,13 +478,12 @@ def test_process_zip_archive_invalid(app):
     shutil.copy2(file_path, tmp_path)
     tmp_file_path = os.path.join(tmp_path, 'submission_invalid_symlink.tgz')
     errors = process_zip_archive(tmp_file_path, 1)
-    assert("Exceptions when copying files" in errors)
-    assert(len(errors["Exceptions when copying files"]) == 1)
-    assert(errors["Exceptions when copying files"][0].get("level") == "error")
-    assert(errors["Exceptions when copying files"][0].get("message")
-           == "Invalid file TestHEPSubmissionInvalidSymlink/invalid_file_name.txt: "
-           "[Errno 2] No such file or directory: "
-           "'TestHEPSubmissionInvalidSymlink/invalid_file_name.txt'"
+    assert("Archive file extractor" in errors)
+    assert(len(errors["Archive file extractor"]) == 1)
+    assert(errors["Archive file extractor"][0].get("level") == "error")
+    assert(errors["Archive file extractor"][0].get("message")
+           == "The archive file submission_invalid_symlink.tgz is not a valid tar file. "
+              "'TestHEPSubmissionInvalidSymlink/invalid_file_name.txt' is a link to an absolute path"
            )
     shutil.rmtree(tmp_path)
 
