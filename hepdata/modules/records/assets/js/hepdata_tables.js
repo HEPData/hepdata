@@ -313,6 +313,7 @@ HEPDATA.table_renderer = {
   },
 
   update_reviewer_button: function () {
+    // First retrieve the review status, and then update the review status
     $.ajax({
       type: "GET",
       url: "/record/data/review/status/",
@@ -334,6 +335,7 @@ HEPDATA.table_renderer = {
         }
 
         HEPDATA.update_review_statuses(review_info.status);
+        // Enabling the message icon for this table in the table-list-section area
         if (review_info.messages) {
           $("#table-" + HEPDATA.current_table_id + "-messages").removeClass("hidden");
         } else {

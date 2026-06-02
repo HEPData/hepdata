@@ -573,12 +573,17 @@ def get_data_reviews_for_record():
 @blueprint.route('/data/review/status/', methods=['GET', ])
 @login_required
 def get_data_review_status():
+    """
+        Get the data review status and any associated messages for a data record,
+            given a recid and optional version.
+    """
     data_id = request.args.get('data_recid', type=int)
     version = request.args.get('version', type=int)
 
     if not data_id:
         return jsonify({"error": "Data record ID is required."}), 400
 
+    # Get the data submission, then filter by any set version
     datasubmission_query = DataSubmission.query.filter_by(id=data_id)
     if version is not None:
         datasubmission_query = datasubmission_query.filter_by(version=version)
@@ -587,11 +592,13 @@ def get_data_review_status():
     if not datasubmission_record:
         return jsonify({"error": "data submission not found."}), 404
 
+    # After finding the correct datasubmission, permission can finally be checked
     publication_recid = datasubmission_record.publication_recid
     if not user_allowed_to_perform_action(publication_recid):
         return jsonify(
             {"error": "You are not authorised to view the review status for this data record."}), 403
 
+    # Get associated data reviews, then filter by version if required
     record_sql = DataReview.query.filter_by(data_recid=data_id)
     if version is not None:
         record_sql = record_sql.filter_by(version=version)
