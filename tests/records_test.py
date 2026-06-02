@@ -754,6 +754,11 @@ def test_get_review_endpoints_require_login(app, load_default_data):
 
 
 def test_get_review_status_for_table(app, load_default_data):
+    """
+        Test updating of the review status with the get_data_review_status endpoint,
+
+    """
+    # Get test submission and update the review status
     hepsubmission = get_latest_hepsubmission(publication_recid=1)
     hepsubmission.overall_status = "todo"
     db.session.add(hepsubmission)
@@ -763,6 +768,7 @@ def test_get_review_status_for_table(app, load_default_data):
     data_submission = DataSubmission.query.filter_by(
         publication_recid=1, version=1).order_by(DataSubmission.id.asc()).first()
 
+    # Get the review status as a logged in user: expecting False/todo as there are no messages
     with app.test_request_context(
             f'/data/review/status/?data_recid={data_submission.id}&version=1'):
         login_user(user)
@@ -774,6 +780,7 @@ def test_get_review_status_for_table(app, load_default_data):
             'messages': False
         }
 
+    # Updating review status to 'attention'
     params = {
         'publication_recid': 1,
         'status': 'attention',
@@ -785,11 +792,13 @@ def test_get_review_status_for_table(app, load_default_data):
         login_user(user)
         set_data_review_status()
 
+    # Adding a test message to the data submission
     data_review = DataReview.query.filter_by(
         publication_recid=1, data_recid=data_submission.id, version=1).one()
     data_review.messages.append(Message(user=user.id, message='test message'))
     db.session.commit()
 
+    # Get review status again, expecting: 'attention' and True
     with app.test_request_context(
             f'/data/review/status/?data_recid={data_submission.id}&version=1'):
         login_user(user)
@@ -800,6 +809,28 @@ def test_get_review_status_for_table(app, load_default_data):
             'status': 'attention',
             'messages': True
         }
+
+    # Testing a non-existent recid returns expected error/code
+    with app.test_request_context(
+            f'/data/review/status/?data_recid=75000&version=1000'):
+        error_result, status_code = get_data_review_status()
+        assert "data submission not found." in error_result.json["error"]
+        assert status_code == 404
+
+    # Testing that no data ID returns expected error/code
+    with app.test_request_context(f'/data/review/status/'):
+        error_result, status_code = get_data_review_status()
+        assert 'Data record ID is required.' in error_result.json.get("error")
+        assert status_code == 400
+
+    # Creating a new user and checking against a submission they cannot access
+    new_user = User(email='new_user@test.com', password='password', active=True,id=999)
+    with app.test_request_context(
+            f'/data/review/status/?data_recid={data_submission.id}&version=1'):
+        login_user(new_user)
+        error_result, status_code = get_data_review_status()
+        assert "You are not authorised" in error_result.json.get("error")
+        assert status_code == 403
 
 
 def test_get_all_ids(app, load_default_data, identifiers):
