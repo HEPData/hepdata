@@ -39,7 +39,6 @@ tests_require = [
     'pytest-timeout>=1.4.2',
     'requests-mock>=1.8.0',
     'selenium>=4.0.0',
-    'urllib3<1.27,'
 ]
 
 extras_require = {
@@ -142,8 +141,8 @@ setup(
         'Topic :: Internet :: WWW/HTTP :: Dynamic Content',
         'Topic :: Software Development :: Libraries :: Python Modules',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.9',
+        'Programming Language :: Python :: 3.14',
         'Development Status :: Production',
     ],
-    python_requires='>=3.9, <3.10',
+    python_requires='>=3.14, <3.15',
 )
