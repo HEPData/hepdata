@@ -92,18 +92,20 @@ def test_cleanup_index_batch(app, load_default_data, identifiers, mocker):
 
     # Reindex submission id 1 (pub_recid=1)
     # New version means the original data submissions (2-16) are
-    # superceded so can be cleaned up
+    # superseded so can be cleaned up
     cleanup_index_batch([1], index)
-    assert mock_records_search.has_calls([
-        call('terms', _id=list(range(2,16)))
+    mock_records_search.assert_has_calls([
+        call('terms', _id=list(range(2, 16))),
+        call().delete()
     ])
     mock_records_search.reset_mock()
 
     # Create more new versions
     _create_new_versions(3, list(range(126, 131)))
     cleanup_index_batch([1], index)
-    assert mock_records_search.has_calls([
-        call('terms', _id=list(range(2,16)) + list(range(126, 131)))
+    mock_records_search.assert_has_calls([
+        call('terms', _id=list(range(2,16))),  # note: v2 data submissions (126-130) not deleted
+        call().delete()
     ])
     mock_records_search.reset_mock()
 

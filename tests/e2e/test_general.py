@@ -38,6 +38,7 @@ from hepdata.ext.opensearch.api import reindex_all
 from hepdata.modules.submission.api import get_latest_hepsubmission
 from hepdata.modules.records.utils.submission import unload_submission
 from hepdata_validator import LATEST_SCHEMA_VERSION, RAW_SCHEMAS_URL
+from hepdata.modules.records.importer.api import import_records
 
 
 def test_home(app, live_server, env_browser, e2e_identifiers):
@@ -216,7 +217,7 @@ def _check_table_links(browser, table_full_name, url=None):
            == f'attachment; filename="HEPData-ins1206352-v1-{filename_table}.yaml"')
 
 
-def test_general_pages(live_server, env_browser):
+def test_general_pages(app, live_server, env_browser):
     """Test general pages can be loaded without errors"""
     browser = env_browser
 
@@ -248,9 +249,14 @@ def test_general_pages(live_server, env_browser):
     browser.get(url)
     assert url in browser.current_url
 
-    url = flask.url_for('hepdata_theme.ping', _external=True)
+    # Test version of /formats that requires ins1748602 to be loaded
+    import_default_data(app, [{'hepdata_id': 'ins1748602'}])
+    url = flask.url_for('hepdata_theme.formats', _external=True)
     browser.get(url)
     assert url in browser.current_url
+    submission = get_latest_hepsubmission(inspire_id='1748602')
+    unload_submission(submission.publication_recid)
+    reindex_all(recreate=True)
 
 
 def test_accept_headers(app, live_server, e2e_identifiers):

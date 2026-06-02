@@ -37,6 +37,7 @@ from invenio_db import db
 from sqlalchemy import and_, func, select
 from sqlalchemy.orm.exc import NoResultFound
 from werkzeug.utils import secure_filename
+from tarfile import TarError
 
 from hepdata.modules.converter import convert_oldhepdata_to_yaml
 from hepdata.modules.email.api import send_cookie_email, notify_submission_created
@@ -794,7 +795,21 @@ def process_zip_archive(file_path, id, old_schema=False):
         else:
             # we are dealing with a zip, tar, etc. so we extract the contents
             try:
-                unzipped_path = extract(file_path, submission_temp_path)
+                try:
+                    unzipped_path = extract(file_path, submission_temp_path)
+                except TarError as e:
+                    shutil.rmtree(submission_temp_path, ignore_errors=True)
+                    message = clean_error_message_for_display(
+                        "The archive file {} is not a valid tar file. {}".format(file_path, e),
+                        file_save_directory
+                    )
+                    return {
+                        "Archive file extractor": [{
+                            "level": "error",
+                            "message": message
+                        }]
+                    }
+
             except Exception as e:
                 # Log the exception and raise it so that celery can retry
                 log.exception(f"Unable to extract file {file_path}")
