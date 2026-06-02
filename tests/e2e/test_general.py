@@ -38,6 +38,7 @@ from hepdata.ext.opensearch.api import reindex_all
 from hepdata.modules.submission.api import get_latest_hepsubmission
 from hepdata.modules.records.utils.submission import unload_submission
 from hepdata_validator import LATEST_SCHEMA_VERSION, RAW_SCHEMAS_URL
+from hepdata.modules.records.importer.api import import_records
 
 
 def test_home(app, live_server, env_browser, e2e_identifiers):
@@ -248,7 +249,8 @@ def test_general_pages(live_server, env_browser):
     browser.get(url)
     assert url in browser.current_url
 
-    url = flask.url_for('hepdata_theme.ping', _external=True)
+    import_records(['ins1748602'], synchronous=True)
+    url = flask.url_for('hepdata_theme.formats', _external=True)
     browser.get(url)
     assert url in browser.current_url
 
