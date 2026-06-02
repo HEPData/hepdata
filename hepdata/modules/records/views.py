@@ -604,15 +604,13 @@ def get_data_review_status():
         record_sql = record_sql.filter_by(version=version)
 
     record = record_sql.first()
-    if not record:
-        return jsonify(
-            {"publication_recid": publication_recid,
-             "data_recid": data_id, "status": "todo", "messages": False})
-
-    return jsonify(
-        {"publication_recid": publication_recid,
-         "data_recid": data_id, "status": record.status,
-         "messages": len(record.messages) > 0})
+    return jsonify({
+            "publication_recid": publication_recid,
+            "data_recid": data_id,
+            # If record, return status and message existence, else todo and False
+            "status": "todo" if not record else record.status,
+            "messages": False if not record else len(record.messages) > 0
+        })
 
 
 @blueprint.route(
