@@ -60,7 +60,8 @@ def cleanup_index_batch(hepsubmission_record_ids, index):
     log.info('Cleaning up index for data records for hepsubmission IDs {0} to {1}'.format(hepsubmission_record_ids[0], hepsubmission_record_ids[-1]))
     # Find all datasubmission entries matching the given hepsubmission ids,
     # where the version is not the highest version present (i.e. there is not
-    # a v2 record with the same associated_recid)
+    # a v2 record with the same associated_recid).
+    # This function does not work if there is a v3 or greater.
     d1 = aliased(DataSubmission)
     d2 = aliased(DataSubmission)
     qry = db.session.query(d1.associated_recid) \
