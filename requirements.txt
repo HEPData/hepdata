@@ -1,5 +1,5 @@
 beautifulsoup4==4.14.3
-bleach==6.2.0
+bleach==6.3.0
 datacite==1.4.0
 gunicorn==23.0.0
 hepdata-converter-ws-client==0.2.2
