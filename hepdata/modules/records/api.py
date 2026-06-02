@@ -798,6 +798,7 @@ def process_zip_archive(file_path, id, old_schema=False):
                 try:
                     unzipped_path = extract(file_path, submission_temp_path)
                 except TarError as e:
+                    shutil.rmtree(submission_temp_path, ignore_errors=True)
                     message = clean_error_message_for_display(
                         "The archive file {} is not a valid tar file. {}".format(file_path, e),
                         file_save_directory
