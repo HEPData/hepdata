@@ -1,7 +1,7 @@
 beautifulsoup4==4.14.3
-bleach==6.2.0
+bleach==6.3.0
 datacite==1.4.0
-gunicorn==23.0.0
+gunicorn==26.0.0
 hepdata-converter-ws-client==0.2.2
 hepdata-validator==0.3.6
 Flask-Security-Invenio==4.1.0
@@ -18,4 +18,4 @@ mathml-to-latex==1.0.0
 python-twitter-v2==0.9.3
 responses==0.26.1
 unicodeit==0.7.5
-xmlschema==4.2.0
+xmlschema==4.3.1
