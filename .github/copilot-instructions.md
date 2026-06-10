@@ -1,6 +1,6 @@
 # HEPData Development Instructions
 
-HEPData is a Python 3.9 Flask web application built on the Invenio v3 framework for managing high-energy physics research data. It provides a repository for experimental data from particle physics experiments.
+HEPData is a Python 3.14 Flask web application built on the Invenio v3 framework for managing high-energy physics research data. It provides a repository for experimental data from particle physics experiments.
 
 **ALWAYS reference these instructions first and fallback to search or bash commands only when you encounter unexpected information that does not match the info here.**
 
@@ -12,7 +12,7 @@ Install these services before running HEPData locally:
 - **Redis** for caching
 - **OpenSearch 3.4.0** for indexing and search
 - **Node.js 18+** and npm for frontend assets
-- **Python 3.9** (HEPData is ONLY compatible with Python 3.9, not 3.10+ or other versions)
+- **Python 3.14** (HEPData is ONLY compatible with Python 3.14, not 3.15+ or other versions)
 
 ### Docker-Based Development (Recommended)
 
@@ -52,17 +52,17 @@ Install these services before running HEPData locally:
 
 **Only use this if Docker is not available. Requires manual service installation.**
 
-1. **Install Python 3.9 specifically:**
+1. **Install Python 3.14 specifically:**
    ```bash
-   # Ubuntu/Debian - you may need to add deadsnakes PPA for Python 3.9
+   # Ubuntu/Debian - you may need to add deadsnakes PPA for Python 3.14
    sudo add-apt-repository ppa:deadsnakes/ppa
    sudo apt update
-   sudo apt install python3.9 python3.9-venv python3.9-dev
+   sudo apt install python3.14 python3.14-venv python3.14-dev
    ```
 
 2. **Create virtual environment:**
    ```bash
-   python3.9 -m venv venv
+   python3.14 -m venv venv
    source venv/bin/activate
    pip install --upgrade pip
    ```
@@ -186,7 +186,7 @@ curl -f http://localhost:9200/ || echo "OpenSearch not running"
 redis-cli ping || echo "Redis not running"
 
 # 2. Verify Python environment
-python --version | grep "3.9" || echo "Wrong Python version"
+python --version | grep "3.14" || echo "Wrong Python version"
 pip list | grep "invenio" || echo "HEPData not installed"
 
 # 3. Check asset compilation works
@@ -217,7 +217,7 @@ curl http://localhost:5000/api/status || echo "API not responding"
 
 ### Build Issues
 - **Node.js SSL errors in Docker:** Use system Node.js installation instead of nodesource
-- **Python version mismatch:** HEPData ONLY works with Python 3.9
+- **Python version mismatch:** HEPData ONLY works with Python 3.14
 - **PyYAML LibYAML binding missing:** Reinstall with LibYAML support
 - **Webpack build failures:** Clear assets first with `./scripts/clean_assets.sh`
 
@@ -342,7 +342,7 @@ export OPENSEARCH_INITIAL_ADMIN_PASSWORD=YourPassword123!
 
 The GitHub Actions workflow (`.github/workflows/ci.yml`):
 - **NEVER CANCEL CI builds** - they take 20-30 minutes
-- Tests against Python 3.9, PostgreSQL 16, OpenSearch 3.4.0
+- Tests against Python 3.14, PostgreSQL 16, OpenSearch 3.4.0
 - Requires Sauce Labs credentials for end-to-end tests
 - Builds and pushes Docker images on main branch
 - **Always check CI status before merging**
