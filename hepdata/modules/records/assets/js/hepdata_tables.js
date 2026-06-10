@@ -194,7 +194,7 @@ HEPDATA.table_renderer = {
         $("#figures").html('');
 
         if (HEPDATA.show_review) {
-          HEPDATA.table_renderer.update_reviewer_button(table_data.review);
+          HEPDATA.table_renderer.update_reviewer_button();
         }
 
         // Check that the table is both empty, and is larger than an empty table (bytes)
@@ -312,8 +312,37 @@ HEPDATA.table_renderer = {
 
   },
 
-  update_reviewer_button: function (review_info) {
-    HEPDATA.update_review_statuses(review_info.review_flag);
+  update_reviewer_button: function () {
+    // First retrieve the review status, and then update the review status
+    $.ajax({
+      type: "GET",
+      url: "/record/data/review/status/",
+      dataType: "json",
+      data: {
+        data_recid: HEPDATA.current_table_id,
+        version: HEPDATA.current_table_version
+      },
+      cache: false,
+      success: function (review_info) {
+        if (!review_info || !review_info.status) {
+          console.warn(
+            "Could not retrieve table review status for",
+            HEPDATA.current_table_id,
+            HEPDATA.current_table_version,
+            review_info
+          );
+          return;
+        }
+
+        HEPDATA.update_review_statuses(review_info.status);
+        // Enabling the message icon for this table in the table-list-section area
+        if (review_info.messages) {
+          $("#table-" + HEPDATA.current_table_id + "-messages").removeClass("hidden");
+        } else {
+          $("#table-" + HEPDATA.current_table_id + "-messages").addClass("hidden");
+        }
+      }
+    });
   },
 
   clean_data: function (value, remove_qualifier_uniqueness_attr) {
