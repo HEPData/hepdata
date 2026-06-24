@@ -96,15 +96,14 @@ Installation
 
 Python
 ------
+
 The HEPData code is only compatible with Python 3.14 (not Python 2 or other 3.x versions).
 
-There are instructions for installing with pip or uv below to set up a Python 3.14 virtual environment and install the required Python packages.
+There are instructions for installing with ``pip`` or ``uv`` below to set up a Python 3.14 virtual environment and install the required Python packages.
 
 **Using pip**
 
 First install all requirements in a Python virtual environment.
-(Use `virtualenv <https://virtualenv.pypa.io/en/stable/installation.html>`_ or
-`virtualenvwrapper <https://virtualenvwrapper.readthedocs.io/en/latest/install.html>`_ if you prefer.)
 The instructions below use the Python module `venv <https://docs.python.org/3/library/venv.html>`_ directly
 with a target directory also called ``venv`` (change it if you prefer).
 
@@ -119,11 +118,11 @@ with a target directory also called ``venv`` (change it if you prefer).
 
 **Using uv**
 
-If you prefer to use `uv <https://docs.astral.sh/uv/>`_, first install uv by following their 
+If you prefer to use `uv <https://docs.astral.sh/uv/>`_, first install it by following their
 `installation instructions <https://docs.astral.sh/uv/getting-started/installation/>`_ (if required).
 Then follow the instructions below to clone the repository, create a virtual environment with Python 3.14, and then install the required packages.
 
-You may change the target directory for the virtual environment (currently ``venv``) if you prefer. For example: `uv venv virtualenv`.
+You may change the target directory for the virtual environment (currently ``venv``) if you prefer. For example: ``uv venv virtualenv``.
 
 .. code-block:: console
 
@@ -133,9 +132,8 @@ You may change the target directory for the virtual environment (currently ``ven
    $ source venv/bin/activate
    $ uv pip install -e ".[all]" --upgrade -r requirements.txt
 
-
-Python Continued
-----------------
+Check PyYAML
+------------
 
 Check that PyYAML has been installed with LibYAML bindings:
 
@@ -149,6 +147,9 @@ reinstall PyYAML to ensure it's built with LibYAML bindings, e.g. on an M1 MacBo
 .. code-block:: console
 
    (venv)$ LDFLAGS="-L$(brew --prefix)/lib" CFLAGS="-I$(brew --prefix)/include" pip install --global-option="--with-libyaml" --force pyyaml==5.4.1
+
+Environment variables
+---------------------
 
 The next lines set environment variables to switch Flask to run in development mode,
 and turns on ``RemovedIn20Warning`` deprecation warnings for SQLAlchemy 1.4.
