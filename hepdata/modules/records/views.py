@@ -544,6 +544,7 @@ def set_data_review_status():
 
 
 @blueprint.route('/data/review/', methods=['GET', ])
+@login_required
 def get_data_reviews_for_record():
     """
     Get the data reviews for a record.
@@ -566,20 +567,50 @@ def get_data_reviews_for_record():
         except:
             return jsonify({"error": "no reviews found"})
 
+    return jsonify({"error": "You are not authorised to view reviews for this record."}), 403
+
 
 @blueprint.route('/data/review/status/', methods=['GET', ])
+@login_required
 def get_data_review_status():
-    data_id = request.args.get('data_recid')
+    """
+        Get the data review status and any associated messages for a data record,
+            given a recid and optional version.
+    """
+    data_id = request.args.get('data_recid', type=int)
+    version = request.args.get('version', type=int)
 
-    record_sql = DataReview.query.filter_by(data_recid=data_id)
+    if not data_id:
+        return jsonify({"error": "Data record ID is required."}), 400
 
-    try:
-        record = record_sql.one()
+    # Get the data submission, then filter by any set version
+    datasubmission_query = DataSubmission.query.filter_by(id=data_id)
+    if version is not None:
+        datasubmission_query = datasubmission_query.filter_by(version=version)
+    datasubmission_record = datasubmission_query.first()
+
+    if not datasubmission_record:
+        return jsonify({"error": "data submission not found."}), 404
+
+    # After finding the correct datasubmission, permission can finally be checked
+    publication_recid = datasubmission_record.publication_recid
+    if not user_allowed_to_perform_action(publication_recid):
         return jsonify(
-            {"publication_recid": record.publication_recid,
-             "data_recid": record.data_recid, "status": record.status})
-    except:
-        return jsonify({"error": "no review found."})
+            {"error": "You are not authorised to view the review status for this data record."}), 403
+
+    # Get associated data reviews, then filter by version if required
+    record_sql = DataReview.query.filter_by(data_recid=data_id)
+    if version is not None:
+        record_sql = record_sql.filter_by(version=version)
+
+    record = record_sql.first()
+    return jsonify({
+            "publication_recid": publication_recid,
+            "data_recid": data_id,
+            # If record, return status and message existence, else todo and False
+            "status": "todo" if not record else record.status,
+            "messages": False if not record else len(record.messages) > 0
+        })
 
 
 @blueprint.route(

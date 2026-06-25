@@ -63,9 +63,11 @@ from hepdata.modules.records.utils.data_files import get_data_path_for_record
 from hepdata.modules.records.utils.json_ld import get_json_ld
 from hepdata.modules.records.utils.users import get_coordinators_in_system, has_role
 from hepdata.modules.records.utils.workflow import update_record, create_record
-from hepdata.modules.records.views import set_data_review_status, get_observer_data
+from hepdata.modules.records.views import set_data_review_status, get_observer_data, get_data_review_status, \
+    get_data_reviews_for_record
 from hepdata.modules.submission.models import HEPSubmission, DataReview, \
-    DataSubmission, DataResource, License, RecordVersionCommitMessage, RelatedRecid, RelatedTable, SubmissionObserver
+    DataSubmission, DataResource, License, RecordVersionCommitMessage, RelatedRecid, RelatedTable, SubmissionObserver, \
+    Message
 from hepdata.modules.submission.views import process_submission_payload
 from hepdata.modules.submission.api import get_latest_hepsubmission, get_or_create_submission_observer
 from tests.conftest import TEST_EMAIL, create_test_record, create_blank_test_record
@@ -479,13 +481,12 @@ def test_process_zip_archive_invalid(app):
     shutil.copy2(file_path, tmp_path)
     tmp_file_path = os.path.join(tmp_path, 'submission_invalid_symlink.tgz')
     errors = process_zip_archive(tmp_file_path, 1)
-    assert("Exceptions when copying files" in errors)
-    assert(len(errors["Exceptions when copying files"]) == 1)
-    assert(errors["Exceptions when copying files"][0].get("level") == "error")
-    assert(errors["Exceptions when copying files"][0].get("message")
-           == "Invalid file TestHEPSubmissionInvalidSymlink/invalid_file_name.txt: "
-           "[Errno 2] No such file or directory: "
-           "'TestHEPSubmissionInvalidSymlink/invalid_file_name.txt'"
+    assert("Archive file extractor" in errors)
+    assert(len(errors["Archive file extractor"]) == 1)
+    assert(errors["Archive file extractor"][0].get("level") == "error")
+    assert(errors["Archive file extractor"][0].get("message")
+           == "The archive file submission_invalid_symlink.tgz is not a valid tar file. "
+              "'TestHEPSubmissionInvalidSymlink/invalid_file_name.txt' is a link to an absolute path"
            )
     shutil.rmtree(tmp_path)
 
@@ -548,6 +549,45 @@ def test_move_files_invalid_path():
     assert(errors["Exceptions when copying files"][0].get("message")
            == "[Errno 2] No such file or directory: 'this_is_not_a_real_path'"
            )
+
+
+def test_process_zip_archive_returns_copy_errors(app):
+    base_dir = os.path.dirname(os.path.realpath(__file__))
+    file_path = os.path.join(base_dir, 'test_data/1396331.zip')
+    expected_errors = {
+        "Exceptions when copying files": [{
+            "level": "error",
+            "message": "forced copy error"
+        }]
+    }
+
+    def _mock_move_files(submission_temp_path, submission_path):
+        # Cleanup temporary extraction dir because we bypass the real move_files finally block.
+        shutil.rmtree(submission_temp_path, ignore_errors=True)
+        return expected_errors
+
+    with patch('hepdata.modules.records.api.move_files', side_effect=_mock_move_files):
+        errors = process_zip_archive(file_path, 1)
+
+    assert errors == expected_errors
+
+
+def test_move_files_shutil_error_formats_messages():
+    submission_temp_path = tempfile.mkdtemp(dir=CFG_TMPDIR)
+    submission_path = tempfile.mkdtemp(dir=CFG_TMPDIR)
+    srcname = os.path.join(submission_temp_path, 'bad.txt')
+    dstname = os.path.join(submission_path, 'bad.txt')
+
+    copy_error = shutil.Error([(srcname, dstname, 'permission denied')])
+    with patch('hepdata.modules.records.api.shutil.copytree', side_effect=copy_error):
+        errors = move_files(submission_temp_path, submission_path)
+
+    assert errors == {
+        "Exceptions when copying files": [{
+            "level": "error",
+            "message": "Invalid file bad.txt: permission denied"
+        }]
+    }
 
 
 def test_get_updated_records_since_date(app):
@@ -736,6 +776,167 @@ def test_set_review_status(app, load_default_data):
             assert(data_review.publication_recid == 1)
             assert(data_review.data_recid == data_submissions[i].id)
             assert(data_review.status == 'passed')
+
+
+def test_get_data_reviews_for_record(app, load_default_data):
+    """
+    Tests getting data reviews from the get_data_reviews_for_record endpoint.
+    """
+    # Ensure review records exist for all tables in a deterministic way.
+    hepsubmission = get_latest_hepsubmission(publication_recid=1)
+    hepsubmission.overall_status = "todo"
+    db.session.add(hepsubmission)
+    db.session.commit()
+
+    user = User.query.first()
+    params = {
+        'publication_recid': 1,
+        'status': 'passed',
+        'version': 1,
+        'all_tables': True
+    }
+
+    # Log in and ensure that the review status can be requested successfully
+    with app.test_request_context('/data/review/status/', data=params):
+        login_user(user)
+        result = set_data_review_status()
+        assert result.json == {'recid': 1, 'success': True}
+
+    # Log in and ensure the correct amount of reviews, and expected data is present
+    with app.test_request_context('/data/review/?publication_recid=1'):
+        login_user(user)
+        result = get_data_reviews_for_record()
+        reviews = json.loads(result)
+        assert len(reviews) == 14
+        for review in reviews:
+            assert 'data_recid' in review
+            assert 'status' in review
+            assert 'last_updated' in review
+            assert review['status'] == 'passed'
+
+
+def test_get_data_reviews_for_record_forbidden(app, load_default_data):
+    """
+    Tests the get_data_reviews_for_record endpoint to ensure a
+    403 is returned when a user does not have permissions.
+    """
+    new_user = User(email='new_user_reviews@test.com', password='password', active=True, id=998)
+
+    # Log in as a new user that does not have permissions
+    with app.test_request_context('/data/review/?publication_recid=1'):
+        login_user(new_user)
+        result, status_code = get_data_reviews_for_record()
+        assert status_code == 403
+        assert result.json == {'error': 'You are not authorised to view reviews for this record.'}
+
+
+def test_get_data_reviews_for_record_query_exception(app, load_default_data, mocker):
+    """
+    Tests the get_data_reviews_for_record endpoint against the case where there is no data review.
+    """
+    user = User.query.first()
+    mock_query_result = mocker.MagicMock()
+    mock_query_result.all.side_effect = Exception('query failed')
+    mocker.patch.object(type(DataReview.query), 'filter_by', return_value=mock_query_result)
+    
+    with app.test_request_context('/data/review/?publication_recid=1'):
+        login_user(user)
+        result = get_data_reviews_for_record()
+        assert result.json == {'error': 'no reviews found'}
+
+
+def test_get_review_endpoints_require_login(app, load_default_data):
+    data_submission = DataSubmission.query.filter_by(
+        publication_recid=1, version=1).order_by(DataSubmission.id.asc()).first()
+
+    with app.test_request_context(
+            f'/data/review/status/?data_recid={data_submission.id}&version=1'):
+        result = get_data_review_status()
+        assert result.status_code == 302
+
+    with app.test_request_context('/data/review/?publication_recid=1'):
+        result = get_data_reviews_for_record()
+        assert result.status_code == 302
+
+
+def test_get_review_status_for_table(app, load_default_data):
+    """
+        Test updating of the review status with the get_data_review_status endpoint,
+
+    """
+    # Get test submission and update the review status
+    hepsubmission = get_latest_hepsubmission(publication_recid=1)
+    hepsubmission.overall_status = "todo"
+    db.session.add(hepsubmission)
+    db.session.commit()
+
+    user = User.query.first()
+    data_submission = DataSubmission.query.filter_by(
+        publication_recid=1, version=1).order_by(DataSubmission.id.asc()).first()
+
+    # Get the review status as a logged in user: expecting False/todo as there are no messages
+    with app.test_request_context(
+            f'/data/review/status/?data_recid={data_submission.id}&version=1'):
+        login_user(user)
+        result = get_data_review_status()
+        assert result.json == {
+            'publication_recid': 1,
+            'data_recid': data_submission.id,
+            'status': 'todo',
+            'messages': False
+        }
+
+    # Updating review status to 'attention'
+    params = {
+        'publication_recid': 1,
+        'status': 'attention',
+        'version': 1,
+        'data_recid': data_submission.id
+    }
+
+    with app.test_request_context('/data/review/status/', data=params):
+        login_user(user)
+        set_data_review_status()
+
+    # Adding a test message to the data submission
+    data_review = DataReview.query.filter_by(
+        publication_recid=1, data_recid=data_submission.id, version=1).one()
+    data_review.messages.append(Message(user=user.id, message='test message'))
+    db.session.commit()
+
+    # Get review status again, expecting: 'attention' and True
+    with app.test_request_context(
+            f'/data/review/status/?data_recid={data_submission.id}&version=1'):
+        login_user(user)
+        result = get_data_review_status()
+        assert result.json == {
+            'publication_recid': 1,
+            'data_recid': data_submission.id,
+            'status': 'attention',
+            'messages': True
+        }
+
+    # Testing a non-existent recid returns expected error/code
+    with app.test_request_context(
+            f'/data/review/status/?data_recid=75000&version=1000'):
+        error_result, status_code = get_data_review_status()
+        assert "data submission not found." in error_result.json["error"]
+        assert status_code == 404
+
+    # Testing that no data ID returns expected error/code
+    with app.test_request_context(f'/data/review/status/'):
+        error_result, status_code = get_data_review_status()
+        assert 'Data record ID is required.' in error_result.json.get("error")
+        assert status_code == 400
+
+    # Creating a new user and checking against a submission they cannot access
+    new_user = User(email='new_user@test.com', password='password', active=True,id=999)
+    with app.test_request_context(
+            f'/data/review/status/?data_recid={data_submission.id}&version=1'):
+        login_user(new_user)
+        error_result, status_code = get_data_review_status()
+        assert "You are not authorised" in error_result.json.get("error")
+        assert status_code == 403
 
 
 def test_get_all_ids(app, load_default_data, identifiers):
@@ -1173,14 +1374,14 @@ def test_multiupdate_analyses(app):
         return
     analysis_resources = DataResource.query.filter_by(file_type='rivet').all()
     assert len(analysis_resources) == 1
-    assert analysis_resources[0].file_location == 'http://rivet.hepforge.org/analyses/ATLAS_2012_I1203852'
+    assert analysis_resources[0].file_location == 'https://rivet.hepforge.org/analyses/ATLAS_2012_I1203852'
 
     # Call update_analyses() again: should be no further changes (but covers more lines of code)
     if not update_analyses('rivet'):
         return
     analysis_resources = DataResource.query.filter_by(file_type='rivet').all()
     assert len(analysis_resources) == 1
-    assert analysis_resources[0].file_location == 'http://rivet.hepforge.org/analyses/ATLAS_2012_I1203852'
+    assert analysis_resources[0].file_location == 'https://rivet.hepforge.org/analyses/ATLAS_2012_I1203852'
 
 
 def test_update_delete_analyses(app):
