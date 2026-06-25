@@ -1367,7 +1367,7 @@ def test_multiupdate_analyses(app):
     import_records(['ins1203852'], synchronous=True)
     analysis_resources = DataResource.query.filter_by(file_type='rivet').all()
     assert len(analysis_resources) == 1
-    assert analysis_resources[0].file_location == 'http://rivet.hepforge.org/analyses#ATLAS_2012_I1203852'
+    assert analysis_resources[0].file_location == 'https://rivet.hepforge.org/analyses#ATLAS_2012_I1203852'
 
     # Call update_analyses(): should add new resource and delete existing one
     if not update_analyses('rivet'):
