@@ -188,6 +188,13 @@ jobs:
         SQLALCHEMY_WARN_20: 1
       run: |
         if [[ -n ${{ secrets.SAUCE_USERNAME }} && -n ${{ secrets.SAUCE_ACCESS_KEY}} ]]; then pytest -v --cov-report xml:${COVERAGE_FILE}.xml tests/e2e; fi
+    - name: Upload coverage artifacts
+      if: ${{ !env.ACT }}
+      uses: actions/upload-artifact@v7
+      with:
+        name: coverage-${{ matrix.test-mode }}
+        path: .coverage_${{ matrix.test-mode }}
+        retention-days: 1
     - uses: actions/upload-artifact@v7
       if: ${{ failure() && !env.ACT }}
       with:
