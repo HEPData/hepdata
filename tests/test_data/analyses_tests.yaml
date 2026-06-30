@@ -46,7 +46,7 @@ rivet:
     before: 1
     after: 1
   test_user: null
-  url: http://rivet.hepforge.org/analyses/ATLAS_2012_I1203852
+  url: https://rivet.hepforge.org/analyses/ATLAS_2012_I1203852
   license: null
 
 SimpleAnalysis:
