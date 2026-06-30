@@ -193,7 +193,7 @@ jobs:
       uses: actions/upload-artifact@v7
       with:
         name: coverage-${{ matrix.test-mode }}
-        path: .coverage_${{ matrix.test-mode }}
+        path: .coverage_${{ matrix.test-mode }}*
         retention-days: 1
     - uses: actions/upload-artifact@v7
       if: ${{ failure() && !env.ACT }}
