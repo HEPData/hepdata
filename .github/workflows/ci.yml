@@ -246,6 +246,7 @@ jobs:
           fail-on-error: false
       - name: Build docs
         run: |
+          python -m pip install --force-reinstall -r requirements.txt
           python -m pip install -e .[docs]
           cd docs && make html
 
