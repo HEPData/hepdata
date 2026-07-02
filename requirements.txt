@@ -1,4 +1,4 @@
-beautifulsoup4==4.14.3
+beautifulsoup4==4.15.0
 bleach==6.4.0
 datacite==1.4.0
 gunicorn==26.0.0
@@ -8,7 +8,7 @@ Flask-Security-Invenio==4.1.0
 invenio-access[admin]==4.0.0
 invenio-assets==4.0.0
 invenio-db[postgresql]==2.0.0
-invenio-logging[sentry]==4.0.2
+invenio-logging[sentry]==4.2.0
 invenio-oauthclient==5.0.0
 invenio-pidstore==2.0.0
 invenio-records==3.0.0
@@ -18,4 +18,4 @@ mathml-to-latex==1.0.0
 python-twitter-v2==0.9.3
 responses==0.26.1
 unicodeit==0.7.5
-xmlschema==4.3.1
+xmlschema==4.3.2
