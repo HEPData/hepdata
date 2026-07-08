@@ -1318,8 +1318,9 @@ def test_create_breadcrumb_text():
 
 
 base_dir = os.path.dirname(os.path.realpath(__file__))
-testdata_analyses = yaml.safe_load(open(os.path.join(base_dir, "test_data", "analyses_tests.yaml"), 'r'))
-testdata_analyses_pytest = [tuple([tool]+list(dic.values())) for tool, dic in testdata_analyses.items()]
+with open(os.path.join(base_dir, "test_data", "analyses_tests.yaml"), "r") as f:
+    testdata_analyses = yaml.safe_load(f)
+testdata_analyses_pytest = [tuple([tool] + list(dic.values())) for tool, dic in testdata_analyses.items()]
 @pytest.mark.endpoints_test
 @pytest.mark.parametrize("tool, import_id, counts, test_user, url, license", testdata_analyses_pytest, ids=testdata_analyses.keys())
 def test_update_analyses(app, tool, import_id, counts, test_user, url, license):
@@ -1421,8 +1422,7 @@ def test_incorrect_endpoint(app):
     current_app.config["ANALYSES_ENDPOINTS"]["TestAnalysis"]['endpoint_url'] = 'https://www.hepdata.net/search/?format=json&size=1'
     with pytest.raises(jsonschema.exceptions.ValidationError) as exc_info:
         update_analyses_single_tool('TestAnalysis')
-        assert exc_info.value.message == "'facets', 'hits', 'results', 'total' do not match any of the regexes: '^[0-9]+$'"
-
+    assert exc_info.value.message == "'facets', 'hits', 'results', 'total' do not match any of the regexes: '^[0-9]+$'"
 def test_update_analyses_error_handling(app):
     """ Test that errors in update_analyses are only raised when expected """
     # Call update_analyses_single_tool using an endpoint with no endpoint_url

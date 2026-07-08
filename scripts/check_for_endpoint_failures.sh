@@ -1,4 +1,4 @@
-#! /usr/bin/env bash
+#!/usr/bin/env bash
 
 LOGFILE=output.log
 ERR_MSGS=()
@@ -10,14 +10,14 @@ pytest -v tests/*_test.py tests/test_*.py -m "strict_endpoints_test" > $LOGFILE 
     ERR_COUNT=$(( ${#ERR_MSGS[@]} + 1 ))
     REASON=`grep "^E       " $LOGFILE | head -n $ERR_COUNT | tail -n 1` # get fail reason
     REASON=${REASON:8} # remove prefix
-    ERR_MSGS+=("::warning ::Analyses endpoint '$ANALYSIS' was not available: $REASON") # use GitHub's warning syntax
+    ERR_MSGS+=("::warning::Analyses endpoint '$ANALYSIS' was not available: $REASON") # use GitHub's warning syntax
   done <<< `grep "FAILED.*\[" $LOGFILE | grep -v "%"` # get summary lines with failing tests, ignore progress lines
 
-cat $LOGFILE
+cat "$LOGFILE"
 
 # flag errors
 for ERR_MSG in "${ERR_MSGS[@]}"; do
-  echo $ERR_MSG;
+  echo "$ERR_MSG"
 done
 
 # fail if there were any errors
