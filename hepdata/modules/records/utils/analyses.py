@@ -267,6 +267,7 @@ def update_analyses(endpoint=None):
     :return: True if all analyses endpoints were updated successfully, False if any error was encountered
     """
 
+    all_ok = True
     for analysis_endpoint in current_app.config["ANALYSES_ENDPOINTS"]:
 
         if endpoint and endpoint != analysis_endpoint:
@@ -274,17 +275,17 @@ def update_analyses(endpoint=None):
 
         try:
             update_analyses_single_tool(analysis_endpoint)
-        except jsonschema.exceptions.ValidationError as e:
-            log.error("Validation error for analyses schema in {}: {}".format(analysis_endpoint, e))
-            return False
-        except KeyError:
-            # KeyError is on HEPData's side and should be raised
-            raise
-        except Exception as e:
-            # need to support LookupError and json.JSONDecodeError
-            # but also ConnectionError, urllib3.exceptions.HTTPError, requests.RequestException, ...
-            # => maybe best to be pragmatic and catch all exceptions
-            log.error(str(e))
-            return False
+        except KeyError as e:
+            # Only treat missing endpoint_url as a hard (HEPData-side) error.
+            if str(e).strip("'") == f"No endpoint_url configured for {analysis_endpoint}":
+                raise
+            log.warning("KeyError while updating analyses from %s: %s", analysis_endpoint, e)
+            all_ok = False
+        except (jsonschema.exceptions.ValidationError, json.JSONDecodeError, LookupError) as e:
+            log.warning("Endpoint-side error while updating analyses from %s: %s", analysis_endpoint, e)
+            all_ok = False
+        except Exception:
+            log.exception("Unexpected error while updating analyses from %s", analysis_endpoint)
+            all_ok = False
 
-    return True
+    return all_ok

@@ -168,7 +168,7 @@ jobs:
         SQLALCHEMY_WARN_20: 1
       continue-on-error: true
       run: |
-        pytest -v tests/*_test.py tests/test_*.py -m "strict_endpoints_test"
+        bash scripts/check_for_endpoint_failures.sh
     - name: Setup Sauce Connect
       uses: saucelabs/sauce-connect-action@v3
       if: matrix.test-mode == 'e2e' && startsWith(matrix.python-version, '3.14')
