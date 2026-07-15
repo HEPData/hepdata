@@ -49,6 +49,8 @@ jobs:
 
     env:
       node-version: '18'
+      SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
+      SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY }}
 
     strategy:
 
@@ -171,7 +173,7 @@ jobs:
         bash scripts/check_for_endpoint_failures.sh
     - name: Setup Sauce Connect
       uses: saucelabs/sauce-connect-action@v3
-      if: matrix.test-mode == 'e2e' && startsWith(matrix.python-version, '3.14')
+      if: matrix.test-mode == 'e2e' && startsWith(matrix.python-version, '3.14') && env.SAUCE_USERNAME != '' && env.SAUCE_ACCESS_KEY != ''
       with:
         username: ${{ secrets.SAUCE_USERNAME }}
         accessKey: ${{ secrets.SAUCE_ACCESS_KEY }}
@@ -180,16 +182,23 @@ jobs:
         proxyLocalhost: direct
         scVersion: 5.5.1
     - name: Run end-to-end tests
-      if: matrix.test-mode == 'e2e' && startsWith(matrix.python-version, '3.14')
+      if: matrix.test-mode == 'e2e' && startsWith(matrix.python-version, '3.14') && env.SAUCE_USERNAME != '' && env.SAUCE_ACCESS_KEY != ''
       env:
-        SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
-        SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY }}
         COVERAGE_FILE: '.coverage_e2e'
         SQLALCHEMY_WARN_20: 1
       run: |
-        if [[ -n ${{ secrets.SAUCE_USERNAME }} && -n ${{ secrets.SAUCE_ACCESS_KEY}} ]]; then pytest -v tests/e2e; fi
+        pytest -v tests/e2e
     - name: Upload coverage artifacts
-      if: ${{ !env.ACT }}
+      if: ${{ !env.ACT && matrix.test-mode != 'e2e' }}
+      uses: actions/upload-artifact@v7
+      with:
+        name: coverage-${{ matrix.test-mode }}
+        path: .coverage_${{ matrix.test-mode }}*
+        include-hidden-files: true
+        if-no-files-found: error
+        retention-days: 1
+    - name: Upload e2e coverage artifacts
+      if: ${{ !env.ACT && matrix.test-mode == 'e2e' && env.SAUCE_USERNAME != '' && env.SAUCE_ACCESS_KEY != '' }}
       uses: actions/upload-artifact@v7
       with:
         name: coverage-${{ matrix.test-mode }}
