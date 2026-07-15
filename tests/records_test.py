@@ -39,8 +39,9 @@ from flask_login import login_user
 from invenio_accounts.models import User
 from invenio_db import db
 from sqlalchemy.exc import MultipleResultsFound
+from types import SimpleNamespace
 import pytest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 from werkzeug.datastructures import FileStorage
 import requests_mock
 import jsonschema
@@ -1404,6 +1405,59 @@ def test_update_delete_analyses(app):
     license_data = License.query.filter_by(id=analysis_resources[0].file_license).first()
     assert license_data.name == 'cc-by-4.0'
     assert license_data.url == 'https://creativecommons.org/licenses/by/4.0'
+
+
+@pytest.mark.parametrize(
+    "response_json",
+    [
+        # Legacy schema path (defaults to 0.1.0 when schema_version is missing)
+        {"123": ["ANA_1"]},
+        # Schema >= 1.0.0 path
+        {
+            "schema_version": "1.0.0",
+            "url_templates": {"main_url": "https://example.org/{analysis_name}"},
+            "analyses": [
+                {
+                    "inspire_id": 123,
+                    "implementations": [{"analysis_name": "ANA_1"}],
+                }
+            ],
+            "implementations_description": "Example implementations",
+        },
+    ],
+    ids=["schema_0_1_0", "schema_1_0_0"],
+)
+def test_update_analyses_no_new_resource(app, response_json):
+    """
+    Tests that existing analysis URLs are correctly removed from the stale-candidate working list
+    for both legacy and >=1.0.0 schemas (no new resource should be added).
+    """
+    with app.app_context():
+        current_app.config["ANALYSES_ENDPOINTS"]["TestAnalysis"] = {
+            "endpoint_url": "https://example.org/analyses.json",
+            "url_template": "https://example.org/{}",
+        }
+
+        # This list acts as the stale-candidate working list.
+        analysis_resources = [SimpleNamespace(file_location="https://example.org/ANA_1")]
+
+        response = Mock(ok=True)
+        response.json.return_value = response_json
+
+        execute_result = Mock()
+        execute_result.scalars.return_value.all.return_value = analysis_resources
+
+        submission = SimpleNamespace(publication_recid=1, version=1, resources=[])
+
+        with patch("hepdata.modules.records.utils.analyses.resilient_requests", return_value=response), \
+             patch("hepdata.modules.records.utils.analyses.test_analyses_schema"), \
+             patch("hepdata.modules.records.utils.analyses.get_latest_hepsubmission", return_value=submission), \
+             patch("hepdata.modules.records.utils.analyses.db.session.execute", return_value=execute_result), \
+             patch("hepdata.modules.records.utils.analyses.is_resource_added_to_submission", return_value=True):
+            update_analyses_single_tool("TestAnalysis")
+
+        assert analysis_resources == []
+        assert submission.resources == []
 
 
 def test_incorrect_endpoint(app):
