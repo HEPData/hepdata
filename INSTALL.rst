@@ -312,6 +312,31 @@ If you have a local development server running, shut it down before running the 
 
 To run the tests locally you have several options:
 
+The full pytest suite, including end-to-end tests, can be run with ``pytest tests`` or
+``./run-tests.sh`` once Selenium or Sauce Labs is set up.
+
+The ``strict_endpoints_test`` marker is used for tests that exercise external analyses
+endpoints in a strict mode. These tests can fail when an external endpoint is down or
+returns unexpected data, even if there is no HEPData regression.
+
+If you want to split the non-e2e suite locally in the same way as GitHub Actions CI,
+the following examples show how to include or exclude the ``strict_endpoints_test``
+marker:
+
+.. code-block:: console
+
+   # Exclude strict endpoint checks from the non-e2e suite
+   (venv)$ pytest tests --ignore=tests/e2e -m "not strict_endpoints_test"
+
+   # Run only the strict endpoint checks from the non-e2e suite
+   (venv)$ pytest tests --ignore=tests/e2e -m "strict_endpoints_test"
+
+   # Run the full non-e2e suite, including both groups
+   (venv)$ pytest tests --ignore=tests/e2e
+
+   # Run the full test suite, including end-to-end tests
+   (venv)$ pytest tests
+
 1. Run a Sauce Connect tunnel (recommended).  This is used by GitHub Actions CI.
     1. Create a Sauce Labs account, or ask for the HEPData account details.
     2. Log into Sauce Labs, and go to the "Tunnel Proxies" page.
@@ -326,7 +351,9 @@ To run the tests locally you have several options:
     2. Include ``RUN_SELENIUM_LOCALLY = True`` in your ``hepdata/config_local.py`` file.
     3. You might need to close Chrome before running the end-to-end tests.
 
-3. Omit the end-to-end tests when running locally, by running ``pytest tests -k 'not e2e'`` instead of ``run-tests.sh``.
+3. Omit the end-to-end tests when running locally by running ``pytest tests --ignore=tests/e2e``
+   instead of ``run-tests.sh``.  Add ``-m "not strict_endpoints_test"`` if you also want to skip the strict
+   external endpoint checks.
 
 
 Once you have set up Selenium or Sauce Labs, you can run the tests using:
