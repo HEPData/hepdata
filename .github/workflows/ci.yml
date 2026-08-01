@@ -224,7 +224,7 @@ jobs:
       - name: Install dependencies
         run: pip install coverage
       - name: Download all coverage artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           pattern: coverage-*
           merge-multiple: true
