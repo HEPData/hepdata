@@ -26,6 +26,8 @@
 
 from unittest.mock import patch
 
+import pytest
+
 from hepdata.modules.theme.views import (
     invalid_doi,
     page_forbidden,
@@ -33,6 +35,7 @@ from hepdata.modules.theme.views import (
     internal_error,
     redirect_nonwww,
     ping,
+    trigger_error,
 )
 
 
@@ -171,3 +174,18 @@ class TestPing:
         with app.test_request_context('/ping'):
             assert ping() == 'OK'
 
+
+class TestDebugSentry:
+    """Tests for the debug-sentry view."""
+
+    def test_debug_sentry_raises_exception(self, app):
+        """GET /debug-sentry propagates the expected Exception in test mode."""
+        with app.test_client() as client:
+            with pytest.raises(Exception, match='Testing that Sentry picks up this error'):
+                client.get('/debug-sentry')
+
+    def test_trigger_error_raises_exception_directly(self, app):
+        """trigger_error() raises an Exception with the expected message."""
+        with app.test_request_context('/debug-sentry'):
+            with pytest.raises(Exception, match='Testing that Sentry picks up this error'):
+                trigger_error()
