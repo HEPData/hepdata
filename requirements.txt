@@ -8,7 +8,7 @@ Flask-Security-Invenio==4.1.0
 invenio-access[admin]==7.0.1
 invenio-assets==4.2.5
 invenio-db[postgresql]==2.5.2
-invenio-logging[sentry]==4.3.0
+invenio-logging[sentry]==4.3.1
 invenio-oauthclient==9.1.1
 invenio-pidstore==4.0.1
 invenio-records==6.0.1
