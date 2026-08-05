@@ -166,3 +166,8 @@ def redirect_nonwww():
 @blueprint.route('/ping')
 def ping():
     return 'OK'
+
+
+@blueprint.route('/debug-sentry')
+def trigger_error():
+    raise Exception('Testing that Sentry picks up this error')
