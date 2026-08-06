@@ -397,6 +397,10 @@ def get_table_details(recid, data_recid, version, load_all=1):
         # add associated files to the table contents
         table_contents['associated_files'] = list(tmp_assoc_files.values())
 
+    # Return if table does not exist.
+    if 'name' not in table_contents:
+        return jsonify(table_contents)
+
     table_contents["review"] = {}
 
     data_review_record = create_data_review(data_recid, recid, version)
@@ -640,7 +644,7 @@ def add_data_review_messsage(publication_recid, data_recid):
             data_review_record = datareview_query.one()
             trace.append("adding data review record")
         except:
-            data_review_record = create_data_review(data_recid, publication_recid)
+            data_review_record = create_data_review(data_recid, publication_recid, version)
             trace.append("created a new data review record")
 
         data_review_message = Message(user=userid, message=message)
