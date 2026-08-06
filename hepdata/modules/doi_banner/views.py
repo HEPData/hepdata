@@ -25,7 +25,7 @@ def resolve_doi_data(doi):
     :return: redirect to HEPData record (or 404 if it doesn't exist)
     """
     matching = get_records_matching_field('doi', doi, source={"includes": ['inspire_id']})
-    if matching.get('hits').get('total') > 0:
+    if matching.get('hits').get('total').get('value') > 0:
         _returned = matching.get('hits').get('hits')[0].get('_source').get('inspire_id')
         return redirect('/record/ins{0}'.format(_returned))
     return abort(404)
@@ -43,8 +43,7 @@ def get_doi_banner(doi):
     """
 
     matching = get_records_matching_field('doi', doi, source={"includes": ['inspire_id']})
-    if matching.get('hits').get('total') > 0:
-        print(matching)
+    if matching.get('hits').get('total').get('value') > 0:
         return send_file(os.path.join(base_dir, 'static/img/hepdata-doi-banner.png'))
     else:
         return send_file(os.path.join(base_dir, 'static/img/1px.png'))
