@@ -43,7 +43,7 @@ from invenio_search import current_search_client as os
 
 from hepdata.modules.search.config import LIMIT_MAX_RESULTS_PER_PAGE, \
     HEPDATA_CFG_DEFAULT_RESULTS_PER_PAGE
-from hepdata.modules.search.views import check_max_results
+from hepdata.modules.search.views import check_max_results, search as search_view
 from hepdata.ext.opensearch.config.os_config import TERMS_SIZE
 
 def test_query_builder_add_aggregations():
@@ -1197,6 +1197,24 @@ def test_check_max_results(input_size, output_size):
     args = {'size': input_size} if input_size is not None else {}
     check_max_results(args)
     assert args['size'] == output_size
+
+
+def test_search_json_error_response_without_total(app, mocker):
+    mocker.patch('hepdata.modules.search.views.parse_query_parameters', return_value={
+        'q': 'bad-query',
+        'filters': [],
+        'size': 10,
+        'sorting_field': None,
+        'sorting_order': None,
+        'offset': 0,
+    })
+    mocker.patch('hepdata.modules.search.views.os_search', return_value={'error': 'failed query'})
+
+    with app.test_request_context('/search/?format=json'):
+        response = search_view()
+
+    assert response.status_code == 200
+    assert response.get_json() == {'error': 'failed query'}
 
 
 def test_get_resource_data(app):
