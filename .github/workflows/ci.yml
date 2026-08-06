@@ -212,6 +212,11 @@ jobs:
         name: sauce-connect-log
         path: ${{ env.SAUCE_CONNECT_DIR_IN_HOST }}/sauce-connect.log
 
+    - name: Stop service containers for act
+      if: ${{ always() && env.ACT }}
+      run: |
+        docker stop act-postgres act-redis act-opensearch
+
   combine-and-upload:
     needs: test
     if: success()
@@ -258,16 +263,6 @@ jobs:
           python -m pip install --force-reinstall -r requirements.txt
           python -m pip install -e .[docs]
           cd docs && make html
-
-  stop-services:
-    needs: test
-    if: always()
-    runs-on: ubuntu-latest
-    steps:
-      - name: Stop service containers for act
-        if: ${{ env.ACT }}
-        run: |
-          docker stop act-postgres act-redis act-opensearch
 
   deploy:
     needs: test
