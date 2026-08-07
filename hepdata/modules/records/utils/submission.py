@@ -646,7 +646,9 @@ def create_data_review(data_recid, publication_recid, version=1):
     :param version:
     :return:
     """
-    submission_count = DataSubmission.query.filter_by(id=data_recid).count()
+    submission_count = DataSubmission.query.filter_by(id=data_recid,
+                                                      publication_recid=publication_recid,
+                                                      version=version).count()
     if submission_count > 0:
         record = get_or_create(db.session, DataReview,
                                publication_recid=publication_recid,
