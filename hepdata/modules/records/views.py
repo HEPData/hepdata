@@ -299,7 +299,7 @@ def get_table_data(data_recid, version):
     """
     # Run the function to load table data and return
     table_contents = load_table_data(data_recid, version)
-    return jsonify(generate_table_data(table_contents))
+    return jsonify(generate_table_data(table_contents) if 'independent_variables' in table_contents else table_contents)
 
 
 @blueprint.route('/data/<int:recid>/<int:data_recid>/<int:version>/')
