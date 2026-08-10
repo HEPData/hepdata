@@ -371,6 +371,23 @@ def test_get_table_details_version_zero_fallback(app, client):
         assert response.status_code == 200
 
 
+def test_get_table_details_missing_table_returns_empty_json(app, client):
+    """Ensure missing table requests return an empty JSON response instead of failing."""
+    with patch('hepdata.modules.records.views.verify_observer_key', return_value=False), \
+         patch('hepdata.modules.records.views.get_version_count', return_value=(1, 1)), \
+         patch('hepdata.modules.records.views.DataSubmission.query') as mock_ds_query, \
+         patch('hepdata.modules.records.views.create_data_review') as mock_create_data_review:
+
+        mock_datasub_query = MagicMock()
+        mock_datasub_query.count.return_value = 0
+        mock_ds_query.options.return_value.filter_by.return_value = mock_datasub_query
+
+        response = client.get('/record/data/1/999999/1/')
+        assert response.status_code == 200
+        assert response.get_json() == {}
+        mock_create_data_review.assert_not_called()
+
+
 def test_get_resource_tar_file_binary_content(app, client):
     """
     Test that get_resource sets contents='Binary' for tar files.

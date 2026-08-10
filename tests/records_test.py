@@ -65,7 +65,7 @@ from hepdata.modules.records.utils.json_ld import get_json_ld
 from hepdata.modules.records.utils.users import get_coordinators_in_system, has_role
 from hepdata.modules.records.utils.workflow import update_record, create_record
 from hepdata.modules.records.views import set_data_review_status, get_observer_data, get_data_review_status, \
-    get_data_reviews_for_record
+    get_data_reviews_for_record, add_data_review_messsage
 from hepdata.modules.submission.models import HEPSubmission, DataReview, \
     DataSubmission, DataResource, License, RecordVersionCommitMessage, RelatedRecid, RelatedTable, SubmissionObserver, \
     Message
@@ -839,7 +839,7 @@ def test_get_data_reviews_for_record_query_exception(app, load_default_data, moc
     mock_query_result = mocker.MagicMock()
     mock_query_result.all.side_effect = Exception('query failed')
     mocker.patch.object(type(DataReview.query), 'filter_by', return_value=mock_query_result)
-    
+
     with app.test_request_context('/data/review/?publication_recid=1'):
         login_user(user)
         result = get_data_reviews_for_record()
@@ -938,6 +938,32 @@ def test_get_review_status_for_table(app, load_default_data):
         error_result, status_code = get_data_review_status()
         assert "You are not authorised" in error_result.json.get("error")
         assert status_code == 403
+
+
+def test_add_review_message_uses_requested_version_on_create(app, load_default_data, mocker):
+    user = User.query.first()
+    data_review_record = SimpleNamespace(publication_recid=1, data_recid=1234, status='todo', messages=[])
+    mock_query = mocker.MagicMock()
+    mock_query.one.side_effect = Exception('missing review record')
+
+    mocker.patch.object(type(DataReview.query), 'filter_by', return_value=mock_query)
+    create_review = mocker.patch('hepdata.modules.records.views.create_data_review', return_value=data_review_record)
+    mocker.patch('hepdata.modules.records.views.get_user_from_id', return_value=SimpleNamespace(email='test@test.org'))
+    mocker.patch('hepdata.modules.records.views.update_action_for_submission_participant')
+
+    params = {
+        'message': 'hello',
+        'version': '7',
+        'send_email': 'false'
+    }
+    with app.test_request_context('/data/review/message/1/1234', method='POST', data=params):
+        login_user(user)
+        result = add_data_review_messsage(1, 1234)
+
+    create_review.assert_called_once_with(1234, 1, '7')
+    payload = json.loads(result)
+    assert payload['publication_recid'] == 1
+    assert payload['data_recid'] == 1234
 
 
 def test_get_all_ids(app, load_default_data, identifiers):
@@ -1357,7 +1383,7 @@ testdata_analyses_pytest_strict = list(testdata_analyses.keys())
 @pytest.mark.parametrize("tool", testdata_analyses_pytest_strict)
 def test_update_analyses_strict(app, tool):
     """
-    Test update of Rivet, MadAnalyses 5, etc. analyses 
+    Test update of Rivet, MadAnalyses 5, etc. analyses
     Be strict about encountered errors, i.e. flag even if error is (presumably) on tool side.
     """
     update_analyses_single_tool(tool)

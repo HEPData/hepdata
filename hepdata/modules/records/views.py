@@ -299,7 +299,7 @@ def get_table_data(data_recid, version):
     """
     # Run the function to load table data and return
     table_contents = load_table_data(data_recid, version)
-    return jsonify(generate_table_data(table_contents))
+    return jsonify(generate_table_data(table_contents) if 'independent_variables' in table_contents else table_contents)
 
 
 @blueprint.route('/data/<int:recid>/<int:data_recid>/<int:version>/')
@@ -329,7 +329,7 @@ def get_table_details(recid, data_recid, version, load_all=1):
         abort(403)
 
     # joinedload allows query of data in another table without a second database access.
-    datasub_query = DataSubmission.query.options(joinedload(DataSubmission.related_tables)).filter_by(id=data_recid, version=version)
+    datasub_query = DataSubmission.query.options(joinedload(DataSubmission.related_tables)).filter_by(id=data_recid, publication_recid=recid, version=version)
     table_contents = {}
 
     if datasub_query.count() > 0:
@@ -396,6 +396,10 @@ def get_table_details(recid, data_recid, version, load_all=1):
 
         # add associated files to the table contents
         table_contents['associated_files'] = list(tmp_assoc_files.values())
+
+    # Return if table does not exist.
+    if 'name' not in table_contents:
+        return jsonify(table_contents)
 
     table_contents["review"] = {}
 
@@ -640,7 +644,7 @@ def add_data_review_messsage(publication_recid, data_recid):
             data_review_record = datareview_query.one()
             trace.append("adding data review record")
         except:
-            data_review_record = create_data_review(data_recid, publication_recid)
+            data_review_record = create_data_review(data_recid, publication_recid, version)
             trace.append("created a new data review record")
 
         data_review_message = Message(user=userid, message=message)

@@ -256,7 +256,7 @@ def record_exists(*args, **kwargs):
 
 def load_table_data(recid, version):
     """
-    Loads a specfic data file's yaml file data.
+    Loads a specific data file's yaml file data.
 
     :param recid: The recid used for the query
     :param version: The data version to select
