@@ -4,7 +4,6 @@ datacite==1.4.1
 gunicorn==26.0.0
 hepdata-converter-ws-client==0.2.2
 hepdata-validator==0.3.6
-Flask-Security-Invenio==4.1.0
 invenio-access[admin]==7.0.2
 invenio-assets==4.2.6
 invenio-db[postgresql]==2.6.0
