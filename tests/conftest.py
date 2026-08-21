@@ -64,7 +64,6 @@ def create_basic_app():
     app = create_app(SQLALCHEMY_DATABASE_URI=test_db_uri)
     app.config.update(dict(
         TESTING=True,
-        TEST_RUNNER="celery.contrib.test_runner.CeleryTestSuiteRunner",
         CELERY_TASK_ALWAYS_EAGER=True,
         CELERY_RESULT_BACKEND="cache",
         CELERY_CACHE_BACKEND="memory",
