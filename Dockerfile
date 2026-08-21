@@ -18,6 +18,8 @@ CMD [ "--version" ]
 ARG APP_ENVIRONMENT
 ARG SAUCE_OS
 
+ARG APP_CACHE_TYPE
+
 # https://github.com/nodesource/distributions#deb
 ENV NODE_MAJOR=18
 RUN curl -SLO https://deb.nodesource.com/nsolid_setup_deb.sh

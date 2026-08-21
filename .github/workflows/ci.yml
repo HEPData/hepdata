@@ -255,11 +255,6 @@ jobs:
     needs: test
     if: contains(github.ref, 'main') || github.event_name == 'release'
     runs-on: ubuntu-latest
-    services:
-      redis:
-        image: redis
-        ports:
-          - "6379:6379"
     steps:
     - uses: actions/checkout@v7
     - name: Deploy to DockerHub
@@ -267,5 +262,6 @@ jobs:
         CI_TAG: ${{ github.event.release.tag_name }}
         DOCKERHUB_USER: ${{ secrets.DOCKERHUB_USER }}
         DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+        APP_CACHE_TYPE: NullCache
       run: |
         ./build-and-deploy.sh
