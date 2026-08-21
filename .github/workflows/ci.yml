@@ -61,7 +61,7 @@ jobs:
         test-mode: [ func, endpoint_availability, e2e ]
       fail-fast: false
 
-    # Service containers to run with `runner-job`
+    # Service containers
     services:
 
       postgres:
@@ -99,14 +99,6 @@ jobs:
         - "9600:9600"
 
     steps:
-
-    # Services are not currently supported by act (https://github.com/nektos/act#services)
-    - name: Set up services for act
-      if: ${{ env.ACT }}
-      run: |
-        docker run --name act-postgres -e POSTGRES_USER=hepdata -e POSTGRES_PASSWORD=hepdata -e POSTGRES_DB=hepdata_test -p 5432:5432 --rm -d postgres:${{ matrix.postgres-version }}
-        docker run --name act-redis --rm -d -p 6379:6379 redis
-        docker run --name act-opensearch --rm -d -p 9200:9200 -p 9600:9600 -e "discovery.type=single-node" -e "plugins.security.disabled=true" opensearchproject/opensearch:${{ matrix.os-version }}
 
     - uses: actions/checkout@v7
     - name: Set up Python ${{ matrix.python-version }}
@@ -217,11 +209,6 @@ jobs:
         python -m pip install -e .[docs]
         cd docs && make html
 
-    - name: Stop service containers for act
-      if: ${{ always() && env.ACT }}
-      run: |
-        docker stop act-postgres act-redis act-opensearch
-
   combine-and-upload:
     needs: test
     if: success()
@@ -268,6 +255,11 @@ jobs:
     needs: test
     if: contains(github.ref, 'main') || github.event_name == 'release'
     runs-on: ubuntu-latest
+    services:
+      redis:
+        image: redis
+        ports:
+          - "6379:6379"
     steps:
     - uses: actions/checkout@v7
     - name: Deploy to DockerHub
