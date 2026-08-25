@@ -14,7 +14,7 @@ services:
     - "APP_ENVIRONMENT=local"
     - "APP_BROKER_URL=redis://cache:6379/0"
     - "APP_CACHE_REDIS_URL=redis://cache:6379/0"
-    - "APP_CACHE_TYPE=redis"
+    - "APP_CACHE_TYPE=RedisCache"
     - "APP_CELERY_RESULT_BACKEND=redis://cache:6379/2"
     - "APP_OPENSEARCH_HOST=os:9200"
     - "APP_SECRET_KEY=CHANGE_ME"
@@ -37,7 +37,7 @@ services:
     environment:
     - "APP_BROKER_URL=redis://cache:6379/0"
     - "APP_CACHE_REDIS_URL=redis://cache:6379/0"
-    - "APP_CACHE_TYPE=redis"
+    - "APP_CACHE_TYPE=RedisCache"
     - "APP_CELERY_RESULT_BACKEND=redis://cache:6379/2"
     - "APP_OPENSEARCH_HOST=os:9200"
     - "APP_SECRET_KEY=CHANGE_ME"
