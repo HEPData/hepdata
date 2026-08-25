@@ -61,7 +61,7 @@ jobs:
         test-mode: [ func, endpoint_availability, e2e ]
       fail-fast: false
 
-    # Service containers to run with `runner-job`
+    # Service containers
     services:
 
       postgres:
@@ -99,14 +99,6 @@ jobs:
         - "9600:9600"
 
     steps:
-
-    # Services are not currently supported by act (https://github.com/nektos/act#services)
-    - name: Set up services for act
-      if: ${{ env.ACT }}
-      run: |
-        docker run --name act-postgres -e POSTGRES_USER=hepdata -e POSTGRES_PASSWORD=hepdata -e POSTGRES_DB=hepdata_test -p 5432:5432 --rm -d postgres:${{ matrix.postgres-version }}
-        docker run --name act-redis --rm -d -p 6379:6379 redis
-        docker run --name act-opensearch --rm -d -p 9200:9200 -p 9600:9600 -e "discovery.type=single-node" -e "plugins.security.disabled=true" opensearchproject/opensearch:${{ matrix.os-version }}
 
     - uses: actions/checkout@v7
     - name: Set up Python ${{ matrix.python-version }}
@@ -211,11 +203,11 @@ jobs:
       with:
         name: sauce-connect-log
         path: ${{ env.SAUCE_CONNECT_DIR_IN_HOST }}/sauce-connect.log
-
-    - name: Stop service containers for act
-      if: ${{ always() && env.ACT }}
+    - name: Build docs
+      if: matrix.test-mode == 'func'
       run: |
-        docker stop act-postgres act-redis act-opensearch
+        python -m pip install -e .[docs]
+        cd docs && make html
 
   combine-and-upload:
     needs: test
@@ -258,11 +250,6 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           file: .coverage
           fail-on-error: false
-      - name: Build docs
-        run: |
-          python -m pip install --force-reinstall -r requirements.txt
-          python -m pip install -e .[docs]
-          cd docs && make html
 
   deploy:
     needs: test
@@ -275,5 +262,6 @@ jobs:
         CI_TAG: ${{ github.event.release.tag_name }}
         DOCKERHUB_USER: ${{ secrets.DOCKERHUB_USER }}
         DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+        APP_CACHE_TYPE: NullCache
       run: |
         ./build-and-deploy.sh

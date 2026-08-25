@@ -16,6 +16,7 @@ echo "Building ${IMAGE}"
 retry docker build \
   --target "build" \
   --build-arg VERSION="${TAG}" \
+  --build-arg APP_CACHE_TYPE="${APP_CACHE_TYPE}" \
   -t "${IMAGE}:${TAG}" \
   -t "${IMAGE}" \
   .
@@ -24,6 +25,7 @@ echo "Building ${IMAGE}-statics"
 retry docker build \
   --target "statics" \
   --build-arg VERSION="${TAG}" \
+  --build-arg APP_CACHE_TYPE="${APP_CACHE_TYPE}" \
   -t "${IMAGE}-statics:${TAG}" \
   -t "${IMAGE}-statics" \
   .
