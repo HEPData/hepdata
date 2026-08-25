@@ -115,7 +115,7 @@ CELERY_TASK_ANNOTATIONS = {
 # Cache
 CACHE_KEY_PREFIX = "cache::"
 CACHE_REDIS_URL = "redis://localhost:6379/0"
-CACHE_TYPE = "redis"
+CACHE_TYPE = "RedisCache"
 
 # Session
 ACCOUNTS_RETENTION_PERIOD = timedelta(days=7)
