@@ -1,7 +1,7 @@
 beautifulsoup4==4.15.0
 bleach==6.4.0
 datacite==1.4.1
-gunicorn==26.0.0
+gunicorn==26.2.0
 hepdata-converter-ws-client==0.2.2
 hepdata-validator==0.3.6
 Flask-Security-Invenio==4.1.0
