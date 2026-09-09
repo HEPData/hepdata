@@ -20,13 +20,3 @@ updates:
       interval: "monthly"
     ignore:
       - dependency-name: "pytest-cov"  # see https://github.com/HEPData/hepdata/issues/580
-      - dependency-name: "invenio-access"  # see https://github.com/HEPData/hepdata/issues/848
-      - dependency-name: "invenio-assets"  # see https://github.com/HEPData/hepdata/issues/848
-      - dependency-name: "invenio-db"  # see https://github.com/HEPData/hepdata/issues/848
-      - dependency-name: "invenio-oauthclient"  # see https://github.com/HEPData/hepdata/issues/848
-      - dependency-name: "invenio-pidstore"  # see https://github.com/HEPData/hepdata/issues/848
-      - dependency-name: "invenio-records"  # see https://github.com/HEPData/hepdata/issues/848
-      - dependency-name: "invenio-search"  # see https://github.com/HEPData/hepdata/issues/848
-      - dependency-name: "invenio-userprofiles"  # see https://github.com/HEPData/hepdata/issues/848
-      - dependency-name: "setuptools"  # see https://github.com/HEPData/hepdata/issues/946
-      - dependency-name: "Flask-Security-Invenio"  # see https://github.com/HEPData/hepdata/issues/957
