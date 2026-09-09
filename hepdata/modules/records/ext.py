@@ -23,15 +23,13 @@
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
 """Jinja utilities for Invenio."""
-
-import pkg_resources
-
 from hepdata.modules.permissions.models import SubmissionParticipant
 from hepdata.modules.theme.views import page_forbidden
 from hepdata.modules.theme.views import internal_error
 from hepdata.modules.theme.views import page_not_found
 from hepdata.modules.theme.views import redirect_nonwww
 from flask_login import current_user
+from flask_cors import CORS
 from invenio_db import db
 
 from hepdata.utils.users import user_is_admin_or_coordinator, user_is_admin
@@ -66,18 +64,8 @@ class HEPDataRecords(object):
                 app.config.setdefault(k, getattr(config, k))
 
     def setup_app(self, app):
-
-        try:
-            from flask_cors import CORS
-            pkg_resources.get_distribution('Flask-CORS')
-
-            # CORS can be configured using CORS_* configuration variables.
-            CORS(app)
-
-        except pkg_resources.DistributionNotFound:
-            raise RuntimeError(
-                "You must use `pip install flask-cors` to "
-                "enable CORS support.")
+        # CORS can be configured using CORS_* configuration variables.
+        CORS(app)
 
         @app.context_processor
         def is_coordinator_or_admin():
