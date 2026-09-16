@@ -1048,22 +1048,37 @@ def test_reindex_batch(app, load_default_data, mocker):
     index = app.config.get('OPENSEARCH_INDEX')
 
     # Mock methods called so we can check they're called with correct parameters
-    mock_index_record_ids = mocker.patch('hepdata.ext.opensearch.api.index_record_ids')
-    mock_push_data_keywords = mocker.patch('hepdata.ext.opensearch.api.push_data_keywords')
+    call_sequence = []
+
+    def _index_record_ids(record_ids, index=None):
+        call_sequence.append(('index', list(record_ids), index))
+        return {'publication': [1], 'datatable': list(range(2,16))}
+
+    def _push_data_keywords(pub_ids=None, index=None):
+        call_sequence.append(('push', pub_ids, index))
+
+    mock_index_record_ids = mocker.patch('hepdata.ext.opensearch.api.index_record_ids', side_effect=_index_record_ids)
+    mock_push_data_keywords = mocker.patch('hepdata.ext.opensearch.api.push_data_keywords', side_effect=_push_data_keywords)
 
     # Reindex submission id 1 (pub_recid=1, with data submissions 2-15)
-    mock_index_record_ids.return_value = {'publication': [1], 'datatable': list(range(2,16))}
     os_api.reindex_batch([1], index)
     mock_index_record_ids.assert_called_once_with(list(range(1, 16)), index=index)
     mock_push_data_keywords.assert_called_once_with(pub_ids=[1])
+    assert call_sequence == [('index', list(range(1, 16)), index), ('push', [1], None)]
+
+    call_sequence.clear()
     mock_index_record_ids.reset_mock()
     mock_push_data_keywords.reset_mock()
 
     # Reindex submission id 2 (pub_recid=16, data submissions 17-56)
-    mock_index_record_ids.return_value = {'publication': [16], 'datatable': list(range(17,56))}
+    mock_index_record_ids.side_effect = lambda record_ids, index=None: (
+        call_sequence.append(('index', list(record_ids), index)) or {'publication': [16], 'datatable': list(range(17,56))}
+    )
+    mock_push_data_keywords.side_effect = lambda pub_ids=None, index=None: call_sequence.append(('push', pub_ids, index))
     os_api.reindex_batch([2], index)
     mock_index_record_ids.assert_called_once_with(list(range(16, 57)), index=index)
     mock_push_data_keywords.assert_called_once_with(pub_ids=[16])
+    assert call_sequence == [('index', list(range(16, 57)), index), ('push', [16], None)]
 
 
 def test_reindex_batch_large_submission(app, mocker):

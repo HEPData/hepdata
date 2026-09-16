@@ -33,7 +33,7 @@ from sqlalchemy import select
 import json
 import jsonschema
 
-from hepdata.ext.opensearch.api import index_record_ids
+from hepdata.ext.opensearch.api import index_record_ids, push_data_keywords
 from hepdata.modules.submission.api import get_latest_hepsubmission, is_resource_added_to_submission
 from hepdata.modules.submission.models import DataResource, HEPSubmission, data_reference_link
 from hepdata.utils.users import get_user_from_id
@@ -132,6 +132,7 @@ def update_analyses_single_tool(analysis_endpoint):
                                 latest_submission = get_latest_hepsubmission(inspire_id=record)
                                 if submission.version == latest_submission.version:
                                     index_record_ids([submission.publication_recid])
+                                    push_data_keywords(pub_ids=[submission.publication_recid])
                             except Exception as e:
                                 db.session.rollback()
                                 log.error(e)
@@ -186,6 +187,7 @@ def update_analyses_single_tool(analysis_endpoint):
                                 latest_submission = get_latest_hepsubmission(inspire_id=inspire_id)
                                 if submission.version == latest_submission.version:
                                     index_record_ids([submission.publication_recid])
+                                    push_data_keywords(pub_ids=[submission.publication_recid])
                             except Exception as e:
                                 db.session.rollback()
                                 log.error(e)
@@ -226,6 +228,7 @@ def update_analyses_single_tool(analysis_endpoint):
                         for i in range(0, len(unique_recids), batch_size):
                             batch_recids = unique_recids[i:i+batch_size]
                             index_record_ids(batch_recids)
+                        push_data_keywords(pub_ids=unique_recids)
                 except Exception as e:
                     db.session.rollback()
                     log.error(e)

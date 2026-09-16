@@ -65,7 +65,7 @@ from hepdata.modules.records.utils.json_ld import get_json_ld
 from hepdata.modules.records.utils.users import get_coordinators_in_system, has_role
 from hepdata.modules.records.utils.workflow import update_record, create_record
 from hepdata.modules.records.views import set_data_review_status, get_observer_data, get_data_review_status, \
-    get_data_reviews_for_record, add_data_review_messsage
+    get_data_reviews_for_record, add_data_review_messsage, add_resource
 from hepdata.modules.submission.models import HEPSubmission, DataReview, \
     DataSubmission, DataResource, License, RecordVersionCommitMessage, RelatedRecid, RelatedTable, SubmissionObserver, \
     Message
@@ -689,9 +689,18 @@ def test_update_record_info_large_submission_batching(app, mocker):
     mocker.patch('hepdata.modules.records.utils.records_update_utils.update_record')
     mocker.patch('hepdata.modules.records.utils.records_update_utils.TESTING', True)
 
-    # Mock the indexing functions to track calls
-    mock_index_record_ids = mocker.patch('hepdata.modules.records.utils.records_update_utils.index_record_ids')
-    mock_push_data_keywords = mocker.patch('hepdata.modules.records.utils.records_update_utils.push_data_keywords')
+    call_sequence = []
+
+    def _index_record_ids(record_ids, index=None):
+        call_sequence.append(('index', list(record_ids), index))
+        return {'publication': [1], 'datatable': []}
+
+    def _push_data_keywords(pub_ids=None, index=None):
+        call_sequence.append(('push', pub_ids, index))
+
+    # Mock the indexing functions to track calls and verify order.
+    mock_index_record_ids = mocker.patch('hepdata.modules.records.utils.records_update_utils.index_record_ids', side_effect=_index_record_ids)
+    mock_push_data_keywords = mocker.patch('hepdata.modules.records.utils.records_update_utils.push_data_keywords', side_effect=_push_data_keywords)
 
     # Call update_record_info with a large submission
     result = update_record_info('1311487')
@@ -711,8 +720,9 @@ def test_update_record_info_large_submission_batching(app, mocker):
     second_batch = calls[1][0][0]
     assert len(second_batch) == 50
 
-    # push_data_keywords should be called once
+    # push_data_keywords should be called once after the index batches are complete
     mock_push_data_keywords.assert_called_once_with(pub_ids=[1])
+    assert call_sequence == [('index', first_batch, None), ('index', second_batch, None), ('push', [1], None)]
 
     assert result == 'Success'
 
@@ -1436,18 +1446,14 @@ def test_update_delete_analyses(app):
 @pytest.mark.parametrize(
     "response_json",
     [
-        # Legacy schema path (defaults to 0.1.0 when schema_version is missing)
         {"123": ["ANA_1"]},
-        # Schema >= 1.0.0 path
         {
             "schema_version": "1.0.0",
             "url_templates": {"main_url": "https://example.org/{analysis_name}"},
-            "analyses": [
-                {
-                    "inspire_id": 123,
-                    "implementations": [{"analysis_name": "ANA_1"}],
-                }
-            ],
+            "analyses": [{
+                "inspire_id": 123,
+                "implementations": [{"analysis_name": "ANA_1"}],
+            }],
             "implementations_description": "Example implementations",
         },
     ],
@@ -1484,6 +1490,97 @@ def test_update_analyses_no_new_resource(app, response_json):
 
         assert analysis_resources == []
         assert submission.resources == []
+
+
+@pytest.mark.parametrize(
+    "response_json",
+    [
+        {"123": ["ANA_1"]},
+        {
+            "schema_version": "1.0.0",
+            "url_templates": {"main_url": "https://example.org/{analysis_name}"},
+            "analyses": [{
+                "inspire_id": 123,
+                "implementations": [{"analysis_name": "ANA_1"}],
+            }],
+            "implementations_description": "Example implementations",
+        },
+    ],
+    ids=["schema_0_1_0", "schema_1_0_0"],
+)
+def test_update_analyses_single_tool_indexes_after_new_resource(app, response_json):
+    """New analysis resources should trigger indexing before keyword refresh."""
+    with app.app_context():
+        current_app.config["ANALYSES_ENDPOINTS"]["TestAnalysis"] = {
+            "endpoint_url": "https://example.org/analyses.json",
+            "url_template": "https://example.org/{}",
+        }
+
+        response = Mock(ok=True)
+        response.json.return_value = response_json
+
+        submission = SimpleNamespace(publication_recid=1, version=1, resources=[])
+        latest_submission = SimpleNamespace(publication_recid=1, version=1)
+        execute_result = Mock()
+        execute_result.scalars.return_value.all.return_value = []
+
+        call_sequence = []
+
+        def _index_record_ids(record_ids, index=None):
+            call_sequence.append(("index", list(record_ids), index))
+            return {"publication": [1], "datatable": []}
+
+        def _push_data_keywords(pub_ids=None, index=None):
+            call_sequence.append(("push", pub_ids, index))
+
+        with patch("hepdata.modules.records.utils.analyses.resilient_requests", return_value=response), \
+             patch("hepdata.modules.records.utils.analyses.test_analyses_schema"), \
+             patch("hepdata.modules.records.utils.analyses.get_latest_hepsubmission", side_effect=[submission, latest_submission]), \
+             patch("hepdata.modules.records.utils.analyses.db.session.execute", return_value=execute_result), \
+             patch("hepdata.modules.records.utils.analyses.db.session.add"), \
+             patch("hepdata.modules.records.utils.analyses.db.session.commit"), \
+             patch("hepdata.modules.records.utils.analyses.is_resource_added_to_submission", return_value=False), \
+             patch("hepdata.modules.records.utils.analyses.index_record_ids", side_effect=_index_record_ids), \
+             patch("hepdata.modules.records.utils.analyses.push_data_keywords", side_effect=_push_data_keywords):
+            update_analyses_single_tool("TestAnalysis")
+
+        assert len(submission.resources) == 1
+        assert call_sequence == [("index", [1], None), ("push", [1], None)]
+
+
+def test_add_resource_indexes_before_push_data_keywords(app, mocker):
+    """Adding an analysis resource should reindex before refreshing keyword data."""
+    with app.app_context():
+        submission = get_or_create_hepsubmission('12345', 1, status='finished')
+        submission.inspire_id = '12345'
+        db.session.add(submission)
+        db.session.commit()
+
+        mocker.patch('hepdata.modules.records.views.user_allowed_to_perform_action', return_value=True)
+
+        call_sequence = []
+
+        def _index_record_ids(record_ids, index=None):
+            call_sequence.append(('index', list(record_ids), index))
+            return {'publication': [12345], 'datatable': []}
+
+        def _push_data_keywords(pub_ids=None, index=None):
+            call_sequence.append(('push', pub_ids, index))
+
+        mocker.patch('hepdata.modules.records.views.index_record_ids', side_effect=_index_record_ids)
+        mocker.patch('hepdata.modules.records.views.push_data_keywords', side_effect=_push_data_keywords)
+
+        with app.test_request_context(
+            '/add_resource/submission/12345/1',
+            method='POST',
+            data={'analysisType': 'other', 'analysisOther': 'TestAnalysis', 'analysisURL': 'https://example.org/test'}
+        ):
+            user = User.query.first()
+            login_user(user)
+            response = add_resource('submission', 12345, 1)
+
+        assert response.status_code == 302
+        assert call_sequence == [('index', [12345], None), ('push', [12345], None)]
 
 
 def test_incorrect_endpoint(app):

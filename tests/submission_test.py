@@ -54,7 +54,7 @@ from hepdata.modules.records.utils.common import infer_file_type, contains_accep
     get_record_contents, is_analysis, get_record_by_id
 from hepdata.modules.records.utils.data_files import get_data_path_for_record
 from hepdata.modules.records.utils.submission import process_submission_directory, do_finalise, unload_submission, \
-    cleanup_data_related_recid, get_or_create_hepsubmission
+    cleanup_data_related_recid
 from hepdata.modules.submission.api import get_latest_hepsubmission, get_submission_participants_for_record, \
     get_or_create_submission_observer, delete_submission_observer
 from hepdata.modules.submission.models import DataSubmission, HEPSubmission, RelatedRecid, RecordVersionCommitMessage, \
@@ -1052,7 +1052,7 @@ def test_submission_observer_create_delete(app, admin_idx):
     assert re.match(uuid_regex, sub_observer_key)
 
     # Patching OpenSearch indexing to avoid setup steps
-    with patch('hepdata.modules.records.utils.submission.index_record_ids', side_effect=None):
+    with patch('hepdata.ext.opensearch.api.index_record_ids', side_effect=None):
         do_finalise(empty_submission.publication_recid, publication_record=record, force_finalise=True)
 
     # We finalise the submission, so there should be no SubmissionObserver objects

@@ -37,7 +37,7 @@ from hepdata_converter_ws_client import get_data_size
 from hepdata.config import CFG_DATA_TYPE, CFG_PUB_TYPE, CFG_SUPPORTED_FORMATS, HEPDATA_DOI_PREFIX
 from hepdata.ext.opensearch.admin_view.api import AdminIndexer
 from hepdata.ext.opensearch.api import get_records_matching_field, \
-    delete_item_from_index, index_record_ids, push_data_keywords, reindex_batch
+    delete_item_from_index, reindex_batch
 from hepdata.modules.converter import prepare_data_folder
 from hepdata.modules.converter.tasks import convert_and_store
 from hepdata.modules.email.api import send_finalised_email
