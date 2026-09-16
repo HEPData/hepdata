@@ -37,12 +37,10 @@ from flask import Blueprint, send_file, abort, redirect, current_app, url_for
 from flask_security.utils import verify_password
 from sqlalchemy import or_, func
 from sqlalchemy.orm import joinedload
-import yaml
-from yaml import CBaseLoader as Loader
 
 from hepdata.config import CFG_DATA_TYPE, CFG_PUB_TYPE, SITE_URL, ADDITIONAL_SIZE_LOAD_CHECK_THRESHOLD
 from hepdata.ext.opensearch.api import get_records_matching_field, get_count_for_collection, get_n_latest_records, \
-    index_record_ids
+    index_record_ids, push_data_keywords
 from hepdata.modules.converter.views import get_version_count
 from hepdata.modules.email.api import send_notification_email, send_new_review_message_email, NoParticipantsException, \
     send_question_email, send_coordinator_notification_email
@@ -50,12 +48,12 @@ from hepdata.modules.inspire_api.views import get_inspire_record_information
 from hepdata.modules.permissions.api import verify_observer_key
 from hepdata.modules.records.api import request, determine_user_privileges, render_template, format_submission, \
     render_record, current_user, db, jsonify, get_user_from_id, get_record_contents, extract_journal_info, \
-    user_allowed_to_perform_action, NoResultFound, OrderedDict, query_messages_for_data_review, returns_json, \
+    user_allowed_to_perform_action, OrderedDict, query_messages_for_data_review, returns_json, \
     process_payload, has_upload_permissions, has_coordinator_permissions, create_new_version, format_resource, \
     should_send_json_ld, JSON_LD_MIMETYPES, get_resource_mimetype, get_table_data_list
 from hepdata.modules.submission.api import get_submission_participants_for_record, get_or_create_submission_observer
 from hepdata.modules.submission.models import HEPSubmission, DataSubmission, \
-    DataResource, DataReview, Message, Question, SubmissionObserver
+    DataResource, DataReview, Message, Question
 from hepdata.modules.records.utils.common import get_record_by_id, \
     default_time, IMAGE_TYPES, decode_string, file_size_check, generate_license_data_by_id, load_table_data
 from hepdata.modules.records.utils.data_processing_utils import \
@@ -1185,6 +1183,7 @@ def add_resource(type, identifier, version):
 
                 try:
                     index_record_ids([recid])
+                    push_data_keywords(pub_ids=[recid])
                 except:
                     log.error('Failed to reindex {0}'.format(recid))
 
