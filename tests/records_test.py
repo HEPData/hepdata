@@ -65,10 +65,10 @@ from hepdata.modules.records.utils.json_ld import get_json_ld
 from hepdata.modules.records.utils.users import get_coordinators_in_system, has_role
 from hepdata.modules.records.utils.workflow import update_record, create_record
 from hepdata.modules.records.views import set_data_review_status, get_observer_data, get_data_review_status, \
-    get_data_reviews_for_record, add_data_review_messsage, add_resource
+    get_data_reviews_for_record, add_data_review_messsage, add_resource, get_all_review_messages
 from hepdata.modules.submission.models import HEPSubmission, DataReview, \
     DataSubmission, DataResource, License, RecordVersionCommitMessage, RelatedRecid, RelatedTable, SubmissionObserver, \
-    Message
+    Message, ReviewConversationArchive
 from hepdata.modules.submission.views import process_submission_payload
 from hepdata.modules.submission.api import get_latest_hepsubmission, get_or_create_submission_observer
 from tests.conftest import TEST_EMAIL, create_test_record, create_blank_test_record
@@ -974,6 +974,56 @@ def test_add_review_message_uses_requested_version_on_create(app, load_default_d
     payload = json.loads(result)
     assert payload['publication_recid'] == 1
     assert payload['data_recid'] == 1234
+
+
+def test_get_all_review_messages_includes_archived_conversations(app, load_default_data):
+    user = User.query.first()
+    data_submission = DataSubmission.query.filter_by(
+        publication_recid=1, version=1
+    ).order_by(DataSubmission.id.asc()).first()
+
+    data_review = DataReview(
+        publication_recid=1,
+        data_recid=data_submission.id,
+        version=1
+    )
+    data_review.messages.append(Message(user=user.id, message='current message'))
+    db.session.add(data_review)
+    db.session.add(ReviewConversationArchive(
+        publication_recid=1,
+        conversation={
+            "Archived table": [{
+                "message": "archived message",
+                "user": "archiver@test.com",
+                "post_time": "2026-01-01 00:00:00"
+            }]
+        }
+    ))
+    db.session.commit()
+
+    with app.test_request_context('/data/review/message/1?include_conversation_metadata=true'):
+        login_user(user)
+        response = json.loads(get_all_review_messages(1))
+        assert response["total_conversations"] == 2
+        assert response["conversation_index"] == 1
+        assert response["has_previous"] is True
+        assert response["has_next"] is False
+        assert response["messages"][data_submission.name][0]["message"] == "current message"
+
+    with app.test_request_context(
+            '/data/review/message/1?include_conversation_metadata=true&conversation_index=0'):
+        login_user(user)
+        response = json.loads(get_all_review_messages(1))
+        assert response["conversation_index"] == 0
+        assert response["has_previous"] is False
+        assert response["has_next"] is True
+        assert response["messages"]["Archived table"][0]["message"] == "archived message"
+
+    with app.test_request_context('/data/review/message/1'):
+        login_user(user)
+        response = json.loads(get_all_review_messages(1))
+        assert "messages" not in response
+        assert data_submission.name in response
 
 
 def test_get_all_ids(app, load_default_data, identifiers):

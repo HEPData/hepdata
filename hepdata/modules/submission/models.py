@@ -385,6 +385,20 @@ class DataReview(db.Model):
     version = db.Column(db.Integer, default=0)
 
 
+class ReviewConversationArchive(db.Model):
+    """Archived review messages for previous uploads of a publication."""
+    __tablename__ = "reviewconversationarchive"
+
+    id = db.Column(
+        db.Integer, primary_key=True,
+        nullable=False, autoincrement=True)
+
+    publication_recid = db.Column(db.Integer, index=True, nullable=False)
+    conversation = db.Column(db.JSON, nullable=False)
+    creation_date = db.Column(
+        db.DateTime, nullable=False, default=datetime.utcnow, index=True)
+
+
 class Message(db.Model):
     """General message structure."""
     __tablename__ = "message"

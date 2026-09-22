@@ -53,9 +53,10 @@ from hepdata.modules.records.api import request, determine_user_privileges, rend
     should_send_json_ld, JSON_LD_MIMETYPES, get_resource_mimetype, get_table_data_list
 from hepdata.modules.submission.api import get_submission_participants_for_record, get_or_create_submission_observer
 from hepdata.modules.submission.models import HEPSubmission, DataSubmission, \
-    DataResource, DataReview, Message, Question
+    DataResource, DataReview, Message, Question, ReviewConversationArchive
 from hepdata.modules.records.utils.common import get_record_by_id, \
     default_time, IMAGE_TYPES, decode_string, file_size_check, generate_license_data_by_id, load_table_data
+from hepdata.modules.records.utils.review_messages import get_review_messages_for_publication
 from hepdata.modules.records.utils.data_processing_utils import \
     generate_table_headers, process_ctx, generate_table_data
 from hepdata.modules.records.utils.submission import create_data_review, \
@@ -699,31 +700,34 @@ def get_all_review_messages(publication_recid):
     :param publication_recid:
     :return:
     """
-    messages = OrderedDict()
+    current_messages = get_review_messages_for_publication(publication_recid=publication_recid)
+    include_metadata = request.args.get(
+        'include_conversation_metadata', ''
+    ).lower() in ('1', 'true', 'yes')
+    conversation_index = request.args.get('conversation_index', type=int)
 
-    latest_submission = get_latest_hepsubmission(publication_recid=publication_recid)
+    if not include_metadata and conversation_index is None:
+        return json.dumps(current_messages, default=default_time)
 
-    datareview_query = DataReview.query.filter_by(
-        publication_recid=publication_recid, version=latest_submission.version).order_by(
-        DataReview.id.asc())
+    archived_conversations = ReviewConversationArchive.query.filter_by(
+        publication_recid=publication_recid
+    ).order_by(ReviewConversationArchive.id.asc()).all()
 
-    if datareview_query.count() > 0:
-        reviews = datareview_query.all()
+    conversations = [conversation.conversation for conversation in archived_conversations]
+    conversations.append(current_messages)
 
-        for data_review in reviews:
+    selected_index = conversation_index
+    if selected_index is None:
+        selected_index = len(conversations) - 1
+    selected_index = max(0, min(selected_index, len(conversations) - 1))
 
-            data_submission_query = DataSubmission.query.filter_by(
-                id=data_review.data_recid)
-            data_submission_record = data_submission_query.one()
-
-            if data_review.data_recid not in messages:
-                if data_submission_query.count() > 0:
-                    messages[data_submission_record.name] = []
-
-            query_messages_for_data_review(data_review, messages[
-                data_submission_record.name])
-
-    return json.dumps(messages, default=default_time)
+    return json.dumps({
+        "messages": conversations[selected_index],
+        "conversation_index": selected_index,
+        "total_conversations": len(conversations),
+        "has_previous": selected_index > 0,
+        "has_next": selected_index < (len(conversations) - 1),
+    }, default=default_time)
 
 
 @blueprint.route('/resources/<int:recid>/<int:version>', methods=['GET'])
