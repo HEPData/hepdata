@@ -364,6 +364,9 @@ ANALYSES_ENDPOINTS = {
     'SimpleAnalysis': {
         'endpoint_url': 'https://simpleanalysis.docs.cern.ch/analyses.json',
     },
+    'ADL': {
+        'endpoint_url': 'https://raw.githubusercontent.com/ADL4HEP/ADL4Reinterpretation/main/analyses.json',
+    },
     #'ufo': {},
     #'xfitter': {},
     #'applgrid': {},
