@@ -28,6 +28,7 @@ import logging
 import os
 
 from invenio_accounts.models import User
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy import TypeDecorator, types, event
 from invenio_db import db
 from datetime import datetime
@@ -394,7 +395,7 @@ class ReviewConversationArchive(db.Model):
         nullable=False, autoincrement=True)
 
     publication_recid = db.Column(db.Integer, index=True, nullable=False)
-    conversation = db.Column(db.JSON, nullable=False)
+    conversation = db.Column(JSONB, nullable=False)
     creation_date = db.Column(
         db.DateTime, nullable=False, default=datetime.utcnow, index=True)
 
