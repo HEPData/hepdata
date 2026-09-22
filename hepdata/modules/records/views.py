@@ -700,6 +700,10 @@ def get_all_review_messages(publication_recid):
     :param publication_recid:
     :return:
     """
+    
+    if not user_allowed_to_perform_action(publication_recid):
+        abort(403)
+    
     current_messages = get_review_messages_for_publication(publication_recid=publication_recid)
     include_metadata = request.args.get(
         'include_conversation_metadata', ''
