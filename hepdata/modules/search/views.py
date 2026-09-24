@@ -30,7 +30,7 @@ from hepdata.modules.records.api import get_all_ids as db_get_all_ids
 from hepdata.utils.session import get_session_item, set_session_item
 from hepdata.utils.url import modify_query
 from .config import HEPDATA_CFG_DEFAULT_RESULTS_PER_PAGE, HEPDATA_CFG_FACETS
-from .config import LIMIT_MAX_RESULTS_PER_PAGE
+from .config import LIMIT_MAX_RESULTS_PER_PAGE, OPENSEARCH_MAX_RESULT_WINDOW
 
 blueprint = Blueprint('os_search',
                       __name__,
@@ -54,13 +54,15 @@ def calculate_total_pages(query_result, max_results):
 def check_page(args):
     """
     Get the page query parameter from the URL and if it doesn't exist
-    assign a default value.
+    assign a default value.  Check the value is in a sensible range.
     """
     page = args.get('page', '1')
     try:
         page = int(page)
         if page < 1:
             raise ValueError
+        elif page > OPENSEARCH_MAX_RESULT_WINDOW:
+            page = OPENSEARCH_MAX_RESULT_WINDOW
     except ValueError:
         page = 1
 

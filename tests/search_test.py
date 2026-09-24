@@ -42,8 +42,8 @@ from hepdata.modules.submission.models import HEPSubmission, DataSubmission, Dat
 from invenio_search import current_search_client as os
 
 from hepdata.modules.search.config import LIMIT_MAX_RESULTS_PER_PAGE, \
-    HEPDATA_CFG_DEFAULT_RESULTS_PER_PAGE
-from hepdata.modules.search.views import check_max_results, search as search_view
+    HEPDATA_CFG_DEFAULT_RESULTS_PER_PAGE, OPENSEARCH_MAX_RESULT_WINDOW
+from hepdata.modules.search.views import check_max_results, check_page, search as search_view
 from hepdata.ext.opensearch.config.os_config import TERMS_SIZE
 
 def test_query_builder_add_aggregations():
@@ -1212,6 +1212,24 @@ def test_check_max_results(input_size, output_size):
     args = {'size': input_size} if input_size is not None else {}
     check_max_results(args)
     assert args['size'] == output_size
+
+
+@pytest.mark.parametrize("input_page, expected_page",
+    [
+        (None, 1),
+        (0, 1),
+        (-3, 1),
+        ('all', 1),
+        ('1', 1),
+        (OPENSEARCH_MAX_RESULT_WINDOW, OPENSEARCH_MAX_RESULT_WINDOW),
+        (OPENSEARCH_MAX_RESULT_WINDOW + 1, OPENSEARCH_MAX_RESULT_WINDOW),
+        ('10001', OPENSEARCH_MAX_RESULT_WINDOW),
+    ]
+)
+def test_check_page(input_page, expected_page):
+    args = {'page': input_page} if input_page is not None else {}
+    check_page(args)
+    assert args['page'] == expected_page
 
 
 def test_search_json_success_response_sets_hits_total(app, mocker):
