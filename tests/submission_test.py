@@ -34,6 +34,7 @@ from time import sleep
 from unittest.mock import patch, MagicMock
 from sqlalchemy.exc import NoResultFound
 
+from invenio_accounts.models import User
 from invenio_db import db
 import pytest
 
@@ -54,11 +55,11 @@ from hepdata.modules.records.utils.common import infer_file_type, contains_accep
     get_record_contents, is_analysis, get_record_by_id
 from hepdata.modules.records.utils.data_files import get_data_path_for_record
 from hepdata.modules.records.utils.submission import process_submission_directory, do_finalise, unload_submission, \
-    cleanup_data_related_recid
+    cleanup_data_related_recid, archive_existing_review_messages
 from hepdata.modules.submission.api import get_latest_hepsubmission, get_submission_participants_for_record, \
     get_or_create_submission_observer, delete_submission_observer
 from hepdata.modules.submission.models import DataSubmission, HEPSubmission, RelatedRecid, RecordVersionCommitMessage, \
-    SubmissionObserver
+    SubmissionObserver, DataReview, Message, ReviewConversationArchive
 from hepdata.modules.submission.views import process_submission_payload
 from hepdata.config import HEPDATA_DOI_PREFIX
 from tests.conftest import create_test_record, create_blank_test_record
@@ -308,6 +309,13 @@ def test_create_submission(app, admin_idx):
         assert (hepdata_submission.version == 1)
 
         # Now unload v1
+        archive_entry = ReviewConversationArchive(
+            publication_recid=hepdata_submission.publication_recid,
+            conversation={"Archived Table": [{"message": "Archived review", "user": "test@test.com",
+                                              "post_time": "2026-01-01 00:00:00"}]}
+        )
+        db.session.add(archive_entry)
+        db.session.commit()
         unload_submission(hepdata_submission.publication_recid)
 
         assert (not record_exists(inspire_id=record['inspire_id']))
@@ -328,6 +336,35 @@ def test_create_submission(app, admin_idx):
 
         # Check file dir has been deleted
         assert(not os.path.exists(directory))
+
+        archived_conversations = ReviewConversationArchive.query.filter_by(
+            publication_recid=hepdata_submission.publication_recid
+        ).count()
+        assert archived_conversations == 0
+
+
+def test_archive_existing_review_messages(app, load_default_data):
+    user = User.query.first()
+    data_submission = DataSubmission.query.filter_by(
+        publication_recid=1, version=1).order_by(DataSubmission.id.asc()).first()
+
+    data_review = DataReview(
+        publication_recid=1,
+        data_recid=data_submission.id,
+        version=1
+    )
+    data_review.messages.append(Message(user=user.id, message="archived message"))
+    db.session.add(data_review)
+    db.session.commit()
+
+    archive_existing_review_messages(1, 1)
+
+    archived_conversations = ReviewConversationArchive.query.filter_by(
+        publication_recid=1
+    ).order_by(ReviewConversationArchive.id.asc()).all()
+    assert len(archived_conversations) == 1
+    assert data_submission.name in archived_conversations[0].conversation
+    assert archived_conversations[0].conversation[data_submission.name][0]["message"] == "archived message"
 
 
 def test_related_records(app, admin_idx):
@@ -1147,4 +1184,3 @@ def test_delete_submission_observer_db_error(app):
     # After the exception, the observer should still exist (rollback occurred)
     submission_observer = SubmissionObserver.query.filter_by(publication_recid=9999).first()
     assert submission_observer is not None
-
