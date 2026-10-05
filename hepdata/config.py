@@ -335,8 +335,6 @@ ANALYSES_ENDPOINTS = {
     },
     'CheckMATE': {
         'endpoint_url': 'https://raw.githubusercontent.com/CheckMATE2/checkmate2/refs/heads/master/data/analyses.json',
-        'url_template': '{0}',
-        'description': 'CheckMATE analysis',
         'subscribe_user_id': 6977
     },
     'HackAnalysis': {
@@ -363,6 +361,9 @@ ANALYSES_ENDPOINTS = {
     },
     'SimpleAnalysis': {
         'endpoint_url': 'https://simpleanalysis.docs.cern.ch/analyses.json',
+    },
+    'ADL': {
+        'endpoint_url': 'https://raw.githubusercontent.com/ADL4HEP/ADL4Reinterpretation/main/analyses.json',
     },
     #'ufo': {},
     #'xfitter': {},

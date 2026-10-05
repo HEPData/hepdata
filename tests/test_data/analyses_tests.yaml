@@ -1,3 +1,12 @@
+ADL:
+  import_id: 2683599
+  counts:
+    before: 0
+    after: 1
+  test_user: null
+  url: https://github.com/ADL4HEP/ADL4Reinterpretation/blob/main/CMS-SUS-21-009/CMS-SUS-21-009_Delphes.adl
+  license: cc-by-4.0
+
 CheckMATE:
   import_id: 1847779
   counts:
@@ -6,7 +15,7 @@ CheckMATE:
   test_user:
     email: test2@test.com
     id: 6977
-  url: https://checkmate.hepforge.org/AnalysesList/ATLAS_13TeV.html#atlas_2102_10874
+  url: https://github.com/CheckMATE2/checkmate2/tree/master/tools/analysis/src/analyses/ATLAS_13TeV/atlas_2102_10874.cc
   license: null
 
 # Combine: # tested in test_update_delete_analyses
