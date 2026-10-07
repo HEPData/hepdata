@@ -1016,3 +1016,9 @@ body, html {
   padding-left: 5px;
   padding-right: 5px;
 }
+
+#conversation-conversation-next:disabled,
+#conversation-conversation-prev:disabled {
+  background-color: #f5f5f5 !important;
+  color: #333 !important;
+}
