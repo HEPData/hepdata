@@ -57,7 +57,7 @@ from hepdata.modules.records.api import process_payload, process_zip_archive, \
 from hepdata.modules.records.importer.api import import_records
 from hepdata.modules.records.utils.analyses import update_analyses, update_analyses_single_tool
 from hepdata.modules.records.utils.submission import get_or_create_hepsubmission, process_submission_directory, \
-    do_finalise, unload_submission
+    do_finalise, unload_submission, remove_submission
 from hepdata.modules.records.utils.common import get_record_by_id, get_record_contents, generate_license_data_by_id
 from hepdata.modules.records.utils.data_processing_utils import generate_table_headers, generate_table_data
 from hepdata.modules.records.utils.data_files import get_data_path_for_record
@@ -472,6 +472,59 @@ def test_has_coordinator_permissions(app):
         db.session.commit()
 
         assert has_coordinator_permissions(recid, user)
+
+
+def test_delete_review_archive(app, mocker):
+    with app.app_context():
+        publication_recid = 12344321
+        mocker.patch('hepdata.modules.records.utils.submission.AdminIndexer.delete_by_id')
+        mocker.patch('hepdata.modules.records.utils.submission.delete_all_files')
+
+        db.session.add(HEPSubmission(
+            publication_recid=publication_recid,
+            coordinator=1,
+            overall_status='todo',
+            version=1,
+        ))
+        db.session.add(DataSubmission(
+            publication_recid=publication_recid,
+            name='Table 1',
+            description='Example table',
+            version=1,
+        ))
+
+        archives = [
+            ReviewConversationArchive(
+                publication_recid=publication_recid,
+                conversation={
+                    'Table 1': [{
+                        'message': 'hello world',
+                        'user': 'reviewer@example.com',
+                        'post_time': '2026-01-01 00:00:00'
+                    }]
+                }
+            ),
+            ReviewConversationArchive(
+                publication_recid=publication_recid,
+                conversation={
+                    'Table 2': [{
+                        'message': 'second archive',
+                        'user': 'reviewer@example.com',
+                        'post_time': '2026-01-02 00:00:00'
+                    }]
+                }
+            )
+        ]
+        db.session.add_all(archives)
+        db.session.commit()
+
+        assert ReviewConversationArchive.query.filter_by(publication_recid=publication_recid).count() == 2
+        assert HEPSubmission.query.filter_by(publication_recid=publication_recid).count() == 1
+
+        remove_submission(publication_recid, version=1)
+
+        assert ReviewConversationArchive.query.filter_by(publication_recid=publication_recid).count() == 0
+        assert HEPSubmission.query.filter_by(publication_recid=publication_recid).count() == 0
 
 
 def test_process_zip_archive_invalid(app):
