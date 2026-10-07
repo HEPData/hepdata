@@ -64,14 +64,7 @@ HEPDATA.update_review_statuses = function(status) {
 };
 
 HEPDATA.load_all_review_messages = function (placement, record_id, conversationIndex = null) {
-  var safePlacements = {
-    "#conversation": "#conversation",
-    "#conversation-only": "#conversation-only"
-  };
-  var safePlacement = safePlacements[placement];
-  if (!safePlacement) {
-    return;
-  }
+  if (!["#conversation", "#conversation-only"].includes(placement)) return;
 
   var query = "?include_conversation_metadata=true";
   if (conversationIndex !== null) {
@@ -84,19 +77,19 @@ HEPDATA.load_all_review_messages = function (placement, record_id, conversationI
     dataType: "json",
     cache: false,
     success: function (payload) {
-      $(safePlacement).empty();
+      $(placement).empty();
       var data = payload.messages ? payload.messages : payload;
       var totalConversations = payload.total_conversations ? payload.total_conversations : 1;
       var selectedConversation = payload.conversation_index !== undefined ? payload.conversation_index : 0;
       if (totalConversations > 1) {
-        var controls = d3.select(safePlacement).append('div')
+        var controls = d3.select(placement).append('div')
           .attr('class', 'conversation-navigation')
           .attr('role', 'navigation')
           .attr('aria-label', 'Conversation history navigation');
         controls.append('button')
           .attr('class', 'btn btn-xs btn-default conversation-nav')
-          .attr('id', safePlacement.replace('#', '') + '-conversation-prev')
-          .attr('data-placement', safePlacement)
+          .attr('id', placement.replace('#', '') + '-conversation-prev')
+          .attr('data-placement', placement)
           .attr('data-record-id', record_id)
           .attr('data-target-index', selectedConversation - 1)
           .attr('aria-label', 'Show older conversation')
@@ -108,8 +101,8 @@ HEPDATA.load_all_review_messages = function (placement, record_id, conversationI
           .text('Upload conversation ' + (selectedConversation + 1) + ' of ' + totalConversations);
         controls.append('button')
           .attr('class', 'btn btn-xs btn-default conversation-nav')
-          .attr('id', safePlacement.replace('#', '') + '-conversation-next')
-          .attr('data-placement', safePlacement)
+          .attr('id', placement.replace('#', '') + '-conversation-next')
+          .attr('data-placement', placement)
           .attr('data-record-id', record_id)
           .attr('data-target-index', selectedConversation + 1)
           .attr('aria-label', 'Show newer conversation')
@@ -118,11 +111,11 @@ HEPDATA.load_all_review_messages = function (placement, record_id, conversationI
       }
       var message_count = 0;
       for (var table in data) {
-        d3.select(safePlacement).append('p').attr('class', 'table-name').text(table);
+        d3.select(placement).append('p').attr('class', 'table-name').text(table);
         message_count += data[table].length;
         for (var message_idx in data[table]) {
           var message_data = data[table][message_idx];
-          HEPDATA.render_review_message(safePlacement, message_data);
+          HEPDATA.render_review_message(placement, message_data);
         }
 
         $("#table-" + HEPDATA.current_table_id + "-messages").removeClass("hidden");
