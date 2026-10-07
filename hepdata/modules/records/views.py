@@ -1189,11 +1189,12 @@ def add_resource(type, identifier, version):
                 db.session.add(submission)
                 db.session.commit()
 
-                try:
-                    index_record_ids([recid])
-                    push_data_keywords(pub_ids=[recid])
-                except:
-                    log.error('Failed to reindex {0}'.format(recid))
+                if submission.overall_status == 'finished':
+                    try:
+                        index_record_ids([recid])
+                        push_data_keywords(pub_ids=[recid])
+                    except:
+                        log.error('Failed to reindex {0}'.format(recid))
 
                 if inspire_id and type == 'submission' and submission.overall_status == 'finished':
                     return redirect('/record/ins{0}'.format(inspire_id))
