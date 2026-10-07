@@ -46,10 +46,16 @@ from hepdata.modules.records.utils.workflow import create_record
 from hepdata.modules.submission.api import get_latest_hepsubmission, get_or_create_submission_observer, \
     delete_submission_observer
 from hepdata.modules.submission.models import DataSubmission, DataReview, \
-    DataResource, Keyword, RelatedTable, RelatedRecid, HEPSubmission, RecordVersionCommitMessage
+    DataResource, Keyword, RelatedTable, RelatedRecid, HEPSubmission, RecordVersionCommitMessage, \
+    ReviewConversationArchive
 from hepdata.modules.records.utils.common import \
     get_license, infer_file_type, get_record_by_id, contains_accepted_url
 from hepdata.modules.records.utils.common import get_or_create
+from hepdata.modules.records.utils.review_messages import (
+    get_review_messages_for_publication,
+    has_review_messages,
+    serialise_review_messages,
+)
 from hepdata.modules.records.utils.data_files import get_data_path_for_record, \
     cleanup_old_files, delete_all_files, delete_packaged_file, \
     find_submission_data_file_path
@@ -103,6 +109,12 @@ def remove_submission(record_id, version=1):
 
         reviews = DataReview.query.filter_by(
             publication_recid=record_id, version=version).all()
+        
+        conversation_archive = ReviewConversationArchive.query.filter_by(
+            publication_recid=record_id)
+        
+        for conv in conversation_archive:
+            db.session.delete(conv)
 
         for review in reviews:
             db.session.delete(review)
@@ -141,6 +153,10 @@ def remove_submission(record_id, version=1):
 
             except PIDDoesNotExistError as e:
                 print('No record entry exists for {0}. Proceeding to delete other files.'.format(record_id))
+
+            ReviewConversationArchive.query.filter_by(
+                publication_recid=record_id
+            ).delete()
 
         db.session.commit()
         db.session.flush()
@@ -184,6 +200,23 @@ def cleanup_submission(recid, version, to_keep):
     except Exception as e:
         logging.error(e)
         db.session.rollback()
+
+
+def archive_existing_review_messages(recid, version):
+    """Archive current review messages for a submission version, if present."""
+    current_messages = get_review_messages_for_publication(
+        publication_recid=recid,
+        version=version
+    )
+    if not has_review_messages(current_messages):
+        return
+
+    archive_entry = ReviewConversationArchive(
+        publication_recid=recid,
+        conversation=serialise_review_messages(current_messages)
+    )
+    db.session.add(archive_entry)
+    db.session.commit()
 
 
 def cleanup_data_resources(data_submission):
@@ -456,6 +489,7 @@ def process_submission_directory(basepath, submission_file_path, recid,
         # Fixes problems with ordering where the table names are changed between uploads.
         # See https://github.com/HEPData/hepdata/issues/112
         # Side effect that reviews will be deleted between uploads.
+        archive_existing_review_messages(recid, hepsubmission.version)
         cleanup_submission(recid, hepsubmission.version, added_file_names)
 
         # Counter to store current table number, which is later used to generate the table DOI ID.

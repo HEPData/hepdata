@@ -28,6 +28,7 @@ import logging
 import os
 
 from invenio_accounts.models import User
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy import TypeDecorator, types, event
 from invenio_db import db
 from datetime import datetime
@@ -383,6 +384,20 @@ class DataReview(db.Model):
                                cascade="all,delete")
 
     version = db.Column(db.Integer, default=0)
+
+
+class ReviewConversationArchive(db.Model):
+    """Archived review messages for previous uploads of a publication."""
+    __tablename__ = "reviewconversationarchive"
+
+    id = db.Column(
+        db.Integer, primary_key=True,
+        nullable=False, autoincrement=True)
+
+    publication_recid = db.Column(db.Integer, index=True, nullable=False)
+    conversation = db.Column(JSONB, nullable=False)
+    creation_date = db.Column(
+        db.DateTime, nullable=False, default=datetime.utcnow, index=True)
 
 
 class Message(db.Model):
