@@ -101,7 +101,7 @@ def dashboard_submissions():
 
     filter_record_id = request.args.get('record_id')
     current_page = request.args.get('page', default=1, type=int)
-    size = request.args.get('size', 25)
+    size = request.args.get('size', default=25, type=int)
     submissions = prepare_submissions(
         user,
         items_per_page=size,
