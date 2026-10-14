@@ -55,7 +55,7 @@ from hepdata.modules.records.utils.common import infer_file_type, contains_accep
     get_record_contents, is_analysis, get_record_by_id
 from hepdata.modules.records.utils.data_files import get_data_path_for_record
 from hepdata.modules.records.utils.submission import process_submission_directory, do_finalise, unload_submission, \
-    cleanup_data_related_recid, archive_existing_review_messages
+    cleanup_data_related_recid, archive_existing_review_messages, remove_submission
 from hepdata.modules.submission.api import get_latest_hepsubmission, get_submission_participants_for_record, \
     get_or_create_submission_observer, delete_submission_observer
 from hepdata.modules.submission.models import DataSubmission, HEPSubmission, RelatedRecid, RecordVersionCommitMessage, \
@@ -343,28 +343,121 @@ def test_create_submission(app, admin_idx):
         assert archived_conversations == 0
 
 
-def test_archive_existing_review_messages(app, load_default_data):
+def test_archive_existing_review_messages(app):
+    """
+        Tests archiving of existing review messages, and version
+        archival of the error message objects.
+    """
+    # Create the user/submission, and submit.
     user = User.query.first()
-    data_submission = DataSubmission.query.filter_by(
-        publication_recid=1, version=1).order_by(DataSubmission.id.asc()).first()
-
-    data_review = DataReview(
-        publication_recid=1,
-        data_recid=data_submission.id,
-        version=1
+    submission = process_submission_payload(
+        title="Versioned review test",
+        submitter_id=1,
+        reviewer={'name': 'Reviewer', 'email': 'reviewer@hepdata.net'},
+        uploader={'name': 'Uploader', 'email': 'uploader@hepdata.net'},
+        send_upload_email=False
     )
-    data_review.messages.append(Message(user=user.id, message="archived message"))
-    db.session.add(data_review)
+    submission.overall_status = 'finished'
+    db.session.add(submission)
     db.session.commit()
 
-    archive_existing_review_messages(1, 1)
+    # Create and submit the datasubmission object
+    v1_data_submission = DataSubmission(
+        publication_recid=submission.publication_recid,
+        name='Table 1',
+        description='Version 1 table',
+        version=1,
+    )
+    db.session.add(v1_data_submission)
+    db.session.commit()
+
+    # Also create a data review now
+    v1_review = DataReview(
+        publication_recid=submission.publication_recid,
+        data_recid=v1_data_submission.id,
+        version=1,
+    )
+    # Add a message into the data review object
+    v1_review.messages.append(Message(user=user.id, message='version 1 archived message'))
+    db.session.add(v1_review)
+    db.session.commit()
+
+    # Now we try archiving the base object
+    archive_existing_review_messages(submission.publication_recid, 1)
 
     archived_conversations = ReviewConversationArchive.query.filter_by(
-        publication_recid=1
+        publication_recid=submission.publication_recid
     ).order_by(ReviewConversationArchive.id.asc()).all()
+
+    """ Ensure that the base archived conversation has worked, has the correct version num,
+            data submission and message contents are correct, and in the correct place. 
+    """
+    
     assert len(archived_conversations) == 1
-    assert data_submission.name in archived_conversations[0].conversation
-    assert archived_conversations[0].conversation[data_submission.name][0]["message"] == "archived message"
+    assert archived_conversations[0].version == 1
+    assert v1_data_submission.name in archived_conversations[0].conversation
+    assert archived_conversations[0].conversation[v1_data_submission.name][0]["message"] == 'version 1 archived message'
+
+    # Now we create a new version of the submission, as well as a new data submission/review
+    create_new_version(submission.publication_recid, user, notify_uploader=False)
+
+    v2_data_submission = DataSubmission(
+        publication_recid=submission.publication_recid,
+        name='Table 1',
+        description='Version 2 table',
+        version=2,
+    )
+    db.session.add(v2_data_submission)
+    db.session.commit()
+
+    v2_review = DataReview(
+        publication_recid=submission.publication_recid,
+        data_recid=v2_data_submission.id,
+        version=2,
+    )
+    v2_review.messages.append(Message(user=user.id, message='version 2 archived message'))
+    db.session.add(v2_review)
+    db.session.commit()
+
+    # Archive again
+    archive_existing_review_messages(submission.publication_recid, 2)
+
+    archived_conversations = ReviewConversationArchive.query.filter_by(
+        publication_recid=submission.publication_recid
+    ).order_by(ReviewConversationArchive.id.asc()).all()
+
+    """ Ensure that there are now two objects, with the correct text for both
+            archived conversation versions
+    """
+    assert len(archived_conversations) == 2
+    assert archived_conversations[0].version == 1
+    assert v1_data_submission.name in archived_conversations[0].conversation
+    assert archived_conversations[0].conversation[v1_data_submission.name][0]["message"] == 'version 1 archived message'
+    assert archived_conversations[1].version == 2
+    assert v2_data_submission.name in archived_conversations[1].conversation
+    assert archived_conversations[1].conversation[v2_data_submission.name][0]["message"] == 'version 2 archived message'
+
+    # Now remove version 2
+    remove_submission(submission.publication_recid, version=2)
+
+    remaining_archives = ReviewConversationArchive.query.filter_by(
+        publication_recid=submission.publication_recid
+    ).order_by(ReviewConversationArchive.id.asc()).all()
+
+    # Ensure that only version 1 exists within the data
+    assert len(remaining_archives) == 1
+    assert remaining_archives[0].version == 1
+    assert v1_data_submission.name in remaining_archives[0].conversation
+    assert remaining_archives[0].conversation[v1_data_submission.name][0]["message"] == 'version 1 archived message'
+
+    # Finally,remove the entire submission and ensure that no archives are present
+    remove_submission(submission.publication_recid)
+    
+    remaining_archives = ReviewConversationArchive.query.filter_by(
+        publication_recid=submission.publication_recid
+    ).order_by(ReviewConversationArchive.id.asc()).all()
+    
+    assert len(remaining_archives) == 0
 
 
 def test_related_records(app, admin_idx):
