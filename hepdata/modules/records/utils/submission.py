@@ -213,6 +213,7 @@ def archive_existing_review_messages(recid, version):
 
     archive_entry = ReviewConversationArchive(
         publication_recid=recid,
+        version=version,
         conversation=serialise_review_messages(current_messages)
     )
     db.session.add(archive_entry)

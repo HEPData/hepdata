@@ -395,9 +395,9 @@ class ReviewConversationArchive(db.Model):
         nullable=False, autoincrement=True)
 
     publication_recid = db.Column(db.Integer, index=True, nullable=False)
+    version = db.Column(db.Integer, nullable=False, default=1, index=True)
     conversation = db.Column(JSONB, nullable=False)
-    creation_date = db.Column(
-        db.DateTime, nullable=False, default=datetime.utcnow, index=True)
+    creation_date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, index=True)
 
 
 class Message(db.Model):
