@@ -109,12 +109,6 @@ def remove_submission(record_id, version=1):
 
         reviews = DataReview.query.filter_by(
             publication_recid=record_id, version=version).all()
-        
-        conversation_archive = ReviewConversationArchive.query.filter_by(
-            publication_recid=record_id)
-        
-        for conv in conversation_archive:
-            db.session.delete(conv)
 
         for review in reviews:
             db.session.delete(review)
@@ -156,6 +150,11 @@ def remove_submission(record_id, version=1):
 
             ReviewConversationArchive.query.filter_by(
                 publication_recid=record_id
+            ).delete()
+        else:
+            ReviewConversationArchive.query.filter_by(
+                publication_recid=record_id,
+                version=version
             ).delete()
 
         db.session.commit()
