@@ -63,15 +63,52 @@ HEPDATA.update_review_statuses = function(status) {
   HEPDATA.toggleReviewerButtons();
 };
 
-HEPDATA.load_all_review_messages = function (placement, record_id) {
+HEPDATA.load_all_review_messages = function (placement, record_id, conversationIndex = null) {
+  if (!["#conversation", "#conversation-only"].includes(placement)) return;
+
+  var query = "?include_conversation_metadata=true";
+  if (conversationIndex !== null) {
+    query += "&conversation_index=" + conversationIndex;
+  }
 
   $.ajax({
     type: "GET",
-    url: "/record/data/review/message/" + record_id,
+    url: "/record/data/review/message/" + record_id + query,
     dataType: "json",
     cache: false,
-    success: function (data) {
-    $(placement).html('');
+    success: function (payload) {
+      $(placement).empty();
+      var data = payload.messages ? payload.messages : payload;
+      var totalConversations = payload.total_conversations ? payload.total_conversations : 1;
+      var selectedConversation = payload.conversation_index !== undefined ? payload.conversation_index : 0;
+      if (totalConversations > 1) {
+        var controls = d3.select(placement).append('div')
+          .attr('class', 'conversation-navigation')
+          .attr('role', 'navigation')
+          .attr('aria-label', 'Conversation history navigation');
+        controls.append('button')
+          .attr('class', 'btn btn-xs btn-default conversation-nav')
+          .attr('id', placement.replace('#', '') + '-conversation-prev')
+          .attr('data-placement', placement)
+          .attr('data-record-id', record_id)
+          .attr('data-target-index', selectedConversation - 1)
+          .attr('aria-label', 'Show older conversation')
+          .property('disabled', selectedConversation <= 0)
+          .text('← Older');
+        controls.append('span')
+          .attr('class', 'conversation-index')
+          .attr('aria-live', 'polite')
+          .text('Upload conversation ' + (selectedConversation + 1) + ' of ' + totalConversations);
+        controls.append('button')
+          .attr('class', 'btn btn-xs btn-default conversation-nav')
+          .attr('id', placement.replace('#', '') + '-conversation-next')
+          .attr('data-placement', placement)
+          .attr('data-record-id', record_id)
+          .attr('data-target-index', selectedConversation + 1)
+          .attr('aria-label', 'Show newer conversation')
+          .property('disabled', selectedConversation >= totalConversations - 1)
+          .text('Newer →');
+      }
       var message_count = 0;
       for (var table in data) {
         d3.select(placement).append('p').attr('class', 'table-name').text(table);
@@ -91,6 +128,14 @@ HEPDATA.load_all_review_messages = function (placement, record_id) {
     }
   });
 };
+
+$(document).on('click', '.conversation-nav', function () {
+  if ($(this).prop('disabled')) {
+    return;
+  }
+  var targetIndex = parseInt($(this).attr('data-target-index'), 10);
+  HEPDATA.load_all_review_messages($(this).attr('data-placement'), $(this).attr('data-record-id'), targetIndex);
+});
 
 HEPDATA.render_review_message = function (placement, message) {
   var date_time = message.post_time.split(" ");
