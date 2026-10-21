@@ -344,6 +344,62 @@ def test_create_submission(app, admin_idx):
 
 
 def test_archive_existing_review_messages(app):
+    test_recid = 9999
+    test_message = 'version 1 archived message'
+    submission = HEPSubmission(publication_recid=test_recid,
+                                    overall_status='todo',
+                                    inspire_id=12345,
+                                    version=1)
+    test_data_submission = DataSubmission(
+        publication_recid=submission.publication_recid,
+        name='Table 1',
+        description='Version 1 table',
+        version=1,
+    )
+    db.session.add_all([submission, test_data_submission])
+    db.session.commit()
+
+    test_review = DataReview(
+        publication_recid=submission.publication_recid,
+        data_recid=test_data_submission.id,
+        version=1
+    )
+    # Add a message into the data review object
+    user = User.query.first()
+    test_review.messages.append(Message(user=user.id, message=test_message))
+    db.session.add(test_review)
+    db.session.commit()
+    
+    bad_id_result = archive_existing_review_messages(12345, 1)
+    assert bad_id_result is None
+    
+    bad_version = archive_existing_review_messages(test_recid, 2)
+    assert bad_version is None
+
+    get_all_reviews = (
+        lambda: DataReview.query.filter_by(
+            publication_recid=test_recid, version=1
+        ).order_by(DataReview.id.asc()).all()
+    )
+    
+    all_reviews = get_all_reviews()
+    assert len(all_reviews) == 1
+    assert all_reviews[0].messages[0].message == test_message
+
+    archive_existing_review_messages(test_recid, 1)
+
+    all_reviews = get_all_reviews()
+    assert len(all_reviews) == 0
+
+    archived_reviews = ReviewConversationArchive.query.filter_by(
+        publication_recid=test_recid,
+        version=1
+    ).all()
+
+    assert len(archived_reviews) == 1
+    assert archived_reviews[0].conversation['Table 1'][0]['message'] == test_message
+
+
     """
         Tests archiving of existing review messages, and version
         archival of the error message objects.
