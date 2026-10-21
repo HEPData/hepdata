@@ -616,6 +616,9 @@ def process_payload(recid, file, redirect_url, synchronous=False):
                     file.filename, file_size, UPLOAD_MAX_SIZE)}), 413
 
         hepsubmission = get_latest_hepsubmission(publication_recid=recid)
+        
+        if hepsubmission.overall_status != 'sandbox':
+            archive_existing_review_messages(recid, hepsubmission.version)
 
         if hepsubmission.overall_status == 'finished':
             # If it is finished and we receive an update,

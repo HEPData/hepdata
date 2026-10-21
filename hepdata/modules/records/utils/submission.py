@@ -501,7 +501,6 @@ def process_submission_directory(basepath, submission_file_path, recid,
         # Fixes problems with ordering where the table names are changed between uploads.
         # See https://github.com/HEPData/hepdata/issues/112
         # Side effect that reviews will be deleted between uploads.
-        archive_existing_review_messages(recid, hepsubmission.version)
         cleanup_submission(recid, hepsubmission.version, added_file_names)
 
         # Counter to store current table number, which is later used to generate the table DOI ID.
