@@ -57,7 +57,7 @@ from hepdata.modules.records.api import process_payload, process_zip_archive, \
 from hepdata.modules.records.importer.api import import_records
 from hepdata.modules.records.utils.analyses import update_analyses, update_analyses_single_tool
 from hepdata.modules.records.utils.submission import get_or_create_hepsubmission, process_submission_directory, \
-    do_finalise, unload_submission
+    do_finalise, unload_submission, remove_submission
 from hepdata.modules.records.utils.common import get_record_by_id, get_record_contents, generate_license_data_by_id
 from hepdata.modules.records.utils.data_processing_utils import generate_table_headers, generate_table_data
 from hepdata.modules.records.utils.data_files import get_data_path_for_record
@@ -65,10 +65,10 @@ from hepdata.modules.records.utils.json_ld import get_json_ld
 from hepdata.modules.records.utils.users import get_coordinators_in_system, has_role
 from hepdata.modules.records.utils.workflow import update_record, create_record
 from hepdata.modules.records.views import set_data_review_status, get_observer_data, get_data_review_status, \
-    get_data_reviews_for_record, add_data_review_messsage, add_resource
+    get_data_reviews_for_record, add_data_review_messsage, add_resource, get_all_review_messages
 from hepdata.modules.submission.models import HEPSubmission, DataReview, \
     DataSubmission, DataResource, License, RecordVersionCommitMessage, RelatedRecid, RelatedTable, SubmissionObserver, \
-    Message
+    Message, ReviewConversationArchive
 from hepdata.modules.submission.views import process_submission_payload
 from hepdata.modules.submission.api import get_latest_hepsubmission, get_or_create_submission_observer
 from tests.conftest import TEST_EMAIL, create_test_record, create_blank_test_record
@@ -472,6 +472,59 @@ def test_has_coordinator_permissions(app):
         db.session.commit()
 
         assert has_coordinator_permissions(recid, user)
+
+
+def test_delete_review_archive(app, mocker):
+    with app.app_context():
+        publication_recid = 12344321
+        mocker.patch('hepdata.modules.records.utils.submission.AdminIndexer.delete_by_id')
+        mocker.patch('hepdata.modules.records.utils.submission.delete_all_files')
+
+        db.session.add(HEPSubmission(
+            publication_recid=publication_recid,
+            coordinator=1,
+            overall_status='todo',
+            version=1,
+        ))
+        db.session.add(DataSubmission(
+            publication_recid=publication_recid,
+            name='Table 1',
+            description='Example table',
+            version=1,
+        ))
+
+        archives = [
+            ReviewConversationArchive(
+                publication_recid=publication_recid,
+                conversation={
+                    'Table 1': [{
+                        'message': 'hello world',
+                        'user': 'reviewer@example.com',
+                        'post_time': '2026-01-01 00:00:00'
+                    }]
+                }
+            ),
+            ReviewConversationArchive(
+                publication_recid=publication_recid,
+                conversation={
+                    'Table 2': [{
+                        'message': 'second archive',
+                        'user': 'reviewer@example.com',
+                        'post_time': '2026-01-02 00:00:00'
+                    }]
+                }
+            )
+        ]
+        db.session.add_all(archives)
+        db.session.commit()
+
+        assert ReviewConversationArchive.query.filter_by(publication_recid=publication_recid).count() == 2
+        assert HEPSubmission.query.filter_by(publication_recid=publication_recid).count() == 1
+
+        remove_submission(publication_recid, version=1)
+
+        assert ReviewConversationArchive.query.filter_by(publication_recid=publication_recid).count() == 0
+        assert HEPSubmission.query.filter_by(publication_recid=publication_recid).count() == 0
 
 
 def test_process_zip_archive_invalid(app):
@@ -974,6 +1027,56 @@ def test_add_review_message_uses_requested_version_on_create(app, load_default_d
     payload = json.loads(result)
     assert payload['publication_recid'] == 1
     assert payload['data_recid'] == 1234
+
+
+def test_get_all_review_messages_includes_archived_conversations(app, load_default_data):
+    user = User.query.first()
+    data_submission = DataSubmission.query.filter_by(
+        publication_recid=1, version=1
+    ).order_by(DataSubmission.id.asc()).first()
+
+    data_review = DataReview(
+        publication_recid=1,
+        data_recid=data_submission.id,
+        version=1
+    )
+    data_review.messages.append(Message(user=user.id, message='current message'))
+    db.session.add(data_review)
+    db.session.add(ReviewConversationArchive(
+        publication_recid=1,
+        conversation={
+            "Archived table": [{
+                "message": "archived message",
+                "user": "archiver@test.com",
+                "post_time": "2026-01-01 00:00:00"
+            }]
+        }
+    ))
+    db.session.commit()
+
+    with app.test_request_context('/data/review/message/1?include_conversation_metadata=true'):
+        login_user(user)
+        response = json.loads(get_all_review_messages(1))
+        assert response["total_conversations"] == 2
+        assert response["conversation_index"] == 1
+        assert response["has_previous"] is True
+        assert response["has_next"] is False
+        assert response["messages"][data_submission.name][0]["message"] == "current message"
+
+    with app.test_request_context(
+            '/data/review/message/1?include_conversation_metadata=true&conversation_index=0'):
+        login_user(user)
+        response = json.loads(get_all_review_messages(1))
+        assert response["conversation_index"] == 0
+        assert response["has_previous"] is False
+        assert response["has_next"] is True
+        assert response["messages"]["Archived table"][0]["message"] == "archived message"
+
+    with app.test_request_context('/data/review/message/1'):
+        login_user(user)
+        response = json.loads(get_all_review_messages(1))
+        assert "messages" not in response
+        assert data_submission.name in response
 
 
 def test_get_all_ids(app, load_default_data, identifiers):
