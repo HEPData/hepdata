@@ -22,6 +22,7 @@
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
+import io
 import json
 import logging
 import os
@@ -30,6 +31,7 @@ import re
 import shutil
 import time
 from datetime import datetime
+from pathlib import Path
 from time import sleep
 from unittest.mock import patch, MagicMock
 from sqlalchemy.exc import NoResultFound
@@ -400,7 +402,7 @@ def test_archive_existing_review_messages(app):
     assert archived_reviews[0].conversation['Table 1'][0]['message'] == test_message
 
 
-def test_archive_existing_review_messages_versioning(app):
+def test_archive_existing_review_messages_versioning(app, client):
     """
         Tests archiving of existing review messages, and versioning/removal functionality.
         archival of the error message objects.
@@ -414,9 +416,28 @@ def test_archive_existing_review_messages_versioning(app):
         uploader={'name': 'Uploader', 'email': 'uploader@hepdata.net'},
         send_upload_email=False
     )
-    submission.overall_status = 'finished'
     db.session.add(submission)
     db.session.commit()
+
+    zip_path = Path("tests/test_data/TestHEPSubmission.zip")
+    zip_bytes = zip_path.read_bytes()
+
+    def reupload_file(client, recid):
+        # Disable auth redirect for this request and exercise the real payload path.
+        prev_login_disabled = app.config.get("LOGIN_DISABLED", False)
+        app.config["LOGIN_DISABLED"] = True
+
+        try:
+            with patch("hepdata.modules.records.views.has_upload_permissions", return_value=True), \
+                patch("hepdata.modules.records.api.process_saved_file.delay"):
+                response = client.post(
+                    f"/record/{recid}/consume",
+                    data={"hep_archive": (io.BytesIO(zip_bytes), "TestHEPSubmission.zip")},
+                    content_type="multipart/form-data",
+                )
+                return response
+        finally:
+            app.config["LOGIN_DISABLED"] = prev_login_disabled
 
     # Create and submit the datasubmission object
     v1_data_submission = DataSubmission(
@@ -435,13 +456,10 @@ def test_archive_existing_review_messages_versioning(app):
         version=1,
     )
     # Add a message into the data review object
-    v1_review.messages.append(Message(user=user.id, message='version 1 archived message'))
+    v1_review.messages.append(Message(user=user.id, message='version 1 archived message 1'))
     db.session.add(v1_review)
     db.session.commit()
-
-    # Now we create a new version of the submission
-    create_new_version(submission.publication_recid, user, notify_uploader=False)
-
+    
     # Reusable query to get all conversations for a publication
     archived_conversations = (
         lambda: ReviewConversationArchive.query.filter_by(
@@ -449,38 +467,42 @@ def test_archive_existing_review_messages_versioning(app):
         ).order_by(ReviewConversationArchive.id.asc()).all()
     )
     
-    """ Ensure that the base archived conversation has worked, has the correct version num,
-            data submission and message contents are correct, and in the correct place.
-    """
+    archive = archived_conversations()
+    assert len(archive) == 0
+    
+    # Trigger reupload to archive files
+    response = reupload_file(client, submission.publication_recid)
+    assert response.status_code == 200
+
     archive = archived_conversations()
     assert len(archive) == 1
     assert archive[0].version == 1
     assert v1_data_submission.name in archive[0].conversation
-    assert archive[0].conversation[v1_data_submission.name][0]["message"] == 'version 1 archived message'
-
-    # Create new data and review objects
-    v2_data_submission = DataSubmission(
+    assert archive[0].conversation[v1_data_submission.name][0]["message"] == 'version 1 archived message 1'
+    
+    # Create new data and review object
+    v1_data_submission_2 = DataSubmission(
         publication_recid=submission.publication_recid,
         name='Table 1',
-        description='Version 2 table',
-        version=2,
+        description='Version 1 table',
+        version=1,
     )
-    db.session.add(v2_data_submission)
+    db.session.add(v1_data_submission_2)
     db.session.commit()
 
-    v2_review = DataReview(
+    v1_review_2 = DataReview(
         publication_recid=submission.publication_recid,
-        data_recid=v2_data_submission.id,
-        version=2,
+        data_recid=v1_data_submission_2.id,
+        version=1,
     )
-    v2_review.messages.append(Message(user=user.id, message='version 2 archived message'))
-    db.session.add(v2_review)
+    v1_review_2.messages.append(Message(user=user.id, message='version 1 archived message 2'))
+    db.session.add(v1_review_2)
 
     # Update the submission status to finished so a new version with archive can be created
-    v2_submission = HEPSubmission.query.filter_by(publication_recid=submission.publication_recid, version=2).one()
-    v2_submission.overall_status = 'finished'
+    v1_submission = HEPSubmission.query.filter_by(publication_recid=submission.publication_recid, version=1).one()
+    v1_submission.overall_status = 'finished'
 
-    db.session.add(v2_submission)
+    db.session.add(v1_submission)
     db.session.commit()
 
     # Create new version to archive the conversation
@@ -493,27 +515,59 @@ def test_archive_existing_review_messages_versioning(app):
     assert len(archive) == 2
     assert archive[0].version == 1
     assert v1_data_submission.name in archive[0].conversation
-    assert archive[0].conversation[v1_data_submission.name][0]["message"] == 'version 1 archived message'
-    assert archive[1].version == 2
-    assert v2_data_submission.name in archive[1].conversation
-    assert archive[1].conversation[v2_data_submission.name][0]["message"] == 'version 2 archived message'
+    assert archive[0].conversation[v1_data_submission.name][0]["message"] == 'version 1 archived message 1'
+    assert archive[1].version == 1
+    assert v1_data_submission_2.name in archive[1].conversation
+    assert archive[1].conversation[v1_data_submission_2.name][0]["message"] == 'version 1 archived message 2'
 
+    # Add a new message on the latest version, then trigger another archive.
+    v2_data_submission = DataSubmission(
+        publication_recid=submission.publication_recid,
+        name='Table 1',
+        description='Version 2 table',
+        version=2,
+    )
+    db.session.add(v2_data_submission)
+    db.session.commit()
+
+    v2_review_1 = DataReview(
+        publication_recid=submission.publication_recid,
+        data_recid=v2_data_submission.id,
+        version=2,
+    )
+    v2_review_1.messages.append(Message(user=user.id, message='version 2 archived message 1'))
+    db.session.add(v2_review_1)
+
+    v2_submission = HEPSubmission.query.filter_by(publication_recid=submission.publication_recid, version=2).one()
+    v2_submission.overall_status = 'finished'
+    db.session.add(v2_submission)
+    db.session.commit()
+
+    create_new_version(submission.publication_recid, user, notify_uploader=False)
+
+    archive = archived_conversations()
+    assert len(archive) == 3
+    assert archive[2].version == 2
+    assert v2_data_submission.name in archive[2].conversation
+    assert archive[2].conversation[v2_data_submission.name][0]["message"] == 'version 2 archived message 1'
+
+    # Now remove version 3
+    remove_submission(submission.publication_recid, 3)
+    
+    archive = archived_conversations()
+    assert len(archive) == 3
+    
     # Now remove version 2
-    remove_submission(submission.publication_recid, version=2)
+    remove_submission(submission.publication_recid, 2)
 
     # Ensure that only version 1 exists within the archive
     archive = archived_conversations()
-    assert len(archive) == 1
+    assert len(archive) == 2
     assert archive[0].version == 1
     assert v1_data_submission.name in archive[0].conversation
-    assert archive[0].conversation[v1_data_submission.name][0]["message"] == 'version 1 archived message'
+    assert archive[0].conversation[v1_data_submission.name][0]["message"] == 'version 1 archived message 1'
+    assert archive[1].conversation[v1_data_submission.name][0]["message"] == 'version 1 archived message 2'
 
-    # Remove V2 submission and ensure that archive for v1 only remains
-    remove_submission(submission.publication_recid, 2)
-    
-    archive = archived_conversations()
-    assert len(archive) == 1
-    
     # Remove the entire submission and ensure that no archives exist at all
     remove_submission(submission.publication_recid)
     
