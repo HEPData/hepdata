@@ -214,13 +214,6 @@ def archive_existing_review_messages(recid, version):
     )
     if not has_review_messages(current_messages):
         return
-    
-    reviews = DataReview.query.filter_by(
-        publication_recid=recid, version=version
-    ).order_by(DataReview.id.asc())
-    
-    for review in reviews:
-        db.session.delete(review)
 
     archive_entry = ReviewConversationArchive(
         publication_recid=recid,
