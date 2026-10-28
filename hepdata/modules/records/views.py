@@ -729,11 +729,14 @@ def get_all_review_messages(publication_recid):
         selected_index = len(conversations) - 1
     selected_index = max(0, min(selected_index, len(conversations) - 1))
 
+    unique_versions = len({version for version in conversation_versions if version is not None})
+
     return json.dumps({
         "messages": conversations[selected_index],
         "conversation_index": selected_index,
         "total_conversations": len(conversations),
         "conversation_version": conversation_versions[selected_index],
+        "available_versions": unique_versions,
         "has_previous": selected_index > 0,
         "has_next": selected_index < (len(conversations) - 1),
     }, default=default_time)

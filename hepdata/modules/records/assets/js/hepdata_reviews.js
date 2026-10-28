@@ -113,10 +113,13 @@ HEPDATA.load_all_review_messages = function (placement, record_id, conversationI
           .attr('aria-label', 'Show newer conversation')
           .property('disabled', selectedConversation >= totalConversations - 1)
           .text('Newer →');
-        controls.append('div')
-          .attr('class', 'conversation-version')
-          .attr('aria-live', 'polite')
-          .text('Version ' + selectedVersion);
+        
+        if (payload.available_versions > 1) {
+          controls.append('div')
+            .attr('class', 'conversation-version')
+            .attr('aria-live', 'polite')
+            .text('Version ' + selectedVersion);
+        }
       }
       var message_count = 0;
       for (var table in data) {
