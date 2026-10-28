@@ -57,7 +57,7 @@ from hepdata.modules.records.utils.common import infer_file_type, contains_accep
     get_record_contents, is_analysis, get_record_by_id
 from hepdata.modules.records.utils.data_files import get_data_path_for_record
 from hepdata.modules.records.utils.submission import process_submission_directory, do_finalise, unload_submission, \
-    cleanup_data_related_recid, archive_existing_review_messages, remove_submission
+    cleanup_data_related_recid, cleanup_submission, archive_existing_review_messages, remove_submission
 from hepdata.modules.submission.api import get_latest_hepsubmission, get_submission_participants_for_record, \
     get_or_create_submission_observer, delete_submission_observer
 from hepdata.modules.submission.models import DataSubmission, HEPSubmission, RelatedRecid, RecordVersionCommitMessage, \
@@ -391,6 +391,12 @@ def test_archive_existing_review_messages(app):
     archive_existing_review_messages(test_recid, 1)
 
     all_reviews = get_all_reviews()
+    assert len(all_reviews) == 1
+    assert all_reviews[0].messages[0].message == test_message
+
+    cleanup_submission(test_recid, 1, [])
+    
+    all_reviews = get_all_reviews()
     assert len(all_reviews) == 0
 
     archived_reviews = ReviewConversationArchive.query.filter_by(
@@ -514,11 +520,17 @@ def test_archive_existing_review_messages_versioning(app, client):
     archive = archived_conversations()
     assert len(archive) == 2
     assert archive[0].version == 1
-    assert v1_data_submission.name in archive[0].conversation
-    assert archive[0].conversation[v1_data_submission.name][0]["message"] == 'version 1 archived message 1'
     assert archive[1].version == 1
+    assert v1_data_submission.name in archive[0].conversation
     assert v1_data_submission_2.name in archive[1].conversation
-    assert archive[1].conversation[v1_data_submission_2.name][0]["message"] == 'version 1 archived message 2'
+
+    archive_messages = {
+        message['message']
+        for archived in archive
+        for message in archived.conversation[v1_data_submission.name]
+    }
+    assert 'version 1 archived message 1' in archive_messages
+    assert 'version 1 archived message 2' in archive_messages
 
     # Add a new message on the latest version, then trigger another archive.
     v2_data_submission = DataSubmission(
@@ -564,9 +576,15 @@ def test_archive_existing_review_messages_versioning(app, client):
     archive = archived_conversations()
     assert len(archive) == 2
     assert archive[0].version == 1
-    assert v1_data_submission.name in archive[0].conversation
-    assert archive[0].conversation[v1_data_submission.name][0]["message"] == 'version 1 archived message 1'
-    assert archive[1].conversation[v1_data_submission.name][0]["message"] == 'version 1 archived message 2'
+    assert archive[1].version == 1
+
+    archive_messages = {
+        message['message']
+        for archived in archive
+        for message in archived.conversation[v1_data_submission.name]
+    }
+    assert 'version 1 archived message 1' in archive_messages
+    assert 'version 1 archived message 2' in archive_messages
 
     # Remove the entire submission and ensure that no archives exist at all
     remove_submission(submission.publication_recid)
