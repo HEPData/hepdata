@@ -1017,6 +1017,20 @@ body, html {
   padding-right: 5px;
 }
 
+.conversation-navigation {
+  display: inline-block;
+}
+
+.conversation-navigation-row {
+  display: flex;
+  align-items: center;
+}
+
+.conversation-version {
+  margin-top: 4px;
+  text-align: center;
+}
+
 #conversation-conversation-next:disabled,
 #conversation-conversation-prev:disabled {
   background-color: #f5f5f5 !important;

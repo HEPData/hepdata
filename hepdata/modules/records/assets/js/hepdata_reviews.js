@@ -81,12 +81,17 @@ HEPDATA.load_all_review_messages = function (placement, record_id, conversationI
       var data = payload.messages ? payload.messages : payload;
       var totalConversations = payload.total_conversations ? payload.total_conversations : 1;
       var selectedConversation = payload.conversation_index !== undefined ? payload.conversation_index : 0;
+      var selectedVersion = payload.conversation_version !== undefined
+        ? payload.conversation_version
+        : HEPDATA.current_table_version;
       if (totalConversations > 1) {
         var controls = d3.select(placement).append('div')
           .attr('class', 'conversation-navigation')
           .attr('role', 'navigation')
           .attr('aria-label', 'Conversation history navigation');
-        controls.append('button')
+        var controlsRow = controls.append('div')
+          .attr('class', 'conversation-navigation-row');
+        controlsRow.append('button')
           .attr('class', 'btn btn-xs btn-default conversation-nav')
           .attr('id', placement.replace('#', '') + '-conversation-prev')
           .attr('data-placement', placement)
@@ -95,11 +100,11 @@ HEPDATA.load_all_review_messages = function (placement, record_id, conversationI
           .attr('aria-label', 'Show older conversation')
           .property('disabled', selectedConversation <= 0)
           .text('← Older');
-        controls.append('span')
+        controlsRow.append('span')
           .attr('class', 'conversation-index')
           .attr('aria-live', 'polite')
           .text('Upload conversation ' + (selectedConversation + 1) + ' of ' + totalConversations);
-        controls.append('button')
+        controlsRow.append('button')
           .attr('class', 'btn btn-xs btn-default conversation-nav')
           .attr('id', placement.replace('#', '') + '-conversation-next')
           .attr('data-placement', placement)
@@ -108,6 +113,10 @@ HEPDATA.load_all_review_messages = function (placement, record_id, conversationI
           .attr('aria-label', 'Show newer conversation')
           .property('disabled', selectedConversation >= totalConversations - 1)
           .text('Newer →');
+        controls.append('div')
+          .attr('class', 'conversation-version')
+          .attr('aria-live', 'polite')
+          .text('Version ' + selectedVersion);
       }
       var message_count = 0;
       for (var table in data) {

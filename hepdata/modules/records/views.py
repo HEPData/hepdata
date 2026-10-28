@@ -716,9 +716,13 @@ def get_all_review_messages(publication_recid):
     archived_conversations = ReviewConversationArchive.query.filter_by(
         publication_recid=publication_recid
     ).order_by(ReviewConversationArchive.id.asc()).all()
+    latest_submission = get_latest_hepsubmission(publication_recid=publication_recid)
+    current_version = latest_submission.version if latest_submission else None
 
     conversations = [conversation.conversation for conversation in archived_conversations]
+    conversation_versions = [conversation.version for conversation in archived_conversations]
     conversations.append(current_messages)
+    conversation_versions.append(current_version)
 
     selected_index = conversation_index
     if selected_index is None:
@@ -729,6 +733,7 @@ def get_all_review_messages(publication_recid):
         "messages": conversations[selected_index],
         "conversation_index": selected_index,
         "total_conversations": len(conversations),
+        "conversation_version": conversation_versions[selected_index],
         "has_previous": selected_index > 0,
         "has_next": selected_index < (len(conversations) - 1),
     }, default=default_time)

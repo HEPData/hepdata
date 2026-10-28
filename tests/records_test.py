@@ -1059,6 +1059,7 @@ def test_get_all_review_messages_includes_archived_conversations(app, load_defau
         response = json.loads(get_all_review_messages(1))
         assert response["total_conversations"] == 2
         assert response["conversation_index"] == 1
+        assert response["conversation_version"] == 1
         assert response["has_previous"] is True
         assert response["has_next"] is False
         assert response["messages"][data_submission.name][0]["message"] == "current message"
@@ -1068,6 +1069,7 @@ def test_get_all_review_messages_includes_archived_conversations(app, load_defau
         login_user(user)
         response = json.loads(get_all_review_messages(1))
         assert response["conversation_index"] == 0
+        assert response["conversation_version"] == 1
         assert response["has_previous"] is False
         assert response["has_next"] is True
         assert response["messages"]["Archived table"][0]["message"] == "archived message"
