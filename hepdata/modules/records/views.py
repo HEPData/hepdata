@@ -1147,13 +1147,13 @@ def add_resource(type, identifier, version):
     recid = None
 
     if type == 'submission':
-        submission = HEPSubmission.query.filter_by(publication_recid=identifier, version=version).one()
+        submission = HEPSubmission.query.filter_by(publication_recid=identifier, version=version).first()
         if submission:
             inspire_id = submission.inspire_id
             recid = submission.publication_recid
 
     elif type == 'data':
-        submission = DataSubmission.query.filter_by(id=identifier).one()
+        submission = DataSubmission.query.filter_by(id=identifier).first()
         if submission:
             inspire_id = submission.publication_inspire_id
             recid = submission.publication_recid
@@ -1169,7 +1169,7 @@ def add_resource(type, identifier, version):
     if analysis_type == 'other':
         analysis_type = analysis_other
 
-    if analysis_type and analysis_url:
+    if analysis_type and analysis_url and analysis_url.lower().startswith('http'):
 
         if submission:
             new_resource = DataResource(file_location=analysis_url, file_type=analysis_type,
