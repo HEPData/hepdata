@@ -51,7 +51,7 @@ from hepdata.modules.records.utils.data_processing_utils import process_ctx
 from hepdata.modules.records.utils.data_files import get_data_path_for_record, cleanup_old_files
 from hepdata.modules.records.utils.json_ld import get_json_ld
 from hepdata.modules.records.utils.submission import process_submission_directory, \
-    create_data_review, cleanup_submission, clean_error_message_for_display
+    create_data_review, cleanup_submission, clean_error_message_for_display, archive_existing_review_messages
 from hepdata.modules.submission.api import get_latest_hepsubmission, get_submission_participants_for_record, \
     get_or_create_submission_observer
 from hepdata.modules.records.utils.users import get_coordinators_in_system, has_role
@@ -544,6 +544,8 @@ def create_new_version(recid, user, notify_uploader=True, uploader_message=None)
     hepsubmission = get_latest_hepsubmission(publication_recid=recid)
 
     if hepsubmission.overall_status == 'finished':
+        archive_existing_review_messages(recid, hepsubmission.version)
+
         # Reopen the submission to allow for revisions,
         # by creating a new HEPSubmission object.
         _rev_hepsubmission = HEPSubmission(publication_recid=recid,
@@ -614,6 +616,9 @@ def process_payload(recid, file, redirect_url, synchronous=False):
                     file.filename, file_size, UPLOAD_MAX_SIZE)}), 413
 
         hepsubmission = get_latest_hepsubmission(publication_recid=recid)
+        
+        if hepsubmission.overall_status != 'sandbox':
+            archive_existing_review_messages(recid, hepsubmission.version)
 
         if hepsubmission.overall_status == 'finished':
             # If it is finished and we receive an update,
