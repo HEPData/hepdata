@@ -113,7 +113,7 @@ HEPDATA.load_all_review_messages = function (placement, record_id, conversationI
           .attr('aria-label', 'Show newer conversation')
           .property('disabled', selectedConversation >= totalConversations - 1)
           .text('Newer →');
-        
+
         if (payload.available_versions > 1) {
           controls.append('div')
             .attr('class', 'conversation-version')
@@ -134,9 +134,8 @@ HEPDATA.load_all_review_messages = function (placement, record_id, conversationI
         $(".loading").addClass("hidden");
         $(".input_box").css("color", "#808080")
           .css("height", "30px");
-        d3.selectAll("#conversation_message_count").html(message_count);
       }
-      $("#conversation_message_count").html(message_count);
+      d3.selectAll("#conversation_message_count").html(message_count);
     }
   });
 };
