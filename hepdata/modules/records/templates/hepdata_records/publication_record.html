@@ -192,7 +192,7 @@
 
                 {% if ctx.show_upload_area == False %}
 
-                    {% if (ctx.show_review_widget or ctx.show_upload_widget or ctx.is_submission_coordinator_or_admin) and ctx.status != 'finished' %}
+                    {% if (ctx.show_review_widget or ctx.show_upload_widget or ctx.is_submission_coordinator_or_admin) and ctx.status != 'finished' and ctx.data_tables|length > 0 %}
                         {% include 'hepdata_records/components/reviewer-widget.html' %}
                         {% if (ctx.show_review_widget or ctx.is_submission_coordinator_or_admin) %}
                           <script>
