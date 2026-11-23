@@ -1517,14 +1517,14 @@ def test_multiupdate_analyses(app):
         return
     analysis_resources = DataResource.query.filter_by(file_type='rivet').all()
     assert len(analysis_resources) == 1
-    assert analysis_resources[0].file_location == 'https://rivet.hepforge.org/analyses/ATLAS_2012_I1203852'
+    assert analysis_resources[0].file_location == 'https://heprivet.org/analyses/ATLAS_2012_I1203852/'
 
     # Call update_analyses() again: should be no further changes (but covers more lines of code)
     if not update_analyses('rivet'):
         return
     analysis_resources = DataResource.query.filter_by(file_type='rivet').all()
     assert len(analysis_resources) == 1
-    assert analysis_resources[0].file_location == 'https://rivet.hepforge.org/analyses/ATLAS_2012_I1203852'
+    assert analysis_resources[0].file_location == 'https://heprivet.org/analyses/ATLAS_2012_I1203852/'
 
 
 def test_update_delete_analyses(app):
