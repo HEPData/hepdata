@@ -3,3 +3,4 @@ Disallow: /
 
 User-agent: *
 Disallow: /search
+Disallow: /download
